@@ -1,17 +1,40 @@
-; Sweet-expression implementation in Scheme, 2006-06-17, version 0.11.
-; Copyright (C) 2006 by David A. Wheeler and Egil Möller . All Rights Reserved.
+; Sweet-expression implementation in Scheme, 2007-10-10, version 0.15.
+; Copyright (C) 2006-2007 by David A. Wheeler and Egil Möller.
 ;
-; This code implements a reader of "sweet-expressions", an s-expression
+; This prototype code implements a reader of "sweet-expressions",
+; an s-expression
 ; format where traditional s-expressions are usually read as-is, but
 ; various extensions to improve program readability are allowed.
 ; It adds support for indentation (as per I-expressions),
-; name-ending function names like fact(x), and it auto-detects
+; name-prefixed function names like fact(x), and it auto-detects
 ; infix expressions (if 3+ parameters, 1st parameter is not infix, and
 ; 2nd parameter IS infix, then it's infix).  To disable infix in an
 ; expression, surround the 2nd parameter with as(..).
 ; To make it pleasant to use interactively, if you enter a single complete
 ; datum as unindented text followed IMMEDIATELY by a newline, it's
 ; run immediately-  so x, load("filename"), and (3 + 4) run immediately.
+;
+; TODO: There's a subtle bug involving EOF interacting with convoluted
+;       constructs involving inline comments; need to track it down and fix.
+;       It appears to only occur when there are multiple indented lines, all of
+;       which have inline ";" comments.  This MUST be fixed before serious use.
+; TODO: Leading + - . for numbers doesn't work, e.g., -5 should be allowed.
+; TODO: There are a few other TODOs, e.g., bare "." processing is needed.
+; TODO: There are almost certainly other bugs; this is "testing" code.
+;       I'm still trying out various ideas, and in the process of trying things
+;       out, other stuff breaks.  Under construction, help wanted.
+; TODO: Make more portable across diff. versions of guile and of Scheme,
+;       then port to Common Lisp, ACL2, etc.
+; TODO: Handling "empty" lines deserves more thinking.  E.G., perhaps a blank
+;       line with at least one space or tab should be completely ignored
+;       (instead of closing deeper indentations).  In some cases a '()
+;       is returned from whitespace that perhaps should be ignored.  The
+;       sweet-load routine does not exec '() anyway.  Perhaps comment-only
+;       lines should NOT count for purposes of determining indent/outdent.
+; TODO: If a single-token expressions is only followed by atmosphere on a line,
+;       and it's unindented, accept and run it immediately (currently that
+;       disables immediate execution).
+; TODO: Add optional support for R6 changes, e.g., allowing [...] lists.
 ;
 ; This is written to work with GNU guile, as a module, though it's written
 ; to be as portable as practicable.  Start up by typing "guile", then;
@@ -23,13 +46,16 @@
 ;  (sweet-read)    : read just one sweet-expression, and return it.
 ;  (sweet-filter)  ; read from stdin and display s-expr translation
 ;  (sweet-filter-file filename)  ; read a file and display s-expr translation
-; There are almost certainly bugs; this is "testing" code.
-; Indentation, name-ending, and infix all work, but the TODOs need completion.
-; TODO: Code not complete, though it's usable for demonstration.
-;       - Infix ONLY works correctly with exactly 3 parameters, so
-;         (3 + 4) and f(n <= 3) work, but (3 + 4 * 5) does not work (yet).
-;       - Stubs not complete for (list . item), leading - + .
-; TODO: Extra blank lines just before EOF interpreted as spurious (), fix.
+; Indentation, name-prefixing, and infix all work, but the TODOs need completion.
+; Precedence is intentionally NOT supported; see the docs for why. But
+; chaining is supported, so (3 + 4 + 5) works as expected.
+;
+; Version information:
+; 0.16: Repair some whitespace skipping code (more to do, see "errors") -
+;       but at least it can now correctly read the example INCLUDING comments.
+; 0.15: In sweet-load, don't try to exec '().
+; 0.14: Add support for parameter chaining, e.g., (3 + 4 + 5); changed
+;       terminology to discuss "name-prefixing" (vs. older "name-ending" term).
 ;
 ; Released under the "MIT license":
 ; Permission is hereby granted, free of charge, to any person obtaining a
@@ -84,7 +110,7 @@
 ;                                               ; Call read-save to handle.
 ;           '.' ambiguousdot | '+' ambiguousplus | '-' ambiguousminus |
 ;           symbol [ ( inside-list ) ]
-;                ; If (), name-ending; if it's infix, make ONE parameter.
+;                ; If (), name-prefixing; if it's infix, make ONE parameter.
 ;
 ; ambiguousminus ::= [0-9]... ;Call read-save to convert to number, then negate
 ; ambiguousminus ::= followed-by-atm-or-closing ; this is a lonely "-"
@@ -165,7 +191,7 @@
       ((not (memv (car charlist)
               '(#\+ #\- #\* #\/ #\< #\= #\> #\& #\| )))
         #f)   ; The front character is not in the permitted list.
-      (t (sweet-infix-operator-chars (cdr charlist))))) ; Look @ next char
+      (#t (sweet-infix-operator-chars (cdr charlist))))) ; Look @ next char
 
   ; Is "op" a valid infix operator?
   (define  (sweet-infix-operator op)
@@ -173,12 +199,30 @@
       ((not (symbol? op)) #f) ; Numbers, lists, etc. aren't symbols.
       ((eq? op '=>) #f) ; In Scheme, => is a predefined keyword and not infix.
       ((eq? op ':) #t)  ; Special case, ":" can be an infix operator.
+      ((eq? op '|| ) #t)  ; Special case, "||" can be an infix operator.
       ; TODO: Check if on Unicode, length correct for UTF-8.
       ((> (string-length (symbol->string op)) 6)   #f) ; Infix ops <=6 chars
       ((= (string-length (symbol->string op)) 0)   #f) ; Ignore Null length
       ( (sweet-infix-operator-chars (string->list (symbol->string op)))
          #t)
-      (t #f)))       ; By default, op is NOT a valid infix operator.
+      (#t #f)))       ; By default, op is NOT a valid infix operator.
+
+
+  ; Return #t if lyst has an even # of parameters, and the (alternating) first
+  ; ones are "op".  Used to determine if a longer lyst is infix.  Else #f.
+  ; If passed empty list, returns #t.
+  ; Probably should combine the DETECTION of infix lists with the CREATION
+  ; of the final list (into a single function), but while various alternatives
+  ; are being considered, I thought it might be safer to have separate functions.
+  (define (even-and-op-prefix op lyst)
+     (cond
+       ((null? lyst) #t)
+       ((not (pair? lyst)) #f)
+       ; TODO: Detect if infix operator but different (no precedence!)
+       ; (perhaps this is an error instead of silently being non-infix)
+       ((not (eq? op (car lyst))) #f)  ; Not-equal operator.
+       ((null? (cdr lyst)) #f) ; odd # of parameters in lyst.
+       (else (even-and-op-prefix op (cddr lyst)))))
 
   ; Return #t if the lyst is in infix format (and should be converted)
   ; If 2nd param surrounded by as(), it won't be infix.
@@ -188,20 +232,21 @@
       (pair? lyst)   ; Must have list;  '() doesn't count in Scheme.
       (pair? (cdr lyst))   ; Must have a second argument.
       (pair? (cddr lyst))   ; Must have a third argument (we check it
-                           ; this way for performance and to avoid cycles)
+                            ; this way for performance)
       (not (sweet-infix-operator (car lyst)))
-      (sweet-infix-operator (cadr lyst))))
+      (sweet-infix-operator (cadr lyst))
+      (even-and-op-prefix (cadr lyst) (cdr lyst))))
 
-; The lyst is considered infix, so return transformed version:
+  ; Return alternating parameters in a lyst (1st, 3rd, 5th, etc.)
+  (define (alternating-parameters lyst)
+    (if (or (null? lyst) (null? (cdr lyst)))
+      lyst
+      (cons (car lyst) (alternating-parameters (cddr lyst)))))
+
+  ; The lyst is considered infix, so return transformed version:
   (define (sweet-infix-it lyst)
-     ; BIG TODO: THIS IS A TEMPORARY VERSION, IT JUST SWAPS FIRST TWO PARAMS.
-     ; THIS ONLY WORKS ON THREE-PARAMETER INFIX LISTS; it works fine there,
-     ; BUT WILL FAIL MISERABLY ON LISTS LONGER THAN THREE.
-     ; FIXME. TEMPORARY.
-
-     (cons (cadr lyst) (cons (car lyst) (cddr lyst)))
-     ; TODO: If try to infix, and fail, complain.
-  )
+     ; Note: NO PRECEDENCE IS SUPPORTED, by intent.  See the docs.
+     (cons (cadr lyst) (alternating-parameters lyst)))
 
   ; If 2nd parameter is "as(...)", remove it.
   (define (sweet-rm-no-infix lyst)
@@ -239,15 +284,17 @@
        ((pair? x) (list-min-count (cdr x) (- kount 1)))
        (else #f)))
 
+  ; CURRENTLY UNUSED - I tried this out; didn't seem to be worth the trouble.
+  ;
   ; For x and down, interpret infixable expressions as infix;
   ; it's reversed by "unfx", continued by "nfx".  Also understands
-  ; nfx1, unfx1, and nameending(...).
+  ; nfx1, unfx1, and nameprefix(...).
   ; Uses "sweet-is-infix" to see if a list is infix, and uses sweet-infix-it
   ; if it is.
   ; (nfx (3 + 2)) => (+ 3 2)   ; single list as argument becomes list.
   ; (nfx 3 + 2)   => (+ 3 2)
   ; (nfx (+ 3 2)) => (+ 3 2)
-  ; (nfx (nameender f 3 + 2)) => (f (+ 3 2))
+  ; (nfx (nameprefix f 3 + 2)) => (f (+ 3 2))
   (define (sweet-nfx-process . x)
     (cond
       ((not (pair? x))     x)
@@ -259,7 +306,7 @@
           (map 'sweet-nfx-process (sweet-infix-it (sweet-solo (cdr x))))))
       ((eq? (car x) 'unfx1)
         (map 'sweet-nfx-process (sweet-nfx-process (sweet-solo (cdr x)))))
-      ((eq? (car x) 'nameender) ; Do we have (nameender func 3 + 2)?
+      ((eq? (car x) 'nameprefix) ; Do we have (nameprefix func 3 + 2)?
         (if (and (list-min-count x 5) (sweet-is-infix (cddr x)))
           (map 'sweet-nfx-process                      ; infix - 1 parameter!
             (list (cadr x) (sweet-infix-it (cddr x))))
@@ -272,6 +319,7 @@
 ; in their usual places.
 
 ; Consume rest of line, until newline or end-of-file marker.
+; It consumes the newline, if any.
   (define (sweet-skip-line port)
     (let ((char (read-char port)))
       (if (not (or
@@ -279,7 +327,7 @@
              (eof-object? char)))
           (sweet-skip-line port))))
 
-; If atmosphere on port, consume it. Doesn't return a useful value,
+; If atmosphere on port, consume all of it. Doesn't return a useful value,
 ; its only purpose is the side-effect on the port.
   (define (sweet-skip-atmosphere port)
     (cond
@@ -287,7 +335,8 @@
         (read-char port)
         (sweet-skip-atmosphere port))
       ((eqv? (peek-char port) #\; )
-        (sweet-skip-line port))))
+        (sweet-skip-line port)
+        (sweet-skip-atmosphere port))))
 
 ; Support for readsymbol; return list of characters of symbol;
 ; stops reading on non-symbol.  For performance, this should probably
@@ -308,29 +357,28 @@
           ; It's an error, though incredibly unlikely in practice.
           (cons (read-char port) (sweet-scansymbol port)))
         ; TODO: forbid control chars & maybe some other characters.
-        (t
+        (#t
           (cons (read-char port) (sweet-scansymbol port))))))
 
-; Read a symbol. If it's IMMEDIATELY followed by (), it's name-ending;
+; Read a symbol. If it's IMMEDIATELY followed by (), it's name-prefixed;
 ; if in that case it's infix, make it ONE parameter.
   (define (sweet-readsymbol port prefix)
    (let ((newsymboltext
             (string-append prefix (list->string (sweet-scansymbol port)))))
     (cond
-      ; TODO: ((eqv? newsymbol "")  - what if empty symbol? Error?
-      ((eqv? (peek-char port) #\( )  ; name-ending symbol[ ( inside-list ) ]
-        ; Not quite the same as non-name-ending, because a cuddled infix
+      ((eqv? (peek-char port) #\( )  ; name-prefix symbol[ ( inside-list ) ]
+        ; Not quite the same as non-name-prefixedbecause a cuddled infix
         ; expression must be interpreted as a SINGLE parameter.
         (read-char port)  ; Consume the opening paren.
         (let ((list-contents (sweet-inside-list port)))
           ; TODO: MUST be closing paren here - should check to be sure.
           (read-char port)  ; Consume the closing paren.
           (if (sweet-is-infix list-contents)
-              (list (string->symbol newsymboltext)  ; Name-ending's different!
+              (list (string->symbol newsymboltext)  ; Name-prefixing is different!
                     (sweet-infix-it list-contents))
               (cons (string->symbol newsymboltext) 
                     (sweet-rm-no-infix list-contents)))))
-      (t (string->symbol newsymboltext)))))
+      (#t (string->symbol newsymboltext)))))
 
   ; Read an s-expression datum (the basic unit of s-expressions),
   ; IGNORING indentation.  Accept func(...) as equal to (func ...),
@@ -347,7 +395,7 @@
             (read-char port)  ; Consume the closing paren.
             (if (sweet-is-infix list-contents)
                 (sweet-infix-it list-contents)
-                    (sweet-rm-no-infix list-contents))))
+                (sweet-rm-no-infix list-contents))))
         ((#\') (read-char port) (list 'quote (sweet-readdatum port)))
         ((#\`) (read-char port) (list 'quasiquote (sweet-readdatum port)))
         ((#\,) (read-char port)
@@ -414,7 +462,7 @@
        ((eqv? char #\,)
 	(sweet-readquote level port 'unquote))
         ; TODO: Check - Do we need to handle ,@ specially too?
-       (t
+       (#t
         (sweet-readdatum port))))) ; use sweet-read-save to disable readdatum
 
   (define (indentation>? indentation1 indentation2)
@@ -481,7 +529,8 @@
   ;; Read one block of input
   ;; "level" is the indentation so far, OR
   ;;  '() if it's the first param cuddled to the left-hand edge.
-  (define (readblock level port)
+  ;;  "firstinline" is true if we're the first item in the line.
+  (define (readblock level port firstinline)
     (let ((char (peek-char port)))
       (cond
        ((eof-object? char)
@@ -489,7 +538,7 @@
        ((eqv? char #\newline)
 	(read-char port)
 	(if (null? level) ; beginning of expression?
-         (readblock level port) ; yes, skip blank lines.
+         (readblock level port #t) ; yes, skip blank lines.
 	 (let ((next-level (indentationlevel port)))
 	  (if (indentation>? next-level level)
 	      (readblocks next-level port)
@@ -497,29 +546,31 @@
        ((or (eqv? char #\space)
 	    (eqv? char #\ht))
 	(read-char port)
-	(readblock (tochars level) port))
+	(readblock (tochars level) port firstinline))
        ((eqv? char #\;)   ; Handle comments - not in original I-expr code.
         (sweet-skip-line port)
-	(readblock (tochars level) port))
-       (t
+	(readblock (tochars level) port #t))
+       (#t
 	(let* ((first (sweet-readitem level port)))
 	  (if (and sweet-edge-end ; alternative: null OR "" level.
                    (null? level) (eqv? (peek-char port) #\newline))
             ; Immediate return - don't consume newline, or peek will block
             (cons '() (list first))
-	    (let* ((rest (readblock level port))
+	    (let* ((rest (readblock level port #f))
 	         (level (car rest))
 	         (block (cdr rest)))
 	      (if (eq? first '.)
 	        (if (pair? block)
 		  (cons level (car block))
 		  rest)
- 	        (cons level (sweet-auto-infix (cons first block)))))))))))
+ 	        (if firstinline ; if first in line, check for infix.
+ 	          (cons level (sweet-auto-infix (cons first block)))
+ 	          (cons level (cons first block)))))))))))
 
   ;; reads a block and handles group, (quote), (unquote) and
   ;; (quasiquote).
   (define (readblock-clean level port)
-    (let* ((read (readblock level port))
+    (let* ((read (readblock level port #t))
 	   (next-level (car read))
 	   (block (cdr read)))
       (if (eof-object? block) (cons -1 block)) ; New: return EOF if EOF.
@@ -538,7 +589,7 @@
       (cond
        ((eq? block '.)
 	'())
-       (t
+       (#t
 	block))))
 
   ; Continuously read sweet-expressions from port and print their
@@ -569,11 +620,13 @@
     (define (load port)
       (let ((inp (sweet-read port))) ; sweet-read, not read.
 	(if (eof-object? inp)
-	    #t ; Return EOF object if done (should EOF be returned?)
+	    #t ; Return if done (should EOF be returned?)
 	    (begin
-	      (eval inp)
-	      (load port)))))
+              (if (not (null? inp))  ; Don't try to evaluate '().
+                 (eval inp (interaction-environment))) ; TODO: CHANGE env?
+              (load port)))))
     (load (open-input-file filename)))
+
 
   (define (sweet-enable)
     (set! read sweet-read)
@@ -593,8 +646,11 @@
           sweet-readsymbol sweet-scansymbol sweet-readdatum
           sweet-infix-operator sweet-infix-operator-chars sweet-is-infix
           sweet-rm-no-infix sweet-infix-it sweet-auto-infix
-          sweet-readitem
+          sweet-readitem sweet-skip-line sweet-skip-atmosphere
+          sweet-inside-list sweet-morelist sweet-readquote sweet-readitem
+          sweet-clean
           readblock-clean readblock readblocks)
+
 
 ; DEBUG: Don't auto-enable.
 ; (sweet-enable)
@@ -605,7 +661,7 @@
 ; SRFI 49 implements an "Indentation-sensitive syntax" for Scheme,
 ; called I-expressions.
 ; Sweet-expressions built on I-expressions, but add support for
-; name-ending names and infix, and also add some additional
+; name-prefixed calls and infix, and also add some additional
 ; semantics based on lessons learned using I-expressions
 ; (if a term begins at the left edge, and ends with a newline, it's
 ;  run immediately so that interactive use is comfortable).
