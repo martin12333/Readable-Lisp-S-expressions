@@ -1,11 +1,39 @@
 This directory contains code to implement improvements in
-the readability of s-expression-based programming languages,
-including Common Lisp, Scheme (including guile), BitC, Emacs Lisp, etc.
-
-sweet.scm is an implementation of "sweet-expressions" in the guile
-dialect of Scheme.  By David A. Wheeler.  Released under the MIT license.
+the readability of Lisp-like (s-expression-based) programming languages,
+including Common Lisp, Scheme (including guile), Emacs Lisp, BitC,
+ACL2, AutoCAD Lisp, etc.
 
 For more information, see:
  http://sourceforge.net/projects/readable/
  http://www.dwheeler.com/readable/
+
+File endings:
+.cl   - Common Lisp
+.lisp - Common Lisp
+.scm  - Scheme
+
+This directory includes:
+
+* iformat.cl: A simple pretty-printer that generates I-expressions
+(indented S-expressions) given an object. By David A. Wheeler. MIT license.
+
+* gloria-infix.lisp: A macro that implements infix notation in Common Lisp.
+By Alan Manuel Gloria.  MIT license.
+
+* gloria-infixdemo.lisp: A demo of gloria-infix.lisp.
+
+* sugar.scm: an implementation of an I-expression reader, defined in
+SFRI-49.  These use indentation to reduce the number of parentheses
+needed to represent S-expressions.
+By Egil Möller (modifications by David A. Wheeler).  MIT license.
+
+* sugar-original.scm: The original sugar.scm as presented in SFRI-49.
+This version has a number of bugs in it, but is included separately since
+this is the version defined in SFRI-49. MIT license.
+
+* sweet.scm: an implementation of a "sweet-expression" reader, a much
+easier-to-read format for S-expressions.  Implemented in the guile
+dialect of Scheme.  By David A. Wheeler.  MIT license.
+
+
 
