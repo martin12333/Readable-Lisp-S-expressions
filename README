@@ -1,18 +1,29 @@
 This directory contains code to implement improvements in
 the readability of Lisp-like (s-expression-based) programming languages,
 including Common Lisp, Scheme (including guile), Emacs Lisp, BitC,
-ACL2, AutoCAD Lisp, etc.
+ACL2, AutoCAD Lisp, etc.  These represent 
+
+ALL of the code is released under open source software / Free Software
+licenses approved by both the OSI (opensource.org) and FSF (fsf.org).
+Most are released under the MIT license, which permits practically any use.
 
 For more information, see:
  http://sourceforge.net/projects/readable/
  http://www.dwheeler.com/readable/
 
-File endings:
+File suffixes are:
 .cl   - Common Lisp
 .lisp - Common Lisp
 .scm  - Scheme
 
-This directory includes:
+This directory includes (in alphabetical order):
+
+* curly-infix.cl: A simple reader macro that implements infix operations
+in lists surrounded by {...}.  It can optionally be used along with
+a separate compile/execution-time macro. By David A. Wheeler. MIT license.
+
+* curly-infix-test: test suite/demo of curly-infix-test.  Requires
+Unix-like system and clisp.
 
 * iformat.cl: A simple pretty-printer that generates I-expressions
 (indented S-expressions) given an object. By David A. Wheeler. MIT license.
@@ -21,6 +32,7 @@ This directory includes:
 By Alan Manuel Gloria.  MIT license.
 
 * gloria-infixdemo.lisp: A demo of gloria-infix.lisp.
+By Alan Manuel Gloria.
 
 * sugar.scm: an implementation of an I-expression reader, defined in
 SFRI-49.  These use indentation to reduce the number of parentheses
@@ -34,6 +46,5 @@ this is the version defined in SFRI-49. MIT license.
 * sweet.scm: an implementation of a "sweet-expression" reader, a much
 easier-to-read format for S-expressions.  Implemented in the guile
 dialect of Scheme.  By David A. Wheeler.  MIT license.
-
 
 
