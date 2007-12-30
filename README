@@ -1,7 +1,8 @@
 This directory contains code to implement improvements in
 the readability of Lisp-like (s-expression-based) programming languages,
 including Common Lisp, Scheme (including guile), Emacs Lisp, BitC,
-ACL2, AutoCAD Lisp, etc.  These represent 
+ACL2, AutoCAD Lisp, etc.  There are several different approaches here,
+to support different needs and goals.
 
 ALL of the code is released under open source software / Free Software
 licenses approved by both the OSI (opensource.org) and FSF (fsf.org).
@@ -20,7 +21,8 @@ This directory includes (in alphabetical order):
 
 * curly-infix.cl: A simple reader macro that implements infix operations
 in lists surrounded by {...}.  It can optionally be used along with
-a separate compile/execution-time macro. By David A. Wheeler. MIT license.
+a separate compile/execution-time macro (such as Gloria's).
+By David A. Wheeler. MIT license.
 
 * curly-infix-test: test suite/demo of curly-infix-test.  Requires
 Unix-like system and clisp.
@@ -46,5 +48,6 @@ this is the version defined in SFRI-49. MIT license.
 * sweet.scm: an implementation of a "sweet-expression" reader, a much
 easier-to-read format for S-expressions.  Implemented in the guile
 dialect of Scheme.  By David A. Wheeler.  MIT license.
+Currently a prototype, and only implements sweet-expressions version 0.1.
 
 
