@@ -30,6 +30,10 @@ Unix-like system and clisp. By David A. Wheeler.  MIT license.
 * iformat.cl: A simple pretty-printer that generates I-expressions
 (indented S-expressions) given an object. By David A. Wheeler. MIT license.
 
+* infpre.lisp: Common Lisp infix/prefix conversion utility (macro).
+By Joern Inge Vestgaarden (jivestgarden at gmail com). License LGPL.
+This is a copy from: http://folk.uio.no/jornv/infpre/infpre.lisp
+
 * gloria-infix.lisp: A macro that implements infix notation in Common Lisp.
 By Alan Manuel Gloria.  MIT license.
 
