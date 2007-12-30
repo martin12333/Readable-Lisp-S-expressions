@@ -3,9 +3,14 @@
 # Test curly-infix.cl.  Also has demo of its use.
 
 # Run this file on a Unix-like system to test curly-infix.cl.
+# You must have clisp, and "curly-infix.cl" must be in the current directory.
+
 # It should print T for the successful loading of the file,
-# followed by a bunch of NILs (the result of successful asserts).
-# If an assert fails, it'll complain - then you need to fix it.
+# followed by a bunch of NILs (the result of successful asserts) and
+# some other calculations, WITHOUT any "assertion fails" messages.
+# If there is an assertion error message of the form:
+#  *** - ....
+# then you must fix something.
 
 clisp << TESTCOMMANDS
 (load "curly-infix.cl")
@@ -58,14 +63,14 @@ clisp << TESTCOMMANDS
 (setf x 5)
 (setf correct {1 <= x <= 10})
 
-; A silly overly-complicated example:
-(setf y {2 + {3 * 4} + (if {{x < 9} and {x > 1}} 4 5)})
-
-
 ; Test that demo worked correctly:
 (assert (= (fibfast 10) 55))
 (assert correct)
-(assert (= y 18))
+
+; More demos:
+
+(setf y {3 + {4 * 5}})
+(setf z {{1 <= x <= 10} and {x > 0}})
 
 (princ "Tests complete!")
 (quit)
