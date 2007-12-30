@@ -25,7 +25,7 @@ a separate compile/execution-time macro (such as Gloria's).
 By David A. Wheeler. MIT license.
 
 * curly-infix-test: test suite/demo of curly-infix-test.  Requires
-Unix-like system and clisp.
+Unix-like system and clisp. By David A. Wheeler.  MIT license.
 
 * iformat.cl: A simple pretty-printer that generates I-expressions
 (indented S-expressions) given an object. By David A. Wheeler. MIT license.
