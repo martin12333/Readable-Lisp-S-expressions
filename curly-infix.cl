@@ -1,4 +1,4 @@
-; curly-infix.cl (Common Lisp), 2007-12-29
+; curly-infix.cl (Common Lisp), 2007-12-31
 ; Implements an infix reader macro: {...} surrounds an infix expression.
 ; E.G., {2 + 3 + 4} is transformed at read time into (+ 2 3 4), and
 ; {2 + {3 * 4}} transforms into (+ 2 (* 3 4)).
@@ -53,6 +53,22 @@
 ; Instead, create normal functions/macros for each infix operator and just
 ; use them directly, e.g., use "<-" for assignment and define a macro
 ; to do what you want.
+;
+; Pros:
+; * Easy to use: Can use ANY operator name as infix, WITHOUT any registration
+; * Syntax makes obvious where new lists occur (no "hidden list creation")
+; * Easily understood/verified implementation - less to "go wrong"
+; * Works 100% trivially with execution macros, particularly if only
+;   "simple" infix forms are used.
+; * No precedence list that must be memorized (unless you use an "nfx" macro)
+; * Can work with an nfx macro (which COULD implement precedence) if needed
+; Cons:
+; * Doesn't support traditional prefix notation, e.g., - x. Must use (- x).
+; * Doesn't directly support precedence (if you want that) - nfx macro
+;   must do that.
+; * Doesn't rename functions, or give them new infix names.  You can define
+;   functions/macros with traditional infix names separately, if desired.
+;
 ; 
 ; Released under the "MIT license":
 ; Permission is hereby granted, free of charge, to any person obtaining a
