@@ -1,0 +1,381 @@
+I-expressions: Detailed Specification
+David A. Wheeler
+2008-01-01
+
+SRFI-49 (http://srfi.schemers.org/srfi-49/srfi-49.html) provides a
+pretty good system for indentation, but there are some issues with it.
+The spec has a few errors, and the BNF productions don't include much
+information on the whitespace-handling (which may explain why the sample
+implementation has bugs in handling comments in certain constructs)...
+instead, much of the whitespace handling is described only informally.
+In addition, the sample code isn't obviously related to the BNF productions,
+so it's difficult to be confident that the code is correct even if that
+bug was fixed.
+
+So, below are step-by-step transforms of the
+SRFI-49 rules.  The first one is a mild "fix-up" of the SFRI rules;
+the second takes the first and adds whitespace rules that are
+(mostly) implicit in the text, as well as proposing a way to deal
+with "initial indent".
+
+It may be easier to simply re-implement the spec, given the details,
+so that we can be more confident that the final code is correct.
+
+===========================================================
+Here are the productions from SRFI-49, with these fixes/changes:
+(1) the "head" productions' "expr" are changed to "s-expr" (a spec bug),
+(2) the rule for "head-> s-expr" is changed from "(list expr)" to
+    "(list $1)" (a spec bug),
+(3) the missing rule for UNQUOTE-SPLICING has been added (spec bug),
+(4) they are reordered so the GROUP productions are adjacent.
+(5) Clarification: Any line containing only spaces and tabs is treated
+    identically to a line containing NO spaces or tabs.  Otherwise,
+    printed text could not be understood with certainty.
+(6) Clarification: At the start of an expression, content-free lines are
+    skipped (these are lines with zero or more initial spaces and tabs,
+    optionally followed by a ";" comment).
+(7) Improvement: Addition of a "start-expr" production, to clarify what
+    happens if the line is initially indented.  This approach means
+    that read does NOT have to store hidden indentation state after
+    returning.  If the initial line is indented, the expression must be
+    followed by something beginning at the left edge (e.g., a blank line).
+
+These production rules become:
+
+  start-expr -> expr
+    $1
+  start-expr -> INDENT expr DEDENT
+    $2 ; Use "most consistent" approach for handling toplevel indents.
+
+  ; Abbreviations; these are considered first, BEFORE reading as s-expr:
+  expr -> QUOTE expr
+   (list 'quote $2)
+  expr -> QUASIQUOTE expr
+   (list 'quasiquote $2)
+  expr -> UNQUOTE expr
+   (list 'unquote $2)
+  expr -> UNQUOTE-SPLICING expr  ; ,@
+   (list 'unquote-splicing $2)
+
+  ; Note: GROUP is defined so it's only meaningful if it's the first
+  ; non-abbreviation of the line; GROUP has no special effect elsewhere.
+  expr -> GROUP head INDENT body DEDENT
+   (append $2 $4)
+  expr -> GROUP INDENT body DEDENT
+   $3
+  expr -> GROUP head
+   (if (= (length $2) 1)
+       (car $2)
+     $2)
+  expr -> head INDENT body DEDENT
+   (append $1 $3)
+  expr -> head
+   (if (= (length $1) 1)
+       (car $1)
+     $1)
+
+  ; "head" is what happens on ONE line, and a head sequence ends with eol.
+  head-> s-expr head
+   (append $1 $2)
+  head-> s-expr
+   (list $1)
+
+  ; "body" is the set of children lines (from the point-of-view of head)
+  body -> expr body
+    (cons $1 $2)
+  body ->
+   '()
+
+
+===========================================================
+Detailed version of spec
+
+The original spec described primarily in _words_ what to do about whitespace.
+This can make it difficult to implement with certainty, so the following
+is a more detailed version of the production rules, but with whitespace
+rules made explicit as part of the productions (instead of being
+implicit in the English text).  We do this by modifying the
+whitespace preprocessor's description slightly; it will output
+SPACE or TAB if not at beginning of line, and at the end of each line
+it will report NL (newline) or EOF (end of file).  It will NOT consume
+comments (beginning with ";" through EOL).  It will still notice
+the beginning of a line (start of reading, or after NL),
+and conceptually output INDENT or DEDENT as appropriate after NL
+(if it outputs neither after NL, we're on the SAME indentation level).
+EOF can start a whole new expression, but can't be in the middle of one
+(so  ' <EOF> is not legal).
+
+Proposal: Treat as line with only horizontal whitespace as if it's
+a line solely with newline - i.e., as if the horizontal whitespace
+didn't even exist.  After all, you can't see the difference when printing,
+and typically can't see them when editing either.
+This appears to be the safer alternative.
+
+
+get-leading-hspace:
+   sequence <- get sequence of spaces and tabs
+   if memv(peek() '(NL EOF))
+      ""  ; if whitespace followed by newline (no ;), treat as newline-by-self
+      sequence
+
+Here's the state machine of the whitespace processor, described
+in pseudocode using sweet-expressions 0.2:
+
+Start:
+  {newstate <- Leftedge}
+  push("")
+Left-edge:
+  {new-indent <- get-leading-hspace()}
+  {newstate <- process-edge}
+Process-edge:
+  cond
+    {new-indent > peek()}  {newstate <- Normal} push(new-indent) return(INDENT)
+    {new-indent = peek()}  {newstate <- Normal}
+    {new-indent < peek()}  {newstate <- Process-edge} pop() return(DEDENT)
+    else error("Incomparable indents")
+Normal:
+  {c <- get-char()}
+  if memv(c '(NL EOF))
+    {newstate <- Left-edge}
+  return(c)
+
+
+The state machine need not be IMPLEMENTED this way.
+Characters can be peeked, then used there if they aren't NL/EOF;
+if they are NL/EOF then call to find the new line's indent.
+Pass down to routines the string with "current line's indent", and return
+(current-line-indent result)... procedure returns can be the
+equivalent of DEDENT processing, and procedure calls the equivalent
+of INDENT processing.  But it's easier to DESCRIBE this way.
+
+
+
+  ; Definitions of whitespace:
+  eol -> comment? eol-final               ; eol = "end of line"
+  comment -> ";" (not NL|EOF)*   ; Note: does not consume NL or EOF.
+  eol-final -> NL | EOF
+  hspace -> SPACE | TAB
+
+
+  ; Start-up is slightly special (esp. EOF).
+  start-expr -> EOF  ; Consume this EOF, in case it's interactive.
+    $1 ; EOF can only occur at top level, so ' <EOF> is not legal.
+  start-expr -> (SPACE | TAB)* (";" (not NL EOF))? (NL | EOF) start-expr
+    $last ; skip any initial content-free lines.
+  start-expr -> INDENT expr DEDENT
+    $2 ; Use "most consistent" approach for handling toplevel indents.
+  start-expr -> expr
+    $1
+
+
+  ; Abbreviations; these are considered first, BEFORE reading as s-expr:
+  expr -> QUOTE hspace* expr
+   (list 'quote $2)
+  expr -> QUASIQUOTE hspace* expr
+   (list 'quasiquote $2)
+  expr -> UNQUOTE hspace* expr
+   (list 'unquote $2)
+  expr -> UNQUOTE-SPLICING hspace* expr  ; ,@
+   (list 'unquote-splicing $2)
+  ; Note: Abbreviations only accept expr at tail, not eol? INDENT body DEDENT.
+  ; Therefore, you can't have an abbreviation symbol followed by a newline,
+  ; you MUST follow it with an expression.
+
+  ; In actual code, you can't tell between GROUP and head until an
+  ; s-expr is read in.  So in the implementation, read in an s-expr,
+  ; then look at the s-expr to see if it's "group" or not.
+  expr -> GROUP hspace* head INDENT body DEDENT
+   (append $2 $4)
+  expr -> GROUP hspace* INDENT body DEDENT
+   $3
+  expr -> GROUP hspace* head
+   (if (= (length $2) 1)
+       (car $2)
+     $2)
+  expr -> head INDENT body DEDENT
+   (append $1 $3)
+  expr -> head
+   (if (= (length $1) 1)
+       (car $1)
+     $1)
+
+  head -> s-expr hspace+ head ; hspace+ can be read with hspace*
+   (append $1 $3)
+  head -> s-expr hspace* eol
+   (list $1)
+
+  body -> expr body
+    (cons $1 $2)
+  body ->
+   '()       ; No more children
+  body -> comment eol-final body
+   $2        ; Skip comment lines with the same indentation
+
+  ; s-expr is a traditional s-expr, aka datum.  It does NOT begin with ";",
+  ; hspace, NL, or EOF.  To implement it, the I-expression reader calls
+  ; the _previous_ reader of datum.
+  ; When processing "expr", the special definitions for
+  ; abbreviations QUOTE etc. take precedence; but if you're processing
+  ; the later entries of "head" (i.e., datums that are NOT the first
+  ; datum on the line), the s-expr reader must handle the abbreviations.
+
+  ; Note: I-expressions do not provide special syntax for improper lists,
+  ; e.g., (a . b).  When you need them, just use s-expressions or cons.
+  ; A _syntax_ for this would be easy, e.g., rules like:
+  ;   head -> s-expr hspace+ "." hspace+ s-expr
+  ; However, it'd be hard to IMPLEMENT, because "." is a leading character
+  ; for many different circumstances (.9, ..., etc.), yet calling the
+  ; underlying reader might not be effective.  E.G., clisp's "read" will
+  ; fail if given a solo ".".  Since you can use s-expressions or cons
+  ; to construct these, there doesn't seem to be a compelling need for such
+  ; a special syntax in I-expressions, anyway... especially given
+  ; their implementation headaches.
+
+
+========================
+
+ISSUE: Leading whitespace at start of expression reading
+in I-expressions
+
+I propose a specific interpretation for leading whitespace in an
+indented I-expression, which I'll call the "most consistent" format.
+Below is an explanation of the problem, and my proposed resolution.
+
+Thoughts?  After fiddling with the alternatives, I'm getting very worried that
+it'd be easy to type in text that would APPEAR to mean one thing, but would
+ACTUALLY mean something else.  That's definitely something to avoid.
+My "most consistent" proposal completely avoids that, without being quite as
+strict as Python's "thou shalt always start any expression at the left edge".
+
+
+First, the problem. What should be done if the start of an expression
+(I'll call that start-expr) begins with whitespace that
+is NOT followed by comments or NL or EOF? E.G.:
+start-expr -> hspace+ (not eol...)
+
+An example should make it clear. Imagine you read this (three lines,
+all indented to the same level at the TOPMOST level):
+   x
+   y
+   z
+
+One interpretation is that there should be 3 different results: x, y, and z.
+But consider how this would be read.
+You'd read in the indentation before x, and note
+that as the "topmost" indentation.  Then you'd read in the indentation
+before y, notice that it was the same as x's, and stop just before reading
+the "y" and return with just "x".
+But wait - if you did that, when you read "y" you would think that there
+was <i>no</i> indentation (the previous read consumed it), and thus z
+would be further indented... returning (y&nbsp;z).  Ooops, that can't be right.
+
+Since essentially the dawn of Lisp in the 1950s
+there has been a "read" function that reads an S-expression
+from the input and returns it.
+This is an extremely stable function interface, and one not easily changed
+in fundamental ways.
+In particular, no user of "read" expects it to <i>also</i> return some
+state - such as the indentation that was read the <i>last</i> time read
+was called - and certainly they aren't going to provide that information
+back to "read" anyway.
+Not only is this difficult to change for backwards-compatibility reasons,
+it's not clear you should - simple interfaces are a good idea, if you can
+get them, and adding such "indentation state" as a required parameter would
+certainly complicate the interface.
+
+In theory, you could "unget" all the indentation characters, so that the
+next read would work correctly.
+But support for this is rare; for example,
+Scheme doesn't even <i>have</i> a standard unget character function, and
+the Common Lisp standard only supports one character unget (not enough!).
+
+You could store "hidden state" inside the read function.
+Problem is, character-reading is not the exclusive domain of the read function;
+many other functions read characters, and they are unlikely to look at this
+hidden state.
+These functions tend to be low-level functions and in some implementations
+are difficult to override.  So you'd probably have inconsistent values
+from different reading functions, a recipe for subtle bugs.
+What's more, you would have to store hidden state for each possible input
+source, and this can become insane in the many implementations that support
+support ports of non-files (such as from strings).
+"Hidden state" could allow for all this, but the complications of
+<i>implementing</i> hidden state suggests that it'd be better to spec
+something that does <i>not</i> require hidden state.
+
+
+
+
+Possible solutions:
+
+1. Simplest approach: Forbid it.  It's an error if it doesn't start on
+left line.  Python does this.  You could argue that the original spec requires
+this, since there's no production that accepts an initial INDENT.
+The xyz example above would then be illegal.
+
+But this is not very flexible; #2 (next) appears to be a better option.
+
+2. Most consistent: Allow indentation on initial line (and consider that
+the indentation for that expression), as long all later lines have
+a further indentation OR are on the left edge (including a blank line
+ending in EOL or EOF, or a comment the left edge).
+Anything on the left edge ends the expression.
+This at least LETS you indent each expression if you like,
+with NO risk of misinterpretation of later lines.
+The result is that you can indent the first lines of expressions.. you just
+have to separate the different expressions with blank lines.
+To implement this:
+start-expr -> INDENT expr DEDENT
+
+The xyz example above would be illegal, and thus rejected.
+However, if you inserted blank lines between x, y, and z, you'd be okay.
+
+This is the most consistent and most flexible, and has no risk of
+misinterpretation, so I propose this one.
+
+3. Original implementation ignores hspace:
+start-expr -> hspace+ start-expr
+  $2
+
+But when this is given the xyz example above, it will misleadingly
+produce (x y z).  That kind of surprise seems undesirable, esp. given
+that there is alternative #2.
+
+4. Instead, could disable indent processing on initial hspace, to maximize
+backwards-compatibility and simplify some command line use:
+start-expr -> hspace+ s-expr
+  $2
+
+This would read in the "xyz" example as you would expect.  It would
+also read in old text like this as it was originally intended:
+  (define x 5) (define y 6)
+
+However, other formats will be misinterpreted, e.g.,
+  fact
+    5
+will be understood as the two separate expressions (requiring two reads):
+  fact
+  5
+and not as (fact 5).
+
+This is risky; on printouts, it might not at ALL be obvious when
+expressions are indented like this - resulting in hard-to-debug code
+and hidden defects.
+
+In general, I think it's much wiser to reject text that might
+be very easily misinterpreted by the reader.  So I suggest #2.
+
+
+
+
+Possible Test patterns
+
+test = (first (second third?)?)?  (SPACE? semicolon - comment)?
+first = abbreviation? t1 (SPACE t2 (SPACE t3)?)?
+t1 = A | GROUP
+t2 = B
+t3 = C
+
+second = first | SPACE first
+third = SPACE first | SPACE SPACE second
+
