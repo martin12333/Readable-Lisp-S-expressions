@@ -10,6 +10,24 @@
 ;
 ; Copyright (C) 2008 by David A. Wheeler.
 ;
+; NOTE: This would be REALLY EASY to implement in Scheme, except for one
+; quirk: most Scheme implementations' "read" function CONSUMES [, ], {, and },
+; instead of treating them as delimiters like space, (, or ).
+; This is even true when the Scheme standards don't permit such characters
+; at all, such as at the end of a number.
+; The only solution is to re-implement "read" in Scheme, but one that
+; DOES treat them as delimiters.  So a simple re-implemention is provided.
+; If your Scheme _does_ treat these characters as delimiters,
+; you can eliminate all of that re-implementation code, and just use your
+; built-in "read" function (which probably has additional extensions that
+; this simple reader does not).
+;
+; You _could_ in a pinch use a standard Scheme reader that didn't
+; consider {} or [] as delimiters.  But then closing characters } and ]
+; must be PRECEDED by a delimiter like a space, and you CANNOT invoke
+; prefixed [] and {} at all.
+
+
 ; Released under the "MIT license":
 ; Permission is hereby granted, free of charge, to any person obtaining a
 ; copy of this software and associated documentation files (the "Software"),
@@ -31,10 +49,127 @@
 
 
 ; Configuration:
-(define modern-backwards-compatible #t) ; If true, "(" triggers old reader.
+(define modern-backwards-compatible #f) ; If true, "(" triggers old reader.
+(define modern-bracketaccess #t) ; If true, "f[...]" => [bracketaccess f ...]
+                                 ; if not, "f[...]" => [f ...].
 
 ; Preserve original read.
 (define old-read read)
+
+; A few useful utilities:
+;
+(define (ismember? item lyst)
+  ; Returns true if item is member of lyst, else false.
+  (pair? (member item lyst)))
+
+(define (debug-result marker value)
+  ; For debugging - you can insert this without adding let, etc., because
+  ; after printing it returns the original value.
+  (newline)
+  (display "DEBUG: ")
+  (display marker)
+  (display " ")
+  (write value)
+  (newline)
+  value)
+
+; Unfortunately, since most Scheme readers will consume [, {, }, and ],
+; we have to re-implement our own Scheme reader.  Ugh.
+; If you fix your Scheme's "read" so that [, {, }, and ] are considered
+; delimiters (and thus not consumed when reading symbols, numbers, etc.),
+; throw away "underlying-read" and just call old-read instead.
+; We WILL call old-read on string reading (that DOES seem to work).
+
+(define modern-delimiters '(#\space #\newline #\( #\) #\[ #\] #\{ #\}))
+
+(define (read-until-delim port delims)
+  ; Read characters until eof or "delims" is seen; do not consume them.
+  ; Returns a list of chars.
+  (let ((c (peek-char port)))
+    (cond
+       ((eof-object? c) '())
+       ((ismember? (peek-char port) delims) '())
+       (#t (cons (read-char port) (read-until-delim port delims))))))
+
+(define (read-number port starting-lyst)
+  (string->number (list->string
+    (append starting-lyst
+      (read-until-delim port modern-delimiters)))))
+
+(define (process-sharp port)
+  ; We've read a # character.  Returns what it represents.
+  (read-char port) ; Remove #
+  (cond
+    ((eof-object? (peek-char port)) (peek-char port))
+    (#t
+      ; Not EOF. Read in the next character, and start acting on it.
+      (let ((c (peek-char port)))
+        (cond
+          ((char=? c #\t)  #t)
+          ((char=? c #\f)  #f)
+          ((ismember? c '(#\i #\e #\b #\o #\d \#x))
+            (read-number port (list #\# c)))
+          ; TODO: Character, Vector
+          (#t (display "ERROR: Unimplemented #\n")))))))
+
+(define (underlying-read port)
+  ; This tiny reader implementation REQUIRES a port value.
+  ; That way, while writing/modifying it, we
+  ; won't forget to pass the port to it.
+  ; Note: This reader is case-sensitive, which is consistent with R6RS
+  ; and guile, but NOT with R5RS.  Most people won't notice, and I
+  ; _like_ case-sensitivity.
+  (skip-whitespace port)
+  (let ((c (peek-char port)))
+    (cond
+      ((eof-object? c) c)
+      ((char=? c #\")      ; old readers tend to handle strings okay, call it.
+        (old-read port))   ; guile 1.8 and gauche/gosh 1.8.11 do it okay.
+      ((ismember? c '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
+        (read-number port '()))
+      ((char=? c #\#) (process-sharp port))
+      ; TODO: initial +/-, initial .
+      ; We'll reimplement abbreviations, (, and ;.
+      ; These actually should be done by modern-read (and thus
+      ; we won't see them), but redoing it here doesn't cost us anything,
+      ; and it makes some kinds of testing simpler.
+      ((char=? c #\')
+        (read-char port)
+        (list 'quote
+          (underlying-read port)))
+      ((char=? c #\`)
+        (read-char port)
+        (list 'quasiquote
+          (underlying-read port)))
+      ((char=? c #\`)
+        (read-char port)
+          (cond
+            ((char=? \#@ (peek-char port))
+              (read-char port)
+              (list 'unquote-splicing
+               (underlying-read port)))
+           (#t 
+            (list 'unquote
+              (underlying-read input-stream eof-error-p
+                            eof-value recursive-p)))))
+      ; The "(" calls modern-read, but since this one shouldn't normally
+      ; be used anyway (modern-read will get first crack at it), it
+      ; doesn't matter:
+      ((char=? c #\( )
+          (read-char port)
+          (my-read-delimited-list #\) port))
+      ((char=? c #\; )
+        (skip-line port)
+        (underlying-read port))
+      (#t ; Nothing else.  Must be a symbol start.
+        (string->symbol (list->string
+          (read-until-delim port modern-delimiters)))))))
+
+
+; End of Scheme reader re-implementation.
+
+
+
 
 ; Utility functions to implement the simple infix system:
 
@@ -79,29 +214,28 @@
 
 
 (define (my-read-delimited-list stop-char port)
-  ; like read-delimited-list, but call modern-read instead.
-  ; Also, has ALL the read parameters.
+  ; like read-delimited-list of Common Lisp, but calls modern-read instead.
+  ; read the "inside" of a list until its matching stop-char, returning list.
   ; TODO: Handle (x . b)
   ; TODO: Handle Error on wrong stop-char.
   ; TODO: Handle EOF in middle.
+  (skip-whitespace port)
   (let
     ((c (peek-char port)))
     ; (print "DEBUG my-read-delimited-list:") (write c)
     (cond
-      ; TODO : if EOF
+      ; TODO : EOF is an error, report it.
+      ((eof-object? c) c)
       ((char=? c stop-char)
         (read-char port)
         '())
-      ((my-is-whitespace c)
-        (read-char port)
-        (my-read-delimited-list stop-char port))
       (#t
         (cons
          (modern-read2 port)
          (my-read-delimited-list stop-char port))))))
 
 (define (my-is-whitespace c)
-  (pair? (member c '(#\space #\newline))))
+  (ismember? c '(#\space #\newline)))
 ; TODO:
 ;   '(#\Space #\Tab #\newline #\Return (code-char 9)    ; Tab
 ;     (code-char 10) (code-char 11)     ; LF, VT
@@ -115,83 +249,86 @@
       (read-char port)
       (skip-whitespace port))))
 
-;!(define (modern-process-tail port prefix)
-;!  ; See if we've just finished reading a prefix, and if so, process.
-;!  ; This recurses, to handle formats like f(x)(y).
-;!  ; This implements prefixed (), [], and {}
-;!  ; (display "Got to tail, prefix is:")
-;!  ; (write prefix)
-;!  ; (display "peek char is:")
-;!  ; (write (peek-char NIL??? input-stream eof-error-p eof-value recursive-p))
-;!  ; (display "Starting...")
-;!  (if (not (or (symbol? prefix) (pair? prefix)))
-;!    prefix  ; Prefixes MUST be symbol or cons; return original value.
-;!    (let ((c (peek-char port)))
-;!      (cond
-;!        ; Portability note: In some Lisps, must check for EOF.
-;!        ((char=? c #\( ) ; ).  Implement f(x).
-;!          (read-char port)
-;!          (modern-process-tail port ;(
-;!            (cons prefix (my-read-delimited-list #\) port)))
-;!        ((char=? c #\[ )
-;!          (read-char port)
-;!          (modern-process-tail port
-;!            (cons 'bracketaccess (cons prefix
-;!              (my-read-delimited-list #\] port)))))
-;!        ((char=? c #\{ )
-;!          (read-char port)
-;!          (modern-process-tail port
-;!            (list prefix
-;!              (process-curly
-;!                (my-read-delimited-list #\} port)))))
-;!        (#t prefix))))))
-
-; TODO - stub
 (define (modern-process-tail port prefix)
-  prefix
-)
+    ; See if we've just finished reading a prefix, and if so, process.
+    ; This recurses, to handle formats like f(x)(y).
+    ; This implements prefixed (), [], and {}
+    ; (display "Got to tail, prefix is:")
+    ; (write prefix)
+    ; (display "peek char is:")
+    ; (write (peek-char NIL??? input-stream eof-error-p eof-value recursive-p))
+    ; (display "Starting...")
+    (if (not (or (symbol? prefix) (pair? prefix)))
+      prefix  ; Prefixes MUST be symbol or cons; return original value.
+      (let ((c (peek-char port)))
+        ; (display "DEBUG - Modern-process tail. Prefix=")
+        ; (write prefix)
+        ; (display "\npeek=")
+        ; (write c)
+        ; (display "\n")
+        (cond
+          ((eof-object? c) c)
+          ((char=? c #\( ) ; ).  Implement f(x).
+            (read-char port)
+            (modern-process-tail port ;(
+              (cons prefix (my-read-delimited-list #\) port))))
+          ((char=? c #\[ )  ; Implement f[x]
+            (read-char port)
+            (modern-process-tail port
+              (if modern-bracketaccess
+                (cons 'bracketaccess (cons prefix
+                  (my-read-delimited-list #\] port)))
+                (cons prefix (my-read-delimited-list #\] port)))))
+          ((char=? c #\{ )  ; Implement f{x}
+            (read-char port)
+            (modern-process-tail port
+              (list prefix
+                (process-curly
+                  (my-read-delimited-list #\} port)))))
+          (#t prefix)))))
+
+
+(define (skip-line port)
+  ; Skip every character in the line - end on EOF or newline.
+  (let ((c (peek-char port)))
+    (cond
+      ((not (or (eof-object? c) (char=? c #\newline)))
+        (read-char port)
+        (skip-line port)))))
 
 (define (modern-read2 port)
   ; Read using "modern Lisp notation".
   ; This implements unprefixed (), [], and {}
   (skip-whitespace port)
-  ; TODO: Add (tail ...)
   (modern-process-tail port
     (let ((c (peek-char port)))
-      (display "modern-read2 peeked at: ")
-      (write c)
+      ; (display "modern-read2 peeked at: ")
+      ; (write c)
       (cond
-        ; Portability note: In other Lisps, must check for EOF.
-        ; Portability note: May need to change the below in other
-        ; Common Lisp implementations - this works for clisp.
         ; We need to directly implement abbreviations ', etc., so that
         ; we retain control over the reading process.
+        ((eof-object? c) c)
         ((char=? c #\')
           (read-char port)
           (list 'quote
             (modern-read2 port)))
-        ; PROBLEM.  DOES NOT WORK:
-        ; ((char=? c #\`)
-        ;   (read-char input-stream eof-error-p eof-value recursive-p)
-        ;   (list 'system::backquote
-        ;     (modern-read2 input-stream eof-error-p eof-value recursive-p)))
-        ; ((char=? c #\,)
-        ;   (read-char input-stream eof-error-p eof-value recursive-p)
-        ;   (cond
-        ;     ((char=? \#@
-        ;           (peek-char NIL??? input-stream eof-error-p
-        ;                          eof-value recursive-p))
-        ;       (read-char input-stream eof-error-p eof-value recursive-p)
-        ;       (list 'system::splice
-        ;        (modern-read2 input-stream eof-error-p
-        ;                      eof-value recursive-p)))
-        ;    (#t 
-        ;     (list 'system::unquote
-        ;       (modern-read2 input-stream eof-error-p
-        ;                     eof-value recursive-p)))))
+        ((char=? c #\`)
+          (read-char port)
+          (list 'quasiquote
+            (modern-read2 port)))
+        ((char=? c #\,)
+          (read-char port)
+            (cond
+              ((char=? #\@ (peek-char port))
+                (read-char port)
+                (list 'unquote-splicing
+                 (modern-read2 port)))
+             (#t 
+              (list 'unquote
+                (modern-read2 port)))))
         ((char=? c #\( ) ; )
           (if modern-backwards-compatible
-            (old-read port)
+            (underlying-read port)
             (begin
               (read-char port) ; (
               (my-read-delimited-list #\) port))))
@@ -202,12 +339,13 @@
           (read-char port)
           (process-curly
             (my-read-delimited-list #\} port)))
-        (#t (let ((result (old-read port)))
-                (display "DEBUG result = ")
-                (write result)
-                (display "\nDEBUG peek after= ")
-                (write (peek-char port))
-                ; (print "DEBUG after-read:")
+        ((char=? c #\; )  ; Handle ";" directly, so we don't lose control.
+          (skip-line port)
+          (modern-read2 port))
+        (#t (let ((result (underlying-read port)))
+                ; (display "DEBUG result = ")
+                ; (write result)
+                ; (display "\nDEBUG peek after= ")
                 ; (write (peek-char port))
                 result))))))
 
