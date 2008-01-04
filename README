@@ -42,6 +42,8 @@ By Alan Manuel Gloria.
 
 * modern.cl: "Modern Lisp" reader, Common Lisp.
 
+* modern.scm: "Modern Lisp" reader, Scheme.
+
 * spec-indent.txt: Detailed specification information on I-expressions.
 
 * sugar.scm: an implementation of an I-expression reader, defined in

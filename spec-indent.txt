@@ -28,17 +28,34 @@ Here are the productions from SRFI-49, with these fixes/changes:
     "(list $1)" (a spec bug),
 (3) the missing rule for UNQUOTE-SPLICING has been added (spec bug),
 (4) they are reordered so the GROUP productions are adjacent.
-(5) Clarification: Any line containing only spaces and tabs is treated
-    identically to a line containing NO spaces or tabs.  Otherwise,
-    printed text could not be understood with certainty.
+(5) Improvement: Addition of a "start-expr" production, to clarify what
+    happens if the line is initially indented, and a specific proposed
+    action:  If the initial line is indented, the expression must be
+    followed by something beginning at the left edge (including a blank line).
+    There are many different ways to handle initial indentation;
+    this is specified so that initial indentation has an "intuitive"
+    meaning, yet the read does NOT have to store hidden indentation state
+    after returning.  (See below for more discussion.)
 (6) Clarification: At the start of an expression, content-free lines are
     skipped (these are lines with zero or more initial spaces and tabs,
     optionally followed by a ";" comment).
-(7) Improvement: Addition of a "start-expr" production, to clarify what
-    happens if the line is initially indented.  This approach means
-    that read does NOT have to store hidden indentation state after
-    returning.  If the initial line is indented, the expression must be
-    followed by something beginning at the left edge (e.g., a blank line).
+(7) Clarification: Any line containing only spaces and tabs is treated
+    identically to a line containing NO spaces or tabs.  Rationale:
+    Otherwise, printed text could not be understood with certainty.
+(8) Proposed clarification: ANY line containing only leading spaces and tabs,
+    followed by a ";"-leading comment, is COMPLETELY IGNORED, even in the
+    middle of an expression.  This means that even its indentation is ignored.
+
+    *** THIS IS UNDER DISCUSSION IN THE MAILING LIST. ***
+    Rationale: This means that people do not need to "line up" indentation
+    of comments - handy for "FIXME" comments or long comments to explain a
+    complicated circumstance.  Since this ONLY applies to comment-only lines,
+    blank lines still end an expression - making interactive use pleasant.
+    More importantly, there's no difference between interactive and
+    non-interactive use - so no need for a "mode" flag (which can be hard
+    to always get right), and you can always cut-and-paste
+    from a file to an interactive session.
+
 
 These production rules become:
 

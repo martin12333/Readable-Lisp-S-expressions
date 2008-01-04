@@ -36,6 +36,12 @@
 clisp << TESTCOMMANDS
 (load "modern.cl")
 
+(princ "Defining reader-test function:")
+(defun reader-test (correct-value)
+  (assert (equal (modern-read) correct-value)))
+
+(princ "Now running tests; you should see a bunch of NILs")
+
 ; Test lower-level routines:
 
 (assert (even-and-op-prefix '+ '(+ 4)))
@@ -64,31 +70,32 @@ clisp << TESTCOMMANDS
 
 
 ; Test Reader itself:
-(assert (equal (modern-read) 'testing123))
+
+(reader-test 'testing123)
 testing123
 
-(assert (equal (modern-read) '(hi)))
+(reader-test '(hi))
   (hi)
 
-(assert (equal (modern-read) '(hi)))
+(reader-test '(hi))
   [hi]
 
-(assert (equal (modern-read) '(+ 3 4)))
+(reader-test '(+ 3 4))
   {3 + 4}
 
-(assert (equal (modern-read) '(a (b))))
+(reader-test '(a (b)))
   (a(b))
 
-(assert (equal (modern-read) '(f a)))
+(reader-test '(f a))
   f(a)
 
-(assert (equal (modern-read) '(bracketaccess f a)))
+(reader-test '(bracketaccess f a))
   f[a]
 
-(assert (equal (modern-read) '(f (+ 2 3))))
+(reader-test '(f (+ 2 3)))
   f{2 + 3}
 
-(assert (equal (modern-read) '((f a) b)))
+(reader-test '((f a) b))
   f(a)(b)
 
 (assert (consp (modern-read)))
@@ -97,43 +104,60 @@ testing123
 (assert (equal (car (modern-read)) 'quote))
   'x
 
-(assert (equal (modern-read) '(quote x)))
+(reader-test '(quote x))
   'x
 
-(assert (equal (modern-read) '(+ 2 3)))
+(reader-test '(+ 2 3))
   {2 + 3}
 
-(assert (equal (modern-read) ''(+ 2 3)))
+(reader-test ''(+ 2 3))
   '{2 + 3}
 
-(assert (equal (modern-read) '(f a b c)))
+(reader-test '(f a b c))
   f(a b c)
 
-(assert (equal (modern-read) '(f a b c)))
+(reader-test '(f a b c))
   f(a
     b c)
 
-(assert (equal (modern-read) '(fibup n 2 1 0)))
+(reader-test '(fibup n 2 1 0))
     fibup(n 2 1 0)
 
-(assert (equal (modern-read) '(if (fibup n 2 1 0))))
+(reader-test '(if (fibup n 2 1 0)))
 [if fibup(n 2 1 0)]
 
-(assert (equal (modern-read)
-  '(DEFUN FIBUP (MAX COUNT N-1 N-2)
-   (IF (= MAX COUNT) (+ N-1 N-2) (FIBUP MAX (+ COUNT 1) (+ N-1 N-2) N-1)))))
+(reader-test
+  '(defun fibup (max count n-1 n-2)
+   (if (= max count) (+ n-1 n-2) (fibup max (+ count 1) (+ n-1 n-2) n-1))))
 
 [defun fibup (max count n-1 n-2)
   [if {max = count}
     {n-1 + n-2}
     [fibup max {count + 1} {n-1 + n-2} n-1]]]
 
-(read-preserving-whitespace)
- [defun fibup (max count n-1 n-2)
-   [if {max = count}
-     {n-1 + n-2}
-     [fibup max {count + 1} {n-1 + n-2} n-1]]]
+; Calling "read-preserving-whitespace" with the modern-read table set
+; won't work; when you read this in:
+; [defun fibup (max count n-1 n-2)
+;   [if {max = count}
+;     {n-1 + n-2}
+;     [fibup max {count + 1} {n-1 + n-2} n-1]]]
+;
+; the calls to read-preserving-space STILL consume the space after
+; defun, fibup, etc., resulting in wrong interpretation.
 
+(princ "Problem coming up!")
+
+; The backquote character will be caught by the sh shell, so
+; shell-escape it.  The backslash won't go to the Lisp interpreter.
+(reader-test (quote \`x))
+ \`x
+
+; PROBLEM: comma-lifting not working.
+; Need to re-implement backquote, comma, splicing :-(.
+(reader-test (quote ((system::unquote x))))
+\`[,x]
+
+; Misc. notes - not used:
 ; (assert (equal '{2 + 3} '(+ 2 3)))
 ; 
 ; (assert (equal '{2 * n} '(* 2 n)))

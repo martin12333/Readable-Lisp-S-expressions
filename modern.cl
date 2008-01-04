@@ -1,14 +1,16 @@
 ; modern.cl (Common Lisp), 2008-01-03
 ;
 ; NOTE: NOT READY FOR PRODUCTION USE.
+; Has trouble with comma-lifting, e.g., `(,x)
 ;
 ; Implements "modern Lisp notation".  E.G., f(x) => (f x),
 ; {3 + 4 + 5} => (+ 3 4 5), f{x + 3} => (f (+ x 3),
 ; x[z] => (bracketaccess x z).
 ;
-; Note: This causes a minor change in the semantics of Common Lisp "read".
-; "read" will now act like "read-preserving-whitespace"
-; (and like Scheme's read) - it will NOT consume whitespace AFTER the
+; Call "modern-read" to read a "modern Lisp expression".
+; Note: This read is slightly different from Common Lisp "read" -
+; it acts like "read-preserving-whitespace" and Scheme's "read".
+; It will sometimes examine, but NOT consume, whitespace AFTER the
 ; expression read.  This is needed so that an indentation processor
 ; can be built on top of it.  It also makes more sense, frankly - why
 ; read in things when you don't need them?
@@ -39,14 +41,17 @@
 (setf *backwards-compatible* t) ; If true, "(" triggers old reader.
 
 ; Preserve original read.
-; Actually, this isn't needed in Common Lisp; it's more of a note,
-; since other Lisps will need to replace "read" instead.
-; Use read-preserving-whitespace, not "read", so that we can stack
-; indentation processing on top of this.
-; Note that #' is needed in CL.
+; Actually, this isn't needed in Common Lisp; it's more of a note to
+; help port this code to other Lisps where "read" is replaced.
+; Use read-preserving-whitespace, not "read", so that we don't consume
+; trailing whitespace.
+; Note that #' is needed in Common Lisp (function values are separate);
+; this isn't needed in other Lisps like Scheme.
 (setf old-read #'read-preserving-whitespace)
 (setf old-readtable *readtable*)
 (setf modern-readtable (copy-readtable)) ; Create new readtable.
+
+; If you were overriding "read" directly, you might need these:
 ; (setf old-read-not-unpreserve #'read)
 ; (setf old-paren (get-macro-character #\( )) ;)
 
@@ -101,22 +106,19 @@
   ; TODO: Handle Error on wrong stop-char.
   ; TODO: Handle EOF in middle.
   (let
-    ((c (peek-char nil input-stream eof-error-p eof-value recursive-p)))
-    (print "DEBUG my-read-delimited-list:") (write c)
+    ((c (peek-char nil input-stream eof-error-p eof-value t)))
+    ; (print "DEBUG my-read-delimited-list:") (write c)
     (cond
       ((char= c stop-char)
-        (read-char input-stream eof-error-p eof-value recursive-p)
+        (read-char input-stream eof-error-p eof-value t)
         '())
-      ((consp (member c
-                   '(#\Space #\Tab #\Newline #\Return (code-char 9)    ; Tab
-                     (code-char 10) (code-char 11)     ; LF, VT
-                     (code-char 12) (code-char 13))))  ; FF, CR
-        (read-char input-stream eof-error-p eof-value recursive-p)
+      ((my-is-whitespace c)
+        (read-char input-stream eof-error-p eof-value t)
         (my-read-delimited-list stop-char input-stream
-                                eof-error-p eof-value recursive-p))
+                                eof-error-p eof-value t))
       (t
         (cons
-         (modern-read input-stream eof-error-p eof-value recursive-p)
+         (modern-read2 input-stream eof-error-p eof-value t)
          (my-read-delimited-list stop-char input-stream t nil t))))))
 
 (defun call-old-paren (&optional (input-stream *standard-input*)
@@ -135,15 +137,19 @@
     (setf *readtable* modern-readtable)
     result))
 
+(defun my-is-whitespace (c)
+  (consp (member c
+    '(#\Space #\Tab #\Newline #\Return (code-char 9)    ; Tab
+      (code-char 10) (code-char 11)     ; LF, VT
+      (code-char 12) (code-char 13)))))  ; FF, CR
+  
+
 (defun skip-whitespace (&optional (input-stream *standard-input*)
                         eof-error-p eof-value recursive-p)
   ; Consume whitespace.  Double-define to make SURE we get them all.
   (cond
-    ( (consp (member (peek-char nil input-stream
-                        eof-error-p eof-value recursive-p)
-                   '(#\Space #\Tab #\Newline #\Return (code-char 9)    ; Tab
-                     (code-char 10) (code-char 11)     ; LF, VT
-                     (code-char 12) (code-char 13))))  ; FF, CR
+    ((my-is-whitespace (peek-char nil input-stream
+                        eof-error-p eof-value recursive-p))
       (read-char input-stream eof-error-p eof-value recursive-p)
       (skip-whitespace input-stream eof-error-p eof-value recursive-p))))
 
@@ -162,6 +168,7 @@
     (let ((c (peek-char nil input-stream
                         eof-error-p eof-value recursive-p)))
       (cond
+        ; Portability note: In some Lisps, must check for EOF.
         ((char= c #\( ) ; Implement f(x)
           (read-char input-stream eof-error-p eof-value recursive-p)
           (modern-process-tail
@@ -185,7 +192,18 @@
             input-stream eof-error-p eof-value recursive-p))
         (t prefix)))))
 
-(defun modern-read (&optional (input-stream *standard-input*)
+; TODO JUNK:
+; (defun showme (x)
+;   (cond
+;     ((consp x) (princ "(") (showme (car x))
+;        (cond
+;          ((consp (cdr x)) (princ " ") (showme (cdr x)))
+;          (t               (princ " . ") (showme (cdr x)))
+;                (princ ")"))
+;     ((null x) (princ "()"))
+;     (t (prin1 x))))
+
+(defun modern-read2 (&optional (input-stream *standard-input*)
                                eof-error-p eof-value recursive-p)
   ; Read using "modern Lisp notation".
   ; This implements unprefixed (), [], and {}
@@ -194,13 +212,34 @@
   (modern-process-tail
     (let ((c (peek-char nil input-stream eof-error-p eof-value recursive-p)))
       (cond
-        ; NOTE: EOF. In some dialects, must check for that directly.
-        ; TODO: Directly implement abbreviations like ', so NOT overriding
-        ; "read" will still work reasonably well.
+        ; Portability note: In other Lisps, must check for EOF.
+        ; Portability note: May need to change the below in other
+        ; Common Lisp implementations - this works for clisp.
+        ; We need to directly implement abbreviations ', etc., so that
+        ; we retain control over the reading process.
         ((char= c #\')
           (read-char input-stream eof-error-p eof-value recursive-p)
           (list 'quote
-            (modern-read input-stream eof-error-p eof-value recursive-p)))
+            (modern-read2 input-stream eof-error-p eof-value recursive-p)))
+        ; PROBLEM.  DOES NOT WORK:
+        ; ((char= c #\`)
+        ;   (read-char input-stream eof-error-p eof-value recursive-p)
+        ;   (list 'system::backquote
+        ;     (modern-read2 input-stream eof-error-p eof-value recursive-p)))
+        ; ((char= c #\,)
+        ;   (read-char input-stream eof-error-p eof-value recursive-p)
+        ;   (cond
+        ;     ((char= \#@
+        ;           (peek-char nil input-stream eof-error-p
+        ;                          eof-value recursive-p))
+        ;       (read-char input-stream eof-error-p eof-value recursive-p)
+        ;       (list 'system::splice
+        ;        (modern-read2 input-stream eof-error-p
+        ;                      eof-value recursive-p)))
+        ;    (t 
+        ;     (list 'system::unquote
+        ;       (modern-read2 input-stream eof-error-p
+        ;                     eof-value recursive-p)))))
         ((char= c #\( ) ; )
           (if *backwards-compatible*
             ; We could do this, _if_ we could change read:
@@ -225,8 +264,12 @@
           (process-curly
             (my-read-delimited-list #\}
                     input-stream eof-error-p eof-value t)))
-        (t (funcall old-read input-stream
-                    eof-error-p eof-value recursive-p))))
+        (t (let ((result (funcall old-read input-stream
+                   eof-error-p eof-value recursive-p)))
+                ; (print "DEBUG after-read:")
+                ; (write (peek-char nil input-stream eof-error-p
+                ;         eof-value recursive-p))
+                result))))
     input-stream eof-error-p eof-value recursive-p))
 
 
@@ -256,28 +299,34 @@
 
 (defun startup-modern-read (stream char)
   (unread-char char stream)
-  (modern-read stream nil nil t))
+  (modern-read2 stream nil nil t))
 
-(defun startup-modern-tail (stream char)
-  (unread-char char stream)
-  (modern-process-tail stream nil nil t))
+; (defun startup-modern-tail (stream char)
+;  (unread-char char stream)
+;  (modern-process-tail '() stream nil nil t))
 
 ; Now, set up readtable.
 
-; When you see (, [, or {, invoke modern reader.
-; (Actually, only the nil is truly necessary.  But since we're here anyway,
-; we may as well directly invoke the reader.)
+; When you see various characters, invoke modern reader
+; (this keeps the reader in control)
 (set-macro-character #\[ #'startup-modern-read nil modern-readtable)
 (set-macro-character #\{ #'startup-modern-read nil modern-readtable)
 (set-macro-character #\( #'startup-modern-read nil modern-readtable)
+(set-macro-character #\' #'startup-modern-read nil modern-readtable)
+(set-macro-character #\` #'startup-modern-read nil modern-readtable)
+(set-macro-character #\, #'startup-modern-read nil modern-readtable)
 
 ; This is necessary, else a cuddled ] or } will be part of an atom: 
 (set-macro-character #\] (get-macro-character #\) ) nil modern-readtable)
 (set-macro-character #\} (get-macro-character #\) ) nil modern-readtable)
 
-; Install it!
-(setf *readtable* modern-readtable)
-
+(defun modern-read (&optional (input-stream *standard-input*)
+                               eof-error-p eof-value recursive-p)
+  (setf *readtable* modern-readtable)
+  (let 
+    ((result (modern-read2 input-stream eof-error-p eof-value recursive-p)))
+    (setf *readtable* old-readtable)
+    result))
 
 ; Install it!
 ; The "symbol-function" stuff is because CL has separate "function" values
