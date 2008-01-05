@@ -1,7 +1,9 @@
 ; modern.cl (Common Lisp), 2008-01-03
 ;
 ; NOTE: NOT READY FOR PRODUCTION USE.
-; Has trouble with comma-lifting, e.g., `(,x)
+; Has trouble with comma-lifting, backquoting, comma-splicing, e.g., `(,x)
+; The problem is that there doesn't seem to be a standard representation
+; for them in Common Lisp, as there is for Scheme.
 ;
 ; Implements "modern Lisp notation".  E.G., f(x) => (f x),
 ; {3 + 4 + 5} => (+ 3 4 5), f{x + 3} => (f (+ x 3),

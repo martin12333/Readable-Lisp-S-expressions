@@ -156,108 +156,190 @@
 
 (reader-test '(- -8 9))
 
+(reader-test '(string<? "\\a" "\\b"))
+
+(reader-test '(define (fibfast n) (if (< n 2) n (fibup n 2 1 0))))
+(reader-test
+ '(define (fibup max count n-1 n-2)
+    (if (= max count) (+ n-1 n-2)
+      (fibup max (+ count 1) (+ n-1 n-2) n-1))))
+
+(reader-test '(define (fibfast n) (if (< n 2) n (fibup n 2 1 0))))
+(reader-test
+ '(define (fibup max count n-1 n-2)
+    (if (= max count) (+ n-1 n-2)
+      (fibup max (+ count 1) (+ n-1 n-2) n-1))))
+
+(reader-test '(a . b))
+
+(reader-test '(a . b))
+
+(reader-test 'b) ; ( . b) is not _required_ by Scheme, but it's common and
+; it'll mean there's a portable way to express the group symbol in I-expr.
+
+(reader-test 'hi)
+
+(reader-test 'a123)
+
+(reader-test '(x y))
+
+(reader-test '#(0 1 2))
+
+(reader-test '())
+
+(reader-test '(f . b))
+
+; Common Lisp example
+
+(reader-test
+ '(defun factorial (n)
+   (if (<= n 1)
+       1
+       (* n (factorial (- n 1))))))
+
+(reader-test
+ '(defun factorial (n)
+   (if (<= n 1)
+       1
+       (* n (factorial (- n 1))))))
+
+; Scheme example
+
+(reader-test
+ '(define (factorial n)
+   (if (<= n 1)
+       1
+       (* n (factorial (- n 1))))))
+
+(reader-test
+ '(define (factorial n)
+   (if (<= n 1)
+       1
+       (* n (factorial (- n 1))))))
+
+; BitC  example (slightly tweaked)
+(reader-test
+'(define (fact (: x int32))
+  (cond ((< x 0) (- (fact (- x))))
+        ((= x 0) 1)
+        (otherwise
+          (* x (fact (- x 1)))))))
+
+(reader-test
+'(define (fact (: x int32))
+  (cond ((< x 0) (- (fact (- x))))
+        ((= x 0) 1)
+        (otherwise
+          (* x (fact (- x 1)))))))
+
+; Nested expression.
+
+(reader-test '(and (<= 1 x 10)  (> x 0)))
+(reader-test '(and (<= 1 x 10)  (> x 0)))
+
+(reader-test
+'(defun replace-html-chars (start end)
+  "Replace '&lt;' to '&amp;lt;' and other chars in HTML.
+This works on the current selection."
+  (interactive "r")
+  (save-restriction
+    (narrow-to-region start end)
+    (goto-char (point-min))
+    (while (search-forward "&" nil t) (replace-match "&amp;" nil t))
+    (goto-char (point-min))
+    (while (search-forward "<" nil t) (replace-match "&lt;" nil t))
+    (goto-char (point-min))
+    (while (search-forward ">" nil t) (replace-match "&gt;" nil t)))))
+
+(reader-test
+'(defun replace-html-chars (start end)
+  "Replace '&lt;' to '&amp;lt;' and other chars in HTML.
+This works on the current selection."
+  (interactive "r")
+  (save-restriction
+    (narrow-to-region start end)
+    (goto-char (point-min))
+    (while (search-forward "&" nil t) (replace-match "&amp;" nil t))
+    (goto-char (point-min))
+    (while (search-forward "<" nil t) (replace-match "&lt;" nil t))
+    (goto-char (point-min))
+    (while (search-forward ">" nil t) (replace-match "&gt;" nil t)))))
+
+; This is AutoCAD Lisp.
+
+(reader-test
+'(DEFUN C:FIND ()
+  (SETQ SA (GETSTRING T "\nEnter string for search parameter: "))
+  (SETQ AR (SSGET "X" (LIST (CONS 1 SA))))
+  (IF (= AR NIL) (ALERT "This string does not exist"))
+  (SETQ SB (SSLENGTH AR))
+  (C:CONT)))
+
+(reader-test
+'(DEFUN C:CONT ()
+  (SETQ SB (- SB 1))
+  (SETQ SC (SSNAME AR SB))
+  (SETQ SE (ENTGET SC))
+  (SETQ SJ (CDR (ASSOC 1 SE)))
+  (IF (= SJ SA)
+    (PROGN
+      (SETQ H (CDR (ASSOC 10 SE)))
+      (SETQ X1 (LIST (- (CAR H) 50) (- (CADR H) 50)))
+      (SETQ X2 (LIST (+ 50 (CAR H)) (+ 50 (CADR H))))
+      (COMMAND "ZOOM" "W" X1 X2))
+    (C:CONT))
+  (IF (= SB 0) (ALERT "END OF SELECTIONS"))
+  (SETQ A (+ SB 1))
+  (SETQ A (RTOS A 2 0))
+  (SETQ A
+    (STRCAT "\nThere are <" A "> selections Enter CONT to advance to next"))
+  (IF (= SB 0) (EXIT))
+  (PRINC A)
+  (PRINC)))
+
+(reader-test
+'(DEFUN C:FIND ()
+  (SETQ SA (GETSTRING T "\nEnter string for search parameter: "))
+  (SETQ AR (SSGET "X" (LIST (CONS 1 SA))))
+  (IF (= AR NIL) (ALERT "This string does not exist"))
+  (SETQ SB (SSLENGTH AR))
+  (C:CONT)))
+
+(reader-test
+'(DEFUN C:CONT ()
+  (SETQ SB (- SB 1))
+  (SETQ SC (SSNAME AR SB))
+  (SETQ SE (ENTGET SC))
+  (SETQ SJ (CDR (ASSOC 1 SE)))
+  (IF (= SJ SA)
+    (PROGN
+      (SETQ H (CDR (ASSOC 10 SE)))
+      (SETQ X1 (LIST (- (CAR H) 50) (- (CADR H) 50)))
+      (SETQ X2 (LIST (+ 50 (CAR H)) (+ 50 (CADR H))))
+      (COMMAND "ZOOM" "W" X1 X2))
+    (C:CONT))
+  (IF (= SB 0) (ALERT "END OF SELECTIONS"))
+  (SETQ A (+ SB 1))
+  (SETQ A (RTOS A 2 0))
+  (SETQ A
+    (STRCAT "\nThere are <" A "> selections Enter CONT to advance to next"))
+  (IF (= SB 0) (EXIT))
+  (PRINC A)
+  (PRINC)))
 
 
-;!!   (reader-test ''(+ 2 3))
-;!!     '{2 + 3}
-;!!   
-;!!   (reader-test '(f a b c))
-;!!     f(a b c)
-;!!   
-;!!   (reader-test '(f a b c))
-;!!     f(a
-;!!       b c)
-;!!   
-;!!   (reader-test '(fibup n 2 1 0))
-;!!       fibup(n 2 1 0)
-;!!   
-;!!   (reader-test '(if (fibup n 2 1 0)))
-;!!   [if fibup(n 2 1 0)]
-;!!   
-;!!   (reader-test
-;!!     '(defun fibup (max count n-1 n-2)
-;!!      (if (= max count) (+ n-1 n-2) (fibup max (+ count 1) (+ n-1 n-2) n-1))))
-;!!   
-;!!   [defun fibup (max count n-1 n-2)
-;!!     [if {max = count}
-;!!       {n-1 + n-2}
-;!!       [fibup max {count + 1} {n-1 + n-2} n-1]]]
-;!!   
-;!!   ; Calling "read-preserving-whitespace" with the modern-read table set
-;!!   ; won't work; when you read this in:
-;!!   ; [defun fibup (max count n-1 n-2)
-;!!   ;   [if {max = count}
-;!!   ;     {n-1 + n-2}
-;!!   ;     [fibup max {count + 1} {n-1 + n-2} n-1]]]
-;!!   ;
-;!!   ; the calls to read-preserving-space STILL consume the space after
-;!!   ; defun, fibup, etc., resulting in wrong interpretation.
-;!!   
-;!!   (princ "Problem coming up!")
-;!!   
-;!!   ; The backquote character will be caught by the sh shell, so
-;!!   ; shell-escape it.  The backslash won't go to the Lisp interpreter.
-;!!   (reader-test (quote \`x))
-;!!    \`x
-;!!   
-;!!   ; PROBLEM: comma-lifting not working.
-;!!   ; Need to re-implement backquote, comma, splicing :-(.
-;!!   (reader-test (quote ((system::unquote x))))
-;!!   \`[,x]
-;!!   
-;!!   ; Misc. notes - not used:
-;!!   ; (assert (equal '{2 + 3} '(+ 2 3)))
-;!!   ; 
-;!!   ; (assert (equal '{2 * n} '(* 2 n)))
-;!!   ; (assert (equal '{x eq y} '(eq x y)))
-;!!   ; (assert (equal '{2 + 3 + 4} '(+ 2 3 4)))
-;!!   ; (assert (equal '{2 + 3 * 4} '(NFX 2 + 3 * 4)))
-;!!   ; (assert (equal '{(- x) / 2} '(/ (- x) 2)))
-;!!   ; (assert (equal '{x = 3 * 4} '(nfx x = 3 * 4)))
-;!!   ; (assert (equal '{x = 3} '(= x 3)))
-;!!   
-;!!   ; (assert (equal '{2 + {3 * 4}} '(+ 2 (* 3 4))))
-;!!   ; (read)
-;!!   ; '{2 + {3 * 4}}
-;!!   ;(defun f1 (x)
-;!!   ;  (princ "I'm f1"))
-;!!   ;(defun f2 (x)
-;!!   ;  (princ "I'm f2"))
-;!!   ; (princ "Calling f2")
-;!!   ; (f2 'call2)
-;!!   ; (defun f2 (x) (funcall 'f1 x))
-;!!   ; (setf (symbol-function 'f2) (function f1)
-;!!   ; (princ "Calling f2, should print f1")
-;!!   ; (f2 'call2)
-;!!   ; (modern-read)
-;!!   ; [defun fibfast (n)
-;!!   ;   [if {n < 2}
-;!!   ;     n
-;!!   ;     fibup(n 2 1 0)]]
-;!!   ; 
-;!!   ; ; Demo its use:
-;!!   ; 
-;!!   ; [defun fibfast (n)
-;!!   ;   [if {n < 2}
-;!!   ;     n
-;!!   ;     [fibup n 2 1 0]]]
-;!!   ; 
-;!!   ; [defun fibup (max count n-1 n-2)
-;!!   ;   [if {max = count}
-;!!   ;     {n-1 + n-2}
-;!!   ;     [fibup max {count + 1} {n-1 + n-2} n-1]]]
-;!!   ; 
-;!!   ; [setf x 5]
-;!!   ; [setf correct {1 <= x <= 10}]
-;!!   ; 
-;!!   ; ; Test that demo worked correctly:
-;!!   ; (assert (= (fibfast 10) 55))
-;!!   ; (assert correct)
-;!!   ; 
-;!!   ; ; More demos:
-;!!   ; 
-;!!   ; [setf y {3 + {4 * 5}}]
-;!!   ; [setf z {{1 <= x <= 10} and {x > 0}}]
+(reader-test
+'(if (eqv? parent1 'f)
+  (and (eqv? kibi 'f) (eqv? kibi-lied? #t))))
+
+(reader-test
+'(if (eqv? parent1 'f)
+  (and (eqv? kibi 'f) (eqv? kibi-lied? #t))))
+
+
+
+
+
 
 (display "Tests complete!")
 (newline)
@@ -267,3 +349,4 @@
 (display test-correct)
 (newline)
 (quit)
+

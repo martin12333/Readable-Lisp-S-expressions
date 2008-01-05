@@ -82,6 +82,11 @@
   (newline)
   value)
 
+; Define the tab character; a tab is immediately after the backslash.
+; Unfortunately, this seems to be the only portable way to define the
+; tab character in Scheme, so we'll do it once (here) and use it elsewhere.
+(define tab #\	)
+
 ; Unfortunately, since most Scheme readers will consume [, {, }, and ],
 ; we have to re-implement our own Scheme reader.  Ugh.
 ; If you fix your Scheme's "read" so that [, {, }, and ] are considered
@@ -91,7 +96,7 @@
 ; We WILL call old-read on string reading (that DOES seem to work
 ; in common cases, and lets us use the implementation's string extensions).
 
-(define modern-delimiters '(#\space #\newline #\( #\) #\[ #\] #\{ #\}))
+(define modern-delimiters `(#\space #\newline #\( #\) #\[ #\] #\{ #\} ,tab))
 
 (define (read-until-delim port delims)
   ; Read characters until eof or "delims" is seen; do not consume them.
@@ -127,11 +132,16 @@
               (cond
                 ((string-ci=? rest-string "space") #\space)
                 ((string-ci=? rest-string "newline") #\newline)
+                ((string-ci=? rest-string "tab") tab) ; Scheme extension.
                 (#t (read-error "Invalid character name"))))))))))
 
 
 (define (process-sharp port)
   ; We've peeked a # character.  Returns what it represents.
+  ; Note: Since we have to re-implement process-sharp anyway,
+  ; the vector representation #(...) uses my-read-delimited-list, which in
+  ; turn calls modern-read2. Thus, modern-expressions CAN be used inside
+  ; a vector expression.
   (read-char port) ; Remove #
   (cond
     ((eof-object? (peek-char port)) (peek-char port)) ; If eof, return eof. 
@@ -143,7 +153,8 @@
           ((char=? c #\f)  #f)
           ((ismember? c '(#\i #\e #\b #\o #\d #\x))
             (read-number port (list #\# c)))
-          ; TODO: Vector
+          ((char=? c #\( )  ; Vector. 
+            (list->vector (my-read-delimited-list #\) port)))
           ((char=? c #\\) (process-char port))
           (#t (read-error "Invalid #-prefixed string")))))))
 
@@ -186,10 +197,13 @@
           (read-number port (list c))
           (string->symbol (list->string (cons c
             (read-until-delim port modern-delimiters))))))
+
       ; We'll reimplement abbreviations, (, and ;.
       ; These actually should be done by modern-read (and thus
       ; we won't see them), but redoing it here doesn't cost us anything,
-      ; and it makes some kinds of testing simpler.
+      ; and it makes some kinds of testing simpler.  It also means that
+      ; this function is a fully-usable Scheme reader, and thus perhaps
+      ; useful for other purposes.
       ((char=? c #\')
         (read-char port)
         (list 'quote
@@ -218,6 +232,13 @@
       ((char=? c #\; )
         (skip-line port)
         (underlying-read port))
+      ((char=? c #\| )   ; Scheme extension, |...| symbol (like Common Lisp)
+        (read-char port) ; Skip |
+        (let ((newsymbol
+          (string->symbol (list->string
+            (read-until-delim port '(#\|))))))
+          (read-char port)
+          newsymbol))
       (#t ; Nothing else.  Must be a symbol start.
         (string->symbol (list->string
           (read-until-delim port modern-delimiters)))))))
@@ -273,30 +294,39 @@
 (define (my-read-delimited-list stop-char port)
   ; like read-delimited-list of Common Lisp, but calls modern-read instead.
   ; read the "inside" of a list until its matching stop-char, returning list.
-  ; TODO: Handle (x . b)
-  ; TODO: Handle Error on wrong stop-char.
-  ; TODO: Handle EOF in middle.
+  ; This implements a common extension: (. b) return b.
+  ; That could be important for I-expressions, e.g., (. group)
   (skip-whitespace port)
   (let
     ((c (peek-char port)))
-    ; (print "DEBUG my-read-delimited-list:") (write c)
     (cond
-      ; TODO : EOF is an error, report it.
-      ((eof-object? c) c)
+      ((eof-object? c) (read-error "EOF in middle of list") c)
       ((char=? c stop-char)
         (read-char port)
-        '())
+        '()) ;(
+      ((ismember? c '(#\) #\] #\}))  (read-error "Bad closing character") c)
       (#t
-        (cons
-         (modern-read2 port)
-         (my-read-delimited-list stop-char port))))))
+        (let ((datum (modern-read2 port)))
+          (cond
+             ((eq? datum '.)
+               (let ((datum2 (modern-read2 port)))
+                 (skip-whitespace port)
+                 (cond
+                   ((not (eqv? (peek-char port) stop-char))
+                    (read-error "Bad closing character after . datum"))
+                   (#t
+                     (read-char port)
+                     datum2))))
+             (#t (cons datum
+               (my-read-delimited-list stop-char port)))))))))
 
 (define (my-is-whitespace c)
-  (ismember? c '(#\space #\newline)))
-; TODO:
-;   '(#\Space #\Tab #\newline #\Return (code-char 9)    ; Tab
-;     (code-char 10) (code-char 11)     ; LF, VT
-;     (code-char 12) (code-char 13)))))  ; FF, CR
+  (ismember? c `(#\space #\newline ,tab)))
+; TODO: Possibly support other whitespace chars, e.g.:
+;    #\return
+;   (code-char 10) (code-char 11)     ; LF, VT
+;   (code-char 12) (code-char 13)))))  ; FF, CR
+;   If so, also modify the "delimiters" list above.
   
 
 (define (skip-whitespace port)
@@ -310,19 +340,9 @@
     ; See if we've just finished reading a prefix, and if so, process.
     ; This recurses, to handle formats like f(x)(y).
     ; This implements prefixed (), [], and {}
-    ; (display "Got to tail, prefix is:")
-    ; (write prefix)
-    ; (display "peek char is:")
-    ; (write (peek-char NIL??? input-stream eof-error-p eof-value recursive-p))
-    ; (display "Starting...")
     (if (not (or (symbol? prefix) (pair? prefix)))
       prefix  ; Prefixes MUST be symbol or cons; return original value.
       (let ((c (peek-char port)))
-        ; (display "DEBUG - Modern-process tail. Prefix=")
-        ; (write prefix)
-        ; (display "\npeek=")
-        ; (write c)
-        ; (display "\n")
         (cond
           ((eof-object? c) c)
           ((char=? c #\( ) ; ).  Implement f(x).
