@@ -193,6 +193,10 @@ didn't even exist.  After all, you can't see the difference when printing,
 and typically can't see them when editing either.
 This appears to be the safer alternative.
 
+TODO: The text below is excessively complex, so the risk
+of mis-implementation is high.  Switch to a description where
+SAME is also returned, and describe the indentation processing
+in a more procedural way.
 
 get-leading-hspace:
    sequence <- get sequence of spaces and tabs
@@ -495,28 +499,31 @@ be very easily misinterpreted by the reader.  So I suggest #2.
 ========================
 ISSUE: Blank and comment-only lines after initial line of an expression.
 
+    *** THIS IS UNDER DISCUSSION IN THE MAILING LIST. ***
+
 After the initial line of an expression,
-any line containing only zero or more leading spaces and tabs, followed by
-a ";"-leading comment, is COMPLETELY IGNORED, even in the
-middle of an expression.  Even its indentation is ignored!
+any line containing only zero or more leading spaces and tabs,
+FOLLOWED by a ";"-leading comment, is COMPLETELY IGNORED, even in the
+middle of an expression.  In particular, its indentation is ignored.
 This is consistent with the original definition of I-expressions.
 
-The proposed change is to consider lines with ONLY horizontal
-whitespace to be the same as a line with no characters at all, AND
-to have blank lines end the expression.
+The proposed change is to (1) consider lines with ONLY horizontal
+whitespace - and NO semicolon-leading comment - to be the same as a line
+with no characters at all, AND (2) to have blank lines end an expression.
 
 If lines with only zero or more horizontal whitespace are completely
-ignored, as the original spec stated, then interaction is painful;
-results would print only after the first line of the NEXT expression
-are entered.
+ignored, as the original spec stated, then interactive use is painful.
+Results would print only after the first line of the NEXT expression
+are entered.  Even the "sample implementation" in the spec didn't
+actually do this.
 
 To make interactivity pleasant, at least lines with absolutely no
 characters should end an expression after the first line.  That way,
 "Enter enter" will cause an expression to be executed.
 
 Then the question becomes, how should a line with ONLY 1 or more
-spaces/tabs be interpreted?  They COULD be interpreted as
-"continue the indentation" if they matched the indenation of the
+spaces/tabs (and no ;-comments) be interpreted?  They COULD be interpreted
+as "continue the indentation" if they matched the indentation of the
 previous line that didn't have just a comment. Problem is, this
 could lead to mysterious bugs.
 Printed or displayed text could not be understood with certainty; a
@@ -524,20 +531,33 @@ line that looked empty COULD mean either "expression completed" OR
 "expression continues", leading to hard-to-debug code.
 To create vertical space, just use a ;-leading comment.
 
-    *** THIS IS UNDER DISCUSSION IN THE MAILING LIST. ***
-    Rationale: This means that people do not need to "line up" indentation
-    of comments. This is useful for "FIXME" comments, or for
-    long comments to explain a complicated circumstance which is deeply
-    indented.  Since this ONLY applies to ;-comment-only lines,
-    blank lines (without comments) still end an expression - so
-    interactive use is still pleasant.  Most importantly, there's no
-    need for a difference between interactive and non-interactive use -
-    there's no need for a "mode" flag (which can be hard to get right),
-    and you can always cut-and-paste from a file into an interactive session.
+It is true that Python 2.5 in _interactive_ mode distinguishes
+between lines with no characters (not even whitespace) and lines
+with only whitespace.  In interactive mode, a line with no characters
+ends an expression, while lines with whitespace are considered relevant
+(and can continue further lines).  However, Python 2.5 in
+_file-reading_ mode has different semantics - it ignores both types of
+lines (they have no effect on indentation).  This difference in modes
+has the problem that it can cause cutting-and-pasting from a file to
+an interactive session to fail, which is unfortunate.
+But it's even more difficult for a Lisp-based system; it's often even
+more difficult to be certain when a session is interactive or not -
+there is no standard way for doing so.  This distinction of
+interactive and non-interactive modes is very inconvenient, and
+should be avoided if practical.
 
-    TODO: If this proposal is acceptable (or another one found that's even
-    better), reword the clarifications to merge this in, and modify the
-    "more detailed spec" to match the new set.
+Note that this does NOT change how comment-only lines, preceded by
+only 0+ spaces and tabs, are interpreted - these are STILL completely
+ignored, and any indentation they have is considered irrelevant.
+Thus, people will not need to "line up" indentation
+of comments. This is useful for "FIXME" comments, or for
+long comments to explain a complicated circumstance which is deeply
+indented.  Since this ONLY applies to ;-comment-only lines,
+blank lines (without comments) still end an expression - so
+interactive use is still pleasant.  Most importantly, there's no
+need for a difference between interactive and non-interactive use -
+there's no need for a "mode" flag (which can be hard to get right),
+and you can always cut-and-paste from a file into an interactive session.
 
 ========================
 Possible Test patterns
