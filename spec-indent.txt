@@ -67,6 +67,13 @@ Here are the productions from SRFI-49, with these fixes/changes:
     better), reword the clarifications to merge this in, and modify the
     "more detailed spec" to match the new set.
 
+(9) Proposed clarification: the term "group" ONLY has the
+    special meaning below if it begins with "G" or "g".  An I-expression
+    parser MUST NOT interpret it as an I-expression group otherwise, to
+    permit the underlying implementation's escape mechanisms to be used.
+
+    TODO: Rewrite below, if accepted.
+
 
 These production rules become:
 
