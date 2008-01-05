@@ -1,16 +1,16 @@
 I-expressions: Detailed Specification
 David A. Wheeler
-2008-01-01
+2008-01-05
 
-SRFI-49 (http://srfi.schemers.org/srfi-49/srfi-49.html) provides a
-pretty good system for indentation, but there are some issues with it.
-The spec has a few errors, and the BNF productions don't include much
-information on the whitespace-handling (which may explain why the sample
-implementation has bugs in handling comments in certain constructs)...
-instead, much of the whitespace handling is described only informally.
-In addition, the sample code isn't obviously related to the BNF productions,
-so it's difficult to be confident that the code is correct even if that
-bug was fixed.
+SRFI-49 (http://srfi.schemers.org/srfi-49/srfi-49.html dated 2005/05/29)
+provides a pretty good system for indentation, but there are some issues
+with it.  The spec has a few errors, and the BNF productions don't
+include much information on the whitespace-handling (which may explain
+why the sample implementation has bugs in handling comments in certain
+constructs).  Instead, much of the whitespace handling is described
+only informally.  In addition, the sample code isn't obviously related
+to the BNF productions, so it's difficult to be confident that the code
+is correct even if that bug was fixed.
 
 So, below are step-by-step transforms of the
 SRFI-49 rules.  The first one is a mild "fix-up" of the SFRI rules;
@@ -22,39 +22,77 @@ It may be easier to simply re-implement the spec, given the details,
 so that we can be more confident that the final code is correct.
 
 ===========================================================
-Here are the productions from SRFI-49, with these fixes/changes:
-(1) the "head" productions' "expr" are changed to "s-expr" (minor spec bug),
-(2) the rule for "head-> s-expr" is changed from "(list expr)" to
-    "(list $1)" (minor spec bug),
-(3) the missing rule for UNQUOTE-SPLICING has been added (minor spec bug),
-(4) they are reordered so the GROUP productions are adjacent (editorial),
-(5) Improvement: Addition of a "start-expr" production, to clarify what
-    happens if the line is initially indented, and a specific additional
-    rule: If the initial line is indented, the expression must be
-    followed by something beginning at the left edge (including a blank line).
-    The original specification forbid initial indentation, but this turns
-    out to have been overly strict.
-    There are many different ways to handle initial indentation; the rule
-    specified here was selected so that initial indentation has the "obvious"
-    meaning, yet read does NOT have to store hidden indentation state
-    after returning.  (See below for more discussion about indentation
-    of the first line of an expression.)
-(6) Clarification: At the start of an expression, content-free lines are
-    skipped (these are lines with zero or more initial spaces and tabs,
-    optionally followed by a ";"-leading comment).
-(7) Clarification: ANY line containing ONLY spaces and tabs is treated
-    identically to a line containing NO spaces or tabs.  Rationale:
-    Otherwise, printed text could not be understood with certainty; a
-    line that looked empty COULD mean either "expression completed" OR
-    "expression continues", leading to hard-to-debug code.
-    To create vertical space, just use a ;-leading comment.
-(8) Proposed clarification: ANY line containing only leading spaces and tabs,
-    followed by a ";"-leading comment, is COMPLETELY IGNORED, even in the
-    middle of an expression.  Even its indentation is ignored!
+The SRFI-49 spec productions are modified as follows:
+
+(1) Fix spec bug: the "head" productions' "expr" are changed to "s-expr"
+
+(2) Fix spec bug: the rule for "head-> s-expr" is changed from "(list expr)"
+    to "(list $1)"
+
+(3) Fix spec bug: the missing rule for UNQUOTE-SPLICING has been added
+
+(4) Editorial: rules are reordered so the GROUP productions are adjacent
+
+(5) Relaxation of rule: This version adds a "start-expr" production,
+    which defines reading the first line of an expression, and adds a new
+    rule to permit indented initial lines:
+        start-expr -> INDENT expr DEDENT
+
+    Rationale: The original specification completely forbid initial
+    indentation, but this turns out to have been overly strict.  See below
+    for details about various alternatives. This alternative was selected
+    because it has the "obvious" meaning, yet does NOT require "read"
+    to store hidden indentation state after returning.  Many other
+    alternatives required hidden state or could be easily misleading
+    (resulting in subtle bugs).  This means that if initial expressions
+    are all indented, they must be separated with blank lines.
+
+(6) Proposed bug-fix: After the FIRST line of an expression, any
+    line with ONLY spaces and tabs (and no comments)
+    is considered the same as one with no horizontal whitespace;
+    in either case, they end the expression.
+
+    This is only a small change from the spec text as literally written.
+    A line with zero or more horizontal whitespace characters followed by
+    a ;-comment, aka an "empty line", is (still) ALWAYS ignored
+    and not considered for indentation processing. In addition,
+    a line with ONLY horizontal whitespace characters, aka a
+    "blank line" (it has only blanks), is (still) ignored and skipped
+    when reading the first line of an expression, and is not considered
+    for indentation processing.
+
+    Rationale: If the spec were followed literally,
+    interactivity would be quite unpleasant; the results of an
+    expression would NEVER be written until after the next
+    expression's first line was entered.
+    In addition, printed and displayed text could not be understood with
+    certainty - a line that looked completely blank COULD mean either
+    "expression completed" OR "expression continues", depending on the
+    invisible whitespace indentation - leading to hard-to-debug code.
+
+    This bug-fix makes it clear that entering a blank (whitespace-only)
+    line at the end of an expression will cause
+    it to be executed.  I-expressions were specifically designed
+    so that they will work the same way whether they are entered
+    interactively or via a file, enabling cut-and-paste
+    and avoiding the complexities of a "mode" flag.
+    Note that the sample _implementation_ did not actually follow the
+    spec as worded either; this is considered a bug in the spec.
+
+    To create vertical space, just use a ;-leading comment.  Note that
+    lines with only leading whitespace and ;-comments MAY, but
+    NEED NOT, align with other text - so quick "FIXME" comments, or
+    lengthy comments, need not be forced to match the indentation.
+
+    Note that multiline comments (e.g., #| ... |#) are NOT considered
+    comments by these rules; there is simply no way a
+    single-character-lookahead library implementation can reliably detect
+    such multicharacter sequences without disabling the reader's
+    implementation of # prefixes.
 
     *** THIS IS UNDER DISCUSSION IN THE MAILING LIST. ***
     Rationale: This means that people do not need to "line up" indentation
-    of comments. This is useful for "FIXME" comments, or for
+    of comments.  This ability is useful for "FIXME" comments, or for
     long comments to explain a complicated circumstance which is deeply
     indented.  Since this ONLY applies to ;-comment-only lines,
     blank lines (without comments) still end an expression - so
@@ -65,17 +103,26 @@ Here are the productions from SRFI-49, with these fixes/changes:
 
     TODO: If this proposal is acceptable (or another one found that's even
     better), reword the clarifications to merge this in, and modify the
-    "more detailed spec" to match the new set.
+    "more detailed spec" below to match.
 
-(9) Proposed clarification: the term "group" ONLY has the
+(7) Proposed Clarification: the term "group" ONLY has the
     special meaning below if it begins with "G" or "g".  An I-expression
-    parser MUST NOT interpret it as an I-expression group otherwise, to
-    permit the underlying implementation's escape mechanisms to be used.
+    parser MUST NOT interpret it as an I-expression group otherwise.
 
-    TODO: Rewrite below, if accepted.
+    Rationale: This permits using the underlying implementation's
+    symbol escape mechanisms to express solely the symbol group
+    WITHOUT giving it the special I-expression meaning.  The spec was
+    not clear what an I-expression reader should do with escaped
+    symbols that _mean_ group, but do not start with G or g.
 
+    TODO: If this proposal is acceptable (or another one found that's even
+    better), reword the clarifications to merge this in, and modify the
+    "more detailed spec" below to match.
 
-These production rules become:
+===========================================================
+Updated SRFI-49 spec productions
+
+The modified production rules are:
 
   start-expr -> expr
     $1
@@ -125,7 +172,7 @@ These production rules become:
 ===========================================================
 Detailed version of spec
 
-The original spec described primarily in _words_ what to do about whitespace.
+The original spec described primarily in words what to do about whitespace.
 This can make it difficult to implement with certainty, so the following
 is a more detailed version of the production rules, but with whitespace
 rules made explicit as part of the productions (instead of being
@@ -266,11 +313,47 @@ of INDENT processing.  But it's easier to DESCRIBE this way.
   ; a special syntax in I-expressions, anyway... especially given
   ; their implementation headaches.
 
-
 ========================
 
-ISSUE: Leading whitespace at start of expression reading
-in I-expressions
+The original final I-expression spec says:
+"Unfourtunately, [in Python] the syntaxes of file input and
+interactive input differs slightly...
+[In I-expressions,]
+Each line in a file is either empty (contains only whitepace and/or a
+comment), or contains some code, preceeded by some number of space and/or tab
+characters.
+In the following syntax definition, this initial space, as well as linebreaks,
+is not included in the rules. Instead, preceding any matching, the leading
+space of each line is compared to the leading space of the last non-empty line
+preceeding it, and then removed. If the line is preceeded by more space than
+the last one was, the special symbol INDENT is added..."
+
+Thus, in the original spec, a line with only horizontal whitespace,
+optionally trailed by a comment (presumably a ;-comment), was ignored after
+the first line of an expression.  But this says nothing about what
+happens on the FIRST line of an expression.  In addition, the text implies
+that in I-expressions, the file input and interactive input formats
+are the same, yet this is improbable as stated.  The "obvious" reading
+suggests that blank lines ("Enter Enter") at the end of an expression
+are ignored, but this would mean that in interactive use, the output
+of a first expression would only be produced after the first line of the
+second expression were entered.  This would lead to confusion like this
+(where ">" is an input prompt):
+> + 1 1
+> + 1 2
+2
+> + 1 3
+3
+
+The sample implementation given in SFRI-49 didn't really follow
+the spec of SFRI-49.  For example, it DID accept indentation of the
+first line (though with a problematic semantic), and it DID accept
+blank lines (in some cases) as ending an expression.
+This suggests that these need to be re-thought and more carefully defined
+in a revision.
+
+========================
+ISSUE: Leading whitespace at start of expression reading in I-expressions
 
 I propose a specific interpretation for leading whitespace in an
 indented I-expression, which I'll call the "most consistent" format.
@@ -282,20 +365,19 @@ ACTUALLY mean something else.  That's definitely something to avoid.
 My "most consistent" proposal completely avoids that, without being quite as
 strict as Python's "thou shalt always start any expression at the left edge".
 
-
 First, the initial situation:  The I-expression spec revised 2005/05/29
 does NOT permit an indentation at the beginning of an expression.
 The sample implementation does permit them; it simply skips horizontal
-whitespace on the first line (ignoring them).
-The spec's completely forbidding them is easily done, but is overly
-strict; the "skip horizontal whitespace" approach has unforunate
-consequences.
+whitespace on the first line (ignoring them).  The spec's completely
+forbidding them is easily done, but is overly strict; the
+"skip horizontal whitespace" approach has unforunate consequences
+(as discussed further below).
 
-
-But what SHOULD be done if the start of an expression
+What SHOULD be done if the start of an expression
 (I'll call that start-expr) begins with whitespace that
-is NOT followed by a ;-comments or newline (NL) or end-of-file (EOF)? E.G.:
-start-expr -> hspace+ (not eol...)
+is followed by content (and not just an
+;-comments, newline (NL) or end-of-file (EOF))? E.G.:
+ start-expr -> hspace+ (not eol...)
 
 An example should make it clear. Imagine you read this (three lines,
 all indented to the same level at the TOPMOST level):
@@ -410,8 +492,54 @@ In general, I think it's much wiser to reject text that might
 be very easily misinterpreted by the reader.  So I suggest #2.
 
 
+========================
+ISSUE: Blank and comment-only lines after initial line of an expression.
 
+After the initial line of an expression,
+any line containing only zero or more leading spaces and tabs, followed by
+a ";"-leading comment, is COMPLETELY IGNORED, even in the
+middle of an expression.  Even its indentation is ignored!
+This is consistent with the original definition of I-expressions.
 
+The proposed change is to consider lines with ONLY horizontal
+whitespace to be the same as a line with no characters at all, AND
+to have blank lines end the expression.
+
+If lines with only zero or more horizontal whitespace are completely
+ignored, as the original spec stated, then interaction is painful;
+results would print only after the first line of the NEXT expression
+are entered.
+
+To make interactivity pleasant, at least lines with absolutely no
+characters should end an expression after the first line.  That way,
+"Enter enter" will cause an expression to be executed.
+
+Then the question becomes, how should a line with ONLY 1 or more
+spaces/tabs be interpreted?  They COULD be interpreted as
+"continue the indentation" if they matched the indenation of the
+previous line that didn't have just a comment. Problem is, this
+could lead to mysterious bugs.
+Printed or displayed text could not be understood with certainty; a
+line that looked empty COULD mean either "expression completed" OR
+"expression continues", leading to hard-to-debug code.
+To create vertical space, just use a ;-leading comment.
+
+    *** THIS IS UNDER DISCUSSION IN THE MAILING LIST. ***
+    Rationale: This means that people do not need to "line up" indentation
+    of comments. This is useful for "FIXME" comments, or for
+    long comments to explain a complicated circumstance which is deeply
+    indented.  Since this ONLY applies to ;-comment-only lines,
+    blank lines (without comments) still end an expression - so
+    interactive use is still pleasant.  Most importantly, there's no
+    need for a difference between interactive and non-interactive use -
+    there's no need for a "mode" flag (which can be hard to get right),
+    and you can always cut-and-paste from a file into an interactive session.
+
+    TODO: If this proposal is acceptable (or another one found that's even
+    better), reword the clarifications to merge this in, and modify the
+    "more detailed spec" to match the new set.
+
+========================
 Possible Test patterns
 
 test = (first (second third?)?)?  (SPACE? semicolon - comment)?
