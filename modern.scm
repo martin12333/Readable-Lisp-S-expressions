@@ -2,15 +2,19 @@
 ;
 ; NOTE: NOT READY FOR PRODUCTION USE.
 ;
-; Implements "modern Lisp notation".  E.G., f(x) => (f x),
-; {3 + 4 + 5} => (+ 3 4 5), f{x + 3} => (f (+ x 3),
-; x[z] => (bracketaccess x z).
+; Implements "modern Lisp expressions", aka mod-expressions.
+; These implement "curly infix" and term-prefixing rules. E.G.:
+;  [x y z]     => (x y z)
+;  {3 + 4 + 5} => (+ 3 4 5)
+;  f(x)        => (f x)
+;  f{x + 3}    => (f (+ x 3)
+;  x[z]        => (bracketaccess x z)
 ;
-; Call "modern-read" to read a "modern Lisp expression".
+; Call "modern-read" to read a "modern Lisp expression", aka mod-expression.
 ;
 ; Copyright (C) 2008 by David A. Wheeler.
 ;
-; NOTE: This would be REALLY EASY to implement in Scheme, except for one
+; NOTE: This would be really easy to implement in Scheme, except for one
 ; quirk: most Scheme implementations' "read" function CONSUMES [, ], {, and },
 ; instead of treating them as delimiters like space, (, or ).
 ; This is even true when the Scheme standards don't permit such characters
@@ -21,6 +25,11 @@
 ; you can eliminate all of that re-implementation code, and just use your
 ; built-in "read" function (which probably has additional extensions that
 ; this simple reader does not).
+;
+; If you DO use an ordinary Scheme reader, there is a limitation:
+; the vector notation #(...) could not contain modern notation.
+; In code, just use vector(...) instead.  The best solution, of course,
+; is to build this into your Scheme reader.
 ;
 ; You _could_ in a pinch use a standard Scheme reader that didn't
 ; consider {} or [] as delimiters.  But then closing characters } and ]
@@ -57,7 +66,7 @@
 (define old-read read)
 
 ; A few useful utilities:
-;
+
 (define (ismember? item lyst)
   ; Returns true if item is member of lyst, else false.
   (pair? (member item lyst)))
@@ -77,8 +86,10 @@
 ; we have to re-implement our own Scheme reader.  Ugh.
 ; If you fix your Scheme's "read" so that [, {, }, and ] are considered
 ; delimiters (and thus not consumed when reading symbols, numbers, etc.),
-; throw away "underlying-read" and just call old-read instead.
-; We WILL call old-read on string reading (that DOES seem to work).
+; you can just call old-read instead of using underlying-read below,
+; with the limitation noted above about vector constants #(...).
+; We WILL call old-read on string reading (that DOES seem to work
+; in common cases, and lets us use the implementation's string extensions).
 
 (define modern-delimiters '(#\space #\newline #\( #\) #\[ #\] #\{ #\}))
 
@@ -91,26 +102,66 @@
        ((ismember? (peek-char port) delims) '())
        (#t (cons (read-char port) (read-until-delim port delims))))))
 
+(define (read-error message)
+  (display "Error: ")
+  (display message)
+  '())
+
 (define (read-number port starting-lyst)
   (string->number (list->string
     (append starting-lyst
       (read-until-delim port modern-delimiters)))))
 
-(define (process-sharp port)
-  ; We've read a # character.  Returns what it represents.
-  (read-char port) ; Remove #
+(define (process-char port)
+  ; We've read #\ - returns what it represents.
   (cond
     ((eof-object? (peek-char port)) (peek-char port))
     (#t
       ; Not EOF. Read in the next character, and start acting on it.
-      (let ((c (peek-char port)))
+      (let ((c (read-char port))
+            (rest (read-until-delim port modern-delimiters)))
+        (cond
+          ((null? rest) c) ; only one char after #\ - so that's it!
+          (#t
+            (let ((rest-string (list->string (cons c rest))))
+              (cond
+                ((string-ci=? rest-string "space") #\space)
+                ((string-ci=? rest-string "newline") #\newline)
+                (#t (read-error "Invalid character name"))))))))))
+
+
+(define (process-sharp port)
+  ; We've peeked a # character.  Returns what it represents.
+  (read-char port) ; Remove #
+  (cond
+    ((eof-object? (peek-char port)) (peek-char port)) ; If eof, return eof. 
+    (#t
+      ; Not EOF. Read in the next character, and start acting on it.
+      (let ((c (read-char port)))
         (cond
           ((char=? c #\t)  #t)
           ((char=? c #\f)  #f)
-          ((ismember? c '(#\i #\e #\b #\o #\d \#x))
+          ((ismember? c '(#\i #\e #\b #\o #\d #\x))
             (read-number port (list #\# c)))
-          ; TODO: Character, Vector
-          (#t (display "ERROR: Unimplemented #\n")))))))
+          ; TODO: Vector
+          ((char=? c #\\) (process-char port))
+          (#t (read-error "Invalid #-prefixed string")))))))
+
+(define digits '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
+
+(define (process-period port)
+  ; We've peeked a period character.  Returns what it represents.
+  (read-char port) ; Remove .
+  (let ((c (peek-char port)))
+    (cond
+      ((eof-object? c) '.) ; period eof; return period.
+      ((ismember? c digits)
+        (read-number port (list #\.)))  ; period digit - it's a number.
+      (#t
+        ; At this point, Scheme only requires support for "." or "...".
+        ; As an extension we can support them all.
+        (string->symbol (list->string (cons #\.
+          (read-until-delim port modern-delimiters))))))))
 
 (define (underlying-read port)
   ; This tiny reader implementation REQUIRES a port value.
@@ -124,11 +175,17 @@
     (cond
       ((eof-object? c) c)
       ((char=? c #\")      ; old readers tend to handle strings okay, call it.
-        (old-read port))   ; guile 1.8 and gauche/gosh 1.8.11 do it okay.
-      ((ismember? c '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
+        (old-read port))   ; (guile 1.8 and gauche/gosh 1.8.11 are fine)
+      ((ismember? c digits) ; Initial digit.
         (read-number port '()))
       ((char=? c #\#) (process-sharp port))
-      ; TODO: initial +/-, initial .
+      ((char=? c #\.) (process-period port))
+      ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
+        (read-char port)
+        (if (ismember? (peek-char port) digits)
+          (read-number port (list c))
+          (string->symbol (list->string (cons c
+            (read-until-delim port modern-delimiters))))))
       ; We'll reimplement abbreviations, (, and ;.
       ; These actually should be done by modern-read (and thus
       ; we won't see them), but redoing it here doesn't cost us anything,
@@ -144,7 +201,7 @@
       ((char=? c #\`)
         (read-char port)
           (cond
-            ((char=? \#@ (peek-char port))
+            ((char=? #\@ (peek-char port))
               (read-char port)
               (list 'unquote-splicing
                (underlying-read port)))

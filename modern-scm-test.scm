@@ -88,6 +88,15 @@
 (define (reader-test correct-value)
   (test (modern-read tc) correct-value))
 
+(use-modules (ice-9 debug))
+; (set-breakpoint! trace-subtree 2)
+; (set! (bp-behaviour (get-breakpoint 3)) debug-here)
+(trace modern-read2)
+(trace modern-process-tail)
+(trace my-read-delimited-list)
+(trace underlying-read)
+
+
 (reader-test 'testing123)
 
 (reader-test '(hi))
@@ -130,6 +139,23 @@
 (reader-test '(f a b c))
 (reader-test '(fibup n 2 1 0))
 (reader-test '(if (fibup n 2 1 0)))
+
+(reader-test '(char=? c #\space))
+
+(reader-test '(and #f #t))
+
+(reader-test '(char=?-ci c #\[))
+
+(reader-test '(= i 10))
+
+(reader-test .2)
+
+(reader-test '(a ... b))
+
+(reader-test '(+ 5 6))
+
+(reader-test '(- -8 9))
+
 
 
 ;!!   (reader-test ''(+ 2 3))
