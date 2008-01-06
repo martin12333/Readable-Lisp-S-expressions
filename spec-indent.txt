@@ -211,7 +211,7 @@ The following is psuedocode for key functions, followed by
 modified productions that add specific rules for whitespace processing
 (instead of the English descriptions):
 
-get-leading-hspace()
+define get-leading-hspace()
    {sequence <- get/consume sequence of spaces and tabs}
    if pair?(memv(peek-char() '(NL EOF)))
       ""  ; if newline (no ;), treat as newline-by-self. Don't consume here.
@@ -223,26 +223,42 @@ This is called when INDENT/SAME/DEDENT are being matched; we know we
 have one (it begins with a newline after start-expr), but we need
 to figure out which one.
 
-process-newline()
+define process-line-begin()
   ; only called when handling start-expr, or have a newline in input
-  ; for the latter, consume the newline before calling this.
-  ; returns (1) INDENT, SAME, or DEDENT
-  ; (2) new indentation level
-  ; it conceptually maintains a stack of the indent levels, which can
-  ; be pushed or popped.
-  if eof-object(peek-char()) return eof
+  ; for the latter. Consume the newline BEFORE calling this.
+  ; returns new indentation level; use "whats-indent" to see if it's
+  ; an INDENT, SAME, or DEDENT.
   {new-indent <- get-leading-hspace()}
-  if {peek() = #\; } ; Detect comment-only lines, so we can ignore them.
-    get-comment() consume-nl-ifany() process-newline()
-    cond
-      {new-indent > peek()}  push(new-indent) return(INDENT)
-      {new-indent = peek()}  return(SAME)
-      {new-indent < peek()}  pop() return(DEDENT)
-      else error("Incomparable indents")
-  ; TODO: Discuss consuming "return" when have blank/tab-only line.
+  cond
+    {peek() = #\; }       ; Comment-only line?
+      get-comment()       ; Yes, ignore comment-only lines -
+      consume-nl-ifany()  ; even their indentation is irrelevant.
+      process-line-begin()
+    #t
+      new-indent
+  ; Note: This won't consume "return" when we have a line with no characters,
+  ; or ONLY spaces/tabs.  Instead, it will return all the way back up to
+  ; start-expr.  If we're processing something, it will eventually return
+  ; to complete a start-expr, which returns with the expression.
+  ; If we're _already_ in start-expr, then start-expr will just consume the
+  ; blank line and keep going.
+
+define whats-indent(old-indent new-indent)
+  cond
+    {new-indent > old-indent}  return(INDENT)
+    {new-indent = old-indent}  return(SAME)
+    {new-indent < old-indent}  return(DEDENT)
+    #t                         error("Incomparable indents")
+  
 
 
-Here are the modified production rules, making whitespace explicit:
+Here are the modified production rules, making whitespace explicit.
+The expectation is that in the implementation, each of these nonterminals
+would be implemented by a function; one of its input parameters would be
+the current indentation, and each would return
+(new-indentation result-so-far).  A function can compare the indentation
+that it received when it started with a new-indentation returned
+using what-indent.
 
   ; Definitions of whitespace:
   eol -> comment? eol-final               ; eol = "end of line"
@@ -250,7 +266,7 @@ Here are the modified production rules, making whitespace explicit:
   eol-final -> NL | EOF
   hspace -> SPACE | TAB
 
-  ; Start-up is slightly special (esp. for EOF):
+  ; Start-up is special (esp. for EOF):
   start-expr -> hspace* comment? EOF
     ; Consume this EOF, in case it's interactive - all others should be peeked
     EOF ; EOF is legal at top level (here).  Note that '<EOF> isn't legal
