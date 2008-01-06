@@ -1,6 +1,6 @@
 I-expressions: Detailed Specification
 David A. Wheeler
-2008-01-05
+2008-01-06
 
 SRFI-49 (http://srfi.schemers.org/srfi-49/srfi-49.html dated 2005/05/29)
 provides a pretty good system for indentation, but there are some issues
@@ -49,7 +49,7 @@ The SRFI-49 spec productions are modified as follows:
 
 (6) Proposed bug-fix: After the FIRST line of an expression, any
     line with ONLY zero or more spaces and tabs, and no ;-comment,
-    ends the expression.
+    ENDS the expression.
 
     This is only a small change from the spec text as literally written.
     A line with zero or more horizontal whitespace characters followed by
@@ -63,8 +63,13 @@ The SRFI-49 spec productions are modified as follows:
     Rationale: If the spec were followed literally, interactive use
     would be quite unpleasant. That's because the results of an
     expression would NEVER be written until after the next
-    expression's first line was entered.
-    In addition, printed and displayed text could not be understood with
+    expression's first line was entered, which is very confusing.
+    Here, pressing "Enter Enter" (a blank line) causes execution, which is
+    much clearer.
+
+    The modification also states that lines with JUST spaces and tabs
+    would be considered the same as a line with no characters at all.
+    Otherwise, printed and displayed text could not be understood with
     certainty - a line that looked completely blank COULD mean either
     "expression completed" OR "expression continues", depending on the
     invisible whitespace indentation - leading to hard-to-debug code.
@@ -73,38 +78,22 @@ The SRFI-49 spec productions are modified as follows:
     have only spaces/tabs from lines with no characters can lead to
     many quiet changes in code meaning.
 
-    This bug-fix makes it clear that entering a blank (whitespace-only)
-    line at the end of an expression will cause it to be executed.
+    Note that the sample implementation (in the spec) does not follow the
+    spec production rules - it DOES return on empty lines in
+    some circumstances.  So this is considered a bug in the production rules.
+
     As noted in its spec, I-expressions were specifically designed
     so that they will work the same way whether they are entered
     interactively or via a file, enabling cut-and-paste
-    and avoiding the complexities of a "mode" flag.
-    Note that the sample _implementation_ did not actually follow the
-    spec as worded either; this is considered a bug in the spec.
+    and avoiding the complexities of a "mode" flag (which can be hard
+    to get right).
 
     To create vertical space, just use a ;-leading comment.  Note that
     lines with only leading whitespace and ;-comments MAY, but
     NEED NOT, align with other text - so quick "FIXME" comments, or
-    lengthy comments, need not be forced to match the indentation.
-
-    Note that multiline comments (e.g., #| ... |#) are NOT considered
-    comments by these rules; there is simply no way a
-    library implementation can reliably detect
-    such multicharacter sequences without disabling the reader's
-    implementation of # prefixes, because they are limited in many
-    languages to single character lookahead.
+    lengthy comments, need not match the indentation.
 
     *** THIS IS UNDER DISCUSSION IN THE MAILING LIST. ***
-    Rationale: This means that people do not need to "line up" indentation
-    of comments.  This ability is useful for "FIXME" comments, or for
-    long comments to explain a complicated circumstance which is deeply
-    indented.  Since this ONLY applies to ;-comment-only lines,
-    blank lines (without comments) still end an expression - so
-    interactive use is still pleasant.  Most importantly, there's no
-    need for a difference between interactive and non-interactive use -
-    so there's no need for a "mode" flag (which can be hard to get right),
-    and you can always cut-and-paste from a file into an interactive session.
-
     TODO: If this proposal is acceptable (or another one found that's even
     better), reword the clarifications to merge this in, and modify the
     "more detailed spec" below to match.
@@ -182,15 +171,15 @@ is a more detailed version of the production rules, but with whitespace
 rules made explicit as part of the productions (instead of being
 implicit in the English text).
 
-Instead of havng an anonymous "whitespace preprocessor", we will have
-a special rule that can consume a line's initial indentation, and
+Instead of having an anonymous "whitespace preprocessor", we will
+define a special rule that can consume a line's initial indentation, and
 compare that with the currently-active indentation.
-It can then produce INDENT, DEDENT, or SAME (for same indentation).
+It can then produce INDENT, DEDENT, or SAME (for the same indentation).
 During processing of the start-expr rule, the "current" indentation is
 the empty string, and it can start immediately (since this rule only
 applies to new lines).  For the rest of the rules, INDENT, DEDENT or
 SAME can only match if the currently-being-processed character is newline
-or EOF.  It will output INDENT if the new line is further indented,
+or EOF.  It will match INDENT if the new line is further indented,
 DEDENT for each level of dedenting, and SAME if it's the same level of
 indenting.
 
@@ -224,10 +213,14 @@ have one (it begins with a newline after start-expr), but we need
 to figure out which one.
 
 define process-line-begin()
-  ; only called when handling start-expr, or have a newline in input
-  ; for the latter. Consume the newline BEFORE calling this.
-  ; returns new indentation level; use "whats-indent" to see if it's
-  ; an INDENT, SAME, or DEDENT.
+  ; Used by the productions OTHER that start-expr; consume the newline
+  ; (which is the current character if you peek), and return the new
+  ; indentation text.  Do NOT use this in start-expr, because start-expr
+  ; need NOT begin with a newline.
+  ; Use "whats-indent" to see if the indentation text returned is
+  ; an INDENT, SAME, DEDENT, or an error.
+  ; The following consumes the newline - and complains if it's NOT a newline
+  if {(read-char) char-ne? #\newline) error("process-line-begin miscalled")
   {new-indent <- get-leading-hspace()}
   cond
     {peek() = #\; }       ; Comment-only line?
@@ -258,7 +251,10 @@ would be implemented by a function; one of its input parameters would be
 the current indentation, and each would return
 (new-indentation result-so-far).  A function can compare the indentation
 that it received when it started with a new-indentation returned
-using what-indent.
+using what-indent.  Note that some of the $values are changed in below,
+because when the whitespace symbols were inserted they caused the positions
+of the other non-terminals to change.  In some cases $last is used, so that
+it'd be more likely to be right as the text below was edited.
 
   ; Definitions of whitespace:
   eol -> comment? eol-final               ; eol = "end of line"
@@ -269,7 +265,11 @@ using what-indent.
   ; Start-up is special (esp. for EOF):
   start-expr -> hspace* comment? EOF
     ; Consume this EOF, in case it's interactive - all others should be peeked
-    EOF ; EOF is legal at top level (here).  Note that '<EOF> isn't legal
+    ; Note: get hspace* using get-leading-hspace, and NOT by skipping the
+    ; space (because we need to retain those characters for examination)
+    ; and NOT by invoking process-line begin (because that presumes that we're
+    ; beginning with a newline, not necessarily true here)
+    $last ; EOF is legal at top level (here).  Note that '<EOF> isn't legal
   start-expr -> hspace* comment? NL start-expr
     $last ; skip any initial content-free lines.
   start-expr -> INDENT expr DEDENT
@@ -285,22 +285,24 @@ using what-indent.
   ; Abbreviations; these are considered first (have higher priority)
   ; that the abbreviation processing built into the nonterminal "s-expr".
   ; That way, we do NOT leave indentation processing merely because we had
-  ; one of the 4 standard abbreviations:
+  ; one of the standard abbreviations, preventing certain misleading formats.
   expr -> QUOTE hspace* SAME? expr
-   (list 'quote $2)
+   (list 'quote $last)
   expr -> QUASIQUOTE hspace* SAME? expr
-   (list 'quasiquote $2)
-  expr -> UNQUOTE hspace* SAME? expr
-   (list 'unquote $2)
+   (list 'quasiquote $last)
+  expr -> UNQUOTE hspace* SAME? expr   ; , without a following @
+   (list 'unquote $last)
   expr -> UNQUOTE-SPLICING hspace* SAME? expr  ; ,@
-   (list 'unquote-splicing $2)
+   (list 'unquote-splicing $last)
   ; Note: Abbreviations only accept expr at their tail; they
-  ; do NOT (by intent) accept "eol? INDENT body DEDENT". The latter
-  ; would imply that abbreviations can have multiple arguments - but
-  ; they can't!  Thus, if an abbreviation symbol is followed by a newline,
-  ; the next line that isn't a comment-only line must have the SAME
-  ; indentation level... which prevents nonsense like a ' with two arguments.
-  ; And notice that an expr is required, so '<EOF> is not legal.
+  ; do NOT (by intent) accept "INDENT body DEDENT" instead of expr.
+  ; If they did, that would imply that abbreviations can have multiple
+  ; arguments (because bodies can have more than one entry) - but they can't!
+  ; Thus, if an abbreviation symbol is followed by hspace* newline,
+  ; the next line (that isn't a comment-only line) must have the SAME
+  ; indentation level. This prevents nonsense like a ' with two arguments.
+  ; Notice that an expr is required after an abbreviation,
+  ; so '<EOF> is not legal.
 
   ; In actual code, you can't distinguish between GROUP and head until the
   ; leading s-expr is read in.  So in the implementation:
@@ -310,13 +312,13 @@ using what-indent.
   ;     was G/g, then it is GROUP... else it is not.
   ;
   expr -> GROUP hspace* head INDENT body DEDENT
-   (append $2 $4)
+   (append $3 $5)
   expr -> GROUP hspace* INDENT body DEDENT
-   $3
+   $4
   expr -> GROUP hspace* head
-   (if (= (length $2) 1)
-       (car $2)
-     $2)
+   (if (= (length $last) 1)
+       (car $last)
+     $last)
   expr -> head INDENT body DEDENT
    (append $1 $3)
   expr -> head  ; followed by DEDENT or SAME
@@ -333,18 +335,26 @@ using what-indent.
    ; this production is followed by EOF or newline (newline is represented
    ; here as part of the indentation token)
 
-  ; "body" describes the sequence of child lines:
-  body -> expr SAME? body
-    (cons $1 $2)
-    ; The read of "SAME?" is where an implementation would typically
-    ; determine what to do next.  If it's SAME, we have another
-    ; body.  If it's DEDENT, we've ended the list of bodies.
-    ; It won't be INDENT; that would be handled by expr, not body.
-  body ->
-   '()       ; No more children.  This will be a DEDENT in caller,
-             ; ending the sequence of bodies. But the DEDENT is actually
-             ; consumed by the caller (one of the expr productions),
-             ; not this production.
+  ; "body" describes the sequence of child lines.
+  ; It's impossible to have the sequence INDENT DEDENT, there MUST be
+  ; something in between.  Thus, when body is first called, it cannot
+  ; match the "empty" rule of the I-expression spec.  Thus, we'll rewrite
+  ; the rule as a body followed by body-tail, because that's
+  ; easier to implement.
+  body -> expr body-tail
+    (cons $1 $last)
+  body-tail -> SAME body
+    $1
+    ; It's another line at the SAME indentation, so we have another body.
+  body-tail ->
+    '()
+    ; No more children.  This will be a DEDENT in caller,
+    ; ending the sequence of bodies. But the DEDENT is actually
+    ; consumed by the caller (one of the expr productions),
+    ; not this production, so we'll write the production rule this way.
+    ; If it's DEDENT, we've ended the list of bodies.
+    ; Note: It would be illegal to be INDENT; INDENT would be handled
+    ; by expr, not body.
 
   ; s-expr is a traditional s-expr, aka datum.  It does NOT begin with
   ; ";", hspace, NL, or EOF.
@@ -664,6 +674,24 @@ interactive use is still pleasant.  Most importantly, there's no
 need for a difference between interactive and non-interactive use -
 there's no need for a "mode" flag (which can be hard to get right),
 and you can always cut-and-paste from a file into an interactive session.
+
+===================
+Notes about multiline comments
+
+Note that multiline comments (e.g., #| ... |#) are NOT considered
+comments by these rules. There is simply no way a
+library implementation can reliably detect
+such multicharacter sequences without disabling the reader's
+implementation of # prefixes, because they are limited in many
+languages to single character lookahead.  A #| will be considered
+an s-expr by the indentation processor.  The following uses of #|
+are known to be safe and not misleading:
+  * #| _inside_ an s-expression; in this case indentation processing
+    isn't happening.
+  * #|...|#, where the opening "#|" is the first non-whitespace on the
+    line, nothing trails the line after the closing |#, and
+    the opening #| is indented the same way as the first
+    non-comment-only line following the closing #|.
 
 ========================
 Possible Test patterns
