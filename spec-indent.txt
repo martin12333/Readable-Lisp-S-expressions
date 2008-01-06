@@ -262,7 +262,13 @@ it'd be more likely to be right as the text below was edited.
   eol-final -> NL | EOF
   hspace -> SPACE | TAB
 
-  ; Start-up is special (esp. for EOF):
+  ; Start-up is special (esp. for EOF handling).
+  ; INDENT-NO-NL, DEDENT-NO-NL, and SAME-NO-NL are like INDENT, DEDENT, and
+  ; SAME, but they do NOT start with a newline.  Thus, they do NOT consume
+  ; an initial newline.  We use these, because in start-expr we are ALREADY
+  ; at the start of a new line, while in all other productions, we don't
+  ; transition to a new line until we see the newline character.
+
   start-expr -> hspace* comment? EOF
     ; Consume this EOF, in case it's interactive - all others should be peeked
     ; Note: get hspace* using get-leading-hspace, and NOT by skipping the
@@ -272,14 +278,17 @@ it'd be more likely to be right as the text below was edited.
     $last ; EOF is legal at top level (here).  Note that '<EOF> isn't legal
   start-expr -> hspace* comment? NL start-expr
     $last ; skip any initial content-free lines.
-  start-expr -> INDENT expr DEDENT
+  start-expr -> INDENT-NO-NL expr DEDENT-NO-NL
     $2 ; Use "most consistent" approach for handling toplevel indents.
-  start-expr -> expr SAME
+    ; Note that DEDENT-NO-NL does NOT consume a newline; that was already
+    ; done in expr.
+  start-expr -> expr SAME-NO-NL
     $1 ; this is an expression starting at the left edge.
     ; Notice that we have no way of knowing when we're "done" until we
     ; read the next line, and see that it has effectively a left-edge-start
     ; (because it's a whitespace-only line, or because it's another expr
-    ; starting at the left edge).
+    ; starting at the left edge).  Note that SAME-NO-NL does NOT consume a
+    ; newline; that consumption was already done by expr.
 
   ; "expr" describes a single expression/datum.
   ; Abbreviations; these are considered first (have higher priority)
