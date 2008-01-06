@@ -10,16 +10,16 @@ why the sample implementation has bugs in handling comments in certain
 constructs).  Instead, much of the whitespace handling is described
 only informally.  In addition, the sample code isn't obviously related
 to the BNF productions, so it's difficult to be confident that the code
-is correct even if that bug was fixed.
+is correct even if its known bugs were fixed.
 
 So, below are step-by-step transforms of the
 SRFI-49 rules.  The first one is a mild "fix-up" of the SFRI rules;
 the second takes the first and adds whitespace rules that are
 (mostly) implicit in the text, as well as proposing a way to deal
-with "initial indent".
-
-It may be easier to simply re-implement the spec, given the details,
-so that we can be more confident that the final code is correct.
+with "initial indent".  The goal is to make the specification more
+detailed, in a step-by-step fashion, and then create an implementation
+that is "obviously correct" from the detailed spec.
+That way, we can be much more confident that the code is correct.
 
 ===========================================================
 The SRFI-49 spec productions are modified as follows:
@@ -48,9 +48,8 @@ The SRFI-49 spec productions are modified as follows:
     are all indented, they must be separated with blank lines.
 
 (6) Proposed bug-fix: After the FIRST line of an expression, any
-    line with ONLY spaces and tabs (and no comments)
-    is considered the same as one with no horizontal whitespace;
-    in either case, they end the expression.
+    line with ONLY zero or more spaces and tabs, and no ;-comment,
+    ends the expression.
 
     This is only a small change from the spec text as literally written.
     A line with zero or more horizontal whitespace characters followed by
@@ -58,21 +57,25 @@ The SRFI-49 spec productions are modified as follows:
     and not considered for indentation processing. In addition,
     a line with ONLY horizontal whitespace characters, aka a
     "blank line" (it has only blanks), is (still) ignored and skipped
-    when reading the first line of an expression, and is not considered
-    for indentation processing.
+    when reading the first line of an expression (and not considered
+    for identation processing).
 
-    Rationale: If the spec were followed literally,
-    interactivity would be quite unpleasant; the results of an
+    Rationale: If the spec were followed literally, interactive use
+    would be quite unpleasant. That's because the results of an
     expression would NEVER be written until after the next
     expression's first line was entered.
     In addition, printed and displayed text could not be understood with
     certainty - a line that looked completely blank COULD mean either
     "expression completed" OR "expression continues", depending on the
     invisible whitespace indentation - leading to hard-to-debug code.
+    What's worse, many tools (including editors and email clients) quietly
+    remove trailing whitespace, so differentiating between lines that
+    have only spaces/tabs from lines with no characters can lead to
+    many quiet changes in code meaning.
 
     This bug-fix makes it clear that entering a blank (whitespace-only)
-    line at the end of an expression will cause
-    it to be executed.  I-expressions were specifically designed
+    line at the end of an expression will cause it to be executed.
+    As noted in its spec, I-expressions were specifically designed
     so that they will work the same way whether they are entered
     interactively or via a file, enabling cut-and-paste
     and avoiding the complexities of a "mode" flag.
@@ -86,9 +89,10 @@ The SRFI-49 spec productions are modified as follows:
 
     Note that multiline comments (e.g., #| ... |#) are NOT considered
     comments by these rules; there is simply no way a
-    single-character-lookahead library implementation can reliably detect
+    library implementation can reliably detect
     such multicharacter sequences without disabling the reader's
-    implementation of # prefixes.
+    implementation of # prefixes, because they are limited in many
+    languages to single character lookahead.
 
     *** THIS IS UNDER DISCUSSION IN THE MAILING LIST. ***
     Rationale: This means that people do not need to "line up" indentation
@@ -98,7 +102,7 @@ The SRFI-49 spec productions are modified as follows:
     blank lines (without comments) still end an expression - so
     interactive use is still pleasant.  Most importantly, there's no
     need for a difference between interactive and non-interactive use -
-    there's no need for a "mode" flag (which can be hard to get right),
+    so there's no need for a "mode" flag (which can be hard to get right),
     and you can always cut-and-paste from a file into an interactive session.
 
     TODO: If this proposal is acceptable (or another one found that's even
@@ -176,65 +180,69 @@ The original spec described primarily in words what to do about whitespace.
 This can make it difficult to implement with certainty, so the following
 is a more detailed version of the production rules, but with whitespace
 rules made explicit as part of the productions (instead of being
-implicit in the English text).  We do this by modifying the
-whitespace preprocessor's description slightly; it will output
-SPACE or TAB if not at beginning of line, and at the end of each line
-it will report NL (newline) or EOF (end of file).  It will NOT consume
-comments (beginning with ";" through EOL).  It will still notice
-the beginning of a line (start of reading, or after NL),
-and conceptually output INDENT or DEDENT as appropriate after NL
-(if it outputs neither after NL, we're on the SAME indentation level).
-EOF can start a whole new expression, but can't be in the middle of one
-(so  ' <EOF> is not legal).
+implicit in the English text).
 
-Proposal: Treat as line with only horizontal whitespace as if it's
-a line solely with newline - i.e., as if the horizontal whitespace
-didn't even exist.  After all, you can't see the difference when printing,
+Instead of havng an anonymous "whitespace preprocessor", we will have
+a special rule that can consume a line's initial indentation, and
+compare that with the currently-active indentation.
+It can then produce INDENT, DEDENT, or SAME (for same indentation).
+During processing of the start-expr rule, the "current" indentation is
+the empty string, and it can start immediately (since this rule only
+applies to new lines).  For the rest of the rules, INDENT, DEDENT or
+SAME can only match if the currently-being-processed character is newline
+or EOF.  It will output INDENT if the new line is further indented,
+DEDENT for each level of dedenting, and SAME if it's the same level of
+indenting.
+
+Note that EOF can start a whole new expression, but can't be in
+the middle of one.  Thus, a ' followed by EOF is not legal, but
+EOF is perfectly legal result of start_expr (it's how a correctly-terminated
+file would end).
+
+A current proposal is to treat as line with only horizontal
+whitespace as if it's a line solely with newline - i.e.,
+as if the horizontal whitespace didn't even exist.
+After all, you can't see the difference when printing,
 and typically can't see them when editing either.
 This appears to be the safer alternative.
+That's what the text below does.
 
-TODO: The text below is excessively complex, so the risk
-of mis-implementation is high.  Switch to a description where
-SAME is also returned, and describe the indentation processing
-in a more procedural way.
+The following is psuedocode for key functions, followed by
+modified productions that add specific rules for whitespace processing
+(instead of the English descriptions):
 
-get-leading-hspace:
-   sequence <- get sequence of spaces and tabs
-   if memv(peek() '(NL EOF))
-      ""  ; if whitespace followed by newline (no ;), treat as newline-by-self
-      sequence
+get-leading-hspace()
+   {sequence <- get/consume sequence of spaces and tabs}
+   if pair?(memv(peek-char() '(NL EOF)))
+      ""  ; if newline (no ;), treat as newline-by-self. Don't consume here.
+      sequence ; return new indent level
 
-Here's the state machine of the whitespace processor, described
-in pseudocode using sweet-expressions 0.2:
+Here's the whitespace processor, described
+in pseudocode using sweet-expressions 0.2.
+This is called when INDENT/SAME/DEDENT are being matched; we know we
+have one (it begins with a newline after start-expr), but we need
+to figure out which one.
 
-Start:
-  {newstate <- Leftedge}
-  push("")
-Left-edge:
+process-newline()
+  ; only called when handling start-expr, or have a newline in input
+  ; for the latter, consume the newline before calling this.
+  ; returns (1) INDENT, SAME, or DEDENT
+  ; (2) new indentation level
+  ; it conceptually maintains a stack of the indent levels, which can
+  ; be pushed or popped.
+  if eof-object(peek-char()) return eof
   {new-indent <- get-leading-hspace()}
-  {newstate <- process-edge}
-Process-edge:
-  cond
-    {new-indent > peek()}  {newstate <- Normal} push(new-indent) return(INDENT)
-    {new-indent = peek()}  {newstate <- Normal}
-    {new-indent < peek()}  {newstate <- Process-edge} pop() return(DEDENT)
-    else error("Incomparable indents")
-Normal:
-  {c <- get-char()}
-  if memv(c '(NL EOF))
-    {newstate <- Left-edge}
-  return(c)
+  if {peek() = #\; } ; Detect comment-only lines, so we can ignore them.
+    get-comment() consume-nl-ifany() process-newline()
+    cond
+      {new-indent > peek()}  push(new-indent) return(INDENT)
+      {new-indent = peek()}  return(SAME)
+      {new-indent < peek()}  pop() return(DEDENT)
+      else error("Incomparable indents")
+  ; TODO: Discuss consuming "return" when have blank/tab-only line.
 
 
-The state machine need not be IMPLEMENTED this way.
-Characters can be peeked, then used there if they aren't NL/EOF;
-if they are NL/EOF then call to find the new line's indent.
-Pass down to routines the string with "current line's indent", and return
-(current-line-indent result)... procedure returns can be the
-equivalent of DEDENT processing, and procedure calls the equivalent
-of INDENT processing.  But it's easier to DESCRIBE this way.
-
-
+Here are the modified production rules, making whitespace explicit:
 
   ; Definitions of whitespace:
   eol -> comment? eol-final               ; eol = "end of line"
@@ -242,34 +250,49 @@ of INDENT processing.  But it's easier to DESCRIBE this way.
   eol-final -> NL | EOF
   hspace -> SPACE | TAB
 
-
-  ; Start-up is slightly special (esp. EOF).
-  start-expr -> EOF  ; Consume this EOF, in case it's interactive.
-    $1 ; EOF can only occur at top level, so ' <EOF> is not legal.
-  start-expr -> (SPACE | TAB)* (";" (not NL EOF))? (NL | EOF) start-expr
+  ; Start-up is slightly special (esp. for EOF):
+  start-expr -> hspace* comment? EOF
+    ; Consume this EOF, in case it's interactive - all others should be peeked
+    EOF ; EOF is legal at top level (here).  Note that '<EOF> isn't legal
+  start-expr -> hspace* comment? NL start-expr
     $last ; skip any initial content-free lines.
   start-expr -> INDENT expr DEDENT
     $2 ; Use "most consistent" approach for handling toplevel indents.
-  start-expr -> expr
-    $1
+  start-expr -> expr SAME
+    $1 ; this is an expression starting at the left edge.
+    ; Notice that we have no way of knowing when we're "done" until we
+    ; read the next line, and see that it has effectively a left-edge-start
+    ; (because it's a whitespace-only line, or because it's another expr
+    ; starting at the left edge).
 
-
-  ; Abbreviations; these are considered first, BEFORE reading as s-expr:
-  expr -> QUOTE hspace* expr
+  ; "expr" describes a single expression/datum.
+  ; Abbreviations; these are considered first (have higher priority)
+  ; that the abbreviation processing built into the nonterminal "s-expr".
+  ; That way, we do NOT leave indentation processing merely because we had
+  ; one of the 4 standard abbreviations:
+  expr -> QUOTE hspace* SAME? expr
    (list 'quote $2)
-  expr -> QUASIQUOTE hspace* expr
+  expr -> QUASIQUOTE hspace* SAME? expr
    (list 'quasiquote $2)
-  expr -> UNQUOTE hspace* expr
+  expr -> UNQUOTE hspace* SAME? expr
    (list 'unquote $2)
-  expr -> UNQUOTE-SPLICING hspace* expr  ; ,@
+  expr -> UNQUOTE-SPLICING hspace* SAME? expr  ; ,@
    (list 'unquote-splicing $2)
-  ; Note: Abbreviations only accept expr at tail, not eol? INDENT body DEDENT.
-  ; Therefore, you can't have an abbreviation symbol followed by a newline,
-  ; you MUST follow it with an expression.
+  ; Note: Abbreviations only accept expr at their tail; they
+  ; do NOT (by intent) accept "eol? INDENT body DEDENT". The latter
+  ; would imply that abbreviations can have multiple arguments - but
+  ; they can't!  Thus, if an abbreviation symbol is followed by a newline,
+  ; the next line that isn't a comment-only line must have the SAME
+  ; indentation level... which prevents nonsense like a ' with two arguments.
+  ; And notice that an expr is required, so '<EOF> is not legal.
 
-  ; In actual code, you can't tell between GROUP and head until an
-  ; s-expr is read in.  So in the implementation, read in an s-expr,
-  ; then look at the s-expr to see if it's "group" or not.
+  ; In actual code, you can't distinguish between GROUP and head until the
+  ; leading s-expr is read in.  So in the implementation:
+  ;   * peek at the first character - remember if it is G/g or not.
+  ;   * read in the s-expr
+  ;   * if the s-expr is the symbol "group", _and_ the first peeked character
+  ;     was G/g, then it is GROUP... else it is not.
+  ;
   expr -> GROUP hspace* head INDENT body DEDENT
    (append $2 $4)
   expr -> GROUP hspace* INDENT body DEDENT
@@ -280,47 +303,90 @@ of INDENT processing.  But it's easier to DESCRIBE this way.
      $2)
   expr -> head INDENT body DEDENT
    (append $1 $3)
-  expr -> head
+  expr -> head  ; followed by DEDENT or SAME
    (if (= (length $1) 1)
        (car $1)
      $1)
 
-  head -> s-expr hspace+ head ; hspace+ can be read with hspace*
+  ; "head" describes multiple datums on one line:
+  head -> s-expr hspace* head ; typically hspace+.
    (append $1 $3)
-  head -> s-expr hspace* eol
+  head -> s-expr hspace* comment?
    (list $1)
+   ; this is the terminating production (the other one recurses to "head");
+   ; this production is followed by EOF or newline (newline is represented
+   ; here as part of the indentation token)
 
-  body -> expr body
+  ; "body" describes the sequence of child lines:
+  body -> expr SAME? body
     (cons $1 $2)
+    ; The read of "SAME?" is where an implementation would typically
+    ; determine what to do next.  If it's SAME, we have another
+    ; body.  If it's DEDENT, we've ended the list of bodies.
+    ; It won't be INDENT; that would be handled by expr, not body.
   body ->
-   '()       ; No more children
-  body -> comment eol-final body
-   $2        ; Skip comment lines with the same indentation
+   '()       ; No more children.  This will be a DEDENT in caller,
+             ; ending the sequence of bodies. But the DEDENT is actually
+             ; consumed by the caller (one of the expr productions),
+             ; not this production.
 
-  ; s-expr is a traditional s-expr, aka datum.  It does NOT begin with ";",
-  ; hspace, NL, or EOF.  To implement it, the I-expression reader calls
-  ; the _previous_ reader of datum.
+  ; s-expr is a traditional s-expr, aka datum.  It does NOT begin with
+  ; ";", hspace, NL, or EOF.
+  ; To implement it, the I-expression reader presumably calls on
+  ; the _previous_ "read" routine for datum.
   ; When processing "expr", the special definitions for
-  ; abbreviations QUOTE etc. take precedence; but if you're processing
+  ; abbreviations QUOTE etc. take precedence, so that indentation
+  ; processing is not accidentally disabled. But, if you're processing
   ; the later entries of "head" (i.e., datums that are NOT the first
   ; datum on the line), the s-expr reader must handle the abbreviations.
+  ; Users could abuse this to make ugly-looking code, but unlike the
+  ; case of the initial expr, this wouldn't confuse the indentation...
+  ; once you're processing later datums on a line, if the line ends in
+  ; an abbreviation, then the next line's indentation is ignored since we
+  ; KNOW we're trying to read in exactly one datum.
+  ; Use a style checker if you want to curb the worst abuses.
 
-  ; Note: I-expressions do not provide special syntax for improper lists,
-  ; e.g., (a . b).  When you need them, just use s-expressions or cons.
-  ; A _syntax_ for this would be easy, e.g., rules like:
-  ;   head -> s-expr hspace+ "." hspace+ s-expr
-  ; However, it'd be hard to IMPLEMENT, because "." is a leading character
-  ; for many different circumstances (.9, ..., etc.), yet calling the
-  ; underlying reader might not be effective.  E.G., clisp's "read" will
-  ; fail if given a solo ".".  Since you can use s-expressions or cons
-  ; to construct these, there doesn't seem to be a compelling need for such
-  ; a special syntax in I-expressions, anyway... especially given
-  ; their implementation headaches.
+
+
+Note: I-expressions do not provide special syntax for improper lists,
+e.g., (a . b).  When you need them, just use s-expressions or cons.
+A _syntax_ for this would be easy, e.g., rules like:
+  head -> s-expr hspace+ "." hspace+ s-expr
+However, it'd be hard to IMPLEMENT, because "." is a leading character
+for many different circumstances (.9, ..., etc.), yet calling the
+underlying reader might not be effective.  E.G., clisp's "read" will
+fail if given a solo ".".  There doesn't seem to be a compelling need
+anyway; you can use s-expressions or cons to construct these,
+and there's an implementation headache to create
+another syntax in I-expressions to implement them.
+
+Other than in start-expr, "INDENT" matches newline followed by a deeper
+indentation than the current one.  Similarly for SAME and DEDENT.
+Thus, INDENT/SAME/DEDENT only match in non-initial lines streams that
+begin with newline or EOF... and obviously, INDENT can't match an EOF.
+
+On a match, all the matching characters (and only those) should be
+consumed.  The exception is EOF: Except for the first rule of
+start-expr, "peek" for EOF and don't consume it.
+
+Note some invariants:
+* You can't follow DEDENT/SAME/INDENT with any hspace - it'd be ambiguous.
+  - Therefore, expr, head, and body can't begin with an hspace.
+
+Goals:
+* Inside a line, you should be able to separate s-expr with hspace+
+* hspace* should be okay at the end of each line, with unchanged meaning.
+  - This is handled by a "head" production
 
 ========================
+Whitespace problems in original spec
+
+Unfortunately, there are several problems in the original spec
+regarding the handling of lines that contain 0+ spaces or tabs,
+possibly followed by a ;-leading comment.
 
 The original final I-expression spec says:
-"Unfourtunately, [in Python] the syntaxes of file input and
+"Unfortunately, [in Python] the syntaxes of file input and
 interactive input differs slightly...
 [In I-expressions,]
 Each line in a file is either empty (contains only whitepace and/or a
@@ -335,11 +401,13 @@ the last one was, the special symbol INDENT is added..."
 Thus, in the original spec, a line with only horizontal whitespace,
 optionally trailed by a comment (presumably a ;-comment), was ignored after
 the first line of an expression.  But this says nothing about what
-happens on the FIRST line of an expression.  In addition, the text implies
-that in I-expressions, the file input and interactive input formats
-are the same, yet this is improbable as stated.  The "obvious" reading
+happens on the FIRST line of an expression; some clarification is needed.
+
+In addition, the text above implies that in I-expressions,
+the file input and interactive input formats are the same.
+Yet this is improbable as stated.  The "obvious" reading of the spec
 suggests that blank lines ("Enter Enter") at the end of an expression
-are ignored, but this would mean that in interactive use, the output
+would be ignored. But this would mean that in interactive use, the output
 of a first expression would only be produced after the first line of the
 second expression were entered.  This would lead to confusion like this
 (where ">" is an input prompt):
@@ -353,8 +421,12 @@ The sample implementation given in SFRI-49 didn't really follow
 the spec of SFRI-49.  For example, it DID accept indentation of the
 first line (though with a problematic semantic), and it DID accept
 blank lines (in some cases) as ending an expression.
-This suggests that these need to be re-thought and more carefully defined
-in a revision.
+This suggests that the spec is not quite accurate, and needs careful
+revision/clarification.
+
+The sections below discuss two issues:
+* Leading whitespace at start of expression reading
+* Blank and comment-only lines after initial line of an expression.
 
 ========================
 ISSUE: Leading whitespace at start of expression reading in I-expressions
@@ -501,17 +573,18 @@ ISSUE: Blank and comment-only lines after initial line of an expression.
 
     *** THIS IS UNDER DISCUSSION IN THE MAILING LIST. ***
 
-After the initial line of an expression,
-any line containing only zero or more leading spaces and tabs,
+Both the original I-expression definition, and this revision,
+have the following rule: After the initial line of an expression,
+any line containing zero or more leading spaces and tabs,
 FOLLOWED by a ";"-leading comment, is COMPLETELY IGNORED, even in the
 middle of an expression.  In particular, its indentation is ignored.
-This is consistent with the original definition of I-expressions.
 
-The proposed change is to (1) consider lines with ONLY horizontal
-whitespace - and NO semicolon-leading comment - to be the same as a line
-with no characters at all, AND (2) to have blank lines end an expression.
+The proposed change is that lines with 0+ spaces or tabs,
+and no ;-leading comment, end an expression.  Note that a line
+WITH just spaces and tabs is treated the same as a line with no characters.
 
-If lines with only zero or more horizontal whitespace are completely
+This changes is necessary for reasonable interactive use.
+If lines with only zero or more horizontal whitespace were completely
 ignored, as the original spec stated, then interactive use is painful.
 Results would print only after the first line of the NEXT expression
 are entered.  Even the "sample implementation" in the spec didn't
@@ -519,17 +592,34 @@ actually do this.
 
 To make interactivity pleasant, at least lines with absolutely no
 characters should end an expression after the first line.  That way,
-"Enter enter" will cause an expression to be executed.
+"Enter Enter" will cause an expression to be executed.
 
-Then the question becomes, how should a line with ONLY 1 or more
-spaces/tabs (and no ;-comments) be interpreted?  They COULD be interpreted
-as "continue the indentation" if they matched the indentation of the
-previous line that didn't have just a comment. Problem is, this
-could lead to mysterious bugs.
-Printed or displayed text could not be understood with certainty; a
-line that looked empty COULD mean either "expression completed" OR
-"expression continues", leading to hard-to-debug code.
-To create vertical space, just use a ;-leading comment.
+Then the question becomes, how should a line with 1 or more
+spaces/tabs, and no ;-comments, be interpreted?  And should a line
+with the current indentation be treated differently than if it is not?
+
+Such lines COULD be interpreted as "continue the indentation"
+if they matched the current indentation... or even if there was
+at least one space/tab.  A minor argument FOR this alternative
+is that it makes "pretty" vertical spacing a possibility.
+
+But there is a serious problem to treating lines with no characters
+differently from lines with only spaces and tabs.
+The problems is that this could lead to mysterious bugs.
+With such a rule, printed or displayed text could not be understood
+with certainty; a line that looked empty COULD mean either
+"expression completed" OR "expression continues",
+leading to hard-to-debug code.  What's worse, many tools
+quietly remove trailing horizontal whitespace on a line
+(including many text editors and mailers); these deletions would
+generally be unnoticed, yet change the meaning of a program.
+
+The risk of mysterious, undetectable errors in code is serious,
+and one that leads at least Wheeler to recommend that space/tab-only
+lines (with no comments) be treated exactly like lines with no
+characters at all.  Certainly, it's sometimes valuable to create
+vertical space, but this can be done using comment-only lines
+(which may, but need not, have leading whitespace).
 
 It is true that Python 2.5 in _interactive_ mode distinguishes
 between lines with no characters (not even whitespace) and lines
@@ -561,6 +651,9 @@ and you can always cut-and-paste from a file into an interactive session.
 
 ========================
 Possible Test patterns
+
+Below are some possible test patterns to help eliminate
+errors in an implementation.
 
 test = (first (second third?)?)?  (SPACE? semicolon - comment)?
 first = abbreviation? t1 (SPACE t2 (SPACE t3)?)?
