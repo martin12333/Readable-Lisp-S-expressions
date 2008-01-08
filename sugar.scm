@@ -8,7 +8,16 @@
 ;  program and data input.
 
 ; The following code implements I-expressions as a GNU Guile module
-; that can be loaded with (use-modules (sugar)).
+; that can be loaded using:
+;     (use-modules (sugar))
+; This command will only work if this file's directory is in %load-path; 
+; if the file is not installed anywhere, you can do this with:
+;      (set! %load-path (append %load-path '(".")))
+; You can also use this (esp. for testing):
+;    export GUILE_LOAD_PATH="."
+; but beware; the GUILE_LOAD_PATH has higher precedence, so while this
+; is useful for testing, setting GUILE_LOAD_PATH to include "." can have
+; security problems if used in "real" programs.
 
 ; CHANGES:
 ; * 2007-10-15 David A. Wheeler <dwheeler at dwheeler dot com>
