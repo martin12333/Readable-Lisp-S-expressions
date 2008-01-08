@@ -112,6 +112,14 @@ The SRFI-49 spec productions are modified as follows:
     better), reword the clarifications to merge this in, and modify the
     "more detailed spec" below to match.
 
+(8) Proposed repair: In the production:
+  head-> s-expr head
+   (append $1 $2)
+  the "append" should be "cons".  An s-expr need not be a list, but
+  append only accepts lists, so clearly "accept" cannot be correct.
+
+  TODO: If accepted, repair below.
+
 ===========================================================
 Updated SRFI-49 spec productions
 
@@ -319,16 +327,19 @@ it'd be more likely to be right as the text below was edited.
   ;   * read in the s-expr
   ;   * if the s-expr is the symbol "group", _and_ the first peeked character
   ;     was G/g, then it is GROUP... else it is not.
-  ;
-  expr -> GROUP hspace* head INDENT body DEDENT
+
+  ; Note: "DEDENT after processing body" moved to body; that's
+  ; easier to implement.
+
+  expr -> GROUP hspace* head INDENT body
    (append $3 $5)
-  expr -> GROUP hspace* INDENT body DEDENT
+  expr -> GROUP hspace* comment? INDENT body
    $4
   expr -> GROUP hspace* head
    (if (= (length $last) 1)
        (car $last)
      $last)
-  expr -> head INDENT body DEDENT
+  expr -> head INDENT body
    (append $1 $3)
   expr -> head  ; followed by DEDENT or SAME
    (if (= (length $1) 1)
@@ -349,19 +360,16 @@ it'd be more likely to be right as the text below was edited.
   ; something in between.  Thus, when body is first called, it cannot
   ; match the "empty" rule of the I-expression spec.  Thus, we'll rewrite
   ; the rule as a body followed by body-tail, because that's
-  ; easier to implement.
+  ; easier to implement.  Also, we'll consume the DEDENT here, instead of
+  ; in the caller; that's easier to implement.
   body -> expr body-tail
     (cons $1 $last)
   body-tail -> SAME body
-    $1
+    $2
     ; It's another line at the SAME indentation, so we have another body.
-  body-tail ->
+  body-tail -> DEDENT
     '()
-    ; No more children.  This will be a DEDENT in caller,
-    ; ending the sequence of bodies. But the DEDENT is actually
-    ; consumed by the caller (one of the expr productions),
-    ; not this production, so we'll write the production rule this way.
-    ; If it's DEDENT, we've ended the list of bodies.
+    ; No more children; the sequence of bodies has ended.
     ; Note: It would be illegal to be INDENT; INDENT would be handled
     ; by expr, not body.
 
