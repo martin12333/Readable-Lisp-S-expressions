@@ -1,3 +1,6 @@
+#!/usr/bin/env guile
+!#
+
 ;  Test modern.scm.  Also has demo of its use.
 ; 
 ;  It should print T for the successful loading of the file,
@@ -28,7 +31,11 @@
 ;  OTHER DEALINGS IN THE SOFTWARE.
 
 
-(load "modern.scm")
+; guile-specific stuff - set up and load using modules
+(set! %load-path (append %load-path '(".")))
+(use-modules (modern))
+
+; Portable:
 
 (define test-error 0)
 (define test-correct 0)
@@ -58,44 +65,45 @@
 (test 1 1)
 
 ; Test lower-level routines:
+; We no longer run these tests - we now use the guile modules
+; system and don't export these functions.  Thus, we don't have access
+; to them to test them.
 
-(assert (even-and-op-prefix '+ '(+ 4)))
-(assert (even-and-op-prefix '+ '(+ 4 + 5)))
-(assert (not (even-and-op-prefix '+ '(+ 4 - 5))))
-(assert (not (even-and-op-prefix '+ '(+ 4 +))))
-
-(assert (simple-infix-listp '(1 + 2)))
-(assert (simple-infix-listp '(1 + 2 + 3)))
-(assert (not (simple-infix-listp '(1 + 2 * 3))))
-(assert (not (simple-infix-listp '(1 + 2 +))))
-(assert (not (simple-infix-listp '(1 +))))
-(assert (not (simple-infix-listp '(1))))
-(assert (not (simple-infix-listp '())))
-
-(test (alternating-parameters '(1 2 3)) '(1 3))
-(test (alternating-parameters '(1 2 3 4 5)) '(1 3 5))
-
-(test (transform-simple-infix '(1 + 3)) '(+ 1 3))
-(test (transform-simple-infix '(1 + 3 + 5)) '(+ 1 3 5))
+; (assert (even-and-op-prefix '+ '(+ 4)))
+; (assert (even-and-op-prefix '+ '(+ 4 + 5)))
+; (assert (not (even-and-op-prefix '+ '(+ 4 - 5))))
+; (assert (not (even-and-op-prefix '+ '(+ 4 +))))
+; 
+; (assert (simple-infix-listp '(1 + 2)))
+; (assert (simple-infix-listp '(1 + 2 + 3)))
+; (assert (not (simple-infix-listp '(1 + 2 * 3))))
+; (assert (not (simple-infix-listp '(1 + 2 +))))
+; (assert (not (simple-infix-listp '(1 +))))
+; (assert (not (simple-infix-listp '(1))))
+; (assert (not (simple-infix-listp '())))
+; 
+; (test (alternating-parameters '(1 2 3)) '(1 3))
+; (test (alternating-parameters '(1 2 3 4 5)) '(1 3 5))
+; 
+; (test (transform-simple-infix '(1 + 3)) '(+ 1 3))
+; (test (transform-simple-infix '(1 + 3 + 5)) '(+ 1 3 5))
 
 (define tc (open-input-file "test-cases-modern"))
 
-(test (begin (skip-whitespace tc) (read-char tc))
-      #\x)
+; (test (begin (skip-whitespace tc) (read-char tc)) sharp backslash x )
 
 (display "Now testing reader itself.\n")
 
 (define (reader-test correct-value)
   (test (modern-read tc) correct-value))
 
-(use-modules (ice-9 debug))
+; (use-modules (ice-9 debug))
 ; (set-breakpoint! trace-subtree 2)
 ; (set! (bp-behaviour (get-breakpoint 3)) debug-here)
-(trace modern-read2)
-(trace modern-process-tail)
-(trace my-read-delimited-list)
-(trace underlying-read)
-
+; (trace modern-read2)
+; (trace modern-process-tail)
+; (trace my-read-delimited-list)
+; (trace underlying-read)
 
 (reader-test 'testing123)
 

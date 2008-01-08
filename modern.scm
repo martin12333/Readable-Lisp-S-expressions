@@ -57,6 +57,11 @@
 ; OTHER DEALINGS IN THE SOFTWARE.
 
 
+; Use Guile's module system.  Delete this (and the exports at the bottom)
+; if you're not using it.
+(define-module (modern))
+
+
 ; Configuration:
 (define modern-backwards-compatible #f) ; If true, "(" triggers old reader.
 (define modern-bracketaccess #t) ; If true, "f[...]" => [bracketaccess f ...]
@@ -86,6 +91,23 @@
 ; Unfortunately, this seems to be the only portable way to define the
 ; tab character in Scheme, so we'll do it once (here) and use it elsewhere.
 (define tab #\	)
+
+(define (my-is-whitespace c)
+  (ismember? c `(#\space #\newline ,tab)))
+; TODO: Possibly support other whitespace chars, e.g.:
+;    #\return
+;   (code-char 10) (code-char 11)     ; LF, VT
+;   (code-char 12) (code-char 13)))))  ; FF, CR
+;   If so, also modify the "delimiters" list above.
+  
+
+(define (skip-whitespace port)
+  ; Consume whitespace.
+  (cond
+    ((my-is-whitespace (peek-char port))
+      (read-char port)
+      (skip-whitespace port))))
+
 
 ; Unfortunately, since most Scheme readers will consume [, {, }, and ],
 ; we have to re-implement our own Scheme reader.  Ugh.
@@ -320,22 +342,6 @@
              (#t (cons datum
                (my-read-delimited-list stop-char port)))))))))
 
-(define (my-is-whitespace c)
-  (ismember? c `(#\space #\newline ,tab)))
-; TODO: Possibly support other whitespace chars, e.g.:
-;    #\return
-;   (code-char 10) (code-char 11)     ; LF, VT
-;   (code-char 12) (code-char 13)))))  ; FF, CR
-;   If so, also modify the "delimiters" list above.
-  
-
-(define (skip-whitespace port)
-  ; Consume whitespace.
-  (cond
-    ((my-is-whitespace (peek-char port))
-      (read-char port)
-      (skip-whitespace port))))
-
 (define (modern-process-tail port prefix)
     ; See if we've just finished reading a prefix, and if so, process.
     ; This recurses, to handle formats like f(x)(y).
@@ -431,4 +437,8 @@
   (if (null? port)
     (modern-read2 (current-input-port))
     (modern-read2 (car port))))
+
+
+; Export this value - this is part of Guile's module system.
+(export modern-read)
 

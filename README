@@ -42,7 +42,8 @@ By Alan Manuel Gloria.
 
 * modern.cl: "Modern Lisp" reader, Common Lisp.
 
-* modern.scm: "Modern Lisp" reader, Scheme.
+* modern.scm: "Modern Lisp" reader, Scheme.  "modern-scm-test.scm" is
+  a guile Scheme program you can run to test it.
 
 * spec-indent.txt: Detailed specification information on I-expressions.
 
@@ -59,5 +60,25 @@ this is the version defined in SFRI-49. MIT license.
 easier-to-read format for S-expressions.  Implemented in the guile
 dialect of Scheme.  By David A. Wheeler.  MIT license.
 Currently a prototype, and only implements sweet-expressions version 0.1.
+
+
+Some of this code uses guile's module capability.
+To use these in guile, you need to make sure that the %load-path
+includes the directory where the source code resides.  For example,
+to add searching the current directory "." to the end of the search path:
+  (set! %load-path (append %load-path '(".")))
+You could include this command in your ~/.guile file, and then it would
+be run each time.
+Alternatively, you can do this at a shell prompt (or ~/.bashrc or similar):
+  export GUILE_LOAD_PATH="."
+which will insert the given path(s) at the beginning of %load-path.
+Beware: the GUILE_LOAD_PATH has the highest precedence when setting
+up the %load-path, so while this is useful for testing,
+setting GUILE_LOAD_PATH to include "." can have security problems
+if used in "real" programs (an attacker might arrange for a malicious
+scheme file to be loaded instead of an intended one).
+
+Once the %load-path is set up, you can easily load modules, e.g.:
+  (use-modules (sugar))
 
 
