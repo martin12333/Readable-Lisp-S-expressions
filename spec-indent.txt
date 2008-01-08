@@ -64,8 +64,9 @@ The SRFI-49 spec productions are modified as follows:
     would be quite unpleasant. That's because the results of an
     expression would NEVER be written until after the next
     expression's first line was entered, which is very confusing.
-    Here, pressing "Enter Enter" (a blank line) causes execution, which is
-    much clearer.
+    This was clearly not the intent; with the sample implementation,
+    pressing "Enter Enter" (a blank line) causes execution, which is
+    much more sensible.
 
     The modification also states that lines with JUST spaces and tabs
     would be considered the same as a line with no characters at all.

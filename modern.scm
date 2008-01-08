@@ -438,7 +438,14 @@
     (modern-read2 (current-input-port))
     (modern-read2 (car port))))
 
+(define (enable-modern)
+  (set! read modern-read))
+
+(define (disable-modern)
+  (set! read old-read))
 
 ; Export this value - this is part of Guile's module system.
 (export modern-read)
+(export enable-modern)
+(export disable-modern)
 
