@@ -1,0 +1,10 @@
+#!/bin/env expect
+# By David A. Wheeler. Start up guile in "modern-expressoin" reading mode,
+# so you can try it out.
+
+spawn -noecho guile --debug -L .
+# Enable readline (for ease of interface), then activate sweet-expressions.
+# (sweet-load) still has some bugs, so it needs to be in this order.
+send "(begin (use-modules (ice-9 readline)) (activate-readline) (set! %load-path (append %load-path '(\".\"))) (use-modules (modern)) (enable-modern) (newline))\n"
+interact
+
