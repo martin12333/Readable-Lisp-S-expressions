@@ -1,0 +1,121 @@
+x
+x
+
+; Fibonacci example
+(define (fibfast n)
+  (if (< n 2)
+    n
+    (fibup n 2 1 0)))
+
+define fibfast(n)
+  if {n < 2}
+    n
+    fibup(n 2 1 0)
+
+(define (fibup max count n-1 n-2)
+  (if (= max count)
+    (+ n-1 n-2)
+    (fibup max (+ count 1) (+ n-1 n-2) n-1)))
+
+define fibup(max count n-1 n-2)
+  if {max = count}
+    {n-1 + n-2}
+    fibup(max {count + 1} {n-1 + n-2} n-1)
+
+
+(define (factorial n)
+  (if (<= n 1)
+    1
+    (* n (factorial (- n 1)))))
+
+define factorial(n)
+  if {n <= 1}
+    1
+    {n * factorial{n - 1}}
+
+x
+x
+
+'y
+'y
+
+xyz
+; Hello
+  ; another comment
+xyz
+
+
+`(x ,y)
+`(x ,y)
+
+;
+`(x ,y)
+`    (x ,y)
+
+
+(abc def)
+
+abc def
+
+
+
+(abc def ghi)
+abc def ghi
+
+
+
+(abc def ghi klm)
+abc def ghi klm
+
+()
+()
+
+
+(a b)
+a
+  b
+
+(i j k)
+i
+  j
+  k
+
+(i (j k) m)
+i
+  j k
+  m
+
+(nfx)
+{}
+
+(nfx 1)
+{1}
+
+(nfx 3 +)
+{3 +}
+
+(+ 3 4)
+{3 + 4}
+
+(nfx 3 + 4 +)
+{3 + 4 +}
+
+(+ 3 4 5)
+{3 + 4 + 5}
+
+(nfx 3 + 4 + 5 +)
+{3 + 4 + 5 +}
+
+(+ 3 (* 5 6))
+{3 + {5 * 6}}
+
+(nfx 3 + 5 * 6)
+{3 + 5 * 6}
+
+(f)
+f()
+
+(f x)
+f(x)
+
+

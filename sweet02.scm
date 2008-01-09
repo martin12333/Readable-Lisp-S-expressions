@@ -26,6 +26,47 @@
 
 (define sweet-read sugar-read)
 
+(define sweet-test-error 0)
+(define sweet-test-correct 0)
+
+(define (sweet-test filename)
+  ; Load a test file, which should have pairs of these:
+  ;    s-expr (correct answer)
+  ;    sweet-expression (which should match it)
+  (define (load port)
+    (let ((correct (old-read port)))
+      (cond
+	((eof-object? correct)
+            (display "TEST COMPLETE\n")
+            (display "Correct answers:  ")
+            (display sweet-test-correct)
+            (display " test errors: ")
+            (display sweet-test-error)
+            (newline)
+	    #t)
+	(#t
+	  ; "Sugar" has problems with blank lines; skip them for now
+	  (if (eqv? #\newline (peek-char port)) (read-char port))
+	  (if (eqv? #\newline (peek-char port)) (read-char port))
+	  (if (eqv? #\newline (peek-char port)) (read-char port))
+	  (let ((sweet-value (sweet-read port)))
+            (cond
+              ((equal? correct sweet-value)
+                (set! sweet-test-correct (+ sweet-test-correct 1))
+                (display "Correct value for: ")
+                (write correct)
+                (newline))
+              (#t
+                (set! sweet-test-error (+ sweet-test-error 1))
+                (display "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ERROR \n")
+                (display " Should be:")
+                (write correct)
+                (display "\n Got: ")
+                (write sweet-value)
+                (newline))))
+	  (load port)))))
+  (load (open-input-file filename)))
+
 (define (sweet-filter)
    (let ((result (sweet-read (current-input-port))))
 	(if (eof-object? result)
@@ -51,4 +92,6 @@
 (export sweet-read)
 (export sweet-load)
 (export sweet-filter)
+(export sweet-test)
+
 

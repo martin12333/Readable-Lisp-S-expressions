@@ -1,0 +1,8 @@
+#!/bin/env guile
+!#
+
+(set! %load-path (append %load-path '(".")))
+(use-modules (sweet02))
+(sweet-test "sweet-testsuite")
+
+

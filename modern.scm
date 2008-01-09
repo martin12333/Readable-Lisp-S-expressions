@@ -467,4 +467,6 @@
 (export modern-load)
 (export enable-modern)
 (export disable-modern)
+(export old-read) ; This is the old read function.
+
 
