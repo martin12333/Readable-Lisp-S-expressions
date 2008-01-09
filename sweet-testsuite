@@ -258,3 +258,17 @@ cond
   {y = 1} blob(y z)
 
 
+'x
+'x
+
+`x
+`x
+
+`(,x)
+`group
+  ,x
+
+`(,@x)
+`group
+  ,@x
+
