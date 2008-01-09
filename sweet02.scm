@@ -5,8 +5,9 @@
 ;   (use-modules (sweet))
 ; Your %load-path must be correctly set up; see the README file.
 ;
-; NOTE: NOT READY FOR PRODUCTION USE; the "sugar" module doesn't work
-; 100% correctly.
+; NOTE: NOT READY FOR PRODUCTION USE; the "sugar" module (which implements
+; indentation) doesn't work 100% correctly.  But it's enough to
+; test it out; please do so!
 ;
 ; Implements and enables "sweet-expressions", which are modern-expressions
 ; plus indentation (using I-expressions).  So we'll chain two modules

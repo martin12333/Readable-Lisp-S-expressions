@@ -154,6 +154,7 @@
               (cond
                 ((string-ci=? rest-string "space") #\space)
                 ((string-ci=? rest-string "newline") #\newline)
+                ((string-ci=? rest-string "ht") tab)  ; Scheme extension.
                 ((string-ci=? rest-string "tab") tab) ; Scheme extension.
                 (#t (read-error "Invalid character name"))))))))))
 
