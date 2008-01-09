@@ -20,6 +20,11 @@
 ; security problems if used in "real" programs.
 
 ; CHANGES:
+; * 2008-01-08 David A. Wheeler <dwheeler at dwheeler dot com>
+;   - Added support for unquote-splicing (,@).
+;   - Fix sugar-filter - it needed to write, not display.
+;   - Changed formatting to cuddle on left-hand-side, space-only, so that
+;     it clearly is formatted in a way similar to what it reads
 ; * 2007-10-15 David A. Wheeler <dwheeler at dwheeler dot com>
 ;   - Changed "t" to "#t" (t is Common Lisp, #t is Scheme)
 ;   - Added sugar-filter.
@@ -33,171 +38,177 @@
 ;     correctly use sugar-read to read the contents.
 ;  ----{ sugar.scm }----
 
-  (define-module (sugar))
+(define-module (sugar))
 
-  (define-public group 'group)
+(define-public group 'group)
 
-  (define-public sugar-read-save read)
-  (define-public sugar-load-save primitive-load)
+(define-public sugar-read-save read)
 
-  (define (readquote level port qt)
-    (read-char port)
-    (let ((char (peek-char port)))
-      (if (or (eqv? char #\space)
-	      (eqv? char #\newline)
-	      (eqv? char #\ht))
-	  (list qt)
-	  (list qt (sugar-read-save port)))))
+(define-public sugar-load-save primitive-load)
 
-  (define (readitem level port)
-    (let ((char (peek-char port)))
-      (cond
-       ((eqv? char #\`)
-	(readquote level port 'quasiquote))
-       ((eqv? char #\')
-	(readquote level port 'quote))
-       ((eqv? char #\,)
-	(readquote level port 'unquote))
-       (#t
-	(sugar-read-save port)))))
+(define (readquote level port qt)
+  (let ((char (peek-char port)))
+    (if (or (eqv? char #\space)
+              (eqv? char #\newline)
+              (eqv? char #\ht))
+          (list qt)
+          (list qt (sugar-read-save port)))))
 
-  (define (indentation>? indentation1 indentation2)
-    (let ((len1 (string-length indentation1))
-	  (len2 (string-length indentation2)))
-      (and (> len1 len2)
-	   (string=? indentation2 (substring indentation1 0 len2)))))
-
-  (define (indentationlevel port)
-    (define (indentationlevel)
-      (if (or (eqv? (peek-char port) #\space)
-	      (eqv? (peek-char port) #\ht))
-	  (cons 
-	   (read-char port)
-	   (indentationlevel))
-	  '()))
-    (list->string (indentationlevel)))
-
-  (define (clean line)
+(define (readitem level port)
+  (let ((char (peek-char port)))
     (cond
-     ((not (pair? line))
-      line)
-     ((null? line)
-      line)
-     ((eq? (car line) 'group)
-      (cdr line))
-     ((null? (car line))
-      (cdr line))
-     ((list? (car line))
-      (if (or (equal? (car line) '(quote))
-	      (equal? (car line) '(quasiquote))
-	      (equal? (car line) '(unquote)))
-	  (if (and (list? (cdr line))
-		   (= (length (cdr line)) 1))
-	      (cons
-	       (car (car line))
-	       (cdr line))
-	      (list
-	       (car (car line))
-	       (cdr line)))
-	  (cons
-	   (clean (car line))
-	   (cdr line))))
+     ((eqv? char #\`)
+      (read-char port)
+        (readquote level port 'quasiquote))
+     ((eqv? char #\')
+      (read-char port)
+        (readquote level port 'quote))
+     ((eqv? char #\,)
+      (read-char port)
+      (cond
+        ((eqv? (peek-char port) #\@) (readquote level port 'unquote-splicing))
+        (#t                          (readquote level port 'unquote))))
      (#t
-      line)))
+        (sugar-read-save port)))))
 
-  ;; Reads all subblocks of a block
-  (define (readblocks level port)
-    (let* ((read (readblock-clean level port))
-	   (next-level (car read))
-	   (block (cdr read)))
-      (if (string=? next-level level)
-	  (let* ((reads (readblocks level port))
-		 (next-next-level (car reads))
-		 (next-blocks (cdr reads)))
-	    (if (eq? block '.)
-		(if (pair? next-blocks)
-		    (cons next-next-level (car next-blocks))
-		    (cons next-next-level next-blocks))
-		(cons next-next-level (cons block next-blocks))))
-	  (cons next-level (list block)))))
+(define (indentation>? indentation1 indentation2)
+  (let ((len1 (string-length indentation1))
+          (len2 (string-length indentation2)))
+    (and (> len1 len2)
+           (string=? indentation2 (substring indentation1 0 len2)))))
 
-  ;; Read one block of input
-  (define (readblock level port)
-    (let ((char (peek-char port)))
-      (cond
-       ((eof-object? char)
-	(cons -1 char))
-       ((eqv? char #\newline)
-	(read-char port)
-	(let ((next-level (indentationlevel port)))
-	  (if (indentation>? next-level level)
-	      (readblocks next-level port)
-	      (cons next-level '()))))
-       ((or (eqv? char #\space)
-	    (eq? char #\ht))
-	(read-char port)
-	(readblock level port))
-       (#t
-	(let* ((first (readitem level port))
-	       (rest (readblock level port))
-	       (level (car rest))
-	       (block (cdr rest)))
-	  (if (eq? first '.)
-	      (if (pair? block)
-		  (cons level (car block))
-		  rest)
-	      (cons level (cons first block))))))))
+(define (indentationlevel port)
+  (define (indentationlevel)
+    (if (or (eqv? (peek-char port) #\space)
+              (eqv? (peek-char port) #\ht))
+          (cons 
+           (read-char port)
+           (indentationlevel))
+          '()))
+  (list->string (indentationlevel)))
 
-  ;; reads a block and handles group, (quote), (unquote) and
-  ;; (quasiquote).
-  (define (readblock-clean level port)
-    (let* ((read (readblock level port))
-	   (next-level (car read))
-	   (block (cdr read)))
-      (if (or (not (list? block)) (> (length block) 1))
-	  (cons next-level (clean block))
-	  (if (= (length block) 1)
-	      (cons next-level (car block))
-	      (cons next-level '.)))))
+(define (clean line)
+  (cond
+   ((not (pair? line))
+    line)
+   ((null? line)
+    line)
+   ((eq? (car line) 'group)
+    (cdr line))
+   ((null? (car line))
+    (cdr line))
+   ((list? (car line))
+    (if (or (equal? (car line) '(quote))
+              (equal? (car line) '(quasiquote))
+              (equal? (car line) '(unquote-splicing))
+              (equal? (car line) '(unquote)))
+          (if (and (list? (cdr line))
+                   (= (length (cdr line)) 1))
+              (cons
+               (car (car line))
+               (cdr line))
+              (list
+               (car (car line))
+               (cdr line)))
+          (cons
+           (clean (car line))
+           (cdr line))))
+   (#t
+    line)))
 
-  (define-public (sugar-read . port)
-    (let* ((read (readblock-clean "" (if (null? port)
-					(current-input-port)
-					(car port))))
-	   (level (car read))
-	   (block (cdr read)))
-      (cond
-       ((eq? block '.)
-	'())
-       (#t
-	block))))
+;; Reads all subblocks of a block
+(define (readblocks level port)
+  (let* ((read (readblock-clean level port))
+           (next-level (car read))
+           (block (cdr read)))
+    (if (string=? next-level level)
+          (let* ((reads (readblocks level port))
+                 (next-next-level (car reads))
+                 (next-blocks (cdr reads)))
+            (if (eq? block '.)
+                (if (pair? next-blocks)
+                    (cons next-next-level (car next-blocks))
+                    (cons next-next-level next-blocks))
+                (cons next-next-level (cons block next-blocks))))
+          (cons next-level (list block)))))
+
+;; Read one block of input
+(define (readblock level port)
+  (let ((char (peek-char port)))
+    (cond
+     ((eof-object? char)
+        (cons -1 char))
+     ((eqv? char #\newline)
+        (read-char port)
+        (let ((next-level (indentationlevel port)))
+          (if (indentation>? next-level level)
+              (readblocks next-level port)
+              (cons next-level '()))))
+     ((or (eqv? char #\space)
+            (eq? char #\ht))
+        (read-char port)
+        (readblock level port))
+     (#t
+        (let* ((first (readitem level port))
+               (rest (readblock level port))
+               (level (car rest))
+               (block (cdr rest)))
+          (if (eq? first '.)
+              (if (pair? block)
+                  (cons level (car block))
+                  rest)
+              (cons level (cons first block))))))))
+
+;; reads a block and handles group, (quote), (unquote),
+;; (unquote-splicing) and (quasiquote).
+(define (readblock-clean level port)
+  (let* ((read (readblock level port))
+           (next-level (car read))
+           (block (cdr read)))
+    (if (or (not (list? block)) (> (length block) 1))
+          (cons next-level (clean block))
+          (if (= (length block) 1)
+              (cons next-level (car block))
+              (cons next-level '.)))))
+
+(define-public (sugar-read . port)
+  (let* ((read (readblock-clean "" (if (null? port)
+                                        (current-input-port)
+                                        (car port))))
+           (level (car read))
+           (block (cdr read)))
+    (cond
+     ((eq? block '.)
+        '())
+     (#t
+        block))))
 
 
-  (define-public (sugar-filter)
-     (let ((result (sugar-read (current-input-port))))
-	(if (eof-object? result)
-	    result
-            (begin (display result) (newline) (sugar-filter)))))
+(define-public (sugar-filter)
+   (let ((result (sugar-read (current-input-port))))
+        (if (eof-object? result)
+            result
+          (begin (write result) (newline) (sugar-filter)))))
 
-  (define-public (sugar-load filename)
-    (define (load port)
-      (let ((inp (sugar-read port)))
-	(if (eof-object? inp)
-	    #t
-	    (begin
-	      (eval inp)
-	      (load port)))))
-    (load (open-input-file filename)))
+(define-public (sugar-load filename)
+  (define (load port)
+    (let ((inp (sugar-read port)))
+        (if (eof-object? inp)
+            #t
+            (begin
+              (eval inp)
+              (load port)))))
+  (load (open-input-file filename)))
 
-  (define-public (sugar-enable)
-    (set! read sugar-read)
-    (set! primitive-load sugar-load))
+(define-public (sugar-enable)
+  (set! read sugar-read)
+  (set! primitive-load sugar-load))
 
-  (define-public (sugar-disable)
-    (set! read sugar-read-save)
-    (set! primitive-load sugar-load-save))
+(define-public (sugar-disable)
+  (set! read sugar-read-save)
+  (set! primitive-load sugar-load-save))
 
-  (sugar-enable)
+(sugar-enable)
 
 ; ----{ sugar.scm }----
 ; Copyright (C) 2005 by Egil Möller . All Rights Reserved.

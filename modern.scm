@@ -438,6 +438,23 @@
     (modern-read2 (current-input-port))
     (modern-read2 (car port))))
 
+
+(define (modern-filter)
+   (let ((result (modern-read (current-input-port))))
+	(if (eof-object? result)
+	    result
+          (begin (write result) (newline) (modern-filter)))))
+
+(define (modern-load filename)
+  (define (load port)
+    (let ((inp (modern-read port)))
+	(if (eof-object? inp)
+	    #t
+	    (begin
+	      (eval inp)
+	      (load port)))))
+  (load (open-input-file filename)))
+
 (define (enable-modern)
   (set! read modern-read))
 
@@ -446,6 +463,8 @@
 
 ; Export this value - this is part of Guile's module system.
 (export modern-read)
+(export modern-filter)
+(export modern-load)
 (export enable-modern)
 (export disable-modern)
 
