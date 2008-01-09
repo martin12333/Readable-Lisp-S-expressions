@@ -2,7 +2,7 @@
 !#
 
 (set! %load-path (append %load-path '(".")))
-(use-modules (sweet02))
+(use-modules (sweet))
 (sweet-test "sweet-testsuite")
 
 

@@ -17,7 +17,7 @@
 
 ; A lot of this is guile-specific, because it uses guile's module system.
 
-(define-module (sweet02))
+(define-module (sweet))
 
 (use-modules (modern))
 (enable-modern)
