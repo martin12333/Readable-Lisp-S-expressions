@@ -145,7 +145,7 @@
               (readblocks next-level port)
               (cons next-level '()))))
      ((or (eqv? char #\space)
-            (eq? char #\ht))
+          (eqv? char #\ht))
         (read-char port)
         (readblock level port))
      (#t

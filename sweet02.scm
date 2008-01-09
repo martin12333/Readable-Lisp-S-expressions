@@ -9,9 +9,12 @@
 ; 100% correctly.
 ;
 ; Implements and enables "sweet-expressions", which are modern-expressions
-; plus indentation (using I-expressions)
+; plus indentation (using I-expressions).  So we'll chain two modules
+; that implement them (respectively).
 
-; Currently, it's just the command line; loading, etc. is to come.
+; This version auto-enables.
+
+; A lot of this is guile-specific, because it uses guile's module system.
 
 (define-module (sweet02))
 
@@ -21,4 +24,31 @@
 (use-modules (sugar))
 ; sugar auto-enables.
 
+(define sweet-read sugar-read)
+
+(define (sweet-filter)
+   (let ((result (sweet-read (current-input-port))))
+	(if (eof-object? result)
+	    result
+          (begin (write result) (newline) (sweet-filter)))))
+
+(define (sweet-load filename)
+  (define (load port)
+    (let ((inp (sweet-read port)))
+	(if (eof-object? inp)
+	    #t
+	    (begin
+	      (eval inp)
+	      (load port)))))
+  (load (open-input-file filename)))
+
+; (define (enable-sweet)
+;   (set! read sweet-read))
+
+; (define (disable-sweet)
+;   (set! read old-read))
+
+(export sweet-read)
+(export sweet-load)
+(export sweet-filter)
 
