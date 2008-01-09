@@ -1,4 +1,4 @@
-; Implementation of SRFI 49, directly from SRFI 49 at:
+; Implementation of a revision of SRFI 49, based on SRFI 49 at:
 ; http://srfi.schemers.org/srfi-49/srfi-49.html
 ; This provides "Indentation-sensitive syntax" for Scheme.
 ; This SRFI descibes a new syntax for Scheme, called I-expressions,
@@ -21,8 +21,13 @@
 
 ; CHANGES:
 ; * 2008-01-08 David A. Wheeler <dwheeler at dwheeler dot com>
+;   - Fixed comment processing.  Inline comments now (correctly) ignored;
+;     all comment-only lines are completely skipped with indentation ignored.
+;   - At the start of a new expression, whitespace-only lines are ignored.
+;   - After the first line of a new expression, no-character lines and
+;     horizontal-whitespace-only lines end the expression.
 ;   - Added support for unquote-splicing (,@).
-;   - Fix sugar-filter - it needed to write, not display.
+;   - Fix sugar-filter - it should have called write, not display.
 ;   - Changed formatting to cuddle on left-hand-side, space-only, so that
 ;     it clearly is formatted in a way similar to what it reads
 ; * 2007-10-15 David A. Wheeler <dwheeler at dwheeler dot com>
@@ -41,10 +46,20 @@
 (define-module (sugar))
 
 (define-public group 'group)
+; TODO: Need to NOT give "group" its special meaning if it doesn't
+; sart with "g" or "G". This may be tricky to do with this design.
 
 (define-public sugar-read-save read)
 
 (define-public sugar-load-save primitive-load)
+
+(define (consume-to-eol port)
+  ; Consumes chars to end of line, WITHOUT consume the ending newline/EOF
+  (let ((c (peek-char port)))
+    (cond
+      ((eof-object? c) c)
+      ((char=? c #\newline) c)
+      (#t (read-char port) (consume-to-eol port)))))
 
 (define (readquote level port qt)
   (let ((char (peek-char port)))
@@ -77,15 +92,24 @@
     (and (> len1 len2)
            (string=? indentation2 (substring indentation1 0 len2)))))
 
+(define (accumulate-hspace port)
+  (if (or (eqv? (peek-char port) #\space)
+          (eqv? (peek-char port) #\ht))
+      (cons (read-char port) (accumulate-hspace port))
+      '()))
+
 (define (indentationlevel port)
-  (define (indentationlevel)
-    (if (or (eqv? (peek-char port) #\space)
-              (eqv? (peek-char port) #\ht))
-          (cons 
-           (read-char port)
-           (indentationlevel))
-          '()))
-  (list->string (indentationlevel)))
+  (let ((indent (accumulate-hspace port)))
+    (cond
+      ((eqv? (peek-char port) #\;)
+        (consume-to-eol port) ; ALWAYS ignore comment-only lines.
+        (if (eqv? (peek-char port) #\newline) (read-char port))
+        (indentationlevel port))
+      ; If ONLY whitespace on line, treat as "", because there's no way
+      ; to (visually) tell the difference (preventing hard-to-find errors):
+      ((eof-object? (peek-char port)) "")
+      ((eqv? (peek-char port) #\newline) "")
+      (#t (list->string indent)))))
 
 (define (clean line)
   (cond
@@ -138,6 +162,9 @@
     (cond
      ((eof-object? char)
         (cons -1 char))
+     ((eqv? char #\;)
+        (consume-to-eol port)
+        (readblock level port))
      ((eqv? char #\newline)
         (read-char port)
         (let ((next-level (indentationlevel port)))
@@ -171,17 +198,39 @@
               (cons next-level (car block))
               (cons next-level '.)))))
 
-(define-public (sugar-read . port)
-  (let* ((read (readblock-clean "" (if (null? port)
-                                        (current-input-port)
-                                        (car port))))
-           (level (car read))
-           (block (cdr read)))
+
+(define (sugar-start-expr port)
+  ; Read single complete I-expression.
+  (let* ((indentation (list->string (accumulate-hspace port)))
+         (c (peek-char port)))
     (cond
-     ((eq? block '.)
-        '())
-     (#t
-        block))))
+      ((eof-object? c) c) ; EOF - return it, we're done.
+      ((eqv? c #\; )    ; comment - consume and see what's after it.
+        (let ((d (consume-to-eol port)))
+          (cond
+            ((eof-object? d) d) ; If EOF after comment, return it.
+            (#t  
+              (read-char port) ; Newline after comment.  Consume NL
+              (sugar-start-expr port))))) ; and try again
+      ((eqv? c #\newline)
+        (read-char port) ; Newline (with no preceding comment).
+        (sugar-start-expr port)) ; Consume and again
+      (#t
+        ; TODO: Handle  (> (string-length indentation) 0)
+        (let* ((read (readblock-clean "" port))
+               (level (car read))
+               (block (cdr read)))
+          (cond
+           ((eq? block '.)
+              '())
+           (#t
+              block)))))))
+
+
+(define-public (sugar-read . port)
+  (if (null? port)
+    (sugar-start-expr (current-input-port))
+    (sugar-start-expr (car port))))
 
 
 (define-public (sugar-filter)
@@ -211,7 +260,8 @@
 (sugar-enable)
 
 ; ----{ sugar.scm }----
-; Copyright (C) 2005 by Egil Möller . All Rights Reserved.
+; Copyright (C) 2005-2008 by Egil Möller and David A. Wheeler.
+; All Rights Reserved.
 ; 
 ; Permission is hereby granted, free of charge, to any person obtaining a
 ; copy of this software and associated documentation files (the "Software"),

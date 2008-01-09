@@ -1,0 +1,10 @@
+#!/bin/env guile
+!#
+
+; This is a filter - it accepts sweet-expressions from standard input,
+; and prints their S-expression translation as output.
+
+(set! %load-path (append %load-path '(".")))
+(use-modules (sweet))
+(sweet-filter)
+

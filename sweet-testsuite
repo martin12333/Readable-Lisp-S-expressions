@@ -119,3 +119,142 @@ f()
 f(x)
 
 
+(define (fibfast n)
+  (if (< n 2)
+    n
+    (fibup n 2 1 0)))
+
+define fibfast(n)  ; function notation
+  if {n < 2}       ; infix, indentation
+    n              ; single-atom
+    fibup(n 2 1 0) ; function call works.
+
+x
+; hi
+  ; there
+;hi
+x
+
+(x y)
+;hi
+x
+;sadfasd
+;  asdfsdf
+    ; sdfasdf
+  y
+
+
+(x (yabba dabba) z)
+; hi
+  ; there
+;hi
+x
+;sadfasd
+;  asdfsdf
+    ; sdfasdf
+  yabba dabba
+;asdfasdfasdf
+                ;a  adf
+ ; asdf
+  z
+; helllo
+
+
+q
+q
+
+; This tests to see that all-spaces is the same as "return":
+(x y)
+x
+  y
+           
+  z
+  z
+
+
+; Empty lines at beginning are ignored.
+(aa bb)
+
+
+
+
+
+
+
+  ; hi
+;hi
+                 ;hi
+aa
+; hi
+       bb
+
+
+(x y z)
+x
+  y
+  z
+
+(x y z)
+x y
+  z
+
+(a b c)
+a b c
+
+(hello)
+group
+  hello
+
+((hello there))
+group
+  hello there
+
+
+(hi group)
+hi group
+
+(a (b c) (d e))
+a
+  b c
+  d e
+
+
+(a b (d e))
+a
+  b
+  d e
+
+(a (b c) d)
+a
+  b c
+  d
+
+(a (b c) (d e))
+a (b c)
+  d e
+
+
+(a (b c) (d e))
+a (b c) (d e)
+
+(x (y))
+x
+  group
+     y
+
+(let ((x 1) (y 2)))
+let
+  group
+    x 1
+    y 2
+
+(cond
+  ((< y 1) (frob))
+  ((> y 1) (knob x))
+  ((= y 1) (blob y z)))
+cond
+  {y < 1} frob()
+  {y > 1} knob(x)
+  {y = 1} blob(y z)
+
+
