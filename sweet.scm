@@ -54,12 +54,12 @@
             (cond
               ((equal? correct sweet-value)
                 (set! sweet-test-correct (+ sweet-test-correct 1))
-                (display "Correct value for: ")
+                (display "Correct for: ")
                 (write correct)
                 (newline))
               (#t
                 (set! sweet-test-error (+ sweet-test-error 1))
-                (display "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ERROR \n")
+                (display "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ERROR \n")
                 (display " Should be:")
                 (write correct)
                 (display "\n Got: ")
