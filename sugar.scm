@@ -81,8 +81,11 @@
      ((eqv? char #\,)
       (read-char port)
       (cond
-        ((eqv? (peek-char port) #\@) (readquote level port 'unquote-splicing))
-        (#t                          (readquote level port 'unquote))))
+        ((eqv? (peek-char port) #\@)
+          (read-char port)
+          (readquote level port 'unquote-splicing))
+        (#t
+          (readquote level port 'unquote))))
      (#t
         (sugar-read-save port)))))
 
