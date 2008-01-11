@@ -1,0 +1,54 @@
+; sugar-testsuite, in form:
+;   * s-expression
+;   * I-expression (which SHOULD match)
+
+x
+x
+
+'y
+'y
+
+xyz
+; Hello
+  ; another comment
+
+      
+xyz
+
+
+`(x ,y)
+`(x ,y)
+
+;
+`(x ,y)
+`    (x ,y)
+
+
+(abc def)
+
+abc def
+
+
+
+(abc def ghi)
+abc def ghi
+
+
+
+(abc def ghi klm)
+abc def ghi klm
+
+()
+()
+
+
+(a b)
+a
+  b
+
+(i j k)
+i
+  j
+  k
+
+

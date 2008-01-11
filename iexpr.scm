@@ -2,6 +2,10 @@
 ; was developed by Egil Möller, and revised by David A. Wheeler. See:
 ;   http://srfi.schemers.org/srfi-49/srfi-49.html
 ;   http://www.dwheeler.com/readable/readable/trunk/spec-indent.txt
+
+
+; WARNING - this approach will probably be abandoned; see sugar.scm.
+
 ;
 ; This provides "Indentation-sensitive syntax" for Scheme.
 ; This SRFI descibes a new syntax for Scheme, called I-expressions,
@@ -18,6 +22,7 @@
 ; Egil Möller.  The key is that this code is intentionally modelled
 ; after the production rules of the specification - so it's more likely
 ; to (1) be correct, and (2) have other people BELIEVE it's correct.
+
 
 ;----{ sugar.scm }----
 ; (define-module (sugar))

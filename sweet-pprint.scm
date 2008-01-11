@@ -80,7 +80,7 @@
           (append
             separators
             (modern-contents separators (cdr obj))))))
-    (#t (append '(#\. #\space)) (modern-charlist obj))))
+    (#t (append '(#\. #\space) (modern-charlist obj)))))
 
 (define function-call-translate #t)
 
