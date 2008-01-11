@@ -121,6 +121,23 @@ The SRFI-49 spec productions are modified as follows:
 
   TODO: If accepted, repair below.
 
+
+TODO/ISSUE: What to do about QUOTE (whitespace) vs. QUOTE (no whitespace),
+various indentations after the abbreviation, etc?  The code doesn't
+match the spec at all.
+
+TODO/ISSUE: What to do about "."?  What does it mean in various
+circumstances?  Presumably similar to regular lists, but the spec doesn't
+note this at all.  Also, the implementation transforms "." to "()"
+too hastily in some cases, where it should stay as ".".
+Need to make sure can represent anything, so there needs to be some
+escape measures.
+
+TODO/ISSUE: These productions are not as easy to implement; it might be
+better to look at the sample implementation and work out productions
+from that.  (Though the sample doesn't distinguish "first terms in a line",
+and that would need to change.)
+
 ===========================================================
 Updated SRFI-49 spec productions
 
