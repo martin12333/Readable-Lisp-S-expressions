@@ -23,6 +23,7 @@
 
 ; TODO: Finish this code.
 ; TODO: Add support for "port"
+; TODO: Add support for vector
 ; TODO: (a . b) not working for some reason - need to debug.
 
 (define LP #\( )
@@ -89,6 +90,7 @@
     ((symbol? obj) (string->list (symbol->string obj)))
     ((null? obj)   (string->list "()"))
     ((number? obj) (string->list (number->string obj)))
+    ((boolean? obj) (list #\# (if obj #\t #\f)))
     ((char? obj)
       (append '(#\#) '(#\\)
         (cond
