@@ -41,44 +41,58 @@
 ; Rewrite this using cons of strings, then flatten the list
 ; to a single string in a final pass.
 
-(define (iformat-body m indent)
-  (if (null? m) '()
-      (append
-         (iformat-top (car m) indent)
-         (iformat-body (cdr m) indent))))
-
-(define (iformat-list m indent)
-  (if (null? m) '()
-    (append (iformat-top (car m) indent)
-      (iformat-list (cdr m) indent))))
-
-(define (atom->list x)
-  (cond
-    ((number? x) (string->list (number->string x)))
-    ((symbol? x) (string->list (symbol->string x)))
-    ((string? x) (string->list x))
-    ; TODO: Others
-))
+(define maxwidth 78)
+(define indent-increment '(#\space #\space))
 
 (define LISTLP (list #\())
 (define LISTRP (list #\)))
-(define indent-increment '(#\space #\space))
+
+
+(define (oneline-list x)
+  ; Return list x's contents, represented as a list of characters
+  (cond
+    ((null? x) '())
+    ((pair? x) (append (oneline (car x)) (oneline-list (cdr x))))
+    (#t (append '(#\space #\. #\space) (oneline x)))))
+
+(define (oneline x)
+  ; Return x represented in a single line, as a list of characters.
+  (cond
+    ((null? x) (string->list "()"))
+    ((number? x) (string->list (number->string x)))
+    ((symbol? x) (string->list (symbol->string x)))
+    ((string? x) (string->list x)) ; TODO handle double-quote, backslash, nl
+    ((pair? x) (append LISTLP (oneline-list x) LISTRP))
+    ; TODO: Others, esp. vector
+    ))
+(define (iformat-body m indent)
+  (if (null? m) '()
+    (append
+      (iformat-top (car m) indent)
+      (iformat-body (cdr m) indent))))
+
+(define (iformat-list m indent)
+  (if (null? m) '()
+    (append
+      (iformat-top (car m) indent)
+      (iformat-list (cdr m) indent))))
+
 
 (define (iformat-top m indent)
   (cond
     ( (not (pair? m)) ; if not a list (atom, etc), print it. () handled here
-      (append indent (atom->list m) '(#\newline)))
+      (append indent (oneline m) '(#\newline)))
     ;  TODO: handle non-atomic quotes.  There are questions about quote meaning
     ;  so let's be cautious for now.
     ((and (eq? (car m) 'quote) (pair? (cdr m))  ; simple quote.
           (null? (cddr m)) (symbol? (cadr m)))
-      (append indent '(#\') (atom->list (cadr m))))
+      (append indent '(#\') (oneline (cadr m))))
               ; (iformat-top (cdr m) indent) '(#\newline)
     ; TODO: match backquote calls.
     ; At this point we have a list - is it special somehow?
     ; TODO: are null? and list? the right tests?
     ( (and (null? (cdr m)) (not (pair? (car m)))) ; singleton list, no descend
-      (append indent LISTLP (atom->list (car m)) LISTRP '(#\newline)))
+      (append indent LISTLP (oneline (car m)) LISTRP '(#\newline)))
     ( (pair? (car m)) ; Is its car also a list? If so, must use GROUP.
      (append indent (string->list "group\n")
         (iformat-top  (car m) (append indent indent-increment))
@@ -90,12 +104,12 @@
         (iformat-body (cdr m) (append indent indent-increment))))))
 
 (define (iformat m indent)
-  ; TODO: Append newline after everything.
-  (display "DEBUG Formatting: ") (write m) (newline)
-  (display (list->string (iformat-top m (string->list indent)))))
+  (display (list->string (iformat-top m (string->list indent))))
+  (newline)
+  (newline))
 
 
-(iformat '(z a (b c) (d) ((e f) g (h)) i 'j) "  ")
+(iformat '(z a (b c) (d) ((e f) g (h)) i 'j) "")
 
 ; NEED TO FINISH:
 ; (define iformat-stream (mystream)
