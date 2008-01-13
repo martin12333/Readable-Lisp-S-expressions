@@ -121,22 +121,30 @@ The SRFI-49 spec productions are modified as follows:
 
   TODO: If accepted, repair below.
 
+(9) ISSUE: QUOTE, etc., are really only the rules when the abbreviations
+are followed by whitespace.  This is not made clear in the specification.
+This can be tricky to implement, too, because there's no "unget-char"
+function in Scheme.
 
-TODO/ISSUE: What to do about QUOTE (whitespace) vs. QUOTE (no whitespace),
-various indentations after the abbreviation, etc?  The code doesn't
-match the spec at all.
+(10) ISSUE: GROUP.  The "group" rules are probably not what was intended.
+For example, the:
+  expr -> GROUP head
+and
+  expr -> head
+effects are (per the spec) exactly the same, yet presumably what was
+INTENDED was to add an extra (...).
 
-TODO/ISSUE: What to do about "."?  What does it mean in various
+(11) TODO/ISSUE: What to do about "."?  What does it mean in various
 circumstances?  Presumably similar to regular lists, but the spec doesn't
 note this at all.  Also, the implementation transforms "." to "()"
 too hastily in some cases, where it should stay as ".".
 Need to make sure can represent anything, so there needs to be some
 escape measures.
 
-TODO/ISSUE: These productions are not as easy to implement; it might be
+(12) TODO/ISSUE: These productions are not as easy to implement; it might be
 better to look at the sample implementation and work out productions
 from that.  (Though the sample doesn't distinguish "first terms in a line",
-and that would need to change.)
+and that would need to change - may need to change both code and spec)
 
 ===========================================================
 Updated SRFI-49 spec productions
@@ -366,7 +374,7 @@ it'd be more likely to be right as the text below was edited.
 
   ; "head" describes multiple datums on one line:
   head -> s-expr hspace* head ; typically hspace+.
-   (append $1 $3)
+   (cons $1 $3) ; PROPOSED REPAIR
   head -> s-expr hspace* comment?
    (list $1)
    ; this is the terminating production (the other one recurses to "head");
