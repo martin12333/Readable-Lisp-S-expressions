@@ -146,6 +146,16 @@ better to look at the sample implementation and work out productions
 from that.  (Though the sample doesn't distinguish "first terms in a line",
 and that would need to change - may need to change both code and spec)
 
+
+Note: "group" is carefully defined so that any s-expression can be
+represented with I-expressions.  In particular, "group" with no parameters
+or children maps to the symbol "group", so the symbol can be represented.
+"group" can escape itself, so to begin a list with "group", just prefix it
+with group, i.e. "group group" maps to "(group)".  The symbol "group"
+only has meaning at the beginning of a line, so expressions like
++ group 1
+map to (+ group 1) as you would expect.
+
 ===========================================================
 Updated SRFI-49 spec productions
 

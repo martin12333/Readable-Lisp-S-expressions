@@ -74,8 +74,9 @@
   ; that its initial parameter was initial, and we've added 'count' params
   ; so far.  We presume that the first parameter of the original list is
   ; NOT a list.
+  ; ???  Returns the list (resulting-char-list remaining-params)
   (cond
-    ((null? remaining-params) current-line)
+    ((null? remaining-params) (cons current-line remaining-params)) ; only here
     ((>= count maximum-params)
       (append current-line '(#\newline)
         (iformat-body remaining-params (append indent indent-increment))))
@@ -88,24 +89,18 @@
                            (cdr remaining-params) (+ count 1)))))))
 
 (define (iformat-body m indent)
-  ; Display a list of items at the same indent level - the
-  ; body of iformat-list.
+  ; Display a list of items at the same indent level
   (if (null? m) '()
     (append
       (iformat-top (car m) indent)
       (iformat-body (cdr m) indent))))
 
 (define (iformat-list m indent)
-  ; Display a list of 2+ items (singleton lists are handled separately),
-  ; with a non-list as first element.
-  ; Do this by displaying the first time with iformat-top, then the rest
-  ; of the items indented.
-  (if (null? m) '()
-    (append-parameters indent (iformat-top  (car m) indent) (car m) (cdr m) 0)))
-  ;  (append
-  ;    (append-parameters (iformat-top  (car m) indent) (car m) (cdr m) 0)
-  ;    (iformat-body (cdr m) (append indent indent-increment)))))
-
+  ; Display a list.  (car list) is shown at indent.  Append on same line
+  ; the next items, as you can, and then append on new lines the remaining
+  ; items at indent + indent-increment.
+    (iformat-top  (car m) indent)
+    (iformat-body (cdr m) (append indent indent-increment)))
 
 (define (iformat-top m indent)
   (cond
@@ -114,23 +109,24 @@
     ;  TODO: handle non-atomic quotes.  There are questions about quote meaning
     ;  so let's be cautious for now.  If the test fails, we'll just print
     ;  using the literal symbol quote, and that's safe to do.
-    ((and (eq? (car m) 'quote) (pair? (cdr m))  ; simple quote.
+    ((and (eq? (car m) 'quote) (pair? (cdr m))  ; simple quote - one symbol
           (null? (cddr m)) (symbol? (cadr m)))
-      (append indent '(#\') (oneline (cadr m))))
-              ; (iformat-top (cdr m) indent) '(#\newline)
-    ; TODO: match backquote calls.
+      (append indent '(#\') (oneline (cadr m)) '(#\newline)))
+    ; TODO: match backquote calls, etc.
     ; At this point we have a list - is it special somehow?
     ; TODO: are null? and list? the right tests?
     ( (and (null? (cdr m)) (not (pair? (car m)))) ; singleton list, no descend
       (append indent LISTLP (oneline (car m)) LISTRP '(#\newline)))
-    ( (pair? (car m)) ; Is its car also a list? If so, must use GROUP.
+    ; TODO: If car is list, can often avoid using group - try doing so.
+    ( (pair? (car m)) ; Is its car also a list? If so, use GROUP.
      (append indent (string->list "group\n")
         (iformat-top  (car m) (append indent indent-increment))
         (iformat-body (cdr m) (append indent indent-increment))))
     (#t
       ; Normal case: list with non-list as 1st element.
       (append
-        (iformat-list  m indent)))))
+        (iformat-top  (car m) indent)
+        (iformat-body (cdr m) (append indent indent-increment))))))
 
 (define (iformat m indent)
   (display "DEBUG: Formatting: ") (write m) (newline) (newline)
