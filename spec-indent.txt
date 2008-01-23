@@ -99,21 +99,7 @@ The SRFI-49 spec productions are modified as follows:
     better), reword the clarifications to merge this in, and modify the
     "more detailed spec" below to match.
 
-(7) Proposed Clarification: the term "group" ONLY has the
-    special meaning below if it begins with "G" or "g".  An I-expression
-    parser MUST NOT interpret it as an I-expression group otherwise.
-
-    Rationale: This permits using the underlying implementation's
-    symbol escape mechanisms to express solely the symbol group
-    WITHOUT giving it the special I-expression meaning.  The spec was
-    not clear what an I-expression reader should do with escaped
-    symbols that _mean_ group, but do not start with G or g.
-
-    TODO: If this proposal is acceptable (or another one found that's even
-    better), reword the clarifications to merge this in, and modify the
-    "more detailed spec" below to match.
-
-(8) Proposed repair: In the production:
+(7) Proposed repair: In the production:
   head-> s-expr head
    (append $1 $2)
   the "append" should be "cons".  An s-expr need not be a list, but
@@ -121,12 +107,12 @@ The SRFI-49 spec productions are modified as follows:
 
   TODO: If accepted, repair below.
 
-(9) ISSUE: QUOTE, etc., are really only the rules when the abbreviations
+(8) ISSUE: QUOTE, etc., are really only the rules when the abbreviations
 are followed by whitespace.  This is not made clear in the specification.
 This can be tricky to implement, too, because there's no "unget-char"
 function in Scheme.
 
-(10) ISSUE: GROUP.  The "group" rules are probably not what was intended.
+(9) ISSUE: GROUP.  The "group" rules are probably not what was intended.
 For example, the:
   expr -> GROUP head
 and
@@ -134,14 +120,14 @@ and
 effects are (per the spec) exactly the same, yet presumably what was
 INTENDED was to add an extra (...).
 
-(11) TODO/ISSUE: What to do about "."?  What does it mean in various
+(10) TODO/ISSUE: What to do about "."?  What does it mean in various
 circumstances?  Presumably similar to regular lists, but the spec doesn't
 note this at all.  Also, the implementation transforms "." to "()"
 too hastily in some cases, where it should stay as ".".
 Need to make sure can represent anything, so there needs to be some
 escape measures.
 
-(12) TODO/ISSUE: These productions are not as easy to implement; it might be
+(11) TODO/ISSUE: These productions are not as easy to implement; it might be
 better to look at the sample implementation and work out productions
 from that.  (Though the sample doesn't distinguish "first terms in a line",
 and that would need to change - may need to change both code and spec)
