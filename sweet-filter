@@ -3,8 +3,52 @@
 
 ; This is a filter - it accepts sweet-expressions from standard input,
 ; and prints their S-expression translation as output.
+; It preserves comments that are outside any sweet-expression, if they begin
+; with ";" on the left edge.
 
+; It pretty-prints - this takes extra time, but it makes the results
+; much easier to understand, and even if you don't look at it all the time,
+; it's very helpful when you DO choose to examine it.
+
+
+; Load pretty-printer
+(use-modules (ice-9 pretty-print))
+
+; Load sweet.
 (set! %load-path (append %load-path '(".")))
 (use-modules (sweet))
+
+
+(define (copy-line port)
+  ; Copy line from in to out - end on EOF or newline.
+  (let ((c (peek-char port)))
+    (cond
+      ((eof-object? c) c)
+      ((char=? c #\newline) (read-char) (newline))
+      (#t (display (read-char port)) (copy-line port)))))
+
+; Sweet-filter - written this way to preserve "external" comments
+; Change "pretty-print" to "write" if speed is critical:
+(define (sweet-filter)
+  (let ((c (peek-char (current-input-port))))
+    (cond
+      ((eof-object? c) c)
+      ((char=? c #\newline ) (read-char) (newline) (sweet-filter))
+      ((char=? c #\; ) (copy-line (current-input-port)) (sweet-filter))
+      (#t
+        (let ((result (sweet-read (current-input-port))))
+          (if (eof-object? result)
+            result
+            (begin (pretty-print result) (newline) (sweet-filter))))))))
+
+
+; Older, simpler version:
+; (define (sweet-filter)
+;   (let ((result (sweet-read (current-input-port))))
+;     (if (eof-object? result)
+;       result
+;       (begin (write result) (newline) (sweet-filter)))))
+
+
 (sweet-filter)
 

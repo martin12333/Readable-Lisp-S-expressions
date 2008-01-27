@@ -26,11 +26,12 @@
 
 (define sweet-read sugar-read)
 
-(define (sweet-filter)
-   (let ((result (sweet-read (current-input-port))))
-	(if (eof-object? result)
-	    result
-          (begin (write result) (newline) (sweet-filter)))))
+; Not needed here; see the file "sweet-filter":
+; (define (sweet-filter)
+;    (let ((result (sweet-read (current-input-port))))
+; 	(if (eof-object? result)
+; 	    result
+;           (begin (write result) (newline) (sweet-filter)))))
 
 (define (sweet-load filename)
   (define (load port)
@@ -50,6 +51,6 @@
 
 ; sweet-read-save allows external users to access "original" read
 
-(export sweet-read sweet-read-save sweet-load sweet-filter)
+(export sweet-read sweet-read-save sweet-load)
 
 
