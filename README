@@ -61,6 +61,10 @@ easier-to-read format for S-expressions.  Implemented in the guile
 dialect of Scheme.  By David A. Wheeler.  MIT license.
 Currently a prototype, and only implements sweet-expressions version 0.1.
 
+* Eventually there will be a small assurance case demo, using ASCAD notation.  
+  For more on the ASCAD notation (goal / argument / evidence), see:
+  http://www.adelard.com/web/hnav/resources/ascad/ascad_download.html
+
 
 Some of this code uses guile's module capability.
 To use these in guile, you need to make sure that the %load-path
