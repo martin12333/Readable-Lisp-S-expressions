@@ -138,7 +138,7 @@
 ; Otherwise, transform to (nfx list), and presume that some macro named
 ; "nfx" will take care of things.
 (defun curly-brace-infix-reader (stream char)
-  ; (declare ignore char)
+  (declare (ignore char))
   (let ((result (read-delimited-list #\} stream t)))
     (if (simple-infix-listp result)
        (transform-simple-infix result) ; Simple infix expression.
