@@ -19,8 +19,9 @@ File suffixes are:
 
 This directory includes (in alphabetical order):
 
-* curly-infix.cl: A simple reader macro that implements infix operations
-in lists surrounded by {...}.  It can optionally be used along with
+* curly-infix.cl: A simple Common Lisp reader macro that
+implements infix operations in lists surrounded by {...}.
+It can optionally be used along with
 a separate compile/execution-time macro (such as Gloria's).
 By David A. Wheeler. MIT license.
 
@@ -30,40 +31,20 @@ Unix-like system and clisp. By David A. Wheeler.  MIT license.
 * iformat.cl: A simple pretty-printer that generates I-expressions
 (indented S-expressions) given an object. By David A. Wheeler. MIT license.
 
-* infpre.lisp: Common Lisp infix/prefix conversion utility (macro).
-By Joern Inge Vestgaarden (jivestgarden at gmail com). License LGPL.
-This is a copy from: http://folk.uio.no/jornv/infpre/infpre.lisp
-
-* gloria-infix.lisp: A macro that implements infix notation in Common Lisp.
-By Alan Manuel Gloria.  MIT license.
-
-* gloria-infixdemo.lisp: A demo of gloria-infix.lisp.
-By Alan Manuel Gloria.
-
-* modern.cl: "Modern Lisp" reader, Common Lisp.
-
 * modern.scm: "Modern Lisp" reader, Scheme.  "modern-scm-test.scm" is
   a guile Scheme program you can run to test it.
 
-* spec-indent.txt: Detailed specification information on I-expressions.
-
-* sugar.scm: an implementation of an I-expression reader, defined in
+* sugar.scm: an implementation of an indentation reader, defined mostly in
 SFRI-49.  These use indentation to reduce the number of parentheses
 needed to represent S-expressions.
 By Egil Möller (modifications by David A. Wheeler).  MIT license.
 
-* sugar-original.scm: The original sugar.scm as presented in SFRI-49.
-This version has a number of bugs in it, but is included separately since
-this is the version defined in SFRI-49. MIT license.
-
 * sweet.scm: an implementation of a "sweet-expression" reader, a much
 easier-to-read format for S-expressions.  Implemented in the guile
 dialect of Scheme.  By David A. Wheeler.  MIT license.
-Currently a prototype, and only implements sweet-expressions version 0.1.
+Builds on sugar.scm and modern.scm.
 
-* Eventually there will be a small assurance case demo, using ASCAD notation.  
-  For more on the ASCAD notation (goal / argument / evidence), see:
-  http://www.adelard.com/web/hnav/resources/ascad/ascad_download.html
+* spec-indent.txt: Detailed specification information on I-expressions.
 
 
 Some of this code uses guile's module capability.

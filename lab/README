@@ -1,0 +1,22 @@
+This the "lab" directory, where you can find older experiments,
+eye of newt, and other odd things.  These are being kept (for the moment)
+in the file set as items that might be useful.
+
+These include:
+
+* gloria-infix.lisp: A macro that implements infix notation in Common Lisp.
+By Alan Manuel Gloria.  MIT license.
+
+* gloria-infixdemo.lisp: A demo of gloria-infix.lisp.
+By Alan Manuel Gloria.
+
+* infpre.lisp: Common Lisp infix/prefix conversion utility (macro).
+By Joern Inge Vestgaarden (jivestgarden at gmail com). License LGPL.
+This is a copy from: http://folk.uio.no/jornv/infpre/infpre.lisp
+
+* modern.cl: "Modern Lisp" reader, Common Lisp.
+
+* sugar-original.scm: The original sugar.scm as presented in SFRI-49.
+This version has a number of bugs in it, but is included separately since
+this is the version defined in SFRI-49. MIT license.
+
