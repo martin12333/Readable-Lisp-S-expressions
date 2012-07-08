@@ -344,7 +344,8 @@ This works on the current selection."
 '(if (eqv? parent1 'f)
   (and (eqv? kibi 'f) (eqv? kibi-lied? #t))))
 
-
+(reader-test
+'("hi" 3))
 
 
 

@@ -347,29 +347,27 @@
     ; See if we've just finished reading a prefix, and if so, process.
     ; This recurses, to handle formats like f(x)(y).
     ; This implements prefixed (), [], and {}
-    (if (not (or (symbol? prefix) (pair? prefix)))
-      prefix  ; Prefixes MUST be symbol or cons; return original value.
-      (let ((c (peek-char port)))
-        (cond
-          ((eof-object? c) c)
-          ((char=? c #\( ) ; ).  Implement f(x).
-            (read-char port)
-            (modern-process-tail port ;(
-              (cons prefix (my-read-delimited-list #\) port))))
-          ((char=? c #\[ )  ; Implement f[x]
-            (read-char port)
-            (modern-process-tail port
-              (if modern-bracketaccess
-                (cons 'bracketaccess (cons prefix
-                  (my-read-delimited-list #\] port)))
-                (cons prefix (my-read-delimited-list #\] port)))))
-          ((char=? c #\{ )  ; Implement f{x}
-            (read-char port)
-            (modern-process-tail port
-              (list prefix
-                (process-curly
-                  (my-read-delimited-list #\} port)))))
-          (#t prefix)))))
+    (let ((c (peek-char port)))
+      (cond
+        ((eof-object? c) c)
+        ((char=? c #\( ) ; ).  Implement f(x).
+          (read-char port)
+          (modern-process-tail port ;(
+            (cons prefix (my-read-delimited-list #\) port))))
+        ((char=? c #\[ )  ; Implement f[x]
+          (read-char port)
+          (modern-process-tail port
+            (if modern-bracketaccess
+              (cons 'bracketaccess (cons prefix
+                (my-read-delimited-list #\] port)))
+              (cons prefix (my-read-delimited-list #\] port)))))
+        ((char=? c #\{ )  ; Implement f{x}
+          (read-char port)
+          (modern-process-tail port
+            (list prefix
+              (process-curly
+                (my-read-delimited-list #\} port)))))
+        (#t prefix))))
 
 
 (define (skip-line port)
