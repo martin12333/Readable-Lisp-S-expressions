@@ -97,6 +97,7 @@
 
 (define (accumulate-hspace port)
   (if (or (eqv? (peek-char port) #\space)
+          (eqv? (peek-char port) #\.)  ; EXPERIMENT: Allow '.' for indentation
           (eqv? (peek-char port) #\ht))
       (cons (read-char port) (accumulate-hspace port))
       '()))
