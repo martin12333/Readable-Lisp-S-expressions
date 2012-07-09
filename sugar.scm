@@ -218,8 +218,9 @@
       ((eqv? c #\newline)
         (read-char port) ; Newline (with no preceding comment).
         (sugar-start-expr port)) ; Consume and again
+      ((> (string-length indentation) 0) ; initial indentation disables
+        (sugar-read-save port))
       (#t
-        ; TODO: Handle  (> (string-length indentation) 0)
         (let* ((read (readblock-clean "" port))
                (level (car read))
                (block (cdr read)))
