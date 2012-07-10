@@ -39,7 +39,7 @@
         (let ((result (sweet-read (current-input-port))))
           (if (eof-object? result)
             result
-            (begin (pretty-print result) (newline) (sweet-filter))))))))
+            (begin (pretty-print result) (sweet-filter))))))))
 
 
 ; Older, simpler version:
