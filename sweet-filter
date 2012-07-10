@@ -15,7 +15,12 @@
 (use-modules (ice-9 pretty-print))
 
 ; Load sweet.
-(set! %load-path (append %load-path '(".")))
+(cond-expand
+  (guile-2
+    (eval-when (compile load eval)
+      (set! %load-path (append %load-path '(".")))))
+  (guile
+    (set! %load-path (append %load-path '(".")))))
 (use-modules (sweet))
 
 
