@@ -53,6 +53,10 @@
            sugar-load
            sugar-enable sugar-disable
           ))
+
+; these only exist in guile
+(define sugar-load-save primitive-load)
+(define sugar-current-load-port-save current-load-port)
 ;----GUILE ENDS
 
 (define group 'group)
@@ -60,8 +64,6 @@
 ; sart with "g" or "G". This may be tricky to do with this design.
 
 (define sugar-read-save read)
-
-(define sugar-load-save primitive-load)
 
 (define (consume-to-eol port)
   ; Consumes chars to end of line, WITHOUT consume the ending newline/EOF
@@ -260,27 +262,54 @@
         (if (eof-object? inp)
             #t
             (begin
-              ; TODO: On Guile-1.x, eval *requires* 2 arguments.
+              ; TODO: Scheme R5RS eval *requires* 2 arguments.
               (eval inp)
               (load port)))))
-  ; TODO: Guile manual specifies that primitive-load
-  ; specifically sets the current module to the
-  ; top-level module (guile-user), then executes
-  ; the code in that module.
-  ; Possibly, make a separate sugar-primitive-load
-  ; that does so.
-  ; Or add sugar-load to the Guile-specific code
-  ; that needs to be rewritten.
   (load (open-input-file filename)))
 
 ;----GUILE BEGINS
+(define %sugar-current-load-port #f)
+;; NOTE!
+;; This code is specifically written to imitate
+;; Guile's load.c's primitive-load implementation.
+(define (sugar-primitive-load filename)
+  (let ((hook (cond
+                ((not %load-hook)
+                  #f)
+                ((not (procedure? %load-hook))
+                  (error "value of %load-hook is neither procedure nor #f"))
+                (#t
+                  %load-hook))))
+    (cond
+      (hook
+        (hook filename)))
+    (let* ((port      (open-input-file filename))
+           (save-port port))
+      (define (load-loop)
+        (let ((form (sugar-read port)))
+          (cond
+            ((not (eof-object? form))
+              ; in Guile only
+              (primitive-eval form)
+              (load-loop)))))
+      (define (swap-ports)
+        (let ((tmp %sugar-current-load-port))
+          (set! %sugar-current-load-port save-port)
+          (set! save-port tmp)))
+      (dynamic-wind swap-ports load-loop swap-ports)
+      (close-input-port port))))
+(define (sugar-current-load-port)
+  %sugar-current-load-port)
+
 (define (sugar-enable)
   (set! read sugar-read)
-  (set! primitive-load sugar-load))
+  (set! primitive-load sugar-load)
+  (set! current-load-port sugar-current-load-port))
 
 (define (sugar-disable)
   (set! read sugar-read-save)
-  (set! primitive-load sugar-load-save))
+  (set! primitive-load sugar-load-save)
+  (set! current-load-port sugar-current-load-port-save))
 
 (sugar-enable)
 ;----GUILE ENDS

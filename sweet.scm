@@ -38,15 +38,7 @@
 ; 	    result
 ;           (begin (write result) (newline) (sweet-filter)))))
 
-(define (sweet-load filename)
-  (define (load port)
-    (let ((inp (sweet-read port)))
-	(if (eof-object? inp)
-	    #t
-	    (begin
-	      (eval inp)
-	      (load port)))))
-  (load (open-input-file filename)))
+(define sweet-load sugar-load)
 
 ; (define (enable-sweet)
 ;   (set! read sweet-read))
