@@ -1,0 +1,183 @@
+
+; streams.scm
+; by almkglor
+;
+;
+; Copyright (C) 2012 Alan Manuel K. Gloria.
+; Permission is hereby granted, free of charge, to any person
+; obtaining a copy of this software and associated documentation
+; files (the "Software"), to deal in the Software without
+; restriction, including without limitation the rights to use,
+; copy, modify, merge, publish, distribute, sublicense, and/or
+; sell copies of the Software, and to permit persons to whom the
+; Software is furnished to do so, subject to the following
+; conditions:
+;
+; The above copyright notice and this permission notice shall be
+; included in all copies or substantial portions of the
+; Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+; KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+; WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+; PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+; COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+; OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+
+; NOTICE: Parts of this code are Copyright 2003 by
+; André van Tonder.  See the [[SRFI-45]] section below
+; to see exactly the code that is copyrighted differently.
+
+define-module
+  ( example streams )
+  ; pending decision on SPLICE
+  :export
+  (
+    ; constructors
+    stream-null stream-cons
+    stream-cons-core-builder ;; needed by Guile < 2.0
+    ; recognizers
+    stream?
+    stream-pair?  stream-null?
+    ; accessor
+    stream-car stream-cdr
+    ; lambda
+    stream-lambda
+    stream-lambda-core-builder ;; needed by Guile < 2.0
+  )
+
+; Guile <2.0 requires this
+use-modules
+  ice-9 syncase
+
+; [[SRFI-45]] begins
+; implementation of SRFI 45
+; This code is based on SRFI-45, and is the same copyrighted
+; material since it is merely a translation of the original
+; code to a different surface syntax:
+; Copyright (C) André van Tonder (2003). All Rights Reserved.
+;
+; Permission is hereby granted, free of charge, to any person
+; obtaining a copy of this software and associated documentation
+; files (the "Software"), to deal in the Software without
+; restriction, including without limitation the rights to use,
+; copy, modify, merge, publish, distribute, sublicense, and/or
+; sell copies of the Software, and to permit persons to whom the
+; Software is furnished to do so, subject to the following
+; conditions:
+;
+; The above copyright notice and this permission notice shall be
+; included in all copies or substantial portions of the
+; Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+; KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+; WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+; PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+; COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+; OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+define-syntax xlazy
+  syntax-rules ()
+    xlazy(exp)
+      box(cons('lazy (lambda () exp)))
+define xeager(x)
+  box(cons('eager x))
+define-syntax xdelay
+  syntax-rules ()
+    xdelay(exp)
+      xlazy(xeager(exp))
+define xforce(promise)
+  let ((content unbox(promise)))
+    case car(content)
+      (eager)
+        cdr(content)
+      (lazy)
+        let*
+          (
+            ( promise* cdr(content)()  )
+            ( content  unbox(promise)  ))
+          if not{ car(content) eqv? 'eager }
+            begin
+              set-car! content  car(unbox(promise*))
+              set-cdr! content  cdr(unbox(promise*))
+              set-box! promise* content
+          xforce(promise)
+define box(x) list(x)
+define unbox car
+define set-box! set-car!
+;-- end of SRFI-45 implementation
+; [[SRFI-45]] ends
+
+; all cons cells are unique
+define private-stream-tag cons('() '())
+define stream-wrap(x)
+  cons(private-stream-tag x)
+define stream-unwrap(x)
+  cdr(x)
+
+; constructors
+define stream-null stream-wrap(xeager(private-stream-tag))
+define-syntax stream-cons
+  syntax-rules ()
+    stream-cons(a d)
+      stream-cons-core-builder
+        lambda () a
+        lambda () d
+
+; recognizers
+define stream?(x)
+  { pair?(x) and { car(x) eq? private-stream-tag } }
+define stream-null?(x)
+  cond
+    stream?(x)
+      let*
+        (
+          ( promise stream-unwrap(x) )
+          ( data    xforce(promise)  ))
+        { data eq? private-stream-tag }
+    #t #f
+define stream-pair?(x)
+  { stream?(x) and not(stream-null?(x)) }
+
+; accessors
+define stream-car(x)
+  let*
+    (
+      ( promise   stream-unwrap(x)  )
+      ( cell      xforce(promise)   )
+      ( promise-a car(cell)         )
+      ( a         xforce(promise-a) ))
+    a
+define stream-cdr(x)
+  let*
+    (
+      ( promise   stream-unwrap(x)  )
+      ( cell      xforce(promise)   )
+      ( promise-d cdr(cell)         )
+      ( d         xforce(promise-d) ))
+    d
+
+; lambda:
+define-syntax stream-lambda
+  syntax-rules ()
+    (stream-lambda parms body ...)
+      lambda parms
+        stream-lambda-core-builder
+          lambda () body ...
+
+;--- implementation
+define stream-cons-core-builder(fa fd)
+  stream-wrap
+    xdelay
+      cons
+        xdelay fa()
+        xdelay fd()
+define stream-lambda-core-builder(f)
+  stream-wrap
+    xlazy
+      stream-unwrap
+        f()
