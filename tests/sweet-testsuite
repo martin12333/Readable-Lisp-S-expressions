@@ -270,11 +270,18 @@ cond
 ,@x
 ,@x
 
+'(x y)
+' x y
+
+'(x y)
+' group
+   x y
+
 `(,x)
-`group
-  ,x
+` group
+   ,x
 
 `(,@x)
-`group
-  ,@x
+` group
+   ,@x
 
