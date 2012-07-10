@@ -20,6 +20,8 @@
 ; security problems if used in "real" programs.
 
 ; CHANGES:
+; * 2012-07-10 Alan Manuel K. Gloria <almkglora at gmail dot com>
+;   - Move Guile-specific code to smaller parts of code.
 ; * 2008-01-08 David A. Wheeler <dwheeler at dwheeler dot com>
 ;   - Fixed comment processing.  Inline comments now (correctly) ignored;
 ;     all comment-only lines are completely skipped with indentation ignored.
@@ -43,15 +45,23 @@
 ;     correctly use sugar-read to read the contents.
 ;  ----{ sugar.scm }----
 
-(define-module (sugar))
+;----GUILE BEGINS
+(define-module (sugar)
+  :export (group
+           sugar-read-save sugar-load-save
+           sugar-read sugar-filter
+           sugar-load
+           sugar-enable sugar-disable
+          ))
+;----GUILE ENDS
 
-(define-public group 'group)
+(define group 'group)
 ; TODO: Need to NOT give "group" its special meaning if it doesn't
 ; sart with "g" or "G". This may be tricky to do with this design.
 
-(define-public sugar-read-save read)
+(define sugar-read-save read)
 
-(define-public sugar-load-save primitive-load)
+(define sugar-load-save primitive-load)
 
 (define (consume-to-eol port)
   ; Consumes chars to end of line, WITHOUT consume the ending newline/EOF
@@ -232,40 +242,73 @@
               block)))))))
 
 
-(define-public (sugar-read . port)
+(define (sugar-read . port)
   (if (null? port)
     (sugar-start-expr (current-input-port))
     (sugar-start-expr (car port))))
 
 
-(define-public (sugar-filter)
+(define (sugar-filter)
    (let ((result (sugar-read (current-input-port))))
         (if (eof-object? result)
             result
           (begin (write result) (newline) (sugar-filter)))))
 
-(define-public (sugar-load filename)
+(define (sugar-load filename)
   (define (load port)
     (let ((inp (sugar-read port)))
         (if (eof-object? inp)
             #t
             (begin
+              ; TODO: On Guile-1.x, eval *requires* 2 arguments.
               (eval inp)
               (load port)))))
+  ; TODO: Guile manual specifies that primitive-load
+  ; specifically sets the current module to the
+  ; top-level module (guile-user), then executes
+  ; the code in that module.
+  ; Possibly, make a separate sugar-primitive-load
+  ; that does so.
+  ; Or add sugar-load to the Guile-specific code
+  ; that needs to be rewritten.
   (load (open-input-file filename)))
 
-(define-public (sugar-enable)
+;----GUILE BEGINS
+(define (sugar-enable)
   (set! read sugar-read)
   (set! primitive-load sugar-load))
 
-(define-public (sugar-disable)
+(define (sugar-disable)
   (set! read sugar-read-save)
   (set! primitive-load sugar-load-save))
 
 (sugar-enable)
+;----GUILE ENDS
 
 ; ----{ sugar.scm }----
 ; Copyright (C) 2005-2008 by Egil Möller and David A. Wheeler.
+; All Rights Reserved.
+; 
+; Permission is hereby granted, free of charge, to any person obtaining a
+; copy of this software and associated documentation files (the "Software"),
+; to deal in the Software without restriction, including without limitation
+; the rights to use, copy, modify, merge, publish, distribute, sublicense,
+; and/or sell copies of the Software, and to permit persons to whom the
+; Software is furnished to do so, subject to the following conditions:
+; 
+; The above copyright notice and this permission notice shall be included
+; in all copies or substantial portions of the Software.
+; 
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+; OTHER DEALINGS IN THE SOFTWARE.
+
+; Some modifications to this file are copyrighted:
+; Copyright (C) 2012 by Alan Manuel K. Gloria.
 ; All Rights Reserved.
 ; 
 ; Permission is hereby granted, free of charge, to any person obtaining a

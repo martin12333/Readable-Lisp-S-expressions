@@ -14,14 +14,19 @@
 ; A lot of this is guile-specific, because it uses guile's module system,
 ; but it can be easily changed for other Schemes
 
-(define-module (sweet))
-
-(define sweet-read-save read)
+;----GUILE BEGINS
+(define-module (sweet)
+  :export (sweet-read sweet-read-save sweet-load))
 
 (use-modules (modern))
 (enable-modern)
 
 (use-modules (sugar))
+
+;----GUILE ENDS
+
+(define sweet-read-save read)
+
 ; sugar auto-enables.
 
 (define sweet-read sugar-read)
@@ -50,7 +55,4 @@
 ;   (set! read old-read))
 
 ; sweet-read-save allows external users to access "original" read
-
-(export sweet-read sweet-read-save sweet-load)
-
 
