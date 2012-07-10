@@ -1,0 +1,188 @@
+; Copyright (C) 2012 Alan Manuel K. Gloria.
+; Permission is hereby granted, free of charge, to any person obtaining a
+; copy of this software and associated documentation files (the "Software"),
+; to deal in the Software without restriction, including without limitation
+; the rights to use, copy, modify, merge, publish, distribute, sublicense,
+; and/or sell copies of the Software, and to permit persons to whom the
+; Software is furnished to do so, subject to the following conditions:
+; 
+; The above copyright notice and this permission notice shall be included
+; in all copies or substantial portions of the Software.
+; 
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+; OTHER DEALINGS IN THE SOFTWARE.
+
+
+any-space -> SPACE | TAB | VTAB | FORMFEED | CR | LF | comment
+
+; the core implementations here need to be
+; factored out, as the sweet-expr parser needs
+; to do similar processing when differentating
+; between QUOTE SPACE and the QUOTE mdn-expr
+; case.
+mdn-expr -> QUOTE any-space* mdn-expr
+  (list 'quote $3)
+mdn-expr -> QUASIQUOTE any-space* mdn-expr
+  (list 'quasiquote $3)
+mdn-expr -> UNQUOTE any-space* mdn-expr
+  (list 'unquote $3)
+mdn-expr -> UNQUOTE-SPLICING any-space* mdn-expr
+  (list 'unquote-splicing $3)
+mdn-expr -> mdn-expr-post-quote
+  $1
+
+mdn-expr-post-quote -> base-expr post-mdn-expr
+  ($2 $1)
+mdn-expr-post-quote -> base-expr
+  $1
+
+post-mdn-expr -> post-mdn-expr-1 post-mdn-expr
+  (lambda (e) ($2 ($1 e)))
+post-mdn-expr -> post-mdn-expr-1
+  $1
+
+post-mdn-expr-1 -> list-notation
+  (lambda (e) (cons e $1))
+post-mdn-expr-1 -> LBRACKET list-content RBRACKET
+  (lambda (e) (cons 'bracketaccess (cons e $2)))
+post-mdn-expr-1 -> curly-infix
+  (lambda (e) (list e $1))
+
+list-notation -> LPARENS list-content RPARENS
+  $2
+; CONS = . i.e. the dotted-pair operator
+list-content -> any-space* CONS any-space+ mdn-expr any-space*
+  $4
+list-content -> any-space* mdn-expr list-content
+  (cons $2 $3)
+list-content -> any-space*
+  '()
+
+base-expr -> list-notation
+  $1
+base-expr -> bracket-notation
+  $1
+base-expr -> curly-infix
+  $1
+; basically, these cases involve calling
+; the built-in reader.
+base-expr -> STRING
+  $1
+base-expr -> NUMBER
+  $1
+base-expr -> OTHER ; i.e. for #x reader
+  $1
+base-expr -> SYMBOL
+  $1
+
+; hook for language-specific bracket meanings
+bracket-notation -> bracket-notation-scheme
+  $1
+bracket-notation-scheme -> LBRACKET list-content RBRACKET
+  $2
+bracket-notation-arc -> LBRACKET list-content RBRACKET
+  (list 'lambda (list '_) $2)
+
+; ignore completely empty and comment lines at start of
+; sweet expressions
+swt-expr -> empty-line* swt-expr-core
+  $2
+
+; some simple utility parsers
+empty-line -> comment-or-hspace* eol
+comment -> COMMENT-MARKER (not eol)*
+comment-line -> hspace* comment eol
+eol -> CR | LF
+hspace -> SPACE | TAB | FORMFEED | VTAB
+comment-or-hspace -> hspace | comment
+
+; for exact indentation
+; this part is tricky
+(initial-indent ()) -> ; empty
+(initial-indent ($2 . l)) -> (initial-indent l) hspace
+
+; implements "whitespace at top-level
+; DISABLES I-expressions"
+swt-expr-core -> hspace+ mdn-expr
+  $2
+; I-expressions must start at
+; indent 0.  Sorry dwheeler.
+; Most consistent seems
+; too complex or has other
+; problems.
+swt-expr-core -> (i-expr ())
+  $1
+
+; implements dwheeler's spec fix.
+(i-expr lvl) -> QUOTE hspace+ (i-expr lvl)
+  (list 'quote $3)
+(i-expr lvl) -> QUASIQUOTE hspace+ (i-expr lvl)
+  (list 'quasiquote $3)
+(i-expr lvl) -> UNQUOTE hspace+ (i-expr lvl)
+  (list 'unquote $3)
+(i-expr lvl) -> UNQUOTE-SPLICING hspace+ (i-expr lvl)
+  (list 'unquote-splicing $3)
+; NB: because of the hspace requirement,
+; implementing the above means that we
+; must take over some of mdn-expr's
+; work; if after finding QUOTE et al.
+; we DON'T find hspace, recurse into
+; mdn-expr and add to the current head.
+
+(i-expr lvl) -> QUOTE eol-comment-lines (body inlvl), if {lvl perfect-tail-sublist-of inlvl}
+  (cons 'quote $3)
+(i-expr lvl) -> QUASIQUOTE eol-comment-lines (body inlvl), if {lvl perfect-tail-sublist-of inlvl}
+  (cons 'quasiquote $3)
+(i-expr lvl) -> UNQUOTE eol-comment-lines (body inlvl), if {lvl perfect-tail-sublist-of inlvl}
+  (cons 'unquote $3)
+(i-expr lvl) -> UNQUOTE-SPLICING eol-comment-lines (body inlvl), if {lvl perfect-tail-sublist-of inlvl}
+  (cons 'unquote-splicing $3)
+
+; merge of GROUP and SPLICE character.
+(i-expr lvl) -> SPLICE head eol-comment-lines (body inlvl), if {lvl perfect-tail-sublist-of inlvl}
+  (append $2 $4)
+(i-expr lvl) -> SPLICE eol-comment-lines (body inlvl), if {lvl perfect-tail-sublist-of inlvl}
+  $3
+(i-expr lvl) -> SPLICE head eol-comment-lines
+  (if (= (length $2) 1)
+      (car $2)
+      $2)
+(i-expr lvl) -> head eol-comment-lines (body inlvl), if {lvl perfect-tail-sublist-of inlvl}
+  (append $1 $3)
+(i-expr lvl) -> head eol-comment-lines
+
+  (if (= (length $1) 1)
+      (car $1)
+      $1)
+
+; another simple utility parser
+eol-comment-lines -> comment-or-hspace* eol comment-line*
+
+head -> mdn-expr hspace* head
+  (cons $1 $3)
+head -> mdn-expr
+  (list $1)
+
+; body handles the final part of the
+; new "splice" concept, viz., splice
+; on same line
+; NB: in the implementation, we expect body to ALSO return
+; the indentation that initial-indent failed at, because of
+; the one-char lookahead.  Also in the implementation
+; initial-indent probably returns the initial indent, not
+; accept it as a parameter.
+(body lvl) -> (initial-indent lvl) (sub-body lvl)
+  $2
+(body lvl) -> ; empty
+  '()
+
+(sub-body lvl) -> (i-expr lvl) hspace* SPLICE hspace* (sub-body lvl)
+  (cons $1 $5)
+(sub-body lvl) -> (i-expr lvl) eol-comment-lines (body lvl)
+  (cons $1 $3)
+
