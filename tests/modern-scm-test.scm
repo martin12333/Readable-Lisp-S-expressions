@@ -32,7 +32,7 @@
 
 
 ; guile-specific stuff - set up and load using modules
-(set! %load-path (append %load-path '(".")))
+(set! %load-path (append %load-path '("..")))
 (use-modules (modern))
 
 ; Portable:

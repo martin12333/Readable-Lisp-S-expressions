@@ -3,7 +3,7 @@
 
 ; Test "Sweet"
 
-(set! %load-path (append %load-path '(".")))
+(set! %load-path (append %load-path '("..")))
 (use-modules (sweet))
 
 (define old-read sweet-read-save)

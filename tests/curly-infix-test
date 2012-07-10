@@ -34,7 +34,7 @@
 
 
 clisp << TESTCOMMANDS
-(load "curly-infix.cl")
+(load "../curly-infix.cl")
 
 ; Test lower-level routines:
 
