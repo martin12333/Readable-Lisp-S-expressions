@@ -22,6 +22,7 @@
 ; CHANGES:
 ; * 2012-07-11 Alan Manuel K. Gloria <almkglora at gmail dot com>
 ;   - Add some comments.
+;   - Implement SPLIT rules.
 ; * 2012-07-10 Alan Manuel K. Gloria <almkglora at gmail dot com>
 ;   - Move Guile-specific code to smaller parts of code.
 ; * 2008-01-08 David A. Wheeler <dwheeler at dwheeler dot com>
@@ -50,6 +51,7 @@
 ;----GUILE BEGINS
 (define-module (sugar)
   :export (group
+           split ;; should we?
            sugar-read-save sugar-load-save
            sugar-read sugar-filter
            sugar-load
@@ -66,6 +68,8 @@
 ; sart with "g" or "G". This may be tricky to do with this design.
 ; TODO: Need to actually USE group.  As of this version the
 ; variable defined above is ***not*** used.
+
+(define split (string->symbol "\\"))
 
 (define sugar-read-save read)
 
@@ -188,6 +192,8 @@
 ;;     next-level ; the indentation of the line that ends this block
 ;;     expr ;       the read-in expression
 (define (readblock level port)
+  (readblock-internal level port #t))
+(define (readblock-internal level port first-item?)
   (let ((char (peek-char port)))
     (cond
      ((eof-object? char)
@@ -204,32 +210,44 @@
      ((or (eqv? char #\space)
           (eqv? char #\ht))
         (read-char port)
-        (readblock level port))
+        (readblock-internal level port first-item?))
      (#t
-        (let* ((first (readitem level port))
-          ;; NOTE! SPLIT probably needs to
-          ;; be implemented exactly here.
-          ;; We also need to consider if we
-          ;; are at the start of the line or
-          ;; not - SPLIT-at-start is skipped,
-          ;; SPLIT-inline ends the expression
-               (rest (readblock level port))
-               (level (car rest))
-               (block (cdr rest)))
-          ;; this check converts:
-          ;;  . foo
-          ;; ->
-          ;;  (. foo)
-          ;; ->
-          ;;  foo
-          ;; HOWEVER, it might not be compatible
-          ;; 100% with the "." as indentation
-          ;; whitespace thing.
-          (if (eq? first '.)
-              (if (pair? block)
-                  (cons level (car block))
-                  rest)
-              (cons level (cons first block))))))))
+        (let ((first (readitem level port)))
+          (if (eq? first split)
+              (begin
+                ; consume horizontal, non indent whitespace
+                (consume-horizontal-whitespace port)
+                (if first-item?
+                    ; SPLIT-at-start: ignore SPLIT if occurs first on line
+                    (readblock-internal level port first-item?)
+                    ; SPLIT-inline: end this block
+                    (cons level '())))
+              (let* ((rest (readblock-internal level port #f))
+                     (level (car rest))
+                     (block (cdr rest)))
+                ;; this check converts:
+                ;;  . foo
+                ;; ->
+                ;;  (. foo)
+                ;; ->
+                ;;  foo
+                ;; HOWEVER, it might not be compatible
+                ;; 100% with the "." as indentation
+                ;; whitespace thing.
+                (if (eq? first '.)
+                    (if (pair? block)
+                        (cons level (car block))
+                        rest)
+                    (cons level (cons first block))))))))))
+
+;; Consumes as much horizontal, non-indent whitespace as
+;; possible.
+(define (consume-horizontal-whitespace port)
+  (let ((char (peek-char port)))
+    (if (or (eqv? char #\space)
+            (eqv? char #\ht))
+        (begin (read-char port)
+               (consume-horizontal-whitespace port)))))
 
 ;; reads a block and handles group, (quote), (unquote),
 ;; (unquote-splicing) and (quasiquote).

@@ -33,20 +33,19 @@
 define-module
   ( example streams )
   ; pending decision on SPLICE
-  :export
-  (
-    ; constructors
-    stream-null stream-cons
-    stream-cons-core-builder ;; needed by Guile < 2.0
-    ; recognizers
-    stream?
-    stream-pair?  stream-null?
-    ; accessor
-    stream-car stream-cdr
-    ; lambda
-    stream-lambda
-    stream-lambda-core-builder ;; needed by Guile < 2.0
-  )
+  :export \ (
+             ; constructors
+             stream-null stream-cons
+             stream-cons-core-builder ;; needed by Guile < 2.0
+             ; recognizers
+             stream?
+             stream-pair?  stream-null?
+             ; accessor
+             stream-car stream-cdr
+             ; lambda
+             stream-lambda
+             stream-lambda-core-builder ;; needed by Guile < 2.0
+           )
 
 ; Guile <2.0 requires this
 use-modules
@@ -97,9 +96,9 @@ define xforce(promise)
         cdr(content)
       (lazy)
         let*
-          (
-            ( promise* cdr(content)()  )
-            ( content  unbox(promise)  ))
+          \
+            promise* cdr(content)()
+            content  unbox(promise)
           if not{ car(content) eqv? 'eager }
             begin
               set-car! content  car(unbox(promise*))
@@ -135,9 +134,9 @@ define stream-null?(x)
   cond
     stream?(x)
       let*
-        (
-          ( promise stream-unwrap(x) )
-          ( data    xforce(promise)  ))
+        \
+          promise stream-unwrap(x)
+          data    xforce(promise)
         { data eq? private-stream-tag }
     #t #f
 define stream-pair?(x)
@@ -146,19 +145,19 @@ define stream-pair?(x)
 ; accessors
 define stream-car(x)
   let*
-    (
-      ( promise   stream-unwrap(x)  )
-      ( cell      xforce(promise)   )
-      ( promise-a car(cell)         )
-      ( a         xforce(promise-a) ))
+    \
+      promise   stream-unwrap(x)
+      cell      xforce(promise)
+      promise-a car(cell)
+      a         xforce(promise-a)
     a
 define stream-cdr(x)
   let*
-    (
-      ( promise   stream-unwrap(x)  )
-      ( cell      xforce(promise)   )
-      ( promise-d cdr(cell)         )
-      ( d         xforce(promise-d) ))
+    \
+      promise   stream-unwrap(x)
+      cell      xforce(promise)
+      promise-d cdr(cell)
+      d         xforce(promise-d)
     d
 
 ; lambda:
