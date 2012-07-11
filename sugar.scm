@@ -272,6 +272,12 @@
 ;; NOTE!
 ;; This code is specifically written to imitate
 ;; Guile's load.c's primitive-load implementation.
+;; NOTE 2!
+;; Starting with Guile 1.8, there is a new
+;; current-reader fluid that can be set to
+;; any arbitrary reader.  However, we (okay,
+;; I, Alan Manuel K. Gloria) wish to retain
+;; compatibility up to Guile 1.6
 (define (sugar-primitive-load filename)
   (let ((hook (cond
                 ((not %load-hook)
