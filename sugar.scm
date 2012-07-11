@@ -20,6 +20,8 @@
 ; security problems if used in "real" programs.
 
 ; CHANGES:
+; * 2012-07-11 Alan Manuel K. Gloria <almkglora at gmail dot com>
+;   - Add some comments.
 ; * 2012-07-10 Alan Manuel K. Gloria <almkglora at gmail dot com>
 ;   - Move Guile-specific code to smaller parts of code.
 ; * 2008-01-08 David A. Wheeler <dwheeler at dwheeler dot com>
@@ -62,6 +64,8 @@
 (define group 'group)
 ; TODO: Need to NOT give "group" its special meaning if it doesn't
 ; sart with "g" or "G". This may be tricky to do with this design.
+; TODO: Need to actually USE group.  As of this version the
+; variable defined above is ***not*** used.
 
 (define sugar-read-save read)
 
@@ -77,7 +81,7 @@
   (let ((char (peek-char port)))
     (if (or (eqv? char #\space)
               (eqv? char #\newline)
-              (eqv? char #\ht))
+              (eqv? char #\ht)) ; NB possibly more portable (among different Scheme impl) to use (integer->char 9)
           (list qt)
           (list qt (sugar-read-save port)))))
 
@@ -157,6 +161,11 @@
     line)))
 
 ;; Reads all subblocks of a block
+;; this essentially implements the "body" production
+;; - return value:
+;;   cons
+;;     next-level ; 
+;;     (xs ...) ; the body
 (define (readblocks level port)
   (let* ((read (readblock-clean level port))
            (next-level (car read))
@@ -173,6 +182,11 @@
           (cons next-level (list block)))))
 
 ;; Read one block of input
+;; this essentially implements the "head" production
+;; - return value:
+;;   cons
+;;     next-level ; the indentation of the line that ends this block
+;;     expr ;       the read-in expression
 (define (readblock level port)
   (let ((char (peek-char port)))
     (cond
@@ -193,9 +207,24 @@
         (readblock level port))
      (#t
         (let* ((first (readitem level port))
+          ;; NOTE! SPLIT probably needs to
+          ;; be implemented exactly here.
+          ;; We also need to consider if we
+          ;; are at the start of the line or
+          ;; not - SPLIT-at-start is skipped,
+          ;; SPLIT-inline ends the expression
                (rest (readblock level port))
                (level (car rest))
                (block (cdr rest)))
+          ;; this check converts:
+          ;;  . foo
+          ;; ->
+          ;;  (. foo)
+          ;; ->
+          ;;  foo
+          ;; HOWEVER, it might not be compatible
+          ;; 100% with the "." as indentation
+          ;; whitespace thing.
           (if (eq? first '.)
               (if (pair? block)
                   (cons level (car block))
