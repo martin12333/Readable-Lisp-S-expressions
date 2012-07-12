@@ -1,11 +1,10 @@
-; iformat.scm  version as of 2008-01-11
-; This Scheme program reformats an S-expression into an I-expression.
-; An I-expression can represent the same information, but can use indentation
-; instead of parentheses.
+; iformat.scm
+; Reformat an S-expression into an I-expression (indentation).
 ;
-; Copyright (C) 2006-2008 David A. Wheeler.
+; Copyright (C) 2006-2012 David A. Wheeler.
 ;
-; Released under the "MIT license":
+; This software is released as open source software under the "MIT" license:
+;
 ; Permission is hereby granted, free of charge, to any person obtaining a
 ; copy of this software and associated documentation files (the "Software"),
 ; to deal in the Software without restriction, including without limitation

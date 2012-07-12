@@ -1,8 +1,10 @@
-; Sweet-expression 0.2 pretty-printing implementation in Scheme,
-; 2007-12-28, version 0.02.
-; Copyright (C) 2006-2007 by David A. Wheeler
+; sweet-pprint.scm
+; Sweet-expression pretty-printing
+
+; Copyright (C) 2006-2012 by David A. Wheeler
 ;
-; Released under the "MIT license":
+; This software is released as open source software under the "MIT" license:
+;
 ; Permission is hereby granted, free of charge, to any person obtaining a
 ; copy of this software and associated documentation files (the "Software"),
 ; to deal in the Software without restriction, including without limitation

@@ -1,12 +1,29 @@
-; Implementation of a revision of SRFI 49, based on SRFI 49 at:
-; http://srfi.schemers.org/srfi-49/srfi-49.html
-; This provides "Indentation-sensitive syntax" for Scheme.
-; This SRFI descibes a new syntax for Scheme, called I-expressions,
-; with equal descriptive power as S-expressions. The syntax uses
-; indentation to group expressions, and has no special cases for
-;  semantic constructs of the language. It can be used both for
-;  program and data input.
-
+; sugar.scm
+; Provide "Indentation-sensitive syntax" for Scheme.
+;
+; Copyright (C) 2005-2012 by Egil Möller, David A. Wheeler,
+;   and Alan Manuel K. Gloria.
+;
+; This software is released as open source software under the "MIT" license:
+; 
+; Permission is hereby granted, free of charge, to any person obtaining a
+; copy of this software and associated documentation files (the "Software"),
+; to deal in the Software without restriction, including without limitation
+; the rights to use, copy, modify, merge, publish, distribute, sublicense,
+; and/or sell copies of the Software, and to permit persons to whom the
+; Software is furnished to do so, subject to the following conditions:
+; 
+; The above copyright notice and this permission notice shall be included
+; in all copies or substantial portions of the Software.
+; 
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+; OTHER DEALINGS IN THE SOFTWARE.
+;
 ; The following code implements I-expressions as a GNU Guile module
 ; that can be loaded using:
 ;     (use-modules (sugar))
@@ -18,7 +35,15 @@
 ; but beware; the GUILE_LOAD_PATH has higher precedence, so while this
 ; is useful for testing, setting GUILE_LOAD_PATH to include "." can have
 ; security problems if used in "real" programs.
-
+;
+; Implementation of a revision of SRFI 49, based on SRFI 49 at:
+; http://srfi.schemers.org/srfi-49/srfi-49.html
+; This SRFI descibes a new syntax for Scheme, called I-expressions,
+; with equal descriptive power as S-expressions. The syntax uses
+; indentation to group expressions, and has no special cases for
+;  semantic constructs of the language. It can be used both for
+;  program and data input.
+;
 ; CHANGES:
 ; * 2012-07-11 Alan Manuel K. Gloria <almkglora at gmail dot com>
 ;   - Add some comments.
@@ -368,46 +393,3 @@
 ;----GUILE ENDS
 
 ; ----{ sugar.scm }----
-; Copyright (C) 2005-2008 by Egil Möller and David A. Wheeler.
-; All Rights Reserved.
-; 
-; Permission is hereby granted, free of charge, to any person obtaining a
-; copy of this software and associated documentation files (the "Software"),
-; to deal in the Software without restriction, including without limitation
-; the rights to use, copy, modify, merge, publish, distribute, sublicense,
-; and/or sell copies of the Software, and to permit persons to whom the
-; Software is furnished to do so, subject to the following conditions:
-; 
-; The above copyright notice and this permission notice shall be included
-; in all copies or substantial portions of the Software.
-; 
-; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-; OTHER DEALINGS IN THE SOFTWARE.
-
-; Some modifications to this file are copyrighted:
-; Copyright (C) 2012 by Alan Manuel K. Gloria.
-; All Rights Reserved.
-; 
-; Permission is hereby granted, free of charge, to any person obtaining a
-; copy of this software and associated documentation files (the "Software"),
-; to deal in the Software without restriction, including without limitation
-; the rights to use, copy, modify, merge, publish, distribute, sublicense,
-; and/or sell copies of the Software, and to permit persons to whom the
-; Software is furnished to do so, subject to the following conditions:
-; 
-; The above copyright notice and this permission notice shall be included
-; in all copies or substantial portions of the Software.
-; 
-; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-; OTHER DEALINGS IN THE SOFTWARE.
-

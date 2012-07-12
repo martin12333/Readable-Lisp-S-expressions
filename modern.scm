@@ -1,6 +1,27 @@
-; modern.scm (Scheme), 2008-01-03
+; modern.scm
+; Implement modern-expressions
 ;
-; NOTE: NOT READY FOR PRODUCTION USE.
+; Copyright (C) 2005-2012 by David A. Wheeler and Alan Manuel K. Gloria.
+;
+; This software is released as open source software under the "MIT" license:
+;
+; Permission is hereby granted, free of charge, to any person obtaining a
+; copy of this software and associated documentation files (the "Software"),
+; to deal in the Software without restriction, including without limitation
+; the rights to use, copy, modify, merge, publish, distribute, sublicense,
+; and/or sell copies of the Software, and to permit persons to whom the
+; Software is furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included
+; in all copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+; OTHER DEALINGS IN THE SOFTWARE.
 ;
 ; Implements "modern Lisp expressions", aka mod-expressions.
 ; These implement "curly infix" and term-prefixing rules. E.G.:
@@ -11,8 +32,6 @@
 ;  x[z]        => (bracketaccess x z)
 ;
 ; Call "modern-read" to read a "modern Lisp expression", aka mod-expression.
-;
-; Copyright (C) 2008 by David A. Wheeler.
 ;
 ; NOTE: This would be really easy to implement in Scheme, except for one
 ; quirk: most Scheme implementations' "read" function CONSUMES [, ], {, and },
@@ -36,45 +55,6 @@
 ; must be PRECEDED by a delimiter like a space, and you CANNOT invoke
 ; prefixed [] and {} at all.
 
-
-; Released under the "MIT license":
-; Permission is hereby granted, free of charge, to any person obtaining a
-; copy of this software and associated documentation files (the "Software"),
-; to deal in the Software without restriction, including without limitation
-; the rights to use, copy, modify, merge, publish, distribute, sublicense,
-; and/or sell copies of the Software, and to permit persons to whom the
-; Software is furnished to do so, subject to the following conditions:
-; 
-; The above copyright notice and this permission notice shall be included
-; in all copies or substantial portions of the Software.
-; 
-; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-; OTHER DEALINGS IN THE SOFTWARE.
-
-; some modifications to this file are:
-; Copyright (C) 2012 by Alan Manuel K. Gloria.
-; Permission is hereby granted, free of charge, to any person obtaining a
-; copy of this software and associated documentation files (the "Software"),
-; to deal in the Software without restriction, including without limitation
-; the rights to use, copy, modify, merge, publish, distribute, sublicense,
-; and/or sell copies of the Software, and to permit persons to whom the
-; Software is furnished to do so, subject to the following conditions:
-; 
-; The above copyright notice and this permission notice shall be included
-; in all copies or substantial portions of the Software.
-; 
-; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-; OTHER DEALINGS IN THE SOFTWARE.
 
 ;----GUILE BEGINS
 ; Use Guile's module system.  Delete this

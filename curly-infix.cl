@@ -1,4 +1,29 @@
-; curly-infix.cl (Common Lisp), 2007-12-31
+; curly-infix.cl
+; Implements an infix reader macro: {...} surrounds an infix expression.
+;
+; Copyright (C) 2007-2012 by David A. Wheeler
+;
+; This software is released as open source software under the "MIT" license:
+;
+; Permission is hereby granted, free of charge, to any person obtaining a
+; copy of this software and associated documentation files (the "Software"),
+; to deal in the Software without restriction, including without limitation
+; the rights to use, copy, modify, merge, publish, distribute, sublicense,
+; and/or sell copies of the Software, and to permit persons to whom the
+; Software is furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included
+; in all copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+; OTHER DEALINGS IN THE SOFTWARE.
+;
+;
 ; Implements an infix reader macro: {...} surrounds an infix expression.
 ; E.G., {2 + 3 + 4} is transformed at read time into (+ 2 3 4), and
 ; {2 + {3 * 4}} transforms into (+ 2 (* 3 4)).
@@ -6,8 +31,6 @@
 ; without complications. It's also a VERY simple implementation, so there's
 ; less to "go wrong".  You can optionally use it in conjunction with an
 ; execution/compile-time macro to support precedence, if you want.
-;
-; Copyright (C) 2007 by David A. Wheeler.
 ;
 ; This reader macro is invoked on expressions surrounded by {...}, and
 ; presumes that all infix operators are surrounded by whitespace.
@@ -68,26 +91,7 @@
 ;   must do that.
 ; * Doesn't rename functions, or give them new infix names.  You can define
 ;   functions/macros with traditional infix names separately, if desired.
-;
-; 
-; Released under the "MIT license":
-; Permission is hereby granted, free of charge, to any person obtaining a
-; copy of this software and associated documentation files (the "Software"),
-; to deal in the Software without restriction, including without limitation
-; the rights to use, copy, modify, merge, publish, distribute, sublicense,
-; and/or sell copies of the Software, and to permit persons to whom the
-; Software is furnished to do so, subject to the following conditions:
-; 
-; The above copyright notice and this permission notice shall be included
-; in all copies or substantial portions of the Software.
-; 
-; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-; OTHER DEALINGS IN THE SOFTWARE.
+
 
 ; Utility functions to implement the simple infix system:
 
