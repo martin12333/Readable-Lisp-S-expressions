@@ -151,6 +151,6 @@
 ; Invoke curly-brace-infix-reader when "{" is read in:
 (set-macro-character #\{ #'curly-brace-infix-reader)
 
-; This is necessary, else a cuddled } will be part of an atom: 
+; This is necessary, else a cuddled } will be part of an atom:
 (set-macro-character #\} (get-macro-character #\) nil))
 

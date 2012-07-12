@@ -107,7 +107,7 @@
 ;   (code-char 10) (code-char 11)     ; LF, VT
 ;   (code-char 12) (code-char 13)))))  ; FF, CR
 ;   If so, also modify the "delimiters" list above.
-  
+
 
 (define (skip-whitespace port)
   ; Consume whitespace.
@@ -175,7 +175,7 @@
   ; a vector expression.
   (read-char port) ; Remove #
   (cond
-    ((eof-object? (peek-char port)) (peek-char port)) ; If eof, return eof. 
+    ((eof-object? (peek-char port)) (peek-char port)) ; If eof, return eof.
     (#t
       ; Not EOF. Read in the next character, and start acting on it.
       (let ((c (read-char port)))
@@ -184,7 +184,7 @@
           ((char=? c #\f)  #f)
           ((ismember? c '(#\i #\e #\b #\o #\d #\x))
             (read-number port (list #\# c)))
-          ((char=? c #\( )  ; Vector. 
+          ((char=? c #\( )  ; Vector.
             (list->vector (my-read-delimited-list #\) port)))
           ((char=? c #\\) (process-char port))
           (#t (read-error "Invalid #-prefixed string")))))))
@@ -250,7 +250,7 @@
               (read-char port)
               (list 'unquote-splicing
                (underlying-read port)))
-           (#t 
+           (#t
             (list 'unquote
               (underlying-read port)))))
       ; The "(" calls modern-read, but since this one shouldn't normally
@@ -412,7 +412,7 @@
                 (read-char port)
                 (list 'unquote-splicing
                  (modern-read2 port)))
-             (#t 
+             (#t
               (list 'unquote
                 (modern-read2 port)))))
         ((char=? c #\( ) ; )

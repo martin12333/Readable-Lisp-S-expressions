@@ -5,17 +5,17 @@
 ;   and Alan Manuel K. Gloria.
 ;
 ; This software is released as open source software under the "MIT" license:
-; 
+;
 ; Permission is hereby granted, free of charge, to any person obtaining a
 ; copy of this software and associated documentation files (the "Software"),
 ; to deal in the Software without restriction, including without limitation
 ; the rights to use, copy, modify, merge, publish, distribute, sublicense,
 ; and/or sell copies of the Software, and to permit persons to whom the
 ; Software is furnished to do so, subject to the following conditions:
-; 
+;
 ; The above copyright notice and this permission notice shall be included
 ; in all copies or substantial portions of the Software.
-; 
+;
 ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -27,7 +27,7 @@
 ; The following code implements I-expressions as a GNU Guile module
 ; that can be loaded using:
 ;     (use-modules (sugar))
-; This command will only work if this file's directory is in %load-path; 
+; This command will only work if this file's directory is in %load-path;
 ; if the file is not installed anywhere, you can do this with:
 ;      (set! %load-path (append %load-path '(".")))
 ; You can also use this (esp. for testing):
@@ -193,7 +193,7 @@
 ;; this essentially implements the "body" production
 ;; - return value:
 ;;   cons
-;;     next-level ; 
+;;     next-level ;
 ;;     (xs ...) ; the body
 (define (readblocks level port)
   (let* ((read (readblock-clean level port))
@@ -297,7 +297,7 @@
         (let ((d (consume-to-eol port)))
           (cond
             ((eof-object? d) d) ; If EOF after comment, return it.
-            (#t  
+            (#t
               (read-char port) ; Newline after comment.  Consume NL
               (sugar-start-expr port))))) ; and try again
       ((eqv? c #\newline)
