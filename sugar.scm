@@ -45,7 +45,9 @@
 ;  program and data input.
 ;
 ; CHANGES:
-; * 2012-07-11 Alan Manuel K. Gloria <almkglora at gmail dot com>
+; * 2012-07-13 Alan Manuel K. Gloria <almkglor at gmail dot com>
+;   - Correct SPLIT rules.
+; * 2012-07-11 Alan Manuel K. Gloria <almkglor at gmail dot com>
 ;   - Add some comments.
 ;   - Implement SPLIT rules.
 ; * 2012-07-10 Alan Manuel K. Gloria <almkglora at gmail dot com>
@@ -95,6 +97,10 @@
 ; variable defined above is ***not*** used.
 
 (define split (string->symbol "\\"))
+; this is a special unique object that is used to
+; represent the existence of the split symbol
+; so that clean handles it properly.
+(define split-tag (cons '() '()))
 
 (define sugar-read-save read)
 
@@ -168,6 +174,10 @@
     line)
    ((eq? (car line) 'group)
     (cdr line))
+   ; remove our special split-tag when it is used
+   ; to fix SPLIT-by-itself
+   ((eq? (car line) split-tag)
+     (cdr line))
    ((null? (car line))
     (cdr line))
    ((list? (car line))
@@ -244,7 +254,32 @@
                 (consume-horizontal-whitespace port)
                 (if first-item?
                     ; SPLIT-at-start: ignore SPLIT if occurs first on line
-                    (readblock-internal level port first-item?)
+                    ;; NB: need a couple of hacks to fix
+                    ;; behavior when SPLIT-by-itself
+                    (if (eqv? (peek-char port) #\newline) ; check SPLIT-by-itself
+                        ; SPLIT-by-itself: some hacks needed
+                        (let* ((sub-read (readblock level port))
+                               (outlevel (car sub-read))
+                               (sub-expr (cdr sub-read)))
+                          (if (and (null? sub-expr) (string=? outlevel level)) ; check SPLIT followed by same indent line
+                              ; blank SPLIT:
+                              ; \
+                              ; \
+                              ; x
+                              ; ===> x, not () () x
+                              (readblock level port)
+                              ; non-blank SPLIT: insert our
+                              ; split-tag.  Without SPLIT-tag
+                              ; readblock-clean will mishandle:
+                              ; \
+                              ;   x y
+                              ; ==> ((x y)), which is a single
+                              ; item list.  Single-item lists
+                              ; are extracted, resulting in
+                              ; (x y)
+                              (cons outlevel (cons split-tag sub-expr))))
+                        ; not SPLIT-by-itself: just ignore it
+                        (readblock-internal level port first-item?))
                     ; SPLIT-inline: end this block
                     (cons level '())))
               (let* ((rest (readblock-internal level port #f))
@@ -266,13 +301,16 @@
                     (cons level (cons first block))))))))))
 
 ;; Consumes as much horizontal, non-indent whitespace as
-;; possible.
+;; possible.  Treat comments as horizontal whitespace too.
 (define (consume-horizontal-whitespace port)
   (let ((char (peek-char port)))
-    (if (or (eqv? char #\space)
+    (cond
+      ((or (eqv? char #\space)
             (eqv? char #\ht))
         (begin (read-char port)
-               (consume-horizontal-whitespace port)))))
+               (consume-horizontal-whitespace port)))
+      ((eqv? char #\;)
+        (consume-to-eol port)))))
 
 ;; reads a block and handles group, (quote), (unquote),
 ;; (unquote-splicing) and (quasiquote).
@@ -283,7 +321,10 @@
     (if (or (not (list? block)) (> (length block) 1))
           (cons next-level (clean block))
           (if (= (length block) 1)
-              (cons next-level (car block))
+              (if (eq? (car block) split-tag)
+                  ; "magically" remove split-tag
+                  (cons next-level '())
+                  (cons next-level (car block)))
               (cons next-level '.)))))
 
 
