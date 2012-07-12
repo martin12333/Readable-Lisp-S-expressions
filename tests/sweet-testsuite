@@ -280,6 +280,12 @@ a b
 a
   c \ d e f
 
+; test initial indent - this is a trivial test, it's hard to test this
+; using this test suite approach
+(first)
+
+  (first)
+
 '(x y)
 ' x y
 
