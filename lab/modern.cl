@@ -26,10 +26,10 @@
 ; the rights to use, copy, modify, merge, publish, distribute, sublicense,
 ; and/or sell copies of the Software, and to permit persons to whom the
 ; Software is furnished to do so, subject to the following conditions:
-; 
+;
 ; The above copyright notice and this permission notice shall be included
 ; in all copies or substantial portions of the Software.
-; 
+;
 ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -144,7 +144,7 @@
     '(#\Space #\Tab #\Newline #\Return (code-char 9)    ; Tab
       (code-char 10) (code-char 11)     ; LF, VT
       (code-char 12) (code-char 13)))))  ; FF, CR
-  
+
 
 (defun skip-whitespace (&optional (input-stream *standard-input*)
                         eof-error-p eof-value recursive-p)
@@ -238,7 +238,7 @@
         ;       (list 'system::splice
         ;        (modern-read2 input-stream eof-error-p
         ;                      eof-value recursive-p)))
-        ;    (t 
+        ;    (t
         ;     (list 'system::unquote
         ;       (modern-read2 input-stream eof-error-p
         ;                     eof-value recursive-p)))))
@@ -255,11 +255,11 @@
             (call-old-paren input-stream eof-error-p eof-value recursive-p)
             (progn
               (read-char input-stream eof-error-p eof-value recursive-p)
-              (my-read-delimited-list #\) 
+              (my-read-delimited-list #\)
                     input-stream eof-error-p eof-value t))))
         ((char= c #\[ )
             (read-char input-stream eof-error-p eof-value recursive-p)
-            (my-read-delimited-list #\] 
+            (my-read-delimited-list #\]
                     input-stream eof-error-p eof-value t))
         ((char= c #\{ )
           (read-char input-stream eof-error-p eof-value recursive-p)
@@ -292,7 +292,7 @@
 ;     (if (simple-infix-listp result)
 ;        (transform-simple-infix result) ; Simple infix expression.
 ;        (cons 'nfx result)))) ; Non-simple; prepend "nfx" to the list.
-; 
+;
 ; ; Invoke curly-brace-infix-reader when "{" is read in:
 ; (set-macro-character #\{ #'curly-brace-infix-reader)
 
@@ -318,14 +318,14 @@
 (set-macro-character #\` #'startup-modern-read nil modern-readtable)
 (set-macro-character #\, #'startup-modern-read nil modern-readtable)
 
-; This is necessary, else a cuddled ] or } will be part of an atom: 
+; This is necessary, else a cuddled ] or } will be part of an atom:
 (set-macro-character #\] (get-macro-character #\) ) nil modern-readtable)
 (set-macro-character #\} (get-macro-character #\) ) nil modern-readtable)
 
 (defun modern-read (&optional (input-stream *standard-input*)
                                eof-error-p eof-value recursive-p)
   (setf *readtable* modern-readtable)
-  (let 
+  (let
     ((result (modern-read2 input-stream eof-error-p eof-value recursive-p)))
     (setf *readtable* old-readtable)
     result))
@@ -348,7 +348,7 @@
 ; (defun read (&optional (input-stream *standard-input*)
 ;                                eof-error-p eof-value recursive-p)
 ;   (funcall #'modern-read input-stream eof-error-p eof-value recursive-p))
-; 
+;
 ; (defun read-preserving-whitespace (&optional (input-stream *standard-input*)
 ;                                eof-error-p eof-value recursive-p)
 ;   (funcall #'modern-read input-stream eof-error-p eof-value recursive-p))

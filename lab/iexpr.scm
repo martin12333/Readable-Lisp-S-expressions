@@ -37,7 +37,7 @@
 (define sugar-load-save primitive-load) ; guile-specific
 
 ; The second character is an embedded "tab"; this seems to be the most
-; portable way to include the tab character. 
+; portable way to include the tab character.
 (define hspaces '(#\space #\	))
 
 (define-macro let1
@@ -55,7 +55,7 @@
     `(let* ((**return** ,production) ; not hygenic, don't use this var name
             (result (cdr **return**)))   ; intentionally NOT hygenic.
        (cons (car **return**) ,result-calculation))))
-    
+
 (define (ismember? item lyst)
   ; Returns true if item is member of lyst, else false.
   (pair? (member item lyst)))
@@ -207,7 +207,7 @@
 
 (define (consume-to-eol port)
   ; Consumes chars to end of line. Returns which character caused
-  ; end-of-line (newline or EOF), WITHOUT consuming the newline/EOF. 
+  ; end-of-line (newline or EOF), WITHOUT consuming the newline/EOF.
   (let1 c (peek-char port)
     (cond
       ((eof-object? c) c)
@@ -236,7 +236,7 @@
         (let1 c (consume-to-eol port)
           (cond
             ((eof-object? c) c) ; If EOF after comment, return it.
-            (#t  
+            (#t
               (read-char port) ; Newline after comment.  Consume NL
               (sugar-start-expr port))))) ; and try again
       ((char=? c #\newline)
@@ -250,7 +250,7 @@
           (if (string=? new-indent "")
               result
               (error "should have 0-length indent")))))))
-           
+
 
 (define (sugar-read . port)
   (if (null? port)
@@ -266,17 +266,17 @@
 ; Copyright (C) 2005-2008 by David A. Wheeler and Egil Möller.
 ; All Rights Reserved; released using the Free-libre / open source software
 ; "MIT license":
-; 
+;
 ; Permission is hereby granted, free of charge, to any person obtaining a
 ; copy of this software and associated documentation files (the "Software"),
 ; to deal in the Software without restriction, including without limitation
 ; the rights to use, copy, modify, merge, publish, distribute, sublicense,
 ; and/or sell copies of the Software, and to permit persons to whom the
 ; Software is furnished to do so, subject to the following conditions:
-; 
+;
 ; The above copyright notice and this permission notice shall be included
 ; in all copies or substantial portions of the Software.
-; 
+;
 ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -294,7 +294,7 @@
 ; 	      (eqv? char #\ht))
 ; 	  (list qt)
 ; 	  (list qt (sugar-read-save port)))))
-; 
+;
 ;   (define (readitem level port)
 ;     (let ((char (peek-char port)))
 ;       (cond
@@ -306,23 +306,23 @@
 ; 	(readquote level port 'unquote))
 ;        (#t
 ; 	(sugar-read-save port)))))
-; 
+;
 ;   (define (indentation>? indentation1 indentation2)
 ;     (let ((len1 (string-length indentation1))
 ; 	  (len2 (string-length indentation2)))
 ;       (and (> len1 len2)
 ; 	   (string=? indentation2 (substring indentation1 0 len2)))))
-; 
+;
 ;   (define (indentationlevel port)
 ;     (define (indentationlevel)
 ;       (if (or (eqv? (peek-char port) #\space)
 ; 	      (eqv? (peek-char port) #\ht))
-; 	  (cons 
+; 	  (cons
 ; 	   (read-char port)
 ; 	   (indentationlevel))
 ; 	  '()))
 ;     (list->string (indentationlevel)))
-; 
+;
 ;   (define (clean line)
 ;     (cond
 ;      ((not (pair? line))
@@ -350,7 +350,7 @@
 ; 	   (cdr line))))
 ;      (#t
 ;       line)))
-; 
+;
 ;   ;; Reads all subblocks of a block
 ;   (define (readblocks level port)
 ;     (let* ((read (readblock-clean level port))
@@ -366,7 +366,7 @@
 ; 		    (cons next-next-level next-blocks))
 ; 		(cons next-next-level (cons block next-blocks))))
 ; 	  (cons next-level (list block)))))
-; 
+;
 ;   ;; Read one block of input
 ;   (define (readblock level port)
 ;     (let ((char (peek-char port)))
@@ -393,7 +393,7 @@
 ; 		  (cons level (car block))
 ; 		  rest)
 ; 	      (cons level (cons first block))))))))
-; 
+;
 ;   ;; reads a block and handles group, (quote), (unquote) and
 ;   ;; (quasiquote).
 ;   (define (readblock-clean level port)
@@ -405,13 +405,13 @@
 ; 	  (if (= (length block) 1)
 ; 	      (cons next-level (car block))
 ; 	      (cons next-level '.)))))
-; 
+;
 ;   (define-public (sugar-filter)
 ;      (let ((result (sugar-read (current-input-port))))
 ; 	(if (eof-object? result)
 ; 	    result
 ;             (begin (display result) (newline) (sugar-filter)))))
-; 
+;
 ;   (define-public (sugar-load filename)
 ;     (define (load port)
 ;       (let ((inp (sugar-read port)))
@@ -421,22 +421,22 @@
 ; 	      (eval inp)
 ; 	      (load port)))))
 ;     (load (open-input-file filename)))
-; 
+;
 ;   (define-public (sugar-enable)
 ;     (set! read sugar-read)
 ;     (set! primitive-load sugar-load))
-; 
+;
 ;   (define-public (sugar-disable)
 ;     (set! read sugar-read-save)
 ;     (set! primitive-load sugar-load-save))
-; 
+;
 ;   (sugar-enable)
-; 
+;
 
 ; I-expressions: Detailed Specification
 ; David A. Wheeler
 ; 2008-01-06
-; 
+;
 ; SRFI-49 (http://srfi.schemers.org/srfi-49/srfi-49.html dated 2005/05/29)
 ; provides a pretty good system for indentation, but there are some issues
 ; with it.  The spec has a few errors, and the BNF productions don't
@@ -446,7 +446,7 @@
 ; only informally.  In addition, the sample code isn't obviously related
 ; to the BNF productions, so it's difficult to be confident that the code
 ; is correct even if its known bugs were fixed.
-; 
+;
 ; So, below are step-by-step transforms of the
 ; SRFI-49 rules.  The first one is a mild "fix-up" of the SFRI rules;
 ; the second takes the first and adds whitespace rules that are
@@ -455,24 +455,24 @@
 ; detailed, in a step-by-step fashion, and then create an implementation
 ; that is "obviously correct" from the detailed spec.
 ; That way, we can be much more confident that the code is correct.
-; 
+;
 ; ===========================================================
 ; The SRFI-49 spec productions are modified as follows:
-; 
+;
 ; (1) Fix spec bug: the "head" productions' "expr" are changed to "s-expr"
-; 
+;
 ; (2) Fix spec bug: the rule for "head-> s-expr" is changed from "(list expr)"
 ;     to "(list $1)"
-; 
+;
 ; (3) Fix spec bug: the missing rule for UNQUOTE-SPLICING has been added
-; 
+;
 ; (4) Editorial: rules are reordered so the GROUP productions are adjacent
-; 
+;
 ; (5) Relaxation of rule: This version adds a "start-expr" production,
 ;     which defines reading the first line of an expression, and adds a new
 ;     rule to permit indented initial lines:
 ;         start-expr -> INDENT expr DEDENT
-; 
+;
 ;     Rationale: The original specification completely forbid initial
 ;     indentation, but this turns out to have been overly strict.  See below
 ;     for details about various alternatives. This alternative was selected
@@ -481,11 +481,11 @@
 ;     alternatives required hidden state or could be easily misleading
 ;     (resulting in subtle bugs).  This means that if initial expressions
 ;     are all indented, they must be separated with blank lines.
-; 
+;
 ; (6) Proposed bug-fix: After the FIRST line of an expression, any
 ;     line with ONLY zero or more spaces and tabs, and no ;-comment,
 ;     ENDS the expression.
-; 
+;
 ;     This is only a small change from the spec text as literally written.
 ;     A line with zero or more horizontal whitespace characters followed by
 ;     a ;-comment, aka an "empty line", is (still) ALWAYS ignored
@@ -494,14 +494,14 @@
 ;     "blank line" (it has only blanks), is (still) ignored and skipped
 ;     when reading the first line of an expression (and not considered
 ;     for identation processing).
-; 
+;
 ;     Rationale: If the spec were followed literally, interactive use
 ;     would be quite unpleasant. That's because the results of an
 ;     expression would NEVER be written until after the next
 ;     expression's first line was entered, which is very confusing.
 ;     Here, pressing "Enter Enter" (a blank line) causes execution, which is
 ;     much clearer.
-; 
+;
 ;     The modification also states that lines with JUST spaces and tabs
 ;     would be considered the same as a line with no characters at all.
 ;     Otherwise, printed and displayed text could not be understood with
@@ -512,51 +512,51 @@
 ;     remove trailing whitespace, so differentiating between lines that
 ;     have only spaces/tabs from lines with no characters can lead to
 ;     many quiet changes in code meaning.
-; 
+;
 ;     Note that the sample implementation (in the spec) does not follow the
 ;     spec production rules - it DOES return on empty lines in
 ;     some circumstances.  So this is considered a bug in the production rules.
-; 
+;
 ;     As noted in its spec, I-expressions were specifically designed
 ;     so that they will work the same way whether they are entered
 ;     interactively or via a file, enabling cut-and-paste
 ;     and avoiding the complexities of a "mode" flag (which can be hard
 ;     to get right).
-; 
+;
 ;     To create vertical space, just use a ;-leading comment.  Note that
 ;     lines with only leading whitespace and ;-comments MAY, but
 ;     NEED NOT, align with other text - so quick "FIXME" comments, or
 ;     lengthy comments, need not match the indentation.
-; 
+;
 ;     *** THIS IS UNDER DISCUSSION IN THE MAILING LIST. ***
 ;     TODO: If this proposal is acceptable (or another one found that's even
 ;     better), reword the clarifications to merge this in, and modify the
 ;     "more detailed spec" below to match.
-; 
+;
 ; (7) Proposed Clarification: the term "group" ONLY has the
 ;     special meaning below if it begins with "G" or "g".  An I-expression
 ;     parser MUST NOT interpret it as an I-expression group otherwise.
-; 
+;
 ;     Rationale: This permits using the underlying implementation's
 ;     symbol escape mechanisms to express solely the symbol group
 ;     WITHOUT giving it the special I-expression meaning.  The spec was
 ;     not clear what an I-expression reader should do with escaped
 ;     symbols that _mean_ group, but do not start with G or g.
-; 
+;
 ;     TODO: If this proposal is acceptable (or another one found that's even
 ;     better), reword the clarifications to merge this in, and modify the
 ;     "more detailed spec" below to match.
-; 
+;
 ; ===========================================================
 ; Updated SRFI-49 spec productions
-; 
+;
 ; The modified production rules are:
-; 
+;
 ;   start-expr -> expr
 ;     $1
 ;   start-expr -> INDENT expr DEDENT
 ;     $2 ; Use "most consistent" approach for handling toplevel indents.
-; 
+;
 ;   ; Abbreviations; these are considered first, BEFORE reading as s-expr:
 ;   expr -> QUOTE expr
 ;    (list 'quote $2)
@@ -566,7 +566,7 @@
 ;    (list 'unquote $2)
 ;   expr -> UNQUOTE-SPLICING expr  ; ,@
 ;    (list 'unquote-splicing $2)
-; 
+;
 ;   ; Note: GROUP is defined so it's only meaningful if it's the first
 ;   ; non-abbreviation of the line; GROUP has no special effect elsewhere.
 ;   expr -> GROUP head INDENT body DEDENT
@@ -583,29 +583,29 @@
 ;    (if (= (length $1) 1)
 ;        (car $1)
 ;      $1)
-; 
+;
 ;   ; "head" is what happens on ONE line, and a head sequence ends with eol.
 ;   head-> s-expr head
 ;    (append $1 $2)
 ;   head-> s-expr
 ;    (list $1)
-; 
+;
 ;   ; "body" is the set of children lines (from the point-of-view of head)
 ;   body -> expr body
 ;     (cons $1 $2)
 ;   body ->
 ;    '()
-; 
-; 
+;
+;
 ; ===========================================================
 ; Detailed version of spec
-; 
+;
 ; The original spec described primarily in words what to do about whitespace.
 ; This can make it difficult to implement with certainty, so the following
 ; is a more detailed version of the production rules, but with whitespace
 ; rules made explicit as part of the productions (instead of being
 ; implicit in the English text).
-; 
+;
 ; Instead of having an anonymous "whitespace preprocessor", we will
 ; define a special rule that can consume a line's initial indentation, and
 ; compare that with the currently-active indentation.
@@ -617,12 +617,12 @@
 ; or EOF.  It will match INDENT if the new line is further indented,
 ; DEDENT for each level of dedenting, and SAME if it's the same level of
 ; indenting.
-; 
+;
 ; Note that EOF can start a whole new expression, but can't be in
 ; the middle of one.  Thus, a ' followed by EOF is not legal, but
 ; EOF is perfectly legal result of start_expr (it's how a correctly-terminated
 ; file would end).
-; 
+;
 ; A current proposal is to treat as line with only horizontal
 ; whitespace as if it's a line solely with newline - i.e.,
 ; as if the horizontal whitespace didn't even exist.
@@ -630,23 +630,23 @@
 ; and typically can't see them when editing either.
 ; This appears to be the safer alternative.
 ; That's what the text below does.
-; 
+;
 ; The following is psuedocode for key functions, followed by
 ; modified productions that add specific rules for whitespace processing
 ; (instead of the English descriptions):
-; 
+;
 ; define get-leading-hspace()
 ;    {sequence <- get/consume sequence of spaces and tabs}
 ;    if pair?(memv(peek-char() '(NL EOF)))
 ;       ""  ; if newline (no ;), treat as newline-by-self. Don't consume here.
 ;       sequence ; return new indent level
-; 
+;
 ; Here's the whitespace processor, described
 ; in pseudocode using sweet-expressions 0.2.
 ; This is called when INDENT/SAME/DEDENT are being matched; we know we
 ; have one (it begins with a newline after start-expr), but we need
 ; to figure out which one.
-; 
+;
 ; define process-line-begin()
 ;   ; Used by the productions OTHER that start-expr; consume the newline
 ;   ; (which is the current character if you peek), and return the new
@@ -670,16 +670,16 @@
 ;   ; to complete a start-expr, which returns with the expression.
 ;   ; If we're _already_ in start-expr, then start-expr will just consume the
 ;   ; blank line and keep going.
-; 
+;
 ; define whats-indent(old-indent new-indent)
 ;   cond
 ;     {new-indent > old-indent}  return(INDENT)
 ;     {new-indent = old-indent}  return(SAME)
 ;     {new-indent < old-indent}  return(DEDENT)
 ;     #t                         error("Incomparable indents")
-;   
-; 
-; 
+
+;
+;
 ; Here are the modified production rules, making whitespace explicit.
 ; The expectation is that in the implementation, each of these nonterminals
 ; would be implemented by a function; one of its input parameters would be
@@ -690,20 +690,20 @@
 ; because when the whitespace symbols were inserted they caused the positions
 ; of the other non-terminals to change.  In some cases $last is used, so that
 ; it'd be more likely to be right as the text below was edited.
-; 
+;
 ;   ; Definitions of whitespace:
 ;   eol -> comment? eol-final               ; eol = "end of line"
 ;   comment -> ";" (not NL|EOF)*   ; Note: does not consume NL or EOF.
 ;   eol-final -> NL | EOF
 ;   hspace -> SPACE | TAB
-; 
+;
 ;   ; Start-up is special (esp. for EOF handling).
 ;   ; INDENT-NO-NL, DEDENT-NO-NL, and SAME-NO-NL are like INDENT, DEDENT, and
 ;   ; SAME, but they do NOT start with a newline.  Thus, they do NOT consume
 ;   ; an initial newline.  We use these, because in start-expr we are ALREADY
 ;   ; at the start of a new line, while in all other productions, we don't
 ;   ; transition to a new line until we see the newline character.
-; 
+;
 ;   start-expr -> hspace* comment? EOF
 ;     ; Consume this EOF, in case it's interactive - all others should be peeked
 ;     ; Note: get hspace* using get-leading-hspace, and NOT by skipping the
@@ -724,7 +724,7 @@
 ;     ; (because it's a whitespace-only line, or because it's another expr
 ;     ; starting at the left edge).  Note that SAME-NO-NL does NOT consume a
 ;     ; newline; that consumption was already done by expr.
-; 
+;
 ;   ; "expr" describes a single expression/datum.
 ;   ; Abbreviations; these are considered first (have higher priority)
 ;   ; that the abbreviation processing built into the nonterminal "s-expr".
@@ -747,7 +747,7 @@
 ;   ; indentation level. This prevents nonsense like a ' with two arguments.
 ;   ; Notice that an expr is required after an abbreviation,
 ;   ; so '<EOF> is not legal.
-; 
+;
 ;   ; In actual code, you can't distinguish between GROUP and head until the
 ;   ; leading s-expr is read in.  So in the implementation:
 ;   ;   * peek at the first character - remember if it is G/g or not.
@@ -769,7 +769,7 @@
 ;    (if (= (length $1) 1)
 ;        (car $1)
 ;      $1)
-; 
+;
 ;   ; "head" describes multiple datums on one line:
 ;   head -> s-expr hspace* head ; typically hspace+.
 ;    (append $1 $3)
@@ -778,7 +778,7 @@
 ;    ; this is the terminating production (the other one recurses to "head");
 ;    ; this production is followed by EOF or newline (newline is represented
 ;    ; here as part of the indentation token)
-; 
+;
 ;   ; "body" describes the sequence of child lines.
 ;   ; It's impossible to have the sequence INDENT DEDENT, there MUST be
 ;   ; something in between.  Thus, when body is first called, it cannot
@@ -799,7 +799,7 @@
 ;     ; If it's DEDENT, we've ended the list of bodies.
 ;     ; Note: It would be illegal to be INDENT; INDENT would be handled
 ;     ; by expr, not body.
-; 
+;
 ;   ; s-expr is a traditional s-expr, aka datum.  It does NOT begin with
 ;   ; ";", hspace, NL, or EOF.
 ;   ; To implement it, the I-expression reader presumably calls on
@@ -815,9 +815,9 @@
 ;   ; an abbreviation, then the next line's indentation is ignored since we
 ;   ; KNOW we're trying to read in exactly one datum.
 ;   ; Use a style checker if you want to curb the worst abuses.
-; 
-; 
-; 
+;
+;
+;
 ; Note: I-expressions do not provide special syntax for improper lists,
 ; e.g., (a . b).  When you need them, just use s-expressions or cons.
 ; A _syntax_ for this would be easy, e.g., rules like:
@@ -829,32 +829,32 @@
 ; anyway; you can use s-expressions or cons to construct these,
 ; and there's an implementation headache to create
 ; another syntax in I-expressions to implement them.
-; 
+;
 ; Other than in start-expr, "INDENT" matches newline followed by a deeper
 ; indentation than the current one.  Similarly for SAME and DEDENT.
 ; Thus, INDENT/SAME/DEDENT only match in non-initial lines streams that
 ; begin with newline or EOF... and obviously, INDENT can't match an EOF.
-; 
+;
 ; On a match, all the matching characters (and only those) should be
 ; consumed.  The exception is EOF: Except for the first rule of
 ; start-expr, "peek" for EOF and don't consume it.
-; 
+;
 ; Note some invariants:
 ; * You can't follow DEDENT/SAME/INDENT with any hspace - it'd be ambiguous.
 ;   - Therefore, expr, head, and body can't begin with an hspace.
-; 
+;
 ; Goals:
 ; * Inside a line, you should be able to separate s-expr with hspace+
 ; * hspace* should be okay at the end of each line, with unchanged meaning.
 ;   - This is handled by a "head" production
-; 
+;
 ; ========================
 ; Whitespace problems in original spec
-; 
+;
 ; Unfortunately, there are several problems in the original spec
 ; regarding the handling of lines that contain 0+ spaces or tabs,
 ; possibly followed by a ;-leading comment.
-; 
+;
 ; The original final I-expression spec says:
 ; "Unfortunately, [in Python] the syntaxes of file input and
 ; interactive input differs slightly...
@@ -867,12 +867,12 @@
 ; space of each line is compared to the leading space of the last non-empty line
 ; preceeding it, and then removed. If the line is preceeded by more space than
 ; the last one was, the special symbol INDENT is added..."
-; 
+;
 ; Thus, in the original spec, a line with only horizontal whitespace,
 ; optionally trailed by a comment (presumably a ;-comment), was ignored after
 ; the first line of an expression.  But this says nothing about what
 ; happens on the FIRST line of an expression; some clarification is needed.
-; 
+;
 ; In addition, the text above implies that in I-expressions,
 ; the file input and interactive input formats are the same.
 ; Yet this is improbable as stated.  The "obvious" reading of the spec
@@ -886,31 +886,31 @@
 ; 2
 ; > + 1 3
 ; 3
-; 
+;
 ; The sample implementation given in SFRI-49 didn't really follow
 ; the spec of SFRI-49.  For example, it DID accept indentation of the
 ; first line (though with a problematic semantic), and it DID accept
 ; blank lines (in some cases) as ending an expression.
 ; This suggests that the spec is not quite accurate, and needs careful
 ; revision/clarification.
-; 
+;
 ; The sections below discuss two issues:
 ; * Leading whitespace at start of expression reading
 ; * Blank and comment-only lines after initial line of an expression.
-; 
+;
 ; ========================
 ; ISSUE: Leading whitespace at start of expression reading in I-expressions
-; 
+;
 ; I propose a specific interpretation for leading whitespace in an
 ; indented I-expression, which I'll call the "most consistent" format.
 ; Below is an explanation of the problem, and my proposed resolution.
-; 
+;
 ; Thoughts?  After fiddling with the alternatives, I'm getting very worried that
 ; it'd be easy to type in text that would APPEAR to mean one thing, but would
 ; ACTUALLY mean something else.  That's definitely something to avoid.
 ; My "most consistent" proposal completely avoids that, without being quite as
 ; strict as Python's "thou shalt always start any expression at the left edge".
-; 
+;
 ; First, the initial situation:  The I-expression spec revised 2005/05/29
 ; does NOT permit an indentation at the beginning of an expression.
 ; The sample implementation does permit them; it simply skips horizontal
@@ -918,19 +918,19 @@
 ; forbidding them is easily done, but is overly strict; the
 ; "skip horizontal whitespace" approach has unforunate consequences
 ; (as discussed further below).
-; 
+;
 ; What SHOULD be done if the start of an expression
 ; (I'll call that start-expr) begins with whitespace that
 ; is followed by content (and not just an
 ; ;-comments, newline (NL) or end-of-file (EOF))? E.G.:
 ;  start-expr -> hspace+ (not eol...)
-; 
+;
 ; An example should make it clear. Imagine you read this (three lines,
 ; all indented to the same level at the TOPMOST level):
 ;    x
 ;    y
 ;    z
-; 
+;
 ; One interpretation is that there should be 3 different results: x, y, and z.
 ; But consider how this would be read.
 ; You'd read in the indentation before x, and note
@@ -940,7 +940,7 @@
 ; But wait - if you did that, when you read "y" you would think that there
 ; was <i>no</i> indentation (the previous read consumed it), and thus z
 ; would be further indented... returning (y&nbsp;z).  Ooops, that can't be right.
-; 
+;
 ; Since essentially the dawn of Lisp in the 1950s
 ; there has been a "read" function that reads an S-expression
 ; from the input and returns it.
@@ -954,13 +954,13 @@
 ; it's not clear you should - simple interfaces are a good idea, if you can
 ; get them, and adding such "indentation state" as a required parameter would
 ; certainly complicate the interface.
-; 
+;
 ; In theory, you could "unget" all the indentation characters, so that the
 ; next read would work correctly.
 ; But support for this is rare; for example,
 ; Scheme doesn't even <i>have</i> a standard unget character function, and
 ; the Common Lisp standard only supports one character unget (not enough!).
-; 
+;
 ; You could store "hidden state" inside the read function.
 ; Problem is, character-reading is not the exclusive domain of the read function;
 ; many other functions read characters, and they are unlikely to look at this
@@ -974,19 +974,19 @@
 ; "Hidden state" could allow for all this, but the complications of
 ; <i>implementing</i> hidden state suggests that it'd be better to spec
 ; something that does <i>not</i> require hidden state.
-; 
-; 
-; 
-; 
+;
+;
+;
+;
 ; Possible solutions:
-; 
+;
 ; 1. Simplest approach: Forbid it.  It's an error if it doesn't start on
 ; left line.  Python does this.  You could argue that the original spec requires
 ; this, since there's no production that accepts an initial INDENT.
 ; The xyz example above would then be illegal.
-; 
+;
 ; But this is not very flexible; #2 (next) appears to be a better option.
-; 
+;
 ; 2. Most consistent: Allow indentation on initial line (and consider that
 ; the indentation for that expression), as long all later lines have
 ; a further indentation OR are on the left edge (including a blank line
@@ -998,30 +998,30 @@
 ; have to separate the different expressions with blank lines.
 ; To implement this:
 ; start-expr -> INDENT expr DEDENT
-; 
+;
 ; The xyz example above would be illegal, and thus rejected.
 ; However, if you inserted blank lines between x, y, and z, you'd be okay.
-; 
+;
 ; This is the most consistent and most flexible, and has no risk of
 ; misinterpretation, so I propose this one.
-; 
+;
 ; 3. Original implementation ignores hspace:
 ; start-expr -> hspace+ start-expr
 ;   $2
-; 
+;
 ; But when this is given the xyz example above, it will misleadingly
 ; produce (x y z).  That kind of surprise seems undesirable, esp. given
 ; that there is alternative #2.
-; 
+;
 ; 4. Instead, could disable indent processing on initial hspace, to maximize
 ; backwards-compatibility and simplify some command line use:
 ; start-expr -> hspace+ s-expr
 ;   $2
-; 
+;
 ; This would read in the "xyz" example as you would expect.  It would
 ; also read in old text like this as it was originally intended:
 ;   (define x 5) (define y 6)
-; 
+;
 ; However, other formats will be misinterpreted, e.g.,
 ;   fact
 ;     5
@@ -1029,50 +1029,50 @@
 ;   fact
 ;   5
 ; and not as (fact 5).
-; 
+;
 ; This is risky; on printouts, it might not at ALL be obvious when
 ; expressions are indented like this - resulting in hard-to-debug code
 ; and hidden defects.
-; 
+;
 ; In general, I think it's much wiser to reject text that might
 ; be very easily misinterpreted by the reader.  So I suggest #2.
-; 
-; 
+;
+;
 ; ========================
 ; ISSUE: Blank and comment-only lines after initial line of an expression.
-; 
+;
 ;     *** THIS IS UNDER DISCUSSION IN THE MAILING LIST. ***
-; 
+;
 ; Both the original I-expression definition, and this revision,
 ; have the following rule: After the initial line of an expression,
 ; any line containing zero or more leading spaces and tabs,
 ; FOLLOWED by a ";"-leading comment, is COMPLETELY IGNORED, even in the
 ; middle of an expression.  In particular, its indentation is ignored.
-; 
+;
 ; The proposed change is that lines with 0+ spaces or tabs,
 ; and no ;-leading comment, end an expression.  Note that a line
 ; WITH just spaces and tabs is treated the same as a line with no characters.
-; 
+;
 ; This changes is necessary for reasonable interactive use.
 ; If lines with only zero or more horizontal whitespace were completely
 ; ignored, as the original spec stated, then interactive use is painful.
 ; Results would print only after the first line of the NEXT expression
 ; are entered.  Even the "sample implementation" in the spec didn't
 ; actually do this.
-; 
+;
 ; To make interactivity pleasant, at least lines with absolutely no
 ; characters should end an expression after the first line.  That way,
 ; "Enter Enter" will cause an expression to be executed.
-; 
+;
 ; Then the question becomes, how should a line with 1 or more
 ; spaces/tabs, and no ;-comments, be interpreted?  And should a line
 ; with the current indentation be treated differently than if it is not?
-; 
+;
 ; Such lines COULD be interpreted as "continue the indentation"
 ; if they matched the current indentation... or even if there was
 ; at least one space/tab.  A minor argument FOR this alternative
 ; is that it makes "pretty" vertical spacing a possibility.
-; 
+;
 ; But there is a serious problem to treating lines with no characters
 ; differently from lines with only spaces and tabs.
 ; The problems is that this could lead to mysterious bugs.
@@ -1083,14 +1083,14 @@
 ; quietly remove trailing horizontal whitespace on a line
 ; (including many text editors and mailers); these deletions would
 ; generally be unnoticed, yet change the meaning of a program.
-; 
+;
 ; The risk of mysterious, undetectable errors in code is serious,
 ; and one that leads at least Wheeler to recommend that space/tab-only
 ; lines (with no comments) be treated exactly like lines with no
 ; characters at all.  Certainly, it's sometimes valuable to create
 ; vertical space, but this can be done using comment-only lines
 ; (which may, but need not, have leading whitespace).
-; 
+;
 ; It is true that Python 2.5 in _interactive_ mode distinguishes
 ; between lines with no characters (not even whitespace) and lines
 ; with only whitespace.  In interactive mode, a line with no characters
@@ -1105,7 +1105,7 @@
 ; there is no standard way for doing so.  This distinction of
 ; interactive and non-interactive modes is very inconvenient, and
 ; should be avoided if practical.
-; 
+;
 ; Note that this does NOT change how comment-only lines, preceded by
 ; only 0+ spaces and tabs, are interpreted - these are STILL completely
 ; ignored, and any indentation they have is considered irrelevant.
@@ -1118,10 +1118,10 @@
 ; need for a difference between interactive and non-interactive use -
 ; there's no need for a "mode" flag (which can be hard to get right),
 ; and you can always cut-and-paste from a file into an interactive session.
-; 
+;
 ; ===================
 ; Notes about multiline comments
-; 
+;
 ; Note that multiline comments (e.g., #| ... |#) are NOT considered
 ; comments by these rules. There is simply no way a
 ; library implementation can reliably detect
@@ -1136,22 +1136,22 @@
 ;     line, nothing trails the line after the closing |#, and
 ;     the opening #| is indented the same way as the first
 ;     non-comment-only line following the closing #|.
-; 
+;
 ; ========================
 ; Possible Test patterns
-; 
+;
 ; Below are some possible test patterns to help eliminate
 ; errors in an implementation.
-; 
+;
 ; test = (first (second third?)?)?  (SPACE? semicolon - comment)?
 ; first = abbreviation? t1 (SPACE t2 (SPACE t3)?)?
 ; t1 = A | GROUP
 ; t2 = B
 ; t3 = C
-; 
+;
 ; second = first | SPACE first
 ; third = SPACE first | SPACE SPACE second
-; 
+;
 ;
 
 
@@ -1195,8 +1195,8 @@
 ; ; consider {} or [] as delimiters.  But then closing characters } and ]
 ; ; must be PRECEDED by a delimiter like a space, and you CANNOT invoke
 ; ; prefixed [] and {} at all.
-; 
-; 
+;
+;
 ; ; Released under the "MIT license":
 ; ; Permission is hereby granted, free of charge, to any person obtaining a
 ; ; copy of this software and associated documentation files (the "Software"),
@@ -1204,10 +1204,10 @@
 ; ; the rights to use, copy, modify, merge, publish, distribute, sublicense,
 ; ; and/or sell copies of the Software, and to permit persons to whom the
 ; ; Software is furnished to do so, subject to the following conditions:
-; ; 
+; ;
 ; ; The above copyright notice and this permission notice shall be included
 ; ; in all copies or substantial portions of the Software.
-; ; 
+; ;
 ; ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 ; ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 ; ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -1215,18 +1215,18 @@
 ; ; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 ; ; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ; ; OTHER DEALINGS IN THE SOFTWARE.
-; 
-; 
+;
+;
 ; ; Configuration:
 ; (define modern-backwards-compatible #f) ; If true, "(" triggers old reader.
 ; (define modern-bracketaccess #t) ; If true, "f[...]" => [bracketaccess f ...]
 ;                                  ; if not, "f[...]" => [f ...].
-; 
+;
 ; ; Preserve original read.
 ; (define old-read read)
-; 
+;
 ; ; A few useful utilities:
-; 
+;
 ; (define (debug-result marker value)
 ;   ; For debugging - you can insert this without adding let, etc., because
 ;   ; after printing it returns the original value.
@@ -1237,12 +1237,12 @@
 ;   (write value)
 ;   (newline)
 ;   value)
-; 
+;
 ; ; Define the tab character; a tab is immediately after the backslash.
 ; ; Unfortunately, this seems to be the only portable way to define the
 ; ; tab character in Scheme, so we'll do it once (here) and use it elsewhere.
 ; (define tab #\	)
-; 
+;
 ; ; Unfortunately, since most Scheme readers will consume [, {, }, and ],
 ; ; we have to re-implement our own Scheme reader.  Ugh.
 ; ; If you fix your Scheme's "read" so that [, {, }, and ] are considered
@@ -1251,9 +1251,9 @@
 ; ; with the limitation noted above about vector constants #(...).
 ; ; We WILL call old-read on string reading (that DOES seem to work
 ; ; in common cases, and lets us use the implementation's string extensions).
-; 
+;
 ; (define modern-delimiters `(#\space #\newline #\( #\) #\[ #\] #\{ #\} ,tab))
-; 
+;
 ; (define (read-until-delim port delims)
 ;   ; Read characters until eof or "delims" is seen; do not consume them.
 ;   ; Returns a list of chars.
@@ -1262,17 +1262,17 @@
 ;        ((eof-object? c) '())
 ;        ((ismember? (peek-char port) delims) '())
 ;        (#t (cons (read-char port) (read-until-delim port delims))))))
-; 
+;
 ; (define (read-error message)
 ;   (display "Error: ")
 ;   (display message)
 ;   '())
-; 
+;
 ; (define (read-number port starting-lyst)
 ;   (string->number (list->string
 ;     (append starting-lyst
 ;       (read-until-delim port modern-delimiters)))))
-; 
+;
 ; (define (process-char port)
 ;   ; We've read #\ - returns what it represents.
 ;   (cond
@@ -1290,8 +1290,8 @@
 ;                 ((string-ci=? rest-string "newline") #\newline)
 ;                 ((string-ci=? rest-string "tab") tab) ; Scheme extension.
 ;                 (#t (read-error "Invalid character name"))))))))))
-; 
-; 
+;
+;
 ; (define (process-sharp port)
 ;   ; We've peeked a # character.  Returns what it represents.
 ;   ; Note: Since we have to re-implement process-sharp anyway,
@@ -1300,7 +1300,7 @@
 ;   ; a vector expression.
 ;   (read-char port) ; Remove #
 ;   (cond
-;     ((eof-object? (peek-char port)) (peek-char port)) ; If eof, return eof. 
+;     ((eof-object? (peek-char port)) (peek-char port)) ; If eof, return eof.
 ;     (#t
 ;       ; Not EOF. Read in the next character, and start acting on it.
 ;       (let ((c (read-char port)))
@@ -1309,13 +1309,13 @@
 ;           ((char=? c #\f)  #f)
 ;           ((ismember? c '(#\i #\e #\b #\o #\d #\x))
 ;             (read-number port (list #\# c)))
-;           ((char=? c #\( )  ; Vector. 
+;           ((char=? c #\( )  ; Vector.
 ;             (list->vector (my-read-delimited-list #\) port)))
 ;           ((char=? c #\\) (process-char port))
 ;           (#t (read-error "Invalid #-prefixed string")))))))
-; 
+;
 ; (define digits '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
-; 
+;
 ; (define (process-period port)
 ;   ; We've peeked a period character.  Returns what it represents.
 ;   (read-char port) ; Remove .
@@ -1329,7 +1329,7 @@
 ;         ; As an extension we can support them all.
 ;         (string->symbol (list->string (cons #\.
 ;           (read-until-delim port modern-delimiters))))))))
-; 
+;
 ; (define (underlying-read port)
 ;   ; This tiny reader implementation REQUIRES a port value.
 ;   ; That way, while writing/modifying it, we
@@ -1353,7 +1353,7 @@
 ;           (read-number port (list c))
 ;           (string->symbol (list->string (cons c
 ;             (read-until-delim port modern-delimiters))))))
-; 
+;
 ;       ; We'll reimplement abbreviations, (, and ;.
 ;       ; These actually should be done by modern-read (and thus
 ;       ; we won't see them), but redoing it here doesn't cost us anything,
@@ -1375,7 +1375,7 @@
 ;               (read-char port)
 ;               (list 'unquote-splicing
 ;                (underlying-read port)))
-;            (#t 
+;            (#t
 ;             (list 'unquote
 ;               (underlying-read input-stream eof-error-p
 ;                             eof-value recursive-p)))))
@@ -1398,15 +1398,15 @@
 ;       (#t ; Nothing else.  Must be a symbol start.
 ;         (string->symbol (list->string
 ;           (read-until-delim port modern-delimiters)))))))
-; 
-; 
+;
+;
 ; ; End of Scheme reader re-implementation.
-; 
-; 
-; 
-; 
+;
+;
+;
+;
 ; ; Utility functions to implement the simple infix system:
-; 
+;
 ; ; Return true if lyst has an even # of parameters, and the (alternating) first
 ; ; ones are "op".  Used to determine if a longer lyst is infix.
 ; ; Otherwise it returns false.
@@ -1418,7 +1418,7 @@
 ;      ((not (eq? op (car lyst))) #f) ; fail - operators not all equal?.
 ;      ((null? (cdr lyst)) #f) ; fail - odd # of parameters in lyst.
 ;      (#t (even-and-op-prefix op (cddr lyst))))) ; recurse.
-; 
+;
 ; ; Return True if the lyst is in simple infix format (and should be converted
 ; ; at read time).  Else returns NIL.
 ; (define (simple-infix-listp lyst)
@@ -1429,24 +1429,24 @@
 ;                            ; this way for performance)
 ;     (symbol? (cadr lyst))  ; 2nd parameter must be a symbol.
 ;     (even-and-op-prefix (cadr lyst) (cdr lyst)))) ; even parameters equal??
-; 
+;
 ; ; Return alternating parameters in a lyst (1st, 3rd, 5th, etc.)
 ; (define (alternating-parameters lyst)
 ;   (if (or (null? lyst) (null? (cdr lyst)))
 ;     lyst
 ;     (cons (car lyst) (alternating-parameters (cddr lyst)))))
-; 
+;
 ; ; Transform a simple infix list - move the 2nd parameter into first position,
 ; ; followed by all the odd parameters.  Thus (3 + 4 + 5) => (+ 3 4 5).
 ; (define (transform-simple-infix lyst)
 ;    (cons (cadr lyst) (alternating-parameters lyst)))
-; 
+;
 ; (define (process-curly lyst)
 ;   (if (simple-infix-listp lyst)
 ;      (transform-simple-infix lyst) ; Simple infix expression.
 ;      (cons 'nfx lyst))) ; Non-simple; prepend "nfx" to the list.
-; 
-; 
+;
+;
 ; (define (my-read-delimited-list stop-char port)
 ;   ; like read-delimited-list of Common Lisp, but calls modern-read instead.
 ;   ; read the "inside" of a list until its matching stop-char, returning list.
@@ -1475,7 +1475,7 @@
 ;                      datum2))))
 ;              (#t (cons datum
 ;                (my-read-delimited-list stop-char port)))))))))
-; 
+;
 ; (define (my-is-whitespace c)
 ;   (ismember? c `(#\space #\newline ,tab)))
 ; ; TODO: Possibly support other whitespace chars, e.g.:
@@ -1483,15 +1483,15 @@
 ; ;   (code-char 10) (code-char 11)     ; LF, VT
 ; ;   (code-char 12) (code-char 13)))))  ; FF, CR
 ; ;   If so, also modify the "delimiters" list above.
-;   
-; 
+;
+;
 ; (define (skip-whitespace port)
 ;   ; Consume whitespace.
 ;   (cond
 ;     ((my-is-whitespace (peek-char port))
 ;       (read-char port)
 ;       (skip-whitespace port))))
-; 
+;
 ; (define (modern-process-tail port prefix)
 ;     ; See if we've just finished reading a prefix, and if so, process.
 ;     ; This recurses, to handle formats like f(x)(y).
@@ -1519,8 +1519,8 @@
 ;                 (process-curly
 ;                   (my-read-delimited-list #\} port)))))
 ;           (#t prefix)))))
-; 
-; 
+;
+;
 ; (define (skip-line port)
 ;   ; Skip every character in the line - end on EOF or newline.
 ;   (let ((c (peek-char port)))
@@ -1528,7 +1528,7 @@
 ;       ((not (or (eof-object? c) (char=? c #\newline)))
 ;         (read-char port)
 ;         (skip-line port)))))
-; 
+;
 ; (define (modern-read2 port)
 ;   ; Read using "modern Lisp notation".
 ;   ; This implements unprefixed (), [], and {}
@@ -1556,7 +1556,7 @@
 ;                 (read-char port)
 ;                 (list 'unquote-splicing
 ;                  (modern-read2 port)))
-;              (#t 
+;              (#t
 ;               (list 'unquote
 ;                 (modern-read2 port)))))
 ;         ((char=? c #\( ) ; )
@@ -1581,7 +1581,6 @@
 ;                 ; (display "\nDEBUG peek after= ")
 ;                 ; (write (peek-char port))
 ;                 result))))))
-; 
-; 
-; 
-; 
+;
+;
+;

@@ -20,10 +20,10 @@
 # the rights to use, copy, modify, merge, publish, distribute, sublicense,
 # and/or sell copies of the Software, and to permit persons to whom the
 # Software is furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included
 # in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -159,7 +159,7 @@ testing123
 
 ; Misc. notes - not used:
 ; (assert (equal '{2 + 3} '(+ 2 3)))
-; 
+;
 ; (assert (equal '{2 * n} '(* 2 n)))
 ; (assert (equal '{x eq y} '(eq x y)))
 ; (assert (equal '{2 + 3 + 4} '(+ 2 3 4)))
@@ -186,28 +186,28 @@ testing123
 ;   [if {n < 2}
 ;     n
 ;     fibup(n 2 1 0)]]
-; 
+;
 ; ; Demo its use:
-; 
+;
 ; [defun fibfast (n)
 ;   [if {n < 2}
 ;     n
 ;     [fibup n 2 1 0]]]
-; 
+;
 ; [defun fibup (max count n-1 n-2)
 ;   [if {max = count}
 ;     {n-1 + n-2}
 ;     [fibup max {count + 1} {n-1 + n-2} n-1]]]
-; 
+;
 ; [setf x 5]
 ; [setf correct {1 <= x <= 10}]
-; 
+;
 ; ; Test that demo worked correctly:
 ; (assert (= (fibfast 10) 55))
 ; (assert correct)
-; 
+;
 ; ; More demos:
-; 
+;
 ; [setf y {3 + {4 * 5}}]
 ; [setf z {{1 <= x <= 10} and {x > 0}}]
 

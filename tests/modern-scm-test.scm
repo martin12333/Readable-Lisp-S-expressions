@@ -2,14 +2,14 @@
 !#
 
 ;  Test modern.scm.  Also has demo of its use.
-; 
+;
 ;  It should print T for the successful loading of the file,
 ;  followed by a bunch of NILs (the result of successful asserts) and
 ;  some other calculations, WITHOUT any "assertion fails" messages.
 ;  If there is an assertion error message of the form:
 ;   *** - ....
 ;  then you must fix something.
-; 
+;
 ;  Copyright (C) 2008 by David A. Wheeler.
 ;  Released under the "MIT license":
 ;  Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,10 +18,10 @@
 ;  the rights to use, copy, modify, merge, publish, distribute, sublicense,
 ;  and/or sell copies of the Software, and to permit persons to whom the
 ;  Software is furnished to do so, subject to the following conditions:
-;  
+;
 ;  The above copyright notice and this permission notice shall be included
 ;  in all copies or substantial portions of the Software.
-;  
+;
 ;  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 ;  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 ;  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -73,7 +73,7 @@
 ; (assert (even-and-op-prefix '+ '(+ 4 + 5)))
 ; (assert (not (even-and-op-prefix '+ '(+ 4 - 5))))
 ; (assert (not (even-and-op-prefix '+ '(+ 4 +))))
-; 
+;
 ; (assert (simple-infix-listp '(1 + 2)))
 ; (assert (simple-infix-listp '(1 + 2 + 3)))
 ; (assert (not (simple-infix-listp '(1 + 2 * 3))))
@@ -81,10 +81,10 @@
 ; (assert (not (simple-infix-listp '(1 +))))
 ; (assert (not (simple-infix-listp '(1))))
 ; (assert (not (simple-infix-listp '())))
-; 
+;
 ; (test (alternating-parameters '(1 2 3)) '(1 3))
 ; (test (alternating-parameters '(1 2 3 4 5)) '(1 3 5))
-; 
+;
 ; (test (transform-simple-infix '(1 + 3)) '(+ 1 3))
 ; (test (transform-simple-infix '(1 + 3 + 5)) '(+ 1 3 5))
 

@@ -272,7 +272,7 @@ define whats-indent(old-indent new-indent)
     {new-indent = old-indent}  return(SAME)
     {new-indent < old-indent}  return(DEDENT)
     #t                         error("Incomparable indents")
-  
+
 
 
 Here are the modified production rules, making whitespace explicit.
