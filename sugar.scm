@@ -93,8 +93,6 @@
 (define group 'group)
 ; TODO: Need to NOT give "group" its special meaning if it doesn't
 ; sart with "g" or "G". This may be tricky to do with this design.
-; TODO: Need to actually USE group.  As of this version the
-; variable defined above is ***not*** used.
 
 (define split (string->symbol "\\"))
 ; this is a special unique object that is used to
@@ -172,7 +170,7 @@
     line)
    ((null? line)
     line)
-   ((eq? (car line) 'group)
+   ((eq? (car line) group)
     (cdr line))
    ; remove our special split-tag when it is used
    ; to fix SPLIT-by-itself
