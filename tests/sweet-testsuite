@@ -294,6 +294,10 @@ a
 '(x y)
 ' x y
 
+()
+(;comment
+)
+
 '(x y)
 ' group
    x y
