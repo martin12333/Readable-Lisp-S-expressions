@@ -1,16 +1,17 @@
-This directory contains code to implement improvements in
-the readability of Lisp-like (s-expression-based) programming languages,
-including Common Lisp, Scheme (including guile), Emacs Lisp, BitC,
-ACL2, AutoCAD Lisp, etc.  There are several different approaches here,
-to support different needs and goals.
+Readable Lisp S-expressions Project
 
-ALL of the code is released under open source software / Free Software
+This software improves the readability of Lisp S-expressions.
+
+For more information, see: http://readable.sourceforge.net.
+
+Lisp-based languages where this software can be helpful include Common Lisp,
+Scheme (including guile), Emacs Lisp, Clojure, Arc, BitC, ACL2,
+SUO-KIF, the GCC MiddleEndLispTranslator (MELT),
+Satisfiability Modulo Theories Library (SMT-LIB), NewLisp, and ISLisp.
+
+All of the code is released under open source software / Free Software
 licenses approved by both the OSI (opensource.org) and FSF (fsf.org).
 Most are released under the MIT license, which permits practically any use.
-
-For more information, see:
- http://sourceforge.net/projects/readable/
- http://www.dwheeler.com/readable/
 
 File suffixes are:
 .cl   - Common Lisp
@@ -20,28 +21,21 @@ File suffixes are:
 This directory includes (in alphabetical order):
 
 * curly-infix.cl: A simple Common Lisp reader macro that
-implements infix operations in lists surrounded by {...}.
-It can optionally be used along with
-a separate compile/execution-time macro (such as Gloria's).
-By David A. Wheeler. MIT license.
-
-* curly-infix-test: test suite/demo of curly-infix-test.  Requires
-Unix-like system and clisp. By David A. Wheeler.  MIT license.
+implements infix operations in lists surrounded by {...}.  MIT license.
 
 * iformat.cl: A simple pretty-printer that generates I-expressions
-(indented S-expressions) given an object. By David A. Wheeler. MIT license.
+(indented S-expressions) given an object. MIT license.
 
 * modern.scm: "Modern Lisp" reader, Scheme.  "modern-scm-test.scm" is
   a guile Scheme program you can run to test it.
 
 * sugar.scm: an implementation of an indentation reader, defined mostly in
 SFRI-49.  These use indentation to reduce the number of parentheses
-needed to represent S-expressions.
-By Egil Möller (modifications by David A. Wheeler).  MIT license.
+needed to represent S-expressions.  MIT license.
 
 * sweet.scm: an implementation of a "sweet-expression" reader, a much
 easier-to-read format for S-expressions.  Implemented in the guile
-dialect of Scheme.  By David A. Wheeler.  MIT license.
+dialect of Scheme.  MIT license.
 Builds on sugar.scm and modern.scm.
 
 * spec-indent.txt: Detailed specification information on I-expressions.
@@ -65,5 +59,4 @@ scheme file to be loaded instead of an intended one).
 
 Once the %load-path is set up, you can easily load modules, e.g.:
   (use-modules (sugar))
-
 
