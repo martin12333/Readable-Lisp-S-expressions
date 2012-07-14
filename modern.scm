@@ -111,10 +111,14 @@
 
 (define (skip-whitespace port)
   ; Consume whitespace.
-  (cond
-    ((my-is-whitespace (peek-char port))
-      (read-char port)
-      (skip-whitespace port))))
+  (let ((char (peek-char port)))
+    (cond
+      ((eqv? char #\;)
+        (skip-line port)
+        (skip-whitespace port))
+      ((my-is-whitespace char)
+        (read-char port)
+        (skip-whitespace port)))))
 
 
 ; Unfortunately, since most Scheme readers will consume [, {, }, and ],
@@ -259,9 +263,6 @@
       ((char=? c #\( )
           (read-char port)
           (my-read-delimited-list #\) port))
-      ((char=? c #\; )
-        (skip-line port)
-        (underlying-read port))
       ((char=? c #\| )   ; Scheme extension, |...| symbol (like Common Lisp)
         (read-char port) ; Skip |
         (let ((newsymbol
@@ -428,9 +429,6 @@
           (read-char port)
           (process-curly
             (my-read-delimited-list #\} port)))
-        ((char=? c #\; )  ; Handle ";" directly, so we don't lose control.
-          (skip-line port)
-          (modern-read2 port))
         (#t (let ((result (underlying-read port)))
                 ; (display "DEBUG result = ")
                 ; (write result)
