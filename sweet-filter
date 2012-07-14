@@ -1,4 +1,4 @@
-#!/bin/env guile
+#!/usr/bin/env guile
 !#
 
 ; This is a filter - it accepts sweet-expressions from standard input,

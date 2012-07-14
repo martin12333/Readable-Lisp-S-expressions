@@ -1,4 +1,4 @@
-#!/bin/env expect
+#!/usr/bin/env expect
 # By David A. Wheeler. Start up guile in "modern-expressoin" reading mode,
 # so you can try it out.
 
