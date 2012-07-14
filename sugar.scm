@@ -54,6 +54,10 @@
 ; these only exist in guile
 (define sugar-load-save primitive-load)
 (define sugar-current-load-port-save current-load-port)
+
+(define (my-eval inp)
+  ; Scheme R5RS eval *requires* 2 arguments.
+  (eval inp (interaction-environment)))
 ;----GUILE ENDS
 
 (define group 'group)
@@ -339,8 +343,7 @@
         (if (eof-object? inp)
             #t
             (begin
-              ; TODO: Scheme R5RS eval *requires* 2 arguments.
-              (eval inp)
+              (my-eval inp)
               (load port)))))
   (load (open-input-file filename)))
 
