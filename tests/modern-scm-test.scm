@@ -32,7 +32,12 @@
 
 
 ; guile-specific stuff - set up and load using modules
-(set! %load-path (append %load-path '("..")))
+(cond-expand
+  (guile-2
+    (eval-when (compile load eval)
+      (set! %load-path (append %load-path '("..")))))
+  (guile
+    (set! %load-path (append %load-path '("..")))))
 (use-modules (modern))
 
 ; Portable:

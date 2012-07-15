@@ -3,7 +3,12 @@
 
 ; Test "Sweet"
 
-(set! %load-path (append %load-path '("..")))
+(cond-expand
+  (guile-2
+    (eval-when (compile load eval)
+      (set! %load-path (append %load-path '("..")))))
+  (guile
+    (set! %load-path (append %load-path '("..")))))
 (use-modules (sweet))
 
 (define old-read sweet-read-save)
