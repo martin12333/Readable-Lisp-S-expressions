@@ -41,6 +41,12 @@
 ;
 ;  ----{ sugar.scm }----
 
+;----PORTABILITY LAYER BEGINS
+(define (my-eval inp)
+  ; Scheme R5RS eval *requires* 2 arguments; other evals work differently.
+  (eval inp (interaction-environment)))
+;----PORTABILITY LAYER ENDS
+
 ;----GUILE BEGINS
 (define-module (sugar)
   :export (group
@@ -54,11 +60,8 @@
 ; these only exist in guile
 (define sugar-load-save primitive-load)
 (define sugar-current-load-port-save current-load-port)
-
-(define (my-eval inp)
-  ; Scheme R5RS eval *requires* 2 arguments.
-  (eval inp (interaction-environment)))
 ;----GUILE ENDS
+
 
 (define group 'group)
 ; TODO: Need to NOT give "group" its special meaning if it doesn't
