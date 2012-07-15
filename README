@@ -23,8 +23,9 @@ This directory includes (in alphabetical order):
 * curly-infix.cl: A simple Common Lisp reader macro that
 implements infix operations in lists surrounded by {...}.  MIT license.
 
-* iformat.cl: A simple pretty-printer that generates I-expressions
-(indented S-expressions) given an object. MIT license.
+* iformat.sscm: A simple pretty-printer that generates I-expressions
+(indented S-expressions) given an object, in sweet-expression format
+(use "make" to generate Scheme). MIT license.
 
 * modern.scm: "Modern Lisp" reader, Scheme.  "modern-scm-test.scm" is
   a guile Scheme program you can run to test it.

@@ -9,7 +9,5 @@ SWEET-FILTER = ./sweet-filter
 %.scm : %.sscm
 	$(SWEET-FILTER) < $< > $@
 
-# Tell it to create this sweet-example.scm:
 
-sweet-example.scm:
-
+all: iformat.scm
