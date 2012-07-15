@@ -51,7 +51,10 @@ define oneline-list(x)
   ; Return list x's contents, represented as a list of characters
   cond
     null?(x) '()
-    pair?(x) append(oneline(car(x)) oneline-list(cdr(x)))
+    pair?(x)
+      if null?(cdr(x))
+        oneline(car(x))
+        append oneline(car(x)) '(#\space) oneline-list(cdr(x))
     #t       append('(#\space #\. #\space) oneline(x))
 
 define oneline(x)
@@ -61,7 +64,10 @@ define oneline(x)
     number?(x)   string->list(number->string(x))
     symbol?(x)   string->list(symbol->string(x))
     string?(x)   string->list(x) ; TODO handle double-quote, backslash, nl
-    pair?(x)     append(LISTLP oneline-list(x) LISTRP)
+    pair?(x)
+     if symbol?(car(x))
+       append oneline(car(x)) LISTLP oneline-list(cdr(x)) LISTRP
+       append LISTLP oneline-list(x) LISTRP
     ; TODO: Others, esp. vector
 
 define iformat-body(m indent)
@@ -102,9 +108,11 @@ define iformat-top(m indent)
         iformat-body cdr(m) append(indent indent-increment)
     #t
       ; Normal case: list with non-list as 1st element.
-      append
-        iformat-top  car(m) indent
-        iformat-body cdr(m) append(indent indent-increment)
+      if {length(oneline(m)) < 20}
+        append indent oneline(m) '(#\newline)
+        append
+          iformat-top  car(m) indent
+          iformat-body cdr(m) append(indent indent-increment)
 
 define iformat(m indent)
   display list->string(iformat-top(m string->list(indent)))
