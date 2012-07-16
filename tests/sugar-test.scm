@@ -53,7 +53,13 @@
 
 ; Load up unit under test:
 
-(load "sugar.scm")
+(cond-expand
+  (guile-2
+    (eval-when (compile load eval)
+      (set! %load-path (append %load-path '("..")))))
+  (guile
+    (set! %load-path (append %load-path '("..")))))
+(use-modules (sugar))
 
 ; (define (reader-test correct-value)
 ;  (test (sugar-read tc) correct-value))
