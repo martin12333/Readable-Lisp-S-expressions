@@ -1,5 +1,5 @@
 ; iformat.scm
-; Reformat an S-expression into an I-expression (indentation).
+; Reformat an S-expression into indented sweet-expression.
 ;
 ; Copyright (C) 2006-2012 David A. Wheeler.
 ;
@@ -23,18 +23,8 @@
 ; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ; OTHER DEALINGS IN THE SOFTWARE.
 
-; To run, just:
-;  (load "iformat.scm")
-;  (iformat '(your expression) "")
-
 ; LIMITATIONS:
-; This version changes EVERY list into indentation form, which is overly
-; wordy.  A future version should add same-line information, which
-; shortens the results dramatically.
-;
-; A future version should optionally support term-ending like f(x) to mean
-; (f x), and {..} for infix operations.  See "sweet-expression" information
-; at http://www.dwheeler.com/readable/.
+; Need to support same-line, {...} infix, etc.
 ;
 ; For efficiency, it should use another approach than string concatenation.
 ; Rewrite this using cons of strings, then flatten the list
@@ -118,57 +108,28 @@ define iformat(m indent)
   display list->string(iformat-top(m string->list(indent)))
 
 
-; NEED TO FINISH:
-; (define iformat-stream (mystream)
-;   (read mystream)
-;   )
-;
-; (define iformat-file (filename)
-;   (with-open-file
-;     (inputfile filename :direction :input :if-does-not-exist NIL???)
-;     (when (stream? name)  ; This is a race condition, shouldn'#t matter.
-;        (iformat-stream inputfile))))
-
-
-
-(define (copy-line port)
+define (copy-line port)
   ; Copy line from in to out - end on EOF or newline.
-  (let ((c (peek-char port)))
-    (cond
-      ((eof-object? c) c)
-      ((char=? c #\newline) (read-char) (newline))
-      (#t (display (read-char port)) (copy-line port)))))
+  let ((c peek-char(port)))
+    cond
+      eof-object?(c)   c
+      char=?(c #\newline) read-char() newline()
+      #t display(read-char(port)) copy-line(port)
 
 ; Filter - written this way to preserve "external" comments
-(define (iformat-filter)
-  (let ((c (peek-char (current-input-port))))
-    (cond
-      ((eof-object? c) c)
-      ((char=? c #\newline ) (read-char) (newline) (iformat-filter))
-      ((char=? c #\space )   (read-char) (iformat-filter))
-      ((char=? c #\tab)      (read-char) (iformat-filter))
-      ((char=? c #\; ) (copy-line (current-input-port)) (iformat-filter))
-      (#t
-        (let ((result (read (current-input-port))))
-          (if (eof-object? result)
+define (iformat-filter)
+  let ((c peek-char(current-input-port())))
+    cond
+      eof-object?(c)      c
+      char=?(c #\newline) read-char() newline() iformat-filter()
+      char=?(c #\space)   read-char() iformat-filter()
+      char=?(c #\tab)     read-char() iformat-filter()
+      char=?(c #\;)       copy-line(current-input-port()) iformat-filter()
+      #t
+        let ((result read(current-input-port())))
+          if eof-object?(result)
             result
-            (begin (iformat result "") (iformat-filter))))))))
+            begin iformat(result "") iformat-filter()
 
-(iformat-filter)
-
-; iformat '(z a (b c) (d) ((e f) g (h)) i 'j) ""
-; Example of use:
-;  (iformat '(z a (b c) (d) ((e f) g (h)) i) " ")
-; " Z
-;    A
-;    B
-;      C
-;    (D)
-;    GROUP
-;      E
-;        F
-;      G
-;      (H)
-;    I
-; "
+iformat-filter()
 
