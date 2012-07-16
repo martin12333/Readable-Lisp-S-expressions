@@ -298,7 +298,7 @@ a
 (;comment
 )
 
-'(x y)
+'((x y))
 ' group
    x y
 
