@@ -219,40 +219,51 @@
         (readblock-internal level port first-item?))
      (#t
         (let ((first (readitem level port)))
-          (if (eq? first split)
-              (begin
-                ; consume horizontal, non indent whitespace
-                (consume-horizontal-whitespace port)
-                (if first-item?
-                    ; SPLIT-at-start: ignore SPLIT if occurs first on line
-                    ;; NB: need a couple of hacks to fix
-                    ;; behavior when SPLIT-by-itself
-                    (if (eqv? (peek-char port) #\newline) ; check SPLIT-by-itself
-                        ; SPLIT-by-itself: some hacks needed
-                        (let* ((sub-read (readblock level port))
-                               (outlevel (car sub-read))
-                               (sub-expr (cdr sub-read)))
-                          (if (and (null? sub-expr) (string=? outlevel level)) ; check SPLIT followed by same indent line
-                              ; blank SPLIT:
-                              ; \
-                              ; \
-                              ; x
-                              ; ===> x, not () () x
-                              (readblock level port)
-                              ; non-blank SPLIT: insert our
-                              ; split-tag.  Without SPLIT-tag
-                              ; readblock-clean will mishandle:
-                              ; \
-                              ;   x y
-                              ; ==> ((x y)), which is a single
-                              ; item list.  Single-item lists
-                              ; are extracted, resulting in
-                              ; (x y)
-                              (cons outlevel (cons split-tag sub-expr))))
-                        ; not SPLIT-by-itself: just ignore it
-                        (readblock-internal level port first-item?))
-                    ; SPLIT-inline: end this block
-                    (cons level '())))
+          (cond
+            ((and first-item?
+                  (or (equal? first '(quote))
+                      (equal? first '(quasiquote))
+                      (equal? first '(unquote))
+                      (equal? first '(unquote-splicing))))
+              (consume-horizontal-whitespace port)
+              (let* ((sub-read (readblock-clean level port))
+                     (outlevel (car sub-read))
+                     (sub-expr (cdr sub-read)))
+                (cons outlevel `(,@first ,sub-expr))))
+            ((eq? first split)
+              ; consume horizontal, non indent whitespace
+              (consume-horizontal-whitespace port)
+              (if first-item?
+                  ; SPLIT-at-start: ignore SPLIT if occurs first on line
+                  ;; NB: need a couple of hacks to fix
+                  ;; behavior when SPLIT-by-itself
+                  (if (eqv? (peek-char port) #\newline) ; check SPLIT-by-itself
+                      ; SPLIT-by-itself: some hacks needed
+                      (let* ((sub-read (readblock level port))
+                             (outlevel (car sub-read))
+                             (sub-expr (cdr sub-read)))
+                        (if (and (null? sub-expr) (string=? outlevel level)) ; check SPLIT followed by same indent line
+                            ; blank SPLIT:
+                            ; \
+                            ; \
+                            ; x
+                            ; ===> x, not () () x
+                            (readblock level port)
+                            ; non-blank SPLIT: insert our
+                            ; split-tag.  Without SPLIT-tag
+                            ; readblock-clean will mishandle:
+                            ; \
+                            ;   x y
+                            ; ==> ((x y)), which is a single
+                            ; item list.  Single-item lists
+                            ; are extracted, resulting in
+                            ; (x y)
+                            (cons outlevel (cons split-tag sub-expr))))
+                      ; not SPLIT-by-itself: just ignore it
+                      (readblock-internal level port first-item?))
+                  ; SPLIT-inline: end this block
+                  (cons level '())))
+            (#t
               (let* ((rest (readblock-internal level port #f))
                      (level (car rest))
                      (block (cdr rest)))
@@ -269,7 +280,7 @@
                     (if (pair? block)
                         (cons level (car block))
                         rest)
-                    (cons level (cons first block))))))))))
+                    (cons level (cons first block)))))))))))
 
 ;; Consumes as much horizontal, non-indent whitespace as
 ;; possible.  Treat comments as horizontal whitespace too.
