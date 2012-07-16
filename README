@@ -14,9 +14,10 @@ licenses approved by both the OSI (opensource.org) and FSF (fsf.org).
 Most are released under the MIT license, which permits practically any use.
 
 File suffixes are:
-.cl   - Common Lisp
-.lisp - Common Lisp
-.scm  - Scheme
+.cl    - Common Lisp
+.lisp  - Common Lisp
+.scm   - Scheme
+.sscm  - Sweet-Scheme; Scheme written with sweet-expressions.
 
 This directory includes (in alphabetical order):
 
