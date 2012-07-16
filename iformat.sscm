@@ -116,11 +116,7 @@ define iformat-top(m indent)
 
 define iformat(m indent)
   display list->string(iformat-top(m string->list(indent)))
-  newline()
-  newline()
 
-
-iformat '(z a (b c) (d) ((e f) g (h)) i 'j) ""
 
 ; NEED TO FINISH:
 ; (define iformat-stream (mystream)
@@ -134,6 +130,33 @@ iformat '(z a (b c) (d) ((e f) g (h)) i 'j) ""
 ;        (iformat-stream inputfile))))
 
 
+
+(define (copy-line port)
+  ; Copy line from in to out - end on EOF or newline.
+  (let ((c (peek-char port)))
+    (cond
+      ((eof-object? c) c)
+      ((char=? c #\newline) (read-char) (newline))
+      (#t (display (read-char port)) (copy-line port)))))
+
+; Filter - written this way to preserve "external" comments
+(define (iformat-filter)
+  (let ((c (peek-char (current-input-port))))
+    (cond
+      ((eof-object? c) c)
+      ((char=? c #\newline ) (read-char) (newline) (iformat-filter))
+      ((char=? c #\space )   (read-char) (iformat-filter))
+      ((char=? c #\tab)      (read-char) (iformat-filter))
+      ((char=? c #\; ) (copy-line (current-input-port)) (iformat-filter))
+      (#t
+        (let ((result (read (current-input-port))))
+          (if (eof-object? result)
+            result
+            (begin (iformat result "") (iformat-filter))))))))
+
+(iformat-filter)
+
+; iformat '(z a (b c) (d) ((e f) g (h)) i 'j) ""
 ; Example of use:
 ;  (iformat '(z a (b c) (d) ((e f) g (h)) i) " ")
 ; " Z

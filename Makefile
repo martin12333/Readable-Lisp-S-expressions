@@ -11,3 +11,8 @@ SWEET-FILTER = ./sweet-filter
 
 
 all: iformat.scm
+
+
+itest: iformat.scm
+	@echo "(a (b c) (d) ((e f) g (h)) i 'j)" | guile iformat.scm
+
