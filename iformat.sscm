@@ -36,6 +36,7 @@ define indent-increment '(#\space #\space)
 define LISTLP list( #\( )
 define LISTRP list( #\) )
 
+define infix-operators '(and or xor + - * /)
 
 define oneline-list(x)
   ; Return list x's contents, represented as a list of characters
@@ -47,16 +48,34 @@ define oneline-list(x)
         append oneline(car(x)) '(#\space) oneline-list(cdr(x))
     #t       append('(#\space #\. #\space) oneline(x))
 
+define represent-as-infix?(x)
+  and
+    list? x
+    symbol? car(x)
+    memq car(x) infix-operators
+    {length(x) >= 3}
+    {length(x) <= 6}
+
+define infix-tail(op x)
+  cond
+    null?(x)  '(#\})
+    pair?(x)  append( '(#\space) op '(#\space) oneline(car(x))
+                       infix-tail(op cdr(x)) )
+    #t        append( '(#\space #\. #\space) oneline(x) '(#\}) )
+
 define oneline(x)
   ; Return x represented in a single line, as a list of characters.
   cond
     null?(x)     string->list("()")
     number?(x)   string->list(number->string(x))
     symbol?(x)   string->list(symbol->string(x))
-    string?(x)   string->list(x) ; TODO handle double-quote, backslash, nl
+    string?(x)   string->list(x)
+    ; TODO handle double-quote, backslash, nl
     pair?(x)
      if symbol?(car(x))
-       append oneline(car(x)) LISTLP oneline-list(cdr(x)) LISTRP
+       if represent-as-infix?(x)
+         append '(#\{) oneline(cadr(x)) infix-tail(oneline(car(x)) cddr(x))
+         append oneline(car(x)) LISTLP oneline-list(cdr(x)) LISTRP
        append LISTLP oneline-list(x) LISTRP
     ; TODO: Others, esp. vector
 
@@ -85,20 +104,20 @@ define iformat-top(m indent)
     ; simple quote:
     {eq?(car(m) 'quote) and pair?(cdr(m)) and
      null?(cddr(m)) and symbol?(cadr(m))}
-      append indent '(#\') oneline(cadr(m))
+      append indent '(#\') oneline(cadr(m)) '(#\newline)
     ;
     ; TODO: match backquote calls.
     ; At this point we have a list - is it special somehow?
     ; TODO: are null? and list? the right tests?
-    {null?(cdr(m)) and not(pair?(car(m)))} ; singleton list, no descend
-      append indent LISTLP oneline(car(m)) LISTRP '(#\newline)
+    ; {null?(cdr(m)) and not(pair?(car(m)))} ; singleton list, no descend
+    ;  append indent LISTLP oneline(car(m)) LISTRP '(#\newline)
     pair?(car(m)) ; Is its car also a list? If so, must use GROUP.
      append indent (string->list "group\n")
         iformat-top  car(m) append(indent indent-increment)
         iformat-body cdr(m) append(indent indent-increment)
     #t
       ; Normal case: list with non-list as 1st element.
-      if {length(oneline(m)) < 20}
+      if {length(oneline(m)) < 30}
         append indent oneline(m) '(#\newline)
         append
           iformat-top  car(m) indent

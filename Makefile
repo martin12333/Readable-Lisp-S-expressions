@@ -14,5 +14,6 @@ all: iformat.scm
 
 
 itest: iformat.scm
-	@echo "(a (b c) (d) ((e f) g (h)) i 'j)" | guile iformat.scm
+	@echo "(a (b c) (d) ((e f) g (h)) i (k l m) (+ x y) 'j z)" \
+                | guile iformat.scm
 
