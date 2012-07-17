@@ -35,10 +35,12 @@ define indent-increment '(#\space #\space)
 define max-unit-character-length 30
 define max-unit-list-length 8
 
+define infix-operators '(and or xor + - * / < <= > >= = <> != ==)
+
 define LISTLP list( #\( )
 define LISTRP list( #\) )
-
-define infix-operators '(and or xor + - * / < <= > >= = <> != ==)
+define LISTLBRACE list((integer->char 123))
+define LISTRBRACE list((integer->char 125))
 
 
 ; Return list x's *contents* represented as a list of characters.
@@ -67,12 +69,12 @@ define represent-as-infix?(x)
 ; Return tail of an infix expression, as list of chars
 define infix-tail(op x)
   cond
-    null?(x)  '(#\})
+    null?(x)  LISTRBRACE
     pair?(x)  append( '(#\space) op '(#\space) unit(car(x))
                        infix-tail(op cdr(x)) )
     ; The following is used if we get an improper list.
     ; This can't happen if only lists are represented with curly-infix:
-    #t        append( '(#\space #\. #\space) unit(x) '(#\}) )
+    #t        append( '(#\space #\. #\space) unit(x) LISTRBRACE)
 
 
 ; Return x represented as a modern-expression unit, as a list of characters.
@@ -85,25 +87,26 @@ define unit(x)
     number?(x)   string->list(number->string(x))
     boolean?(x)  if(x '(#\# #\t) '(#\# #\f))
     symbol?(x)   string->list(symbol->string(x))
-    char?(x)     list(#\# #\\ x #\space) ; TODO: Handle special chars
+    char?(x)     append '(#\# #\\) x ; TODO: Handle special chars
     string?(x)   append '(#\") string->list(x) '(#\")
                  ; TODO handle strings with double-quote, backslash, \n, etc.
     ; TODO: Handle other types, e.g., vector
     pair?(x)
      cond
-       eq?(car(x) 'quote)
-         append '(#\') unit(cadr(x))
-       eq?(car(x) 'quasiquote)
+       {eq?(car(x) 'quote) and pair?(cdr(x)) and null?(cddr(x))}
+         append '(#\') unit(cadr(x)) string->list("!!")
+       {eq?(car(x) 'quasiquote) and pair?(cdr(x)) and null?(cddr(x))}
          append '(#\`) unit(cadr(x))
-       eq?(car(x) 'unquote)
+       {eq?(car(x) 'unquote) and pair?(cdr(x)) and null?(cddr(x))}
          append '(#\,) unit(cadr(x))
-       eq?(car(x) 'unquote-splicing)
+       {eq?(car(x) 'unquote-splicing) and pair?(cdr(x)) and null?(cddr(x))}
          append '(#\, #\@) unit(cadr(x))
        symbol?(car(x))
          if represent-as-infix?(x)
-           append '(#\{) unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
+           append LISTLBRACE unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
            append unit(car(x)) LISTLP unit-list(cdr(x)) LISTRP
        #t append LISTLP unit-list(x) LISTRP
+    #t  string->list("UNKNOWN_TYPE")
 
 ; Input: expression "m" with indentation string "indent".
 ; Output: List of characters representing it (#\newline for new line).
