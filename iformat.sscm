@@ -32,39 +32,54 @@
 
 define maxwidth 78
 define indent-increment '(#\space #\space)
+define max-unit-character-length 30
+define max-unit-list-length 8
 
 define LISTLP list( #\( )
 define LISTRP list( #\) )
 
 define infix-operators '(and or xor + - * /)
 
-define oneline-list(x)
-  ; Return list x's contents, represented as a list of characters
+
+; Return list x's *contents* represented as a list of characters.
+; Each one must use modern-expressions, space-separated;
+; it will be surrounded by (...) so no indentation processing is relevant.
+define unit-list(x)
   cond
     null?(x) '()
     pair?(x)
       if null?(cdr(x))
-        oneline(car(x))
-        append oneline(car(x)) '(#\space) oneline-list(cdr(x))
-    #t       append('(#\space #\. #\space) oneline(x))
+        unit car(x)
+        append unit(car(x)) '(#\space) unit-list(cdr(x))
+    #t  append('(#\space #\. #\space) unit(x))
 
+
+; Return #t if x should be represented using curly-infix notation {...}.
 define represent-as-infix?(x)
   and
-    list? x
+    pair? x
     symbol? car(x)
     memq car(x) infix-operators
+    list? x
     {length(x) >= 3}
     {length(x) <= 6}
 
+; Return tail of an infix expression, as list of chars
 define infix-tail(op x)
   cond
     null?(x)  '(#\})
-    pair?(x)  append( '(#\space) op '(#\space) oneline(car(x))
+    pair?(x)  append( '(#\space) op '(#\space) unit(car(x))
                        infix-tail(op cdr(x)) )
-    #t        append( '(#\space #\. #\space) oneline(x) '(#\}) )
+    ; The following is used if we get an improper list.
+    ; This can't happen if only lists are represented with curly-infix:
+    #t        append( '(#\space #\. #\space) unit(x) '(#\}) )
 
-define oneline(x)
-  ; Return x represented in a single line, as a list of characters.
+
+; Return x represented as a modern-expression unit, as a list of characters.
+; Indentation processing *may* be active, but the character sequence
+; returned must not depend on that.
+; This is widely-used; may want to memoize this.
+define unit(x)
   cond
     null?(x)     string->list("()")
     number?(x)   string->list(number->string(x))
@@ -72,13 +87,20 @@ define oneline(x)
     string?(x)   string->list(x)
     ; TODO handle double-quote, backslash, nl
     pair?(x)
-     if symbol?(car(x))
-       if represent-as-infix?(x)
-         append '(#\{) oneline(cadr(x)) infix-tail(oneline(car(x)) cddr(x))
-         append oneline(car(x)) LISTLP oneline-list(cdr(x)) LISTRP
-       append LISTLP oneline-list(x) LISTRP
+     cond
+       eq?(car(x) 'quote)
+         append '(#\') unit(cadr(x))
+       symbol?(car(x))
+         if represent-as-infix?(x)
+           append '(#\{) unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
+           append unit(car(x)) LISTLP unit-list(cdr(x)) LISTRP
+       #t append LISTLP unit-list(x) LISTRP
     ; TODO: Others, esp. vector
 
+; Input: expression "m" with indentation string "indent".
+; Output: List of characters representing it (#\newline for new line).
+; This tail handles the body of a list (after its first entry) when
+; indentation processing is active, each of these is its own initial line.
 define iformat-body(m indent)
   if null?(m)
     '()
@@ -86,6 +108,7 @@ define iformat-body(m indent)
       iformat-top  car(m) indent
       iformat-body cdr(m) indent
 
+; Not currently used.
 define iformat-list(m indent)
   if null?(m)
     '()
@@ -94,48 +117,56 @@ define iformat-list(m indent)
       iformat-list cdr(m) indent
 
 
+; Input: expression "m" with indentation string "indent".
+; Output: List of characters representing it (#\newline for new line).
+; At this point, we're at the beginning of a possibly-indented
+; line with sweet-expression (indentation) processing active.
 define iformat-top(m indent)
   cond
     not(pair?(m)) ; if not a list (atom, etc), print it. () handled here
-      append(indent oneline(m) '(#\newline))
+      append(indent unit(m) '(#\newline))
     ;
     ;  TODO: handle non-atomic quotes.  There are questions about quote meaning
     ;  so let's be cautious for now.
     ; simple quote:
     {eq?(car(m) 'quote) and pair?(cdr(m)) and
      null?(cddr(m)) and symbol?(cadr(m))}
-      append indent '(#\') oneline(cadr(m)) '(#\newline)
+      append indent '(#\') unit(cadr(m)) '(#\newline)
     ;
     ; TODO: match backquote calls.
     ; At this point we have a list - is it special somehow?
     ; TODO: are null? and list? the right tests?
     ; {null?(cdr(m)) and not(pair?(car(m)))} ; singleton list, no descend
-    ;  append indent LISTLP oneline(car(m)) LISTRP '(#\newline)
-    pair?(car(m)) ; Is its car also a list? If so, must use GROUP.
-     append indent (string->list "group\n")
+    ;  append indent LISTLP unit(car(m)) LISTRP '(#\newline)
+    pair?(car(m)) ; Is its car also a list? If so, prefer using GROUP.
+      append indent (string->list "group\n")
         iformat-top  car(m) append(indent indent-increment)
         iformat-body cdr(m) append(indent indent-increment)
     #t
       ; Normal case: list with non-list as 1st element.
-      if {length(oneline(m)) < 30}
-        append indent oneline(m) '(#\newline)
-        append
-          iformat-top  car(m) indent
-          iformat-body cdr(m) append(indent indent-increment)
+      let* ( asunit(unit(m)) length-asunit(length(asunit)) )
+        if { {length-asunit < max-unit-character-length} and
+             {{length-asunit + length(indent)} < maxwidth } and
+             {length(m) < max-unit-list-length} }
+          append indent asunit '(#\newline)
+          append
+            iformat-top  car(m) indent
+            iformat-body cdr(m) append(indent indent-increment)
 
+; Display formatted expression "m" using indentation string "indent".
 define iformat(m indent)
   display list->string(iformat-top(m string->list(indent)))
 
-
+; Copy one line from stdin to stdout, end on EOF or newline.
 define (copy-line port)
-  ; Copy line from in to out - end on EOF or newline.
   let ((c peek-char(port)))
     cond
       eof-object?(c)   c
       char=?(c #\newline) read-char() newline()
       #t display(read-char(port)) copy-line(port)
 
-; Filter - written this way to preserve "external" comments
+; filter stdin to stdout, reading in traditional s-expressions and outputting
+; sweet-expressions.  Preserve the comments outside an s-expression.
 define (iformat-filter)
   let ((c peek-char(current-input-port())))
     cond
