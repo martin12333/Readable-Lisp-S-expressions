@@ -38,7 +38,7 @@ define max-unit-list-length 8
 define LISTLP list( #\( )
 define LISTRP list( #\) )
 
-define infix-operators '(and or xor + - * /)
+define infix-operators '(and or xor + - * / < <= > >= = <> != ==)
 
 
 ; Return list x's *contents* represented as a list of characters.
@@ -83,9 +83,12 @@ define unit(x)
   cond
     null?(x)     string->list("()")
     number?(x)   string->list(number->string(x))
+    boolean?(x)  if(x '(#\# #\t) '(#\# #\f))
     symbol?(x)   string->list(symbol->string(x))
-    string?(x)   string->list(x)
-    ; TODO handle double-quote, backslash, nl
+    char?(x)     list(#\# #\\ x #\space) ; TODO: Handle special chars
+    string?(x)   append '(#\") string->list(x) '(#\")
+                 ; TODO handle strings with double-quote, backslash, \n, etc.
+    ; TODO: Handle other types, e.g., vector
     pair?(x)
      cond
        eq?(car(x) 'quote)
@@ -101,7 +104,6 @@ define unit(x)
            append '(#\{) unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
            append unit(car(x)) LISTLP unit-list(cdr(x)) LISTRP
        #t append LISTLP unit-list(x) LISTRP
-    ; TODO: Others, esp. vector
 
 ; Input: expression "m" with indentation string "indent".
 ; Output: List of characters representing it (#\newline for new line).
