@@ -68,6 +68,7 @@
 ; sart with "g" or "G". This may be tricky to do with this design.
 
 (define split (string->symbol "\\"))
+(define split-char #\\ ) ; First (possibly only) character of split symbol.
 ; this is a special unique object that is used to
 ; represent the existence of the split symbol
 ; so that clean handles it properly.
@@ -233,7 +234,7 @@
                      (outlevel (car sub-read))
                      (sub-expr (cdr sub-read)))
                 (cons outlevel `(,@first ,sub-expr))))
-            ((eq? first split)
+            ((and (eq? char split-char) (eq? first split))
               ; consume horizontal, non indent whitespace
               (consume-horizontal-whitespace port)
               (if first-item?
