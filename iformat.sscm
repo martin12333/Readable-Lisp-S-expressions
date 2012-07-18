@@ -32,7 +32,7 @@
 
 define maxwidth 78
 define indent-increment '(#\space #\space)
-define max-unit-character-length 30
+define max-unit-character-length 60
 define max-unit-list-length 8
 
 define infix-operators '(and or xor + - * / < <= > >= = <> != ==)
@@ -90,7 +90,7 @@ define unit(x)
     pair?(x)
      cond
        {eq?(car(x) 'quote) and pair?(cdr(x)) and null?(cddr(x))}
-         append '(#\') unit(cadr(x)) string->list("!!")
+         append '(#\') unit(cadr(x))
        {eq?(car(x) 'quasiquote) and pair?(cdr(x)) and null?(cddr(x))}
          append '(#\`) unit(cadr(x))
        {eq?(car(x) 'unquote) and pair?(cdr(x)) and null?(cddr(x))}
@@ -101,7 +101,7 @@ define unit(x)
          if represent-as-infix?(x)
            append LISTLBRACE unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
            append unit(car(x)) LISTLP unit-list(cdr(x)) LISTRP
-       #t append LISTLP unit-list(x) LISTRP
+       #t append(LISTLP unit-list(x) LISTRP)
     #t  string->list(object->string(x))
     ; R5RS doesn't include "object->string", but it's painful to do without.
     ; You might be able to use these in a pinch:
