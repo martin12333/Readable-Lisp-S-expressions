@@ -125,7 +125,7 @@
           '()
           (let ((c (read-char port)))
             (if (or (eqv? (peek-char port) #\space) (eqv? (peek-char port) #\ht))
-              (cons #\space (accumulate-hspace port)) ; period-as-indent
+              (cons #\. (accumulate-hspace port)) ; period-as-indent
               (begin (unread-char c port) '()))))))
 
 (define (indentationlevel port)
