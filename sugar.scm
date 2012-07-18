@@ -118,11 +118,14 @@
            (string=? indentation2 (substring indentation1 0 len2)))))
 
 (define (accumulate-hspace port)
-  (if (or (eqv? (peek-char port) #\space)
-          (eqv? (peek-char port) #\.)  ; EXPERIMENT: Allow '.' for indentation
-          (eqv? (peek-char port) #\ht))
+  (if (or (eqv? (peek-char port) #\space) (eqv? (peek-char port) #\ht))
       (cons (read-char port) (accumulate-hspace port))
-      '()))
+      (if (not (eqv? (peek-char port) #\.))
+          '()
+          (let ((c (read-char port)))
+            (if (or (eqv? (peek-char port) #\space) (eqv? (peek-char port) #\ht))
+              (cons #\space (accumulate-hspace port)) ; period-as-indent
+              (begin (unread-char c port) '()))))))
 
 (define (indentationlevel port)
   (let ((indent (accumulate-hspace port)))
