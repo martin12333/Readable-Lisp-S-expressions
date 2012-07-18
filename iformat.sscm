@@ -43,6 +43,18 @@ define LISTLBRACE list((integer->char 123))
 define LISTRBRACE list((integer->char 125))
 
 
+; Return length of x, which may be an improper list.
+; If improper, count the two sides as two, so "(a . b)" is length 2.
+define general-length(x)
+  general-length-inner(x 0)
+
+define general-length-inner(x count-so-far)
+  cond
+    null?(x)      count-so-far
+    not(pair?(x)) {count-so-far + 1}
+    #t
+                  general-length-inner cdr(x) {count-so-far + 1}
+
 ; Return list x's *contents* represented as a list of characters.
 ; Each one must use modern-expressions, space-separated;
 ; it will be surrounded by (...) so no indentation processing is relevant.
@@ -159,7 +171,7 @@ define iformat-top(m indent)
       let* ( asunit(unit(m)) length-asunit(length(asunit)) )
         if { {length-asunit < max-unit-character-length} and
              {{length-asunit + length(indent)} < maxwidth } and
-             {length(m) < max-unit-list-length} }
+             {general-length(m) < max-unit-list-length} }
           append indent asunit '(#\newline)
           append
             iformat-top  car(m) indent
