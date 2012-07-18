@@ -87,10 +87,6 @@ define unit(x)
     number?(x)   string->list(number->string(x))
     boolean?(x)  if(x '(#\# #\t) '(#\# #\f))
     symbol?(x)   string->list(symbol->string(x))
-    char?(x)     append '(#\# #\\) x ; TODO: Handle special chars
-    string?(x)   append '(#\") string->list(x) '(#\")
-                 ; TODO handle strings with double-quote, backslash, \n, etc.
-    ; TODO: Handle other types, e.g., vector
     pair?(x)
      cond
        {eq?(car(x) 'quote) and pair?(cdr(x)) and null?(cddr(x))}
@@ -106,7 +102,12 @@ define unit(x)
            append LISTLBRACE unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
            append unit(car(x)) LISTLP unit-list(cdr(x)) LISTRP
        #t append LISTLP unit-list(x) LISTRP
-    #t  string->list("UNKNOWN_TYPE")
+    #t  string->list(object->string(x))
+    ; R5RS doesn't include "object->string", but it's painful to do without.
+    ; You might be able to use these in a pinch:
+    ; char?(x)     append '(#\# #\\) x ; Doesn't handle special chars
+    ; string?(x)   append '(#\") string->list(x) '(#\")
+    ;       ; Doesn't handle strings with double-quote, backslash, \n, etc.
 
 ; Input: expression "m" with indentation string "indent".
 ; Output: List of characters representing it (#\newline for new line).
