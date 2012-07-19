@@ -25,7 +25,7 @@
 ;
 ; Implements "modern Lisp expressions", aka mod-expressions.
 ; These implement "curly infix" and term-prefixing rules. E.G.:
-;  [x y z]     => (x y z)
+;  (x y z)     => (x y z)
 ;  {3 + 4 + 5} => (+ 3 4 5)
 ;  f(x)        => (f x)
 ;  f{x + 3}    => (f (+ x 3)
