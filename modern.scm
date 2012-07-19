@@ -101,9 +101,10 @@
 ; The indentation reader also defines this, but to the same value, so
 ; it doesn't matter.
 (define tab (integer->char 9))
+(define carriage-return (integer->char 13))
 
 (define (my-is-whitespace c)
-  (ismember? c `(#\space #\newline ,tab)))
+  (ismember? c `(#\space #\newline ,tab ,carriage-return)))
 ; TODO: Possibly support other whitespace chars, e.g.:
 ;    #\return
 ;   (code-char 10) (code-char 11)     ; LF, VT
@@ -132,7 +133,8 @@
 ; We WILL call old-read on string reading (that DOES seem to work
 ; in common cases, and lets us use the implementation's string extensions).
 
-(define modern-delimiters `(#\space #\newline #\( #\) #\[ #\] #\{ #\} ,tab))
+(define modern-delimiters `(#\space #\newline #\( #\) #\[ #\] #\{ #\}
+          ,tab ,carriage-return))
 
 (define (read-until-delim port delims)
   ; Read characters until eof or "delims" is seen; do not consume them.
@@ -384,7 +386,8 @@
   ; Skip every character in the line - end on EOF or newline.
   (let ((c (peek-char port)))
     (cond
-      ((not (or (eof-object? c) (char=? c #\newline)))
+      ((not (or (eof-object? c)
+            (char=? c #\newline) (char=? c carriage-return)))
         (read-char port)
         (skip-line port)))))
 

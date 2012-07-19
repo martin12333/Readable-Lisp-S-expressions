@@ -71,6 +71,13 @@
 ; #\ht is not as portable, so predefine "tab" as that char
 (define tab (integer->char 9))
 
+; We want to be able to read files that use CRLF (#\return #\newline)
+; line endings, and ideally on systems that use just CR or just LF.
+; Typically #\newline is defined as linefeed = (integer->char 10),
+; though the code should work if it is 13 instead.
+; Since #\return is not portable, predefine an equivalent.
+(define carriage-return (integer->char 13))
+
 ; Return #t if char is space or tab.
 (define (char-horiz-whitespace? char)
   (or (eqv? char #\space)
@@ -84,6 +91,7 @@
     (cond
       ((eof-object? c) c)
       ((char=? c #\newline) c)
+      ((char=? c carriage-return) c)
       (#t (read-char port) (consume-to-eol port)))))
 
 (define (readquote level port qt)
@@ -133,12 +141,15 @@
     (cond
       ((eqv? (peek-char port) #\;)
         (consume-to-eol port) ; ALWAYS ignore comment-only lines.
+        (if (eqv? (peek-char port) carriage-return) (read-char port))
         (if (eqv? (peek-char port) #\newline) (read-char port))
         (indentationlevel port))
       ; If ONLY whitespace on line, treat as "", because there's no way
       ; to (visually) tell the difference (preventing hard-to-find errors):
       ((eof-object? (peek-char port)) "")
       ((eqv? (peek-char port) #\newline) "")
+      ((eqv? (peek-char port) carriage-return)
+         (read-char port) "")
       (#t (list->string indent)))))
 
 ;; Reads all subblocks of a block
@@ -178,8 +189,12 @@
      ((eqv? char #\;)
         (consume-to-eol port)
         (readblock level port))
-     ((eqv? char #\newline)
+     ((or (eqv? char #\newline)
+          (eqv? char carriage-return))
         (read-char port)
+        (if (and (eqv? char carriage-return)
+                (eqv? (peek-char port) #\newline))
+          (read-char port))
         (let ((next-level (indentationlevel port)))
           (if (indentation>? next-level level)
               (readblocks next-level port)
@@ -204,10 +219,11 @@
               ; consume horizontal, non indent whitespace
               (consume-horizontal-whitespace port)
               (if first-item?
-                  ; SPLIT-at-start: ignore SPLIT if occurs first on line
                   ;; NB: need a couple of hacks to fix
                   ;; behavior when SPLIT-by-itself
-                  (if (eqv? (peek-char port) #\newline) ; check SPLIT-by-itself
+                  (if (or (eqv? (peek-char port) #\newline)
+                          (eqv? (peek-char port) carriage-return))
+                      ; check SPLIT-by-itself
                       ; SPLIT-by-itself: some hacks needed
                       (let* ((sub-read (readblock level port))
                              (outlevel (car sub-read))
@@ -302,6 +318,11 @@
       ((eqv? c #\newline)
         (read-char port) ; Newline (with no preceding comment).
         (sugar-start-expr port)) ; Consume and again
+      ((eqv? c carriage-return)
+        (read-char port) ; Consume carriage return.
+        (if (eqv? (peek-char port) #\newline)
+            (read-char port)) ; Consume newline if it follows CR.
+        (sugar-start-expr port))
       ((> (string-length indentation) 0) ; initial indentation disables
         (sugar-read-save port))
       (#t
