@@ -74,6 +74,14 @@
 ; so that clean handles it properly.
 (define split-tag (cons '() '()))
 
+; #\ht is not as portable, so predefine "tab" as that char
+(define tab (integer->char 9))
+
+; Return #t if char is space or tab.
+(define (char-horiz-whitespace? char)
+  (or (eqv? char #\space)
+      (eqv? char tab)))
+
 (define sugar-read-save read)
 
 (define (consume-to-eol port)
@@ -86,11 +94,9 @@
 
 (define (readquote level port qt)
   (let ((char (peek-char port)))
-    (if (or (eqv? char #\space)
-              (eqv? char #\newline)
-              (eqv? char #\ht)) ; NB possibly more portable (among different Scheme impl) to use (integer->char 9)
-          (list qt)
-          (list qt (sugar-read-save port)))))
+    (if (char-whitespace? char)
+        (list qt)
+        (list qt (sugar-read-save port)))))
 
 (define (readitem level port)
   (let ((char (peek-char port)))
@@ -119,12 +125,12 @@
            (string=? indentation2 (substring indentation1 0 len2)))))
 
 (define (accumulate-hspace port)
-  (if (or (eqv? (peek-char port) #\space) (eqv? (peek-char port) #\ht))
+  (if (char-horiz-whitespace? (peek-char port))
       (cons (read-char port) (accumulate-hspace port))
       (if (not (eqv? (peek-char port) #\.))
           '()
           (let ((c (read-char port)))
-            (if (or (eqv? (peek-char port) #\space) (eqv? (peek-char port) #\ht))
+            (if (char-horiz-whitespace? (peek-char port))
               (cons #\. (accumulate-hspace port)) ; period-as-indent
               (begin (unread-char c port) '()))))))
 
@@ -217,8 +223,7 @@
           (if (indentation>? next-level level)
               (readblocks next-level port)
               (cons next-level '()))))
-     ((or (eqv? char #\space)
-          (eqv? char #\ht))
+     ((char-horiz-whitespace? char)
         (read-char port)
         (readblock-internal level port first-item?))
      (#t
@@ -291,12 +296,11 @@
 (define (consume-horizontal-whitespace port)
   (let ((char (peek-char port)))
     (cond
-      ((or (eqv? char #\space)
-            (eqv? char #\ht))
-        (begin (read-char port)
-               (consume-horizontal-whitespace port)))
+      ((char-horiz-whitespace? char)
+         (read-char port)
+         (consume-horizontal-whitespace port))
       ((eqv? char #\;)
-        (consume-to-eol port)))))
+         (consume-to-eol port)))))
 
 ;; reads a block and handles group, (quote), (unquote),
 ;; (unquote-splicing) and (quasiquote).
