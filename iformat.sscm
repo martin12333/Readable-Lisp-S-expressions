@@ -36,7 +36,8 @@ define max-unit-character-length 60
 define max-unit-list-length 8
 
 define group-string "group\n"
-define infix-operators '(and or xor + - * / < <= > >= = <> != ==)
+define infix-operators '(
+            and or xor + - * / ^ ++ -- ** // ^^ < <= > >= = <> != ==)
 
 define LISTLP list( #\( )
 define LISTRP list( #\) )
