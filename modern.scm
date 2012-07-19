@@ -97,8 +97,10 @@
 
 ; Define the tab character; a tab is immediately after the backslash.
 ; Unfortunately, this seems to be the only portable way to define the
-; tab character in Scheme, so we'll do it once (here) and use it elsewhere.
-(define tab #\	)
+; tab character in Scheme, so we'll do it here and use it elsewhere.
+; The indentation reader also defines this, but to the same value, so
+; it doesn't matter.
+(define tab (integer->char 9))
 
 (define (my-is-whitespace c)
   (ismember? c `(#\space #\newline ,tab)))
