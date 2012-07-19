@@ -35,6 +35,7 @@ define indent-increment '(#\space #\space)
 define max-unit-character-length 60
 define max-unit-list-length 8
 
+define group-string "group\n"
 define infix-operators '(and or xor + - * / < <= > >= = <> != ==)
 
 define LISTLP list( #\( )
@@ -165,7 +166,7 @@ define iformat-top(m indent)
     ; {null?(cdr(m)) and not(pair?(car(m)))} ; singleton list, no descend
     ;  append indent LISTLP unit(car(m)) LISTRP '(#\newline)
     pair?(car(m)) ; Is its car also a list? If so, prefer using GROUP.
-      append indent (string->list "group\n")
+      append indent (string->list group-string)
         iformat-top  car(m) append(indent indent-increment)
         iformat-body cdr(m) append(indent indent-increment)
     #t
