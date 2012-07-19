@@ -31,7 +31,7 @@
 define-module
   example simple-nfx
   :export-syntax
-  \
+  \\
     nfx
 
 cond-expand
@@ -45,36 +45,36 @@ cond-expand
 define-syntax nfx::helper
   syntax-rules (+ - * /)
     ; base case
-    \
+    \\
     . nfx::helper (x) ()
-    . \ x
+    . \\ x
     ; * and / have highest priority - ignore pending adds
-    \
+    \\
     . nfx::helper (x * y terms ...) pending-add
-    . \ nfx::helper ((* x y) terms ...) pending-add
-    \
+    . \\ nfx::helper ((* x y) terms ...) pending-add
+    \\
     . nfx::helper (x / y terms ...) pending-add
-    . \ nfx::helper ((/ x y) terms ...) pending-add
+    . \\ nfx::helper ((/ x y) terms ...) pending-add
     ; if + or -, and no pending adds, pend them
-    \
+    \\
     . nfx::helper (x + terms ...) ()
-    . \ nfx::helper (terms ...) (x +)
-    \
+    . \\ nfx::helper (terms ...) (x +)
+    \\
     . nfx::helper (x - terms ...) ()
-    . \ nfx::helper (terms ...) (x -)
+    . \\ nfx::helper (terms ...) (x -)
     ; if we reached here, then the next term isn't
     ; a multiplication/division.  Commit the
     ; pending add/subtract
-    \
+    \\
     . nfx::helper (y terms ...) (x +)
-    . \ nfx::helper ((+ x y) terms ...) ()
-    \
+    . \\ nfx::helper ((+ x y) terms ...) ()
+    \\
     . nfx::helper (y terms ...) (x -)
-    . \ nfx::helper ((- x y) terms ...) ()
+    . \\ nfx::helper ((- x y) terms ...) ()
 
 define-syntax nfx
   syntax-rules (+ - * /)
-    \
+    \\
     . nfx terms ...
-    . \ nfx::helper (terms ...) ()
+    . \\ nfx::helper (terms ...) ()
 

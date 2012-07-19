@@ -33,7 +33,7 @@
 define-module
   ( example streams )
   ; pending decision on SPLICE
-  :export \ (
+  :export \\ (
              ; constructors
              stream-null stream-cons
              stream-cons-core-builder ;; needed by Guile < 2.0
@@ -96,7 +96,7 @@ define xforce(promise)
         cdr(content)
       (lazy)
         let*
-          \
+          \\
             promise* cdr(content)()
             content  unbox(promise)
           if not{ car(content) eqv? 'eager }
@@ -134,7 +134,7 @@ define stream-null?(x)
   cond
     stream?(x)
       let*
-        \
+        \\
           promise stream-unwrap(x)
           data    xforce(promise)
         { data eq? private-stream-tag }
@@ -145,7 +145,7 @@ define stream-pair?(x)
 ; accessors
 define stream-car(x)
   let*
-    \
+    \\
       promise   stream-unwrap(x)
       cell      xforce(promise)
       promise-a car(cell)
@@ -153,7 +153,7 @@ define stream-car(x)
     a
 define stream-cdr(x)
   let*
-    \
+    \\
       promise   stream-unwrap(x)
       cell      xforce(promise)
       promise-d cdr(cell)

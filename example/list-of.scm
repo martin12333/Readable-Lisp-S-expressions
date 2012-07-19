@@ -36,12 +36,12 @@
 define-module
   example list-of
   :export
-  \
+  \\
     ; in Guile 1.6, module macros need to export the
     ; functions they use.
     list-of::concat-map
   :export-syntax
-  \
+  \\
     list-of
 
 ; Guile < 2.0 requires this
@@ -51,35 +51,35 @@ use-modules
 define-syntax list-of
   syntax-rules (is in)
     ; base case
-    \
+    \\
     . list-of x
-    . \ list x
+    . \\ list x
     ; handle (var in x) clause
-    \
+    \\
     . list-of x
     .   var in expr
-    .   clauses \ ...
-    . \ list-of::concat-map
+    .   clauses \\ ...
+    . \\ list-of::concat-map
     . .   lambda (var)
     . .     list-of x
-    . .       clauses \ ...
+    . .       clauses \\ ...
     . .   expr
     ; handle (var is x) clause
-    \
+    \\
     . list-of x
     .   var is expr
-    .   clauses \ ...
-    . \ let ((var expr))
+    .   clauses \\ ...
+    . \\ let ((var expr))
     . .   list-of x
-    . .     clauses \ ...
+    . .     clauses \\ ...
     ; handle (pred? x) clause
-    \
+    \\
     . list-of x
     .   pred?(args ...)
-    .   clauses \ ...
-    . \ if pred?(args ...)
+    .   clauses \\ ...
+    . \\ if pred?(args ...)
     . .    list-of x
-    . .      clauses \ ...
+    . .      clauses \\ ...
     . .    '()
 
 define list-of::concat-map(f l)
