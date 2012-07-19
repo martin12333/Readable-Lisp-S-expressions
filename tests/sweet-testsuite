@@ -1,3 +1,12 @@
+; The following is a set of test cases for the sweet-expression reader.
+; The first line is the traditional S-expression format;
+; the second is the equivalent sweet-expression reader
+; (it's in this order so that if the sweet-expression reader screws up,
+; the data it's comparing to is known correct.)
+; Some of these tests are basically duplicative; it's better to have
+; "extra" tests than not enough.
+
+
 x
 x
 
@@ -43,6 +52,13 @@ xyz
 ; Hello
   ; another comment
 xyz
+
+qqq
+qqq ; inline comment
+
+rrr
+; preceded with comment line
+rrr ; inline comment
 
 
 `(x ,y)
@@ -325,3 +341,397 @@ define-module
 ; initial split
 x
 \\ \\ \\ \\ \\ x
+
+
+; Test "initial period".  This is tricky, because it could be a:
+; number: .5
+; symbol: .hello
+; cons separator: ( a . b)  and ( . x)
+; indent: .<space>a
+
+.5
+.5
+
+.hello
+.hello
+
+...
+...
+
+(foo ...)
+foo ...
+
+(bar ...)
+bar
+   ...
+
+(a . b)
+(a . b)
+
+(a . (b c))
+(a . (b c))
+
+xyz
+(. xyz)
+
+abc
+( . abc)
+
+.qq
+(. .qq)
+
+.qq
+( . .qq)
+
+(bar (x y))
+bar
+. x y
+
+(foo (a b) . c)
+foo
+  a b
+  .
+  c
+
+(foo nnn)
+foo
+  . nnn
+
+; Tests to focus on grouping (SPLIT symbol at beginning).
+
+(z)
+\\
+  z
+
+((z a))
+\\
+  z a
+
+(a b)
+\\ a
+  b
+
+(a (b c))
+\\ a
+  b c
+
+(a b (c d))
+\\ a b
+  c d
+
+(foo (a))
+foo
+  \\
+     a
+
+(foo ((a b)))
+foo
+  \\
+     a b
+
+(foo (z (a b)))
+foo
+  \\ z
+     a b
+
+(foo (a b))
+foo
+  \\
+  a b
+
+
+(foo7 nnn)
+foo7
+  \\
+  \\
+  \\
+  nnn
+
+
+; Tests for SPLIT in middle.
+
+(foo a b)
+foo
+  a \\ b
+
+
+(bar a (c b))
+bar
+  a \\ c b
+
+(bar2 (z a) (c b))
+bar2
+  z a \\ c b
+
+(bar3 (z a) c)
+bar3
+  z a \\ c
+
+(bar4 z y x w v)
+bar4
+   z \\ y \\ x \\ w \\ v
+
+; Check lots of parameters
+
+(foo a z y x w v)
+foo a z y x w v
+
+
+(foo1 a z y x w v)
+foo1
+  a
+  z
+  y
+  x
+  w
+  v
+
+
+(foo2 a z y x w v)
+foo2 a
+  z
+  y
+  x
+  w
+  v
+
+(foo3 a z y x w v)
+foo3 a z
+  y
+  x
+  w
+  v
+
+(f x q)
+f(x q)
+
+; Boring s-expressions should work too
+()
+()
+
+(a b)
+(a b)
+
+(a . b)
+(a . b)
+
+(z (q x) (f n))
+(z (q x) (f n))
+
+123
+123
+
+5.5
+5.5
+
+-7
+-7
+
++8
++8
+
+-5.5
+-5.5
+
+(->x)
+(->x)
+
+#\x
+#\x
+
+(#\newline #\space #\x)
+(#\newline #\space #\x)
+
+( #\( #\) #\[ #\] #\{ #\} )
+( #\( #\) #\[ #\] #\{ #\} )
+
+#b10101
+#b10101
+
+#xca9a
+#xca9a
+
+#t
+#t
+
+#f
+#f
+
+"I am a string"
+"I am a string"
+
+"String\n with embedded newline"
+"String\n with embedded newline"
+
+
+; Test indentation
+
+(foo z)
+foo
+                             z
+
+; tab:
+(foo2 z)
+foo2
+	z
+
+(foo3 z)
+foo3
+		z
+
+; Mixed:
+(foo4 a)
+foo4
+	 a
+
+(foo6 z)
+foo6
+. . . . z
+
+
+; Initial quote + space:
+'ab
+' ab
+
+'(ab cd)
+' ab cd
+
+'(aa cc ff)
+' aa cc
+  ff
+
+'(aa cc (ff gg))
+' aa cc
+  ff gg
+
+'((a b))
+' \\
+  a b
+
+'((a b))
+' \\
+  a(b)
+
+'(aaa)
+' \\
+  aaa 
+
+'((ccc ddd))
+' \\
+  (ccc ddd)
+
+'(c (a b))
+' \\ c
+  a b
+
+; Quote followed by newline: interpret ' as quote.
+; This is debatable, but I think it makes sense.
+; In particular, if you start with:
+; \\
+;    aaa
+; and then quote it:
+; ' \\
+;   aaa
+; It should produce '(aaa).  So, if there's no \\, it makes sense
+; to interpret it like this:
+
+'(aaa bbb)
+'
+  (aaa bbb)
+
+
+'(aa bb)
+'
+  aa bb
+
+; quote followed by space + newline should be same as just followed by newline:
+'(e f)
+' 
+  e f
+
+
+; Test comments.
+(zz aa)
+; before
+zz
+; ignore
+    ; ignore
+  aa
+     ; ignore
+
+
+(bracketaccess b)
+b[]
+
+
+(bracketaccess b q)
+b[q]
+
+(a . port)
+a(. port)
+
+
+(b c . port)
+b(c . port)
+
+(f)
+f()
+
+(f (nfx))
+f{}
+
+(f (+ a b))
+f{a + b}
+
+(f (+ a b))
+f({a + b})
+
+(f (nfx a + b * c))
+f{a + b * c}
+
+(- 5)
+-(5)
+
+(- b c)
+-(b c)
+
+(* x y)
+*(x y)
+
+(/ n d)
+/(n d)
+
+(->x)
+->x()
+
+(a->b 0)
+a->b(0)
+
+(+ a (* b c))
+{a + {b * c}}
+
+("Hello" 3)
+"Hello"(3)
+
+(q (a b c) (d e (f h (i j))))
+q(a(b c) d(e f(h i(j))))
+
+(qq (a b c) (d e (f h (i j))))
+qq(   a(b c) 
+  d(e f(h i(j))))
+
+((f a) c d)
+f(a)(c d)
+
+((g h) ((f a) c d))
+g(h)f(a)(c d)
+
+((((hello))))
+((((hello))))
+
+(1 (2 (3 (4 (5 (6 (7 (8 (9 9) 8) 7) 6) 5) 4) 3) 2) 1)
+(1 (2 (3 (4 (5 (6 (7 (8 (9 9) 8) 7) 6) 5) 4) 3) 2) 1)
+
+(a (2 (3 (4 (5 (6 (7 (8 (9 9) 8) 7) 6) 5) 4) 3) 2) 1)
+a(2(3(4(5(6(7(8(9(9) 8) 7) 6) 5) 4) 3) 2) 1)
+
