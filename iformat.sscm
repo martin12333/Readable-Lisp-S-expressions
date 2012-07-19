@@ -35,7 +35,7 @@ define indent-increment '(#\space #\space)
 define max-unit-character-length 60
 define max-unit-list-length 8
 
-define group-string "group\n"
+define group-string "\\\\\n"
 define infix-operators '(
             and or xor + - * / ^ ++ -- ** // ^^ < <= > >= = <> != ==)
 

@@ -67,7 +67,7 @@
 ; TODO: Need to NOT give "group" its special meaning if it doesn't
 ; sart with "g" or "G". This may be tricky to do with this design.
 
-(define split (string->symbol "\\"))
+(define split (string->symbol "\\\\"))
 (define split-char #\\ ) ; First (possibly only) character of split symbol.
 ; this is a special unique object that is used to
 ; represent the existence of the split symbol

@@ -273,12 +273,12 @@ cond
 ; Test SPLIT
 (a b c (d e f))
 a b
-  c \ d e f
+  c \\ d e f
 
 ; Test SPLIT
 (a c (d e f))
 a
-  c \ d e f
+  c \\ d e f
 
 ; test initial indent - this is a trivial test, it's hard to test this
 ; using this test suite approach
@@ -287,7 +287,7 @@ a
   (first)
 
 ((x y))
-\
+\\
   x y
 
 
