@@ -39,6 +39,7 @@ define group-string "group\n"
 define infix-operators '(
             and or xor + - * / ^ ++ -- ** // ^^ < <= > >= = <> != ==)
 
+define tab integer->char(9)
 define LISTLP list( #\( )
 define LISTRP list( #\) )
 define LISTLBRACE list((integer->char 123))
@@ -99,6 +100,24 @@ define abbreviations '(
   (unquote (#\,))
   (unquote-splicing (#\, #\@)))
 
+; Given list of characters, return the characters that would REPRESENT
+; those characters inside a string AFTER the initial double-quote,
+; then return the double-quote.  This translates newline to \n, etc.
+define unit-string-tail(x)
+  if null?(x)
+    '(#\")  ; Return the string's closing double-quote.
+    append
+      let ((c car(x)))
+        cond             ; Can't use "case" because of "tab" variable.
+          eq?(c #\\)        '(#\\ #\\)
+          eq?(c #\")        '(#\\ #\")
+          ; These aren't in R5RS, but NOT escaping them will
+          ; cause more trouble:
+          eq?(c #\newline)  '(#\\ #\n)
+          eq?(c tab)        '(#\\ #\t)
+          #t                list(car(x))
+      unit-string-tail cdr(x)
+
 ; Return x represented as a modern-expression unit, as a list of characters.
 ; Indentation processing *may* be active, but the character sequence
 ; returned must not depend on that.
@@ -109,6 +128,7 @@ define unit(x)
     number?(x)   string->list(number->string(x))
     boolean?(x)  if(x '(#\# #\t) '(#\# #\f))
     symbol?(x)   string->list(symbol->string(x))
+    string?(x)   append('(#\") unit-string-tail(string->list(x)))
     pair?(x)
      cond
        {assq(car(x) abbreviations) and pair?(cdr(x)) and null?(cddr(x))}
@@ -122,8 +142,6 @@ define unit(x)
     ; R5RS doesn't include "object->string", but it's painful to do without.
     ; You might be able to use these in a pinch:
     ; char?(x)     append '(#\# #\\) x ; Doesn't handle special chars
-    ; string?(x)   append '(#\") string->list(x) '(#\")
-    ;       ; Doesn't handle strings with double-quote, backslash, \n, etc.
 
 ; Input: expression "m" with indentation string "indent".
 ; Output: List of characters representing it (#\newline for new line).
