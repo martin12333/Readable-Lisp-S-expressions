@@ -202,16 +202,16 @@ x y
 a b c
 
 (hello)
-group
+\\
   hello
 
 ((hello there))
-group
+\\
   hello there
 
 
-(hi group)
-hi group
+(hi \\)
+hi (. \\)
 
 (a (b c) (d e))
 a
@@ -239,12 +239,12 @@ a (b c) (d e)
 
 (x (y))
 x
-  group
+  \\
      y
 
 (let ((x 1) (y 2)))
 let
-  group
+  \\
     x 1
     y 2
 
@@ -299,14 +299,14 @@ a
 )
 
 '((x y))
-' group
+' \\
    x y
 
 `(,x)
-` group
+` \\
    ,x
 
 `(,@x)
-` group
+` \\
    ,@x
 
