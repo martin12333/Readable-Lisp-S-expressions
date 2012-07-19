@@ -88,6 +88,14 @@ define infix-tail(op x)
     ; This can't happen if only lists are represented with curly-infix:
     #t        append( '(#\space #\. #\space) unit(x) LISTRBRACE)
 
+; Define an association list of Lisp abbreviations.
+; Eventually use "group" to define this, but currently the group
+; symbol is under discussion, so best not to use it yet:
+define abbreviations '(
+  (quote (#\'))
+  (quasiquote (#\`))
+  (unquote (#\,))
+  (unquote-splicing (#\, #\@)))
 
 ; Return x represented as a modern-expression unit, as a list of characters.
 ; Indentation processing *may* be active, but the character sequence
@@ -101,14 +109,8 @@ define unit(x)
     symbol?(x)   string->list(symbol->string(x))
     pair?(x)
      cond
-       {eq?(car(x) 'quote) and pair?(cdr(x)) and null?(cddr(x))}
-         append '(#\') unit(cadr(x))
-       {eq?(car(x) 'quasiquote) and pair?(cdr(x)) and null?(cddr(x))}
-         append '(#\`) unit(cadr(x))
-       {eq?(car(x) 'unquote) and pair?(cdr(x)) and null?(cddr(x))}
-         append '(#\,) unit(cadr(x))
-       {eq?(car(x) 'unquote-splicing) and pair?(cdr(x)) and null?(cddr(x))}
-         append '(#\, #\@) unit(cadr(x))
+       {assq(car(x) abbreviations) and pair?(cdr(x)) and null?(cddr(x))}
+         append cadr(assq(car(x) abbreviations)) unit(cadr(x))
        symbol?(car(x))
          if represent-as-infix?(x)
            append LISTLBRACE unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
