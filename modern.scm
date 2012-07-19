@@ -327,8 +327,8 @@
 (define (my-read-delimited-list stop-char port)
   ; like read-delimited-list of Common Lisp, but calls modern-read instead.
   ; read the "inside" of a list until its matching stop-char, returning list.
-  ; This implements a common extension: (. b) return b.
-  ; That could be important for I-expressions, e.g., (. group)
+  ; This implements a useful extension: (. b) returns b.
+  ; This is important as an escape for indented expressions, e.g., (. \\)
   (skip-whitespace port)
   (let
     ((c (peek-char port)))

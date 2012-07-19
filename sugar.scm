@@ -49,9 +49,7 @@
 
 ;----GUILE BEGINS
 (define-module (sugar)
-  :export (group
-           split ;; should we?
-           sugar-read-save sugar-load-save
+  :export (sugar-read-save sugar-load-save
            sugar-read sugar-filter
            sugar-load
            sugar-enable sugar-disable
@@ -62,10 +60,6 @@
 (define sugar-current-load-port-save current-load-port)
 ;----GUILE ENDS
 
-
-(define group 'group)
-; TODO: Need to NOT give "group" its special meaning if it doesn't
-; sart with "g" or "G". This may be tricky to do with this design.
 
 (define split (string->symbol "\\\\"))
 (define split-char #\\ ) ; First (possibly only) character of split symbol.
@@ -153,8 +147,6 @@
     line)
    ((null? line)
     line)
-   ((eq? (car line) group)
-    (cdr line))
    ; remove our special split-tag when it is used
    ; to fix SPLIT-by-itself
    ((eq? (car line) split-tag)
@@ -302,7 +294,7 @@
       ((eqv? char #\;)
          (consume-to-eol port)))))
 
-;; reads a block and handles group, (quote), (unquote),
+;; reads a block and handles (quote), (unquote),
 ;; (unquote-splicing) and (quasiquote).
 (define (readblock-clean level port)
   (let* ((read (readblock level port))
