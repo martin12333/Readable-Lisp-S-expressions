@@ -8,6 +8,8 @@ spawn -noecho guile --debug -L .
 send "(begin (use-modules (ice-9 readline)) (activate-readline))\n\n"
 # Now enable sweet-expressions.
 # (sweet-load) still has some bugs, so it needs to be in this order.
-send "(begin (set! %load-path (append %load-path '(\".\"))) (use-modules (sweet)) (newline))\n"
+# NB: AFAIK the bugs no longer exist after I (Alan) rewrote
+# the primitive-load replacement
+send "(begin (set! %load-extensions (cons \".sscm\" %load-extensions)) (set! %load-path (append %load-path '(\".\"))) (use-modules (sweet)) (newline))\n"
 interact
 
