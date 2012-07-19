@@ -310,3 +310,18 @@ a
 ` \\
    ,@x
 
+; other examples
+; s-expr
+(define-module (foo bar quux)
+  :export (quux1 quux2))
+; sweet-expr
+define-module
+  foo bar quux
+  :export
+  \\
+    quux1
+    quux2
+
+; initial split
+x
+\\ \\ \\ \\ \\ x
