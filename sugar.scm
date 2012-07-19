@@ -65,7 +65,7 @@
 (define split-char #\\ ) ; First (possibly only) character of split symbol.
 ; this is a special unique object that is used to
 ; represent the existence of the split symbol
-; so that clean handles it properly.
+; so that readblock-clean handles it properly.
 (define split-tag (cons '() '()))
 
 ; #\ht is not as portable, so predefine "tab" as that char
@@ -140,37 +140,6 @@
       ((eof-object? (peek-char port)) "")
       ((eqv? (peek-char port) #\newline) "")
       (#t (list->string indent)))))
-
-(define (clean line)
-  (cond
-   ((not (pair? line))
-    line)
-   ((null? line)
-    line)
-   ; remove our special split-tag when it is used
-   ; to fix SPLIT-by-itself
-   ((eq? (car line) split-tag)
-     (cdr line))
-   ((null? (car line))
-    (cdr line))
-   ((list? (car line))
-    (if (or (equal? (car line) '(quote))
-              (equal? (car line) '(quasiquote))
-              (equal? (car line) '(unquote-splicing))
-              (equal? (car line) '(unquote)))
-          (if (and (list? (cdr line))
-                   (= (length (cdr line)) 1))
-              (cons
-               (car (car line))
-               (cdr line))
-              (list
-               (car (car line))
-               (cdr line)))
-          (cons
-           (clean (car line))
-           (cdr line))))
-   (#t
-    line)))
 
 ;; Reads all subblocks of a block
 ;; this essentially implements the "body" production
@@ -298,16 +267,23 @@
 ;; (unquote-splicing) and (quasiquote).
 (define (readblock-clean level port)
   (let* ((read (readblock level port))
-           (next-level (car read))
-           (block (cdr read)))
-    (if (or (not (list? block)) (> (length block) 1))
-          (cons next-level (clean block))
-          (if (= (length block) 1)
-              (if (eq? (car block) split-tag)
-                  ; "magically" remove split-tag
-                  (cons next-level '())
-                  (cons next-level (car block)))
-              (cons next-level '.)))))
+         (next-level (car read))
+         (block (cdr read)))
+    (cond
+      ; remove split-tag
+      ((and (pair? block) (eq? (car block) split-tag))
+        (cons next-level (cdr block)))
+      ; non-list and multi-item blocks.
+      ((or (not (list? block)) (> (length block) 1))
+        (cons next-level block))
+      ; unwrap single-item blocks
+      ((= (length block) 1)
+        (if (eq? (car block) split-tag)
+            ; "magically" remove split-tag
+            (cons next-level '())
+            (cons next-level (car block))))
+      (#t
+        (cons next-level '.)))))
 
 
 (define (sugar-start-expr port)
