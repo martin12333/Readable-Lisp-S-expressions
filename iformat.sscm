@@ -241,7 +241,8 @@ define iformat-top(m indent)
             iformat-top-normal-indent(m indent)
 
 ; Display x (a list of chars and strings), but do NOT display
-; the last EOL.
+; the last end-of-line.  Because we only take generated files,
+; the end-of-line is exactly \#newline and nothing else.
 define display-skip-last-eol(x)
   cond
     null?(x)

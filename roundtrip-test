@@ -1,13 +1,16 @@
 #!/bin/sh
 # Test the sweet translators by doing a round-trip.
+# Tests using the filename in $1, or a default filename if none given.
+
+# TODO: ./sweet-filter doesn't copy out a comment if it was immediately
+# preceded by a line with a datum.  Need to fix.
+
 # For the given test file (which must be in traditional S-expression format),
 # 1. Pretty-print it (placing it in ,1)
 # 2. Convert to sweet, then convert back to S-expressions (placing it in ,2)
 # They should be the same.  This puts stress on both converters.
 
-TESTFILE="iformat.scm"
-
-# TODO: ./sweet-filter doesn't copy out the last line if it's a comment.
+TESTFILE="${1:-iformat.scm}"
 
 make iformat.scm
 
