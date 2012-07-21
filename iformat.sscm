@@ -1,5 +1,5 @@
 ; iformat.scm
-; Reformat an S-expression into indented sweet-expression.
+; Filter to read S-expressions and output indented sweet-expression.
 ;
 ; Copyright (C) 2006-2012 David A. Wheeler.
 ;
@@ -23,14 +23,12 @@
 ; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ; OTHER DEALINGS IN THE SOFTWARE.
 
-; LIMITATIONS:
-; Need to support same-line, {...} infix, etc.
-;
-; For efficiency, it should use another approach than string concatenation.
-; Rewrite this using cons of strings, then flatten the list
-; to a single string in a final pass.
 
+; Note: The maxwidth may be violated if, at a current indent, there is a
+; long non-pair that exceeds it.  But other than long atoms, it's respected,
+; so it's unlikely to exceed this width in practice:
 define maxwidth 78
+
 define indent-increment '(#\space #\space)
 define max-unit-character-length 60
 define max-unit-list-length 8
@@ -38,9 +36,12 @@ define max-unit-list-length 8
 define group-string "\\\\\n"
 define infix-operators '(
             and or xor + - * / ^ ++ -- ** // ^^ < <= > >= = <> != ==)
+
 ; Lists with these symbols as first parameter, and aren't shown on 1 line,
-; should be shown as a line with SYMBOL FIRST-PARAMETER and then indents.
-; This refinement isn't *necessary* but it looks better.
+; are be shown as a line with SYMBOL FIRST-PARAMETER and *then* indents.
+; This is used when the first parameter is especially *special* and
+; (normally) has a different semantic meaning from later parameters.
+; This refinement isn't *necessary* but I think it looks better.
 define cuddle-first-parameter '(define defun lambda set!
            if when unless let let* letrec do syntax-rules)
 
@@ -156,6 +157,8 @@ define unit(x)
     ; You might be able to use these in a pinch:
     ; char?(x)     append '(#\# #\\) x ; Doesn't handle special chars
 
+
+; Return x, the rest of the list, as a list of characters. See line().
 define line-tail(x)
   cond
     null?(x)  '()
@@ -190,64 +193,41 @@ define iformat-body(m indent)
       iformat-top  car(m) indent
       iformat-body cdr(m) indent
 
-; Not currently used.
-define iformat-list(m indent)
-  if null?(m)
-    '()
-    append
-      iformat-top  car(m) indent
-      iformat-list cdr(m) indent
-
+; Return list m represented in the typical indent style.
+define iformat-top-normal-indent(m indent)
+  append
+    iformat-top  car(m) indent
+    iformat-body cdr(m) append(indent indent-increment)
 
 ; Input: expression "m" with indentation string "indent".
 ; Output: List of characters representing it (#\newline for new line).
 ; At this point, we're at the beginning of a possibly-indented
 ; line with sweet-expression (indentation) processing active.
 define iformat-top(m indent)
-  cond
-    not(pair?(m)) ; if not a list (atom, etc), print it. () handled here
-      append(indent unit(m) '(#\newline))
-    ;
-    ;  TODO: handle non-atomic quotes.  There are questions about quote meaning
-    ;  so let's be cautious for now.
-    ; simple quote:
-    ; {eq?(car(m) 'quote) and pair?(cdr(m)) and
-    ;  null?(cddr(m)) and symbol?(cadr(m))}
-    ;   append indent '(#\') unit(cadr(m)) '(#\newline)
-    ;
-    ; TODO: match backquote calls.
-    ; At this point we have a list - is it special somehow?
-    ; TODO: are null? and list? the right tests?
-    ; {null?(cdr(m)) and not(pair?(car(m)))} ; singleton list, no descend
-    ;  append indent LISTLP unit(car(m)) LISTRP '(#\newline)
-    #t
-      ; Normal case.  Try to represent as one line.
-      let* (asline(line(m)) length-asline(length(asline)))
-        if { {length-asline < max-unit-character-length} and
-             {{length-asline + length(indent)} < maxwidth } and
-             {general-length(m) < max-unit-list-length} }
-          append indent asline '(#\newline)
-          ; Can't put entire expression on one line, now try alternatives:
-          if pair?(car(m))  ; Is it possible we'll need GROUP?
-            let* (asline-car(line(car(m))))
-              if {{length(asline-car) + length(indent)} < maxwidth }
-                append
-                  iformat-top  car(m) indent
-                  iformat-body cdr(m) append(indent indent-increment)
-                append indent (string->list group-string) ; GROUP
-                  iformat-top  car(m) append(indent indent-increment)
-                  iformat-body cdr(m) append(indent indent-increment)
-            ; This is messy & does lots of unnecessary recalculation
-            if { memq(car(m) cuddle-first-parameter) and
-                 {length(m) >= 3} and
-                 { {length(line(list(car(m) cadr(m))))
-                     + length(indent) } < maxwidth} }
-              append indent line(list((car m) (cadr m))) ; Cuddle up!
-                '(#\newline)
-                iformat-body cddr(m) append(indent indent-increment)
-              append ; Typical indent style.
-                iformat-top  car(m) indent
+  if not(pair?(m)) ; if not a pair, just print it. () handled here
+    append(indent unit(m) '(#\newline))
+    ; We have a pair. Try to represent as one line of space-sep params.
+    let* (asline(line(m)) length-asline(length(asline)))
+      if { {length-asline < max-unit-character-length} and
+           {{length-asline + length(indent)} < maxwidth } and
+           {general-length(m) < max-unit-list-length} }
+        append indent asline '(#\newline)
+        ; Can't put entire expression on one line, now try alternatives:
+        if pair?(car(m))  ; Is car a pair?  If so, we may need GROUP.
+          let* (asline-car(line(car(m))))
+            if {{length(asline-car) + length(indent)} < maxwidth }
+              iformat-top-normal-indent(m indent) ; We can squeeze it in.
+              append indent (string->list group-string) ; Can't squeze; GROUP
+                iformat-top  car(m) append(indent indent-increment)
                 iformat-body cdr(m) append(indent indent-increment)
+          ; The car isn't a pair. Try to cuddle, else use normal indent style
+          if { memq(car(m) cuddle-first-parameter) and {length(m) >= 3}}
+            let* (asline-cuddled(line(list(car(m) cadr(m)))))
+               if { {length(asline-cuddled) + length(indent)} < maxwidth}
+                  append indent asline-cuddled '(#\newline) ; Cuddle up!
+                    iformat-body cddr(m) append(indent indent-increment)
+                  iformat-top-normal-indent(m indent) ; Don't cuddle.
+            iformat-top-normal-indent(m indent)
 
 
 ; Display formatted expression "m" using indentation string "indent".
