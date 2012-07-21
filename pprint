@@ -1,0 +1,5 @@
+#!/bin/sh
+# Filter to pretty-print a file in traditional S-expression Scheme format.
+# Requires Guile.
+
+guile pprint.scm

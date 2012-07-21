@@ -1,0 +1,21 @@
+#!/bin/sh
+# Test the sweet translators by doing a round-trip.
+# For the given test file (which must be in traditional S-expression format),
+# 1. Pretty-print it (placing it in ,1)
+# 2. Convert to sweet, then convert back to S-expressions (placing it in ,2)
+# They should be the same.  This puts stress on both converters.
+
+TESTFILE="iformat.scm"
+
+# TODO: ./sweet-filter doesn't copy out the last line if it's a comment.
+
+make iformat.scm
+
+./pprint < "$TESTFILE" > ,1
+
+guile iformat.scm < "$TESTFILE" > ,2reformat
+./sweet-filter < ,2reformat | ./pprint > ,2
+
+echo "DIFFERENCES (should be none):"
+echo
+diff -u ,1 ,2
