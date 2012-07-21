@@ -206,9 +206,9 @@ define iformat-top(m indent)
     ;  TODO: handle non-atomic quotes.  There are questions about quote meaning
     ;  so let's be cautious for now.
     ; simple quote:
-    {eq?(car(m) 'quote) and pair?(cdr(m)) and
-     null?(cddr(m)) and symbol?(cadr(m))}
-      append indent '(#\') unit(cadr(m)) '(#\newline)
+    ; {eq?(car(m) 'quote) and pair?(cdr(m)) and
+    ; null?(cddr(m)) and symbol?(cadr(m))}
+    ;  append indent '(#\') unit(cadr(m)) '(#\newline)
     ;
     ; TODO: match backquote calls.
     ; At this point we have a list - is it special somehow?
@@ -222,10 +222,18 @@ define iformat-top(m indent)
              {{length-asline + length(indent)} < maxwidth } and
              {general-length(m) < max-unit-list-length} }
           append indent asline '(#\newline)
-          if pair?(car(m)) ; If car is a list, prefer using GROUP.
-            append indent (string->list group-string)
-              iformat-top  car(m) append(indent indent-increment)
-              iformat-body cdr(m) append(indent indent-increment)
+          if pair?(car(m))  ; May need GROUP symbol
+            let*
+              \\
+                asline-car(line(car(m)))
+                length-asline-car(length(asline-car))
+              if {{length-asline-car + length(indent)} < maxwidth }
+                append
+                  iformat-top  car(m) indent
+                  iformat-body cdr(m) append(indent indent-increment)
+                append indent (string->list group-string) ; GROUP
+                  iformat-top  car(m) append(indent indent-increment)
+                  iformat-body cdr(m) append(indent indent-increment)
             append
               iformat-top  car(m) indent
               iformat-body cdr(m) append(indent indent-increment)
