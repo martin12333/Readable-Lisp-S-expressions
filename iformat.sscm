@@ -23,6 +23,8 @@
 ; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ; OTHER DEALINGS IN THE SOFTWARE.
 
+; TODO: Handle arbitrary end-of-line. Currently this assumes that
+;       lines end with just #\newline.
 
 ; Note: The maxwidth may be violated if, at a current indent, there is a
 ; long non-pair that exceeds it.  But other than long atoms, it's respected,
@@ -238,10 +240,32 @@ define iformat-top(m indent)
                   iformat-top-normal-indent(m indent) ; Don't cuddle.
             iformat-top-normal-indent(m indent)
 
+; Display x (a list of chars and strings), but do NOT display
+; the last EOL.
+define display-skip-last-eol(x)
+  cond
+    null?(x)
+      #t
+    string?(car(x))
+      display(car(x))
+      display-skip-last-eol(cdr(x))
+    {char?(car(x)) and null?(cdr(x)) and (eq? car(x) #\newline)}
+      #t
+    char?(car(x))
+      write-char(car(x))
+      display-skip-last-eol(cdr(x))
+    #t
+      display("BUG!!! in display-skip-last-eof!")
 
 ; Display formatted expression "m" using indentation string "indent".
-define iformat(m indent)
-  display list->string(iformat-top(m string->list(indent)))
+; Do NOT display the final end-of-line, due to an interesting subtlety:
+; read() doesn't consume the end-of-line, so if we are translating
+; what read() has read in, then we need to NOT generate the last end-of-line
+; so that they will match up.
+define iformat(m)
+  display-skip-last-eol iformat-top(m string->list(""))
+
+
 
 ; Copy one line from stdin to stdout, end on EOF or newline.
 define (copy-line port)
@@ -249,7 +273,7 @@ define (copy-line port)
     cond
       eof-object?(c)   c
       char=?(c #\newline) read-char() newline()
-      #t display(read-char(port)) copy-line(port)
+      #t write-char(read-char(port)) copy-line(port)
 
 ; filter stdin to stdout, reading in traditional s-expressions and outputting
 ; sweet-expressions.  Preserve the comments outside an s-expression.
@@ -265,7 +289,7 @@ define (iformat-filter)
         let ((result read(current-input-port())))
           if eof-object?(result)
             result
-            begin iformat(result "") iformat-filter()
+            begin iformat(result) iformat-filter()
 
 iformat-filter()
 
