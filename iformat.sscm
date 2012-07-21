@@ -23,9 +23,6 @@
 ; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ; OTHER DEALINGS IN THE SOFTWARE.
 
-; TODO: Handle arbitrary end-of-line. Currently this assumes that
-;       lines end with just #\newline.
-
 ; Note: The maxwidth may be violated if, at a current indent, there is a
 ; long non-pair that exceeds it.  But other than long atoms, it's respected,
 ; so it's unlikely to exceed this width in practice:
@@ -38,6 +35,20 @@ define max-unit-list-length 8
 define group-string "\\\\\n"
 define infix-operators '(
             and or xor + - * / ^ ++ -- ** // ^^ < <= > >= = <> != ==)
+
+; This program automatically handles various end-of-line situations.
+; An end-of-line is a sequence of two different end-of-line chars,
+; otherwise, it is a single end-of-line char.
+; Thus we handle \n, \r\n, \n\r, \r, and variations of <next line> too.
+; To do this, we need a list of end-of-line characters:
+define end-of-line-chars
+  list 
+    integer->char(#x0a)     ; <linefeed>, aka \n
+    integer->char(#x0d)     ; <carriage return>, aka \r
+    integer->char(#x85)     ; <next line>
+    ; If wide chars are supported, add this:
+    ; integer->char(#x2028)   ; <line separator>
+
 
 ; Lists with these symbols as first parameter, and aren't shown as 1 line,
 ; are be shown as a line with SYMBOL FIRST-PARAMETER and *then* indents.
@@ -268,13 +279,28 @@ define iformat(m)
 
 
 
-; Copy one line from stdin to stdout, end on EOF or newline.
+; Consume an end-of-line. This is 2 unequal end-of-line characters,
+; or a single end-of-line character, whichever is longer.
+define consume-end-of-line()
+  let ( c(peek-char()) )
+    if memq(c end-of-line-chars)
+      begin
+        read-char()
+        let ( next(peek-char()) )
+          if {not(eq?(c next)) and memq(next end-of-line-chars)}
+            read-char()
+
+; Copy one line from stdin to stdout, end on EOF or end-of-line.
+; Consume the end of line.
 define (copy-line port)
   let ((c peek-char(port)))
     cond
       eof-object?(c)   c
-      char=?(c #\newline) read-char() newline()
+      memq(c end-of-line-chars)
+        consume-end-of-line()
+        newline()
       #t write-char(read-char(port)) copy-line(port)
+
 
 ; filter stdin to stdout, reading in traditional s-expressions and outputting
 ; sweet-expressions.  Preserve the comments outside an s-expression.
@@ -282,11 +308,17 @@ define (iformat-filter)
   let ((c peek-char(current-input-port())))
     cond
       eof-object?(c)      c
-      char=?(c #\newline) read-char() newline() iformat-filter()
-      char=?(c #\space)   read-char() iformat-filter()
-      char=?(c #\tab)     read-char() iformat-filter()
-      char=?(c #\;)       copy-line(current-input-port()) iformat-filter()
+      memq(c end-of-line-chars)
+        consume-end-of-line()
+        newline()
+        iformat-filter()
+      char=?(c #\;)
+        copy-line current-input-port()
+        iformat-filter()
       #t
+        ; Do not copy space or tab directly to output; instead,
+        ; use read() to skip past them.  Initial indents (from space/tab)
+        ; disable sweet-expression processing, which is not what we want.
         let ((result read(current-input-port())))
           if eof-object?(result)
             result
