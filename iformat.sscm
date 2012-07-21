@@ -223,11 +223,8 @@ define iformat-top(m indent)
              {general-length(m) < max-unit-list-length} }
           append indent asline '(#\newline)
           if pair?(car(m))  ; May need GROUP symbol
-            let*
-              \\
-                asline-car(line(car(m)))
-                length-asline-car(length(asline-car))
-              if {{length-asline-car + length(indent)} < maxwidth }
+            let* (asline-car(line(car(m))))
+              if {{length(asline-car) + length(indent)} < maxwidth }
                 append
                   iformat-top  car(m) indent
                   iformat-body cdr(m) append(indent indent-increment)
