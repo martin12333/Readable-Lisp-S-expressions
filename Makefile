@@ -10,10 +10,10 @@ SWEET-FILTER = ./sweet-filter
 	$(SWEET-FILTER) < $< > $@
 
 
-all: iformat.scm
+all: sweetener.scm
 
 
-itest: iformat.scm
+itest: sweetener.scm
 	@echo "(a (b c) (d) ((e f) g (h)) i (k l m) (+ x y) 'j z)" \
-                | guile iformat.scm
+                | sweetener
 

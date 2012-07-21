@@ -32,6 +32,9 @@ Run "make" to generate Scheme, "guile iformat.scm" runs it as a filter
 * modern.scm: "Modern Lisp" reader, Scheme.  "modern-scm-test.scm" is
   a guile Scheme program you can run to test it.
 
+* sweetener: A filter that takes ordinary S-expressions as input,
+  and generates nice-looking sweet-expressions as output.
+
 * sugar.scm: an implementation of an indentation reader, defined mostly in
 SFRI-49.  These use indentation to reduce the number of parentheses
 needed to represent S-expressions.  MIT license.
