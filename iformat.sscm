@@ -220,10 +220,13 @@ define iformat-top(m indent)
         append indent asline '(#\newline)
         ; Can't put entire expression on one line, now try alternatives:
         if pair?(car(m))  ; Is car a pair?  If so, we may need GROUP.
-          let* (asline-car(line(car(m))))
-            if {{length(asline-car) + length(indent)} < maxwidth }
-              iformat-top-normal-indent(m indent) ; We can squeeze it in.
-              append indent (string->list group-string) ; Can't squeze; GROUP
+          let* (asunit-car(unit(car(m)))) ; Get representation of car.
+            if {{length(asunit-car) + length(indent)} < maxwidth }
+              ; Don't need to use GROUP, we can squeeze the car in.
+              append indent asunit-car '(#\newline)
+                iformat-body cdr(m) append(indent indent-increment)
+              ; Use GROUP, we can't squeeze the car in.
+              append indent (string->list group-string)
                 iformat-top  car(m) append(indent indent-increment)
                 iformat-body cdr(m) append(indent indent-increment)
           ; The car isn't a pair. Try to cuddle, else use normal indent style
