@@ -37,13 +37,19 @@ define group-string "\\\\\n"
 define infix-operators '(
             and or xor + - * / ^ ++ -- ** // ^^ < <= > >= = <> != ==)
 
-; Lists with these symbols as first parameter, and aren't shown on 1 line,
+; Lists with these symbols as first parameter, and aren't shown as 1 line,
 ; are be shown as a line with SYMBOL FIRST-PARAMETER and *then* indents.
-; This is used when the first parameter is especially *special* and
-; (normally) has a different semantic meaning from later parameters.
+; This is used when in typical uses the first parameter is *special* and
+; has a different semantic meaning from later parameters.
 ; This refinement isn't *necessary* but I think it looks better.
-define cuddle-first-parameter '(define defun lambda set!
-           if when unless let let* letrec do syntax-rules)
+define cuddle-first-parameter '(define lambda
+           if when unless case
+           set! let let* letrec let1 do
+           define-module                  ; Guile modules
+           library export import          ; R6RS library modules
+           defun block typecase           ; Common Lisp
+           let-syntax letcrec-syntax define-syntax syntax-rules)
+
 
 define tab integer->char(9)
 define LISTLP list( #\( )
