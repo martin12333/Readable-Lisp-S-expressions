@@ -4,16 +4,16 @@
 # Make "pattern rules".
 # Just put this into your "Makefile":
 
-SWEET-FILTER = ./sweet-filter
+UNSWEETEN = ./unsweeten
 
 %.scm : %.sscm
-	$(SWEET-FILTER) < $< > $@
+	$(UNSWEETEN) < $< > $@
 
 
-all: sweetener.scm
+all: sweeten.scm
 
 
-itest: sweetener.scm
+itest: sweeten.scm
 	@echo "(a (b c) (d) ((e f) g (h)) i (k l m) (+ x y) 'j z)" \
-                | ./sweetener
+                | $(UNSWEETEN)
 

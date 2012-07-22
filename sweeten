@@ -4,10 +4,10 @@
 # Requires guile and runs sweetener.scm.
 # Currently presumes sweetener.scm is findable by guile without help.
 
-if make sweetener.scm >/dev/null 2>/dev/null
+if make sweeten.scm >/dev/null 2>/dev/null
 then
-  guile sweetener.scm
+  guile sweeten.scm
 else
   # Whups, there was a failure.  Try again, but not silently.
-  make sweetener.scm
+  make sweeten.scm
 fi

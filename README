@@ -34,10 +34,17 @@ reader; provides the three tiers curly-infix-read, modern-read, and
 sweet-read.  Implemented in the Guile dialect of Scheme, includes
 hooks for other dialects.  MIT License.
 
+* sweeten: A filter that reads in (from stdin) a file of ordinary
+S-expressions (Scheme format) and outputs sweet-expressions.
+
 * spec-indent.txt: Detailed specification information on I-expressions.
+
 * spec-almkglor.txt: A not-so-updated specification for the entire
 sweet-expression spec, created by Alan Manuel K. Gloria
 
+* unsweeten: A filter that reads in (from stdin) a file of
+sweet-expressions, and outputs sweet-expressions.  You can use this in
+"makefiles" so that you can write files using sweet-expressions.
 
 Some of this code uses guile's module capability.
 To use these in guile, you need to make sure that the %load-path
@@ -65,3 +72,4 @@ strangeness is when autocompilation is turned OFF.  If you want to
 use sweet-guile or modern-guile, turn ON autocompilation, as
 otherwise use-modules will use the default reader rather than
 what you replace.
+
