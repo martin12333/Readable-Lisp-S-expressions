@@ -267,7 +267,7 @@ define iformat-body(m indent)
 define iformat-top-normal-indent(m indent)
   append
     iformat-top  car(m) indent
-    iformat-body cdr(m) append(indent indent-increment)
+    iformat-body cdr(m) deeper(indent)
 
 ; Input: expression "m" with indentation string "indent".
 ; Output: List of characters representing it (#\newline for new line).
@@ -289,11 +289,11 @@ define iformat-top(m indent)
             if {{length(asunit-car) + length(indent)} < maxwidth }
               ; Don't need to use GROUP, we can squeeze the car in.
               append indent asunit-car '(#\newline)
-                iformat-body cdr(m) append(indent indent-increment)
+                iformat-body cdr(m) deeper(indent)
               ; Use GROUP, we can't squeeze the car in.
               append indent (string->list group-string-newline)
-                iformat-top  car(m) append(indent indent-increment)
-                iformat-body cdr(m) append(indent indent-increment)
+                iformat-top  car(m) deeper(indent)
+                iformat-body cdr(m) deeper(indent)
           ; The car isn't a pair. Try to cuddle, else use normal indent style
           cond
             long-and-boring?(m)
@@ -308,7 +308,7 @@ define iformat-top(m indent)
                  if { {length(asline-cuddled) + length(indent)} < maxwidth}
                     ; We can cuddle up on line with one parameter:
                     append indent asline-cuddled '(#\newline)
-                      iformat-body cddr(m) append(indent indent-increment)
+                      iformat-body cddr(m) deeper(indent)
                     ; Can't cuddle - use normal format.
                     iformat-top-normal-indent(m indent)
             #t
