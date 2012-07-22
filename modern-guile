@@ -3,8 +3,8 @@
 # so you can try it out.
 
 spawn -noecho guile --debug -L .
-# Enable readline (for ease of interface), then activate sweet-expressions.
-# (sweet-load) still has some bugs, so it needs to be in this order.
-send "(begin (use-modules (ice-9 readline)) (activate-readline) (set! %load-path (append %load-path '(\".\"))) (use-modules (modern)) (enable-modern) (newline))\n"
+# Enable readline (for ease of interface), then activate modern-expressions.
+send "(begin (use-modules (ice-9 readline)) (activate-readline))\n\n"
+send "(begin (set! %load-path (append %load-path '(\".\"))) (use-modules (readable sweet-impl)) (replace-read modern-read) (newline))\n"
 interact
 

@@ -21,7 +21,7 @@
       (set! %load-path (append %load-path '(".")))))
   (guile
     (set! %load-path (append %load-path '(".")))))
-(use-modules (sweet))
+(use-modules (readable sweet-impl))
 
 
 (define (copy-line port)

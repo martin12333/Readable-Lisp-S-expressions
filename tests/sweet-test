@@ -9,9 +9,7 @@
       (set! %load-path (append %load-path '("..")))))
   (guile
     (set! %load-path (append %load-path '("..")))))
-(use-modules (sweet))
-
-(define old-read sweet-read-save)
+(use-modules (readable sweet-impl))
 
 (define sweet-test-error 0)
 (define sweet-test-correct 0)
@@ -21,7 +19,7 @@
 ;    sweet-expression (which should match it)
 (define (sweet-test filename)
   (define (load port)
-    (let ((correct (old-read port)))
+    (let ((correct (read port)))
       (cond
 	((eof-object? correct)
             (display "TEST COMPLETE\n")

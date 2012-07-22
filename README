@@ -29,22 +29,14 @@ implements infix operations in lists surrounded by {...}.  MIT license.
 Run "make" to generate Scheme, "guile iformat.scm" runs it as a filter
 (input is stdin, output is stdout).  MIT license.
 
-* modern.scm: "Modern Lisp" reader, Scheme.  "modern-scm-test.scm" is
-  a guile Scheme program you can run to test it.
-
-* sweetener: A filter that takes ordinary S-expressions as input,
-  and generates nice-looking sweet-expressions as output.
-
-* sugar.scm: an implementation of an indentation reader, defined mostly in
-SFRI-49.  These use indentation to reduce the number of parentheses
-needed to represent S-expressions.  MIT license.
-
-* sweet.scm: an implementation of a "sweet-expression" reader, a much
-easier-to-read format for S-expressions.  Implemented in the guile
-dialect of Scheme.  MIT license.
-Builds on sugar.scm and modern.scm.
+* readable/sweet-impl.scm: An implementation of a "sweet-expression"
+reader; provides the three tiers curly-infix-read, modern-read, and
+sweet-read.  Implemented in the Guile dialect of Scheme, includes
+hooks for other dialects.  MIT License.
 
 * spec-indent.txt: Detailed specification information on I-expressions.
+* spec-almkglor.txt: A not-so-updated specification for the entire
+sweet-expression spec, created by Alan Manuel K. Gloria
 
 
 Some of this code uses guile's module capability.
@@ -64,5 +56,12 @@ if used in "real" programs (an attacker might arrange for a malicious
 scheme file to be loaded instead of an intended one).
 
 Once the %load-path is set up, you can easily load modules, e.g.:
-  (use-modules (sugar))
+  (use-modules (readable sweet-impl))
+  (replace-read sweet-read)
 
+On Guile 2.0 there are occassional strangenesses in the interaction
+between the module system and autocompilation - the particular
+strangeness is when autocompilation is turned OFF.  If you want to
+use sweet-guile or modern-guile, turn ON autocompilation, as
+otherwise use-modules will use the default reader rather than
+what you replace.
