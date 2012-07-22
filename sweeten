@@ -1,0 +1,13 @@
+#!/bin/sh
+# Filter to read S-expressions and output indented sweet-expressions.
+
+# Requires guile and runs sweetener.scm.
+# Currently presumes sweetener.scm is findable by guile without help.
+
+if make sweetener.scm >/dev/null 2>/dev/null
+then
+  guile sweetener.scm
+else
+  # Whups, there was a failure.  Try again, but not silently.
+  make sweetener.scm
+fi
