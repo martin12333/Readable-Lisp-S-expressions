@@ -1,7 +1,7 @@
 #!/usr/bin/env guile
 !#
 
-;  Test modern.scm.  Also has demo of its use.
+;  Test modern-read in (readable sweet-impl).  Also has demo of its use.
 ;
 ;  It should print T for the successful loading of the file,
 ;  followed by a bunch of NILs (the result of successful asserts) and
@@ -38,7 +38,7 @@
       (set! %load-path (append %load-path '("..")))))
   (guile
     (set! %load-path (append %load-path '("..")))))
-(use-modules (modern))
+(use-modules (readable sweet-impl))
 
 ; Portable:
 
