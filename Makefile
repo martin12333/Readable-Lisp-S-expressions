@@ -15,5 +15,5 @@ all: sweetener.scm
 
 itest: sweetener.scm
 	@echo "(a (b c) (d) ((e f) g (h)) i (k l m) (+ x y) 'j z)" \
-                | sweetener
+                | ./sweetener
 

@@ -31,10 +31,14 @@ define maxwidth 78
 define indent-increment '(#\space #\space)
 define max-unit-character-length 60
 define max-unit-list-length 8
+define boring-length 16
 
-define group-string "\\\\\n"
+define group-string "\\\\"
+define group-string-newline "\\\\\n"
+define group-list string->list(group-string)
 define infix-operators '(
             and or xor + - * / ^ ++ -- ** // ^^ < <= > >= = <> != ==)
+
 
 ; This program automatically handles various end-of-line situations.
 ; An end-of-line is a sequence of two different end-of-line chars,
@@ -48,6 +52,11 @@ define end-of-line-chars
     integer->char(#x85)     ; <next line>
     ; If wide chars are supported, add this:
     ; integer->char(#x2028)   ; <line separator>
+
+
+; Given an indent, return the next deeper indent.
+define deeper(indent)
+  append(indent indent-increment)
 
 
 ; Lists with these symbols as first parameter, and aren't shown as 1 line,
@@ -200,7 +209,49 @@ define line(x)
         append LISTLP unit(car(x)) LISTRP
     #t
       append unit(car(x)) '(#\space) line-tail(cdr(x))
-    
+
+; a list is boring if it has ONLY non-pair members.
+define boring?(x)
+  cond
+    not(pair?(x))  #t  ; This includes (), which is boring & the end.
+    pair?(car(x))  #f
+    #t             boring?(cdr(x))
+
+; A list is long and boring if it's a list, it's boring, and
+; its length is longer than the boring-length.
+; Such a list is almost certainly NOT a function call or a
+; body of some executable sequence, instead, it's almost certainly a long
+; boring list of data
+define long-and-boring?(x)
+  cond
+    not(pair?(x))                 #f
+    not(list?(x))                 #f
+    {length(x) < boring-length}   #f
+    #t                            boring?(x)
+
+
+
+; Return list "m" as a list of characters representing
+; a long and boring split list.
+define iformat-boring-list(x first? pos next-indent)
+  cond
+    null?(x) '(#\newline)
+    first?
+      ; if first, force its disply, even if that goes beyond width max.
+      let (item(unit(car(x))))
+        append item 
+          iformat-boring-list(cdr(x) #f {pos + length(item)} next-indent)
+    #t ; Not first.
+      let (item(unit(car(x))))
+        let (item-sameline(append('(#\space) group-list '(#\space) item)))
+          if {{pos + length(item-sameline)} < maxwidth}
+            append item-sameline
+              iformat-boring-list cdr(x) #f
+                {pos + length(item-sameline)} \\ next-indent
+            begin
+              append '(#\newline) next-indent
+                iformat-boring-list x #t length(next-indent) next-indent
+
 ; Input: expression "m" with indentation string "indent".
 ; Output: List of characters representing it (#\newline for new line).
 ; This tail handles the body of a list (after its first entry) when
@@ -225,13 +276,14 @@ define iformat-top-normal-indent(m indent)
 define iformat-top(m indent)
   if not(pair?(m)) ; if not a pair, just print it. () handled here
     append(indent unit(m) '(#\newline))
-    ; We have a pair. Try to represent as one line of space-sep params.
+    ; We have a pair. Can we represent it as one line of space-sep params?
     let* (asline(line(m)) length-asline(length(asline)))
       if { {length-asline < max-unit-character-length} and
            {{length-asline + length(indent)} < maxwidth } and
            {general-length(m) < max-unit-list-length} }
+        ; Yes, we can represent it as one list of space-separated parameters:
         append indent asline '(#\newline)
-        ; Can't put entire expression on one line, now try alternatives:
+        ; No, Can't put entire expression on one line; try alternatives.
         if pair?(car(m))  ; Is car a pair?  If so, we may need GROUP.
           let* (asunit-car(unit(car(m)))) ; Get representation of car.
             if {{length(asunit-car) + length(indent)} < maxwidth }
@@ -239,17 +291,28 @@ define iformat-top(m indent)
               append indent asunit-car '(#\newline)
                 iformat-body cdr(m) append(indent indent-increment)
               ; Use GROUP, we can't squeeze the car in.
-              append indent (string->list group-string)
+              append indent (string->list group-string-newline)
                 iformat-top  car(m) append(indent indent-increment)
                 iformat-body cdr(m) append(indent indent-increment)
           ; The car isn't a pair. Try to cuddle, else use normal indent style
-          if { memq(car(m) cuddle-first-parameter) and {length(m) >= 3}}
-            let* (asline-cuddled(line(list(car(m) cadr(m)))))
-               if { {length(asline-cuddled) + length(indent)} < maxwidth}
-                  append indent asline-cuddled '(#\newline) ; Cuddle up!
-                    iformat-body cddr(m) append(indent indent-increment)
-                  iformat-top-normal-indent(m indent) ; Don't cuddle.
-            iformat-top-normal-indent(m indent)
+          cond
+            long-and-boring?(m)
+              ; A long-and-boring list is almost certainly data, not
+              ; a function call or code sequence.  Format it differently.
+              append
+                indent \\ string->list(group-string-newline)
+                deeper(indent)
+                iformat-boring-list m #t length(indent) deeper(indent)
+            {memq(car(m) cuddle-first-parameter) and {length(m) >= 3}}
+              let* (asline-cuddled(line(list(car(m) cadr(m)))))
+                 if { {length(asline-cuddled) + length(indent)} < maxwidth}
+                    ; We can cuddle up on line with one parameter:
+                    append indent asline-cuddled '(#\newline)
+                      iformat-body cddr(m) append(indent indent-increment)
+                    ; Can't cuddle - use normal format.
+                    iformat-top-normal-indent(m indent)
+            #t
+              iformat-top-normal-indent(m indent)
 
 ; Display x (a list of chars and strings), but do NOT display
 ; the last end-of-line.  Because we only take generated files,
