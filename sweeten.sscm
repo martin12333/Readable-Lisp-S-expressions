@@ -259,15 +259,15 @@ define iformat-boring-list(x first? pos next-indent)
 ; Output: List of characters representing it (#\newline for new line).
 ; This tail handles the body of a list (after its first entry) when
 ; indentation processing is active, each of these is its own initial line.
-define iformat-body(m indent)
+define iformat-body(m indent indent-already)
   if null?(m)
     '()
     append
-      iformat-top  car(m) indent
-      iformat-body cdr(m) indent
+      iformat-top  car(m) indent indent-already
+      iformat-body cdr(m) indent #f
 
 ; Return list m represented in the typical indent style.
-define iformat-top-normal-indent(x indent)
+define iformat-top-normal-indent(x indent indent-already)
   if represent-as-abbreviation?(x)
     ; Use QUOTE+SPACE, etc.
     ; Problem: iformat-top doesn't have a way of NOT inserting an indent,
@@ -280,16 +280,20 @@ define iformat-top-normal-indent(x indent)
     ; to pass a "position" value around all the functions, and it's
     ; unlikely to affect anything, so we won't worry about it.
     append indent cadr(assq(car(x) abbreviations)) '(#\space)
-      iformat-top(cadr(x) indent)
+      iformat-top(cadr(x) indent #f) ; TODO!!!
     append
-      iformat-top  car(x) indent
-      iformat-body cdr(x) deeper(indent)
+      iformat-top  car(x) indent indent-already
+      iformat-body cdr(x) deeper(indent) #f
 
 ; Input: expression "m" with indentation string "indent".
+;        indent-already if #f if no indentation has already taken place,
+;        or if indentation *has* taken place, it contains the string of
+;        indentation that's occurred (so char position, etc., can be
+;        determined).
 ; Output: List of characters representing it (#\newline for new line).
 ; At this point, we're at the beginning of a possibly-indented
 ; line with sweet-expression (indentation) processing active.
-define iformat-top(m indent)
+define iformat-top(m indent indent-already)
   if not(pair?(m)) ; if not a pair, just print it. () handled here
     append(indent unit(m) '(#\newline))
     ; We have a pair. Can we represent it as one line of space-sep params?
@@ -305,11 +309,11 @@ define iformat-top(m indent)
             if {{length(asunit-car) + length(indent)} < maxwidth }
               ; Don't need to use GROUP, we can squeeze the car in.
               append indent asunit-car '(#\newline)
-                iformat-body cdr(m) deeper(indent)
+                iformat-body cdr(m) deeper(indent) #f
               ; Use GROUP, we can't squeeze the car in.
               append indent (string->list group-string-newline)
-                iformat-top  car(m) deeper(indent)
-                iformat-body cdr(m) deeper(indent)
+                iformat-top  car(m) deeper(indent) #f
+                iformat-body cdr(m) deeper(indent) #f
           ; The car isn't a pair. Try to cuddle, else use normal indent style
           cond
             long-and-boring?(m)
@@ -324,11 +328,11 @@ define iformat-top(m indent)
                  if { {length(asline-cuddled) + length(indent)} < maxwidth}
                     ; We can cuddle up on line with one parameter:
                     append indent asline-cuddled '(#\newline)
-                      iformat-body cddr(m) deeper(indent)
+                      iformat-body cddr(m) deeper(indent) #f
                     ; Can't cuddle - use normal format.
-                    iformat-top-normal-indent(m indent)
+                    iformat-top-normal-indent m indent #f
             #t
-              iformat-top-normal-indent(m indent)
+              iformat-top-normal-indent m indent indent-already
 
 ; Display x (a list of chars and strings), but do NOT display
 ; the last end-of-line.  Because we only take generated files,
@@ -354,7 +358,7 @@ define display-skip-last-eol(x)
 ; what read() has read in, then we need to NOT generate the last end-of-line
 ; so that they will match up.
 define iformat(m)
-  display-skip-last-eol iformat-top(m string->list(""))
+  display-skip-last-eol iformat-top(m string->list("") #f)
 
 
 
