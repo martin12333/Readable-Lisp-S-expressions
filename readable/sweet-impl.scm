@@ -232,7 +232,7 @@
 
     ; On R6RS, and other Scheme's, module contents must
     ; be entirely inside a top-level module structure.
-    ; Use module-contents to support that.  On Scheme's
+    ; Use module-contents to support that.  On Schemes
     ; where module declarations are separate top-level
     ; expressions, we expect module-contents to transform
     ; to a simple (begin ...), and possibly include
@@ -313,7 +313,7 @@
     (define (get-sourceinfo _) #f)
     (define (attach-sourceinfo _ x) x)
 
-    ; Not strictly R5RS but we expect at least some Scheme's
+    ; Not strictly R5RS but we expect at least some Schemes
     ; to allow this somehow.
     (define (replace-read-with f)
       (set! read f))))
@@ -330,35 +330,85 @@
    ; replacing the reader
    replace-read restore-scheme-read)
 
+  ; Define the whitespace characters, in relatively portable ways
+  ; Presumes ASCII, Latin-1, Unicode or similar.
+  (define tab (integer->char #x0009))             ; #\ht aka \t.
+  (define linefeed (integer->char #x000A))        ; #\newline aka \n. FORCE it.
+  (define carriage-return (integer->char #x000D)) ; \r.
+  (define line-tab (integer->char #x000D))
+  (define form-feed (integer->char #x000C))
+  (define space '#\space)
+  (define next-line (integer->char #x0085))
+  ; (define line-separator (integer->char #x2028))
+  ; (define paragraph-separator (integer->char #x2029))
+
+  (define line-ending-chars (list linefeed carriage-return next-line))
+  ; If supported, add line-separator
+
+
+  ; This definition of whitespace chars is per R6RS section 4.2.1.
+  ; R6RS doesn't explicitly list the #\space character, be sure to include!
+  (define whitespace-chars
+     (list tab linefeed line-tab form-feed carriage-return next-line #\space))
+  ; If supported, add characters whose category is Zs, Zl, or Zp
+
+  ; Returns a true value (not necessarily #t)
+  (define (char-line-ending? char) (memq char line-ending-chars))
+
+  ; Return #t if char is space or tab.
+  (define (char-horiz-whitespace? char)
+    (or (eqv? char #\space)
+        (eqv? char tab)))
+
+  ; Create own version, in case underlying implementation omits some.
+  (define (my-char-whitespace? c)
+    (or (char-whitespace? c) (memq c whitespace-chars)))
+
+  ; Consume an end-of-line sequence. This is 2 unequal end-of-line
+  ; characters, or a single end-of-line character, whichever is longer.
+  (define (consume-end-of-line port)
+    (let ((c (my-peek-char port)))
+      (if (char-line-ending? c)
+        (begin
+          (my-read-char port)
+          (let ((next (my-peek-char port)))
+            (if (and (not (eq? c next))
+                     (char-line-ending? next))
+              (my-read-char port)))))))
+
+  (define (consume-to-eol port)
+    ; Consume every non-eol character in the current line.
+    ; End on EOF or end-of-line char.
+    ; Do NOT consume the end-of-line character(s).
+    (let ((c (my-peek-char port)))
+      (cond
+        ((not (or (eof-object? c)
+                  (char-line-ending? c)))
+          (my-read-char port)
+          (consume-to-eol port)))))
+
   (define (ismember? item lyst)
     ; Returns true if item is member of lyst, else false.
     (pair? (member item lyst)))
 
-  ; Define the tab character.
-  ; Unfortunately, this seems to be the only portable way to define the
-  ; tab character in Scheme, so we'll do it here and use it elsewhere.
-  (define tab (integer->char 9)) ; assume ASCII
-  (define carriage-return (integer->char 13)) ; assume ASCII
+  ; Quick utility for debugging.  Display marker, show data, return data.
+  (define (debug-show marker data)
+    (display "DEBUG: ")
+    (display marker)
+    (display " = ")
+    (write data)
+    (display "\n")
+    data)
 
-  (define (my-is-whitespace c)
-    (ismember? c `(#\space #\newline ,tab ,carriage-return)))
-
-  (define (skip-line port)
-    ; Skip every character in the line - end on EOF or newline.
-    (let ((c (my-peek-char port)))
-      (cond
-        ((not (or (eof-object? c)
-                  (char=? c #\newline)
-                  (char=? c carriage-return)))
-          (my-read-char port)
-          (skip-line port)))))
 
   (define (my-read-delimited-list my-read stop-char port)
-    ; like read-delimited-list of Common Lisp, but calls the specified reader instead.
-    ; read the "inside" of a list until its matching stop-char, returning list.
-    ; This implements a useful extension: (. b) returns b.
-    ; This is important as an escape for indented expressions, e.g., (. \\)
-    (skip-whitespace port)
+    ; Read the "inside" of a list until its matching stop-char, returning list.
+    ; stop-char needs to be closing paren, closing bracket, or closing brace.
+    ; This is like read-delimited-list of Common Lisp, but it
+    ; calls the specified reader instead.
+    ; This implements a useful extension: (. b) returns b. This is
+    ; important as an escape for indented expressions, e.g., (. \\)
+    (consume-whitespace port)
     (let*
       ((pos (get-sourceinfo port))
        (c   (my-peek-char port)))
@@ -373,7 +423,7 @@
             (cond
                ((eq? datum '.)
                  (let ((datum2 (my-read port)))
-                   (skip-whitespace port)
+                   (consume-whitespace port)
                    (cond
                      ((not (eqv? (my-peek-char port) stop-char))
                       (read-error "Bad closing character after . datum"))
@@ -407,27 +457,30 @@
 ; We WILL call default-scheme-read on string reading (that DOES seem to work
 ; in common cases, and lets us use the implementation's string extensions).
 
-  (define modern-delimiters `(#\space #\newline #\( #\) #\[ #\] #\{ #\}
-            ,tab ,carriage-return))
+  ; See R6RS section 4.2.1
+  (define modern-delimiters
+     (append (list #\( #\) #\[ #\] #\{ #\})
+             (list #\" #\; #\#)   ; TODO: ADD???
+             whitespace-chars))
 
-  (define (skip-whitespace port)
-    ; Consume whitespace.
+  (define (consume-whitespace port)
     (let ((char (my-peek-char port)))
       (cond
         ((eqv? char #\;)
-          (skip-line port)
-          (skip-whitespace port))
-        ((my-is-whitespace char)
+          (consume-to-eol port)
+          (consume-whitespace port))
+        ((my-char-whitespace? char)
           (my-read-char port)
-          (skip-whitespace port)))))
+          (consume-whitespace port)))))
 
   (define (read-until-delim port delims)
-    ; Read characters until eof or "delims" is seen; do not consume them.
-    ; Returns a list of chars.
+    ; Read characters until eof or a character in "delims" is seen.
+    ; Do not consume the eof or delimiter.
+    ; Returns the list of chars that were read.
     (let ((c (my-peek-char port)))
       (cond
          ((eof-object? c) '())
-         ((ismember? (my-peek-char port) delims) '())
+         ((ismember? c delims) '())
          (#t (cons (my-read-char port) (read-until-delim port delims))))))
 
   (define (read-error message)
@@ -472,9 +525,9 @@
         ; Not EOF. Read in the next character, and start acting on it.
         (let ((c (my-read-char port)))
           (cond
-            ((char=? c #\t)  #t)
-            ((char=? c #\f)  #f)
-            ((ismember? c '(#\i #\e #\b #\o #\d #\x))
+            ((char-ci=? c #\t)  #t)
+            ((char-ci=? c #\f)  #f)
+            ((ismember? c '(#\i #\e #\b #\o #\d #\x)) ; TODO: Add upper-case
               (read-number port (list #\# c)))
             ((char=? c #\( )  ; Vector.
               (list->vector (my-read-delimited-list top-read #\) port)))
@@ -501,16 +554,17 @@
     ; Note: This reader is case-sensitive, which is consistent with R6RS
     ; and guile, but NOT with R5RS.  Most people won't notice, and I
     ; _like_ case-sensitivity.
-    (skip-whitespace port)
+    (consume-whitespace port)
     (let* ((pos (get-sourceinfo port))
            (c   (my-peek-char port)))
       (cond
         ((eof-object? c) c)
-        ((char=? c #\")                           ; old readers tend to handle strings okay, call it.
-          (invoke-read default-scheme-read port)) ; (guile 1.8 and gauche/gosh 1.8.11 are fine)
+        ((char=? c #\")
+          ; old readers tend to read strings okay, call it.
+          ; (guile 1.8 and gauche/gosh 1.8.11 are fine)
+          (invoke-read default-scheme-read port))
         (#t
-          ; attach the source information to
-          ; the item read-in
+          ; attach the source information to the item read-in
           (attach-sourceinfo pos
             (cond
               ((ismember? c digits) ; Initial digit.
@@ -526,7 +580,8 @@
 
               ; We'll reimplement abbreviations, list open, and ;.
               ; These actually should be done by modern-read (and thus
-              ; we won't see them), but redoing it here doesn't cost us anything,
+              ; we won't see them), but redoing it here doesn't
+              ; cost us anything,
               ; and it makes some kinds of testing simpler.  It also means that
               ; this function is a fully-usable Scheme reader, and thus perhaps
               ; useful for other purposes.
@@ -548,13 +603,15 @@
                    (#t
                     (list (attach-sourceinfo pos 'unquote)
                       (top-read port)))))
-              ; The "(" calls modern-read, but since this one shouldn't normally
-              ; be used anyway (modern-read will get first crack at it), it
-              ; doesn't matter:
-              ((char=? c #\( )
+              ; The open parent calls modern-read, but since this one
+              ; shouldn't normally be used anyway (modern-read
+              ; will get first crack at it), it doesn't matter:
+              ((char=? c #\( ) ; )
                   (my-read-char port)
                   (my-read-delimited-list top-read #\) port))
-              ((char=? c #\| )   ; Scheme extension, |...| symbol (like Common Lisp)
+              ((char=? c #\| )
+                ; Scheme extension, |...| symbol (like Common Lisp)
+                ; Disable this if you don't like it.
                 (my-read-char port) ; Skip |
                 (let ((newsymbol
                   (string->symbol (list->string
@@ -635,7 +692,7 @@
       (let* ((pos (get-sourceinfo port))
              (c   (my-peek-char port)))
         (cond
-          ((eof-object? c) c)
+          ((eof-object? c) prefix)
           ((char=? c #\( ) ; Implement f(x).
             (my-read-char port)
             (modern-process-tail port
@@ -658,7 +715,8 @@
   (define (modern-read-func port)
     ; Read using "modern Lisp notation".
     ; This implements unprefixed (), [], and {}
-    (skip-whitespace port)
+    (consume-whitespace port)
+
     (modern-process-tail port
       (let* ((pos (get-sourceinfo port))
              (c   (my-peek-char port)))
@@ -706,24 +764,11 @@
 ; -----------------------------------------------------------------------------
 
   (define split (string->symbol "\\\\"))
-  (define split-char #\\ ) ; First (possibly only) character of split symbol.
-  ; this is a special unique object that is used to
+  (define split-char #\\ ) ; First character of split symbol.
+  ; This is a special unique object that is used to
   ; represent the existence of the split symbol
-  ; so that readblock-clean handles it properly.
+  ; so that readblock-clean handles it properly:
   (define split-tag (cons '() '()))
-  ; Return #t if char is space or tab.
-  (define (char-horiz-whitespace? char)
-    (or (eqv? char #\space)
-        (eqv? char tab)))
-
-  (define (consume-to-eol port)
-    ; Consumes chars to end of line, WITHOUT consume the ending newline/EOF
-    (let ((c (my-peek-char port)))
-      (cond
-        ((eof-object? c) c)
-        ((char=? c #\newline) c)
-        ((char=? c carriage-return) c)
-        (#t (my-read-char port) (consume-to-eol port)))))
 
   (define (readquote level port qt)
     (let ((char (my-peek-char port)))
@@ -769,19 +814,16 @@
                 (begin (my-unread-char c port) '()))))))
 
   (define (indentationlevel port)
-    (let ((indent (accumulate-hspace port)))
+    (let* ((indent (accumulate-hspace port)) (c (my-peek-char port)))
       (cond
-        ((eqv? (my-peek-char port) #\;)
-          (consume-to-eol port) ; ALWAYS ignore comment-only lines.
-          (if (eqv? (my-peek-char port) carriage-return) (my-read-char port))
-          (if (eqv? (my-peek-char port) #\newline) (my-read-char port))
+        ((eqv? c #\;)
+          (consume-to-eol port) ; COMPLETELY ignore comment-only lines.
+          (consume-end-of-line port)
           (indentationlevel port))
         ; If ONLY whitespace on line, treat as "", because there's no way
         ; to (visually) tell the difference (preventing hard-to-find errors):
-        ((eof-object? (my-peek-char port)) "")
-        ((eqv? (my-peek-char port) #\newline) "")
-        ((eqv? (my-peek-char port) carriage-return)
-           (my-read-char port) "")
+        ((eof-object? c) "")
+        ((char-line-ending? c) "")
         (#t (list->string indent)))))
 
   ;; Reads all subblocks of a block
@@ -803,7 +845,8 @@
                   (if (pair? next-blocks)
                       (cons next-next-level (car next-blocks))
                       (cons next-next-level next-blocks))
-                  (cons next-next-level (attach-sourceinfo pos (cons block next-blocks)))))
+                  (cons next-next-level
+                        (attach-sourceinfo pos (cons block next-blocks)))))
             (cons next-level (attach-sourceinfo pos (list block))))))
 
   ;; Read one block of input
@@ -823,12 +866,8 @@
        ((eqv? char #\;)
           (consume-to-eol port)
           (readblock level port))
-       ((or (eqv? char #\newline)
-            (eqv? char carriage-return))
-          (my-read-char port)
-          (if (and (eqv? char carriage-return)
-                  (eqv? (my-peek-char port) #\newline))
-            (my-read-char port))
+       ((char-line-ending? char)
+          (consume-end-of-line port)
           (let ((next-level (indentationlevel port)))
             (if (indentation>? next-level level)
                 (readblocks next-level port)
@@ -855,14 +894,14 @@
                 (if first-item?
                     ;; NB: need a couple of hacks to fix
                     ;; behavior when SPLIT-by-itself
-                    (if (or (eqv? (my-peek-char port) #\newline)
-                            (eqv? (my-peek-char port) carriage-return))
+                    (if (char-line-ending? (my-peek-char port))
                         ; check SPLIT-by-itself
                         ; SPLIT-by-itself: some hacks needed
                         (let* ((sub-read (readblock level port))
                                (outlevel (car sub-read))
                                (sub-expr (cdr sub-read)))
-                          (if (and (null? sub-expr) (string=? outlevel level)) ; check SPLIT followed by same indent line
+                          ; check SPLIT followed by same indent line
+                          (if (and (null? sub-expr) (string=? outlevel level))
                               ; blank SPLIT:
                               ; \
                               ; \
@@ -950,14 +989,9 @@
               (#t
                 (my-read-char port) ; Newline after comment.  Consume NL
                 (sugar-start-expr port))))) ; and try again
-        ((eqv? c #\newline)
-          (my-read-char port) ; Newline (with no preceding comment).
+        ((char-line-ending? c)
+          (consume-end-of-line port)
           (sugar-start-expr port)) ; Consume and again
-        ((eqv? c carriage-return)
-          (my-read-char port) ; Consume carriage return.
-          (if (eqv? (my-peek-char port) #\newline)
-              (my-read-char port)) ; Consume newline if it follows CR.
-          (sugar-start-expr port))
         ((> (string-length indentation) 0) ; initial indentation disables
           (modern-read-func port))
         (#t
@@ -986,4 +1020,8 @@
 
   )
 
+; TODO: Fix bug if there's no end-of-line at the last line of file.
+;       Seems to be in the sweet-expression processing.
+
 ; vim: set expandtab shiftwidth=2 :
+
