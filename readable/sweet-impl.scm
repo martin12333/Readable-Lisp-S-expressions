@@ -106,6 +106,17 @@
 ;   - Replace 'read and 'get-datum at the minimum.  If your Scheme
 ;     needs any kind of involved magic to handle load and loading
 ;     modules correctly, do it here.
+;
+;   next-line
+;   line-separator
+;   paragraph-separator
+;   - The Unicode characters with those names.
+;   - If your Scheme does *not* support Unicode, define these to be #f.
+;   - If your Scheme *does* support Unicode, to prevent other Schemes
+;     from misreading this file, use the following defines:
+;       (define next-line (integer->char #x0085))
+;       (define line-separator (integer->char #x2028))
+;       (define paragraph-separator (integer->char #x2029))
 
 ; On Guile 2.0, the define-module part needs to occur separately from
 ; the rest of the compatibility checks, unfortunately.  Sigh.
@@ -223,6 +234,28 @@
       (setup-primitive-load)
       (set! read f))
 
+    ; define Unicode chars based on version.  On 1.x assume
+    ; no Unicode (actually 1.9 has Unicode, but that's not a
+    ; stable branch.)
+    (define has-unicode
+      (let* ((v (effective-version))
+             (c (string-ref v 0)))
+        (if (or (char=? c #\0) (char=? c #\1))
+            #f
+            #t)))
+    (define next-line
+      (if has-unicode
+          (integer->char #x0085)
+          #f))
+    (define line-separator
+      (if has-unicode
+          (integer->char #x2028)
+          #f))
+    (define paragraph-separator
+      (if has-unicode
+          (integer->char #x2028)
+          #f))
+
     )
 ; -----------------------------------------------------------------------------
 ; R5RS Compatibility
@@ -316,7 +349,15 @@
     ; Not strictly R5RS but we expect at least some Schemes
     ; to allow this somehow.
     (define (replace-read-with f)
-      (set! read f))))
+      (set! read f))
+
+    ; Assume that a random R5RS Scheme doesn't support Unicode
+    ; out-of-the-box
+    (define next-line #f)
+    (define line-separator #f)
+    (define paragraph-separator #f)
+
+    ))
 
 ; -----------------------------------------------------------------------------
 ; Module declaration and useful utilities
@@ -338,18 +379,34 @@
   (define line-tab (integer->char #x000D))
   (define form-feed (integer->char #x000C))
   (define space '#\space)
-  (define next-line (integer->char #x0085))
-  ; (define line-separator (integer->char #x2028))
-  ; (define paragraph-separator (integer->char #x2029))
 
-  (define line-ending-chars (list linefeed carriage-return next-line))
-  ; If supported, add line-separator
-
+  (define line-ending-chars-ascii (list linefeed carriage-return))
+  (define line-ending-chars
+    (append
+      line-ending-chars-ascii
+      (if next-line
+          (list next-line)
+          '())
+      (if line-separator
+          (list line-separator)
+          '())))
 
   ; This definition of whitespace chars is per R6RS section 4.2.1.
   ; R6RS doesn't explicitly list the #\space character, be sure to include!
+  (define whitespace-chars-ascii
+     (list tab linefeed line-tab form-feed carriage-return #\space))
   (define whitespace-chars
-     (list tab linefeed line-tab form-feed carriage-return next-line #\space))
+    (append
+      whitespace-chars-ascii
+      (if next-line
+          (list next-line)
+          '())
+      (if line-separator
+          (list line-separator)
+          '())
+      (if paragraph-separator
+          (list paragraph-separator)
+          '())))
   ; If supported, add characters whose category is Zs, Zl, or Zp
 
   ; Returns a true value (not necessarily #t)
