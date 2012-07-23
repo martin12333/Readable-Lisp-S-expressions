@@ -26,6 +26,9 @@
 ; In generated .scm (but not in .sscm) you can enable debugging using:
 ; (use-modules (ice-9 debugging traps) (ice-9 debugging trace))
 
+use-modules
+  readable sweet-impl
+
 ; Note: The maxwidth may be violated if, at a current indent, there is a
 ; long non-pair that exceeds it.  But other than long atoms, it's respected,
 ; so it's unlikely to exceed this width in practice:
@@ -385,6 +388,7 @@ define (copy-line port)
 ; filter stdin to stdout, reading in traditional s-expressions and outputting
 ; sweet-expressions.  Preserve the comments outside an s-expression.
 define (iformat-filter)
+  restore-scheme-read()
   let ((c peek-char(current-input-port())))
     cond
       eof-object?(c)      c
