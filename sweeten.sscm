@@ -23,6 +23,9 @@
 ; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ; OTHER DEALINGS IN THE SOFTWARE.
 
+; In generated .scm (but not in .sscm) you can enable debugging using:
+; (use-modules (ice-9 debugging traps) (ice-9 debugging trace))
+
 ; Note: The maxwidth may be violated if, at a current indent, there is a
 ; long non-pair that exceeds it.  But other than long atoms, it's respected,
 ; so it's unlikely to exceed this width in practice:
@@ -364,7 +367,8 @@ define consume-end-of-line()
         read-char()
         let ( next(peek-char()) )
           if {not(eq?(c next)) and memq(next end-of-line-chars)}
-            read-char()
+            begin
+              read-char()
 
 ; Copy one line from stdin to stdout, end on EOF or end-of-line.
 ; Consume the end of line.
@@ -399,6 +403,19 @@ define (iformat-filter)
           if eof-object?(result)
             result
             begin iformat(result) iformat-filter()
+
+; You can use guile to trace, but the reader doesn't support #' ... yet.
+; Thus, the .sscm file cannot currently include guile trap invocations.
+; So to install traps, generate the .scm file directly with:
+;    make sweeten.scm
+; Add the traps by patching the sweeten.scm file (not the .sscm file), e.g.: 
+;   (install-trap
+;     (make <procedure-trap>
+;           #:procedure iformat-filter
+;           #:behaviour (list trace-trap trace-until-exit)))
+; And run:
+;    guile sweeten.scm
+
 
 iformat-filter()
 
