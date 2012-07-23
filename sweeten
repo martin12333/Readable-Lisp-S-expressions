@@ -5,37 +5,6 @@
 
 # *Requires* that sweeten.scm, makefile, etc. be in current directory.
 
-make sweeten.scm 2> ,make-report >&2 ||
- (
-  cat ,make-report
-  exit 1
- )
-
-
-runsweetener () {
-  # The "$1" is the prefix, e.g., "exec"
-  $1 guile sweeten.scm
-}
-
-
-if [ $# -eq 0 ] ; then
- runsweetener "exec"
-else
- for file ; do
-  runsweetener < "$file"
- done
-fi
-
-exit 0
-
-# ============ AUTO-COMPILE APPROACH ==============
-# The below automatically loads sweet.sscm and compiles it with "readable".
-# Unfortunately, "readable" doesn't currently have a way to completely
-# switch back to the standard reader - the ports end up consuming extra
-# characters (like "(") when there's no blank line between datums.
-# Switch to the approach below once there's a way to
-# completely revert to the standard reader.
-
 # Requires guile and runs sweeten.sscm.
 # Currently presumes sweeten.sscm is in the same path as this file.
 
