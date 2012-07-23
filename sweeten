@@ -1,13 +1,13 @@
 #!/bin/sh
 # Filter to read S-expressions and output indented sweet-expressions.
 
-# Requires guile and runs sweetener.scm.
-# Currently presumes sweetener.scm is findable by guile without help.
+# Requires guile and runs sweeten.sscm.
+# Currently presumes sweeten.sscm is in the same path as
+# this file.
 
-if make sweeten.scm >/dev/null 2>/dev/null
-then
-  guile sweeten.scm
-else
-  # Whups, there was a failure.  Try again, but not silently.
-  make sweeten.scm
-fi
+exec env -i HOME=$HOME GUILE_LOAD_PATH="`dirname $0`" guile -q -s $0
+!#
+
+(use-modules (readable sweet-impl))
+(replace-read sweet-read)
+(load "sweeten.sscm")
