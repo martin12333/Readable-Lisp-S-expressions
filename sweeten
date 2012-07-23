@@ -1,11 +1,31 @@
 #!/bin/sh
 # Filter to read S-expressions and output indented sweet-expressions.
 
-# Requires guile and runs sweeten.sscm.
-# Currently presumes sweeten.sscm is in the same path as
-# this file.
+# Takes list of files, if no list, reads from stdin.
 
-exec env -i HOME=$HOME GUILE_LOAD_PATH="`dirname $0`" guile -q -s $0
+# Requires guile and runs sweeten.sscm.
+# Currently presumes sweeten.sscm is in the same path as this file.
+
+# To completely clear out the environment first, replace "env" with:
+#    env -i HOME="$HOME" PATH="$PATH"
+
+runsweetener () {
+  this_script="$1"
+  # guile's poorly-documented "-q" flag inhibits loading of user init file.
+  $2 env GUILE_LOAD_PATH="${GUILE_LOAD_PATH:-"`dirname $1`"}" guile -q -s "$1"
+}
+
+if [ $# -eq 0 ] ; then
+ runsweetener "$0" "exec"
+else
+ for file ; do
+  runsweetener "$0" < "$file"
+ done
+fi
+echo
+exit
+
+# The following starts the script run by guile (per the -s flag):
 !#
 
 (use-modules (readable sweet-impl))

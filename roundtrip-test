@@ -12,7 +12,7 @@
 
 TESTFILE="${1:-sweeten.scm}"
 
-make sweeten.scm
+# make sweeten.scm
 
 if [ ! -f "$TESTFILE" ]
 then
@@ -22,8 +22,8 @@ fi
 
 ./pprint < "$TESTFILE" > ,1
 
-./sweeten   < "$TESTFILE" > ,2.sweet
-./unsweeten < ,2.sweet | ./pprint > ,2
+./sweeten   < "$TESTFILE" > ,2.sscm
+./unsweeten < ,2.sscm | ./pprint > ,2
 
 echo "DIFFERENCES (should be none):"
 echo
