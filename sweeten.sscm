@@ -235,7 +235,8 @@ define long-and-boring?(x)
 
 
 ; Return list "m" as a list of characters representing
-; a long and boring split list.
+; a long and boring split list.  We'll keep track of position inside
+; this routine, since we can do that easily here.
 define iformat-boring-list(x first? pos next-indent)
   cond
     null?(x) '(#\newline)
@@ -285,33 +286,48 @@ define iformat-top-normal-indent(x indent indent-already)
       iformat-top  car(x) indent indent-already
       iformat-body cdr(x) deeper(indent) #f
 
+; Return the string to add as indentation; should be empty if indentation
+; has already occurred.
+define getdent(indent-already indent)
+  if indent-already
+    ""
+    indent
+
+; What's the number of characters consumed in the indent (and thus
+; the column position starting from 0)?
+define posdent(indent-already indent)
+  if indent-already
+    length(indent-already)
+    length(indent)
+
 ; Input: expression "m" with indentation string "indent".
 ;        indent-already if #f if no indentation has already taken place,
 ;        or if indentation *has* taken place, it contains the string of
-;        indentation that's occurred (so char position, etc., can be
-;        determined).
+;        indentation and any following characters that's occurred
+;        (so char position, etc., can be determined).
 ; Output: List of characters representing it (#\newline for new line).
 ; At this point, we're at the beginning of a possibly-indented
 ; line with sweet-expression (indentation) processing active.
 define iformat-top(m indent indent-already)
   if not(pair?(m)) ; if not a pair, just print it. () handled here
-    append(indent unit(m) '(#\newline))
+    append(getdent(indent-already indent) unit(m) '(#\newline))
     ; We have a pair. Can we represent it as one line of space-sep params?
     let* (asline(line(m)) length-asline(length(asline)))
       if { {length-asline < max-unit-character-length} and
-           {{length-asline + length(indent)} < maxwidth } and
+           {{length-asline + posdent(indent-already indent)} < maxwidth } and
            {general-length(m) < max-unit-list-length} }
         ; Yes, we can represent it as one list of space-separated parameters:
-        append indent asline '(#\newline)
+        append getdent(indent-already indent) asline '(#\newline)
         ; No, Can't put entire expression on one line; try alternatives.
         if pair?(car(m))  ; Is car a pair?  If so, we may need GROUP.
           let* (asunit-car(unit(car(m)))) ; Get representation of car.
-            if {{length(asunit-car) + length(indent)} < maxwidth }
+            if {{length(asunit-car) + posdent(indent-already indent)} < maxwidth }
               ; Don't need to use GROUP, we can squeeze the car in.
-              append indent asunit-car '(#\newline)
+              append getdent(indent-already indent) asunit-car '(#\newline)
                 iformat-body cdr(m) deeper(indent) #f
               ; Use GROUP, we can't squeeze the car in.
-              append indent (string->list group-string-newline)
+              append getdent(indent-already indent)
+                string->list group-string-newline
                 iformat-top  car(m) deeper(indent) #f
                 iformat-body cdr(m) deeper(indent) #f
           ; The car isn't a pair. Try to cuddle, else use normal indent style
@@ -320,17 +336,19 @@ define iformat-top(m indent indent-already)
               ; A long-and-boring list is almost certainly data, not
               ; a function call or code sequence.  Format it differently.
               append
-                indent \\ string->list(group-string-newline)
+                getdent(indent-already indent)
+                string->list(group-string-newline)
                 deeper(indent)
-                iformat-boring-list m #t length(indent) deeper(indent)
+                iformat-boring-list m #t posdent(indent-already indent) deeper(indent)
             {memq(car(m) cuddle-first-parameter) and {length(m) >= 3}}
               let* (asline-cuddled(line(list(car(m) cadr(m)))))
-                 if { {length(asline-cuddled) + length(indent)} < maxwidth}
+                 if { {length(asline-cuddled) + posdent(indent-already indent)} < maxwidth}
                     ; We can cuddle up on line with one parameter:
-                    append indent asline-cuddled '(#\newline)
+                    append getdent(indent-already indent)
+                      asline-cuddled \\ '(#\newline)
                       iformat-body cddr(m) deeper(indent) #f
                     ; Can't cuddle - use normal format.
-                    iformat-top-normal-indent m indent #f
+                    iformat-top-normal-indent m getdent(indent-already indent) #f
             #t
               iformat-top-normal-indent m indent indent-already
 
