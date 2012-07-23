@@ -256,6 +256,21 @@ define iformat-boring-list(x first? pos next-indent)
               append '(#\newline) next-indent
                 iformat-boring-list x #t length(next-indent) next-indent
 
+
+; Return the string to add as indentation; should be empty if indentation
+; has already occurred.
+define getdent(indent-already indent)
+  if indent-already
+    string->list("")
+    indent
+
+; What's the number of characters consumed in the indent (and thus
+; the column position starting from 0)?
+define posdent(indent-already indent)
+  if indent-already
+    length(indent-already)
+    length(indent)
+
 ; Input: expression "m" with indentation string "indent".
 ; Output: List of characters representing it (#\newline for new line).
 ; This tail handles the body of a list (after its first entry) when
@@ -270,35 +285,18 @@ define iformat-body(m indent indent-already)
 ; Return list m represented in the typical indent style.
 define iformat-top-normal-indent(x indent indent-already)
   if represent-as-abbreviation?(x)
-    ; Use QUOTE+SPACE, etc.
-    ; Problem: iformat-top doesn't have a way of NOT inserting an indent,
-    ; and here we want to do the insert ourselves.
-    ; The result isn't WRONG (as long as the indent only contains whitespace)
-    ; but is not what we wanted.
-    ; Also, this is a slight cheat in the formatter;
-    ; it means that the "indent" parameter no longer represents the
-    ; exact character position.   Fixing this exactly would require us
-    ; to pass a "position" value around all the functions, and it's
-    ; unlikely to affect anything, so we won't worry about it.
-    append indent cadr(assq(car(x) abbreviations)) '(#\space)
-      iformat-top(cadr(x) indent #f) ; TODO!!!
+    ; Use QUOTE+SPACE, etc.  This is handled specially - we will
+    ; create an indent-already, so that we can insert the indent and
+    ; the other characters.
+    let*
+      \\
+        prefix  append(cadr(assq(car(x) abbreviations)) '(#\space))
+        newdent append(getdent(indent-already indent) prefix)
+      append newdent
+        iformat-top(cadr(x) indent newdent) ; TODO!!!
     append
       iformat-top  car(x) indent indent-already
       iformat-body cdr(x) deeper(indent) #f
-
-; Return the string to add as indentation; should be empty if indentation
-; has already occurred.
-define getdent(indent-already indent)
-  if indent-already
-    ""
-    indent
-
-; What's the number of characters consumed in the indent (and thus
-; the column position starting from 0)?
-define posdent(indent-already indent)
-  if indent-already
-    length(indent-already)
-    length(indent)
 
 ; Input: expression "m" with indentation string "indent".
 ;        indent-already if #f if no indentation has already taken place,
