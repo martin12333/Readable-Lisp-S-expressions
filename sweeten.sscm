@@ -23,11 +23,13 @@
 ; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ; OTHER DEALINGS IN THE SOFTWARE.
 
-; In generated .scm (but not in .sscm) you can enable debugging using:
-; (use-modules (ice-9 debugging traps) (ice-9 debugging trace))
+; Set to #f if you want to run without invoking the sweet module, e.g.
+; for debugging.  See the bottom for debugging tips.
 
-use-modules
-  readable sweet-impl
+define build-on-sweet #t
+if build-on-sweet
+  use-modules
+    readable sweet-impl
 
 ; Note: The maxwidth may be violated if, at a current indent, there is a
 ; long non-pair that exceeds it.  But other than long atoms, it's respected,
@@ -408,7 +410,8 @@ define (copy-line port)
 ; filter stdin to stdout, reading in traditional s-expressions and outputting
 ; sweet-expressions.  Preserve the comments outside an s-expression.
 define (iformat-filter)
-  restore-scheme-read()
+  if build-on-sweet
+    restore-scheme-read()
   let ((c peek-char(current-input-port())))
     cond
       eof-object?(c)      c
@@ -432,7 +435,14 @@ define (iformat-filter)
 ; Thus, the .sscm file cannot currently include guile trap invocations.
 ; So to install traps, generate the .scm file directly with:
 ;    make sweeten.scm
-; Add the traps by patching the sweeten.scm file (not the .sscm file), e.g.: 
+; Now patch the generated sweetenv.scm (not the .sscm file) directly.
+; Change:
+;  (define build-on-sweet #t)
+; to:
+;  (define build-on-sweet #f)
+;  (use-modules (ice-9 debugging traps) (ice-9 debugging trace))
+; 
+; Then add the traps you want near the bottom, e.g.:
 ;   (install-trap
 ;     (make <procedure-trap>
 ;           #:procedure iformat-filter
