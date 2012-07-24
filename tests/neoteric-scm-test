@@ -1,9 +1,9 @@
 #!/bin/sh
 
-# Test modern.scm.  Also has demo of its use.
+# Test neoteric.scm.  Also has demo of its use.
 
 # Run this file on a Unix-like system to test curly-infix.scm.
-# You must have guile, and "modern.cl" must be in the current directory.
+# You must have guile, and "neoteric.cl" must be in the current directory.
 
 # It should print T for the successful loading of the file,
 # followed by a bunch of NILs (the result of successful asserts) and
@@ -33,4 +33,4 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 
-guile modern-scm-test.scm
+guile neoteric-scm-test.scm

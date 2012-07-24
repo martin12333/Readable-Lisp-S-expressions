@@ -161,7 +161,7 @@ f(. b)
 (and (<= 1 x 10)  (> x 0))
 
 
-; Emacs Lisp example - first modern notation, then traditional notation.
+; Emacs Lisp example - first neoteric notation, then traditional notation.
 
 (defun replace-html-chars (start end)
   "Replace '&lt;' to '&amp;lt;' and other chars in HTML.
@@ -190,7 +190,7 @@ This works on the current selection."
     (while (search-forward ">" nil t) (replace-match "&gt;" nil t))))
 
 
-; AutoCAD Lisp - modern, then traditional.
+; AutoCAD Lisp - neoteric, then traditional.
 
 (DEFUN C:FIND ()
   SETQ(SA GETSTRING(T "\nEnter string for search parameter: "))

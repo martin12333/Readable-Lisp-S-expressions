@@ -1,9 +1,9 @@
 #!/bin/sh
 
-# Test modern.cl.  Also has demo of its use.
+# Test neoteric.cl.  Also has demo of its use.
 
 # Run this file on a Unix-like system to test curly-infix.cl.
-# You must have clisp, and "modern.cl" must be in the current directory.
+# You must have clisp, and "neoteric.cl" must be in the current directory.
 
 # It should print T for the successful loading of the file,
 # followed by a bunch of NILs (the result of successful asserts) and
@@ -34,11 +34,11 @@
 
 
 clisp << TESTCOMMANDS
-(load "modern.cl")
+(load "neoteric.cl")
 
 (princ "Defining reader-test function:")
 (defun reader-test (correct-value)
-  (assert (equal (modern-read) correct-value)))
+  (assert (equal (neoteric-read) correct-value)))
 
 (princ "Now running tests; you should see a bunch of NILs")
 
@@ -98,10 +98,10 @@ testing123
 (reader-test '((f a) b))
   f(a)(b)
 
-(assert (consp (modern-read)))
+(assert (consp (neoteric-read)))
   'x
 
-(assert (equal (car (modern-read)) 'quote))
+(assert (equal (car (neoteric-read)) 'quote))
   'x
 
 (reader-test '(quote x))
@@ -135,7 +135,7 @@ testing123
     {n-1 + n-2}
     [fibup max {count + 1} {n-1 + n-2} n-1]]]
 
-; Calling "read-preserving-whitespace" with the modern-read table set
+; Calling "read-preserving-whitespace" with the neoteric-read table set
 ; won't work; when you read this in:
 ; [defun fibup (max count n-1 n-2)
 ;   [if {max = count}
@@ -181,7 +181,7 @@ testing123
 ; (setf (symbol-function 'f2) (function f1)
 ; (princ "Calling f2, should print f1")
 ; (f2 'call2)
-; (modern-read)
+; (neoteric-read)
 ; [defun fibfast (n)
 ;   [if {n < 2}
 ;     n

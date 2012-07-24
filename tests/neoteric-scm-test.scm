@@ -1,7 +1,7 @@
 #!/usr/bin/env guile
 !#
 
-;  Test modern-read in (readable sweet-impl).  Also has demo of its use.
+;  Test neoteric-read in (readable sweet-impl).  Also has demo of its use.
 ;
 ;  It should print T for the successful loading of the file,
 ;  followed by a bunch of NILs (the result of successful asserts) and
@@ -93,20 +93,20 @@
 ; (test (transform-simple-infix '(1 + 3)) '(+ 1 3))
 ; (test (transform-simple-infix '(1 + 3 + 5)) '(+ 1 3 5))
 
-(define tc (open-input-file "test-cases-modern"))
+(define tc (open-input-file "test-cases-neoteric"))
 
 ; (test (begin (skip-whitespace tc) (read-char tc)) sharp backslash x )
 
 (display "Now testing reader itself.\n")
 
 (define (reader-test correct-value)
-  (test (modern-read tc) correct-value))
+  (test (neoteric-read tc) correct-value))
 
 ; (use-modules (ice-9 debug))
 ; (set-breakpoint! trace-subtree 2)
 ; (set! (bp-behaviour (get-breakpoint 3)) debug-here)
-; (trace modern-read2)
-; (trace modern-process-tail)
+; (trace neoteric-read2)
+; (trace neoteric-process-tail)
 ; (trace my-read-delimited-list)
 ; (trace underlying-read)
 
