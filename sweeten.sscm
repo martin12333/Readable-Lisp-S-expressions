@@ -411,7 +411,7 @@ define (copy-line port)
 ; sweet-expressions.  Preserve the comments outside an s-expression.
 define (iformat-filter)
   if build-on-sweet
-    restore-scheme-read()
+    restore-traditional-read()
   let ((c peek-char(current-input-port())))
     cond
       eof-object?(c)      c

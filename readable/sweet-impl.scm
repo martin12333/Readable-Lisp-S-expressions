@@ -363,7 +363,7 @@
    ; comparison functions
    compare-read-file ; compare-read-string
    ; replacing the reader
-   replace-read restore-scheme-read)
+   replace-read restore-traditional-read)
 
   ; Define the whitespace characters, in relatively portable ways
   ; Presumes ASCII, Latin-1, Unicode or similar.
@@ -492,7 +492,7 @@
 
   (define default-scheme-read read)
   (define replace-read replace-read-with)
-  (define (restore-scheme-read) (replace-read-with default-scheme-read))
+  (define (restore-traditional-read) (replace-read-with default-scheme-read))
 
 ; -----------------------------------------------------------------------------
 ; Scheme Reader re-implementation
