@@ -1,10 +1,10 @@
 #!/usr/bin/env expect
-# By David A. Wheeler. Start up guile in "modern-expressoin" reading mode,
+# By David A. Wheeler. Start up guile in "neoteric-expressoin" reading mode,
 # so you can try it out.
 
 spawn -noecho guile --debug -L .
-# Enable readline (for ease of interface), then activate modern-expressions.
+# Enable readline (for ease of interface), then activate neoteric-expressions.
 send "(begin (use-modules (ice-9 readline)) (activate-readline))\n\n"
-send "(begin (set! %load-path (append %load-path '(\".\"))) (use-modules (readable sweet-impl)) (replace-read modern-read) (newline))\n"
+send "(begin (set! %load-path (append %load-path '(\".\"))) (use-modules (readable sweet-impl)) (replace-read neoteric-read) (newline))\n"
 interact
 

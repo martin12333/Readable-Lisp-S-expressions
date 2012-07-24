@@ -30,7 +30,7 @@ Run "make" to generate Scheme, "guile iformat.scm" runs it as a filter
 (input is stdin, output is stdout).  MIT license.
 
 * readable/sweet-impl.scm: An implementation of a "sweet-expression"
-reader; provides the three tiers curly-infix-read, modern-read, and
+reader; provides the three tiers curly-infix-read, neoteric-read, and
 sweet-read.  Implemented in the Guile dialect of Scheme, includes
 hooks for other dialects.  MIT License.
 
@@ -69,7 +69,7 @@ Once the %load-path is set up, you can easily load modules, e.g.:
 On Guile 2.0 there are occassional strangenesses in the interaction
 between the module system and autocompilation - the particular
 strangeness is when autocompilation is turned OFF.  If you want to
-use sweet-guile or modern-guile, turn ON autocompilation, as
+use sweet-guile or neoteric-guile, turn ON autocompilation, as
 otherwise use-modules will use the default reader rather than
 what you replace.
 
