@@ -385,7 +385,7 @@ abc
 
 (bar (x y))
 bar
-. x y
+! x y
 
 (foo (a b) . c)
 foo
@@ -586,7 +586,7 @@ foo4
 
 (foo6 z)
 foo6
-. . . . z
+! ! ! ! z
 
 
 ; Initial quote + space:

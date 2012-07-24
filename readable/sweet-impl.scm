@@ -275,8 +275,7 @@
         ((module-contents exports body ...)
           (begin body ...))))
 
-    ; We still need the my-* functions below even with the
-    ; "!" as whitespace rule.  The algorithm acts as if the
+    ; We use my-* functions so that the
     ; "port" automatically keeps track of source position.
     ; On Schemes where that is not true (e.g. Racket, where
     ; source information is passed into a reader and the
@@ -284,12 +283,6 @@
     ; the port with the source information, and update that
     ; source information in the my-* functions.
 
-    ; R5RS only allows 1 character lookahead, but
-    ; the "." as indentation rule needs 2.  Fortunately
-    ; the indentation processor is relatively
-    ; circumscribed, so that on exiting a reader
-    ; we are (almost?) sure that there is no 2-character
-    ; lookahead.
     (define (my-peek-char port)
       (let ((real-port (cdr port))
             (buffer    (car port)))
@@ -331,6 +324,7 @@
               (error
                 "internal error in sweet-impl, some unread input remaining")
               rv))))
+
     ; invoke the given "actual" reader, most likely
     ; the builtin one, but make sure to unwrap any
     ; fake ports.
@@ -822,6 +816,7 @@
 
   (define split (string->symbol "\\\\"))
   (define split-char #\\ ) ; First character of split symbol.
+  (define non-whitespace-indent #\!) ; Non-whitespace-indent char.
   ; This is a special unique object that is used to
   ; represent the existence of the split symbol
   ; so that readblock-clean handles it properly:
@@ -861,14 +856,10 @@
              (string=? indentation2 (substring indentation1 0 len2)))))
 
   (define (accumulate-hspace port)
-    (if (char-horiz-whitespace? (my-peek-char port))
-        (cons (my-read-char port) (accumulate-hspace port))
-        (if (not (eqv? (my-peek-char port) #\.))
-            '()
-            (let ((c (my-read-char port)))
-              (if (char-horiz-whitespace? (my-peek-char port))
-                (cons #\. (accumulate-hspace port)) ; period-as-indent
-                (begin (my-unread-char c port) '()))))))
+    (if (or (char-horiz-whitespace?     (my-peek-char port))
+            (eqv? non-whitespace-indent (my-peek-char port)))
+        (cons (read-char port) (accumulate-hspace port))
+        '()))
 
   (define (indentationlevel port)
     (let* ((indent (accumulate-hspace port)) (c (my-peek-char port)))
