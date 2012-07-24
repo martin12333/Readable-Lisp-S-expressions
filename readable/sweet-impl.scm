@@ -569,6 +569,7 @@
     ; Note: Since we have to re-implement process-sharp anyway,
     ; the vector representation #(...) uses my-read-delimited-list, which in
     ; turn calls top-read.
+    ; TODO: Create a readtable for this case.
     (my-read-char port) ; Remove #
     (cond
       ((eof-object? (my-peek-char port)) (my-peek-char port)) ; If eof, return eof.
@@ -578,8 +579,9 @@
           (cond
             ((char-ci=? c #\t)  #t)
             ((char-ci=? c #\f)  #f)
-            ((ismember? c '(#\i #\e #\b #\o #\d #\x)) ; TODO: Add upper-case
-              (read-number port (list #\# c)))
+            ((ismember? c '(#\i #\e #\b #\o #\d #\x
+                            #\I #\E #\B #\O #\D #\X))
+              (read-number port (list #\# (char-downcase c))))
             ((char=? c #\( )  ; Vector.
               (list->vector (my-read-delimited-list top-read #\) port)))
             ((char=? c #\\) (process-char port))
