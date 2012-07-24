@@ -359,7 +359,7 @@
 (module-contents
   ; exported functions
   (; tier read functions
-   curly-infix-read modern-read sweet-read
+   curly-infix-read neoteric-read sweet-read
    ; comparison functions
    compare-read-file ; compare-read-string
    ; replacing the reader
@@ -504,12 +504,12 @@
 ; delimiters (and thus not consumed when reading symbols, numbers, etc.),
 ; you can just call default-scheme-read instead of using underlying-read below,
 ; with the limitation that vector constants #(...) will not support curly-infix
-; or modern-function-expressions.
+; or neoteric-function-expressions.
 ; We WILL call default-scheme-read on string reading (that DOES seem to work
 ; in common cases, and lets us use the implementation's string extensions).
 
   ; See R6RS section 4.2.1
-  (define modern-delimiters
+  (define neoteric-delimiters
      (append (list #\( #\) #\[ #\] #\{ #\})
              (list #\" #\; #\#)   ; TODO: ADD???
              whitespace-chars))
@@ -542,7 +542,7 @@
   (define (read-number port starting-lyst)
     (string->number (list->string
       (append starting-lyst
-        (read-until-delim port modern-delimiters)))))
+        (read-until-delim port neoteric-delimiters)))))
 
   (define (process-char port)
     ; We've read #\ - returns what it represents.
@@ -551,7 +551,7 @@
       (#t
         ; Not EOF. Read in the next character, and start acting on it.
         (let ((c (my-read-char port))
-              (rest (read-until-delim port modern-delimiters)))
+              (rest (read-until-delim port neoteric-delimiters)))
           (cond
             ((null? rest) c) ; only one char after #\ - so that's it!
             (#t
@@ -599,7 +599,7 @@
           ; At this point, Scheme only requires support for "." or "...".
           ; As an extension we can support them all.
           (string->symbol (list->string (cons #\.
-            (read-until-delim port modern-delimiters))))))))
+            (read-until-delim port neoteric-delimiters))))))))
 
   (define (underlying-read top-read port)
     ; Note: This reader is case-sensitive, which is consistent with R6RS
@@ -627,10 +627,10 @@
                 (if (ismember? (my-peek-char port) digits)
                   (read-number port (list c))
                   (string->symbol (list->string (cons c
-                    (read-until-delim port modern-delimiters))))))
+                    (read-until-delim port neoteric-delimiters))))))
 
               ; We'll reimplement abbreviations, list open, and ;.
-              ; These actually should be done by modern-read (and thus
+              ; These actually should be done by neoteric-read (and thus
               ; we won't see them), but redoing it here doesn't
               ; cost us anything,
               ; and it makes some kinds of testing simpler.  It also means that
@@ -654,8 +654,8 @@
                    (#t
                     (list (attach-sourceinfo pos 'unquote)
                       (top-read port)))))
-              ; The open parent calls modern-read, but since this one
-              ; shouldn't normally be used anyway (modern-read
+              ; The open parent calls neoteric-read, but since this one
+              ; shouldn't normally be used anyway (neoteric-read
               ; will get first crack at it), it doesn't matter:
               ((char=? c #\( ) ; )
                   (my-read-char port)
@@ -671,7 +671,7 @@
                   newsymbol))
               (#t ; Nothing else.  Must be a symbol start.
                 (string->symbol (list->string
-                  (read-until-delim port modern-delimiters))))))))))
+                  (read-until-delim port neoteric-delimiters))))))))))
 
 ; -----------------------------------------------------------------------------
 ; Curly Infix
@@ -733,10 +733,10 @@
     (read-at-curly curly-infix-read-func port))
 
 ; -----------------------------------------------------------------------------
-; Modern Expressions
+; Neoteric Expressions
 ; -----------------------------------------------------------------------------
 
-  (define (modern-process-tail port prefix)
+  (define (neoteric-process-tail port prefix)
       ; See if we've just finished reading a prefix, and if so, process.
       ; This recurses, to handle formats like f(x)(y).
       ; This implements prefixed (), [], and {}
@@ -746,29 +746,29 @@
           ((eof-object? c) prefix)
           ((char=? c #\( ) ; Implement f(x).
             (my-read-char port)
-            (modern-process-tail port
+            (neoteric-process-tail port
               (attach-sourceinfo pos
-                (cons prefix (my-read-delimited-list modern-read-func #\) port)))))
+                (cons prefix (my-read-delimited-list neoteric-read-func #\) port)))))
           ((char=? c #\[ )  ; Implement f[x]
             (my-read-char port)
-            (modern-process-tail port
+            (neoteric-process-tail port
                 (attach-sourceinfo pos
                   (cons (attach-sourceinfo pos 'bracketaccess)
                     (cons prefix
-                      (my-read-delimited-list modern-read-func #\] port))))))
+                      (my-read-delimited-list neoteric-read-func #\] port))))))
           ((char=? c #\{ )  ; Implement f{x}
-            (modern-process-tail port
+            (neoteric-process-tail port
               (attach-sourceinfo pos
                 (list prefix
-                  (read-at-curly modern-read-func port)))))
+                  (read-at-curly neoteric-read-func port)))))
           (#t prefix))))
 
-  (define (modern-read-func port)
-    ; Read using "modern Lisp notation".
+  (define (neoteric-read-func port)
+    ; Read using "neoteric Lisp notation".
     ; This implements unprefixed (), [], and {}
     (consume-whitespace port)
 
-    (modern-process-tail port
+    (neoteric-process-tail port
       (let* ((pos (get-sourceinfo port))
              (c   (my-peek-char port)))
         ; (write c)
@@ -782,32 +782,32 @@
                 ((char=? c #\')
                   (my-read-char port)
                   (list (attach-sourceinfo pos 'quote)
-                    (modern-read-func port)))
+                    (neoteric-read-func port)))
                 ((char=? c #\`)
                   (my-read-char port)
                   (list (attach-sourceinfo pos 'quasiquote)
-                    (modern-read-func port)))
+                    (neoteric-read-func port)))
                 ((char=? c #\,)
                   (my-read-char port)
                     (cond
                       ((char=? #\@ (my-peek-char port))
                         (my-read-char port)
                         (list (attach-sourceinfo pos 'unquote-splicing)
-                         (modern-read-func port)))
+                         (neoteric-read-func port)))
                      (#t
                       (list (attach-sourceinfo pos 'unquote)
-                        (modern-read-func port)))))
+                        (neoteric-read-func port)))))
                 ((char=? c #\( )
                    (my-read-char port)
-                   (my-read-delimited-list modern-read-func #\) port))
+                   (my-read-delimited-list neoteric-read-func #\) port))
                 ((char=? c #\[ )
                     (my-read-char port)
-                    (my-read-delimited-list modern-read-func #\] port))
+                    (my-read-delimited-list neoteric-read-func #\] port))
                 ((char=? c #\{ )
                   (my-read-char port)
                   (process-curly
-                    (my-read-delimited-list modern-read-func #\} port)))
-                (#t (let ((result (underlying-read modern-read-func port)))
+                    (my-read-delimited-list neoteric-read-func #\} port)))
+                (#t (let ((result (underlying-read neoteric-read-func port)))
                         result)))))))))
 
 ; -----------------------------------------------------------------------------
@@ -826,7 +826,7 @@
     (let ((char (my-peek-char port)))
       (if (char-whitespace? char)
           (list qt)
-          (list qt (modern-read-func port)))))
+          (list qt (neoteric-read-func port)))))
 
   (define (readitem level port)
     (let ((pos  (get-sourceinfo port))
@@ -847,7 +847,7 @@
           (#t
             (attach-sourceinfo pos (readquote level port 'unquote)))))
        (#t
-          (modern-read-func port)))))
+          (neoteric-read-func port)))))
 
   (define (indentation>? indentation1 indentation2)
     (let ((len1 (string-length indentation1))
@@ -1041,7 +1041,7 @@
           (consume-end-of-line port)
           (sugar-start-expr port)) ; Consume and again
         ((> (string-length indentation) 0) ; initial indentation disables
-          (modern-read-func port))
+          (neoteric-read-func port))
         (#t
           (let* ((read (readblock-clean "" port))
                  (level (car read))
@@ -1063,7 +1063,7 @@
 ; -----------------------------------------------------------------------------
 
   (define curly-infix-read (make-read curly-infix-read-func))
-  (define modern-read (make-read modern-read-func))
+  (define neoteric-read (make-read neoteric-read-func))
   (define sweet-read (make-read sugar-start-expr))
 
   )
