@@ -52,41 +52,41 @@ define-syntax list-of
   syntax-rules (is in)
     ; base case
     \\
-    . list-of x
-    . \\ list x
+    ! list-of x
+    ! \\ list x
     ; handle (var in x) clause
     \\
-    . list-of x
-    .   var in expr
-    .   clauses
-    .   ...
-    . \\ list-of::concat-map
-    . .    lambda (var)
-    . .      list-of x
-    . .        clauses
-    . .        ...
-    . .    expr
+    ! list-of x
+    !   var in expr
+    !   clauses
+    !   ...
+    ! \\ list-of::concat-map
+    ! !    lambda (var)
+    ! !      list-of x
+    ! !        clauses
+    ! !        ...
+    ! !    expr
     ; handle (var is x) clause
     \\
-    . list-of x
-    .   var is expr
-    .   clauses
-    .   ...
-    . \\ let ((var expr))
-    . .    list-of x
-    . .      clauses
-    . .      ...
+    ! list-of x
+    !   var is expr
+    !   clauses
+    !   ...
+    ! \\ let ((var expr))
+    ! !    list-of x
+    ! !      clauses
+    ! !      ...
     ; handle (pred? x) clause
     \\
-    . list-of x
-    .   pred?(args ...)
-    .   clauses
-    .   ...
-    . \\ if pred?(args ...)
-    . .     list-of x
-    . .       clauses
-    . .       ...
-    . .     '()
+    ! list-of x
+    !   pred?(args ...)
+    !   clauses
+    !   ...
+    ! \\ if pred?(args ...)
+    ! !     list-of x
+    ! !       clauses
+    ! !       ...
+    ! !     '()
 
 define list-of::concat-map(f l)
   concat-map-loop(f l '())
