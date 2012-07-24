@@ -2,7 +2,7 @@
 # Test the sweet translators by doing a round-trip.
 # Tests using the filename in $1, or a default filename if none given.
 
-# TODO: ./sweet-filter doesn't copy out a comment if it was immediately
+# TODO: ./unsweeten doesn't copy out a comment if it was immediately
 # preceded by a line with a datum.  Need to fix.
 
 # For the given test file (which must be in traditional S-expression format),
