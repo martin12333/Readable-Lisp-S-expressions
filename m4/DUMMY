@@ -1,0 +1,10 @@
+This dummy file solves an odd problem when combining autoreconf + git.
+
+Some versions of autoreconf don't automatically create an "m4" directory
+when needed, and will fail if it's not there.
+But git won't store an empty directory.
+
+Putting this dummy file in the git directory ensures that autoreconf
+has an "m4" directory to use.
+
+See http://www.dwheeler.com/autotools for more information.

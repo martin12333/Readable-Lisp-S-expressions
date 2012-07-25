@@ -1,0 +1,11 @@
+Primary authors:
+
+* David A. Wheeler - initiator of "readable" project, created first
+  drafts of specs and code.
+* Alan Manuel K. Gloria - Made a number of spec suggestions and
+  wrote significant pieces
+* Egil Möller - Developed SRFI-49, including its sample implementation.
+  The sweet-expression indentation semantics are based on SRFI-49
+  (with changes based on experimentation with it), and some of the
+  implementation comes from the SRFI-49 reference implementation.
+
