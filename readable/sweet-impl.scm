@@ -887,17 +887,22 @@
            (read       (readblock-clean level port))
            (next-level (car read))
            (block      (cdr read)))
-      (if (string=? next-level level)
-            (let* ((reads (readblocks level port))
-                   (next-next-level (car reads))
-                   (next-blocks (cdr reads)))
-              (if (eq? block '.)
-                  (if (pair? next-blocks)
-                      (cons next-next-level (car next-blocks))
-                      (cons next-next-level next-blocks))
-                  (cons next-next-level
-                        (attach-sourceinfo pos (cons block next-blocks)))))
-            (cons next-level (attach-sourceinfo pos (list block))))))
+      (cond
+        ; check EOF
+        ((eqv? next-level -1)
+          (cons "" '()))
+        ((string=? next-level level)
+          (let* ((reads (readblocks level port))
+                 (next-next-level (car reads))
+                 (next-blocks (cdr reads)))
+            (if (eq? block '.)
+                (if (pair? next-blocks)
+                    (cons next-next-level (car next-blocks))
+                    (cons next-next-level next-blocks))
+                (cons next-next-level
+                      (attach-sourceinfo pos (cons block next-blocks))))))
+        (#t
+          (cons next-level (attach-sourceinfo pos (list block)))))))
 
   ;; Read one block of input
   ;; this essentially implements the "head" production
@@ -985,11 +990,16 @@
                   ;; HOWEVER, it might not be compatible
                   ;; 100% with the "." as indentation
                   ;; whitespace thing.
-                  (if (eq? first '.)
+                  (cond
+                    ((eqv? level -1)
+                      ; EOF encountered - end at first
+                      (cons "" (list first)))
+                    ((eq? first '.)
                       (if (pair? block)
                           (cons level (car block))
-                          rest)
-                      (cons level (attach-sourceinfo pos (cons first block))))))))))))
+                          rest))
+                    (#t
+                      (cons level (attach-sourceinfo pos (cons first block)))))))))))))
 
   ;; Consumes as much horizontal, non-indent whitespace as
   ;; possible.  Treat comments as horizontal whitespace too.
