@@ -117,6 +117,30 @@
 ;       (define next-line (integer->char #x0085))
 ;       (define line-separator (integer->char #x2028))
 ;       (define paragraph-separator (integer->char #x2029))
+;
+;   (parse-hash top-read char fake-port)
+;   - a function that is invoked when an unrecognized, non-R5RS hash
+;     character combination is encountered in the input port.
+;   - this function is passed a "fake port", as wrapped by the
+;     make-read function above.  You should probably use my-read-char
+;     and my-peek-char in it, or at least unwrap the port (since
+;     make-read does the wrapping, and you wrote make-read, we assume
+;     you know how to unwrap the port).
+;   - if your function needs to parse a datum, invoke
+;     (top-read fake-port).  Do NOT use any other read function.  The
+;     top-read function accepts exactly one parameter - the fake port
+;     this function was passed in.
+;     - top-read is either a version of curly-infix-read, or a version
+;       of neoteric-read; this specal version accepts only a fake port.
+;       It is never a version of sweet-read.
+;   - At the start of this function, both the # and the character
+;     after it have been read in.
+;   - The function returns one of the following:
+;       #f  - the hash-character combination is invalid/not supported.
+;       ()  - the hash-character combination introduced a comment;
+;             at the return of this function with this value, the
+;             comment has been removed from the input port.
+;       (a) - the datum read in is the value a
 
 ; On Guile 2.0, the define-module part needs to occur separately from
 ; the rest of the compatibility checks, unfortunately.  Sigh.
@@ -256,6 +280,106 @@
           (integer->char #x2028)
           #f))
 
+    ; Guile has #! !# comments; these comments do *not* nest.
+    ; On Guile 1.6 and 1.8 the only comments are ; and #! !#
+    ; On Guile 2.0, #; (SRFI-62) and #| #| |# |# (SRFI-30) comments exist.
+    ; On Guile 2.0, #' #` #, #,@ have the R6RS meaning; on
+    ; Guile 1.8 and 1.6 there is a #' syntax but I have yet
+    ; to figure out what exactly it does.
+    ; On Guile, #:x is a keyword.  Keywords have symbol
+    ; syntax.
+    (define (parse-hash top-read char fake-port)
+      (let* ((ver (effective-version))
+             (c   (string-ref ver 0))
+             (>=2 (and (not (char=? c #\0)) (not (char=? c #\1)))))
+        (cond
+          ((char=? char #\!)
+            ; non-nestable comment #! ... !#
+            (non-nest-comment fake-port)
+            '())
+          ; s-expression comment
+          ; (in this case it's either a c-expression or
+          ; n-expression comment; it is mostly infeasible
+          ; to make it a t-expression comment without
+          ; explicit changes in the indentation processor)
+          ; support as an extension in 1.6 and 1.8
+          ((char=? char #\;)
+            (top-read fake-port)
+            '())
+          ; support as an extension in 1.6 and 1.8
+          ((char=? char #\|)
+            (nest-comment fake-port)
+            '())
+          ((char=? char #\:)
+            ; On Guile 1.6, #: reads characters until it finds non-symbol
+            ; characters.
+            ; On Guile 1.8 and 2.0, #: reads in a datum, and if the
+            ; datum is not a symbol, throws an error.
+            ; Follow the 1.8/2.0 behavior as it is simpler to implement,
+            ; and even on 1.6 it is unlikely to cause problems.
+            ; NOTE: This behavior means that #:foo(bar) will cause
+            ; problems on neoteric and higher tiers.
+            (let ((s (top-read fake-port)))
+              (if (symbol? s)
+                  `( ,(symbol->keyword s) )
+                  #f)))
+          ; On Guile 2.0 #' #` #, #,@ have the R6RS meaning.
+          ; guard against it here because of differences in
+          ; Guile 1.6 and 1.8.
+          ((and >=2 (char=? char #\'))
+            `( (syntax ,(top-read fake-port)) ))
+          ((and >=2 (char=? char #\`))
+            `( (quasisyntax ,(top-read fake-port)) ))
+          ((and >=2 (char=? char #\,))
+            (let ((c2 (my-peek-char fake-port)))
+              (cond
+                ((char=? c2 #\@)
+                  (my-read-char fake-port)
+                  `( (unsyntax-splicing ,(top-read fake-port)) ))
+                (#t
+                  `( (unsyntax ,(top-read fake-port)) )))))
+          (#t
+            #f))))
+
+    ; detect the !#
+    (define (non-nest-comment fake-port)
+      (let ((c (my-read-char fake-port)))
+        (cond
+          ((eof-object? c)
+            (values))
+          ((char=? c #\!)
+            (let ((c2 (my-peek-char fake-port)))
+              (if (char=? c2 #\#)
+                  (begin
+                    (my-read-char fake-port)
+                    (values))
+                  (non-nest-comment fake-port))))
+          (#t
+            (non-nest-comment fake-port)))))
+    ; detect #| or |#
+    (define (nest-comment fake-port)
+      (let ((c (my-read-char fake-port)))
+        (cond
+          ((eof-object? c)
+            (values))
+          ((char=? c #\|)
+            (let ((c2 (my-peek-char fake-port)))
+              (if (char=? c2 #\#)
+                  (begin
+                    (my-read-char fake-port)
+                    (values))
+                  (nest-comment fake-port))))
+          ((char=? c #\#)
+            (let ((c2 (my-peek-char fake-port)))
+              (if (char=? c2 #\|)
+                  (begin
+                    (my-read-char fake-port)
+                    (nest-comment fake-port))
+                  (values))
+              (nest-comment fake-port)))
+          (#t
+            (nest-comment fake-port)))))
+
     )
 ; -----------------------------------------------------------------------------
 ; R5RS Compatibility
@@ -350,6 +474,9 @@
     (define next-line #f)
     (define line-separator #f)
     (define paragraph-separator #f)
+
+    ; R5RS has no hash extensions
+    (define (parse-hash . _) #f)
 
     ))
 
@@ -887,17 +1014,22 @@
            (read       (readblock-clean level port))
            (next-level (car read))
            (block      (cdr read)))
-      (if (string=? next-level level)
-            (let* ((reads (readblocks level port))
-                   (next-next-level (car reads))
-                   (next-blocks (cdr reads)))
-              (if (eq? block '.)
-                  (if (pair? next-blocks)
-                      (cons next-next-level (car next-blocks))
-                      (cons next-next-level next-blocks))
-                  (cons next-next-level
-                        (attach-sourceinfo pos (cons block next-blocks)))))
-            (cons next-level (attach-sourceinfo pos (list block))))))
+      (cond
+        ; check EOF
+        ((eqv? next-level -1)
+          (cons "" '()))
+        ((string=? next-level level)
+          (let* ((reads (readblocks level port))
+                 (next-next-level (car reads))
+                 (next-blocks (cdr reads)))
+            (if (eq? block '.)
+                (if (pair? next-blocks)
+                    (cons next-next-level (car next-blocks))
+                    (cons next-next-level next-blocks))
+                (cons next-next-level
+                      (attach-sourceinfo pos (cons block next-blocks))))))
+        (#t
+          (cons next-level (attach-sourceinfo pos (list block)))))))
 
   ;; Read one block of input
   ;; this essentially implements the "head" production
@@ -985,11 +1117,16 @@
                   ;; HOWEVER, it might not be compatible
                   ;; 100% with the "." as indentation
                   ;; whitespace thing.
-                  (if (eq? first '.)
+                  (cond
+                    ((eqv? level -1)
+                      ; EOF encountered - end at first
+                      (cons "" (list first)))
+                    ((eq? first '.)
                       (if (pair? block)
                           (cons level (car block))
-                          rest)
-                      (cons level (attach-sourceinfo pos (cons first block))))))))))))
+                          rest))
+                    (#t
+                      (cons level (attach-sourceinfo pos (cons first block)))))))))))))
 
   ;; Consumes as much horizontal, non-indent whitespace as
   ;; possible.  Treat comments as horizontal whitespace too.
