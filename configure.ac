@@ -4,10 +4,10 @@
 # Initialize, but use more options.  Note parameters brackets and whitespace.
 AC_INIT([readable], [0.25], [dwheeler@dwheeler.com],
         [readable], [http://readable.sourceforge.net/])
-# Force autoconf to be at least this version number:
-AC_PREREQ([2.68])
+# Force autoconf to be more recent.
+AC_PREREQ([2.67])
 # Safety check - list a source file that wouldn't be in other directories:
-AC_CONFIG_SRCDIR([readable/sweet-impl.scm])
+AC_CONFIG_SRCDIR([src/sweet-impl.scm])
 # Put configuration results here, so we can easily #include them:
 # AC_CONFIG_HEADERS([config.h])
 # Put autotools auxiliary files in a subdir, so they don't clutter top dir:

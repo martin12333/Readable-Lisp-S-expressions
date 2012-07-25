@@ -1,4 +1,8 @@
 #!/usr/bin/env guile
+-L "@LIBRARY_DIRECTORY@" -s
+
+# @WARNING_MESSAGE@
+
 !#
 
 ; This is a filter - it accepts sweet-expressions from standard input,

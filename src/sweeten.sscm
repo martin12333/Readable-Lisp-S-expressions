@@ -26,7 +26,7 @@
 ; Set to #f if you want to run without invoking the sweet module, e.g.
 ; for debugging.  See the bottom for debugging tips.
 
-define build-on-sweet #t
+define build-on-sweet #f
 if build-on-sweet
   use-modules
     readable sweet-impl

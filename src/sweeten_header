@@ -1,0 +1,6 @@
+#!/usr/bin/env guile
+-L "@LIBRARY_DIRECTORY@" -s
+
+# @WARNING_MESSAGE@
+
+!#

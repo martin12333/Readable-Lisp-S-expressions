@@ -1,0 +1,10 @@
+#!/bin/sh
+
+LIBRARY_DIRECTORY="$1"
+
+if [ -z "$LIBRARY_DIRECTORY" ] ; then
+  LIBRARY_DIRECTORY="$(pwd)"
+fi
+
+sed -e 's!@WARNING_MESSAGE@!Generated automatically by my-subst, DO NOT EDIT!' \
+    -e "s!@LIBRARY_DIRECTORY@!${LIBRARY_DIRECTORY}!g"
