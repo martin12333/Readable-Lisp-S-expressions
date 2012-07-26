@@ -2,7 +2,7 @@
 # See http://www.dwheeler.com/autotools for some tips/explanations.
 
 # Initialize, but use more options.  Note parameters brackets and whitespace.
-AC_INIT([readable], [0.25], [dwheeler@dwheeler.com],
+AC_INIT([readable], [0.30], [dwheeler@dwheeler.com],
         [readable], [http://readable.sourceforge.net/])
 # Force autoconf to be more recent.
 AC_PREREQ([2.67])
