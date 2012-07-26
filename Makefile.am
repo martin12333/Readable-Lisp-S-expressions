@@ -80,31 +80,32 @@ CLEANFILES += $(noinst_SCRIPTS)
 
 EXTRA_DIST += $(srcdir)/my-subst
 
-bin/sweeten: src/sweeten_header src/sweeten.sscm ./unsweeten
+bin/sweeten: src/sweeten_header src/sweeten.sscm ./unsweeten my-subst
 	$(MKDIR_P) bin
-	$(srcdir)/my-subst "$(readable_libdir)" \
+	$(srcdir)/my-subst "$(GUILE)" "$(readable_libdir)" \
 	              < "$(srcdir)/src/sweeten_header"  > $@
 	./unsweeten < "$(srcdir)/src/sweeten.sscm" >> $@
 	chmod a+x $@
 
-bin/unsweeten: src/unsweeten
+bin/unsweeten: src/unsweeten my-subst
 	$(MKDIR_P) bin
-	$(srcdir)/my-subst "$(readable_libdir)" < $<  > $@
+	$(srcdir)/my-subst "$(GUILE)" "$(readable_libdir)" < $<  > $@
 	chmod a+x $@
 
-bin/neoteric-guile: src/neoteric-guile
+bin/neoteric-guile: src/neoteric-guile my-subst
 	$(MKDIR_P) bin
-	$(srcdir)/my-subst "$(readable_libdir)" < $<  > $@
+	$(srcdir)/my-subst "$(GUILE)" "$(readable_libdir)" < $<  > $@
 	chmod a+x $@
 
-bin/sweet-guile: src/sweet-guile
+bin/sweet-guile: src/sweet-guile my-subst
 	$(MKDIR_P) bin
-	$(srcdir)/my-subst "$(readable_libdir)" < $<  > $@
+	$(srcdir)/my-subst "$(GUILE)" "$(readable_libdir)" < $<  > $@
 	chmod a+x $@
 
 
-./sweeten: src/sweeten_header src/sweeten.sscm ./unsweeten
-	$(srcdir)/my-subst "" < "$(srcdir)/src/sweeten_header"  > $@
+./sweeten: src/sweeten_header src/sweeten.sscm ./unsweeten my-subst
+	$(RM) -f $@
+	$(srcdir)/my-subst "$(GUILE)" "" < "$(srcdir)/src/sweeten_header"  > $@
 	./unsweeten < "$(srcdir)/src/sweeten.sscm" >> $@
 	chmod a+x $@
 
@@ -112,28 +113,33 @@ bin/sweet-guile: src/sweet-guile
 # That way, once "./unsweeten" is created, we know that it's ready to use
 # (because its dependencies have been installed); other rules can just
 # depend on "./unsweeten", and they won't start until unsweeten is ready.
-./unsweeten: src/unsweeten readable/kernel.scm
-	$(srcdir)/my-subst "" < $<  > $@
+./unsweeten: src/unsweeten readable/kernel.scm my-subst
+	$(RM) -f $@
+	$(srcdir)/my-subst "$(GUILE)" "" < $<  > $@
 	chmod a+x $@
 	chmod a-w $@
 
-./neoteric-guile: src/neoteric-guile
-	$(srcdir)/my-subst "" < $<  > $@
+./neoteric-guile: src/neoteric-guile my-subst
+	$(RM) -f $@
+	$(srcdir)/my-subst "$(GUILE)" "" < $<  > $@
 	chmod a+x $@
 	chmod a-w $@
 
-./sweet-guile: src/sweet-guile
-	$(srcdir)/my-subst "" < $<  > $@
+./sweet-guile: src/sweet-guile my-subst
+	$(RM) -f $@
+	$(srcdir)/my-subst "$(GUILE)" "" < $<  > $@
 	chmod a+x $@
 	chmod a-w $@
 
-./sweeten.sscm: src/sweeten.sscm
-	$(srcdir)/my-subst "" < $<  > $@
+./sweeten.sscm: src/sweeten.sscm my-subst
+	$(RM) -f $@
+	$(srcdir)/my-subst "$(GUILE)" "" < $<  > $@
 	chmod a+x $@
 	chmod a-w $@
 
 # Not directly used; useful if you want to generate JUST this file:
 ,sweeten.scm : src/sweeten.sscm $(UNSWEETEN)
+	$(RM) -f $@
 	$(UNSWEETEN) $< > $@
 	chmod a-w $@
 

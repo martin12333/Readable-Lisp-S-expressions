@@ -4,7 +4,7 @@
 
 # @WARNING_MESSAGE@
 
-spawn -noecho guile --debug -L "@LIBRARY_DIRECTORY@"
+spawn -noecho "@GUILE@" --debug -L "@LIBRARY_DIRECTORY@"
 # Enable readline (for ease of interface), then activate neoteric-expressions.
 send "(begin (use-modules (ice-9 readline)) (activate-readline))\n\n"
 send "(begin (set! %load-path (append %load-path '(\".\"))) (use-modules (readable kernel)) (replace-read neoteric-read) (newline))\n"
