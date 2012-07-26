@@ -285,8 +285,6 @@ This works on the current selection."
 'CHECKPOINT1
 )
 
-; DISABLED!!
-; Below are more tests.
 
 ; This is AutoCAD Lisp.
 
@@ -299,69 +297,76 @@ This works on the current selection."
   (C:CONT)))
 
 
-; (reader-test
-; '(DEFUN C:CONT ()
-;   (SETQ SB (- SB 1))
-;   (SETQ SC (SSNAME AR SB))
-;   (SETQ SE (ENTGET SC))
-;   (SETQ SJ (CDR (ASSOC 1 SE)))
-;   (IF (= SJ SA)
-;     (PROGN
-;       (SETQ H (CDR (ASSOC 10 SE)))
-;       (SETQ X1 (LIST (- (CAR H) 50) (- (CADR H) 50)))
-;       (SETQ X2 (LIST (+ 50 (CAR H)) (+ 50 (CADR H))))
-;       (COMMAND "ZOOM" "W" X1 X2))
-;     (C:CONT))
-;   (IF (= SB 0) (ALERT "END OF SELECTIONS"))
-;   (SETQ A (+ SB 1))
-;   (SETQ A (RTOS A 2 0))
-;   (SETQ A
-;     (STRCAT "\nThere are <" A "> selections Enter CONT to advance to next"))
-;   (IF (= SB 0) (EXIT))
-;   (PRINC A)
-;   (PRINC)))
-; 
-; (reader-test
-; '(DEFUN C:FIND ()
-;   (SETQ SA (GETSTRING T "\nEnter string for search parameter: "))
-;   (SETQ AR (SSGET "X" (LIST (CONS 1 SA))))
-;   (IF (= AR NIL) (ALERT "This string does not exist"))
-;   (SETQ SB (SSLENGTH AR))
-;   (C:CONT)))
-; 
-; (reader-test
-; '(DEFUN C:CONT ()
-;   (SETQ SB (- SB 1))
-;   (SETQ SC (SSNAME AR SB))
-;   (SETQ SE (ENTGET SC))
-;   (SETQ SJ (CDR (ASSOC 1 SE)))
-;   (IF (= SJ SA)
-;     (PROGN
-;       (SETQ H (CDR (ASSOC 10 SE)))
-;       (SETQ X1 (LIST (- (CAR H) 50) (- (CADR H) 50)))
-;       (SETQ X2 (LIST (+ 50 (CAR H)) (+ 50 (CADR H))))
-;       (COMMAND "ZOOM" "W" X1 X2))
-;     (C:CONT))
-;   (IF (= SB 0) (ALERT "END OF SELECTIONS"))
-;   (SETQ A (+ SB 1))
-;   (SETQ A (RTOS A 2 0))
-;   (SETQ A
-;     (STRCAT "\nThere are <" A "> selections Enter CONT to advance to next"))
-;   (IF (= SB 0) (EXIT))
-;   (PRINC A)
-; 
-; 
-; (reader-test
-; '(if (eqv? parent1 'f)
-;   (and (eqv? kibi 'f) (eqv? kibi-lied? #t))))
-; 
-; (reader-test
-; '(if (eqv? parent1 'f)
-;   (and (eqv? kibi 'f) (eqv? kibi-lied? #t))))
-; 
-; (reader-test
-; '("hi" 3))
+(reader-test
+'(DEFUN C:CONT ()
+  (SETQ SB (- SB 1))
+  (SETQ SC (SSNAME AR SB))
+  (SETQ SE (ENTGET SC))
+  (SETQ SJ (CDR (ASSOC 1 SE)))
+  (IF (= SJ SA)
+    (PROGN
+      (SETQ H (CDR (ASSOC 10 SE)))
+      (SETQ X1 (LIST (- (CAR H) 50) (- (CADR H) 50)))
+      (SETQ X2 (LIST (+ 50 (CAR H)) (+ 50 (CADR H))))
+      (COMMAND "ZOOM" "W" X1 X2))
+    (C:CONT))
+  (IF (= SB 0) (ALERT "END OF SELECTIONS"))
+  (SETQ A (+ SB 1))
+  (SETQ A (RTOS A 2 0))
+  (SETQ A
+    (STRCAT "\nThere are <" A "> selections Enter CONT to advance to next"))
+  (IF (= SB 0) (EXIT))
+  (PRINC A)
+  (PRINC)))
 
+(reader-test
+'(DEFUN C:FIND ()
+  (SETQ SA (GETSTRING T "\nEnter string for search parameter: "))
+  (SETQ AR (SSGET "X" (LIST (CONS 1 SA))))
+  (IF (= AR NIL) (ALERT "This string does not exist"))
+  (SETQ SB (SSLENGTH AR))
+  (C:CONT)))
+
+(reader-test
+'(DEFUN C:CONT ()
+  (SETQ SB (- SB 1))
+  (SETQ SC (SSNAME AR SB))
+  (SETQ SE (ENTGET SC))
+  (SETQ SJ (CDR (ASSOC 1 SE)))
+  (IF (= SJ SA)
+    (PROGN
+      (SETQ H (CDR (ASSOC 10 SE)))
+      (SETQ X1 (LIST (- (CAR H) 50) (- (CADR H) 50)))
+      (SETQ X2 (LIST (+ 50 (CAR H)) (+ 50 (CADR H))))
+      (COMMAND "ZOOM" "W" X1 X2))
+    (C:CONT))
+  (IF (= SB 0) (ALERT "END OF SELECTIONS"))
+  (SETQ A (+ SB 1))
+  (SETQ A (RTOS A 2 0))
+  (SETQ A
+    (STRCAT "\nThere are <" A "> selections Enter CONT to advance to next"))
+  (IF (= SB 0) (EXIT))
+  (PRINC A)
+  (PRINC)))
+
+
+(reader-test
+'(if (eqv? parent1 'f)
+  (and (eqv? kibi 'f) (eqv? kibi-lied? #t))))
+
+(reader-test
+'(if (eqv? parent1 'f)
+  (and (eqv? kibi 'f) (eqv? kibi-lied? #t))))
+
+(reader-test
+'("hi" 3))
+
+
+
+; Put new tests here.
+
+(reader-test
+'FINI)
 
 
 

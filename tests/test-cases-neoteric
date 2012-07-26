@@ -193,7 +193,6 @@ CHECKPOINT1
 
 ; AutoCAD Lisp - neoteric, then traditional.
 
-; DISABLED!
 (DEFUN C:FIND ()
   SETQ(SA GETSTRING(T "\nEnter string for search parameter: "))
   SETQ(AR SSGET("X" LIST(CONS(1 SA))))
@@ -259,4 +258,7 @@ CHECKPOINT1
 
 "hi"(3)
 
+; Put new tests here.
+
+FINI
 
