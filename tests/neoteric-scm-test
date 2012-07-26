@@ -281,20 +281,24 @@ This works on the current selection."
     (goto-char (point-min))
     (while (search-forward ">" nil t) (replace-match "&gt;" nil t)))))
 
+(reader-test
+'CHECKPOINT1
+)
+
 ; DISABLED!!
 ; Below are more tests.
 
 ; This is AutoCAD Lisp.
 
-; (reader-test
-; '(DEFUN C:FIND ()
-;   (SETQ SA (GETSTRING T "\nEnter string for search parameter: "))
-;   (SETQ AR (SSGET "X" (LIST (CONS 1 SA))))
-;   (IF (= AR NIL) (ALERT "This string does not exist"))
-;   (SETQ SB (SSLENGTH AR))
-;   (C:CONT)))
-; 
-;
+(reader-test
+'(DEFUN C:FIND ()
+  (SETQ SA (GETSTRING T "\nEnter string for search parameter: "))
+  (SETQ AR (SSGET "X" (LIST (CONS 1 SA))))
+  (IF (= AR NIL) (ALERT "This string does not exist"))
+  (SETQ SB (SSLENGTH AR))
+  (C:CONT)))
+
+
 ; (reader-test
 ; '(DEFUN C:CONT ()
 ;   (SETQ SB (- SB 1))
@@ -369,5 +373,7 @@ This works on the current selection."
 (display test-correct)
 (newline)
 
-(exit 0)
+(if (= test-error 0)
+  (exit 0)
+  (exit 1))
 
