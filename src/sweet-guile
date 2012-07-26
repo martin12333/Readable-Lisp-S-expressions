@@ -14,6 +14,6 @@ send "(begin (use-modules (ice-9 readline)) (activate-readline))\n\n"
 # NB: AFAIK the bugs no longer exist after I (Alan) rewrote
 # the primitive-load replacement
 
-send "(begin (set! %load-extensions (cons \".sscm\" %load-extensions)) (set! %load-path (append %load-path '(\".\"))) (use-modules (readable sweet-impl)) (replace-read sweet-read) (newline))\n"
+send "(begin (set! %load-extensions (cons \".sscm\" %load-extensions)) (set! %load-path (append %load-path '(\".\"))) (use-modules (readable kernel)) (replace-read sweet-read) (newline))\n"
 interact
 

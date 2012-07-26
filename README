@@ -85,7 +85,7 @@ implements infix operations in lists surrounded by {...}.  MIT license.
 from standard in, and generates sweet-expressions on standard out.
 MIT license.
 
-* src/sweet-impl.scm: An implementation of the three tiers
+* src/kernel.scm: An implementation of the three tiers
 curly-infix-read, neoteric-read, and sweet-read.
 Implemented in the Guile dialect of Scheme, includes
 hooks for other dialects.  MIT License.
@@ -108,7 +108,7 @@ File suffixes are:
 
 
 You can invoke the readers from your own Guile programs by doing:
-  (use-modules (readable sweet-impl))
+  (use-modules (readable kernel))
 and you can even:
   (replace-read sweet-read)
 

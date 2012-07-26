@@ -29,7 +29,7 @@
 define build-on-sweet #f
 if build-on-sweet
   use-modules
-    readable sweet-impl
+    readable kernel
 
 ; Note: The maxwidth may be violated if, at a current indent, there is a
 ; long non-pair that exceeds it.  But other than long atoms, it's respected,

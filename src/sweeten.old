@@ -30,6 +30,6 @@ exit
 # The following starts the script run by guile (per the -s flag):
 !#
 
-(use-modules (readable sweet-impl))
+(use-modules (readable kernel))
 (replace-read sweet-read)
 (load "sweeten.sscm")

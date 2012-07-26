@@ -12,7 +12,7 @@
 ;     (set! %load-path (append %load-path '("..")))))
 
 
-(use-modules (readable sweet-impl))
+(use-modules (readable kernel))
 
 (define sweet-test-error 0)
 (define sweet-test-correct 0)

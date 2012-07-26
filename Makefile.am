@@ -38,18 +38,18 @@ UNSWEETEN = ./unsweeten
 
 readable_libdir = $(GUILE_SITE)/readable
 
-readable_lib_DATA = readable/sweet-impl.scm
+readable_lib_DATA = readable/kernel.scm
 
-readable/sweet-impl.scm:
+readable/kernel.scm:
 	$(MKDIR_P) readable
-	cp -p "$(srcdir)/src/sweet-impl.scm" readable/sweet-impl.scm
+	cp -p "$(srcdir)/src/kernel.scm" readable/kernel.scm
 
-CLEANFILES = readable/sweet-impl.scm
+CLEANFILES = readable/kernel.scm
 
 
 # Scripts
 
-script_sources = src/sweeten.sscm src/sweeten_header src/unsweeten src/neoteric-guile src/sweet-guile src/sweet-impl.scm
+script_sources = src/sweeten.sscm src/sweeten_header src/unsweeten src/neoteric-guile src/sweet-guile src/kernel.scm
 EXTRA_DIST += $(script_sources)
 
 # These scripts are generated at build time, so they're not distributed
@@ -112,7 +112,7 @@ bin/sweet-guile: src/sweet-guile
 # That way, once "./unsweeten" is created, we know that it's ready to use
 # (because its dependencies have been installed); other rules can just
 # depend on "./unsweeten", and they won't start until unsweeten is ready.
-./unsweeten: src/unsweeten readable/sweet-impl.scm
+./unsweeten: src/unsweeten readable/kernel.scm
 	$(srcdir)/my-subst "" < $<  > $@
 	chmod a+x $@
 	chmod a-w $@
@@ -152,7 +152,7 @@ EXTRA_DIST += \
 # check:
 #	PATH="`pwd`:$(srcdir)/tests:${PATH}" ./all-test
 
-check: readable/sweet-impl.scm
+check: readable/kernel.scm
 	CURLYFILE="$(srcdir)/curly-infix.cl" $(srcdir)/tests/curly-infix-test
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/neoteric-scm-test \
 	            < $(srcdir)/tests/test-cases-neoteric

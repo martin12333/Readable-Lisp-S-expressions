@@ -1,4 +1,4 @@
-; sweet-impl.scm
+; kernel.scm
 ; Implementation of the sweet-expressions project by readable mailinglist.
 ;
 ; Copyright (C) 2005-2012 by Egil Möller, David A. Wheeler,
@@ -36,9 +36,9 @@
 ;     scheme calls it (chicken eggs?), preferably with one of the following
 ;     names, in order of preference, depending on your Scheme's package naming
 ;     conventions/support
-;       (readable sweet-impl)
-;       readable/sweet-impl
-;       sweet-impl
+;       (readable kernel)
+;       readable/kernel
+;       kernel
 ;       sweetimpl
 ;   - The first element after the module-contents name is a list of exported
 ;     functions.  This module shall never export a macro or syntax, not even
@@ -149,7 +149,7 @@
     ; define the module
     ; this ensures that the user's module does not get contaminated with
     ; our compatibility functions/macros
-    (define-module (readable sweet-impl))))
+    (define-module (readable kernel))))
 (cond-expand
 ; -----------------------------------------------------------------------------
 ; Guile Compatibility
@@ -417,7 +417,7 @@
     (define (my-unread-char c port)
       (let ((buffer (car port)))
         (if buffer
-            (error "internal error in sweet-impl, too many unreads")
+            (error "internal error in kernel, too many unreads")
             (set-car! port c)))
       ; return nothing of consequence
       (values))
@@ -446,7 +446,7 @@
           ; pending character?
           (if (car fake-port)
               (error
-                "internal error in sweet-impl, some unread input remaining")
+                "internal error in kernel, some unread input remaining")
               rv))))
 
     ; invoke the given "actual" reader, most likely
@@ -457,7 +457,7 @@
             (buffer    (car port)))
         (if buffer
             (error
-              "internal error in sweet-impl, some unread input before entering builtin read")
+              "internal error in kernel, some unread input before entering builtin read")
             (read real-port))))
     ; R5RS doesn't have any method of extracting
     ; or attaching source location information.
