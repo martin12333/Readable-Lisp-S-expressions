@@ -13,29 +13,78 @@ All of the code is released under open source software / Free Software
 licenses approved by both the OSI (opensource.org) and FSF (fsf.org).
 Most are released under the MIT license, which permits practically any use.
 
-File suffixes are:
-.cl    - Common Lisp
-.lisp  - Common Lisp
-.scm   - Scheme
-.sscm  - Sweet-Scheme; Scheme written with sweet-expressions.
+This software supports the usual GNU Build System conventions;
+here are the steps.
 
-This directory includes (in alphabetical order):
+1. Download/Uncompress.
+
+You need to get the files.  You've probably done that, since you're
+reading this, but just in case you haven't, here's one way:
+
+   git clone git://git.code.sf.net/p/readable/code readable-code
+   cd readable-code
+
+2. Create "configure".
+
+If you've downloaded directly from the source repository, autoreconf it
+by running this command:
+
+    autoreconf -i
+
+3. Configure
+
+As usual, configure.  To accept all the defaults, installing to /usr/local:
+
+    ./configure
+
+If you want it to install to /usr (e.g., programs go in /usr/bin):
+
+    ./configure --prefix=/usr
+
+4. Build ("make")
+
+Now build the code.
+
+    make
+
+5. Install ("make install")
+
+You actually don't *have* to install the software.  Just run
+"./unsweeten", "./sweeten", "./sweet-guile", and it'll work.
+But it's often more convenient to install.  Do this with:
+
+    make install
+
+The usual conventions all work (DESTDIR, VPATH builds, etc.).
+
+
+=== Key directories ===
+
+src/      - Most source files
+bin/      - Generated command (script) files for installation
+readable/ - Guile library (generated, don't edit these)
+tests/    - Test scripts and test cases
+
+The "src/" directory holds most of the source code.
+A "make" will generate files in the top dir, bin/ directory, and the
+readable/ directory.  The generated files in the top directory are
+scripts designed to invoke the locally-built readable library, even if
+there's another one installed.
+
+
+=== Key files ===
 
 * curly-infix.cl: A simple Common Lisp reader macro that
 implements infix operations in lists surrounded by {...}.  MIT license.
 
-* iformat.sscm: A simple pretty-printer that generates I-expressions
-(indented S-expressions) given an object, in sweet-expression format.
-Run "make" to generate Scheme, "guile iformat.scm" runs it as a filter
-(input is stdin, output is stdout).  MIT license.
+* sweeten: A filter that reads in s-expressions (Scheme format)
+from standard in, and generates sweet-expressions on standard out.
+MIT license.
 
-* readable/sweet-impl.scm: An implementation of a "sweet-expression"
-reader; provides the three tiers curly-infix-read, neoteric-read, and
-sweet-read.  Implemented in the Guile dialect of Scheme, includes
+* src/sweet-impl.scm: An implementation of the three tiers
+curly-infix-read, neoteric-read, and sweet-read.
+Implemented in the Guile dialect of Scheme, includes
 hooks for other dialects.  MIT License.
-
-* sweeten: A filter that reads in (from stdin) a file of ordinary
-S-expressions (Scheme format) and outputs sweet-expressions.
 
 * spec-indent.txt: Detailed specification information on I-expressions.
 
@@ -46,24 +95,17 @@ sweet-expression spec, created by Alan Manuel K. Gloria
 sweet-expressions, and outputs sweet-expressions.  You can use this in
 "makefiles" so that you can write files using sweet-expressions.
 
-Some of this code uses guile's module capability.
-To use these in guile, you need to make sure that the %load-path
-includes the directory where the source code resides.  For example,
-to add searching the current directory "." to the end of the search path:
-  (set! %load-path (append %load-path '(".")))
-You could include this command in your ~/.guile file, and then it would
-be run each time.
-Alternatively, you can do this at a shell prompt (or ~/.bashrc or similar):
-  export GUILE_LOAD_PATH="."
-which will insert the given path(s) at the beginning of %load-path.
-Beware: the GUILE_LOAD_PATH has the highest precedence when setting
-up the %load-path, so while this is useful for testing,
-setting GUILE_LOAD_PATH to include "." can have security problems
-if used in "real" programs (an attacker might arrange for a malicious
-scheme file to be loaded instead of an intended one).
 
-Once the %load-path is set up, you can easily load modules, e.g.:
+File suffixes are:
+.cl    - Common Lisp
+.lisp  - Common Lisp
+.scm   - Scheme
+.sscm  - Sweet-Scheme; Scheme written with sweet-expressions.
+
+
+You can invoke the readers from your own Guile programs by doing:
   (use-modules (readable sweet-impl))
+and you can even:
   (replace-read sweet-read)
 
 On Guile 2.0 there are occassional strangenesses in the interaction
