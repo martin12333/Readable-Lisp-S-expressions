@@ -6,14 +6,14 @@
 # so you can try it out.
 
 spawn -noecho "@GUILE@" --debug -L "@LIBRARY_DIRECTORY@"
+
 # Enable readline (for ease of interface). Do it separately, in case
 # readline isn't available.
-send "(begin (use-modules (ice-9 readline)) (activate-readline))\n\n"
+send "(cond ((string-ci=? \"@GUILE_READLINE_AVAILABLE@\" \"yes\") (use-modules (ice-9 readline)) (activate-readline)))\n\n"
+
 # Now enable sweet-expressions.
-# (sweet-load) still has some bugs, so it needs to be in this order.
-# NB: AFAIK the bugs no longer exist after I (Alan) rewrote
-# the primitive-load replacement
 
 send "(begin (set! %load-extensions (cons \".sscm\" %load-extensions)) (set! %load-path (append %load-path '(\".\"))) (use-modules (readable kernel)) (replace-read sweet-read) (newline))\n"
 interact
+
 

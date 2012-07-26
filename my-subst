@@ -1,7 +1,8 @@
 #!/bin/sh
 
 GUILE="$1"
-LIBRARY_DIRECTORY="$2"
+GUILE_READLINE_AVAILABLE="$2"
+LIBRARY_DIRECTORY="$3"
 WARNING_MESSAGE='Generated automatically by my-subst, DO NOT EDIT!'
 
 if [ -z "$LIBRARY_DIRECTORY" ] ; then
@@ -9,6 +10,7 @@ if [ -z "$LIBRARY_DIRECTORY" ] ; then
 fi
 
 sed -e "s!@GUILE@!${GUILE}!g" \
+    -e "s!@GUILE_READLINE_AVAILABLE@!${GUILE_READLINE_AVAILABLE}!g" \
     -e "s!@LIBRARY_DIRECTORY@!${LIBRARY_DIRECTORY}!g" \
     -e "s/@WARNING_MESSAGE@/${WARNING}/g"
 

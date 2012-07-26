@@ -20,6 +20,8 @@ AC_CONFIG_FILES([Makefile])
 # Look for the program "guile" and its site directory:
 GUILE_PROGS
 GUILE_SITE_DIR
+GUILE_MODULE_AVAILABLE([GUILE_READLINE_AVAILABLE], [(ice-9 readline)])
+AC_SUBST([GUILE_READLINE_AVAILABLE])
 
 # Look for a C compiler:
 # AC_PROG_CC

@@ -70,6 +70,7 @@ CLEANFILES += $(noinst_SCRIPTS)
 # also be able to change the directory at the later *build* time.
 # So we create a trivial script to do the substitutions, and run it
 # at build time (e.g., "make" with no options).
+# The setting GUILE_READLINE_AVAILABLE is from autoconf.
 
 # For now, we'll just generate the "sweeten" script with traditional
 # Scheme.  Eventually probably want to put sweeten into the library.
@@ -82,30 +83,30 @@ EXTRA_DIST += $(srcdir)/my-subst
 
 bin/sweeten: src/sweeten_header src/sweeten.sscm ./unsweeten my-subst
 	$(MKDIR_P) bin
-	$(srcdir)/my-subst "$(GUILE)" "$(readable_libdir)" \
+	$(srcdir)/my-subst "$(GUILE)" "$(GUILE_READLINE_AVAILABLE)" "$(readable_libdir)" \
 	              < "$(srcdir)/src/sweeten_header"  > $@
 	./unsweeten < "$(srcdir)/src/sweeten.sscm" >> $@
 	chmod a+x $@
 
 bin/unsweeten: src/unsweeten my-subst
 	$(MKDIR_P) bin
-	$(srcdir)/my-subst "$(GUILE)" "$(readable_libdir)" < $<  > $@
+	$(srcdir)/my-subst "$(GUILE)" "$(GUILE_READLINE_AVAILABLE)" "$(readable_libdir)" < $<  > $@
 	chmod a+x $@
 
 bin/neoteric-guile: src/neoteric-guile my-subst
 	$(MKDIR_P) bin
-	$(srcdir)/my-subst "$(GUILE)" "$(readable_libdir)" < $<  > $@
+	$(srcdir)/my-subst "$(GUILE)" "$(GUILE_READLINE_AVAILABLE)" "$(readable_libdir)" < $<  > $@
 	chmod a+x $@
 
 bin/sweet-guile: src/sweet-guile my-subst
 	$(MKDIR_P) bin
-	$(srcdir)/my-subst "$(GUILE)" "$(readable_libdir)" < $<  > $@
+	$(srcdir)/my-subst "$(GUILE)" "$(GUILE_READLINE_AVAILABLE)" "$(readable_libdir)" < $<  > $@
 	chmod a+x $@
 
 
 ./sweeten: src/sweeten_header src/sweeten.sscm ./unsweeten my-subst
 	$(RM) -f $@
-	$(srcdir)/my-subst "$(GUILE)" "" < "$(srcdir)/src/sweeten_header"  > $@
+	$(srcdir)/my-subst "$(GUILE)" "$(GUILE_READLINE_AVAILABLE)" "" < "$(srcdir)/src/sweeten_header"  > $@
 	./unsweeten < "$(srcdir)/src/sweeten.sscm" >> $@
 	chmod a+x $@
 
@@ -115,25 +116,25 @@ bin/sweet-guile: src/sweet-guile my-subst
 # depend on "./unsweeten", and they won't start until unsweeten is ready.
 ./unsweeten: src/unsweeten readable/kernel.scm my-subst
 	$(RM) -f $@
-	$(srcdir)/my-subst "$(GUILE)" "" < $<  > $@
+	$(srcdir)/my-subst "$(GUILE)" "$(GUILE_READLINE_AVAILABLE)" "" < $<  > $@
 	chmod a+x $@
 	chmod a-w $@
 
 ./neoteric-guile: src/neoteric-guile my-subst
 	$(RM) -f $@
-	$(srcdir)/my-subst "$(GUILE)" "" < $<  > $@
+	$(srcdir)/my-subst "$(GUILE)" "$(GUILE_READLINE_AVAILABLE)" "" < $<  > $@
 	chmod a+x $@
 	chmod a-w $@
 
 ./sweet-guile: src/sweet-guile my-subst
 	$(RM) -f $@
-	$(srcdir)/my-subst "$(GUILE)" "" < $<  > $@
+	$(srcdir)/my-subst "$(GUILE)" "$(GUILE_READLINE_AVAILABLE)" "" < $<  > $@
 	chmod a+x $@
 	chmod a-w $@
 
 ./sweeten.sscm: src/sweeten.sscm my-subst
 	$(RM) -f $@
-	$(srcdir)/my-subst "$(GUILE)" "" < $<  > $@
+	$(srcdir)/my-subst "$(GUILE)" "$(GUILE_READLINE_AVAILABLE)" "" < $<  > $@
 	chmod a+x $@
 	chmod a-w $@
 
