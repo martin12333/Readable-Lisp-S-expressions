@@ -34,7 +34,7 @@
 
 
 clisp << TESTCOMMANDS
-(load "../curly-infix.cl")
+(load (getenv "CURLYFILE"))
 
 ; Test lower-level routines:
 
@@ -94,6 +94,7 @@ clisp << TESTCOMMANDS
 (setf z {{1 <= x <= 10} and {x > 0}})
 
 (princ "Tests complete!")
+(exit 0)
 (quit)
 TESTCOMMANDS
 

@@ -192,12 +192,13 @@ This works on the current selection."
 
 ; AutoCAD Lisp - neoteric, then traditional.
 
-(DEFUN C:FIND ()
-  SETQ(SA GETSTRING(T "\nEnter string for search parameter: "))
-  SETQ(AR SSGET("X" LIST(CONS(1 SA))))
-  (IF {AR = NIL} ALERT("This string does not exist"))
-  SETQ(SB SSLENGTH(AR))
-  C:CONT())
+; DISABLED!
+; (DEFUN C:FIND ()
+;   SETQ(SA GETSTRING(T "\nEnter string for search parameter: "))
+;   SETQ(AR SSGET("X" LIST(CONS(1 SA))))
+;   (IF {AR = NIL} ALERT("This string does not exist"))
+;   SETQ(SB SSLENGTH(AR))
+;   C:CONT())
 
 (DEFUN C:CONT ()
   SETQ(SB {SB - 1})

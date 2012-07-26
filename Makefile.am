@@ -143,7 +143,6 @@ EXTRA_DIST += \
  tests/curly-infix-test \
  tests/neoteric-cl-test \
  tests/neoteric-scm-test \
- tests/neoteric-scm-test.scm \
  tests/sweet-test \
  tests/sweet-testsuite \
  tests/test-cases-neoteric
@@ -152,4 +151,11 @@ EXTRA_DIST += \
 # TODO: Improve test harness & integration into overall system.
 # check:
 #	PATH="`pwd`:$(srcdir)/tests:${PATH}" ./all-test
+
+check: readable/sweet-impl.scm
+	CURLYFILE="$(srcdir)/curly-infix.cl" $(srcdir)/tests/curly-infix-test
+	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/neoteric-scm-test \
+	            < $(srcdir)/tests/test-cases-neoteric
+	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/sweet-test \
+	            < $(srcdir)/tests/sweet-testsuite
 

@@ -3,12 +3,15 @@
 
 ; Test "Sweet"
 
-(cond-expand
-  (guile-2
-    (eval-when (compile load eval)
-      (set! %load-path (append %load-path '("..")))))
-  (guile
-    (set! %load-path (append %load-path '("..")))))
+; We assume that GUILE_LOAD_PATH is set correctly, so we don't need to do:
+; (cond-expand
+;   (guile-2
+;     (eval-when (compile load eval)
+;       (set! %load-path (append %load-path '("..")))))
+;   (guile
+;     (set! %load-path (append %load-path '("..")))))
+
+
 (use-modules (readable sweet-impl))
 
 (define sweet-test-error 0)
@@ -17,8 +20,7 @@
 ; Load a test file, which should have pairs of these:
 ;    s-expr (correct answer)
 ;    sweet-expression (which should match it)
-(define (sweet-test filename)
-  (define (load port)
+(define (sweet-test port)
     (let ((correct (read port)))
       (cond
 	((eof-object? correct)
@@ -28,6 +30,9 @@
             (display " test errors: ")
             (display sweet-test-error)
             (newline)
+            (if (= sweet-test-error 0)
+              (exit 0)
+              (exit 3))
 	    #t)
 	(#t
 	  (let ((sweet-value (sweet-read port)))
@@ -45,8 +50,9 @@
                 (display "\n Got: ")
                 (write sweet-value)
                 (newline))))
-	  (load port)))))
-  (load (open-input-file filename)))
+	  (sweet-test port)))))
 
-(sweet-test "sweet-testsuite")
+(set! sweet-test-correct 0)
+(set! sweet-test-error 0)
+(sweet-test (current-input-port))
 
