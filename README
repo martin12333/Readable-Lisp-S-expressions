@@ -41,11 +41,15 @@ If you want it to install to /usr (e.g., programs go in /usr/bin):
 
     ./configure --prefix=/usr
 
-4. Build ("make")
+4. Build ("make") / test
 
 Now build the code.
 
     make
+
+You can optionally run the testsuite; it's a very good idea:
+
+    make check
 
 5. Install ("make install")
 
