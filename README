@@ -1,37 +1,65 @@
 Readable Lisp S-expressions Project
+===================================
 
-This software improves the readability of Lisp S-expressions.
+This software improves the readability of Lisp S-expressions, by
+implementing three tiers of additional abbreviations in S-expressions.
+These tiers are (oversimplified):
+1. Curly-infix-expressions (c-expressions): Lists surrounded by {...} are
+   interpreted as infix notation, in a Lispy way.
+2. Neoteric-expressions (n-expressions): An e(...) is interpreted as
+   (e ...), an e{...} is interpreted as e({...}).
+3. Sweet-expressions (t-expressions): Parentheses are deduced from indentation:
+   - An indented line is a parameter of its parent.
+   - Later terms on a line are parameters of the first term.
+   - A line with exactly one term and no child lines is simply that term.
+   - Empty lines end the previous expression. Just type ENTER ENTER
+     to execute what you've typed.
 
 For more information, see: http://readable.sourceforge.net.
+In particular, see the [Tutorial], [Solution], and other pages on the wiki.
 
 Lisp-based languages where this software can be helpful include Common Lisp,
 Scheme (including guile), Emacs Lisp, Clojure, Arc, BitC, ACL2,
 SUO-KIF, the GCC MiddleEndLispTranslator (MELT),
 Satisfiability Modulo Theories Library (SMT-LIB), NewLisp, and ISLisp.
 
-All of the code is released under open source software / Free Software
-licenses approved by both the OSI (opensource.org) and FSF (fsf.org).
-Most are released under the MIT license, which permits practically any use.
 
-This software supports the usual GNU Build System conventions;
-here are the steps.
+License
+=======
 
-1. Download/Uncompress.
+The software is released under the MIT license, which permits practically
+any use.  The MIT license is an open source software / Free Software
+license approved by both the OSI (opensource.org) as an open source software
+license, and by the FSF (fsf.org) as a Free software license.
+
+
+Building and Installing
+=======================
+
+This software supports the usual GNU Build System conventions.
+Here are the steps, spelled out.
+
+1. Download/Prepare to configure
 
 You need to get the files.  You've probably done that, since you're
-reading this, but just in case you haven't, here's one way:
+reading this, but here are the basics.
+
+If you want to get the current stable version, go to:
+
+   http://readable.sourceforge.net
+   Click on "Download files", and download the current version.
+   Then uncompress them; one way is via the command line:
+     tar xvzf readable-*.tar.gz
+     cd readable-*
+
+If you want to get the latest developmental version, download the
+files from our git code repository & prepare it to be configured:
 
    git clone git://git.code.sf.net/p/readable/code readable-code
    cd readable-code
+   autoreconf -i
 
-2. Create "configure".
-
-If you've downloaded directly from the source repository, autoreconf it
-by running this command:
-
-    autoreconf -i
-
-3. Configure
+2. Configure
 
 As usual, configure.  To accept all the defaults, installing to /usr/local:
 
@@ -41,7 +69,7 @@ If you want it to install to /usr (e.g., programs go in /usr/bin):
 
     ./configure --prefix=/usr
 
-4. Build ("make") / test
+3. Build ("make") / test
 
 Now build the code.
 
@@ -51,7 +79,7 @@ You can optionally run the testsuite; it's a very good idea:
 
     make check
 
-5. Install ("make install")
+4. Install ("make install")
 
 You actually don't *have* to install the software.  Just run
 "./unsweeten", "./sweeten", "./sweet-guile", and it'll work.
@@ -62,7 +90,43 @@ But it's often more convenient to install.  Do this with:
 The usual conventions all work (DESTDIR, VPATH builds, etc.).
 
 
-=== Key directories ===
+
+Key files
+=========
+
+Some of the key files are:
+
+* unsweeten: A filter that reads in (from stdin) a file of
+sweet-expressions, and outputs sweet-expressions.  You can use this in
+"makefiles" so that you can write files using sweet-expressions. MIT license.
+
+* sweeten: A filter that reads in s-expressions (Scheme format)
+from standard in, and generates sweet-expressions on standard out.
+MIT license.
+
+* neoteric-guile: Start up guile, but use neoteric-expressions to
+interact with it. MIT license.
+
+* sweet-guile: Start up guile, but use sweet-expressions to
+interact with it. MIT license.
+
+* src/kernel.scm: An implementation of the three notation tiers
+curly-infix-read, neoteric-read, and sweet-read.
+Implemented in the Guile dialect of Scheme; it includes
+hooks for other dialects.  This is installed into the "readable"
+site directory of guile. MIT license.
+
+* curly-infix.cl: A simple Common Lisp reader readtable macro that
+implements infix operations in lists surrounded by {...}.  MIT license.
+
+* spec-indent.txt: Detailed specification information on I-expressions.
+
+* spec-almkglor.txt: A not-so-updated specification for the entire
+sweet-expression spec, created by Alan Manuel K. Gloria
+
+
+Key directories
+===============
 
 src/      - Most source files
 bin/      - Generated command (script) files for installation
@@ -75,37 +139,11 @@ readable/ directory.  The generated files in the top directory are
 scripts designed to invoke the locally-built readable library, even if
 there's another one installed.
 
-
-=== Key files ===
-
-* curly-infix.cl: A simple Common Lisp reader macro that
-implements infix operations in lists surrounded by {...}.  MIT license.
-
-* sweeten: A filter that reads in s-expressions (Scheme format)
-from standard in, and generates sweet-expressions on standard out.
-MIT license.
-
-* src/kernel.scm: An implementation of the three tiers
-curly-infix-read, neoteric-read, and sweet-read.
-Implemented in the Guile dialect of Scheme, includes
-hooks for other dialects.  MIT License.
-
-* spec-indent.txt: Detailed specification information on I-expressions.
-
-* spec-almkglor.txt: A not-so-updated specification for the entire
-sweet-expression spec, created by Alan Manuel K. Gloria
-
-* unsweeten: A filter that reads in (from stdin) a file of
-sweet-expressions, and outputs sweet-expressions.  You can use this in
-"makefiles" so that you can write files using sweet-expressions.
-
-
 File suffixes are:
 .cl    - Common Lisp
 .lisp  - Common Lisp
 .scm   - Scheme
 .sscm  - Sweet-Scheme; Scheme written with sweet-expressions.
-
 
 You can invoke the readers from your own Guile programs by doing:
   (use-modules (readable kernel))
@@ -118,4 +156,12 @@ strangeness is when autocompilation is turned OFF.  If you want to
 use sweet-guile or neoteric-guile, turn ON autocompilation, as
 otherwise use-modules will use the default reader rather than
 what you replace.
+
+For more information
+===================
+
+For more information, see:
+  http://readable.sourceforge.net
+
+Discussions are held on the mailing list.
 
