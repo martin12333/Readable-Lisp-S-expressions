@@ -168,3 +168,8 @@ check: readable/kernel.scm
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/sweet-test \
 	            < $(srcdir)/tests/sweet-testsuite
 
+# Developer convenience. If we say "make push" we probably meant
+# "git push", so do that:
+push:
+	git push
+
