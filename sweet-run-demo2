@@ -1,0 +1,5 @@
+#!./sweet-run
+;#!scsh -s
+;!#
+
+run cat("README")

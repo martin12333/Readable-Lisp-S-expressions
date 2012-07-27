@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Run an arbitrary program expressed using sweet-expressions.
+# First parameter is the filename of a script to run through
+# Sweet-expression parser, then run the result.
+# The arbitrary program will probably look like this:
+#   #!sweet-run
+#   ;#!guile -s
+#   ;!#
+# Where "guile -s" might be scsh or something else.
+
+result="$(mktemp)"
+
+UNSWEETEN="./unsweeten"
+
+tail -n +2 < "$1" | "${UNSWEETEN}" > "$result"
+
+chmod u+x "$result"
+
+# Create full name, so we can execute it, and then erase temp file
+# once we're done with it:
+
+fullname="$(dirname "$result")/$(basename "$result")"
+"$fullname"
+rm -f -- "$result"

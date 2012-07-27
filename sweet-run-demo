@@ -1,0 +1,17 @@
+#!./sweet-run
+;#!guile
+;!#
+
+; This is a demonstration of sweet-run.
+display "This calculates 5:\n"
+display {2 + 3}
+display "\n"
+
+define factorial(n)
+  if {n <= 1}
+    1
+    {n * factorial{n - 1}} ; f{...} => f({...})
+
+display "Now let's calculate factorial(22):\n"
+display factorial(22)
+
