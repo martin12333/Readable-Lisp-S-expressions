@@ -34,40 +34,47 @@
 
 
 clisp << TESTCOMMANDS
-(load (getenv "CURLYFILE"))
+(if (not (load (getenv "CURLYFILE") :if-does-not-exist t))
+  (exit 1))
+
+
+(defun mytest (test)
+  (cond
+    (test  'PASS)
+    (t     (princ "FAIL!!!") (exit 1))))
 
 ; Test lower-level routines:
 
-(assert (even-and-op-prefix '+ '(+ 4)))
-(assert (even-and-op-prefix '+ '(+ 4 + 5)))
-(assert (not (even-and-op-prefix '+ '(+ 4 - 5))))
-(assert (not (even-and-op-prefix '+ '(+ 4 +))))
+(mytest (even-and-op-prefix '+ '(+ 4)))
+(mytest (even-and-op-prefix '+ '(+ 4 + 5)))
+(mytest (not (even-and-op-prefix '+ '(+ 4 - 5))))
+(mytest (not (even-and-op-prefix '+ '(+ 4 +))))
 
-(assert (simple-infix-listp '(1 + 2)))
-(assert (simple-infix-listp '(1 + 2 + 3)))
-(assert (not (simple-infix-listp '(1 + 2 * 3))))
-(assert (not (simple-infix-listp '(1 + 2 +))))
-(assert (not (simple-infix-listp '(1 +))))
-(assert (not (simple-infix-listp '(1))))
-(assert (not (simple-infix-listp '())))
+(mytest (simple-infix-listp '(1 + 2)))
+(mytest (simple-infix-listp '(1 + 2 + 3)))
+(mytest (not (simple-infix-listp '(1 + 2 * 3))))
+(mytest (not (simple-infix-listp '(1 + 2 +))))
+(mytest (not (simple-infix-listp '(1 +))))
+(mytest (not (simple-infix-listp '(1))))
+(mytest (not (simple-infix-listp '())))
 
-(assert (equal (alternating-parameters '(1 2 3)) '(1 3)))
-(assert (equal (alternating-parameters '(1 2 3 4 5)) '(1 3 5)))
+(mytest (equal (alternating-parameters '(1 2 3)) '(1 3)))
+(mytest (equal (alternating-parameters '(1 2 3 4 5)) '(1 3 5)))
 
-(assert (equal (transform-simple-infix '(1 + 3)) '(+ 1 3)))
-(assert (equal (transform-simple-infix '(1 + 3 + 5)) '(+ 1 3 5)))
+(mytest (equal (transform-simple-infix '(1 + 3)) '(+ 1 3)))
+(mytest (equal (transform-simple-infix '(1 + 3 + 5)) '(+ 1 3 5)))
 
 ; Test {...} itself:
 
-(assert (equal '{2 + 3} '(+ 2 3)))
-(assert (equal '{2 * n} '(* 2 n)))
-(assert (equal '{x eq y} '(eq x y)))
-(assert (equal '{2 + 3 + 4} '(+ 2 3 4)))
-(assert (equal '{2 + {3 * 4}} '(+ 2 (* 3 4))))
-(assert (equal '{2 + 3 * 4} '(NFX 2 + 3 * 4)))
-(assert (equal '{(- x) / 2} '(/ (- x) 2)))
-(assert (equal '{x = 3 * 4} '(nfx x = 3 * 4)))
-(assert (equal '{x = 3} '(= x 3)))
+(mytest (equal '{2 + 3} '(+ 2 3)))
+(mytest (equal '{2 * n} '(* 2 n)))
+(mytest (equal '{x eq y} '(eq x y)))
+(mytest (equal '{2 + 3 + 4} '(+ 2 3 4)))
+(mytest (equal '{2 + {3 * 4}} '(+ 2 (* 3 4))))
+(mytest (equal '{2 + 3 * 4} '(NFX 2 + 3 * 4)))
+(mytest (equal '{(- x) / 2} '(/ (- x) 2)))
+(mytest (equal '{x = 3 * 4} '(nfx x = 3 * 4)))
+(mytest (equal '{x = 3} '(= x 3)))
 
 ; Demo its use:
 
@@ -85,8 +92,8 @@ clisp << TESTCOMMANDS
 (setf correct {1 <= x <= 10})
 
 ; Test that demo worked correctly:
-(assert (= (fibfast 10) 55))
-(assert correct)
+(mytest (= (fibfast 10) 55))
+(mytest correct)
 
 ; More demos:
 

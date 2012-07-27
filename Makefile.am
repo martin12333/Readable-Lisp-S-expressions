@@ -147,16 +147,17 @@ bin/sweet-guile: src/sweet-guile my-subst
 	$(UNSWEETEN) $< > $@
 	chmod a-w $@
 
+# Eventually we'll package this, but for now, just distribute
+# the Common Lisp curly-infix.cl implementation.
+EXTRA_DIST += curly-infix.cl
 
+# Test cases.
 EXTRA_DIST += \
- tests/all-test \
  tests/curly-infix-test \
- tests/neoteric-cl-test \
  tests/neoteric-scm-test \
  tests/sweet-test \
  tests/sweet-testsuite \
  tests/test-cases-neoteric
-
 
 # TODO: Improve test harness & integration into overall system.
 # check:
