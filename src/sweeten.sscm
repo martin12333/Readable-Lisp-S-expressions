@@ -324,35 +324,40 @@ define iformat-top(m indent indent-already)
         ; No, Can't put entire expression on one line; try alternatives.
         if pair?(car(m))  ; Is car a pair?  If so, we may need GROUP.
           let* (asunit-car(unit(car(m)))) ; Get representation of car.
-            if {{length(asunit-car) + posdent(indent-already indent)} < maxwidth }
-              ; Don't need to use GROUP, we can squeeze the car in.
-              append getdent(indent-already indent) asunit-car '(#\newline)
-                iformat-body cdr(m) deeper(indent) #f
-              ; Use GROUP, we can't squeeze the car in.
-              append getdent(indent-already indent)
-                string->list group-string-newline
-                iformat-top  car(m) deeper(indent) #f
-                iformat-body cdr(m) deeper(indent) #f
+          ! if {{length(asunit-car) + posdent(indent-already indent)}
+          !      < maxwidth }
+          !   ; Don't need to use GROUP, we can squeeze the car in.
+          !   append getdent(indent-already indent) asunit-car '(#\newline)
+          !     iformat-body cdr(m) deeper(indent) #f
+          !   ; Use GROUP, we can't squeeze the car in.
+          !   append getdent(indent-already indent)
+          !     string->list group-string-newline
+          !     iformat-top  car(m) deeper(indent) #f
+          !     iformat-body cdr(m) deeper(indent) #f
           ; The car isn't a pair. Try to cuddle, else use normal indent style
           cond
-            long-and-boring?(m)
-              ; A long-and-boring list is almost certainly data, not
-              ; a function call or code sequence.  Format it differently.
-              append
-                getdent(indent-already indent)
-                string->list(group-string-newline)
-                deeper(indent)
-                iformat-boring-list m #t posdent(indent-already indent) deeper(indent)
-            {memq(car(m) cuddle-first-parameter) and {length(m) >= 3}}
-              let* (asline-cuddled(line(list(car(m) cadr(m)))))
-                 if { {length(asline-cuddled) + posdent(indent-already indent)} < maxwidth}
-                    ; We can cuddle up on line with one parameter:
-                    append getdent(indent-already indent)
-                      asline-cuddled \\ '(#\newline)
-                      iformat-body cddr(m) deeper(indent) #f
-                    ; Can't cuddle - use normal format.
-                    iformat-top-normal-indent m getdent(indent-already indent) #f
-            #t
+          ! long-and-boring?(m)
+          ! ! ; A long-and-boring list is almost certainly data, not
+          ! ! ; a function call or code sequence.  Format it differently.
+          ! ! append
+          ! !   getdent(indent-already indent)
+          ! !   string->list(group-string-newline)
+          ! !   deeper(indent)
+          ! !   iformat-boring-list m #t posdent(indent-already indent)
+          ! !                       deeper(indent)
+          ! {memq(car(m) cuddle-first-parameter) and {length(m) >= 3}}
+          ! ! let* (asline-cuddled(line(list(car(m) cadr(m)))))
+          ! !    if { {length(asline-cuddled) + posdent(indent-already indent)}
+          ! !         < maxwidth}
+          ! !       ; We can cuddle up on line with one parameter:
+          ! !       append getdent(indent-already indent)
+          ! !         asline-cuddled \\ '(#\newline)
+          ! !         iformat-body cddr(m) deeper(indent) #f
+          ! !       ; Can't cuddle - use normal format.
+          ! !       iformat-top-normal-indent m
+          ! !         getdent(indent-already indent)
+          ! !         #f
+          ! #t
               iformat-top-normal-indent m indent indent-already
 
 ; Display x (a list of chars and strings), but do NOT display
