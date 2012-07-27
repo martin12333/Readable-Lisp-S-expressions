@@ -57,7 +57,7 @@ EXTRA_DIST += $(script_sources)
 bin_SCRIPTS = bin/sweeten bin/unsweeten bin/neoteric-guile bin/sweet-guile
 CLEANFILES += $(bin_SCRIPTS)
 
-# These are the local scripts.
+# These are the local scripts, for testing, and are not installed.
 noinst_SCRIPTS = ./sweeten ./unsweeten ./neoteric-guile ./sweet-guile
 CLEANFILES += $(noinst_SCRIPTS)
 
@@ -70,10 +70,12 @@ CLEANFILES += $(noinst_SCRIPTS)
 # also be able to change the directory at the later *build* time.
 # So we create a trivial script to do the substitutions, and run it
 # at build time (e.g., "make" with no options).
-# The setting GUILE_READLINE_AVAILABLE is from autoconf.
+# The setting GUILE_READLINE_AVAILABLE is from autoconf-generated configure.
 # To add a substitution, add it here and in my-subst.
 
 MY_SUBST = $(srcdir)/my-subst "$(GUILE)" "$(GUILE_READLINE_AVAILABLE)"
+
+
 
 # For now, we'll just generate the "sweeten" script with traditional
 # Scheme.  Eventually probably want to put sweeten into the library.
@@ -115,9 +117,9 @@ bin/sweet-guile: src/sweet-guile my-subst
 
 # Make "unsweeten" depend on the underlying library.
 # That way, once "./unsweeten" is created, we know that it's ready to use
-# (because its dependencies have been installed); other rules can just
+# (because its dependencies have been installed). Then other rules can just
 # depend on "./unsweeten", and they won't start until unsweeten is ready.
-./unsweeten: src/unsweeten readable/kernel.scm my-subst
+./unsweeten: src/unsweeten my-subst readable/kernel.scm
 	$(RM) -f $@
 	$(MY_SUBST) "" < $<  > $@
 	chmod a+x $@
@@ -151,7 +153,7 @@ bin/sweet-guile: src/sweet-guile my-subst
 # the Common Lisp curly-infix.cl implementation.
 EXTRA_DIST += curly-infix.cl
 
-# Test cases.
+# Test drivers and testsuites.
 EXTRA_DIST += \
  tests/curly-infix-test \
  tests/neoteric-test \
