@@ -39,11 +39,18 @@
 ; Sweet-filter - written this way to preserve "external" comments
 ; Change "pretty-print" to "write" if speed is critical:
 (define (sweet-filter)
-  (let ((c (peek-char (current-input-port))))
+  (let ((c (peek-char)))
     (cond
       ((eof-object? c) c)
       ((char=? c #\newline ) (read-char) (newline) (sweet-filter))
-      ((char=? c #\; ) (copy-line (current-input-port)) (sweet-filter))
+      ((char=? c #\; )
+        (read-char) ; Consume semicolon.
+        (let ((c2 (peek-char)))
+          (cond
+            ; Pass ;# and ;! but WITHOUT the leading semicolon:
+            ((or (eq? c2 #\#) (eq? c2 #\!))
+              (copy-line (current-input-port)) (sweet-filter))
+            (#t (display c) (copy-line (current-input-port)) (sweet-filter)))))
       (#t
         (let ((result (sweet-read (current-input-port))))
           (if (eof-object? result)
