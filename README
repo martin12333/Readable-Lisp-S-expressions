@@ -96,6 +96,8 @@ Key files
 
 Some of the key files are:
 
+## Installed:
+
 * unsweeten: A filter that reads in (from stdin) a file of
 sweet-expressions, and outputs sweet-expressions.  You can use this in
 "makefiles" so that you can write files using sweet-expressions. MIT license.
@@ -110,11 +112,17 @@ interact with it. MIT license.
 * sweet-guile: Start up guile, but use sweet-expressions to
 interact with it. MIT license.
 
+## Not Installed:
+
 * src/kernel.scm: An implementation of the three notation tiers
 curly-infix-read, neoteric-read, and sweet-read.
 Implemented in the Guile dialect of Scheme; it includes
 hooks for other dialects.  This is installed into the "readable"
 site directory of guile. MIT license.
+
+* src/sweeten.sscm: The source of the "sweeten" program.  It's written
+in Scheme using sweet-expressions, so if you want to see what
+sweet-expressions look like, well, here's an example.
 
 * curly-infix.cl: A simple Common Lisp reader readtable macro that
 implements infix operations in lists surrounded by {...}.  MIT license.
