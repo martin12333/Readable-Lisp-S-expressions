@@ -1,6 +1,0 @@
-#!@GUILE@ \
--L "@LIBRARY_DIRECTORY@" -s
-
-# @WARNING_MESSAGE@
-
-!#

@@ -49,7 +49,7 @@ CLEANFILES = readable/kernel.scm
 
 # Scripts
 
-script_sources = src/sweeten.sscm src/sweeten_header src/unsweeten src/neoteric-guile src/sweet-guile src/kernel.scm
+script_sources = src/sweeten.sscm src/unsweeten src/neoteric-guile src/sweet-guile src/kernel.scm
 EXTRA_DIST += $(script_sources)
 
 # These scripts are generated at build time, so they're not distributed
@@ -86,11 +86,10 @@ MY_SUBST = $(srcdir)/my-subst "$(GUILE)" "$(GUILE_READLINE_AVAILABLE)"
 
 EXTRA_DIST += $(srcdir)/my-subst
 
-bin/sweeten: src/sweeten_header src/sweeten.sscm ./unsweeten my-subst
+bin/sweeten: src/sweeten.sscm ./unsweeten my-subst
 	$(MKDIR_P) bin
 	$(MY_SUBST) "$(readable_libdir)" \
-	   < "$(srcdir)/src/sweeten_header"  > $@
-	./unsweeten < "$(srcdir)/src/sweeten.sscm" >> $@
+	   < "$(srcdir)/src/sweeten.sscm" | ./unsweeten > $@
 	chmod a+x $@
 
 bin/unsweeten: src/unsweeten my-subst
@@ -109,10 +108,9 @@ bin/sweet-guile: src/sweet-guile my-subst
 	chmod a+x $@
 
 
-./sweeten: src/sweeten_header src/sweeten.sscm ./unsweeten my-subst
+./sweeten: src/sweeten.sscm ./unsweeten my-subst
 	$(RM) -f $@
-	$(MY_SUBST) "" < "$(srcdir)/src/sweeten_header"  > $@
-	./unsweeten < "$(srcdir)/src/sweeten.sscm" >> $@
+	$(MY_SUBST) "" < "$(srcdir)/src/sweeten.sscm" | ./unsweeten > $@
 	chmod a+x $@
 
 # Make "unsweeten" depend on the underlying library.

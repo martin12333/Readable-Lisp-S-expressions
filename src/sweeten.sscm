@@ -1,3 +1,9 @@
+;_#!@GUILE@ \
+;_-L "@LIBRARY_DIRECTORY@" -s
+;_
+;_# @WARNING_MESSAGE@
+;_
+;_!#
 ; iformat.scm
 ; Filter to read S-expressions and output indented sweet-expression.
 ;
@@ -358,7 +364,7 @@ define iformat-top(m indent indent-already)
           ! !         getdent(indent-already indent)
           ! !         #f
           ! #t
-              iformat-top-normal-indent m indent indent-already
+          ! ! iformat-top-normal-indent m indent indent-already
 
 ; Display x (a list of chars and strings), but do NOT display
 ; the last end-of-line.  Because we only take generated files,
