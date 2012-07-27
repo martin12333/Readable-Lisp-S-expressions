@@ -1,0 +1,15 @@
+Makefile
+Makefile.in
+bin/
+aclocal.m4
+autom4te.cache
+build-aux
+config.log
+configure
+m4
+config.status
+neoteric-guile
+readable/
+sweet-guile
+sweeten
+unsweeten

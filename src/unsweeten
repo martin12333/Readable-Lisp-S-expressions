@@ -1,5 +1,5 @@
-#!@GUILE@ \
--L "@LIBRARY_DIRECTORY@" -s
+#!/bin/sh
+exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ -q -s $0
 
 # @WARNING_MESSAGE@
 

@@ -1,5 +1,5 @@
-;_#!@GUILE@ \
-;_-L "@LIBRARY_DIRECTORY@" -s
+;_#!/bin/sh
+;_exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ -q -s $0
 ;_
 ;_# @WARNING_MESSAGE@
 ;_
@@ -330,8 +330,7 @@ define iformat-top(m indent indent-already)
         ; No, Can't put entire expression on one line; try alternatives.
         if pair?(car(m))  ; Is car a pair?  If so, we may need GROUP.
           let* (asunit-car(unit(car(m)))) ; Get representation of car.
-          ! if {{length(asunit-car) + posdent(indent-already indent)}
-          !      < maxwidth }
+          ! if {{length(asunit-car) + posdent(indent-already indent)} < maxwidth }
           !   ; Don't need to use GROUP, we can squeeze the car in.
           !   append getdent(indent-already indent) asunit-car '(#\newline)
           !     iformat-body cdr(m) deeper(indent) #f
@@ -353,8 +352,7 @@ define iformat-top(m indent indent-already)
           ! !                       deeper(indent)
           ! {memq(car(m) cuddle-first-parameter) and {length(m) >= 3}}
           ! ! let* (asline-cuddled(line(list(car(m) cadr(m)))))
-          ! !    if { {length(asline-cuddled) + posdent(indent-already indent)}
-          ! !         < maxwidth}
+          ! !    if { {length(asline-cuddled) + posdent(indent-already indent)} < maxwidth}
           ! !       ; We can cuddle up on line with one parameter:
           ! !       append getdent(indent-already indent)
           ! !         asline-cuddled \\ '(#\newline)
