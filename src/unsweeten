@@ -50,6 +50,8 @@
             ; Pass ;# and ;! but WITHOUT the leading semicolon:
             ((or (eq? c2 #\#) (eq? c2 #\!))
               (copy-line (current-input-port)) (sweet-filter))
+            ((eq? c2 #\_) ; Pass ;_ WITHOUT EITHER leading character:
+              (read-char) (copy-line (current-input-port)) (sweet-filter))
             (#t (display c) (copy-line (current-input-port)) (sweet-filter)))))
       (#t
         (let ((result (sweet-read (current-input-port))))
