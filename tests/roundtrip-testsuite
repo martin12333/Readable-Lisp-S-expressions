@@ -1,0 +1,533 @@
+; iformat.scm
+; Filter to read S-expressions and output indented sweet-expression.
+;
+; Copyright (C) 2006-2012 David A. Wheeler.
+;
+; This software is released as open source software under the "MIT" license:
+;
+; Permission is hereby granted, free of charge, to any person obtaining a
+; copy of this software and associated documentation files (the "Software"),
+; to deal in the Software without restriction, including without limitation
+; the rights to use, copy, modify, merge, publish, distribute, sublicense,
+; and/or sell copies of the Software, and to permit persons to whom the
+; Software is furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included
+; in all copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+; OTHER DEALINGS IN THE SOFTWARE.
+
+; Set to #f if you want to run without invoking the sweet module, e.g.
+; for debugging.  See the bottom for debugging tips.
+
+(define build-on-sweet #t)
+(if build-on-sweet
+  (use-modules (readable sweet-impl)))
+
+; Note: The maxwidth may be violated if, at a current indent, there is a
+; long non-pair that exceeds it.  But other than long atoms, it's respected,
+; so it's unlikely to exceed this width in practice:
+(define maxwidth 78)
+
+(define indent-increment
+  '(#\space #\space))
+(define max-unit-character-length 60)
+(define max-unit-list-length 8)
+(define boring-length 16)
+
+(define group-string "\\\\")
+(define group-string-newline "\\\\
+")
+(define group-list (string->list group-string))
+(define infix-operators
+  '(and or
+        xor
+        +
+        -
+        *
+        /
+        ^
+        ++
+        --
+        **
+        //
+        ^^
+        <
+        <=
+        >
+        >=
+        =
+        <>
+        !=
+        ==))
+
+
+; This program automatically handles various end-of-line situations.
+; An end-of-line is a sequence of two different end-of-line chars,
+; otherwise, it is a single end-of-line char.
+; Thus we handle \n, \r\n, \n\r, \r, and variations of <next line> too.
+; To do this, we need a list of end-of-line characters:
+(define end-of-line-chars
+  (list (integer->char 10)
+        (integer->char 13)
+        (integer->char 133)))
+
+
+; Given an indent, return the next deeper indent.
+(define (deeper indent)
+  (append indent indent-increment))
+
+
+; Lists with these symbols as first parameter, and aren't shown as 1 line,
+; are be shown as a line with SYMBOL FIRST-PARAMETER and *then* indents.
+; This is used when in typical uses the first parameter is *special* and
+; has a different semantic meaning from later parameters.
+; This refinement isn't *necessary* but I think it looks better.
+(define cuddle-first-parameter
+  '(define lambda
+     if
+     when
+     unless
+     case
+     set!
+     let
+     let*
+     letrec
+     let1
+     do
+     define-module
+     library
+     export
+     import
+     defun
+     block
+     typecase
+     let-syntax
+     letcrec-syntax
+     define-syntax
+     syntax-rules))
+
+
+(define tab (integer->char 9))
+(define LISTLP (list #\())
+(define LISTRP (list #\)))
+(define LISTLBRACE (list (integer->char 123)))
+(define LISTRBRACE (list (integer->char 125)))
+
+
+; Return length of x, which may be an improper list.
+; If improper, count the two sides as two, so "(a . b)" is length 2.
+(define (general-length x)
+  (general-length-inner x 0))
+
+(define (general-length-inner x count-so-far)
+  (cond ((null? x) count-so-far)
+        ((not (pair? x)) (+ count-so-far 1))
+        (#t
+         (general-length-inner (cdr x) (+ count-so-far 1)))))
+
+; Return list x's *contents* represented as a list of characters.
+; Each one must use neoteric-expressions, space-separated;
+; it will be surrounded by (...) so no indentation processing is relevant.
+(define (unit-list x)
+  (cond ((null? x) (quote ()))
+        ((pair? x)
+         (if (null? (cdr x))
+           (unit (car x))
+           (append
+             (unit (car x))
+             '(#\space)
+             (unit-list (cdr x)))))
+        (#t
+         (append (quote (#\space #\. #\space)) (unit x)))))
+
+
+; Return #t if x should be represented using curly-infix notation {...}.
+(define (represent-as-infix? x)
+  (and (pair? x)
+       (symbol? (car x))
+       (memq (car x) infix-operators)
+       (list? x)
+       (>= (length x) 3)
+       (<= (length x) 6)))
+
+; Return tail of an infix expression, as list of chars
+(define (infix-tail op x)
+  (cond ((null? x) LISTRBRACE)
+        ((pair? x)
+         (append
+           '(#\space)
+           op
+           '(#\space)
+           (unit (car x))
+           (infix-tail op (cdr x))))
+        (#t
+         (append
+           '(#\space #\. #\space)
+           (unit x)
+           LISTRBRACE))))
+
+; Define an association list of Lisp abbreviations.
+; Eventually use "group" to define this, but currently the group
+; symbol is under discussion, so best not to use it yet:
+(define abbreviations
+  '('(#\')
+    `(#\`)
+    ,(#\,)
+    ,@(#\, #\@)))
+
+
+; return #t if we should as a traditional abbreviation, e.g., '
+(define (represent-as-abbreviation? x)
+  (and (assq (car x) abbreviations)
+       (pair? (cdr x))
+       (null? (cddr x))))
+
+; Given list of characters, return the characters that would REPRESENT
+; those characters inside a string AFTER the initial double-quote,
+; then return the double-quote.  This translates newline to \n, etc.
+(define (unit-string-tail x)
+  (if (null? x)
+    '(#\")
+    (append
+      (let ((c (car x)))
+        (cond ((eq? c #\\) (quote (#\\ #\\)))
+              ((eq? c #\") (quote (#\\ #\")))
+              ((eq? c #\newline) (quote (#\\ #\n)))
+              ((eq? c tab) (quote (#\\ #\t)))
+              (#t (list (car x)))))
+      (unit-string-tail (cdr x)))))
+
+; Return x represented as a neoteric-expression unit, as a list of characters.
+; Indentation processing *may* be active, but the character sequence
+; returned must not depend on that.
+; This is widely-used; may want to memoize this.
+(define (unit x)
+  (cond ((null? x) (string->list "()"))
+        ((number? x) (string->list (number->string x)))
+        ((boolean? x)
+         (if x (quote (#\# #\t)) (quote (#\# #\f))))
+        ((symbol? x) (string->list (symbol->string x)))
+        ((string? x)
+         (append
+           '(#\")
+           (unit-string-tail (string->list x))))
+        ((pair? x)
+         (cond ((represent-as-abbreviation? x)
+                (append
+                  (cadr (assq (car x) abbreviations))
+                  (unit (cadr x))))
+               ((symbol? (car x))
+                (if (represent-as-infix? x)
+                  (append
+                    LISTLBRACE
+                    (unit (cadr x))
+                    (infix-tail (unit (car x)) (cddr x)))
+                  (append
+                    (unit (car x))
+                    LISTLP
+                    (unit-list (cdr x))
+                    LISTRP)))
+               (#t (append LISTLP (unit-list x) LISTRP))))
+        (#t (string->list (object->string x)))))
+
+
+; Return x, the rest of the list, as a list of characters. See line().
+(define (line-tail x)
+  (cond ((null? x) (quote ()))
+        ((pair? x)
+         (append
+           (unit (car x))
+           '(#\space)
+           (line-tail (cdr x))))
+        (#t (append (quote (#\. #\space)) (unit x)))))
+
+; Return x represented as a line of space-separated neoteric-expression units,
+; as a list of characters.
+; Indentation processing *MUST* be active.
+(define (line x)
+  (cond ((not (pair? x)) (unit x))
+        ((represent-as-abbreviation? x) (unit x))
+        ((represent-as-infix? x) (unit x))
+        ((and (pair? x) (null? (cdr x)))
+         (if (symbol? (car x))
+           (append (unit (car x)) LISTLP LISTRP)
+           (append LISTLP (unit (car x)) LISTRP)))
+        (#t
+         (append
+           (unit (car x))
+           '(#\space)
+           (line-tail (cdr x))))))
+
+; a list is boring if it has ONLY non-pair members.
+(define (boring? x)
+  (cond ((not (pair? x)) #t)
+        ((pair? (car x)) #f)
+        (#t (boring? (cdr x)))))
+
+; A list is long and boring if it's a list, it's boring, and
+; its length is longer than the boring-length.
+; Such a list is almost certainly NOT a function call or a
+; body of some executable sequence, instead, it's almost certainly a long
+; boring list of data
+(define (long-and-boring? x)
+  (cond ((not (pair? x)) #f)
+        ((not (list? x)) #f)
+        ((< (length x) boring-length) #f)
+        (#t (boring? x))))
+
+
+
+; Return list "m" as a list of characters representing
+; a long and boring split list.  We'll keep track of position inside
+; this routine, since we can do that easily here.
+(define (iformat-boring-list x first? pos next-indent)
+  (cond ((null? x) (quote (#\newline)))
+        (first?
+         (let ((item (unit (car x))))
+           (append
+             item
+             (iformat-boring-list
+               (cdr x)
+               #f
+               (+ pos (length item))
+               next-indent))))
+        (#t
+         (let ((item (unit (car x))))
+           (let ((item-sameline
+                   (append
+                     '(#\space)
+                     group-list
+                     '(#\space)
+                     item)))
+             (if (< (+ pos (length item-sameline)) maxwidth)
+               (append
+                 item-sameline
+                 (iformat-boring-list
+                   (cdr x)
+                   #f
+                   (+ pos (length item-sameline))
+                   next-indent))
+               (begin
+                 (append
+                   '(#\newline)
+                   next-indent
+                   (iformat-boring-list
+                     x
+                     #t
+                     (length next-indent)
+                     next-indent)))))))))
+
+
+; Return the string to add as indentation; should be empty if indentation
+; has already occurred.
+(define (getdent indent-already indent)
+  (if indent-already (string->list "") indent))
+
+; What's the number of characters consumed in the indent (and thus
+; the column position starting from 0)?
+(define (posdent indent-already indent)
+  (if indent-already
+    (length indent-already)
+    (length indent)))
+
+; Input: expression "m" with indentation string "indent".
+; Output: List of characters representing it (#\newline for new line).
+; This tail handles the body of a list (after its first entry) when
+; indentation processing is active, each of these is its own initial line.
+(define (iformat-body m indent indent-already)
+  (if (null? m)
+    '()
+    (append
+      (iformat-top (car m) indent indent-already)
+      (iformat-body (cdr m) indent #f))))
+
+; Return list m represented in the typical indent style.
+(define (iformat-top-normal-indent
+         x
+         indent
+         indent-already)
+  (if (represent-as-abbreviation? x)
+    (let* ((prefix
+             (append
+               (cadr (assq (car x) abbreviations))
+               '(#\space)))
+           (newdent
+             (append (getdent indent-already indent) prefix)))
+      (append
+        newdent
+        (iformat-top (cadr x) indent newdent)))
+    (append
+      (iformat-top (car x) indent indent-already)
+      (iformat-body (cdr x) (deeper indent) #f))))
+
+; Input: expression "m" with indentation string "indent".
+;        indent-already if #f if no indentation has already taken place,
+;        or if indentation *has* taken place, it contains the string of
+;        indentation and any following characters that's occurred
+;        (so char position, etc., can be determined).
+; Output: List of characters representing it (#\newline for new line).
+; At this point, we're at the beginning of a possibly-indented
+; line with sweet-expression (indentation) processing active.
+(define (iformat-top m indent indent-already)
+  (if (not (pair? m))
+    (append
+      (getdent indent-already indent)
+      (unit m)
+      '(#\newline))
+    (let* ((asline (line m))
+           (length-asline (length asline)))
+      (if (and (< length-asline max-unit-character-length)
+               (< (+ length-asline (posdent indent-already indent))
+                  maxwidth)
+               (< (general-length m) max-unit-list-length))
+        (append
+          (getdent indent-already indent)
+          asline
+          '(#\newline))
+        (if (pair? (car m))
+          (let* ((asunit-car (unit (car m))))
+            (if (< (+ (length asunit-car)
+                      (posdent indent-already indent))
+                   maxwidth)
+              (append
+                (getdent indent-already indent)
+                asunit-car
+                '(#\newline)
+                (iformat-body (cdr m) (deeper indent) #f))
+              (append
+                (getdent indent-already indent)
+                (string->list group-string-newline)
+                (iformat-top (car m) (deeper indent) #f)
+                (iformat-body (cdr m) (deeper indent) #f))))
+          (cond ((long-and-boring? m)
+                 (append
+                   (getdent indent-already indent)
+                   (string->list group-string-newline)
+                   (deeper indent)
+                   (iformat-boring-list
+                     m
+                     #t
+                     (posdent indent-already indent)
+                     (deeper indent))))
+                ((and (memq (car m) cuddle-first-parameter)
+                      (>= (length m) 3))
+                 (let* ((asline-cuddled (line (list (car m) (cadr m)))))
+                   (if (< (+ (length asline-cuddled)
+                             (posdent indent-already indent))
+                          maxwidth)
+                     (append
+                       (getdent indent-already indent)
+                       asline-cuddled
+                       '(#\newline)
+                       (iformat-body (cddr m) (deeper indent) #f))
+                     (iformat-top-normal-indent
+                       m
+                       (getdent indent-already indent)
+                       #f))))
+                (#t
+                 (iformat-top-normal-indent
+                   m
+                   indent
+                   indent-already))))))))
+
+; Display x (a list of chars and strings), but do NOT display
+; the last end-of-line.  Because we only take generated files,
+; the end-of-line is exactly \#newline and nothing else.
+(define (display-skip-last-eol x)
+  (cond ((null? x) #t)
+        ((string? (car x))
+         (display (car x))
+         (display-skip-last-eol (cdr x)))
+        ((and (char? (car x))
+              (null? (cdr x))
+              (eq? (car x) #\newline))
+         #t)
+        ((char? (car x))
+         (write-char (car x))
+         (display-skip-last-eol (cdr x)))
+        (#t (display "BUG!!! in display-skip-last-eof!"))))
+
+; Display formatted expression "m" using indentation string "indent".
+; Do NOT display the final end-of-line, due to an interesting subtlety:
+; read() doesn't consume the end-of-line, so if we are translating
+; what read() has read in, then we need to NOT generate the last end-of-line
+; so that they will match up.
+(define (iformat m)
+  (display-skip-last-eol
+    (iformat-top m (string->list "") #f)))
+
+
+
+; Consume an end-of-line. This is 2 unequal end-of-line characters,
+; or a single end-of-line character, whichever is longer.
+(define (consume-end-of-line)
+  (let ((c (peek-char)))
+    (if (memq c end-of-line-chars)
+      (begin
+        (read-char)
+        (let ((next (peek-char)))
+          (if (and (not (eq? c next))
+                   (memq next end-of-line-chars))
+            (begin (read-char))))))))
+
+; Copy one line from stdin to stdout, end on EOF or end-of-line.
+; Consume the end of line.
+(define (copy-line port)
+  (let ((c (peek-char port)))
+    (cond ((eof-object? c) c)
+          ((memq c end-of-line-chars)
+           (consume-end-of-line)
+           (newline))
+          (#t
+           (write-char (read-char port))
+           (copy-line port)))))
+
+
+; filter stdin to stdout, reading in traditional s-expressions and outputting
+; sweet-expressions.  Preserve the comments outside an s-expression.
+(define (iformat-filter)
+  (if build-on-sweet (restore-traditional-read))
+  (let ((c (peek-char (current-input-port))))
+    (cond ((eof-object? c) c)
+          ((memq c end-of-line-chars)
+           (consume-end-of-line)
+           (newline)
+           (iformat-filter))
+          ((char=? c #\;)
+           (copy-line (current-input-port))
+           (iformat-filter))
+          (#t
+           (let ((result (read (current-input-port))))
+             (if (eof-object? result)
+               result
+               (begin (iformat result) (iformat-filter))))))))
+
+; You can use guile to trace, but the reader doesn't support #' ... yet.
+; Thus, the .sscm file cannot currently include guile trap invocations.
+; So to install traps, generate the .scm file directly with:
+;    make sweeten.scm
+; Now patch the generated sweetenv.scm (not the .sscm file) directly.
+; Change:
+;  (define build-on-sweet #t)
+; to:
+;  (define build-on-sweet #f)
+;  (use-modules (ice-9 debugging traps) (ice-9 debugging trace))
+; 
+; Then add the traps you want near the bottom, e.g.:
+;   (install-trap
+;     (make <procedure-trap>
+;           #:procedure iformat-filter
+;           #:behaviour (list trace-trap trace-until-exit)))
+; And run:
+;    guile sweeten.scm
+
+
+(iformat-filter)
+

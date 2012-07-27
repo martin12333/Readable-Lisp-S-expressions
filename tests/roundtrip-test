@@ -20,11 +20,18 @@ then
   exit 1
 fi
 
-./pprint < "$TESTFILE" > ,1
+pprint < "$TESTFILE" > ,1
 
-./sweeten   < "$TESTFILE" > ,2.sscm
-./unsweeten < ,2.sscm | ./pprint > ,2
+sweeten   < "$TESTFILE" > ,2.sscm
+unsweeten < ,2.sscm | pprint > ,2
 
-echo "DIFFERENCES (should be none):"
+echo "Roundtrip differences (should be none):"
 echo
-diff -u ,1 ,2
+if diff -u ,1 ,2 ; then
+  echo "No differences, all well!"
+  rm -f ,1 ,2 ,2.sscm
+  exit 0
+else
+  echo "DIFFERENCES.  See ,1 and ,2.sscm and ,2 for more details"
+  exit 1
+fi

@@ -157,7 +157,11 @@ EXTRA_DIST += \
  tests/neoteric-test \
  tests/neoteric-testsuite \
  tests/sweet-test \
- tests/sweet-testsuite
+ tests/sweet-testsuite \
+ tests/roundtrip-test \
+ tests/roundtrip-testsuite \
+ tests/pprint
+
 
 # TODO: Improve test harness & integration into overall system.
 
@@ -167,9 +171,12 @@ check: readable/kernel.scm
 	            < $(srcdir)/tests/neoteric-testsuite
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/sweet-test \
 	            < $(srcdir)/tests/sweet-testsuite
+	PATH="$(builddir):$(srcdir)/tests:${PATH}" \
+	     $(srcdir)/tests/roundtrip-test $(srcdir)/tests/roundtrip-testsuite
 
 # Developer convenience. If we say "make push" we probably meant
 # "git push", so do that:
 push:
 	git push
+
 
