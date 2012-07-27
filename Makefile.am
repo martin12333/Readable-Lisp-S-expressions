@@ -160,8 +160,6 @@ EXTRA_DIST += \
  tests/test-cases-neoteric
 
 # TODO: Improve test harness & integration into overall system.
-# check:
-#	PATH="`pwd`:$(srcdir)/tests:${PATH}" ./all-test
 
 check: readable/kernel.scm
 	CURLYFILE="$(srcdir)/curly-infix.cl" $(srcdir)/tests/curly-infix-test

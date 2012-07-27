@@ -1,5 +1,0 @@
-#!/bin/sh
-
-# Run all tests.  Currently doesn't have a nice way to say if all succeeded.
-
-./curly-infix-test && ./neoteric-scm-test && ./sweet-test
