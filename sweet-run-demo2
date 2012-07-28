@@ -2,4 +2,21 @@
 ;#!scsh -s
 ;!#
 
-run cat("README")
+display "Starting scsh\n\n"
+
+define argc length(command-line-arguments)
+
+display "Number of parameters passed = "
+display argc
+display "\n"
+
+if {argc > 0}
+  begin
+    display "First argument = "
+    display car(command-line-arguments)
+    display "\n"
+
+display "\n\n"
+
+; You don't actually have to quote "README", I just like the look of it.
+run head(-10 "README")

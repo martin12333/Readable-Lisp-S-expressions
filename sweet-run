@@ -14,12 +14,16 @@ result="$(mktemp)"
 UNSWEETEN="./unsweeten"
 
 tail -n +2 < "$1" | "${UNSWEETEN}" > "$result"
-
 chmod u+x "$result"
 
-# Create full name, so we can execute it, and then erase temp file
-# once we're done with it:
+shift
 
+# Create full name, so we can be sure we can execute it no matter what
+# mktemp's settings are.
 fullname="$(dirname "$result")/$(basename "$result")"
-"$fullname"
+
+# Run it, passing all the parameters we got.
+"$fullname" "$@"
+
+# Erase temp file # once we're done with it:
 rm -f -- "$result"
