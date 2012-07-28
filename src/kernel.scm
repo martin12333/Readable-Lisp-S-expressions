@@ -984,6 +984,9 @@
   (define split (string->symbol "\\\\"))
   (define split-char #\\ ) ; First character of split symbol.
   (define non-whitespace-indent #\!) ; Non-whitespace-indent char.
+  (define sublist (string->symbol "$"))
+  (define sublist-char #\$) ; First character of sublist symbol.
+
   ; This is a special unique object that is used to
   ; represent the existence of the split symbol
   ; so that readblock-clean handles it properly:
@@ -1147,6 +1150,17 @@
                         (readblock-internal level port first-item?))
                     ; SPLIT-inline: end this block
                     (cons level (attach-sourceinfo pos '()))))
+              ; sublist
+              ((and (eq? char sublist-char) (eq? first sublist))
+                (cond
+                  (first-item?
+                    (read-error "SUBLIST found at start of line"))
+                  (#t
+                    (consume-horizontal-whitespace port)
+                    (let* ((read (readblock-clean level port))
+                           (next-level (car read))
+                           (block (cdr read)))
+                      (cons next-level (attach-sourceinfo pos (list block)))))))
               (#t
                 (let* ((rest (readblock-internal level port #f))
                        (level (car rest))
