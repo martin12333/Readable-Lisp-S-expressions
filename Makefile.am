@@ -151,7 +151,19 @@ bin/sweet-guile: src/sweet-guile my-subst
 # the Common Lisp curly-infix.cl implementation.
 EXTRA_DIST += curly-infix.cl
 
-# Test drivers and testsuites.
+
+# Distribute examples (but don't install them).
+EXTRA_DIST += \
+ examples/list-of.sscm \
+ examples/simple-nfx.sscm \
+ examples/streams.sscm \
+ examples/sweet-run-demo \
+ examples/sweet-run-demo2 \
+ examples/sweet-simple.sscm
+
+
+
+# Distribute test drivers and testsuites.
 EXTRA_DIST += \
  tests/curly-infix-test \
  tests/neoteric-test \

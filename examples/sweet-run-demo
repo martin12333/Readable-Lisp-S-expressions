@@ -1,4 +1,4 @@
-#!./sweet-run
+#!/usr/bin/env sweet-run
 ;#!guile
 ;!#
 
