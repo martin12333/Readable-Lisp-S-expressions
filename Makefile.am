@@ -40,7 +40,7 @@ readable_libdir = $(GUILE_SITE)/readable
 
 readable_lib_DATA = readable/kernel.scm
 
-readable/kernel.scm:
+readable/kernel.scm: src/kernel.scm
 	$(MKDIR_P) readable
 	cp -p "$(srcdir)/src/kernel.scm" readable/kernel.scm
 
