@@ -53,6 +53,8 @@ define group-list string->list(group-string)
 define infix-operators '(
             and or xor + - * / ^ ++ -- ** // ^^ < <= > >= = <> != ==)
 
+; True if at beginning of column (line), otherwise false.
+define column1 #t
 
 ; This program automatically handles various end-of-line situations.
 ; An end-of-line is a sequence of two different end-of-line chars,
@@ -205,9 +207,9 @@ define line-tail(x)
   cond
     null?(x)  '()
     pair?(x)
-      append unit(car(x)) '(#\space) line-tail(cdr(x))
+      append '(#\space) unit(car(x)) line-tail(cdr(x))
     #t
-      append '(#\. #\space) unit(x)
+      append '(#\space #\. #\space) unit(x)
 
 ; Return x represented as a line of space-separated neoteric-expression units,
 ; as a list of characters.
@@ -222,7 +224,7 @@ define line(x)
         append unit(car(x)) LISTLP LISTRP
         append LISTLP unit(car(x)) LISTRP
     #t
-      append unit(car(x)) '(#\space) line-tail(cdr(x))
+      append unit(car(x)) line-tail(cdr(x))
 
 ; a list is boring if it has ONLY non-pair members.
 define boring?(x)
@@ -376,11 +378,14 @@ define display-skip-last-eol(x)
       #t
     string?(car(x))
       display(car(x))
+      ; In this program, strings only happen from indents:
+      set! column1 #f
       display-skip-last-eol(cdr(x))
     {char?(car(x)) and null?(cdr(x)) and (eq? car(x) #\newline)}
       #t
     char?(car(x))
       write-char(car(x))
+      set! column1 #f
       display-skip-last-eol(cdr(x))
     #t
       display("BUG!!! in display-skip-last-eof!")
@@ -391,6 +396,10 @@ define display-skip-last-eol(x)
 ; what read() has read in, then we need to NOT generate the last end-of-line
 ; so that they will match up.
 define iformat(m)
+  ; Force newline if aren't already in column1.  Otherwise, expressions like:
+  ; (a)(b)  will be incorrectly output as a()b() instead of a()\nb().
+  if not(column1)
+    begin newline() set!(column1 #t)
   display-skip-last-eol sweeten-top(m string->list("") #f)
 
 
@@ -409,19 +418,20 @@ define consume-end-of-line()
 
 ; Copy one line from stdin to stdout, end on EOF or end-of-line.
 ; Consume the end of line.
-define (copy-line port)
+define copy-line(port)
   let ((c peek-char(port)))
     cond
       eof-object?(c)   c
       memq(c end-of-line-chars)
         consume-end-of-line()
         newline()
-      #t write-char(read-char(port)) copy-line(port)
+        set! column1 #t
+      #t write-char(read-char(port)) set!(column1 #f) copy-line(port)
 
 
 ; filter stdin to stdout, reading in traditional s-expressions and outputting
 ; sweet-expressions.  Preserve the comments outside an s-expression.
-define (sweeten-filter)
+define sweeten-filter()
   if build-on-sweet
     restore-traditional-read()
   let ((c peek-char(current-input-port())))
@@ -430,14 +440,18 @@ define (sweeten-filter)
       memq(c end-of-line-chars)
         consume-end-of-line()
         newline()
+        set! column1 #t
         sweeten-filter()
       char=?(c #\;)
         copy-line current-input-port()
         sweeten-filter()
-      #t
+      {char=?(c #\space) or char=?(c tab)}
         ; Do not copy space or tab directly to output; instead,
-        ; use read() to skip past them.  Initial indents (from space/tab)
+        ; skip past them.  Initial indents (from space/tab)
         ; disable sweet-expression processing, which is not what we want.
+        read-char()
+        sweeten-filter()
+      #t
         let ((result read(current-input-port())))
           if eof-object?(result)
             result

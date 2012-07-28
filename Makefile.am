@@ -197,7 +197,9 @@ EXTRA_DIST += \
  tests/sweet-testsuite \
  tests/roundtrip-test \
  tests/roundtrip-testsuite \
- tests/pprint
+ tests/pprint \
+ tests/sweeten-testsuite \
+ tests/sweeten-correct
 
 
 # TODO: Improve test harness & integration into overall system.
@@ -210,6 +212,9 @@ check: readable/kernel.scm
 	            < $(srcdir)/tests/sweet-testsuite
 	PATH="$(builddir):$(srcdir)/tests:${PATH}" \
 	     $(srcdir)/tests/roundtrip-test $(srcdir)/tests/roundtrip-testsuite
+	@echo "Running sweeten, showing differences from correct results:"
+	"$(builddir)/sweeten" < "$(srcdir)/tests/sweeten-testsuite" | \
+	     diff -u - "$(srcdir)/tests/sweeten-correct"
 
 # Developer convenience. If we say "make push" we probably meant
 # "git push", so do that:
