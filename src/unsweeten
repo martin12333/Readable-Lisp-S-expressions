@@ -15,8 +15,11 @@ exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ -q -s "$0"
 ; it's very helpful when you DO choose to examine it.
 
 
+(define use-pretty-print #t)
+
 ; Load pretty-printer
-(use-modules (ice-9 pretty-print))
+(if use-pretty-print
+  (use-modules (ice-9 pretty-print)))
 
 ; Load sweet.
 (cond-expand
@@ -26,6 +29,7 @@ exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ -q -s "$0"
   (guile
     (set! %load-path (append %load-path '(".")))))
 (use-modules (readable kernel))
+
 
 (define linefeed (integer->char #x000A))
 
@@ -45,43 +49,48 @@ exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ -q -s "$0"
         (write-char (read-char port))
         (copy-line port)))))
 
-; Sweet-filter - written this way to preserve "external" comments
-; Change "pretty-print" to "write" if speed is critical:
-(define (sweet-filter)
-  (let ((c (peek-char)))
+; Sweet-filter - Convert, preserve comments outside a datum, and
+; specially handle beginning-of-line special formats ";#", ";!", and ";_"
+; Change "pretty-print" to "write" if speed is critical.
+(define (sweet-filter port)
+  (let ((c (peek-char port)))
     (cond
       ((eof-object? c) c)
       ((or (char=? c #\newline ) (char=? c linefeed))
-        (set! column1 #t) (write-char (read-char)) (sweet-filter))
+        (set! column1 #t) (write-char (read-char port)) (sweet-filter port))
       ((char=? c #\; )
-        (read-char) ; Consume semicolon.
-        (let ((c2 (peek-char)))
+        (read-char port) ; Consume semicolon.
+        (let ((c2 (peek-char port)))
           (cond
             ; Pass ;# and ;! but WITHOUT the leading semicolon:
             ((and column1 (or (eq? c2 #\#) (eq? c2 #\!)))
-              (copy-line (current-input-port)) (sweet-filter))
+              (copy-line port) (sweet-filter port))
             ; Pass ;_ WITHOUT EITHER leading character:
             ((and column1 (eq? c2 #\_))
-              (read-char) (copy-line (current-input-port)) (sweet-filter))
+              (read-char port) (copy-line port) (sweet-filter port))
             (#t
                 (set! column1 #f)
                 (write-char c)
-                (copy-line (current-input-port))
-                (sweet-filter)))))
+                (copy-line port)
+                (sweet-filter port)))))
       (#t
-        (let ((result (sweet-read (current-input-port))))
+        (let ((result (sweet-read port)))
           (if (eof-object? result)
             result
-            (begin (pretty-print result) (sweet-filter))))))))
+            (begin
+              (if use-pretty-print
+                (pretty-print result)
+                (write result))
+              (sweet-filter port))))))))
 
 
 ; Older, simpler version:
-; (define (sweet-filter)
+; (define (sweet-filter port)
 ;   (let ((result (sweet-read (current-input-port))))
 ;     (if (eof-object? result)
 ;       result
-;       (begin (write result) (newline) (sweet-filter)))))
+;       (begin (write result) (newline) (sweet-filter port)))))
 
 
-(sweet-filter)
+(sweet-filter (current-input-port))
 
