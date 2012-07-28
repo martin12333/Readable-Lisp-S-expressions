@@ -179,6 +179,14 @@ EXTRA_DIST += \
  examples/basic-sweet.sscm
 
 
+# Distribute some description of the solution and tutorial,
+# in markdown format.  The website has the updated version, but for
+# those who just have this file, it'd be useful to have SOME useful
+# information on what this code is trying to do and how to use it.
+EXTRA_DIST += \
+ solution.md \
+ tutorial.md
+
 
 # Distribute test drivers and testsuites.
 EXTRA_DIST += \
