@@ -1,17 +1,21 @@
 #!/bin/sh
-
 # Run an arbitrary program expressed using sweet-expressions.
-# First parameter is the filename of a script to run through
-# Sweet-expression parser, then run the result.
+# First parameter is the filename of a script in sweet-expression format.
+# That file's contents are run through the sweet-expression filter,
+# and the results are executed.
+# The rest of the parameters are parameters of the executed program.
+#
 # The arbitrary program will probably look like this:
 #   #!sweet-run
 #   ;#!guile -s
 #   ;!#
-# Where "guile -s" might be scsh or something else.
+# Where "guile -s" might be "scsh -s" or similar.
 
 result="$(mktemp)"
 
-UNSWEETEN="./unsweeten"
+export PATH="@PATH_PREFIX@$PATH"
+
+UNSWEETEN="unsweeten"
 
 tail -n +2 < "$1" | "${UNSWEETEN}" > "$result"
 chmod u+x "$result"

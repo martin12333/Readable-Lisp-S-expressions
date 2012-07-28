@@ -3,6 +3,7 @@
 GUILE="$1"
 GUILE_READLINE_AVAILABLE="$2"
 LIBRARY_DIRECTORY="$3"
+PATH_PREFIX="$4"
 WARNING_MESSAGE='Generated automatically by my-subst, DO NOT EDIT!'
 
 if [ -z "$LIBRARY_DIRECTORY" ] ; then
@@ -12,5 +13,6 @@ fi
 sed -e "s!@GUILE@!${GUILE}!g" \
     -e "s!@GUILE_READLINE_AVAILABLE@!${GUILE_READLINE_AVAILABLE}!g" \
     -e "s!@LIBRARY_DIRECTORY@!${LIBRARY_DIRECTORY}!g" \
+    -e "s!@PATH_PREFIX@!${PATH_PREFIX}!g" \
     -e "s/@WARNING_MESSAGE@/${WARNING_MESSAGE}/g"
 
