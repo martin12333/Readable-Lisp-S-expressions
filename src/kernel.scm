@@ -492,6 +492,9 @@
    ; replacing the reader
    replace-read restore-traditional-read)
 
+  ; special tag to denote comment return from hash-processing
+  (define comment-tag (cons '() '())) ; all cons cells are unique
+
   ; Define the whitespace characters, in relatively portable ways
   ; Presumes ASCII, Latin-1, Unicode or similar.
   (define tab (integer->char #x0009))             ; #\ht aka \t.
@@ -691,6 +694,8 @@
                   (#t (read-error "Invalid character name"))))))))))
 
 
+  ; NOTE: this function can return comment-tag.  Program defensively
+  ; against this when calling it.
   (define (process-sharp top-read port)
     ; We've peeked a # character.  Returns what it represents.
     ; Note: Since we have to re-implement process-sharp anyway,
@@ -712,7 +717,17 @@
             ((char=? c #\( )  ; Vector.
               (list->vector (my-read-delimited-list top-read #\) port)))
             ((char=? c #\\) (process-char port))
-            (#t (read-error "Invalid #-prefixed string")))))))
+            (#t
+              (let ((rv (parse-hash top-read c port)))
+                (cond
+                  ((not rv)
+                    (read-error "Invalid #-prefixed string"))
+                  ((null? rv)
+                    comment-tag)
+                  ((pair? rv)
+                    (car rv))
+                  (#t
+                    (read-error "****ERROR IN COMPATIBILITY LAYER parse-hash: must return #f '() or `(,obj)"))))))))))
 
   (define digits '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
 
@@ -730,6 +745,8 @@
           (string->symbol (list->string (cons #\.
             (read-until-delim port neoteric-delimiters))))))))
 
+  ; NOTE: this function can return comment-tag.  Program defensively
+  ; against this when calling it.
   (define (underlying-read top-read port)
     ; Note: This reader is case-sensitive, which is consistent with R6RS
     ; and guile, but NOT with R5RS.  Most people won't notice, and I
@@ -845,6 +862,8 @@
        (transform-simple-infix lyst) ; Simple infix expression.
        (cons 'nfx lyst))) ; Non-simple; prepend "nfx" to the list.
 
+  ; NOTE: this function can return comment-tag.  Program defensively
+  ; against this when calling it.
   (define (read-at-curly top-read port)
     (let* ((pos (get-sourceinfo port))
            (c   (my-peek-char port)))
@@ -858,8 +877,16 @@
         (#t
           (underlying-read top-read port)))))
 
+  ; NOTE: this function can return comment-tag.  Program defensively
+  ; against this when calling it.
   (define (curly-infix-read-func port)
-    (read-at-curly curly-infix-read-func port))
+    (read-at-curly curly-infix-read-nocomment-func port))
+  (define (curly-infix-read-nocomment-func port)
+    (let ((rv (curly-infix-read-func port)))
+      (if (eq? rv comment-tag)
+          ; comment, so retry
+          (curly-infix-read-nocomment-func port)
+          rv)))
 
 ; -----------------------------------------------------------------------------
 ; Neoteric Expressions
@@ -877,21 +904,26 @@
             (my-read-char port)
             (neoteric-process-tail port
               (attach-sourceinfo pos
-                (cons prefix (my-read-delimited-list neoteric-read-func #\) port)))))
+                (cons prefix (my-read-delimited-list neoteric-read-nocomment-func #\) port)))))
           ((char=? c #\[ )  ; Implement f[x]
             (my-read-char port)
             (neoteric-process-tail port
                 (attach-sourceinfo pos
                   (cons (attach-sourceinfo pos 'bracketaccess)
                     (cons prefix
-                      (my-read-delimited-list neoteric-read-func #\] port))))))
+                      (my-read-delimited-list neoteric-read-nocomment-func #\] port))))))
           ((char=? c #\{ )  ; Implement f{x}
             (neoteric-process-tail port
               (attach-sourceinfo pos
                 (list prefix
-                  (read-at-curly neoteric-read-func port)))))
+                  ; NOTE: although read-at-curly could return comment-tag,
+                  ; at this point we know the next item is { }, so
+                  ; it cannot return a comment-tag in this context
+                  (read-at-curly neoteric-read-nocomment-func port)))))
           (#t prefix))))
 
+  ; NOTE: this function can return comment-tag.  Program defensively
+  ; against this when calling it.
   (define (neoteric-read-func port)
     ; Read using "neoteric Lisp notation".
     ; This implements unprefixed (), [], and {}
@@ -911,33 +943,39 @@
                 ((char=? c #\')
                   (my-read-char port)
                   (list (attach-sourceinfo pos 'quote)
-                    (neoteric-read-func port)))
+                    (neoteric-read-nocomment-func port)))
                 ((char=? c #\`)
                   (my-read-char port)
                   (list (attach-sourceinfo pos 'quasiquote)
-                    (neoteric-read-func port)))
+                    (neoteric-read-nocomment-func port)))
                 ((char=? c #\,)
                   (my-read-char port)
                     (cond
                       ((char=? #\@ (my-peek-char port))
                         (my-read-char port)
                         (list (attach-sourceinfo pos 'unquote-splicing)
-                         (neoteric-read-func port)))
+                         (neoteric-read-nocomment-func port)))
                      (#t
                       (list (attach-sourceinfo pos 'unquote)
-                        (neoteric-read-func port)))))
+                        (neoteric-read-nocomment-func port)))))
                 ((char=? c #\( )
                    (my-read-char port)
-                   (my-read-delimited-list neoteric-read-func #\) port))
+                   (my-read-delimited-list neoteric-read-nocomment-func #\) port))
                 ((char=? c #\[ )
                     (my-read-char port)
-                    (my-read-delimited-list neoteric-read-func #\] port))
+                    (my-read-delimited-list neoteric-read-nocomment-func #\] port))
                 ((char=? c #\{ )
                   (my-read-char port)
                   (process-curly
-                    (my-read-delimited-list neoteric-read-func #\} port)))
-                (#t (let ((result (underlying-read neoteric-read-func port)))
+                    (my-read-delimited-list neoteric-read-nocomment-func #\} port)))
+                (#t (let ((result (underlying-read neoteric-read-nocomment-func port)))
                         result)))))))))
+
+  (define (neoteric-read-nocomment-func port)
+    (let ((rv (neoteric-read-func port)))
+      (if (eq? rv comment-tag)
+          (neoteric-read-nocomment-func port)
+          rv)))
 
 ; -----------------------------------------------------------------------------
 ; Sweet Expressions
@@ -955,8 +993,10 @@
     (let ((char (my-peek-char port)))
       (if (char-whitespace? char)
           (list qt)
-          (list qt (neoteric-read-func port)))))
+          (list qt (neoteric-read-nocomment-func port)))))
 
+  ; NOTE: this function can return comment-tag.  Program defensively
+  ; against this when calling it.
   (define (readitem level port)
     (let ((pos  (get-sourceinfo port))
           (char (my-peek-char port)))
@@ -1070,7 +1110,10 @@
                        (outlevel (car sub-read))
                        (sub-expr (cdr sub-read)))
                   (cons outlevel (attach-sourceinfo pos `(,@first ,sub-expr)))))
-              ((and (eq? char split-char) (eq? first split))
+              ((or
+                 ; treat multiline comment as SPLIT
+                 (eq? first comment-tag)
+                 (and (eq? char split-char) (eq? first split)))
                 ; consume horizontal, non indent whitespace
                 (consume-horizontal-whitespace port)
                 (if first-item?
@@ -1154,6 +1197,7 @@
           (cons next-level block))
         ; unwrap single-item blocks
         ((= (length block) 1)
+          ; TODO: study if this is indeed necessary
           (if (eq? (car block) split-tag)
               ; "magically" remove split-tag
               (cons next-level '())
@@ -1161,7 +1205,27 @@
         (#t
           (cons next-level '.)))))
 
+  ; TODO: merge the latter part of readblock-clean and
+  ; readblock-clean-rotated, so that changes need to
+  ; be done in only one place.
 
+  ;; like readblock-clean, but with an initial object
+  ;; already given
+  (define (readblock-clean-rotated level port pos obj)
+    (let* ((read (readblock-internal level port #f))
+           (next-level (car read))
+           (sub-block (cdr read))
+           (block (cons obj sub-block)))
+      ; unlike readblock-clean, we know that block
+      ; is indeed a list, and its first item is
+      ; *not* split-tag.  The question is the length
+      ; of that list.
+      (cond
+        ((null? sub-block)
+          (cons next-level (attach-sourceinfo pos obj)))
+        (#t (cons next-level (attach-sourceinfo pos block))))))
+
+  ; TODO: merge handling of ;-comments and #|...|# comments
   (define (sugar-start-expr port)
     ; Read single complete I-expression.
     (let* ((indentation (list->string (accumulate-hspace port)))
@@ -1176,11 +1240,36 @@
               (#t
                 (my-read-char port) ; Newline after comment.  Consume NL
                 (sugar-start-expr port))))) ; and try again
+        ; hashes are potential comments too
+        ((eqv? c #\#)
+          (let ((obj (process-sharp neoteric-read-nocomment-func port)))
+            (if (eq? obj comment-tag)
+                ; heh, comment.  Consume spaces and start again.
+                ; (Consuming horizontal spaces makes comments behave
+                ; as SPLIT when an item is after a comment on the
+                ; same line)
+                (begin
+                  (accumulate-hspace port)
+                  (sugar-start-expr port))
+                ; aaaaargh not a comment.  Use rotated version
+                ; of readblock-clean.
+                (let* ((sub-read (readblock-clean-rotated "" port pos obj))
+                       (block (cdr sub-read)))
+                  (cond
+                    ((eq? block '.)
+                      (attach-sourceinfo pos '()))
+                    (#t
+                      (attach-sourceinfo pos block)))))))
         ((char-line-ending? c)
           (consume-end-of-line port)
           (sugar-start-expr port)) ; Consume and again
         ((> (string-length indentation) 0) ; initial indentation disables
-          (neoteric-read-func port))
+          ; ignore indented comments
+          (let ((rv (neoteric-read-func port)))
+            (if (eq? rv comment-tag)
+                ; indented comment.  restart.
+                (sugar-start-expr port)
+                rv)))
         (#t
           (let* ((read (readblock-clean "" port))
                  (level (car read))
@@ -1201,8 +1290,8 @@
 ; Exported Interface
 ; -----------------------------------------------------------------------------
 
-  (define curly-infix-read (make-read curly-infix-read-func))
-  (define neoteric-read (make-read neoteric-read-func))
+  (define curly-infix-read (make-read curly-infix-read-nocomment-func))
+  (define neoteric-read (make-read neoteric-read-nocomment-func))
   (define sweet-read (make-read sugar-start-expr))
 
   )
