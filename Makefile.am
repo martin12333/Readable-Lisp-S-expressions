@@ -216,9 +216,12 @@ check: readable/kernel.scm
 	"$(builddir)/sweeten" < "$(srcdir)/tests/sweeten-testsuite" | \
 	     diff -u - "$(srcdir)/tests/sweeten-correct"
 
-# Developer convenience. If we say "make push" we probably meant
-# "git push", so do that:
+# Developer conveniences:
+# "make push" interpreted as "git push".
+# "make test" interpreted as "make check"
 push:
 	git push
 
+test:
+	make check
 
