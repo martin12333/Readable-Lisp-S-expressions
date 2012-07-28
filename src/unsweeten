@@ -27,14 +27,23 @@ exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ -q -s "$0"
     (set! %load-path (append %load-path '(".")))))
 (use-modules (readable kernel))
 
+(define linefeed (integer->char #x000A))
+
+; True if we are at column one (the beginning of a line), else false:
+(define column1 #t)
 
 (define (copy-line port)
   ; Copy line from in to out - end on EOF or newline.
   (let ((c (peek-char port)))
     (cond
       ((eof-object? c) c)
-      ((char=? c #\newline) (read-char) (newline))
-      (#t (display (read-char port)) (copy-line port)))))
+      ((or (char=? c #\newline) (char=? c linefeed))
+        (set! column1 #t)
+        (write-char (read-char port)))
+      (#t
+        (set! column1 #f)
+        (write-char (read-char port))
+        (copy-line port)))))
 
 ; Sweet-filter - written this way to preserve "external" comments
 ; Change "pretty-print" to "write" if speed is critical:
@@ -42,17 +51,23 @@ exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ -q -s "$0"
   (let ((c (peek-char)))
     (cond
       ((eof-object? c) c)
-      ((char=? c #\newline ) (read-char) (newline) (sweet-filter))
+      ((or (char=? c #\newline ) (char=? c linefeed))
+        (set! column1 #t) (write-char (read-char)) (sweet-filter))
       ((char=? c #\; )
         (read-char) ; Consume semicolon.
         (let ((c2 (peek-char)))
           (cond
             ; Pass ;# and ;! but WITHOUT the leading semicolon:
-            ((or (eq? c2 #\#) (eq? c2 #\!))
+            ((and column1 (or (eq? c2 #\#) (eq? c2 #\!)))
               (copy-line (current-input-port)) (sweet-filter))
-            ((eq? c2 #\_) ; Pass ;_ WITHOUT EITHER leading character:
+            ; Pass ;_ WITHOUT EITHER leading character:
+            ((and column1 (eq? c2 #\_))
               (read-char) (copy-line (current-input-port)) (sweet-filter))
-            (#t (display c) (copy-line (current-input-port)) (sweet-filter)))))
+            (#t
+                (set! column1 #f)
+                (write-char c)
+                (copy-line (current-input-port))
+                (sweet-filter)))))
       (#t
         (let ((result (sweet-read (current-input-port))))
           (if (eof-object? result)
