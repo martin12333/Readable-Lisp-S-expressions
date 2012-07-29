@@ -1,0 +1,77 @@
+.TH UNSWEETEN 1 local
+.SH NAME
+sweet-run \- run a script written in sweet-expressions
+.SH SYNOPSIS
+.ll +8
+.B sweet-run
+.ll -8
+.br
+.SH DESCRIPTION
+.PP
+.I sweet-run
+runs an arbitrary script that is expressed using sweet-expressions.
+It is typically named as the executable in the first line of a file,
+somewhere after "#!".
+That file's contents (after the first line)
+are run through the sweet-expression filter
+.I unsweeten
+and the results are then executed.
+.PP
+For more information, see
+http://readable.sourceforge.net.
+
+
+.SH OPTIONS
+.PP
+None.
+
+.\" .SH "ENVIRONMENT"
+.\" .PP
+
+.\" .SH BUGS
+.\" .PP
+
+.SH EXAMPLES
+.PP
+An example use might be the following, to create a guile script using
+sweet-expressions:
+
+  #!/usr/bin/env sweet-run
+  ;#!guile -s
+  ;!#
+  define factorial(n)
+    if {n <= 1}
+      1
+      {n * factorial{n - 1}}
+
+  display factorial(9)
+
+.PP
+You could replace "guile -s" with "scsh -s" to run Scheme shell (scsh)
+instead of guile.
+
+.SH "COPYRIGHT NOTICE"
+.PP
+Copyright \(co 2012 David A. Wheeler
+.PP
+This software (including the documentation)
+is released as open source software under the "MIT" license:
+.PP
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+.PP
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+.PP
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
