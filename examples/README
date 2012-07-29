@@ -1,0 +1,15 @@
+This directory contains some simple examples.
+
+basic-sweet.sscm : Basic, simple examples of sweet-expressions.
+
+list-of.sscm : Example of a Scheme macro using Sweet-expressions.
+
+simple-nfx.sscm : A simple "nfx" Scheme macro that provides precedence,
+  building on top of curly-infix.
+
+streams.sscm : Streams
+
+sweet-run-demo : Example of how to use sweet-run to invoke guile.
+
+sweet-run-demo2 : Example of how to use sweet-run to invoke scsh.
+

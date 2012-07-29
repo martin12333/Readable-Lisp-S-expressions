@@ -176,7 +176,8 @@ EXTRA_DIST += \
  examples/streams.sscm \
  examples/sweet-run-demo \
  examples/sweet-run-demo2 \
- examples/basic-sweet.sscm
+ examples/basic-sweet.sscm \
+ examples/README
 
 # Man pages
 dist_man_MANS = man/unsweeten.1 man/sweet-run.1 man/sweeten.1
