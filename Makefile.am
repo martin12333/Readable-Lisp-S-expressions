@@ -199,7 +199,9 @@ EXTRA_DIST += \
  tests/roundtrip-testsuite \
  tests/pprint \
  tests/sweeten-testsuite \
- tests/sweeten-correct
+ tests/sweeten-correct \
+ tests/unsweeten-testsuite \
+ tests/unsweeten-correct
 
 
 # TODO: Improve test harness & integration into overall system.
@@ -210,11 +212,14 @@ check: readable/kernel.scm
 	            < $(srcdir)/tests/neoteric-testsuite
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/sweet-test \
 	            < $(srcdir)/tests/sweet-testsuite
-	PATH="$(builddir):$(srcdir)/tests:${PATH}" \
-	     $(srcdir)/tests/roundtrip-test $(srcdir)/tests/roundtrip-testsuite
+	@echo "Running unsweeten, showing differences from correct results:"
+	"$(builddir)/unsweeten" < "$(srcdir)/tests/unsweeten-testsuite" | \
+	     diff -u - "$(srcdir)/tests/unsweeten-correct"
 	@echo "Running sweeten, showing differences from correct results:"
 	"$(builddir)/sweeten" < "$(srcdir)/tests/sweeten-testsuite" | \
 	     diff -u - "$(srcdir)/tests/sweeten-correct"
+	PATH="$(builddir):$(srcdir)/tests:${PATH}" \
+	     $(srcdir)/tests/roundtrip-test $(srcdir)/tests/roundtrip-testsuite
 
 # Developer conveniences:
 # "make push" interpreted as "git push".

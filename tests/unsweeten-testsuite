@@ -1,0 +1,16 @@
+; Tests for unsweeten.
+xyz
+simplelist()
+a()
+b()
+
+; Simple comment, not preceded by blank line.
+
+; Comment preceded by blank line.
+x y z qq(xx)
+m n o
+E F g
+
+define f(a) {2 * a}
+
+; Comment at end of file.
