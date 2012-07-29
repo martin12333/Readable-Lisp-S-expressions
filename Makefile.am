@@ -214,7 +214,7 @@ check: readable/kernel.scm
 	            < $(srcdir)/tests/sweet-testsuite
 	@echo "Running unsweeten, showing differences from correct results:"
 	"$(builddir)/unsweeten" < "$(srcdir)/tests/unsweeten-testsuite" | \
-	     diff -u - "$(srcdir)/tests/unsweeten-correct"
+	     diff -b -u - "$(srcdir)/tests/unsweeten-correct"
 	@echo "Running sweeten, showing differences from correct results:"
 	"$(builddir)/sweeten" < "$(srcdir)/tests/sweeten-testsuite" | \
 	     diff -u - "$(srcdir)/tests/sweeten-correct"
