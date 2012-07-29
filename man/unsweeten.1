@@ -27,36 +27,64 @@ Sweet-expressions are actually the top of three tiers of notation,
 each of which builds on the previous one:
 
 .IP 1. 4
-\fICurly-infix-expressions\fR (\fIc-expressions\fR): Curly braces {...} contain an \fIinfix list\fR. A \fIsimple infix list\fR has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  Other infix lists map to "(nfx parameters)".   By intent, there is no precedence and you *must* use another {...} for an embedded infix list.
-    * Example: {n <= 2} maps to (<= n 2)
-    * Example: {2 * 3 * 4} maps to (* 2 3 4)
-    * Example: {2 + 3 * 4} maps to (nfx 2 + 3 * 4)
-    * Example: {2 + {3 * 4}} maps to (+ 2 (* 3 4))
+\fICurly-infix-expressions\fR (\fIc-expressions\fR): Curly braces {...} contain an \fIinfix list\fR. A \fIsimple infix list\fR has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  Other infix lists map to "(nfx parameters)".   By intent, there is no precedence and you \fImust\fR use another {...} for an embedded infix list.
+.RS 6
+.IP \(bu 2
+Example: {n <= 2} maps to (<= n 2)
+.IP \(bu 2
+Example: {2 * 3 * 4} maps to (* 2 3 4)
+.IP \(bu 2
+Example: {2 + 3 * 4} maps to (nfx 2 + 3 * 4)
+.IP \(bu 2
+Example: {2 + {3 * 4}} maps to (+ 2 (* 3 4))
+.IP \(bu 2
+Example: {n <= 2} maps to (<= n 2)
+.RE
 .IP 2. 4
 \fINeoteric-expressions\fR (\fIn-expressions\fR): This includes curly-infix-expressions, and adds special meanings to some prefixed symbols. An e(...) maps to (e ...); an e{...} maps to e({...}); and an e[...] maps to (bracketaccess e ...), where "e" is any expression. There must be no whitespace between e and the open parenthesis. Also, an unprefixed "( . e)" must evaluate as "e".
-    * Example: f(1 2) maps to (f 1 2)
-    * Example: f{n - 1} maps to f({n - 1}) which maps to (f (- n 1))
-    * Example: f{n - 1}(x) maps to f({n - 1})(x) which maps to (f (- n 1))(x) which maps to ((f (- n 1)) x)
+.RS 6
+.IP \(bu 2
+Example: f(1 2) maps to (f 1 2)
+.IP \(bu 2
+Example: f{n - 1} maps to f({n - 1}) which maps to (f (- n 1))
+.IP \(bu 2
+Example: f{n - 1}(x) maps to f({n - 1})(x) which maps to (f (- n 1))(x) which maps to ((f (- n 1)) x)
+.RE
 .IP 3. 4
 \fISweet-expressions\fR (\fIt-expressions\fR): Includes neoteric-expressions, and deduces parentheses from indentation. Basic rules:
+.RS 6
+.IP \(bu 2
+An indented line is a parameter of its parent.
+.IP \(bu 2
+Later terms on a line are parameters of the first term.
+.IP \(bu 2
+A line with exactly one term, and no child lines, is simply that term; multiple terms are wrapped into a list.
+.IP \(bu 2
+An empty line ends the expression; empty lines \fIbefore\fR expressions are ignored.
+.IP \(bu 2
+Indentation processing does not occur inside ( ), [ ], and { }, whether they are prefixed or not; they're just neoteric-expressions.
+.RE
+.IP "" ""
+Sweet-expression rule refinements:
+.RS 6
+.IP \(bu 2
+Lines with only a ;-comment are completely ignored - even their indentation (if any) is irrelevant.
+.IP \(bu 2
+A \\\\ (aka SPLIT) starts a new line at the current indentation.  If it's immediately after indentation (aka GROUP in that case), it represents no symbol at all (at that indentation) - this is useful for lists of lists.
+.IP \(bu 2
+A $ (aka SUBLIST) in the middle of list restarts list processing; the right-hand-side (including its sub-blocks) is the last parameter of the left-hand side.
+.IP \(bu 2
+A leading traditional abbreviation (quote, comma, backquote, or comma-at), followed by space or tab, is that operator applied to the sweet-expression starting at the same line.
+.IP \(bu 2
+You can indent using one-or-more space, tab, and/or exclamation point (!) characters.
+.IP \(bu 2
+A line with only indentation is an empty line.
+.IP \(bu 2
+If an expression \fIstarts\fR indented, then indentation is completely ignored (that line switches to neoteric-expressions).
+.RE
 
-    - An indented line is a parameter of its parent.
-    - Later terms on a line are parameters of the first term.
-    - A line with exactly one term, and no child lines, is simply that term; multiple terms are wrapped into a list.
-    - An empty line ends the expression; empty lines *before* expressions are ignored.
-    - Indentation processing does not occur inside ( ), [ ], and { }, whether they are prefixed or not; they're just neoteric-expressions.
-
-    Sweet-expression rule refinements:
-
-    - Lines with only a ;-comment are completely ignored - even their indentation (if any) is irrelevant.
-    - A \\\\ (aka SPLIT) starts a new line at the current indentation.  If it's immediately after indentation (aka GROUP in that case), it represents no symbol at all (at that indentation) - this is useful for lists of lists.
-    - A $ (aka SUBLIST) in the middle of list restarts list processing; the right-hand-side (including its sub-blocks) is the last parameter of the left-hand side.
-    - A leading traditional abbreviation (quote, comma, backquote, or comma-at), followed by space or tab, is that operator applied to the sweet-expression starting at the same line.
-    - You can indent using one-or-more space, tab, and/or exclamation point (!) characters.
-    - A line with only indentation is an empty line.
-    - If an expression *starts* indented, then indentation is completely ignored (that line switches to neoteric-expressions).
-
-    Sweet-expression examples are shown below.
+.PP
+Sweet-expression examples are shown below.
 
 .PP
 Only a group of semicolon comments starting from either the file's very beginning, or after a blank line, are copied to the output. Such semicolon comments will have indentation (if any) removed. Block comments and inside a datum are never copied. Semicolon comments immediately after a datum aren't copied either (the reader has to consume them to see if it's reached the end of the datum).
@@ -87,7 +115,7 @@ You can use this tool to process files, say, via a makefile. Then you can use sw
     $(UNSWEETEN) $< > $@
 
 .PP
-Here is an example of the kind of data that can be sent into unsweet:
+Here is an example of the kind of data that can be sent into unsweeten:
 .PP
 define factorial(n)
   if {n <= 1}
