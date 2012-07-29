@@ -1,21 +1,40 @@
 .TH UNSWEETEN 1 local
 .SH NAME
-sweet-run \- run a script written in sweet-expressions
+sweeten \- filter to translate Lisp/Scheme s-expressions to sweet-expressions
 .SH SYNOPSIS
 .ll +8
-.B sweet-run
+.B unsweeten
 .ll -8
 .br
 .SH DESCRIPTION
 .PP
-.I sweet-run
-runs an arbitrary script that is expressed using sweet-expressions.
-It is typically named as the executable in the first line of a file,
-somewhere after "#!".
-That file's contents (after the first line)
-are run through the sweet-expression filter
-.I unsweeten
-and the results are then executed.
+.I sweeten
+translates Lisp/Scheme s-expressions to sweet-expressions.
+It takes input from standard input, and outputs to standard output.
+.PP
+Sweet-expressions are a way to represent Lisp/Scheme data and programs
+that adds additional abbreviations beyond those in traditional s-expressions.
+Well-formatted S-expressions should work as-is, but
+s-expressions are intended to be easier for humans to understand.
+Unlike most past efforts to make Lisp more readable, the
+s-expression approach is
+.I generic
+(the notation does not depend on an underlying semantic) and
+.I homoiconic
+(the underlying data structure is clear from the syntax).
+.PP
+Sweet-expressions are actually the top of three tiers of notation,
+each of which builds on the previous one.
+For more information, see the man page for
+.IR unsweeten .
+
+.PP
+Only semicolon comments outside any datum are copied to the output.
+Block comments and comments inside a datum are never copied.
+
+.PP
+Sweeten creates only one of many possible representations of its input.
+
 .PP
 For more information, see
 http://readable.sourceforge.net.
@@ -33,29 +52,23 @@ None.
 
 .SH EXAMPLES
 .PP
-An example use might be the following, to create a guile script using
-sweet-expressions:
-
-  #!/usr/bin/env sweet-run
-  ;#!guile -s
-  ;!#
-  define factorial(n)
-    if {n <= 1}
-      1
-      {n * factorial{n - 1}}
-
-  display factorial(9)
+The sweeten tool could be sent the following traditional s-expression:
+.PP
+  (define (factorial n)
+    (if (<= n 1)
+        1
+        (* n (factorial (- n 1)))))
 
 .PP
-You could replace "guile -s" with "scsh -s" to run Scheme shell (scsh)
-instead of guile.
+Sweeten might choose to represent it this way:
 
+.PP
+  define factorial(n) if({n <= 1} 1 {n * factorial({n - 1})})
 
 .SH "SEE ALSO"
 .PP
-.IR sweeten(1) ,
-.IR unsweeten(1) .
-
+.IR unsweeten(1) ,
+.IR sweet-run(1) .
 
 .SH "COPYRIGHT NOTICE"
 .PP

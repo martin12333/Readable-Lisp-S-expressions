@@ -179,7 +179,7 @@ EXTRA_DIST += \
  examples/basic-sweet.sscm
 
 # Man pages
-dist_man_MANS = man/unsweeten.1 man/sweet-run.1
+dist_man_MANS = man/unsweeten.1 man/sweet-run.1 man/sweeten.1
 
 # Distribute some description of the solution and tutorial,
 # in markdown format.  The website has the updated version, but for
