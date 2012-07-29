@@ -82,8 +82,8 @@ None.
 .PP
 You can use this tool to process files, say, via a makefile. Then you can use sweet-expressions to write your code, and have it quickly translated to s-expressions. The following portable makefile snippet translates all ".sscm" (Sweet Scheme) files into ".scm" (Scheme) files (be sure the first character is TAB on the last line):
 
-UNSWEETEN = unsweeten
-.sscm.scm:
+ UNSWEETEN = unsweeten
+ \.sscm\.scm:
     $(UNSWEETEN) $< > $@
 
 .PP
