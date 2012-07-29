@@ -1,0 +1,132 @@
+.TH UNSWEETEN 1 local
+.SH NAME
+unsweeten \- filter to translate Lisp/Scheme sweet-expressions to s-expressions
+.SH SYNOPSIS
+.ll +8
+.B unsweeten
+.ll -8
+.br
+.SH DESCRIPTION
+.PP
+.I unsweeten
+translates Lisp/Scheme sweet-expressions to s-expressions.
+It takes input from standard input, and outputs to standard output.
+.PP
+Sweet-expressions are a way to represent Lisp/Scheme data and programs
+that adds additional abbreviations beyond those in traditional s-expressions.
+Well-formatted S-expressions should work as-is, but
+s-expressions are intended to be easier for humans to understand.
+Unlike most past efforts to make Lisp more readable, the
+s-expression approach is
+.I generic
+(the notation does not depend on an underlying semantic) and
+.I homoiconic
+(the underlying data structure is clear from the syntax).
+.PP
+Sweet-expressions are actually the top of three tiers of notation,
+each of which builds on the previous one:
+
+.IP 1. 4
+\fICurly-infix-expressions\fR (\fIc-expressions\fR): Curly braces {...} contain an \fIinfix list\fR. A \fIsimple infix list\fR has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  Other infix lists map to "(nfx parameters)".   By intent, there is no precedence and you *must* use another {...} for an embedded infix list.
+    * Example: {n <= 2} maps to (<= n 2)
+    * Example: {2 * 3 * 4} maps to (* 2 3 4)
+    * Example: {2 + 3 * 4} maps to (nfx 2 + 3 * 4)
+    * Example: {2 + {3 * 4}} maps to (+ 2 (* 3 4))
+.IP 2. 4
+\fINeoteric-expressions\fR (\fIn-expressions\fR): This includes curly-infix-expressions, and adds special meanings to some prefixed symbols. An e(...) maps to (e ...); an e{...} maps to e({...}); and an e[...] maps to (bracketaccess e ...), where "e" is any expression. There must be no whitespace between e and the open parenthesis. Also, an unprefixed "( . e)" must evaluate as "e".
+    * Example: f(1 2) maps to (f 1 2)
+    * Example: f{n - 1} maps to f({n - 1}) which maps to (f (- n 1))
+    * Example: f{n - 1}(x) maps to f({n - 1})(x) which maps to (f (- n 1))(x) which maps to ((f (- n 1)) x)
+.IP 3. 4
+\fISweet-expressions\fR (\fIt-expressions\fR): Includes neoteric-expressions, and deduces parentheses from indentation. Basic rules:
+
+    - An indented line is a parameter of its parent.
+    - Later terms on a line are parameters of the first term.
+    - A line with exactly one term, and no child lines, is simply that term; multiple terms are wrapped into a list.
+    - An empty line ends the expression; empty lines *before* expressions are ignored.
+    - Indentation processing does not occur inside ( ), [ ], and { }, whether they are prefixed or not; they're just neoteric-expressions.
+
+    Sweet-expression rule refinements:
+
+    - Lines with only a ;-comment are completely ignored - even their indentation (if any) is irrelevant.
+    - A \\\\ (aka SPLIT) starts a new line at the current indentation.  If it's immediately after indentation (aka GROUP in that case), it represents no symbol at all (at that indentation) - this is useful for lists of lists.
+    - A $ (aka SUBLIST) in the middle of list restarts list processing; the right-hand-side (including its sub-blocks) is the last parameter of the left-hand side.
+    - A leading traditional abbreviation (quote, comma, backquote, or comma-at), followed by space or tab, is that operator applied to the sweet-expression starting at the same line.
+    - You can indent using one-or-more space, tab, and/or exclamation point (!) characters.
+    - A line with only indentation is an empty line.
+    - If an expression *starts* indented, then indentation is completely ignored (that line switches to neoteric-expressions).
+
+    Sweet-expression examples are shown below.
+
+.PP
+Only a group of semicolon comments starting from either the file's very beginning, or after a blank line, are copied to the output. Such semicolon comments will have indentation (if any) removed. Block comments and inside a datum are never copied. Semicolon comments immediately after a datum aren't copied either (the reader has to consume them to see if it's reached the end of the datum).
+.PP
+Unsweeten also has some special substitutions. If a semicolon begins a line, the next character may cause it to do something special. If line begins with ";#: or ";!", the line is copied back without the leading semicolon. If a line begins with ";_", then the line is copied back without either of those first two characters.
+
+.PP
+For more information, see
+http://readable.sourceforge.net.
+
+
+.SH OPTIONS
+.PP
+None.
+
+.\" .SH "ENVIRONMENT"
+.\" .PP
+
+.\" .SH BUGS
+.\" .PP
+
+.SH EXAMPLES
+.PP
+You can use this tool to process files, say, via a makefile. Then you can use sweet-expressions to write your code, and have it quickly translated to s-expressions. The following portable makefile snippet translates all ".sscm" (Sweet Scheme) files into ".scm" (Scheme) files (be sure the first character is TAB on the last line):
+
+UNSWEETEN = unsweeten
+.sscm.scm:
+    $(UNSWEETEN) $< > $@
+
+.PP
+Here is an example of the kind of data that can be sent into unsweet:
+.PP
+define factorial(n)
+  if {n <= 1}
+    1
+    {n * factorial{n - 1}}
+
+.PP
+The unsweet tool will translate that input into this traditional
+s-expression:
+.PP
+(define (factorial n)
+  (if (<= n 1)
+      1
+      (* n (factorial (- n 1)))))
+
+
+
+.SH "COPYRIGHT NOTICE"
+.PP
+Copyright \(co 2012 David A. Wheeler
+.PP
+This software (including the documentation)
+is released as open source software under the "MIT" license:
+.PP
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+.PP
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+.PP
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
