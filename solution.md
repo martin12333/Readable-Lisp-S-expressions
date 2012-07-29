@@ -198,7 +198,7 @@ The "!" is an indent character, which is unusual, but notice that it can be used
 Credits
 =======
 
-*   David A. Wheeler was the initiator of the"readable" project.  He created initial three tiers, and developed first drafts of the specifications and code.
+*   David A. Wheeler was the initiator of the"readable" project.  He created the initial three tiers, and developed first drafts of the specifications and code.
 *   Alan Manuel K. Gloria made a number of specification suggestions and wrote significant pieces of the implementation.
 *   Egil Möller developed SRFI-49, an indentation semantic for Scheme and sample implementation. The sweet-expression indentation semantics and implementation are based on on this.
 
@@ -209,4 +209,3 @@ Trying them out
 =============
 
 See the [Tutorial] page for information on how you can try out these notations.  We think you'll like them.
-

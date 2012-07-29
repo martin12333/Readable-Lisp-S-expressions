@@ -22,7 +22,7 @@ To solve this, we've developed three tiers of notation, each building on the pre
 
 1.  *Curly-infix-expressions* (*c-expressions*): Any expression surrounded by {...} is an abbreviation for an infix expression. Typically the even parameters are the (single) operator and the odd parameters are the operands. Thus {n \<= 2} maps to (\<= n 2), {2 \* 3 \* 4} maps to (\* 2 3 4), and {2 + {3 \* 4}} maps to (+ 2 (\* 3 4)). By design there is *no* precedence, and terms inside it must use {...} to also be infix.
 2.  *Neoteric-expressions* (*n-expressions*): This starts with curly infix, and adds special meanings to the prefixed grouping symbols (), [], and {}, so that     **e(...)** — maps **(e ...)** and **e{...}** maps to **f({...})**.     This means normal mathematical function notation now works; f(1 2) has the same meaning as (f 1 2).
-3.  *Sweet-expressions* (*t-expressions*): This starts with modern-expressions, and deduces parentheses from indentation (similar to Python, Haskell, and many other languages). Every additional indentation (with at least 2 terms) creates a new list. Indentation is disabled by ( ... ), [ ... ], or { ... }.
+3.  *Sweet-expressions* (*t-expressions*): This starts with neoteric-expressions, and deduces parentheses from indentation (similar to Python, Haskell, and many other languages). Every additional indentation (with at least 2 terms) creates a new list. Indentation is disabled by ( ... ), [ ... ], or { ... }.
 
 For more details, see [Solution].
 
@@ -43,15 +43,15 @@ And the same thing with sweet-expressions:
 You can see many more examples in [Examples].
 
 
-Installing and running the demos
-================================
+Getting our implementations
+===========================
 
-We've implemented demo implementations of curly infix, modern-expressions, and sweet-expressions. We really want people to try this out and give feedback.
+We've created implementations of curly infix, neoteric-expressions, and sweet-expressions. We really want people to try this out and give feedback.
 
 To try all the demos, make sure you have:
 
 *   [GNU Guile](http://www.gnu.org/software/guile/guile.html) (an implementation of the *Scheme* dialect of Lisp).  It's best if you use a guile with built-in readline support (normally it is), but the demos will work if it isn't.
-*   a Common Lisp implementation; here we'll presume it is clisp, but it doesn't really matter (sbcl is known to work).
+*   a Common Lisp implementation; here we'll presume it is clisp, but it doesn't really matter (sbcl is known to work).  You can use guile instead if you don't want to install a Common Lisp.
 *   expect
 
 If you plan to use the development (not stable) version, you'll also need:
@@ -98,9 +98,13 @@ Now build the code, using:
 Install
 -------
 
-You actually don't have to install to use it, if you just want to play with it.  But if you're using it seriously, you should probably install it to "real" locations.  If you do, just type:
+You actually don't have to install it to use it, if you just want to play with it.  But if you're using this software seriously, you should probably install it to "real" locations.  If you do, just type:
 
     make install
+
+This will probably require privileges, so you may need to run "su" first or use sudo ("sudo make install") to get those privileges.
+
+The instructions below assume you haven't installed it.  If you *have* installed it, you don't need to include the "./" prefixes in the command names below.
 
 
 
@@ -111,6 +115,8 @@ Let's first try out "curly-infix-expressions" (c-expressions). Start up your Com
 
      clisp
      (load "curly-infix.cl")
+
+(If you really don't want to install Common Lisp, you can run "./neoteric-guile" instead, which also supports curly-infix-expressions using guile instead of clisp.)
 
 Any of these three new notations (curly-infix-expressions, neoteric-expressions, and sweet-expressions) can also accept normally-formatted s-expressions. To demonstrate, type at the command line:
 
@@ -140,7 +146,7 @@ So this explains the real rule: in curly infix, the {...} contains an "infix lis
 
 Note that curly-infix-expressions intentionally do not force a particular precedence, nor do they automatically switch to infix operators recursively inside {...}. Many previous systems did that, but this turned out to interfere with many of Lisp's power (homoiconicity, multiple levels of language, and so on). It also does not attempt to guess when infix operators are used. [After many experiments with real problems, David A. Wheeler found that the rule as given actually works better for Lisps than those alternatives.](http://www.dwheeler.com/readable/version02.html)
 
-You can type control-D (Windows: control-Z) to end this demo.
+You can type control-D (Windows: control-Z) to end this demo.  Or run "(exit)" to get out.
 
 
 Using Neoteric-expressions (n-expressions)
@@ -148,7 +154,7 @@ Using Neoteric-expressions (n-expressions)
 
 Now let's try out neoteric-expressions (which include curly-infix-expressions).  This time we'll use guile, a Scheme implementation.   You'll need to have guile and expect for this to work; assuming you do, try this:
 
-      ./modern-guile
+      ./neoteric-guile
 
 We have reports that guile version 2.0's new "autocompilation" feature can cause troubles.  If you see ";; compiling /blah/blah..." just exit by typing **exit()** and **Enter**.  Then restart it (don't the clear cache first), and it should work.
 
@@ -168,7 +174,7 @@ You can nest them, just as you'd expect:
 
     substring("Hello" 1 string-length("xyz"))
 
-Using function name prefixes is a nice way of showing negation, e.g., -(x) computes the value of 0 - x. So while curly infix by itself doesn't handle prefix functions, modern-expressions can handle them nicely:
+Using function name prefixes is a nice way of showing negation, e.g., -(x) computes the value of 0 - x. So while curly infix by itself doesn't handle prefix functions, neoteric-expressions can handle them nicely:
 
     {-(n) / 2}
 
@@ -189,7 +195,7 @@ Just like traditional s-expressions, spaces separate parameters, so it's *import
 Here's the real rule: in neoteric-expressions, f(...) maps to (f ...), f{...} maps to (f {...}), and f[ ... ] maps to (bracketaccess f). The "bracketaccess" is so that you can write a macro to access arrays and other mappings.  Note that "neoteric-expressions" used be called "modern-expressions"; you may see some older documents using that name.
 
 Normally, people and pretty-printers will format Lisp code so that parameters inside a list are *separated* by whitespace, e.g., (a b c), so it turns out that this change in interpretation doesn't change the meaning of typically-formatted modern Lisp code (and you can
-pretty-print code to fix it). What's more, typical Lisp-aware text editors can work with modern-expressions as they are, without change... so if you don't want to change the way you work, but have a somewhat more readable notation, neoteric-expressions can help. But we still have to do all that parentheses-balancing, which hinders readability. Sweet-expressions, our next stop, address this.  Type control-D to get out of this demo.
+pretty-print code to fix it). What's more, typical Lisp-aware text editors can work with neoteric-expressions as they are, without change... so if you don't want to change the way you work, but have a somewhat more readable notation, neoteric-expressions can help. But we still have to do all that parentheses-balancing, which hinders readability. Sweet-expressions, our next stop, address this.  Type control-D to get out of this demo.
 
 
 Using Sweet-expressions (t-expressions) 
@@ -263,9 +269,9 @@ When you're done with the demo, you can exit:
 Unsweeten: Translating Sweet-expressions into S-expressions
 ===========================================================
 
-We have a simple filter called "unsweeten" that translates sweet-expressions into S-expressions.  You can use it to help you understand sweet-expressions, or use it to write programs using sweet-expressions and then translate it to something your Lisp-based system can understand.
+We have a filter called "unsweeten" that translates sweet-expressions into S-expressions.  You can use it to write programs using sweet-expressions, like compiler.  Basically, you can write sweet-expressions, and use unsweeten to translate that into something your Lisp-based system can understand.  You can also use unsweeten to help you understand sweet-expressions - type in expressions, and see what they translate to!
 
-You can run it interactively, just type:
+You can run unsweeten interactively, just type:
 
     ./unsweeten
 
@@ -285,6 +291,9 @@ You can use this tool to process files, say, via a makefile.  Then you can use s
     UNSWEETEN = unsweeten
     .sscm.scm:
         $(UNSWEETEN) $< > $@
+
+
+Only a group of semicolon comments starting from either the file's very beginning, or after a blank line, are copied to the output.  Such semicolon comments will have indentation (if any) removed. Block comments and *inside* a datum are never copied.  Semicolon comments immediately after a datum aren't copied either (the reader has to consume them to see if it's reached the end of the datum).
 
 Unsweeten also has some special substitutions.  If a semicolon begins a line, the next character may cause it to do something special.  If line begins with ";#: or ";!", the line is copied back without the leading semicolon.  If a line begins with ";_", then the line is copied back without either of those first two characters.
 
@@ -445,4 +454,3 @@ Closing Remarks
 These notations can take a few minutes to learn how to use, just like anything else new, but they are worth it.
 
 Although we used some specific implementations, note that these notations could be used with any Lisp-based system.
-
