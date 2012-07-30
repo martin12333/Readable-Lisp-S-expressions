@@ -31,18 +31,23 @@
 ; -----------------------------------------------------------------------------
 ; The compatibility layer is composed of:
 ;
-;   (module-contents (exports ...) body ...)
+;   (readable-kernel-module-contents (exports ...) body ...)
 ;   - a macro that should package the given body as a module, or whatever your
 ;     scheme calls it (chicken eggs?), preferably with one of the following
 ;     names, in order of preference, depending on your Scheme's package naming
 ;     conventions/support
 ;       (readable kernel)
 ;       readable/kernel
-;       kernel
+;       readable-kernel
 ;       sweetimpl
 ;   - The first element after the module-contents name is a list of exported
 ;     functions.  This module shall never export a macro or syntax, not even
 ;     in the future.
+;   - If your Scheme requires module contents to be defined inside a top-level
+;     module declaration (unlike Guile where module contents are declared as
+;     top-level entities after the module declaration) then the other
+;     functions below should be defined inside the module context in order
+;     to reduce user namespace pollution.
 ;
 ;   (my-peek-char port)
 ;   (my-read-char port)
@@ -161,7 +166,7 @@
 
     ; On Guile 1.x defmacro is the only thing supported outside-the-box
     ; This form still exists in Guile 2.x, fortunately.
-    (defmacro module-contents (exports . body)
+    (defmacro readable-kernel-module-contents (exports . body)
       `(begin (export ,@exports)
               ,@body))
 
@@ -394,9 +399,9 @@
     ; expressions, we expect module-contents to transform
     ; to a simple (begin ...), and possibly include
     ; whatever declares exported stuff on that Scheme.
-    (define-syntax module-contents
+    (define-syntax readable-kernel-module-contents
       (syntax-rules ()
-        ((module-contents exports body ...)
+        ((readable-kernel-module-contents exports body ...)
           (begin body ...))))
 
     ; We use my-* functions so that the
@@ -483,7 +488,7 @@
 ; -----------------------------------------------------------------------------
 ; Module declaration and useful utilities
 ; -----------------------------------------------------------------------------
-(module-contents
+(readable-kernel-module-contents
   ; exported functions
   (; tier read functions
    curly-infix-read neoteric-read sweet-read
