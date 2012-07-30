@@ -37,21 +37,43 @@ if build-on-sweet
   use-modules
     readable kernel
 
+; These are settings that control the "look" of the formatted result.
+; In the future these might be controlled via option flags.
+
 ; Note: The maxwidth may be violated if, at a current indent, there is a
 ; long non-pair that exceeds it.  But other than long atoms, it's respected,
 ; so it's unlikely to exceed this width in practice:
 define maxwidth 78
-
 define indent-increment '(#\space #\space)
+define min-indent-marking {length(indent-increment) * 3}
+define marked-indent-increment '(#\! #\space)
 define max-unit-character-length 60
 define max-unit-list-length 8
 define boring-length 16
 
+define infix-operators
+  ' and or xor + - * / ^ ++ -- ** // ^^ < <= > >= = <> != ==
+
+; Lists with these symbols as first parameter, and aren't shown as 1 line,
+; are be shown as a line with SYMBOL FIRST-PARAMETER and *then* indents.
+; This is used when in typical uses the first parameter is *special* and
+; has a different semantic meaning from later parameters.
+; This refinement isn't *necessary* but I think it looks better.
+define cuddle-first-parameter
+  '(define lambda
+  if when unless case
+  set! let let* letrec let1 do
+  define-module                  ; Guile modules
+  library export import          ; R6RS library modules
+  defun block typecase           ; Common Lisp
+  let-syntax letcrec-syntax define-syntax syntax-rules)
+
+
+; Control what symbol is used for grouping.  This isn't likely to change
+; now, but it was a subject of long mailing list discussion.
 define group-string "\\\\"
 define group-list string->list(group-string)
 define group-string-newline string-append(group-string "\n")
-define infix-operators
-  ' and or xor + - * / ^ ++ -- ** // ^^ < <= > >= = <> != ==
 
 define tab             integer->char(#x09)
 define carriage-return integer->char(#x0d)
@@ -84,20 +106,21 @@ define end-of-line-chars
 define deeper(indent)
   append indent indent-increment
 
+; Return #t if indent's last indent was unmarked.
+; Presumes indent is long enough to be marked.
+define last-indent-unmarked(indent)
+  not $ equal?
+    list-tail indent {length(indent) - length(marked-indent-increment)}
+    marked-indent-increment
 
-; Lists with these symbols as first parameter, and aren't shown as 1 line,
-; are be shown as a line with SYMBOL FIRST-PARAMETER and *then* indents.
-; This is used when in typical uses the first parameter is *special* and
-; has a different semantic meaning from later parameters.
-; This refinement isn't *necessary* but I think it looks better.
-define cuddle-first-parameter
-  '(define lambda
-  if when unless case
-  set! let let* letrec let1 do
-  define-module                  ; Guile modules
-  library export import          ; R6RS library modules
-  defun block typecase           ; Common Lisp
-  let-syntax letcrec-syntax define-syntax syntax-rules)
+; Given an indent, return the next deeper indent, marked if appropriate.
+; "If appropriate" just means it's already somewhat deep to start with,
+; and thus it'd be helpful to have the markings for the eye to follow.
+; Also, don't mark if the previous indent already marked its indent.
+define mark-deeper(indent)
+  if {{length(indent) > min-indent-marking} and last-indent-unmarked(indent)}
+    append indent marked-indent-increment
+    append indent indent-increment
 
 
 ; An x is boring if it's not a list, or it's a list with ONLY non-pair members.
@@ -258,7 +281,6 @@ define line(x)
       append unit(car(x)) line-tail(cdr(x))
 
 
-
 ; Return list "m" as a list of characters representing
 ; a long and boring split list.  We'll keep track of position inside
 ; this routine, since we can do that easily here.
@@ -377,7 +399,7 @@ define sweeten-top(m indent indent-already)
           ! !       ; We can cuddle up on line with one parameter:
           ! !       append getdent(indent-already indent)
           ! !         asline-cuddled \\ '(#\newline)
-          ! !         sweeten-body cddr(m) deeper(indent) #f
+          ! !         sweeten-body cddr(m) mark-deeper(indent) #f
           ! !       ; Can't cuddle - use normal format.
           ! !       sweeten-top-normal-indent m
           ! !         getdent(indent-already indent)
