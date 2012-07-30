@@ -1,5 +1,10 @@
 ;_#!/bin/sh
-;_exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ -q -s "$0"
+;_if test "$#" = "0"; then
+;_  exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ -q -s "$0"
+;_else
+;_  cat "$@" | /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ -q -s "$0"
+;_  exit $?
+;_fi
 ;_
 ;_# @WARNING_MESSAGE@
 ;_
