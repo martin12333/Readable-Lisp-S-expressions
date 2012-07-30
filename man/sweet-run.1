@@ -17,6 +17,14 @@ are run through the sweet-expression filter
 .I unsweeten
 and the results are then executed.
 .PP
+Note that only the specified script is read in using
+sweet-expressions; in particular, any dependencies read
+in using
+.I load
+or
+.I use-modules
+are still processed as traditional s-expressions.
+.PP
 For more information, see
 http://readable.sourceforge.net.
 
