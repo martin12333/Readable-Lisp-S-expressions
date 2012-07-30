@@ -62,7 +62,7 @@ define infix-operators
 define cuddle-first-parameter
   '(define lambda
   if when unless case
-  set! let let* letrec let1 do
+  set! setq let let* letrec let1 do
   define-module                  ; Guile modules
   library export import          ; R6RS library modules
   defun block typecase           ; Common Lisp
@@ -114,9 +114,9 @@ define last-indent-unmarked(indent)
     marked-indent-increment
 
 ; Given an indent, return the next deeper indent, marked if appropriate.
-; "If appropriate" just means it's already somewhat deep to start with,
+; "If appropriate" means it's already somewhat deep to start with,
 ; and thus it'd be helpful to have the markings for the eye to follow.
-; Also, don't mark if the previous indent already marked its indent.
+; Don't mark if the previous indent already marked its indent.
 define mark-deeper(indent)
   if {{length(indent) > min-indent-marking} and last-indent-unmarked(indent)}
     append indent marked-indent-increment
@@ -351,6 +351,49 @@ define sweeten-top-normal-indent(x indent indent-already)
       sweeten-top  car(x) indent indent-already
       sweeten-body cdr(x) deeper(indent) #f
 
+; Return a list of characters representing m,
+; using multiple lines to represent m.
+; There several possible formats; we'll examine various options
+; to determine the most pleasing format.
+define sweeten-top-multiline(m indent indent-already)
+  if pair?(car(m))  ; Is car a pair?  If so, we may need GROUP.
+    let* (asunit-car(unit(car(m)))) ; Get representation of car.
+    ! if fits-width?(indent-already indent length(asunit-car))
+    !   ; We can squeeze the car into the line - don't use GROUP.
+    !   append getdent(indent-already indent) asunit-car '(#\newline)
+    !     sweeten-body cdr(m) deeper(indent) #f
+    !   ; We *cannot* squeeze the car into the line - use GROUP
+    !   append getdent(indent-already indent)
+    !     string->list group-string-newline
+    !     sweeten-top  car(m) deeper(indent) #f
+    !     sweeten-body cdr(m) deeper(indent) #f
+    ; The car isn't a pair. Try alternatives, else normal format.
+    cond
+    ! long-and-boring?(m)
+    ! ! ; A long-and-boring list is almost certainly data, not
+    ! ! ; a function call or code sequence.  Format it specially.
+    ! ! append
+    ! !   getdent(indent-already indent)
+    ! !   string->list(group-string-newline)
+    ! !   deeper(indent)
+    ! !   sweeten-boring-list m #t posdent(indent-already indent)
+    ! !                       deeper(indent)
+    ! {memq(car(m) cuddle-first-parameter) and {length(m) >= 3}}
+    ! ! ; the car is a symbol that we'd like to cuddle. Try to do so.
+    ! ! let* (asline-cuddled(line(list(car(m) cadr(m)))))
+    ! !    if fits-width?(indent-already indent length(asline-cuddled))
+    ! !       ; We can cuddle up on line with one parameter:
+    ! !       append getdent(indent-already indent)
+    ! !         asline-cuddled \\ '(#\newline)
+    ! !         sweeten-body cddr(m) mark-deeper(indent) #f
+    ! !       ; Can't cuddle - use normal format.
+    ! !       sweeten-top-normal-indent m
+    ! !         getdent(indent-already indent)
+    ! !         #f
+    ! ; Normal format:
+    ! #t
+    ! ! sweeten-top-normal-indent m indent indent-already
+
 ; Input: expression "m" with indentation string "indent".
 ;        indent-already is #f if no indentation has already taken place;
 ;        if indentation *has* taken place, it contains the string of
@@ -369,44 +412,8 @@ define sweeten-top(m indent indent-already)
            {general-length(m) < max-unit-list-length} }
         ; Yes, we can represent it as one list of space-separated parameters:
         append getdent(indent-already indent) asline '(#\newline)
-        ; No, Can't put entire expression on one line; try alternatives.
-        if pair?(car(m))  ; Is car a pair?  If so, we may need GROUP.
-          let* (asunit-car(unit(car(m)))) ; Get representation of car.
-          ! if fits-width?(indent-already indent length(asunit-car))
-          !   ; We can squeeze the car into the line - don't use GROUP.
-          !   append getdent(indent-already indent) asunit-car '(#\newline)
-          !     sweeten-body cdr(m) deeper(indent) #f
-          !   ; We *cannot* squeeze the car into the line - use GROUP
-          !   append getdent(indent-already indent)
-          !     string->list group-string-newline
-          !     sweeten-top  car(m) deeper(indent) #f
-          !     sweeten-body cdr(m) deeper(indent) #f
-          ; The car isn't a pair. Try alternatives, else normal format.
-          cond
-          ! long-and-boring?(m)
-          ! ! ; A long-and-boring list is almost certainly data, not
-          ! ! ; a function call or code sequence.  Format it specially.
-          ! ! append
-          ! !   getdent(indent-already indent)
-          ! !   string->list(group-string-newline)
-          ! !   deeper(indent)
-          ! !   sweeten-boring-list m #t posdent(indent-already indent)
-          ! !                       deeper(indent)
-          ! {memq(car(m) cuddle-first-parameter) and {length(m) >= 3}}
-          ! ! ; the car is a symbol that we'd like to cuddle. Try to do so.
-          ! ! let* (asline-cuddled(line(list(car(m) cadr(m)))))
-          ! !    if fits-width?(indent-already indent length(asline-cuddled))
-          ! !       ; We can cuddle up on line with one parameter:
-          ! !       append getdent(indent-already indent)
-          ! !         asline-cuddled \\ '(#\newline)
-          ! !         sweeten-body cddr(m) mark-deeper(indent) #f
-          ! !       ; Can't cuddle - use normal format.
-          ! !       sweeten-top-normal-indent m
-          ! !         getdent(indent-already indent)
-          ! !         #f
-          ! ; Normal format:
-          ! #t
-          ! ! sweeten-top-normal-indent m indent indent-already
+        ; No, can't put entire expression on one line. Use a multiline format.
+        sweeten-top-multiline(m indent indent-already)
 
 ; Display x (a list of chars and strings), but do NOT display
 ; the last end-of-line.  Because we only take generated files,
