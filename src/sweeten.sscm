@@ -48,10 +48,20 @@ define max-unit-list-length 8
 define boring-length 16
 
 define group-string "\\\\"
-define group-string-newline "\\\\\n"
 define group-list string->list(group-string)
-define infix-operators '(
-            and or xor + - * / ^ ++ -- ** // ^^ < <= > >= = <> != ==)
+define group-string-newline string-append(group-string "\n")
+define infix-operators
+  ' and or xor + - * / ^ ++ -- ** // ^^ < <= > >= = <> != ==
+
+define tab             integer->char(#x09)
+define carriage-return integer->char(#x0d)
+define LISTLP          list( #\( )
+define LISTRP          list( #\) )
+define LISTLBRACE      list((integer->char 123))
+define LISTRBRACE      list((integer->char 125))
+define LISTSPACE       list( #\space )
+define LISTSP.SP       list( #\space #\. #\space )
+
 
 ; True if at beginning of column (line), otherwise false.
 define column1 #t
@@ -72,7 +82,7 @@ define end-of-line-chars
 
 ; Given an indent, return the next deeper indent.
 define deeper(indent)
-  append(indent indent-increment)
+  append indent indent-increment
 
 
 ; Lists with these symbols as first parameter, and aren't shown as 1 line,
@@ -80,27 +90,37 @@ define deeper(indent)
 ; This is used when in typical uses the first parameter is *special* and
 ; has a different semantic meaning from later parameters.
 ; This refinement isn't *necessary* but I think it looks better.
-define cuddle-first-parameter '(define lambda
-           if when unless case
-           set! let let* letrec let1 do
-           define-module                  ; Guile modules
-           library export import          ; R6RS library modules
-           defun block typecase           ; Common Lisp
-           let-syntax letcrec-syntax define-syntax syntax-rules)
+define cuddle-first-parameter
+  '(define lambda
+  if when unless case
+  set! let let* letrec let1 do
+  define-module                  ; Guile modules
+  library export import          ; R6RS library modules
+  defun block typecase           ; Common Lisp
+  let-syntax letcrec-syntax define-syntax syntax-rules)
 
 
-define tab integer->char(9)
-define LISTLP list( #\( )
-define LISTRP list( #\) )
-define LISTLBRACE list((integer->char 123))
-define LISTRBRACE list((integer->char 125))
+; An x is boring if it's not a list, or it's a list with ONLY non-pair members.
+define boring?(x)
+  cond
+    not(pair?(x))  #t  ; This includes (), which is boring & the end.
+    pair?(car(x))  #f
+    #t             boring?(cdr(x))
+
+; A list is long and boring if it's a list, its length is at least
+; the boring-length, and it's boring.
+; A long-and-boring list is almost certainly NOT a function call or a
+; body of some executable sequence - it's almost certainly a long
+; boring list of data instead. If it is, we want to display it differently.
+define long-and-boring?(x)
+  cond
+    not(pair?(x))                 #f
+    not(list?(x))                 #f
+    {length(x) < boring-length}   #f
+    #t                            boring?(x)
 
 
-; Return length of x, which may be an improper list.
-; If improper, count the two sides as two, so "(a . b)" is length 2.
-define general-length(x)
-  general-length-inner(x 0)
-
+; Support general-length-inner - help count length of possibly-improper list.
 define general-length-inner(x count-so-far)
   cond
     null?(x)      count-so-far
@@ -108,17 +128,10 @@ define general-length-inner(x count-so-far)
     #t
                   general-length-inner cdr(x) {count-so-far + 1}
 
-; Return list x's *contents* represented as a list of characters.
-; Each one must use neoteric-expressions, space-separated;
-; it will be surrounded by (...) so no indentation processing is relevant.
-define unit-list(x)
-  cond
-    null?(x) '()
-    pair?(x)
-      if null?(cdr(x))
-        unit car(x)
-        append unit(car(x)) '(#\space) unit-list(cdr(x))
-    #t  append('(#\space #\. #\space) unit(x))
+; Return length of x, which may be an improper list.
+; If improper, count the two sides as two, so "(a . b)" is length 2.
+define general-length(x)
+  general-length-inner x 0
 
 
 ; Return #t if x should be represented using curly-infix notation {...}.
@@ -131,55 +144,72 @@ define represent-as-infix?(x)
     {length(x) >= 3}
     {length(x) <= 6}
 
-; Return tail of an infix expression, as list of chars
-define infix-tail(op x)
-  cond
-    null?(x)  LISTRBRACE
-    pair?(x)  append( '(#\space) op '(#\space) unit(car(x))
-                       infix-tail(op cdr(x)) )
-    ; The following is used if we get an improper list.
-    ; This can't happen if only lists are represented with curly-infix:
-    #t        append( '(#\space #\. #\space) unit(x) LISTRBRACE)
-
 ; Define an association list of Lisp abbreviations.
-; Eventually use "group" to define this, but currently the group
-; symbol is under discussion, so best not to use it yet:
-define abbreviations '(
-  (quote (#\'))
-  (quasiquote (#\`))
-  (unquote (#\,))
-  (unquote-splicing (#\, #\@)))
-
+define abbreviations
+  ' \\
+    quote (#\')
+    quasiquote (#\`)
+    unquote (#\,)
+    unquote-splicing (#\, #\@)
 
 ; return #t if we should as a traditional abbreviation, e.g., '
 define represent-as-abbreviation?(x)
   and
+    pair? x
     assq car(x) abbreviations
     pair? cdr(x)
     null? cddr(x)
 
+; Return list x's *contents* represented as a list of characters.
+; Each one must use neoteric-expressions, space-separated;
+; it will be surrounded by (...) so no indentation processing is relevant.
+define unit-list(x)
+  cond
+    null?(x) '()
+    pair?(x)
+      if null?(cdr(x))
+        unit car(x)
+        append unit(car(x)) LISTSPACE unit-list(cdr(x))
+    #t  append(LISTSP.SP unit(x))
+
+; Return tail of an infix expression, as list of chars
+; The "op" is the infix operator represented as a list of chars.
+define infix-tail(op x)
+  cond
+    null?(x)
+      LISTRBRACE
+    pair?(x)
+      append LISTSPACE op LISTSPACE unit(car(x)) infix-tail(op cdr(x))
+    ; The following is used if we get an improper list.  This can't
+    ; happen if only proper lists are represented using curly-infix:
+    #t
+      append LISTSP.SP unit(x) LISTRBRACE
+
 ; Given list of characters, return the characters that would REPRESENT
 ; those characters inside a string AFTER the initial double-quote,
 ; then return the double-quote.  This translates newline to \n, etc.
+; We'll translate carriage-return to \r and tab to \t; these aren't in
+; R5RS, but failing to translate them can cause other trouble, and they
+; *are* in R6RS.
 define unit-string-tail(x)
   if null?(x)
     '(#\")  ; Return the string's closing double-quote.
     append
       let ((c car(x)))
         cond             ; Can't use "case" because of "tab" variable.
-          eq?(c #\\)        '(#\\ #\\)
-          eq?(c #\")        '(#\\ #\")
-          ; These aren't in R5RS, but NOT escaping them will
-          ; cause more trouble:
-          eq?(c #\newline)  '(#\\ #\n)
-          eq?(c tab)        '(#\\ #\t)
-          #t                list(car(x))
+          eq?(c #\\)              '(#\\ #\\)
+          eq?(c #\")              '(#\\ #\")
+          eq?(c #\newline)        '(#\\ #\n)
+          eq?(c carriage-return)  '(#\r #\n) ; Not in R5RS
+          eq?(c tab)              '(#\\ #\t) ; Not in R5RS
+          #t                      list(car(x))
       unit-string-tail cdr(x)
 
-; Return x represented as a neoteric-expression unit, as a list of characters.
+; Return x represented as a neoteric-expression unit,
+; as a list of characters that are part of one line.
 ; Indentation processing *may* be active, but the character sequence
 ; returned must not depend on that.
-; This is widely-used; may want to memoize this.
+; This is widely-used; if speed's a problem, memoize this.
 define unit(x)
   cond
     null?(x)     string->list("()")
@@ -195,7 +225,8 @@ define unit(x)
          if represent-as-infix?(x)
            append LISTLBRACE unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
            append unit(car(x)) LISTLP unit-list(cdr(x)) LISTRP
-       #t append(LISTLP unit-list(x) LISTRP)
+       #t
+         append LISTLP unit-list(x) LISTRP
     #t  string->list(object->string(x))
     ; R5RS doesn't include "object->string", but it's painful to do without.
     ; You might be able to use these in a pinch:
@@ -207,9 +238,9 @@ define line-tail(x)
   cond
     null?(x)  '()
     pair?(x)
-      append '(#\space) unit(car(x)) line-tail(cdr(x))
+      append LISTSPACE unit(car(x)) line-tail(cdr(x))
     #t
-      append '(#\space #\. #\space) unit(x)
+      append LISTSP.SP unit(x)
 
 ; Return x represented as a line of space-separated neoteric-expression units,
 ; as a list of characters.
@@ -226,25 +257,6 @@ define line(x)
     #t
       append unit(car(x)) line-tail(cdr(x))
 
-; a list is boring if it has ONLY non-pair members.
-define boring?(x)
-  cond
-    not(pair?(x))  #t  ; This includes (), which is boring & the end.
-    pair?(car(x))  #f
-    #t             boring?(cdr(x))
-
-; A list is long and boring if it's a list, it's boring, and
-; its length is longer than the boring-length.
-; Such a list is almost certainly NOT a function call or a
-; body of some executable sequence, instead, it's almost certainly a long
-; boring list of data
-define long-and-boring?(x)
-  cond
-    not(pair?(x))                 #f
-    not(list?(x))                 #f
-    {length(x) < boring-length}   #f
-    #t                            boring?(x)
-
 
 
 ; Return list "m" as a list of characters representing
@@ -260,7 +272,7 @@ define sweeten-boring-list(x first? pos next-indent)
           sweeten-boring-list(cdr(x) #f {pos + length(item)} next-indent)
     #t ; Not first.
       let (item(unit(car(x))))
-        let (item-sameline(append('(#\space) group-list '(#\space) item)))
+        let (item-sameline(append(LISTSPACE group-list LISTSPACE item)))
           if {{pos + length(item-sameline)} < maxwidth}
             append item-sameline
               sweeten-boring-list cdr(x) #f
@@ -284,6 +296,11 @@ define posdent(indent-already indent)
     length(indent-already)
     length(indent)
 
+; Return #t if a sequence of characters (length newlen) will fit within
+; maxlen, given indent-already and indent.  Else returns #f.
+define fits-width?(indent-already indent newlen)
+  {{posdent(indent-already indent) + newlen} < maxwidth}
+
 ; Input: expression "m" with indentation string "indent".
 ; Output: List of characters representing it (#\newline for new line).
 ; This tail handles the body of a list (after its first entry) when
@@ -303,18 +320,18 @@ define sweeten-top-normal-indent(x indent indent-already)
     ; the other characters.
     let*
       \\
-        prefix  append(cadr(assq(car(x) abbreviations)) '(#\space))
+        prefix  append(cadr(assq(car(x) abbreviations)) LISTSPACE)
         newdent append(getdent(indent-already indent) prefix)
       append newdent
-        sweeten-top(cadr(x) indent newdent) ; TODO!!!
+        sweeten-top cadr(x) indent newdent
     ; Normal case, we don't have a traditional abbreviation we want to use.
     append
       sweeten-top  car(x) indent indent-already
       sweeten-body cdr(x) deeper(indent) #f
 
 ; Input: expression "m" with indentation string "indent".
-;        indent-already if #f if no indentation has already taken place,
-;        or if indentation *has* taken place, it contains the string of
+;        indent-already is #f if no indentation has already taken place;
+;        if indentation *has* taken place, it contains the string of
 ;        indentation and any following characters that's occurred
 ;        (so char position, etc., can be determined).
 ; Output: List of characters representing it (#\newline for new line).
@@ -326,18 +343,18 @@ define sweeten-top(m indent indent-already)
     ; We have a pair. Can we represent it as one line of space-sep params?
     let* (asline(line(m)) length-asline(length(asline)))
       if { {length-asline < max-unit-character-length} and
-           {{length-asline + posdent(indent-already indent)} < maxwidth } and
+           fits-width?(indent-already indent length-asline) and
            {general-length(m) < max-unit-list-length} }
         ; Yes, we can represent it as one list of space-separated parameters:
         append getdent(indent-already indent) asline '(#\newline)
         ; No, Can't put entire expression on one line; try alternatives.
         if pair?(car(m))  ; Is car a pair?  If so, we may need GROUP.
           let* (asunit-car(unit(car(m)))) ; Get representation of car.
-          ! if {{length(asunit-car) + posdent(indent-already indent)} < maxwidth}
-          !   ; Don't need to use GROUP, we can squeeze the car in.
+          ! if fits-width?(indent-already indent length(asunit-car))
+          !   ; We can squeeze the car into the line - don't use GROUP.
           !   append getdent(indent-already indent) asunit-car '(#\newline)
           !     sweeten-body cdr(m) deeper(indent) #f
-          !   ; Use GROUP, we can't squeeze the car in.
+          !   ; We *cannot* squeeze the car into the line - use GROUP
           !   append getdent(indent-already indent)
           !     string->list group-string-newline
           !     sweeten-top  car(m) deeper(indent) #f
@@ -356,7 +373,7 @@ define sweeten-top(m indent indent-already)
           ! {memq(car(m) cuddle-first-parameter) and {length(m) >= 3}}
           ! ! ; the car is a symbol that we'd like to cuddle. Try to do so.
           ! ! let* (asline-cuddled(line(list(car(m) cadr(m)))))
-          ! !    if { {length(asline-cuddled) + posdent(indent-already indent)} < maxwidth}
+          ! !    if fits-width?(indent-already indent length(asline-cuddled))
           ! !       ; We can cuddle up on line with one parameter:
           ! !       append getdent(indent-already indent)
           ! !         asline-cuddled \\ '(#\newline)
@@ -381,7 +398,7 @@ define display-skip-last-eol(x)
       ; In this program, strings only happen from indents:
       set! column1 #f
       display-skip-last-eol(cdr(x))
-    {char?(car(x)) and null?(cdr(x)) and (eq? car(x) #\newline)}
+    {char?(car(x)) and null?(cdr(x)) and eq?(car(x) #\newline)}
       #t
     char?(car(x))
       write-char(car(x))
@@ -436,7 +453,8 @@ define sweeten-filter()
     restore-traditional-read()
   let ((c peek-char(current-input-port())))
     cond
-      eof-object?(c)      c
+      eof-object?(c)
+        c
       memq(c end-of-line-chars)
         consume-end-of-line()
         newline()
@@ -457,7 +475,8 @@ define sweeten-filter()
             result
             begin iformat(result) sweeten-filter()
 
-; You can use guile to trace, but the reader doesn't support #' ... yet.
+; You can use guile to trace, but the reader doesn't support the guile
+; extension #' yet.
 ; Thus, the .sscm file cannot currently include guile trap invocations.
 ; So to install traps, generate the .scm file directly with:
 ;    make sweeten.scm
