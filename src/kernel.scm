@@ -51,13 +51,8 @@
 ;
 ;   (my-peek-char port)
 ;   (my-read-char port)
-;   (my-unread-char port)
 ;   - Performs I/O on a "port" object.
 ;   - The algorithm assumes that port objects have the following abilities:
-;     * The port supports 2-character lookahead, by allowing
-;       (my-unread-char port) after a (my-peek-char port).
-;       See the R5RS portability layer for a way of implementing
-;       this.
 ;     * The port automatically keeps track of source location
 ;       information.  On R5RS there is no source location
 ;       information that can be attached to objects, so as a
@@ -178,7 +173,6 @@
     ; during load-time).
     (define (my-peek-char p)     (peek-char p))
     (define (my-read-char p)     (read-char p))
-    (define (my-unread-char c p) (unread-char c p))
 
     (define (make-read f)
       (lambda args
@@ -435,28 +429,8 @@
     ; the port with the source information, and update that
     ; source information in the my-* functions.
 
-    (define (my-peek-char port)
-      (let ((real-port (cdr port))
-            (buffer    (car port)))
-        (if buffer
-            buffer
-            (peek-char real-port))))
-    ; handle 2nd character buffer
-    (define (my-unread-char c port)
-      (let ((buffer (car port)))
-        (if buffer
-            (error "internal error in kernel, too many unreads")
-            (set-car! port c)))
-      ; return nothing of consequence
-      (values))
-    ; clear 2nd character buffer if set
-    (define (my-read-char port)
-      (let ((real-port (cdr port))
-            (buffer    (car port)))
-        (if buffer
-            (begin (set-car! port #f)
-                   buffer)
-            (read-char real-port))))
+    (define (my-peek-char port) (peek-char port))
+    (define (my-read-char port) (read-char port))
 
     ; this wrapper function wraps a reader function
     ; that accepts a "fake" port above, and converts
@@ -468,25 +442,14 @@
     ; on exit from the given inner function.
     (define (make-read f)
       (lambda args
-        (let* ((real-port (if (null? args) (current-input-port) (car args)))
-               (fake-port (cons #f real-port))
-               (rv        (f fake-port)))
-          ; pending character?
-          (if (car fake-port)
-              (error
-                "internal error in kernel, some unread input remaining")
-              rv))))
+        (let ((real-port (if (null? args) (current-input-port) (car args))))
+          (f real-port))))
 
     ; invoke the given "actual" reader, most likely
     ; the builtin one, but make sure to unwrap any
     ; fake ports.
     (define (invoke-read read port)
-      (let ((real-port (cdr port))
-            (buffer    (car port)))
-        (if buffer
-            (error
-              "internal error in kernel, some unread input before entering builtin read")
-            (read real-port))))
+      (read port))
     ; R5RS doesn't have any method of extracting
     ; or attaching source location information.
     (define (get-sourceinfo _) #f)
