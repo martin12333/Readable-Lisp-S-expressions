@@ -343,6 +343,9 @@
                   `( (unsyntax-splicing ,(top-read fake-port)) ))
                 (#t
                   `( (unsyntax ,(top-read fake-port)) )))))
+          ; #{ }# syntax
+          ((char=? char #\{ )  ; Special symbol, through till ...}#
+            `( ,(list->symbol (special-symbol fake-port))))
           (#t
             #f))))
 
@@ -384,6 +387,26 @@
               (nest-comment fake-port)))
           (#t
             (nest-comment fake-port)))))
+
+  ; Return list of characters inside #{...}#, a guile extension.
+  ; presume we've already read the sharp and initial open brace.
+  ; On eof we just end.  We could error out instead.
+  ; TODO: actually conform to Guile's syntax.  Note that 1.x
+  ; and 2.0 have different syntax when spaces, backslashes, and
+  ; control characters get involved.
+  (define (special-symbol port)
+    (cond
+      ((eof-object? (my-peek-char port)) '())
+      ((eqv? (my-peek-char port) #\})
+        (my-read-char port) ; consume closing brace
+        (cond
+          ((eof-object? (my-peek-char port)) '(#\}))
+          ((eqv? (my-peek-char port) #\#)
+            (my-read-char port) ; Consume closing sharp.
+            '())
+          (#t (append '(#\}) (special-symbol port)))))
+      (#t (append (list (my-read-char port)) (special-symbol port)))))
+
 
     )
 ; -----------------------------------------------------------------------------
@@ -679,22 +702,6 @@
       (append starting-lyst
         (read-until-delim port neoteric-delimiters)))))
 
-  ; Return list of characters inside #{...}#, a guile extension.
-  ; presume we've already read the sharp and initial open brace.
-  ; On eof we just end.  We could error out instead.
-  (define (special-symbol port)
-    (cond
-      ((eof-object? (my-peek-char port)) '())
-      ((eqv? (my-peek-char port) #\})
-        (my-read-char port) ; consume closing brace
-        (cond
-          ((eof-object? (my-peek-char port)) '(#\}))
-          ((eqv? (my-peek-char port) #\#)
-            (my-read-char port) ; Consume closing sharp.
-            '())
-          (#t (append '(#\}) (special-symbol port)))))
-      (#t (append (list (my-read-char port)) (special-symbol port)))))
-
 
   (define (process-char port)
     ; We've read #\ - returns what it represents.
@@ -738,8 +745,6 @@
               (read-number port (list #\# (char-downcase c))))
             ((char=? c #\( )  ; Vector.
               (list->vector (my-read-delimited-list top-read #\) port)))
-            ((char=? c #\{ )  ; Special symbol, through till ...}#
-              (list->symbol (special-symbol port)))
             ((char=? c #\\) (process-char port))
             (#t
               (let ((rv (parse-hash top-read c port)))
