@@ -237,7 +237,8 @@ define unit-string-tail(x)
 ; as a list of characters that are part of one line.
 ; Indentation processing *may* be active, but the character sequence
 ; returned must not depend on that.
-; This is widely-used; if speed's a problem, memoize this.
+; This is widely-used. If speed's a problem, memoize this; you can erase
+; the memoized information once iformat() has displayed the result.
 define unit(x)
   cond
     null?(x)     string->list("()")
