@@ -171,11 +171,12 @@ EXTRA_DIST += curly-infix.cl
 
 # Distribute examples (but don't install them).
 EXTRA_DIST += \
+ examples/sweet-run-demo-guile \
+ examples/sweet-run-demo-scsh \
+ examples/sweet-run-demo-clisp \
  examples/list-of.sscm \
  examples/simple-nfx.sscm \
  examples/streams.sscm \
- examples/sweet-run-demo \
- examples/sweet-run-demo2 \
  examples/basic-sweet.sscm \
  examples/README
 

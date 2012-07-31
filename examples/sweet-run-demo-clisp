@@ -1,0 +1,28 @@
+#!/usr/bin/env sweet-run
+;#!/usr/bin/env clisp
+
+; The "-C" is optional; it just compiles-before-run which can be faster.
+
+; NOTICE! The "unsweet" script expects Scheme-format lisp, but we
+; are executing this in Common Lisp instead.  Thus, you need to stick
+; to the syntax that is in common between the two lisps.
+
+; This example is from "Lisp Script" by Gene Michael Stover
+; http://cybertiggyr.com/gene/lscript/lscript.html
+; Original version:
+;   (defun fib (n)
+;     (if (or (zerop n) (= 1 n))
+;         1
+;       (+ (fib (1- n)) (fib (- n 2)))))
+;   (fib 10)
+
+
+defun fib (n)
+  if {zerop(n) or {1 = n}}
+    1
+    {fib{n - 1} + fib{n - 2}}
+
+write-line "Clisp running!"
+
+print fib(10)
+

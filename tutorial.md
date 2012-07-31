@@ -187,7 +187,7 @@ This works with zero parameters, too; if you have a command called "help" (guile
 
     help()
 
-It's actually quite common to have a function call pass one parameter, where the parameter is calculated using infix notation, so there's a rule to simplify this common case. You can use f{x + 1}, which maps to (f {x + 1}) which then maps to (f (+ x 1)). This makes it easy to pass a single parameter which happens to be calculated using infix. For example, factorial{n - 1} maps to factorial({n - 1}) which maps to (factorial (- n 1)).
+It's actually quite common to have a function call pass one parameter, where the parameter is calculated using infix notation, so there's a rule to simplify this common case. You can use f{x + 1}, which maps to (f {x + 1}) which then maps to (f (+ x 1)). This makes it easy to pass a single parameter which happens to be calculated using infix. For example, factorial{n - 1} maps to factorial({n - 1}) which maps to (factorial (- n 1)).  You can try out this simple example:
 
      not{#t and #f}
 
@@ -195,8 +195,7 @@ Just like traditional s-expressions, spaces separate parameters, so it's *import
 
 Here's the real rule: in neoteric-expressions, f(...) maps to (f ...), f{...} maps to (f {...}), and f[ ... ] maps to (bracketaccess f). The "bracketaccess" is so that you can write a macro to access arrays and other mappings.  Note that "neoteric-expressions" used be called "modern-expressions"; you may see some older documents using that name.
 
-Normally, people and pretty-printers will format Lisp code so that parameters inside a list are *separated* by whitespace, e.g., (a b c), so it turns out that this change in interpretation doesn't change the meaning of typically-formatted modern Lisp code (and you can
-pretty-print code to fix it). What's more, typical Lisp-aware text editors can work with neoteric-expressions as they are, without change... so if you don't want to change the way you work, but have a somewhat more readable notation, neoteric-expressions can help. But we still have to do all that parentheses-balancing, which hinders readability. Sweet-expressions, our next stop, address this.  Type control-D to get out of this demo.
+Normally, people and pretty-printers will format Lisp code so that parameters inside a list are *separated* by whitespace, e.g., (a b c), so it turns out that this change in interpretation doesn't change the meaning of typically-formatted modern Lisp code (and you can pretty-print code to fix it). What's more, typical Lisp-aware text editors can work with neoteric-expressions as they are, without change... so if you don't want to change the way you work, but have a somewhat more readable notation, neoteric-expressions can help. But we still have to do all that parentheses-balancing, which hinders readability. Sweet-expressions, our next stop, address this.  To get out of this demo, type *exit()* *Enter* or *control-D* *Enter*.
 
 
 Using Sweet-expressions (t-expressions) 
@@ -331,6 +330,12 @@ Similarly, here's an example of a script that is written with sweet-expressions 
 
     run head(-10 "README")
 
+You can even do this with Common Lisp (e.g., clisp), but since unsweeten expects Scheme syntax, you have to limit yourself to the syntax in common between Scheme and Common Lisp.
+
+The "examples" subdirectory has files *sweet-run-demo-clisp*, *sweet-run-demo-guile*, and *sweet-run-demo-scsh* that demonstrate this.  If you've *installed* the readable system (with "make install") you can just run them.  If you haven't installed the readable system, you'll need modify your PATH so that the script can find the programs it needs, e.g.:
+
+    PATH="./$PATH" example/sweet-run-demo-guile
+
 
 Sweeten: Translating S-expressions into Sweet-expressions
 =========================================================
@@ -365,9 +370,9 @@ To use the modules from guile, simply say:
 
 This exports the following functions:
 
-*   curly-infix-read(port): Read a curly-infix-expression datum from port.
-*   neoteric-read sweet-read(port): Read a neoteric-expression datum from port.
-*   sweet-read sweet-read(port): Read a sweet-expression datum from port.
+*   curly-infix-read(. port): Read a curly-infix-expression datum from port.
+*   neoteric-read sweet-read(. port): Read a neoteric-expression datum from port.
+*   sweet-read sweet-read(. port): Read a sweet-expression datum from port.
 *   replace-read(replace-read-with): Change the current "read" function to the function replace-read-with.
 *   restore-traditional-read(): Restore the traditional read function.
 
