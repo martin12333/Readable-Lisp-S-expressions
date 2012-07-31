@@ -191,6 +191,12 @@ EXTRA_DIST += \
  solution.md \
  tutorial.md
 
+# Distribute the specs.  They're not up-to-date, but they
+# are referred to in the README, so distribute them too
+# as users may be puzzled if they're not there.
+EXTRA_DIST += \
+ spec-indent.txt \
+ spec-almkglor.txt
 
 # Distribute test drivers and testsuites.
 EXTRA_DIST += \
