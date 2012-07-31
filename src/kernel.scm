@@ -132,7 +132,10 @@
 ;     this function was passed in.
 ;     - top-read is either a version of curly-infix-read, or a version
 ;       of neoteric-read; this specal version accepts only a fake port.
-;       It is never a version of sweet-read.
+;       It is never a version of sweet-read.  You don't normally want to
+;       call sweet-read, because sweet-read presumes that it's starting
+;       at the beginning of the line, with indentation processing still
+;       active.  There's no reason either must be true when processing "#".
 ;   - At the start of this function, both the # and the character
 ;     after it have been read in.
 ;   - The function returns one of the following:
@@ -159,7 +162,7 @@
     ; properly get bindings
     (use-modules (guile))
 
-    ; On Guile 1.x defmacro is the only thing supported outside-the-box
+    ; On Guile 1.x defmacro is the only thing supported out-of-the-box.
     ; This form still exists in Guile 2.x, fortunately.
     (defmacro readable-kernel-module-contents (exports . body)
       `(begin (export ,@exports)
