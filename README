@@ -15,6 +15,9 @@ These tiers are (oversimplified):
    - Empty lines end the previous expression. Just type ENTER ENTER
      to execute what you've typed.
 
+Well-formatted traditional s-expressions continue to be read in normally,
+so you only need to use the abbreviations when you find them useful.
+
 For more information, see: http://readable.sourceforge.net.
 In particular, see the [Tutorial], [Solution], and other pages on the wiki.
 
@@ -100,33 +103,39 @@ Some of the key files are:
 
 ## Installed:
 
-* unsweeten: A filter that reads in (from stdin) a file of
-sweet-expressions, and outputs sweet-expressions.  You can use this in
-"makefiles" so that you can write files using sweet-expressions. MIT license.
+*   unsweeten: A filter that reads in (from stdin) a file of
+    sweet-expressions, and outputs sweet-expressions.  You can use this
+    in "makefiles" so that you can write files using sweet-expressions.
+    MIT license.
+*   sweeten: A filter that reads in s-expressions (Scheme format) from
+    standard in, and generates sweet-expressions on standard out.  MIT license.
+*   neoteric-guile: Start up guile, but use neoteric-expressions to
+    interact with it. MIT license.
+*   sweet-guile: Start up guile, but use sweet-expressions to interact
+    with it. MIT license.
+*   solution.md: A description of the notations this project implements.
+    See the project website for the current version of this.
+*   tutorial.md: A tutorial.  See the project website for a
+    current version of this.
+*   spec-indent.txt: Detailed specification information on I-expressions,
+    the basis of sweet-expressions.
+*   spec-almkglor.txt: A not-so-updated specification for the
+    entire sweet-expression spec, created by Alan Manuel K. Gloria.
 
-* sweeten: A filter that reads in s-expressions (Scheme format)
-from standard in, and generates sweet-expressions on standard out.
-MIT license.
-
-* neoteric-guile: Start up guile, but use neoteric-expressions to
-interact with it. MIT license.
-
-* sweet-guile: Start up guile, but use sweet-expressions to
-interact with it. MIT license.
+The spec-* files need to be updated (volunteers welcome).  For now, see
+"solution.md" for the real specification.
 
 ## Not Installed:
 
-*   solution.md: A description of the notations this project implements. See the project website for the current version of this.
-*   tutorial.md: A tutorial.  See the project website for a current version of this.
-*   src/kernel.scm: An implementation of the three notation tiers curly-infix-read, neoteric-read, and sweet-read.  Implemented in the Guile dialect of Scheme; it includes hooks for other dialects.  This is installed into the "readable" site directory of guile. MIT license.
+*   src/kernel.scm: An implementation of the three notation tiers
+    curly-infix-read, neoteric-read, and sweet-read.  Implemented in the
+    Guile dialect of Scheme; it includes hooks for other dialects.  This is
+    installed into the "readable" site directory of guile. MIT license.
 *   src/sweeten.sscm: The source of the "sweeten" program.  It's written
-in Scheme using sweet-expressions, so if you want to see what
-sweet-expressions look like, well, here's an example.
+    in Scheme using sweet-expressions, so if you want to see what
+    sweet-expressions look like, well, here's an example.
 *   curly-infix.cl: A simple Common Lisp reader readtable macro that
-implements infix operations in lists surrounded by {...}.  MIT license.
-*   spec-indent.txt: Detailed specification information on I-expressions.
-*   spec-almkglor.txt: A not-so-updated specification for the entire
-sweet-expression spec, created by Alan Manuel K. Gloria
+    implements infix operations in lists surrounded by {...}.  MIT license.
 
 
 Key directories
