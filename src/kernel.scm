@@ -976,6 +976,8 @@
 ; Sweet Expressions
 ; -----------------------------------------------------------------------------
 
+  ; NOTE split et al. should not begin in #, as # causes
+  ; the top-level parser to guard against multiline comments.
   (define split (string->symbol "\\\\"))
   (define split-char #\\ ) ; First character of split symbol.
   (define non-whitespace-indent #\!) ; Non-whitespace-indent char.
@@ -1251,7 +1253,7 @@
                 (sugar-start-expr port))))) ; and try again
         ; hashes are potential comments too
         ((eqv? c #\#)
-          (let ((obj (process-sharp neoteric-read-nocomment-func port)))
+          (let ((obj (neoteric-read-func port)))
             (if (eq? obj comment-tag)
                 ; heh, comment.  Consume spaces and start again.
                 ; (Consuming horizontal spaces makes comments behave
