@@ -13,4 +13,12 @@ xyz
 
 (define (f a) (* 2 a))
 
+(define (f a) (* 2 a))
+(define x 4)
+
+
+(g x)
+
+(#f)
+
 ; Comment at end of file.
