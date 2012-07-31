@@ -250,6 +250,8 @@ define unit(x)
      cond
        represent-as-abbreviation?(x)
          append cadr(assq(car(x) abbreviations)) unit(cadr(x))
+       long-and-boring?(x)
+         append LISTLP unit-list(x) LISTRP
        symbol?(car(x))
          if represent-as-infix?(x)
            append LISTLBRACE unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
