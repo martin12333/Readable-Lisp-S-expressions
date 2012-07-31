@@ -187,10 +187,8 @@ dist_man_MANS = man/unsweeten.1 man/sweet-run.1 man/sweeten.1
 # in markdown format.  The website has the updated version, but for
 # those who just have this file, it'd be useful to have SOME useful
 # information on what this code is trying to do and how to use it.
-EXTRA_DIST += \
- solution.md \
- tutorial.md
-
+# README is distributed anyway; this just makes it clearer.
+dist_doc_DATA = README solution.md tutorial.md
 
 # Distribute test drivers and testsuites.
 EXTRA_DIST += \
