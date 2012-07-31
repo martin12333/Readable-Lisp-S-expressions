@@ -58,6 +58,7 @@ If you plan to use the development (not stable) version, you'll also need:
 
 *   git (to download the software)
 *   autoconf and automake (to build it)
+*   guile development libraries (e.g., "guile-devel" on Fedora and Cygwin)
 
 You should be running on a POSIX system; if you use Windows, you may need to install Cygwin first. Any modern GNU/Linux system will do nicely.
 
@@ -353,6 +354,22 @@ And you should see this as output:
 You can also run it interactively, but you may find that you want to press an extra "Enter" after your expression.  (It's done this way so that when it translates files they look correct.)
 
 Sweeten reads Scheme S-expression syntax.  However, you can use it for other Lisp-like languages if you stick to the syntax that is common between them.  There is a limitation of the sweeten implementation: Comments inside any parentheses will not be produced in the output.  (This is because it uses the underlying system "read" function, which throws this away.) Still, it's a useful tool.
+
+Readable library
+================
+
+The Scheme readers are implemented in a library module.  They're written to easily port to other Scheme systems, but guile is what we primarily use right now.
+
+To use the modules from guile, simply say:
+    (use-modules (readable kernel))
+
+This exports the following functions:
+
+*   curly-infix-read(port): Read a curly-infix-expression datum from port.
+*   neoteric-read sweet-read(port): Read a neoteric-expression datum from port.
+*   sweet-read sweet-read(port): Read a sweet-expression datum from port.
+*   replace-read(replace-read-with): Change the current "read" function to the function replace-read-with.
+*   restore-traditional-read(): Restore the traditional read function.
 
 
 More Complex Examples
