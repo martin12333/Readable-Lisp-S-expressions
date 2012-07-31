@@ -34,9 +34,26 @@
 ; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ; OTHER DEALINGS IN THE SOFTWARE.
 
-; Set to #f if you want to run without invoking the sweet module, e.g.
-; for debugging.  See the bottom for debugging tips.
+; This reformats standard input from s-expressions into sweet-expressions.
+; Internally, many functions develop possible representations as a list
+; of characters; various alternatives are tried out and the "best" is used.
+; For example, a "boring" list (with only non-pairs and a length of at
+; least boring-length) is probably data and is represented differently.
+;
+; Key functions include:
+; sweeten-top(): Returns a list-of-characters representation of an
+;   expression; it may generate multiple lines with indentation.
+; line(): Return a list-of-characters representation of *one* line
+;   of space-separated neoteric-expression units.
+;   Indentation must be active at the start of the line.
+; unit(): Return a list-of-characters representation of some unit.
+;   Indentation processing *may* be active, but the character sequence
+;   returned must not depend on that; it returns a list without newline.
 
+; Set to #t if you want to run while invoking the sweet module directly.
+; We need to explicitly *disable* the sweet-reader if it's active so that we
+; get the "old" reader format on read; this is important for handling
+; badly-formatted old files.   In the standard build this is unnecessary.
 define build-on-sweet #f
 if build-on-sweet
   use-modules
@@ -50,19 +67,20 @@ if build-on-sweet
 ; so it's unlikely to exceed this width in practice:
 define maxwidth 78
 define indent-increment '(#\space #\space)
-define min-indent-marking {length(indent-increment) * 3}
 define marked-indent-increment '(#\! #\space)
-define max-unit-character-length 60
-define max-unit-list-length 8
-define boring-length 16
+define min-indent-marking {length(indent-increment) * 3}
+define max-unit-character-length 60  ; Max character length of single unit.
+define max-unit-list-length 8        ; Max list length of single unit.
+define boring-length 16              ; Lists >= this length may be boring.
 
 define infix-operators
   ' and or xor + - * / ^ ++ -- ** // ^^ < <= > >= = <> != ==
 
 ; Lists with these symbols as first parameter, and aren't shown as 1 line,
-; are be shown as a line with SYMBOL FIRST-PARAMETER and *then* indents.
-; This is used when in typical uses the first parameter is *special* and
-; has a different semantic meaning from later parameters.
+; are be shown as a line with SYMBOL FIRST-PARAMETER, followed by
+; child lines (where we can manage it).
+; This format is used when in typical uses the first parameter is *special*
+; and has a different semantic meaning from later parameters.
 ; This refinement isn't *necessary* but I think it looks better.
 define cuddle-first-parameter
   '(define lambda
@@ -73,13 +91,13 @@ define cuddle-first-parameter
   defun block typecase           ; Common Lisp
   let-syntax letcrec-syntax define-syntax syntax-rules)
 
-
 ; Control what symbol is used for grouping.  This isn't likely to change
 ; now, but it was a subject of long mailing list discussion.
 define group-string "\\\\"
 define group-list string->list(group-string)
 define group-string-newline string-append(group-string "\n")
 
+; Other special characters and lists of characters.
 define tab             integer->char(#x09)
 define carriage-return integer->char(#x0d)
 define LISTLP          list( #\( )
@@ -89,9 +107,6 @@ define LISTRBRACE      list((integer->char 125))
 define LISTSPACE       list( #\space )
 define LISTSP.SP       list( #\space #\. #\space )
 
-
-; True if at beginning of column (line), otherwise false.
-define column1 #t
 
 ; This program automatically handles various end-of-line situations.
 ; An end-of-line is a sequence of two different end-of-line chars,
@@ -172,7 +187,8 @@ define represent-as-infix?(x)
     {length(x) >= 3}
     {length(x) <= 6}
 
-; Define an association list of Lisp abbreviations.
+; Define an association list mapping the Lisp function names which have
+; abbreviations ==> the list of characters in their abbreviation
 define abbreviations
   ' \\
     quote (#\')
@@ -237,8 +253,9 @@ define unit-string-tail(x)
 ; as a list of characters that are part of one line.
 ; Indentation processing *may* be active, but the character sequence
 ; returned must not depend on that.
-; This is widely-used. If speed's a problem, memoize this; you can erase
-; the memoized information once iformat() has displayed the result.
+; This is widely-used. If speed's a problem, memoize this;
+; you can erase the memoized information once display-sweeten-format() has
+; displayed the result.
 define unit(x)
   cond
     null?(x)     string->list("()")
@@ -345,9 +362,11 @@ define sweeten-body(m indent indent-already)
 ; Return list m represented in the typical indent style.
 define sweeten-top-normal-indent(x indent indent-already)
   if represent-as-abbreviation?(x)
-    ; Use QUOTE+SPACE, etc.  This is handled specially - we will
-    ; create an indent-already, so that we can insert the indent and
-    ; the other characters.
+    ; Use QUOTE+SPACE, etc.  This is handled specially! We will
+    ; create a new indent-already value, so that we can insert the indent and
+    ; the other characters.  This way, we can insert the right amount
+    ; of space (one) after the abbreviation, and let the other functions
+    ; know that the indentation has been performed.
     let*
       \\
         prefix  append(cadr(assq(car(x) abbreviations)) LISTSPACE)
@@ -396,9 +415,8 @@ define sweeten-top-multiline(m indent indent-already)
     ! !         sweeten-body cddr(m) mark-deeper(indent) #f
     ! !       ; Can't cuddle - use normal format.
     ! !       sweeten-top-normal-indent m
-    ! !         getdent(indent-already indent)
-    ! !         #f
-    ! ; Normal format:
+    ! !         getdent(indent-already indent) \\ #f
+    ! ; Nothing special.  Use normal multi-line format:
     ! #t
     ! ! sweeten-top-normal-indent m indent indent-already
 
@@ -423,6 +441,11 @@ define sweeten-top(m indent indent-already)
         ; No, can't put entire expression on one line. Use a multiline format.
         sweeten-top-multiline(m indent indent-already)
 
+; True if at beginning of column (line), otherwise false.
+; This value is only used when we're looking for a datum to read() in.
+define column1 #t
+
+
 ; Display x (a list of chars and strings), but do NOT display
 ; the last end-of-line.  Because we only take generated files,
 ; the end-of-line is exactly \#newline and nothing else.
@@ -444,17 +467,17 @@ define display-skip-last-eol(x)
     #t
       display("BUG!!! in display-skip-last-eof!")
 
-; Display formatted expression "m" using indentation string "indent".
+; Display formatted expression "x" using indentation string "indent".
 ; Do NOT display the final end-of-line, due to an interesting subtlety:
 ; read() doesn't consume the end-of-line, so if we are translating
 ; what read() has read in, then we need to NOT generate the last end-of-line
 ; so that they will match up.
-define iformat(m)
+define display-sweeten-format(x)
   ; Force newline if aren't already in column1.  Otherwise, expressions like:
   ; (a)(b)  will be incorrectly output as a()b() instead of a()\nb().
   if not(column1)
     begin newline() set!(column1 #t)
-  display-skip-last-eol sweeten-top(m string->list("") #f)
+  display-skip-last-eol sweeten-top(x string->list("") #f)
 
 
 
@@ -507,10 +530,11 @@ define sweeten-filter()
         read-char()
         sweeten-filter()
       #t
-        let ((result read(current-input-port())))
-          if eof-object?(result)
-            result
-            begin iformat(result) sweeten-filter()
+        let ((datum read(current-input-port())))
+          if eof-object?(datum)
+            datum
+            ; We have a datum to format and display - begin the real work:
+            begin display-sweeten-format(datum) sweeten-filter()
 
 ; You can use guile to trace, but the reader doesn't support the guile
 ; extension #' yet.
