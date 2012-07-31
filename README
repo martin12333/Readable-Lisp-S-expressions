@@ -103,6 +103,8 @@ Some of the key files are:
 
 ## Installed:
 
+Executables:
+
 *   unsweeten: A filter that reads in (from stdin) a file of
     sweet-expressions, and outputs sweet-expressions.  You can use this
     in "makefiles" so that you can write files using sweet-expressions.
@@ -113,6 +115,10 @@ Some of the key files are:
     interact with it. MIT license.
 *   sweet-guile: Start up guile, but use sweet-expressions to interact
     with it. MIT license.
+
+Documentation:
+
+*   README: This file.
 *   solution.md: A description of the notations this project implements.
     See the project website for the current version of this.
 *   tutorial.md: A tutorial.  See the project website for a
@@ -121,6 +127,9 @@ Some of the key files are:
     the basis of sweet-expressions.
 *   spec-almkglor.txt: A not-so-updated specification for the
     entire sweet-expression spec, created by Alan Manuel K. Gloria.
+*   sweeten.sscm: An example of code written using sweet-expressions.
+    This is the original source code for "sweeten", which reads
+    traditional s-expressions and writes sweet-expression versions of them.
 
 The spec-* files need to be updated (volunteers welcome).  For now, see
 "solution.md" for the real specification.

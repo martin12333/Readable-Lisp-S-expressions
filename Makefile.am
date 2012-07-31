@@ -195,6 +195,11 @@ dist_doc_DATA = README COPYING AUTHORS ChangeLog solution.md tutorial.md
 # as users may be puzzled if they're not there.
 dist_doc_DATA += spec-indent.txt spec-almkglor.txt
 
+# This is an odd case.  Since we're distributing a tool for developers,
+# it's useful to have worked examples.  So here we install the
+# "sweeten.sscm" file as a worked example.
+dist_doc_DATA += src/sweeten.sscm
+
 # Distribute test drivers and testsuites.
 EXTRA_DIST += \
  tests/curly-infix-test \
