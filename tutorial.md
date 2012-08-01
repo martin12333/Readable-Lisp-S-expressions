@@ -18,11 +18,19 @@ For more information on the problem, see [Problem].
 Proposed solution
 =================
 
-To solve this, we've developed three tiers of notation, each building on the previous. These are simply new abbreviations for common cases. These new notations/abbreviations are, in summary:
+To solve this, we've developed three tiers of notation, each building on the previous. These are simply new abbreviations for common cases; you can continue to use normally-formatted s-expressions wherever you want to. These new notations/abbreviations are, in summary:
 
-1.  *Curly-infix-expressions* (*c-expressions*): Any expression surrounded by {...} is an abbreviation for an infix expression. Typically the even parameters are the (single) operator and the odd parameters are the operands. Thus {n \<= 2} maps to (\<= n 2), {2 \* 3 \* 4} maps to (\* 2 3 4), and {2 + {3 \* 4}} maps to (+ 2 (\* 3 4)). By design there is *no* precedence, and terms inside it must use {...} to also be infix.
-2.  *Neoteric-expressions* (*n-expressions*): This starts with curly infix, and adds special meanings to the prefixed grouping symbols (), [], and {}, so that     **e(...)** — maps **(e ...)** and **e{...}** maps to **f({...})**.     This means normal mathematical function notation now works; f(1 2) has the same meaning as (f 1 2).
-3.  *Sweet-expressions* (*t-expressions*): This starts with neoteric-expressions, and deduces parentheses from indentation (similar to Python, Haskell, and many other languages). Every additional indentation (with at least 2 terms) creates a new list. Indentation is disabled by ( ... ), [ ... ], or { ... }.
+1.   *Curly-infix-expressions* (*c-expressions*): Curly braces {...} contain an *infix list*. A *simple infix list* has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  Other infix lists map to "(nfx parameters)".   By intent, there is no precedence and you *must* use another {...} for an embedded infix list.
+    * Example: {n <= 2} maps to (<= n 2)
+2.   *Neoteric-expressions* (*n-expressions*): This includes curly-infix-expressions, and adds special meanings to some prefixed symbols. An e(...) maps to (e ...); an e{...} maps to e({...}); and an e[...] maps to (bracketaccess e ...), where "e" is any expression. There must be no whitespace between e and the open parenthesis. Also, an unprefixed "( . e)" must evaluate as "e".
+    * Example: f(1 2) maps to (f 1 2)
+3.   *Sweet-expressions* (*t-expressions*): Includes neoteric-expressions, and deduces parentheses from indentation. Basic rules:
+
+    - An indented line is a parameter of its parent.
+    - Later terms on a line are parameters of the first term.
+    - A line with exactly one term, and no child lines, is simply that term; multiple terms are wrapped into a list.
+    - An empty line ends the expression; empty lines *before* expressions are ignored.
+    - Indentation processing does not occur inside ( ), [ ], and { }, whether they are prefixed or not; they're just neoteric-expressions.
 
 For more details, see [Solution].
 
@@ -105,7 +113,9 @@ You actually don't have to install it to use it, if you just want to play with i
 
 This will probably require privileges, so you may need to run "su" first or use sudo ("sudo make install") to get those privileges.
 
-The instructions below assume you haven't installed it.  If you *have* installed it, you don't need to include the "./" prefixes in the command names below.
+The instructions below assume you haven't installed it.  If you *have* installed it, you don't need to include the "./" prefixes in the command names below.  Another way you can avoid the "./" prefixes is to include directory with these commands in your PATH; on a Bourne-like shell, you can do this:
+
+    export PATH="$(pwd)/$PATH"
 
 
 
@@ -133,19 +143,21 @@ and you will see 5. Look! You now have a calculator! It's important to realize t
 
     '{2 + 3}
 
-it will respond with (+ 2 3).  That is, once it's read in, it will read in a quoted (+&nbsp;2&nbsp;3), and "executing" it will return the simple (+&nbsp;2&nbsp;3).
+it will respond with (+ 2 3).  That is, once it's read in, it will read in a quoted (+&nbsp;2&nbsp;3), and "executing" it will return the simple (+&nbsp;2&nbsp;3).  Note that the infix operator *must* be surrounded by whitespace - otherwise, it would have no way to know where the name of the operation begins or ends.
 
-There is intentionally no support for precedence between different operators. While precedence is useful in some circumstances, in typical uses for Lisp-derived languages and sweet-expressions, it doesn't help and is often harmful. In particular, precedence can hide where different lists occur.  This is not a problem at all, just use curly braces or parentheses when mixing different infix operators:
+There is intentionally no support for precedence between different operators. While precedence is useful in some circumstances, in typical uses for Lisp-derived languages and sweet-expressions, it doesn't help and is often harmful. In particular, precedence can hide where different lists occur.  This lack of precedence is not a problem at all; usually you can just use curly braces or parentheses when mixing different infix operators:
 
     {2 + {3 * 4}}
 
-You *can* "chain" the same infix operator, e.g., {2 + 3 + 4} is fine, and it will map to (+ 2 3 4). Note that the infix operator *must* be surrounded by whitespace - otherwise, it would have no way to know where the name of the operation begins or ends.
+You *can* "chain" the same infix operator, e.g., {2 + 3 + 4} is fine, and it will map to (+ 2 3 4). This works with comparisons, too, e.g.:
 
-What happens if we *do* use multiple infix operators in a single list? Instead of trying to guess the precedence, the reader will simply turn it into a list with "nfx" at front. You can then define a macro named "nfx" to process the list, or define "nfx" as an error to prevent its use.
+    {5 <= 7 <= 10}
 
-So this explains the real rule: in curly infix, the {...} contains an "infix list". If the enclosed infix list has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol, then it is mapped to "(*even-parameter* *odd-parameters*)". Otherwise, it is mapped to "(nfx *list*)" — you'll need to have a macro named "nfx" to use it.
+In short, a *simple infix list* has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  By intent, there is no precedence and you *must* use another {...} for an embedded infix list.
 
-Note that curly-infix-expressions intentionally do not force a particular precedence, nor do they automatically switch to infix operators recursively inside {...}. Many previous systems did that, but this turned out to interfere with many of Lisp's power (homoiconicity, multiple levels of language, and so on). It also does not attempt to guess when infix operators are used. [After many experiments with real problems, David A. Wheeler found that the rule as given actually works better for Lisps than those alternatives.](http://www.dwheeler.com/readable/version02.html)
+But what happens to infix lists that aren't simple infix lists?  The answer is that they map to "(nfx parameters)".   You can then define a macro named "nfx" to process the list (e.g., to implement a precedence system), or define "nfx" as an error to prevent its use.
+
+Note that curly-infix-expressions intentionally do not force a particular precedence, nor do they automatically switch to infix operators recursively inside {...}. Many previous systems did that, but this turned out to interfere with many of Lisp's power (which needs homoiconicity and generality). It also does not attempt to guess when infix operators are used. [After many experiments with real problems, David A. Wheeler found that this rule works better for Lisps than those alternatives.](http://www.dwheeler.com/readable/version02.html)
 
 You can type control-D (Windows: control-Z) to end this demo.  Or run "(exit)" to get out.
 
@@ -157,9 +169,9 @@ Now let's try out neoteric-expressions (which include curly-infix-expressions). 
 
       ./neoteric-guile
 
-We have reports that guile version 2.0's new "autocompilation" feature can cause troubles.  If you see ";; compiling /blah/blah..." just exit by typing **exit()** and **Enter**.  Then restart it (don't the clear cache first), and it should work.
+We have reports that guile version 2.0's new "autocompilation" feature can cause troubles.  If you see ";; compiling /blah/blah...", then just exit by typing **exit()** and **Enter**.  Then restart it (don't the clear cache first), and it should work.
 
-Neoteric-expressions include curly-infix-expressions, but adds special meanings to the grouping symbols ( ), [ ], and { } if they *immediately* follow an expression (instead of being separated by whitespace).
+Neoteric-expressions support curly-infix-expressions, including normally-formatted s-expressions.  In addition, neoteric-expressions add special meanings to the grouping symbols ( ), [ ], and { } if they *immediately* follow an expression (instead of being separated by whitespace).  In particular, any e( ... ) is mapped to (e ...), and any e{ ... } is mapped to (e { ... }).
 
 This means that you can use more "traditional" functional notation, e.g., f(1 2) maps to (f 1 2). Just type in the name of a function, an opening "(", its parameters (space-separated), and a closing ")". Make sure that you do *not* have a space before the (prefixed) function name and the following "(". For example, type this in:
 
@@ -177,6 +189,7 @@ You can nest them, just as you'd expect:
 
 Using function name prefixes is a nice way of showing negation, e.g., -(x) computes the value of 0 - x. So while curly infix by itself doesn't handle prefix functions, neoteric-expressions can handle them nicely:
 
+    define(n 12)
     {-(n) / 2}
 
 You can even use function name prefixes with traditional binary operators, such as:
@@ -193,9 +206,9 @@ It's actually quite common to have a function call pass one parameter, where the
 
 Just like traditional s-expressions, spaces separate parameters, so it's *important* that there be *no* space between the function name and the opening "(". Since spaces separate parameters, a space between the function name and the opening "(" would create two parameters instead of a single function call. The same is basically true for traditional s-expressions, too; (a b) and (ab) are not the same thing.
 
-Here's the real rule: in neoteric-expressions, f(...) maps to (f ...), f{...} maps to (f {...}), and f[ ... ] maps to (bracketaccess f). The "bracketaccess" is so that you can write a macro to access arrays and other mappings.  Note that "neoteric-expressions" used be called "modern-expressions"; you may see some older documents using that name.
+Here's the real rule: in neoteric-expressions, e(...) maps to (e ...), e{...} maps to (e {...}), e[ ... ] maps to (bracketaccess e), and (. e) maps to e. The "bracketaccess" is so that you can write a macro to access arrays and other mappings.  The (. e) rule lets you escape expressions (e.g., for the sweet-expressions we'll describe next).  Note that "neoteric-expressions" used be called "modern-expressions"; you may see some older documents using that name.
 
-Normally, people and pretty-printers will format Lisp code so that parameters inside a list are *separated* by whitespace, e.g., (a b c), so it turns out that this change in interpretation doesn't change the meaning of typically-formatted modern Lisp code (and you can pretty-print code to fix it). What's more, typical Lisp-aware text editors can work with neoteric-expressions as they are, without change... so if you don't want to change the way you work, but have a somewhat more readable notation, neoteric-expressions can help. But we still have to do all that parentheses-balancing, which hinders readability. Sweet-expressions, our next stop, address this.  To get out of this demo, type *exit()* *Enter* or *control-D* *Enter*.
+Normally, people and pretty-printers will format Lisp code so that parameters inside a list are *separated* by whitespace, e.g., (a b c), so it turns out that this change in interpretation doesn't change the meaning of typically-formatted modern Lisp code (and you can pretty-print code to fix it in the rare cases you need to). What's more, typical Lisp-aware text editors can often work with neoteric-expressions as they are, without change... so if you don't want to change the way you work, but have a somewhat more readable notation, neoteric-expressions can help. But we still have to do all that parentheses-balancing, which hinders readability. Sweet-expressions, our next stop, address this.  To get out of this demo, type *exit()* *Enter* or *control-D* *Enter*.
 
 
 Using Sweet-expressions (t-expressions) 
@@ -206,17 +219,17 @@ Sweet-expressions take neoteric-expressions and infers parentheses from indentat
     ./sweet-guile
 
 
-Again, we have reports that guile version 2.0's new "autocompilation" feature can cause troubles.  If you see ";; compiling /blah/blah..." just exit by typing **exit()** and **Enter** **Enter**.  Then restart it (don't the clear cache first), and it should work.
+Again, we have reports that guile version 2.0's new "autocompilation" feature can cause troubles.  If you see ";; compiling /blah/blah...", then just exit by typing **exit()** and **Enter** **Enter**.  Then restart it (don't the clear cache first), and it should work.
 
-Here, an indented line is a parameter of its parent and later terms on a line are parameters of the first term. A line with exactly one term, and no child lines, is simply that item; otherwise that line and its child lines are themselves a new list. Lines with *only* a ;-comment, and nothing else, are completely ignored - even their indentation is irrelevant. Whitespace-only lines at the beginning of a new expression are ignored, but a whitespace-only line (including a zero-length line) ends an expression. So, just type in your expression, and type a blank line (an extra Enter) to indicate that you're done.
+In sweet-expressions, an indented line is a parameter of its parent, and later terms on a line are parameters of the first term. A line with exactly one term, and no child lines, is simply that item; otherwise those terms and its child lines are themselves a new list. Lines with *only* a ;-comment, and nothing else, are completely ignored - even their indentation is irrelevant. Whitespace-only lines at the beginning of a new expression are ignored, but a whitespace-only line (including a zero-length line) ends an expression. So, just type in your expression, and type a blank line (an extra Enter) to indicate that you're done.
 
-Here's a trivial example:
+Here's a trivial example; type this in, and enter a blank line (*Enter* *Enter*) to calculate it:
 
     substring "Hello"
       1
       3
 
-What happens if the parameters are not constants, but something to be calculated? No problem, just put them on new lines and give them parameters. If something has parameters, then it must be something to calculate too! Here's another example (be sure to press at least one space before the 'substring'):
+What happens if the parameters are not constants, but something to be calculated? No problem, just put them on new lines and give them parameters. If something has parameters, then it must be something to calculate too! Here's another example (be sure to consistently indent the lines after the first one):
 
     substring
       "Hello"
@@ -260,16 +273,19 @@ Will produce:
 
 Sometimes you want to have a parameter that is a list of lists, or where the function to be called is in fact determined by another calculation. This is indicated with the "//" keyword; basically, at the beginning of line (but after indentation) "//" maps into a null function name, so you can use forms like "let" easily.
 
-There are a few limitations with the current implementation.  It doesn't currently support some constructs such as #', #|...|#, or #!...!#. Also, on Guile 2.0, autocompilation (the default) needs to be enabled in order to work properly.  If you'd like to help us improve the implementation, please join us!
+Note: In our current implementation, users of guile 2.0 must have autocompilation enabled.  This is the default anyway.
 
 When you're done with the demo, you can exit:
 
     exit()
 
+Again, be sure to type *Enter* *Enter* (a blank line) to execute the expression.
+
+
 Unsweeten: Translating Sweet-expressions into S-expressions
 ===========================================================
 
-We have a filter called "unsweeten" that translates sweet-expressions into S-expressions.  You can use it to write programs using sweet-expressions, like compiler.  Basically, you can write sweet-expressions, and use unsweeten to translate that into something your Lisp-based system can understand.  You can also use unsweeten to help you understand sweet-expressions - type in expressions, and see what they translate to!
+We have a filter called "unsweeten" that translates sweet-expressions into S-expressions.  You can use it to write programs using sweet-expressions, like a compiler.  Basically, you can write sweet-expressions, and use unsweeten to translate that into something your Lisp-based system can understand.  You can also use unsweeten to help you understand sweet-expressions - type in expressions, and see what they translate to!
 
 You can run unsweeten interactively, just type:
 
@@ -284,16 +300,16 @@ define factorial(n)
     {n * factorial{n - 1}}
 </pre>
 
-Remember to enter a blank line (ENTER ENTER) to end an expression.
+Remember to enter a blank line (*Enter* *Enter*) to end an expression.
 
-You can use this tool to process files, say, via a makefile.  Then you can use sweet-expressions to write your code, and have it quickly translated to s-expressions.  The following portable makefile snippet translates all ".sscm" (Sweet Scheme) files into ".scm" (Scheme) files (be sure the first character is TAB on the last line):
+You can use this tool to process files, say, via a makefile.  Then you can use sweet-expressions to write your code, and have it quickly translated to s-expressions.  The following portable makefile snippet translates all ".sscm" (Sweet Scheme) files into ".scm" (Scheme) files; be sure the first character on the last line is TAB:
 
     UNSWEETEN = unsweeten
     .sscm.scm:
         $(UNSWEETEN) $< > $@
 
 
-Only a group of semicolon comments starting from either the file's very beginning, or after a blank line, are copied to the output.  Such semicolon comments will have indentation (if any) removed. Block comments and *inside* a datum are never copied.  Semicolon comments immediately after a datum aren't copied either (the reader has to consume them to see if it's reached the end of the datum).
+Unsweeten also copies out comments, but only in certain cases.  Only a group of semicolon comments starting from either the file's very beginning, or after a blank line, are copied to the output.  Such semicolon comments will have indentation (if any) removed. Block comments and comments *inside* a datum are never copied.  Semicolon comments immediately after a datum aren't copied either (the reader has to consume them to see if it's reached the end of the datum - and once it is consumed unsweeten can't copy the comment out).
 
 Unsweeten also has some special substitutions.  If a semicolon begins a line, the next character may cause it to do something special.  If line begins with ";#: or ";!", the line is copied back without the leading semicolon.  If a line begins with ";_", then the line is copied back without either of those first two characters.
 
@@ -330,17 +346,22 @@ Similarly, here's an example of a script that is written with sweet-expressions 
 
     run head(-10 "README")
 
-You can even do this with Common Lisp (e.g., clisp), but since unsweeten expects Scheme syntax, you have to limit yourself to the syntax in common between Scheme and Common Lisp.
+You can even do this with Common Lisp (e.g., clisp).  Since unsweeten expects Scheme syntax, at this time you have to limit yourself to the syntax in common between Scheme and Common Lisp.  This is not a limitation on the *concept* of sweet-expressions, it's just a lmitation of our current implementation.  So here's an example using clisp:
 
-The "examples" subdirectory has files *sweet-run-demo-clisp*, *sweet-run-demo-guile*, and *sweet-run-demo-scsh* that demonstrate this.  If you've *installed* the readable system (with "make install") you can just run them.  If you haven't installed the readable system, you'll need modify your PATH so that the script can find the programs it needs, e.g.:
+    #!/usr/bin/env sweet-run
+    ;#!/usr/bin/env clisp
 
-    PATH="./$PATH" example/sweet-run-demo-guile
+The "examples" subdirectory has files *sweet-run-demo-clisp*, *sweet-run-demo-guile*, and *sweet-run-demo-scsh* that demonstrate sweet-run.  If you've *installed* the readable system (with "make install"), you can just run them.  If you haven't installed the readable system, you'll need modify your PATH so that the sweet-run and unsweeten programs can be found.  On a Bourne shell system, if sweet-run and unsweeted are in your current directory, you can modify your PATH by running:
+
+    export PATH="$(pwd)/$PATH"
+
+Now you can run (for example) "example/sweet-run-demo-guile" to run that guile demo.
 
 
 Sweeten: Translating S-expressions into Sweet-expressions
 =========================================================
 
-We also have a filter called "sweeten" that translates existing S-expressions into Sweet-expressions (the *reverse* of unsweeten).  You can use sweeten to help you understand understand sweet-expressions, or move an existing program to sweet-expressions.
+We also have a filter called "sweeten" that translates existing S-expressions into sweet-expressions (this is the *reverse* of unsweeten).  You can use sweeten to help you understand sweet-expressions, or to move an existing program to sweet-expressions.
 
 Just put some S-expressions into a file and you can have them translated.  For example, you could the following in file "demo.scm":
 
@@ -358,14 +379,15 @@ And you should see this as output:
 
 You can also run it interactively, but you may find that you want to press an extra "Enter" after your expression.  (It's done this way so that when it translates files they look correct.)
 
-Sweeten reads Scheme S-expression syntax.  However, you can use it for other Lisp-like languages if you stick to the syntax that is common between them.  There is a limitation of the sweeten implementation: Comments inside any parentheses will not be produced in the output.  (This is because it uses the underlying system "read" function, which throws this away.) Still, it's a useful tool.
+Sweeten reads Scheme S-expression syntax.  However, you can use it for other Lisp-like languages if you stick to the syntax that is common between them.  There is also a limitation of the sweeten implementation: Comments inside any parentheses will not be produced in the output.  (This is because it uses the underlying system "read" function, which throws this information away.) Still, it's a useful tool.
 
 Readable library
 ================
 
-The Scheme readers are implemented in a library module.  They're written to easily port to other Scheme systems, but guile is what we primarily use right now.
+These new notations are implemented in a Scheme library module.  They're written to easily port to other Scheme systems, and even non-Scheme systems, but guile is what we primarily use right now.
 
 To use the modules from guile, simply say:
+
     (use-modules (readable kernel))
 
 This exports the following functions:
