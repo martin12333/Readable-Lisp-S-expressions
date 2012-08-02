@@ -144,6 +144,11 @@
 ;             at the return of this function with this value, the
 ;             comment has been removed from the input port.
 ;       (a) - the datum read in is the value a
+;
+;   hash-pipe-comment-nests?
+;   - a Boolean value that specifies whether #|...|# comments
+;     should nest.
+
 
 ; On Guile 2.0, the define-module part needs to occur separately from
 ; the rest of the compatibility checks, unfortunately.  Sigh.
@@ -299,19 +304,6 @@
             ; non-nestable comment #! ... !#
             (non-nest-comment fake-port)
             '())
-          ; s-expression comment
-          ; (in this case it's either a c-expression or
-          ; n-expression comment; it is mostly infeasible
-          ; to make it a t-expression comment without
-          ; explicit changes in the indentation processor)
-          ; support as an extension in 1.6 and 1.8
-          ((char=? char #\;)
-            (top-read fake-port)
-            '())
-          ; support as an extension in 1.6 and 1.8
-          ((char=? char #\|)
-            (nest-comment fake-port)
-            '())
           ((char=? char #\:)
             ; On Guile 1.6, #: reads characters until it finds non-symbol
             ; characters.
@@ -361,29 +353,6 @@
                   (non-nest-comment fake-port))))
           (#t
             (non-nest-comment fake-port)))))
-    ; detect #| or |#
-    (define (nest-comment fake-port)
-      (let ((c (my-read-char fake-port)))
-        (cond
-          ((eof-object? c)
-            (values))
-          ((char=? c #\|)
-            (let ((c2 (my-peek-char fake-port)))
-              (if (char=? c2 #\#)
-                  (begin
-                    (my-read-char fake-port)
-                    (values))
-                  (nest-comment fake-port))))
-          ((char=? c #\#)
-            (let ((c2 (my-peek-char fake-port)))
-              (if (char=? c2 #\|)
-                  (begin
-                    (my-read-char fake-port)
-                    (nest-comment fake-port))
-                  (values))
-              (nest-comment fake-port)))
-          (#t
-            (nest-comment fake-port)))))
 
   ; Return list of characters inside #{...}#, a guile extension.
   ; presume we've already read the sharp and initial open brace.
@@ -404,6 +373,7 @@
           (#t (append '(#\}) (special-symbol port)))))
       (#t (append (list (my-read-char port)) (special-symbol port)))))
 
+    (define hash-pipe-comment-nests? #t)
 
     )
 ; -----------------------------------------------------------------------------
@@ -471,6 +441,10 @@
 
     ; R5RS has no hash extensions
     (define (parse-hash . _) #f)
+
+    ; Hash-pipe comment is not in R5RS, but support
+    ; it as an extension, and make them nest.
+    (define hash-pipe-comment-nests? #t)
 
     ))
 
@@ -712,6 +686,18 @@
             ((char=? c #\( )  ; Vector.
               (list->vector (my-read-delimited-list top-read #\) port)))
             ((char=? c #\\) (process-char port))
+            ; Handle #; (item comment).  This
+            ; only works at the item-level:
+            ;  it can only remove c-expressions
+            ;  or n-expressions, not whole
+            ; t-expressions!
+            ((char=? c #\;)
+              (top-read fake-port)
+              comment-tag)
+            ; handle nested comments
+            ((char=? c #\|)
+              (nest-comment port)
+              comment-tag)
             (#t
               (let ((rv (parse-hash top-read c port)))
                 (cond
@@ -723,6 +709,31 @@
                     (car rv))
                   (#t
                     (read-error "****ERROR IN COMPATIBILITY LAYER parse-hash: must return #f '() or `(,obj)"))))))))))
+
+
+  ; detect #| or |#
+  (define (nest-comment fake-port)
+    (let ((c (my-read-char fake-port)))
+      (cond
+        ((eof-object? c)
+          (values))
+        ((char=? c #\|)
+          (let ((c2 (my-peek-char fake-port)))
+            (if (char=? c2 #\#)
+                (begin
+                  (my-read-char fake-port)
+                  (values))
+                (nest-comment fake-port))))
+        ((and hash-pipe-comment-nests? (char=? c #\#))
+          (let ((c2 (my-peek-char fake-port)))
+            (if (char=? c2 #\|)
+                (begin
+                  (my-read-char fake-port)
+                  (nest-comment fake-port))
+                (values))
+            (nest-comment fake-port)))
+        (#t
+          (nest-comment fake-port)))))
 
   (define digits '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
 
