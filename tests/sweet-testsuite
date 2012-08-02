@@ -758,3 +758,47 @@ cleanup $ run $ cat(README)
 (cleanup 'nicely (run (cat README)))
 cleanup 'nicely $ run $ cat(README)
 
+; multiline comments
+
+x
+#|
+ #|
+  |#
+ |#
+x
+
+(x y)
+  #| shouldn't disable t-expression mode
+   #|
+    |#
+   |#
+x y
+
+x
+x #|
+   #|
+    |#
+   |#
+
+(x
+  y)
+x
+ #|
+  #|
+   |#
+  |# y
+
+(y z)
+#; x y z
+
+(x z)
+x #; y z
+
+(x y)
+x #|comment|# y
+
+(f
+ (x y))
+f
+  x #|comment|# y
+
