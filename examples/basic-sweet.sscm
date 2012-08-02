@@ -34,7 +34,7 @@ define add-if-all-numbers(lst)
 define mat-mat-mul
    lambda (m1 m2)
       let*
-        group
+        \\
           nr1 matrix-rows(m1)
           nr2 matrix-rows(m2)
           nc2 matrix-columns(m2)
@@ -42,20 +42,20 @@ define mat-mat-mul
         if not{matrix-columns(m1) = nr2} ; f{infix} = f({infix}).
           match-error(m1 m2)
         do
-          group
+          \\
             i 0 {i + 1}
-          group
+          \\
             {i = nr1} r
           do
-            group
+            \\
               j 0 {j + 1}
-            group
+            \\
               {j = nc2}
             do
-             group
+             \\
                k 0 {k + 1}
                a 0 {a + {matrix-ref(m1 i k) * matrix-ref(m2 k j)}}
-             group
+             \\
                {k = nr2}
                matrix-set!(r i j a)
 
