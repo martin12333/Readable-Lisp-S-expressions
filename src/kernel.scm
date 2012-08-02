@@ -692,7 +692,7 @@
             ;  or n-expressions, not whole
             ; t-expressions!
             ((char=? c #\;)
-              (top-read fake-port)
+              (top-read port)
               comment-tag)
             ; handle nested comments
             ((char=? c #\|)
