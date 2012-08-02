@@ -1110,9 +1110,13 @@
                        (outlevel (car sub-read))
                        (sub-expr (cdr sub-read)))
                   (cons outlevel (attach-sourceinfo pos `(,@first ,sub-expr)))))
+              ; remove multiline comment immediately if not at
+              ; start of line
+              ((and (not first-item?) (eq? first comment-tag))
+                (readblock-internal level port first-item?))
               ((or
-                 ; treat multiline comment as SPLIT
-                 (eq? first comment-tag)
+                 ; treat multiline comment at start-of-line as SPLIT
+                 (and first-item? (eq? first comment-tag))
                  (and (eq? char split-char) (eq? first split)))
                 ; consume horizontal, non indent whitespace
                 (consume-horizontal-whitespace port)
