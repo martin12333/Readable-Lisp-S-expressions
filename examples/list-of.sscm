@@ -34,7 +34,7 @@
 ; Scheme hygienic macros).
 
 define-module
-  example list-of
+  examples list-of
   :export
   \\
     ; in Guile 1.6, module macros need to export the
