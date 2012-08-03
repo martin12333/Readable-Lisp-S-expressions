@@ -1,9 +1,13 @@
+; Here are a few basic examples of Sweet-expressions, which "unsweeten"
+; can process.  These are all in Scheme.
 
-; Here are a few examples of Sweet-expressions; you can run them through
-; sweet-filter < examples
-; These are all in Scheme, so you can send them to Scheme after processing.
-; Sweet-expressions are NOT limited to Scheme - see the documentation.
+define factorial(n)
+  if {n <= 1}
+    1
+    {n * factorial{n - 1}} ; f{...} => f({...})
 
+; Based on example by Hanson Char,
+; http://hansonchar.blogspot.com/2006/01/fibonacci-numbers-in-scheme.html
 
 define fibfast(n)  ; Typical function notation
   if {n < 2}       ; Indentation, infix {...}
@@ -15,10 +19,7 @@ define fibup(max count n-1 n-2)
     {n-1 + n-2}
     fibup max {count + 1} {n-1 + n-2} n-1
 
-define factorial(n)
-  if {n <= 1}
-    1
-    {n * factorial{n - 1}} ; f{...} => f({...})
+; From Wikipedia article "Scheme (programming language)":
 
 define add-if-all-numbers(lst)
  call/cc
@@ -31,6 +32,9 @@ define add-if-all-numbers(lst)
           {car(lst) + loop(cdr(lst))}
 
 
+; From "The Scheme Programming Language, Second Edition" by R. Kent Dybvig,
+; Chapter 9.  http://www.scheme.com/tspl2d/examples.html
+
 define mat-mat-mul
    lambda (m1 m2)
       let*
@@ -41,14 +45,10 @@ define mat-mat-mul
           r   make-matrix(nr1 nc2)
         if not{matrix-columns(m1) = nr2} ; f{infix} = f({infix}).
           match-error(m1 m2)
-        do
-          \\
-            i 0 {i + 1}
+        do (i(0 {i + 1}))
           \\
             {i = nr1} r
-          do
-            \\
-              j 0 {j + 1}
+          do ((j 0 {j + 1}))
             \\
               {j = nc2}
             do
@@ -58,5 +58,4 @@ define mat-mat-mul
              \\
                {k = nr2}
                matrix-set!(r i j a)
-
 
