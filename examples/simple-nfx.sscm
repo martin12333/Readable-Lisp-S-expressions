@@ -29,7 +29,7 @@
 ; arithmetic precedence, and nothing else.
 
 define-module
-  example simple-nfx
+  examples simple-nfx
   :export-syntax
   \\
     nfx
