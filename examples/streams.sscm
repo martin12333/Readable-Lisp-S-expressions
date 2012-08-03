@@ -31,7 +31,7 @@
 ; to see exactly the code that is copyrighted differently.
 
 define-module
-  ( example streams )
+  examples streams
   ; pending decision on SPLICE
   :export \\ (
              ; constructors
@@ -157,7 +157,7 @@ define stream-cdr(x)
       promise   stream-unwrap(x)
       cell      xforce(promise)
       promise-d cdr(cell)
-      d         xforce(promise-d)
+      d         stream-wrap(promise-d)
     d
 
 ; lambda:
@@ -171,12 +171,14 @@ define-syntax stream-lambda
 ;--- implementation
 define stream-cons-core-builder(fa fd)
   stream-wrap
-    xdelay
+    xeager
       cons
         xdelay fa()
-        xdelay fd()
+        xlazy  $ stream-unwrap $ fd()
 define stream-lambda-core-builder(f)
   stream-wrap
     xlazy
       stream-unwrap
         f()
+
+; vim: set ft=scheme : ;
