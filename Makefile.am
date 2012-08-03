@@ -234,10 +234,11 @@ check: readable/kernel.scm
 	     $(srcdir)/tests/roundtrip-test $(srcdir)/tests/roundtrip-testsuite
 
 # Developer conveniences:
-# "make push" interpreted as "git push".
+# "make push" interpreted as "git push" when current branch is "develop".
 # "make test" interpreted as "make check"
 push:
-	git push
+	[ "`git symbolic-ref HEAD`" = "refs/heads/develop" ] && \
+	    git push origin develop
 
 test:
 	make check
