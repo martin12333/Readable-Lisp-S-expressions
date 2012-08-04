@@ -1,0 +1,14 @@
+2001-08-10 David A. Wheeler
+	* (Release of readable software version 0.3.1?)
+
+2001-08-02 Alan Manuel Gloria
+	* Fixed multi-line comment processing
+	* configuration no longer depends on guile-config (simplifies install)
+
+2001-08-01 David A. Wheeler
+	* Add presentation to distribution
+
+2012-07-31 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Release of readable software version 0.3.0.
+
+
