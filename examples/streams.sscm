@@ -32,6 +32,7 @@
 define-module
   examples streams
   :export
+  \\
     ; constructors
     stream-null \\ stream-cons
     stream-cons-core-builder ;; needed by Guile < 2.0
