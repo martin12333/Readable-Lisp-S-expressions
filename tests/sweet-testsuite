@@ -782,6 +782,35 @@ $ f g
 ((f x))
 $ f(x)
 
+((f (a b)))
+$ f
+  a b
+
+((f a))
+$ f
+  a
+
+((f q (a b)))
+$ f q
+  a b
+
+(solo (z))
+solo
+  $ z
+
+(foo ((a b)))
+foo
+  $ a b
+
+(far ((a b (c d))))
+far
+  $ a b
+    c d
+
+(((f x) xyz))
+$ f(x)
+  xyz
+
 ; multiline comments
 
 x
