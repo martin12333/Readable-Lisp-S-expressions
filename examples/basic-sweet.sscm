@@ -45,12 +45,12 @@ define mat-mat-mul
           r   make-matrix(nr1 nc2)
         if not{matrix-columns(m1) = nr2} ; f{infix} = f({infix}).
           match-error(m1 m2)
-        do (i(0 {i + 1}))
-          \\
-            {i = nr1} r
-          do ((j 0 {j + 1}))
-            \\
-              {j = nc2}
+        do
+          $ i 0 {i + 1}
+          $ {i = nr1} r
+          do
+            $ j 0 {j + 1}
+            $ {j = nc2}
             do
              \\
                k 0 {k + 1}
