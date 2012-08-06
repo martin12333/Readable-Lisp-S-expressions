@@ -51,18 +51,18 @@ CLEANFILES = readable/kernel.scm
 
 script_sources = src/sweeten.sscm src/unsweeten \
                  src/neoteric-guile src/sweet-guile src/sweet-run \
-                 src/kernel.scm
+                 src/kernel.scm src/sweet-scsh
 EXTRA_DIST += $(script_sources)
 
 # These scripts are generated at build time, so they're not distributed
 # (there's no dist_ prefix for bin_SCRIPTS here):
 bin_SCRIPTS  = bin/sweeten bin/unsweeten bin/neoteric-guile bin/sweet-guile
-bin_SCRIPTS += bin/sweet-run
+bin_SCRIPTS += bin/sweet-run bin/sweet-scsh
 CLEANFILES  += $(bin_SCRIPTS)
 
 # These are the local scripts, for testing, and are not installed.
 noinst_SCRIPTS = ./sweeten ./unsweeten \
-                 ./neoteric-guile ./sweet-guile ./sweet-run
+                 ./neoteric-guile ./sweet-guile ./sweet-scsh ./sweet-run
 CLEANFILES += $(noinst_SCRIPTS)
 
 
@@ -111,6 +111,11 @@ bin/sweet-guile: src/sweet-guile my-subst
 	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
 	chmod a+x $@
 
+bin/sweet-scsh: src/sweet-scsh
+	$(MKDIR_P) bin
+	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
+	chmod a+x $@
+
 bin/sweet-run: src/sweet-run my-subst
 	$(MKDIR_P) bin
 	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
@@ -140,6 +145,12 @@ bin/sweet-run: src/sweet-run my-subst
 	chmod a-w $@
 
 ./sweet-guile: src/sweet-guile my-subst
+	$(RM) -f $@
+	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
+	chmod a+x $@
+	chmod a-w $@
+
+./sweet-scsh: src/sweet-scsh my-subst
 	$(RM) -f $@
 	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
 	chmod a+x $@

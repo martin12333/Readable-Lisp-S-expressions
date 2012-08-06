@@ -42,14 +42,11 @@ fi
 (define column1 #t)
 
 (define (copy-line port)
-  ; Copy line from in to out - end on EOF or newline.
+  ; Copy line from in to out - end on EOF or newline (but don't output it)
   (let ((c (peek-char port)))
     (cond
       ((eof-object? c) c)
-      ((or (char=? c #\newline) (char=? c linefeed))
-        (set! column1 #t)
-        (write-char (read-char port)))
-      (#t
+      ((not (or (char=? c #\newline) (char=? c linefeed)))
         (set! column1 #f)
         (write-char (read-char port))
         (copy-line port)))))
@@ -62,7 +59,10 @@ fi
     (cond
       ((eof-object? c) c)
       ((or (char=? c #\newline ) (char=? c linefeed))
-        (set! column1 #t) (write-char (read-char port)) (sweet-filter port))
+        (set! column1 #t)
+        (write-char (read-char port))
+        (force-output) ; guile, flush output so interactive use okay.
+        (sweet-filter port))
       ((char=? c #\; )
         (read-char port) ; Consume semicolon.
         (let ((c2 (peek-char port)))

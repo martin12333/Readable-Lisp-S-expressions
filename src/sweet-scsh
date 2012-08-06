@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# If "unsweeten" isn't avaiable but is in ".", add "." to PATH.
+
+location="`command -v unsweeten`"
+if [ -z "$location" ] ; then
+  if [ -x "unsweeten" ] ; then
+    export PATH=".:$PATH"
+  fi
+fi
+
+unsweeten | scsh
+
