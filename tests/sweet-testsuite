@@ -754,9 +754,33 @@ run $ head -10 README
 (cleanup (run (cat README)))
 cleanup $ run $ cat(README)
 
-
 (cleanup 'nicely (run (cat README)))
 cleanup 'nicely $ run $ cat(README)
+
+(aa bb (cc (dd ee)))
+aa bb $ cc
+  dd ee
+
+(a b c d)
+a b c $ d
+
+(a b (c d))
+a b $ c d
+
+(a (b c d))
+a $ b c d
+
+((a b c d))
+$ a b c d
+
+(q)
+$ q
+
+((f g))
+$ f g
+
+((f x))
+$ f(x)
 
 ; multiline comments
 

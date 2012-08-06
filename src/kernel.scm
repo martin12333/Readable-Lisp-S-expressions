@@ -1166,7 +1166,12 @@
               ((and (eq? char sublist-char) (eq? first sublist))
                 (cond
                   (first-item?
-                    (read-error "SUBLIST found at start of line"))
+                    ; Create list of rest of items.
+                    ; Was: (read-error "SUBLIST found at start of line")
+                    (let* ((read (readblock-clean level port))
+                           (next-level (car read))
+                           (block (cdr read)))
+                      (cons next-level (cons split-tag (attach-sourceinfo pos (list block))))))
                   (#t
                     (consume-horizontal-whitespace port)
                     (let* ((read (readblock-clean level port))
