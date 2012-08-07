@@ -1,0 +1,25 @@
+
+`biwascheme/` Directory
+=======================
+
+This directory contains a simple `sweetbiwa.html` file that,
+when loaded, provides an online REPL to BiwaScheme, but
+using sweet-expressions rather than s-expressions.
+
+To make that work, first get BiwaScheme in a completely
+separate directory, probably via this command:
+
+    git clone https://github.com/biwascheme/biwascheme.git biwascheme_js
+
+Then make *just* the `biwascheme.js` file:
+
+    cd biwascheme_js/
+    make release/biwascheme.js
+
+Then copy the resulting file `release/biwascheme.js` to
+this directory and open the `sweetbiwa.html` file in a
+js-capable browser.
+
+`sweetbiwa.html` should be constructed by the `Makefile`
+in the main directory.  The file `sweetbiwa.html.in` is
+the source.
