@@ -1,0 +1,29 @@
+# Example Makefile, showing one way to create a Makefile using unsweeten.
+
+# You can use this file directly using make -f, e.g.:
+#  make -f Makefile.example clean
+
+# Set a make variable for where to find "unsweeten":
+
+UNSWEETEN=../unsweeten
+
+# Here is an inference rule, expressed in the POSIX-portable
+# old-fashioned suffix rule format, that defines how to use unsweeten
+# to take .sscm files and generate .scm files:
+.sscm.scm:
+	$(UNSWEETEN) < $< > $@
+
+SOURCES= basic-sweet.sscm list-of.sscm simple-nfx.sscm streams.sscm
+SCM_FILES= $(SOURCES:.sscm=.scm)
+
+all: $(SCM_FILES)
+
+clean:
+	rm -f $(SCM_FILES)
+
+.PHONY: all clean
+
+# You *must* set .SUFFIXES for the suffix rule to work:
+
+.SUFFIXES: .sscm .scm
+
