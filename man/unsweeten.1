@@ -37,8 +37,6 @@ Example: {2 * 3 * 4} maps to (* 2 3 4)
 Example: {2 + 3 * 4} maps to (nfx 2 + 3 * 4)
 .IP \(bu 2
 Example: {2 + {3 * 4}} maps to (+ 2 (* 3 4))
-.IP \(bu 2
-Example: {n <= 2} maps to (<= n 2)
 .RE
 .IP 2. 4
 \fINeoteric-expressions\fR (\fIn-expressions\fR): This includes curly-infix-expressions, and adds special meanings to some prefixed symbols. An e(...) maps to (e ...); an e{...} maps to e({...}); and an e[...] maps to (bracketaccess e ...), where "e" is any expression. There must be no whitespace between e and the open parenthesis. Also, an unprefixed "( . e)" must evaluate as "e".
@@ -72,7 +70,8 @@ Lines with only a ;-comment are completely ignored - even their indentation (if 
 .IP \(bu 2
 A \\\\ (aka SPLIT) starts a new line at the current indentation.  If it's immediately after indentation (aka GROUP in that case), it represents no symbol at all (at that indentation) - this is useful for lists of lists.
 .IP \(bu 2
-A $ (aka SUBLIST) in the middle of list restarts list processing; the right-hand-side (including its sub-blocks) is the last parameter of the left-hand side.
+A $ (aka SUBLIST) in the middle of list restarts list processing; the right-hand-side (including its sub-blocks) is the last parameter of the left-hand-side (on the line).
+If there is no left-hand-side, the right-hand-side is put in a list.
 .IP \(bu 2
 A leading traditional abbreviation (quote, comma, backquote, or comma-at), followed by space or tab, is that operator applied to the sweet-expression starting at the same line.
 .IP \(bu 2
@@ -103,8 +102,14 @@ None.
 .\" .SH "ENVIRONMENT"
 .\" .PP
 
-.\" .SH BUGS
-.\" .PP
+.SH BUGS
+.PP
+Unsweeten is designed to read Scheme-formatted expressions.
+It can be used for other Lisp-based languages, but only if the input
+is limited to the notation in common between them.
+.PP
+Unsweeten implements its own reader, so it does not support some of the
+nonstandard reader extensions supported by some other readers.
 
 .SH EXAMPLES
 .PP
@@ -113,6 +118,13 @@ You can use this tool to process files, say, via a makefile. Then you can use sw
  UNSWEETEN = unsweeten
  \.sscm\.scm:
     $(UNSWEETEN) $< > $@
+
+.PP
+You can also use the tool as a front-end for interactive uses. For example,
+you can use it to work with clisp (though you must stick to the subset
+common between Scheme and Common Lisp):
+
+ unsweeten | clisp
 
 .PP
 Here is an example of the kind of data that can be sent into unsweeten:
@@ -124,7 +136,7 @@ define factorial(n)
 
 .PP
 The unsweeten tool will translate that input into this traditional
-s-expression:
+s-expression (which is a valid Scheme program):
 .PP
 (define (factorial n)
   (if (<= n 1)
