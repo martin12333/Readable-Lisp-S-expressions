@@ -1,0 +1,361 @@
+Readable s-expressions
+
+#+startup: beamer
+#+LaTeX_CLASS: beamer
+#+LaTeX_CLASS_OPTIONS: [bigger]
+#+AUTHOR: David A. Wheeler ( [[http://readable.sourceforge.net][readable.sourceforge.net]] )
+#+SUBTITLE: Curly-infix-, Neoteric-, and Sweet-expressions
+#+BEAMER_FRAME_LEVEL: 2
+
+* Problem
+** The Problem
+
+#+begin_src emacs-lisp
+(let 
+    ((a 1)
+     (b 2))
+    (message
+        (number-to-string
+            (* (- a b) (+ a b)))))
+#+end_src
+
+
+#+begin_quote
+“I've used Lisp my whole programming life and I still don't find prefix math expressions natural.” 
+- Paul Graham 
+#+end_quote
+
+** s-expressions: Simple, clear, ugly.
+
+#+begin_quote
+“Lisp has all the visual appeal of oatmeal with fingernail clippings mixed in.” 
+- Larry Wall 
+#+end_quote
+
+#+begin_quote
+“After 13 years of doing Lisp and 3 or 4 years of Python, I agree: I prefer writing Lisp, but Python is easier to read.” 
+- John Wiseman 
+#+end_quote
+
+#+begin_quote
+“LISP: ...  ‘Lots of Irritating Superfluous Parentheses’” 
+- Jargon File 
+#+end_quote
+
+** Challenges
+
+*** Be General                                                :BMCOL:B_block:
+    :PROPERTIES:
+    :BEAMER_col: 0.5
+    :BEAMER_env: block
+    :END:
+/useful regardless of underlying semantic/
+*** Be Homoiconic                                             :BMCOL:B_block:
+    :PROPERTIES:
+    :BEAMER_col: 0.5
+    :BEAMER_env: block
+    :END:
+/underlying data structure is clear from the syntax/
+ 
+** Abbreviations
+
+*** Prior work                                                :B_block:BMCOL:
+    :PROPERTIES:
+    :BEAMER_env: block
+    :BEAMER_col: 0.5
+    :END:
+**** Lisp has, for over 50 years, had abbreviations 
+
+#+begin_example
+'x means (quote x) 
+#+end_example
+#+begin_example
+(a b c) 
+means 
+(a . (b . (c . ()))) 
+#+end_example
+
+*** Adding New Ones                                           :B_block:BMCOL:
+    :PROPERTIES:
+    :BEAMER_env: block
+    :BEAMER_col: 0.5
+    :END:
+
+**** Takes time to learn & implement
+**** makes code readable
+**** For arbitrary Lisps (Scheme, Common Lisp, Emacs Lisp, Arc, Clojure, ...) 
+
+** Readability counts
+
+#+begin_quote
+“When you program, you spend more time reading code than writing it... a language that makes source code ugly is maddening to an exacting programmer, as clay full of lumps would be to a sculptor.”
+- Paul Graham 
+#+end_quote
+
+ 
+* Readable solution
+** Readable solution
+*** new abbreviations 
+/Normally-formatted s-expressions keep working/
+*** You can update your reader to support these 
+
+*** Three new expression tiers
+
+** (0) starting lisp
+
+#+begin_src emacs-lisp
+(let 
+    ((a 1)
+     (b 2))
+    (message
+        (number-to-string
+            (* (- a b) (+ a b)))))
+#+end_src
+
+** (1) Curly infix
+
+#+begin_src emacs-lisp
+(let 
+    ((a 1)
+     (b 2))
+    (message
+        (number-to-string
+            {{a - b} * {a + b}})))
+#+end_src
+
+** (2) Neoteric
+
+#+begin_src emacs-lisp
+let((a(1)
+     b(2))
+    message(
+        number-to-string(
+            {{a - b} * {a + b}})))
+#+end_src
+
+** (3) Sweet
+
+#+begin_src emacs-lisp
+let
+    \\
+        a 1
+        b 2
+    message
+        number-to-string
+            {{a - b} * {a + b}}
+#+end_src
+ 
+** Curly-infix-expressions
+
+(c-expressions)
+- S-expressions, + curly braces \{...\} contain an “infix list” 
+- A “simple infix list” represents one operation; it has: 
+    - An odd number of parameters 
+    - At least 3 parameters, and 
+    - All even parameters are the same symbol 
+        … maps to “(even-param odd-params)” so \{2 + 3\} maps to (+ 2 3) 
+- Otherwise maps to "(nfx parameters)". 
+- No built-in precedence, use another \{…\} for embedded list 
+
+** Curly Infix Examples: 
+*** Basics                                            :BMCOL:B_ignoreheading:
+    :PROPERTIES:
+    :BEAMER_col: 0.5
+    :BEAMER_env: ignoreheading
+    :END:
+*** Basics                                                          :B_block:
+    :PROPERTIES:
+    :BEAMER_env: block
+    :END:
+#+begin_example
+{n <= 2} 
+   ↓
+(<= n 2) 
+#+end_example
+*** Multiple operators                                              :B_block:
+    :PROPERTIES:
+    :BEAMER_env: block
+    :END:
+#+begin_example
+{2 * 3 * 4} 
+     ↓
+(* 2 3 4) 
+#+end_example
+*** No Precedence                                     :BMCOL:B_ignoreheading:
+    :PROPERTIES:
+    :BEAMER_col: 0.5
+    :BEAMER_env: ignoreheading
+    :END:
+*** No Precedence                                                   :B_block:
+    :PROPERTIES:
+    :BEAMER_env: block
+    :END:
+#+begin_example
+{2 + {3 * 4}} 
+      ↓
+(+ 2 (* 3 4)) 
+
+#+end_example
+*** Mixed operators                                                 :B_block:
+    :PROPERTIES:
+    :BEAMER_env: block
+    :END:
+#+begin_example
+{2 + 3 * 4} 
+     ↓
+(nfx 2 + 3 * 4) 
+#+end_example
+
+
+** Neoteric-expressions (n-expressions)
+
+*** Definition                                                :B_block:BMCOL:
+    :PROPERTIES:
+    :BEAMER_env: block
+    :BEAMER_col: 0.5
+    :END:
+    - e(...) → (e ...) 
+    - e\{...\} → e(\{...\}) 
+    - e[...] → (bracketaccess e …) 
+    - unprefixed "( . e)" → e 
+*** Examples:                                                 :BMCOL:B_block:
+    :PROPERTIES:
+    :BEAMER_col: 0.5
+    :BEAMER_env: block
+    :END:
+#+begin_example
+f(1 2) maps to (f 1 2) 
+#+end_example
+#+begin_example
+f{n - 1} maps to f({n - 1}) 
+which maps to (f (- n 1)) 
+#+end_example
+ 
+** Basic Sweet-expressions (t-expressions)
+- Includes neoteric-expressions, and deduces parentheses from indentation 
+    - An indented line is a parameter of its parent 
+    - Later terms on a line are parameters of the first term 
+    - A line with exactly one term, and no child lines, is that term; multiple terms are wrapped into a list 
+    - An empty line ends the expression 
+    - Empty lines before expressions are ignored 
+    - No indentation processing inside ( ), [ ], and { } 
+- Stop “Lots of Irritating Superfluous Parentheses” 
+
+* Examples 
+** Sweet-expression Example #1
+
+*** Sweet                                                   :B_ignoreheading:
+    :PROPERTIES:
+    :BEAMER_env: ignoreheading
+    :END:
+#+begin_src scheme
+define factorial(n)
+    if {n <= 1}
+        1
+        {n * factorial{n - 1}}
+
+#+end_src
+*** ↓  ↓  ↓  ↓  ↓                                                   :B_block:
+    :PROPERTIES:
+    :BEAMER_env: block
+    :END:
+#+begin_src scheme
+(define (factorial n)
+  (if (<= n 1)
+    1
+    (* n (factorial (- n 1)))))
+#+end_src
+ 
+** Sweet-expression Example #2
+#+begin_src scheme
+define long-and-boring?(x)
+    cond
+        not(pair?(x))       #f
+        not(list?(x))       #f
+        {length(x) < boring-length} #f
+        #t           boring?(x)
+#+end_src
+ 
+** Sweet-expression Example #3
+#+begin_src scheme
+define unit-list(x)
+  cond
+    null?(x)    '()
+    pair?(x)
+    if null?(cdr(x))
+      unit car(x)
+      append unit(car(x)) LISTSPACE unit-list(cdr(x))
+    #t  append(LISTSP.SP unit(x))
+#+end_src
+ 
+** Sweet-expression Refinements (1)
+- ;-comment-only-lines completely ignored 
+    - Even indentation irrelevant 
+    - Useful to “separate” lines without ending whole expression 
+- Indents: one-or-more space, tab, and/or ! 
+    - A line with only indentation is an empty line 
+    - If an expression *starts* indented, then indentation disabled 
+    - “!” is surprising, but solves past problems with indentation-sensitive syntaxes & enables highlighting 
+ 
+** Sweet-expression Refinements (2)
+- A \text{\textbackslash\textbackslash} between datums (aka SPLIT) starts a new line at current indentation 
+- A \text{\textbackslash\textbackslash} after indent (aka GROUP) represents no symbol 
+    - Useful for lists of lists 
+- A $ in the middle of list (aka SUBLIST) restarts list processing (Haskell-like) 
+    - Right-hand-side (including sub-blocks) is the last parameter of left-hand side 
+- Leading quote (etc.), followed by space or tab, quotes rest 
+ 
+** Example with let*
+
+*** Sweet                                                     :B_block:
+    :PROPERTIES:
+    :BEAMER_env: block
+    :END:
+#+begin_src scheme
+    define factorial(n)
+        if {n <= 1}
+            1
+            {n * factorial{n - 1}}
+#+end_src
+
+*** ↓ unsweeten ↓                                                    :B_block:
+    :PROPERTIES:
+    :BEAMER_env: block
+    :END:
+#+begin_src scheme
+    (define (factorial n)
+      (if (<= n 1)
+        1
+        (* n (factorial (- n 1)))))
+#+end_src
+ 
+* Tools available
+** Tools available
+*** unsweeten: Translate sweet-expressions to s-expressions 
+/Can be used in makefiles/
+*** sweeten: Translate s-expression to sweet-expressions 
+/Simplifies transition/
+*** sweet-run: Translate and run sweet-expression script 
+/Can use guile, scsh, clisp, .../
+*** neoteric-guile: Run guile using neoteric-expressions 
+*** sweet-guile: Run guile using sweet-expressions 
+ 
+* Conclusions
+** Conclusions
+
+“Readable”
+
+- is much more readable
+- is easier to understand
+- uses three tiers 
+    - Curly-infix-expressions: \{a + b\}
+    - Neoteric-expressions:    f(a b)
+    - Sweet-expressions:       f a b
+
+More info & implementation: 
+        [[http://readable.sourceforge.net][readable.sourceforge.net]]
+ 
+** Released under CC-BY
+- This presentation is released under the Creative Commons Attribution 3.0 Unported license (CC BY 3.0) 
+- You may share, remix, and make commercial use of the work, as long as you give attribution to “David A. Wheeler”. 
+- [[http://creativecommons.org/licenses/by/3.0/][creativecommons.org/licenses/by/3.0/]]
