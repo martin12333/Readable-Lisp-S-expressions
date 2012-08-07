@@ -189,6 +189,7 @@ EXTRA_DIST += \
  examples/simple-nfx.sscm \
  examples/streams.sscm \
  examples/basic-sweet.sscm \
+ examples/Makefile.example \
  examples/README
 
 # Man pages
