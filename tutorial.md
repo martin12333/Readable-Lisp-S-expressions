@@ -219,7 +219,7 @@ Sweet-expressions take neoteric-expressions and infers parentheses from indentat
     ./sweet-guile
 
 
-Again, we have reports that guile version 2.0's new "autocompilation" feature can cause troubles.  If you see ";; compiling /blah/blah...", then just exit by typing **exit()** and **Enter** **Enter**.  Then restart it (don't the clear cache first), and it should work.
+Again, we have reports that guile version 2.0's new "autocompilation" feature can cause troubles.  If you see ";; compiling /blah/blah...", then just exit by typing **(exit)** and **Enter** **Enter**.  Then restart it (don't the clear cache first), and it should work.
 
 In sweet-expressions, an indented line is a parameter of its parent, and later terms on a line are parameters of the first term. A line with exactly one term, and no child lines, is simply that item; otherwise those terms and its child lines are themselves a new list. Lines with *only* a ;-comment, and nothing else, are completely ignored - even their indentation is irrelevant. Whitespace-only lines at the beginning of a new expression are ignored, but a whitespace-only line (including a zero-length line) ends an expression. So, just type in your expression, and type a blank line (an extra Enter) to indicate that you're done.
 
@@ -271,7 +271,7 @@ If you're not sure what something means, you can "quote" it so it won't execute.
 Will produce:
 (foo bar1 bar2 (spam eggs eggs))
 
-Sometimes you want to have a parameter that is a list of lists, or where the function to be called is in fact determined by another calculation. This is indicated with the "//" keyword; basically, at the beginning of line (but after indentation) "//" maps into a null function name, so you can use forms like "let" easily.
+Sometimes you want to have a parameter that is a list of lists, or where the function to be called is in fact determined by another calculation. This is indicated with the "\\\\" keyword; basically, at the beginning of line (but after indentation) "\\\\" maps into a null function name, so you can use forms like "let" easily.
 
 Note: In our current implementation, users of guile 2.0 must have autocompilation enabled.  This is the default anyway.
 
@@ -302,7 +302,7 @@ define factorial(n)
 
 Remember to enter a blank line (*Enter* *Enter*) to end an expression.
 
-You can use this tool to process files, say, via a makefile.  Then you can use sweet-expressions to write your code, and have it quickly translated to s-expressions.  The following portable makefile snippet translates all ".sscm" (Sweet Scheme) files into ".scm" (Scheme) files; be sure the first character on the last line is TAB:
+You can use this tool to process files, say, via a makefile.  Then you can use sweet-expressions to write your code, and have it quickly translated to s-expressions.  The following portable Makefile snippet translates all ".sscm" (Sweet Scheme) files into ".scm" (Scheme) files; as this is Makefile be sure the first character on the last line is TAB:
 
     UNSWEETEN = unsweeten
     .sscm.scm:
@@ -379,7 +379,7 @@ And you should see this as output:
 
 You can also run it interactively, but you may find that you want to press an extra "Enter" after your expression.  (It's done this way so that when it translates files they look correct.)
 
-Sweeten reads Scheme S-expression syntax.  However, you can use it for other Lisp-like languages if you stick to the syntax that is common between them.  There is also a limitation of the sweeten implementation: Comments inside any parentheses will not be produced in the output.  (This is because it uses the underlying system "read" function, which throws this information away.) Still, it's a useful tool.
+Sweeten reads Scheme (or more specifically, Guile) S-expression syntax.  However, you can use it for other Lisp-like languages if you stick to the syntax that is common between them.  There is also a limitation of the sweeten implementation: Comments inside any parentheses will not be produced in the output.  (This is because it uses the underlying system "read" function, which throws this information away.) Still, it's a useful tool.
 
 Readable library
 ================
@@ -398,6 +398,7 @@ This exports the following functions:
 *   replace-read(replace-read-with): Change the current "read" function to the function replace-read-with.
 *   restore-traditional-read(): Restore the traditional read function.
 
+For porting to other Scheme implementations, see the comments in the file `src/kernel.scm`.  On a sufficiently R5RS Scheme with SRFI-0 it can be loaded `(load "src/kernel.scm")` and will work, but without line source information and with its internal functions scattered all over your user's namespace.
 
 More Complex Examples
 =====================

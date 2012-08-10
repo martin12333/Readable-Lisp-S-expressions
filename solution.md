@@ -2,48 +2,48 @@ As discussed in the [Problem] page, many developers find standard Lisp notation 
 
 Unlike most past efforts to make Lisp more readable, our approach is **generic** (the notation does not depend on an underlying semantic) and **homoiconic** (the underlying data structure is clear from the syntax).  We believe these are necessary conditions for a readable Lisp notation (and their lack is why past efforts often failed).
 
-Readable rules
-==============
+Readable abbreviation rules
+===========================
 
-We have three tiers, each of which builds on the previous one:
+We have three notation tiers, each of which builds on the previous one ("&rArr;" means "maps to"):
 
 1.   *Curly-infix-expressions* (*c-expressions*): Curly braces {...} contain an *infix list*. A *simple infix list* has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  Other infix lists map to "(nfx parameters)".   By intent, there is no precedence and you *must* use another {...} for an embedded infix list.
-    * Example: {n <= 2} maps to (<= n 2)
-    * Example: {2 * 3 * 4} maps to (* 2 3 4)
-    * Example: {2 + 3 * 4} maps to (nfx 2 + 3 * 4)
-    * Example: {2 + {3 * 4}} maps to (+ 2 (* 3 4))
+    * Example: {n <= 2} &rArr; (<= n 2)
+    * Example: {2 * 3 * 4} &rArr; (* 2 3 4)
+    * Example: {2 + 3 * 4} &rArr; (nfx 2 + 3 * 4)
+    * Example: {2 + {3 * 4}} &rArr; (+ 2 (* 3 4))
 2.   *Neoteric-expressions* (*n-expressions*): This includes curly-infix-expressions, and adds special meanings to some prefixed symbols. An e(...) maps to (e ...); an e{...} maps to e({...}); and an e[...] maps to (bracketaccess e ...), where "e" is any expression. There must be no whitespace between e and the open parenthesis. Also, an unprefixed "( . e)" must evaluate as "e".
-    * Example: f(1 2) maps to (f 1 2)
-    * Example: f{n - 1} maps to f({n - 1}) which maps to (f (- n 1))
-    * Example: f{n - 1}(x) maps to f({n - 1})(x) which maps to (f (- n 1))(x) which maps to ((f (- n 1)) x)
+    * Example: f(1 2) &rArr; (f 1 2)
+    * Example: f{n - 1} &rArr; f({n - 1}) &rArr; (f (- n 1))
+    * Example: f{n - 1}(x) &rArr; f({n - 1})(x) &rArr; (f (- n 1))(x) &rArr; ((f (- n 1)) x)
 3.   *Sweet-expressions* (*t-expressions*): Includes neoteric-expressions, and deduces parentheses from indentation. Basic rules:
 
     - An indented line is a parameter of its parent.
     - Later terms on a line are parameters of the first term.
     - A line with exactly one term, and no child lines, is simply that term; multiple terms are wrapped into a list.
     - An empty line ends the expression; empty lines *before* expressions are ignored.
-    - Indentation processing does not occur inside ( ), [ ], and { }, whether they are prefixed or not; they're just neoteric-expressions.
+    - Indentation processing does not occur inside ( ), [ ], and { }, whether they are prefixed or not; they're just neoteric-expressions.  This makes sweet-expressions highly backwards-compatible.
 
     Sweet-expression rule refinements:
 
     - Lines with only a ;-comment are completely ignored - even their indentation (if any) is irrelevant.
-    - A \\\\ (aka SPLIT) starts a new line at the current indentation.  If it's immediately after indentation (aka GROUP in that case), it represents no symbol at all (at that indentation) - this is useful for lists of lists.
-    - A $ (aka SUBLIST) in the middle of list restarts list processing; the right-hand-side (including its sub-blocks) is the last parameter of the left-hand side.
-    - A leading traditional abbreviation (quote, comma, backquote, or comma-at), followed by space or tab, is that operator applied to the sweet-expression starting at the same line.
     - You can indent using one-or-more space, tab, and/or exclamation point (!) characters.
     - A line with only indentation is an empty line.
     - If an expression *starts* indented, then indentation is completely ignored (that line switches to neoteric-expressions).
+    - A \\\\ (aka SPLIT) starts a new line at the current indentation.  If it's immediately after indentation (aka GROUP in that case), it represents no symbol at all (at that indentation) - this is useful for lists of lists.
+    - A $ (aka SUBLIST) in the middle of list restarts list processing; the right-hand-side (including its sub-blocks) is the last parameter of the left-hand side (of just that line). If there's no left-hand-side, the right-hand-side is put in a list.
+    - A leading traditional abbreviation (quote, comma, backquote, or comma-at), followed by space or tab, is that operator applied to the sweet-expression starting at the same line.
+    - Scheme's #; datum comment comments out the next *neoteric* expression, not the next *sweet* expression.
 
     Sweet-expression examples are shown below.
 
 Curly-infix adds support for traditional infix notation; neoteric-expressions add support for traditional function notation; and sweet-expressions reduce the the number of explicit parentheses needed (by deducing them from indentation).  See [Rationale] for why these rules are the way they are.
 
-Beginning an expression with indentation causes that line's indentation to be ignored, improving backwards compatibility.  We recommend that editors highlight these lines as warnings, to reduce the risk of their accidental use.
+Beginning an expression with indentation causes that line's indentation to be ignored, improving backwards compatibility.  We recommend that editors highlight these lines as warnings, to reduce the risk of their accidental use.  It might be also useful for an editor to highlight blank lines (as they separate expressions) and lines beginning at the left column.
 
 Individual implementations may have *additional* abbreviations that are useful for their semantics; our goal is to devise general abbreviations that others can build on if they choose.
 
-We consider these "version 0.3" of these rules, though at this point we don't expect significant future changes.
-
+This is version 0.4 of notation specification; we believe the only area that *might* change are the sweet-expression refinements.
 
 Quick Examples
 ==============
@@ -53,7 +53,7 @@ Here are some examples of the result, as well as what they map to (which is what
 <table cellpadding="4" border="1" rules="cols">
 <tr>
 <th align="center">Sweet-expression</th>
-<th align="center">(Ugly) S-expression</th>
+<th align="center">(Awkward) S-expression</th>
 </tr>
 <tr>
 
@@ -127,7 +127,7 @@ Everyone **knows** macros need s-expressions.  Or do they?  We think not!  Here'
 <table>
 <tr>
 <th align="center">Sweet-expression</th>
-<th align="center">(Ugly) S-expression</th>
+<th align="center">(Awkward) S-expression</th>
 </tr>
 
 <tr>
@@ -200,7 +200,7 @@ Credits
 
 *   David A. Wheeler was the initiator of the"readable" project.  He created the initial three tiers, and developed first drafts of the specifications and code.
 *   Alan Manuel K. Gloria made a number of specification suggestions and wrote significant pieces of the implementation.
-*   Egil Möller developed SRFI-49, an indentation semantic for Scheme and sample implementation. The sweet-expression indentation semantics and implementation are based on on this.
+*   Egil Möller developed SRFI-49, an indentation semantic for Scheme and sample implementation. The sweet-expression indentation semantics and implementation are based on this.
 
 Also, thanks to the many other mailing list participants who provided feedback.
 
