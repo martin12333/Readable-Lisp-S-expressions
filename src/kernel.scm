@@ -118,7 +118,7 @@
 ;       (define line-separator (integer->char #x2028))
 ;       (define paragraph-separator (integer->char #x2029))
 ;
-;   (parse-hash top-read char fake-port)
+;   (parse-hash no-indent-read char fake-port)
 ;   - a function that is invoked when an unrecognized, non-R5RS hash
 ;     character combination is encountered in the input port.
 ;   - this function is passed a "fake port", as wrapped by the
@@ -127,10 +127,10 @@
 ;     make-read does the wrapping, and you wrote make-read, we assume
 ;     you know how to unwrap the port).
 ;   - if your function needs to parse a datum, invoke
-;     (top-read fake-port).  Do NOT use any other read function.  The
-;     top-read function accepts exactly one parameter - the fake port
+;     (no-indent-read fake-port).  Do NOT use any other read function.  The
+;     no-indent-read function accepts exactly one parameter - the fake port
 ;     this function was passed in.
-;     - top-read is either a version of curly-infix-read, or a version
+;     - no-indent-read is either a version of curly-infix-read, or a version
 ;       of neoteric-read; this specal version accepts only a fake port.
 ;       It is never a version of sweet-read.  You don't normally want to
 ;       call sweet-read, because sweet-read presumes that it's starting
@@ -295,7 +295,7 @@
     ; to figure out what exactly it does.
     ; On Guile, #:x is a keyword.  Keywords have symbol
     ; syntax.
-    (define (parse-hash top-read char fake-port)
+    (define (parse-hash no-indent-read char fake-port)
       (let* ((ver (effective-version))
              (c   (string-ref ver 0))
              (>=2 (and (not (char=? c #\0)) (not (char=? c #\1)))))
@@ -313,7 +313,7 @@
             ; and even on 1.6 it is unlikely to cause problems.
             ; NOTE: This behavior means that #:foo(bar) will cause
             ; problems on neoteric and higher tiers.
-            (let ((s (top-read fake-port)))
+            (let ((s (no-indent-read fake-port)))
               (if (symbol? s)
                   `( ,(symbol->keyword s) )
                   #f)))
@@ -321,17 +321,17 @@
           ; guard against it here because of differences in
           ; Guile 1.6 and 1.8.
           ((and >=2 (char=? char #\'))
-            `( (syntax ,(top-read fake-port)) ))
+            `( (syntax ,(no-indent-read fake-port)) ))
           ((and >=2 (char=? char #\`))
-            `( (quasisyntax ,(top-read fake-port)) ))
+            `( (quasisyntax ,(no-indent-read fake-port)) ))
           ((and >=2 (char=? char #\,))
             (let ((c2 (my-peek-char fake-port)))
               (cond
                 ((char=? c2 #\@)
                   (my-read-char fake-port)
-                  `( (unsyntax-splicing ,(top-read fake-port)) ))
+                  `( (unsyntax-splicing ,(no-indent-read fake-port)) ))
                 (#t
-                  `( (unsyntax ,(top-read fake-port)) )))))
+                  `( (unsyntax ,(no-indent-read fake-port)) )))))
           ; #{ }# syntax
           ((char=? char #\{ )  ; Special symbol, through till ...}#
             `( ,(list->symbol (special-symbol fake-port))))
@@ -671,11 +671,11 @@
 
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
-  (define (process-sharp top-read port)
+  (define (process-sharp no-indent-read port)
     ; We've peeked a # character.  Returns what it represents.
     ; Note: Since we have to re-implement process-sharp anyway,
     ; the vector representation #(...) uses my-read-delimited-list, which in
-    ; turn calls top-read.
+    ; turn calls no-indent-read.
     ; TODO: Create a readtable for this case.
     (my-read-char port) ; Remove #
     (cond
@@ -690,7 +690,7 @@
                             #\I #\E #\B #\O #\D #\X))
               (read-number port (list #\# (char-downcase c))))
             ((char=? c #\( )  ; Vector.
-              (list->vector (my-read-delimited-list top-read #\) port)))
+              (list->vector (my-read-delimited-list no-indent-read #\) port)))
             ((char=? c #\\) (process-char port))
             ; Handle #; (item comment).  This
             ; only works at the item-level:
@@ -698,14 +698,14 @@
             ;  or n-expressions, not whole
             ; t-expressions!
             ((char=? c #\;)
-              (top-read port)
+              (no-indent-read port)
               comment-tag)
             ; handle nested comments
             ((char=? c #\|)
               (nest-comment port)
               comment-tag)
             (#t
-              (let ((rv (parse-hash top-read c port)))
+              (let ((rv (parse-hash no-indent-read c port)))
                 (cond
                   ((not rv)
                     (read-error "Invalid #-prefixed string"))
@@ -759,7 +759,7 @@
 
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
-  (define (underlying-read top-read port)
+  (define (underlying-read no-indent-read port)
     ; Note: This reader is case-sensitive, which is consistent with R6RS
     ; and guile, but NOT with R5RS.  Most people won't notice, and I
     ; _like_ case-sensitivity.
@@ -778,7 +778,7 @@
             (cond
               ((ismember? c digits) ; Initial digit.
                 (read-number port '()))
-              ((char=? c #\#) (process-sharp top-read port))
+              ((char=? c #\#) (process-sharp no-indent-read port))
               ((char=? c #\.) (process-period port))
               ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
                 (my-read-char port)
@@ -797,27 +797,27 @@
               ((char=? c #\')
                 (my-read-char port)
                 (list (attach-sourceinfo pos 'quote)
-                  (top-read port)))
+                  (no-indent-read port)))
               ((char=? c #\`)
                 (my-read-char port)
                 (list (attach-sourceinfo pos 'quasiquote)
-                  (top-read port)))
+                  (no-indent-read port)))
               ((char=? c #\`)
                 (my-read-char port)
                   (cond
                     ((char=? #\@ (my-peek-char port))
                       (my-read-char port)
                       (list (attach-sourceinfo pos 'unquote-splicing)
-                       (top-read port)))
+                       (no-indent-read port)))
                    (#t
                     (list (attach-sourceinfo pos 'unquote)
-                      (top-read port)))))
+                      (no-indent-read port)))))
               ; The open parent calls neoteric-read, but since this one
               ; shouldn't normally be used anyway (neoteric-read
               ; will get first crack at it), it doesn't matter:
               ((char=? c #\( ) ; )
                   (my-read-char port)
-                  (my-read-delimited-list top-read #\) port))
+                  (my-read-delimited-list no-indent-read #\) port))
               ((char=? c #\| )
                 ; Scheme extension, |...| symbol (like Common Lisp)
                 ; Disable this if you don't like it.
@@ -876,7 +876,7 @@
 
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
-  (define (read-at-curly top-read port)
+  (define (read-at-curly no-indent-read port)
     (let* ((pos (get-sourceinfo port))
            (c   (my-peek-char port)))
       (cond
@@ -885,9 +885,9 @@
           ; read in as infix
           (attach-sourceinfo pos
             (process-curly
-              (my-read-delimited-list top-read #\} port))))
+              (my-read-delimited-list no-indent-read #\} port))))
         (#t
-          (underlying-read top-read port)))))
+          (underlying-read no-indent-read port)))))
 
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
