@@ -1,8 +1,8 @@
 ; kernel.scm
 ; Implementation of the sweet-expressions project by readable mailinglist.
 ;
-; Copyright (C) 2005-2012 by Egil Möller, David A. Wheeler,
-;   and Alan Manuel K. Gloria.
+; Copyright (C) 2005-2012 by David A. Wheeler, Alan Manuel K. Gloria,
+;                         and Egil Möller.
 ;
 ; This software is released as open source software under the "MIT" license:
 ;
@@ -24,7 +24,8 @@
 ; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ; OTHER DEALINGS IN THE SOFTWARE.
 
-; This file includes code from SRFI-49, but significantly modified.
+; This file includes code from SRFI-49 (by Egil Möller),
+; but significantly modified.
 
 ; -----------------------------------------------------------------------------
 ; Compatibility Layer
