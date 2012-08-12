@@ -50,19 +50,22 @@ CLEANFILES = readable/kernel.scm
 # Scripts
 
 script_sources = src/sweeten.sscm src/unsweeten \
-                 src/neoteric-guile src/sweet-guile src/sweet-run \
-                 src/kernel.scm src/sweet-scsh
+                 src/curly-guile src/neoteric-guile src/sweet-guile \
+                 src/sweet-run src/sweet-scsh \
+                 src/kernel.scm
 EXTRA_DIST += $(script_sources)
 
 # These scripts are generated at build time, so they're not distributed
 # (there's no dist_ prefix for bin_SCRIPTS here):
-bin_SCRIPTS  = bin/sweeten bin/unsweeten bin/neoteric-guile bin/sweet-guile
+bin_SCRIPTS  = bin/sweeten bin/unsweeten
+bin_SCRIPTS += bin/curly-guile bin/neoteric-guile bin/sweet-guile
 bin_SCRIPTS += bin/sweet-run bin/sweet-scsh
 CLEANFILES  += $(bin_SCRIPTS)
 
 # These are the local scripts, for testing, and are not installed.
 noinst_SCRIPTS = ./sweeten ./unsweeten \
-                 ./neoteric-guile ./sweet-guile ./sweet-scsh ./sweet-run
+                 ./curly-guile ./neoteric-guile ./sweet-guile \
+                 ./sweet-scsh ./sweet-run
 CLEANFILES += $(noinst_SCRIPTS)
 
 
@@ -101,6 +104,11 @@ bin/unsweeten: src/unsweeten my-subst
 	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
 	chmod a+x $@
 
+bin/curly-guile: src/curly-guile my-subst
+	$(MKDIR_P) bin
+	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
+	chmod a+x $@
+
 bin/neoteric-guile: src/neoteric-guile my-subst
 	$(MKDIR_P) bin
 	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
@@ -133,6 +141,12 @@ bin/sweet-run: src/sweet-run my-subst
 # (because its dependencies have been installed). Then other rules can just
 # depend on "./unsweeten", and they won't start until unsweeten is ready.
 ./unsweeten: src/unsweeten my-subst readable/kernel.scm
+	$(RM) -f $@
+	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
+	chmod a+x $@
+	chmod a-w $@
+
+./curly-guile: src/curly-guile my-subst
 	$(RM) -f $@
 	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
 	chmod a+x $@
