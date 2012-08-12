@@ -878,6 +878,8 @@
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
   (define (read-at-curly no-indent-read port)
+    ; Skip whitespace (this is needed if we only implement curly-infix):
+    (consume-whitespace port)
     (let* ((pos (get-sourceinfo port))
            (c   (my-peek-char port)))
       (cond
