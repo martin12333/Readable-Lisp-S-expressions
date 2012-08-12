@@ -836,9 +836,8 @@
 ; Curly Infix
 ; -----------------------------------------------------------------------------
 
-  ; Return true if lyst has an even # of parameters, and the (alternating) first
-  ; ones are "op".  Used to determine if a longer lyst is infix.
-  ; Otherwise it returns false.
+  ; Return true if lyst has an even # of parameters, and the (alternating)
+  ; first parameters are "op".  Used to determine if a longer lyst is infix.
   ; If passed empty list, returns true (so recursion works correctly).
   (define (even-and-op-prefix? op lyst)
     (cond
@@ -848,8 +847,8 @@
       ((null? (cdr lyst)) #f) ; fail - wrong # of parameters in lyst.
       (#t (even-and-op-prefix? op (cddr lyst))))) ; recurse.
 
-  ; Return True if the lyst is in simple infix format (and should be converted
-  ; at read time).  Else returns NIL.
+  ; Return true if the lyst is in simple infix format
+  ; (and thus should be reordered at read time).
   (define (simple-infix-list? lyst)
     (and
       (pair? lyst)           ; Must have list;  '() doesn't count.
