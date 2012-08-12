@@ -458,7 +458,7 @@
    ; comparison functions
    compare-read-file ; compare-read-string
    ; replacing the reader
-   replace-read restore-traditional-read)
+   replace-read restore-traditional-read enable-curly-infix)
 
   ; special tag to denote comment return from hash-processing
   (define comment-tag (cons '() '())) ; all cons cells are unique
@@ -591,6 +591,12 @@
   (define default-scheme-read read)
   (define replace-read replace-read-with)
   (define (restore-traditional-read) (replace-read-with default-scheme-read))
+
+  (define (enable-curly-infix)
+    (if (not (or (eq? read curly-infix-read)
+                 (eq? read neoteric-read)
+                 (eq? read sweet-read)))
+        (replace-read curly-infix-read)))
 
 ; -----------------------------------------------------------------------------
 ; Scheme Reader re-implementation
