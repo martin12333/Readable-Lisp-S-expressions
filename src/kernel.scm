@@ -833,24 +833,24 @@
   ; ones are "op".  Used to determine if a longer lyst is infix.
   ; Otherwise it returns false.
   ; If passed empty list, returns true (so recursion works correctly).
-  (define (even-and-op-prefix op lyst)
+  (define (even-and-op-prefix? op lyst)
     (cond
       ((null? lyst) #t)
       ((not (pair? lyst)) #f) ; Not a list.
-      ((not (eq? op (car lyst))) #f) ; fail - operators not all equal?.
-      ((null? (cdr lyst)) #f) ; fail - odd # of parameters in lyst.
-      (#t (even-and-op-prefix op (cddr lyst))))) ; recurse.
+      ((not (eq? op (car lyst))) #f) ; fail - operators not the same
+      ((null? (cdr lyst)) #f) ; fail - wrong # of parameters in lyst.
+      (#t (even-and-op-prefix? op (cddr lyst))))) ; recurse.
 
   ; Return True if the lyst is in simple infix format (and should be converted
   ; at read time).  Else returns NIL.
-  (define (simple-infix-listp lyst)
+  (define (simple-infix-list? lyst)
     (and
       (pair? lyst)           ; Must have list;  '() doesn't count.
       (pair? (cdr lyst))     ; Must have a second argument.
       (pair? (cddr lyst))    ; Must have a third argument (we check it
                              ; this way for performance)
       (symbol? (cadr lyst))  ; 2nd parameter must be a symbol.
-      (even-and-op-prefix (cadr lyst) (cdr lyst)))) ; even parameters equal??
+      (even-and-op-prefix? (cadr lyst) (cdr lyst)))) ; true if rest is simple
 
   ; Return alternating parameters in a lyst (1st, 3rd, 5th, etc.)
   (define (alternating-parameters lyst)
@@ -864,7 +864,7 @@
      (cons (cadr lyst) (alternating-parameters lyst)))
 
   (define (process-curly lyst)
-    (if (simple-infix-listp lyst)
+    (if (simple-infix-list? lyst)
        (transform-simple-infix lyst) ; Simple infix expression.
        (cons 'nfx lyst))) ; Non-simple; prepend "nfx" to the list.
 
