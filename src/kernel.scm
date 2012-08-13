@@ -603,9 +603,12 @@
 ; Scheme Reader re-implementation
 ; -----------------------------------------------------------------------------
 
-; Unfortunately, since most Scheme readers will consume [, {, }, and ],
-; we have to re-implement our own Scheme reader.  Ugh.
-; If you fix your Scheme's "read" so that [, {, }, and ] are considered
+; Many Scheme readers will not consider [, ], {, and } as delimiters
+; (they are not required delimiters in R5RS and R6RS, for example).
+; Thus, we have to re-implement our own Scheme reader.
+; We also have to re-implement our own reader if we want vector
+; constants #(...) to support curly-infix- or neoteric-expressions.
+; If you fix your Scheme's "read" so that [, ], {, and } are considered
 ; delimiters (and thus not consumed when reading symbols, numbers, etc.),
 ; you can just call default-scheme-read instead of using underlying-read below,
 ; with the limitation that vector constants #(...) will not support curly-infix
@@ -615,8 +618,8 @@
 
   ; See R6RS section 4.2.1
   (define neoteric-delimiters
-     (append (list #\( #\) #\[ #\] #\{ #\})
-             (list #\" #\; #\#)   ; TODO: ADD???
+     (append (list #\( #\) #\[ #\] #\{ #\}  ; Add [] {}
+                   #\" #\; #\# #\|)         ; | is delimiter in R7RS draft 6.
              whitespace-chars))
 
   (define (consume-whitespace port)
@@ -668,7 +671,6 @@
                   ((string-ci=? rest-string "ht") tab)  ; Scheme extension.
                   ((string-ci=? rest-string "tab") tab) ; Scheme extension.
                   (#t (read-error "Invalid character name"))))))))))
-
 
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
