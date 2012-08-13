@@ -449,6 +449,12 @@
 
     ))
 
+; If your Scheme supports "string-foldcase", use that instead of
+; string-downcase:
+(define (my-string-foldcase s)
+  (string-downcase s))
+
+
 ; -----------------------------------------------------------------------------
 ; Module declaration and useful utilities
 ; -----------------------------------------------------------------------------
@@ -460,6 +466,16 @@
    compare-read-file ; compare-read-string
    ; replacing the reader
    replace-read restore-traditional-read enable-curly-infix)
+
+  ; Should we fold case of symbols by default?
+  ; #f means case-sensitive (R6RS); #t means case-insensitive (R5RS).
+  ; Here we'll set it to be case-sensitive, which is consistent with R6RS
+  ; and guile, but NOT with R5RS.  Most people won't notice, I
+  ; _like_ case-sensitivity, and the latest spec is case-sensitive,
+  ; so let's start with #f (case-sensitive).
+  ; This doesn't affect character names; as an extension,
+  ; We always accept arbitrary case for them, e.g., #\newline or #\NEWLINE.
+  (define foldcase-default #f)
 
   ; special tag to denote comment return from hash-processing
   (define comment-tag (cons '() '())) ; all cons cells are unique
@@ -666,11 +682,22 @@
             (#t
               (let ((rest-string (list->string (cons c rest))))
                 (cond
+                  ; As an extension, we will ALWAYS accept character names
+                  ; of any case, no matter what the case-folding value is.
                   ((string-ci=? rest-string "space") #\space)
                   ((string-ci=? rest-string "newline") #\newline)
                   ((string-ci=? rest-string "ht") tab)  ; Scheme extension.
                   ((string-ci=? rest-string "tab") tab) ; Scheme extension.
                   (#t (read-error "Invalid character name"))))))))))
+
+  ; If fold-case is active on this port, return string "s" in folded case.
+  ; Otherwise, just return "s".  This is needed to support our
+  ; foldcase-default configuration value when processing symbols.
+  ; TODO: If R7RS adds #!fold-case and #!no-fold-case, add support here.
+  (define (fold-case-maybe port s)
+    (if foldcase-default
+      (my-string-foldcase s)
+      s))
 
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
@@ -757,8 +784,10 @@
         (#t
           ; At this point, Scheme only requires support for "." or "...".
           ; As an extension we can support them all.
-          (string->symbol (list->string (cons #\.
-            (read-until-delim port neoteric-delimiters))))))))
+          (string->symbol
+            (fold-case-maybe port
+              (list->string (cons #\.
+                (read-until-delim port neoteric-delimiters)))))))))
 
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
@@ -769,9 +798,6 @@
   ; and then call down to this underlying-read function when basic reader
   ; functionality (implemented here) is needed.
   (define (underlying-read no-indent-read port)
-    ; Note: This reader is case-sensitive, which is consistent with R6RS
-    ; and guile, but NOT with R5RS.  Most people won't notice, and I
-    ; _like_ case-sensitivity.
     (consume-whitespace port)
     (let* ((pos (get-sourceinfo port))
            (c   (my-peek-char port)))
@@ -793,8 +819,9 @@
                 (my-read-char port)
                 (if (ismember? (my-peek-char port) digits)
                   (read-number port (list c))
-                  (string->symbol (list->string (cons c
-                    (read-until-delim port neoteric-delimiters))))))
+                  (string->symbol (fold-case-maybe port
+                    (list->string (cons c
+                      (read-until-delim port neoteric-delimiters)))))))
               ((char=? c #\')
                 (my-read-char port)
                 (list (attach-sourceinfo pos 'quote)
@@ -821,16 +848,18 @@
                   (my-read-delimited-list no-indent-read #\] port))
               ((char=? c #\| )
                 ; Scheme extension, |...| symbol (like Common Lisp)
-                ; Disable this if you don't like it.
-                (my-read-char port) ; Skip |
+                ; This is present in R7RS draft 6.
+                (my-read-char port) ; Consume the initial vertical bar.
                 (let ((newsymbol
+                  ; Do NOT call fold-case-maybe; always use literal values.
                   (string->symbol (list->string
                     (read-until-delim port '(#\|))))))
                   (my-read-char port)
                   newsymbol))
               (#t ; Nothing else.  Must be a symbol start.
-                (string->symbol (list->string
-                  (read-until-delim port neoteric-delimiters))))))))))
+                (string->symbol (fold-case-maybe port
+                  (list->string
+                    (read-until-delim port neoteric-delimiters)))))))))))
 
 ; -----------------------------------------------------------------------------
 ; Curly Infix
