@@ -69,7 +69,7 @@
 ; "nfx" macro as an error.
 ;
 ; Warning: if you use an "nfx" macro, don't have nfx override the name
-; an existing function, or it will be confusing to use.  E.G., if
+; of an existing function, or it will be confusing to use.  E.G., if
 ; "nfx" renames "=" as "setf", then you could have this confusing case:
 ; {x = 3 * 4} maps to (nfx x = 3 * 4) maps to (setf x (* 3 4)), but
 ; {x = 3} maps to (= x 3) which is a comparison, not a value-setting operation.
@@ -129,6 +129,10 @@
 (defun transform-simple-infix (lyst)
    (cons (cadr lyst) (alternating-parameters lyst)))
 
+; Transform not-simple infix list.  Written as a separate function so that
+; future versions/specifications can easily replace just this pieces.
+(defun transform-not-simple-infix (lyst)
+  (cons 'nfx result))
 
 ; The following install the {...} reader.
 ; See "Common Lisp: The Language" by Guy L. Steele, 2nd edition,
@@ -146,7 +150,7 @@
   (let ((result (read-delimited-list #\} stream t)))
     (if (simple-infix-listp result)
        (transform-simple-infix result) ; Simple infix expression.
-       (cons 'nfx result)))) ; Non-simple; prepend "nfx" to the list.
+       (transform-not-simple-infix result))))
 
 ; Invoke curly-brace-infix-reader when "{" is read in:
 (set-macro-character #\{ #'curly-brace-infix-reader)

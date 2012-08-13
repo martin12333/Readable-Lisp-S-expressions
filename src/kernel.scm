@@ -910,11 +910,16 @@
   (define (transform-simple-infix lyst)
      (cons (cadr lyst) (alternating-parameters lyst)))
 
+  ; Not a simple infix list - transform it.  Written as separate function
+  ; so that future experiments or SRFIs can easily replace just this piece.
+  (define (transform-not-simple-infix lyst)
+     (cons 'nfx lyst))
+
   ; Given curly-infix lyst, map it to its final internal format.
   (define (process-curly lyst)
     (if (simple-infix-list? lyst)
        (transform-simple-infix lyst) ; Simple infix expression.
-       (cons 'nfx lyst))) ; Non-simple; prepend "nfx" to the list.
+       (transform-not-simple-infix lyst)))
 
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
