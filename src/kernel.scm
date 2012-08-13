@@ -979,8 +979,7 @@
                   (my-read-char port)
                   (process-curly
                     (my-read-delimited-list neoteric-read-nocomment #\} port)))
-                (#t (let ((result (underlying-read neoteric-read-nocomment port)))
-                        result)))))))))
+                (#t (underlying-read neoteric-read-nocomment port)))))))))
 
   (define (neoteric-read-nocomment port)
     (let ((rv (neoteric-read-real port)))
