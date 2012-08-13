@@ -132,7 +132,7 @@
 ; Transform not-simple infix list.  Written as a separate function so that
 ; future versions/specifications can easily replace just this pieces.
 (defun transform-not-simple-infix (lyst)
-  (cons 'nfx result))
+  (cons 'nfx lyst))
 
 ; The following install the {...} reader.
 ; See "Common Lisp: The Language" by Guy L. Steele, 2nd edition,
