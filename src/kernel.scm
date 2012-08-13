@@ -813,9 +813,12 @@
                    (#t
                     (list (attach-sourceinfo pos 'unquote)
                       (no-indent-read port)))))
-              ((char=? c #\( ) ; )
+              ((char=? c #\( )
                   (my-read-char port)
                   (my-read-delimited-list no-indent-read #\) port))
+              ((char=? c #\[ )
+                  (my-read-char port)
+                  (my-read-delimited-list no-indent-read #\] port))
               ((char=? c #\| )
                 ; Scheme extension, |...| symbol (like Common Lisp)
                 ; Disable this if you don't like it.
