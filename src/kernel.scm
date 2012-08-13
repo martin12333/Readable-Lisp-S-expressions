@@ -900,10 +900,14 @@
 ; Neoteric Expressions
 ; -----------------------------------------------------------------------------
 
+  ; Implement neoteric-expression's prefixed (), [], and {}.
+  ; At this point, we have just finished reading some expression, which
+  ; MIGHT be a prefix of some longer expression.  Examine the next
+  ; character to be consumed; if it's an opening paren, bracket, or brace,
+  ; then the expression "prefix" is actually a prefix.
+  ; Otherwise, just return the prefix and do not consume that next char.
+  ; This recurses, to handle formats like f(x)(y).
   (define (neoteric-process-tail port prefix)
-      ; See if we've just finished reading a prefix, and if so, process.
-      ; This recurses, to handle formats like f(x)(y).
-      ; This implements prefixed (), [], and {}
       (let* ((pos (get-sourceinfo port))
              (c   (my-peek-char port)))
         (cond
@@ -933,15 +937,13 @@
 
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
+  ; This is the "real" implementation of neoteric-read.
+  ; It directly implements unprefixed (), [], and {} so we retain control.
   (define (neoteric-read-real port)
-    ; Read using "neoteric Lisp notation".
-    ; This implements unprefixed (), [], and {}
     (consume-whitespace port)
-
     (neoteric-process-tail port
       (let* ((pos (get-sourceinfo port))
              (c   (my-peek-char port)))
-        ; (write c)
         (cond
           ; We need to directly implement abbreviations ', etc., so that
           ; we retain control over the reading process.
@@ -1207,6 +1209,7 @@
 
   ;; Consumes as much horizontal, non-indent whitespace as
   ;; possible.  Treat comments as horizontal whitespace too.
+  ;; Note that this does NOT consume any end-of-line characters.
   (define (consume-horizontal-whitespace port)
     (let ((char (my-peek-char port)))
       (cond
@@ -1216,7 +1219,7 @@
         ((eqv? char #\;)
            (consume-to-eol port)))))
 
-  ;; reads a block and handles (quote), (unquote),
+  ;; Reads a block and handles (quote), (unquote),
   ;; (unquote-splicing) and (quasiquote).
   (define (readblock-clean level port)
     (let* ((read (readblock level port))
