@@ -3,14 +3,7 @@
 
 ;  Test neoteric-read in (readable kernel).  Also has demo of its use.
 ;
-;  It should print T for the successful loading of the file,
-;  followed by a bunch of NILs (the result of successful asserts) and
-;  some other calculations, WITHOUT any "assertion fails" messages.
-;  If there is an assertion error message of the form:
-;   *** - ....
-;  then you must fix something.
-;
-;  Copyright (C) 2008 by David A. Wheeler.
+;  Copyright (C) 2008-2012 by David A. Wheeler.
 ;  Released under the "MIT license":
 ;  Permission is hereby granted, free of charge, to any person obtaining a
 ;  copy of this software and associated documentation files (the "Software"),
@@ -31,19 +24,10 @@
 ;  OTHER DEALINGS IN THE SOFTWARE.
 
 
-; guile-specific stuff - set up and load using modules
-; (cond-expand
-;   (guile-2
-;     (eval-when (compile load eval)
-;       (set! %load-path (append %load-path '("..")))))
-;   (guile
-;     (set! %load-path (append %load-path '("..")))))
-
-
+; guile-specific use-modules call:
 (use-modules (readable kernel))
 
 ; Portable:
-
 
 (define test-error 0)
 (define test-correct 0)
@@ -67,51 +51,15 @@
       (display "\n\n")))
   (display "\n"))
 
-(define (assert value)
-  (test value #t))
-
-(test 1 1)
-
-; Test lower-level routines:
-; We no longer run these tests - we now use the guile modules
-; system and don't export these functions.  Thus, we don't have access
-; to them to test them.
-
-; (assert (even-and-op-prefix '+ '(+ 4)))
-; (assert (even-and-op-prefix '+ '(+ 4 + 5)))
-; (assert (not (even-and-op-prefix '+ '(+ 4 - 5))))
-; (assert (not (even-and-op-prefix '+ '(+ 4 +))))
-;
-; (assert (simple-infix-listp '(1 + 2)))
-; (assert (simple-infix-listp '(1 + 2 + 3)))
-; (assert (not (simple-infix-listp '(1 + 2 * 3))))
-; (assert (not (simple-infix-listp '(1 + 2 +))))
-; (assert (not (simple-infix-listp '(1 +))))
-; (assert (not (simple-infix-listp '(1))))
-; (assert (not (simple-infix-listp '())))
-;
-; (test (alternating-parameters '(1 2 3)) '(1 3))
-; (test (alternating-parameters '(1 2 3 4 5)) '(1 3 5))
-;
-; (test (transform-simple-infix '(1 + 3)) '(+ 1 3))
-; (test (transform-simple-infix '(1 + 3 + 5)) '(+ 1 3 5))
-
-; (define tc (open-input-file "test-cases-neoteric"))
-
-; (test (begin (skip-whitespace tc) (read-char tc)) sharp backslash x )
-
-(display "Now testing reader itself.\n")
-
 (define (reader-test correct-value)
   (test (neoteric-read (current-input-port)) correct-value))
 
-; (use-modules (ice-9 debug))
-; (set-breakpoint! trace-subtree 2)
-; (set! (bp-behaviour (get-breakpoint 3)) debug-here)
-; (trace neoteric-read2)
-; (trace neoteric-process-tail)
-; (trace my-read-delimited-list)
-; (trace underlying-read)
+
+; Check "test" function itself
+(display "Self-test:\n")
+(test 1 1)
+
+(display "Beginning tests:\n")
 
 (reader-test 'testing123)
 
