@@ -232,7 +232,7 @@ dist_doc_DATA += src/sweeten.sscm
 
 # Distribute test drivers and testsuites.
 EXTRA_DIST += \
- tests/curly-infix-test \
+ tests/curly-infix-test-cl \
  tests/neoteric-test \
  tests/neoteric-testsuite \
  tests/sweet-test \
@@ -249,7 +249,7 @@ EXTRA_DIST += \
 # TODO: Improve test harness & integration into overall system.
 
 check: readable/kernel.scm
-	CURLYFILE="$(srcdir)/curly-infix.cl" $(srcdir)/tests/curly-infix-test
+	CURLYFILE="$(srcdir)/curly-infix.cl" $(srcdir)/tests/curly-infix-test-cl
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/neoteric-test \
 	            < $(srcdir)/tests/neoteric-testsuite
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/sweet-test \
