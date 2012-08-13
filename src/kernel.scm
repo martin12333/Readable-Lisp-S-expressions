@@ -760,6 +760,12 @@
 
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
+  ; This implements a simple Scheme "read" implementation from "port",
+  ; but if it must recurse to read, it will invoke "no-indent-read"
+  ; (a reader that is NOT indentation-sensitive).
+  ; This additional parameter lets us easily implement additional semantics,
+  ; and then call down to this underlying-read function when basic reader
+  ; functionality (implemented here) is needed.
   (define (underlying-read no-indent-read port)
     ; Note: This reader is case-sensitive, which is consistent with R6RS
     ; and guile, but NOT with R5RS.  Most people won't notice, and I
@@ -787,14 +793,6 @@
                   (read-number port (list c))
                   (string->symbol (list->string (cons c
                     (read-until-delim port neoteric-delimiters))))))
-
-              ; We'll reimplement abbreviations, list open, and ;.
-              ; These actually should be done by neoteric-read (and thus
-              ; we won't see them), but redoing it here doesn't
-              ; cost us anything,
-              ; and it makes some kinds of testing simpler.  It also means that
-              ; this function is a fully-usable Scheme reader, and thus perhaps
-              ; useful for other purposes.
               ((char=? c #\')
                 (my-read-char port)
                 (list (attach-sourceinfo pos 'quote)
@@ -813,9 +811,6 @@
                    (#t
                     (list (attach-sourceinfo pos 'unquote)
                       (no-indent-read port)))))
-              ; The open parent calls neoteric-read, but since this one
-              ; shouldn't normally be used anyway (neoteric-read
-              ; will get first crack at it), it doesn't matter:
               ((char=? c #\( ) ; )
                   (my-read-char port)
                   (my-read-delimited-list no-indent-read #\) port))
