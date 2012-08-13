@@ -803,7 +803,7 @@
                 (my-read-char port)
                 (list (attach-sourceinfo pos 'quasiquote)
                   (no-indent-read port)))
-              ((char=? c #\`)
+              ((char=? c #\,)
                 (my-read-char port)
                   (cond
                     ((char=? #\@ (my-peek-char port))
@@ -940,48 +940,30 @@
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
   ; This is the "real" implementation of neoteric-read.
-  ; It directly implements unprefixed (), [], and {} so we retain control.
+  ; It directly implements unprefixed (), [], and {} so we retain control;
+  ; it calls neoteric-process-tail so f(), f[], and f{} are implemented.
   (define (neoteric-read-real port)
     (consume-whitespace port)
-    (neoteric-process-tail port
-      (let* ((pos (get-sourceinfo port))
-             (c   (my-peek-char port)))
-        (cond
-          ; We need to directly implement abbreviations ', etc., so that
-          ; we retain control over the reading process.
-          ((eof-object? c) c)
-          (#t
-            (attach-sourceinfo pos
-              (cond
-                ((char=? c #\')
-                  (my-read-char port)
-                  (list (attach-sourceinfo pos 'quote)
-                    (neoteric-read-nocomment port)))
-                ((char=? c #\`)
-                  (my-read-char port)
-                  (list (attach-sourceinfo pos 'quasiquote)
-                    (neoteric-read-nocomment port)))
-                ((char=? c #\,)
-                  (my-read-char port)
-                    (cond
-                      ((char=? #\@ (my-peek-char port))
-                        (my-read-char port)
-                        (list (attach-sourceinfo pos 'unquote-splicing)
-                         (neoteric-read-nocomment port)))
-                     (#t
-                      (list (attach-sourceinfo pos 'unquote)
-                        (neoteric-read-nocomment port)))))
-                ((char=? c #\( )
-                   (my-read-char port)
-                   (my-read-delimited-list neoteric-read-nocomment #\) port))
-                ((char=? c #\[ )
-                    (my-read-char port)
-                    (my-read-delimited-list neoteric-read-nocomment #\] port))
-                ((char=? c #\{ )
-                  (my-read-char port)
-                  (process-curly
-                    (my-read-delimited-list neoteric-read-nocomment #\} port)))
-                (#t (underlying-read neoteric-read-nocomment port)))))))))
+    (if (eof-object? (my-peek-char port))
+      (my-peek-char port)
+      (neoteric-process-tail port
+        (let* ((pos (get-sourceinfo port))
+               (c   (my-peek-char port)))
+          (cond
+            ((char=? c #\( )
+               (my-read-char port)
+               (attach-sourceinfo pos
+                 (my-read-delimited-list neoteric-read-nocomment #\) port)))
+            ((char=? c #\[ )
+               (my-read-char port)
+               (attach-sourceinfo pos
+                 (my-read-delimited-list neoteric-read-nocomment #\] port)))
+            ((char=? c #\{ )
+              (my-read-char port)
+              (attach-sourceinfo pos
+                (process-curly
+                  (my-read-delimited-list neoteric-read-nocomment #\} port))))
+            (#t (underlying-read neoteric-read-nocomment port)))))))
 
   (define (neoteric-read-nocomment port)
     (let ((rv (neoteric-read-real port)))
