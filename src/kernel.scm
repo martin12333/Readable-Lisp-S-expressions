@@ -864,11 +864,12 @@
       lyst
       (cons (car lyst) (alternating-parameters (cddr lyst)))))
 
-  ; Transform a simple infix list - move the 2nd parameter into first position,
+  ; Transform a simple infix list - move 2nd parameter into first position,
   ; followed by all the odd parameters.  Thus (3 + 4 + 5) => (+ 3 4 5).
   (define (transform-simple-infix lyst)
      (cons (cadr lyst) (alternating-parameters lyst)))
 
+  ; Given curly-infix lyst, map it to its final internal format.
   (define (process-curly lyst)
     (if (simple-infix-list? lyst)
        (transform-simple-infix lyst) ; Simple infix expression.
@@ -876,8 +877,8 @@
 
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
-  (define (read-at-curly no-indent-read port)
-    ; Skip whitespace (this is needed if we only implement curly-infix):
+  (define (curly-infix-read-real no-indent-read port)
+    ; Skip whitespace; needed if neoteric- or sweet-expressions aren't active.
     (consume-whitespace port)
     (let* ((pos (get-sourceinfo port))
            (c   (my-peek-char port)))
@@ -891,12 +892,10 @@
         (#t
           (underlying-read no-indent-read port)))))
 
-  ; NOTE: this function can return comment-tag.  Program defensively
-  ; against this when calling it.
-  (define (curly-infix-read-func port)
-    (read-at-curly curly-infix-read-nocomment-func port))
+  ; Read using curly-infix-read-real, but try again if we get a
+  ; comment tag (thus it will never return a comment tag)
   (define (curly-infix-read-nocomment-func port)
-    (let ((rv (curly-infix-read-func port)))
+    (let ((rv (curly-infix-read-real curly-infix-read-nocomment-func port)))
       (if (eq? rv comment-tag)
           ; comment, so retry
           (curly-infix-read-nocomment-func port)
@@ -930,10 +929,11 @@
             (neoteric-process-tail port
               (attach-sourceinfo pos
                 (list prefix
-                  ; NOTE: although read-at-curly could return comment-tag,
+                  ; NOTE: although curly-infix-read-real could
+                  ; return comment-tag,
                   ; at this point we know the next item is { }, so
                   ; it cannot return a comment-tag in this context
-                  (read-at-curly neoteric-read-nocomment-func port)))))
+                  (curly-infix-read-real neoteric-read-nocomment-func port)))))
           (#t prefix))))
 
   ; NOTE: this function can return comment-tag.  Program defensively
