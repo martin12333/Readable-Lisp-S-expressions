@@ -632,10 +632,22 @@
 ; We WILL call default-scheme-read on string reading (that DOES seem to work
 ; in common cases, and lets us use the implementation's string extensions).
 
-  ; See R6RS section 4.2.1
+  ; Identifying the list of delimiter characters is harder than you'd think.
+  ; This list is based on R6RS section 4.2.1, while adding [] and {},
+  ; but removing "#" from the delimiter set.
+  ; NOTE: R6RS has "#" has a delimiter.  However, R5RS does not, and
+  ; R7RS probably will not - http://trac.sacrideo.us/wg/wiki/WG1Ballot3Results
+  ; shows a strong vote AGAINST "#" being a delimiter.
+  ; Having the "#" as a delimiter means that you cannot have "#" embedded
+  ; in a symbol name, which hurts backwards compatibility, and it also
+  ; breaks implementations like Chicken (has many such identifiers) and
+  ; Gambit (which uses this as a namespace separator).
+  ; Thus, this list does NOT have "#" as a delimiter, contravening R6RS
+  ; (but consistent with R5RS, probably R7RS, and several implementations).
+  ; Also - R7RS draft 6 has "|" as delimiter, but we currently don't.
   (define neoteric-delimiters
      (append (list #\( #\) #\[ #\] #\{ #\}  ; Add [] {}
-                   #\" #\; #\# #\|)         ; | is delimiter in R7RS draft 6.
+                   #\" #\;)                 ; Could add #\# or #\|
              whitespace-chars))
 
   (define (consume-whitespace port)
