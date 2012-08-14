@@ -627,18 +627,18 @@
 ; Scheme Reader re-implementation
 ; -----------------------------------------------------------------------------
 
-; Many Scheme readers will not consider [, ], {, and } as delimiters
-; (they are not required delimiters in R5RS and R6RS, for example).
-; Thus, we have to re-implement our own Scheme reader.
-; We also have to re-implement our own reader if we want vector
-; constants #(...) to support curly-infix- or neoteric-expressions.
-; If you fix your Scheme's "read" so that [, ], {, and } are considered
-; delimiters (and thus not consumed when reading symbols, numbers, etc.),
-; you can just call default-scheme-read instead of using underlying-read below,
-; with the limitation that vector constants #(...) will not support curly-infix
-; or neoteric-function-expressions.
-; We WILL call default-scheme-read on string reading (that DOES seem to work
-; in common cases, and lets us use the implementation's string extensions).
+; We have to re-implement our own Scheme reader.
+; This takes more code than it would otherwise because many
+; Scheme readers will not consider [, ], {, and } as delimiters
+; (they are not required delimiters in R5RS and R6RS).
+; Thus, we cannot call down to the underlying reader to implement reading
+; many types of values such as symbols.
+; If your Scheme's "read" also considers [, ], {, and } as
+; delimiters (and thus are not consumed when reading symbols, numbers, etc.),
+; then underlying-read could be much simpler.
+; We WILL call default-scheme-read on string reading (the ending delimiter
+; is ", so that is no problem) - this lets us use the implementation's
+; string extensions if any.
 
   ; Identifying the list of delimiter characters is harder than you'd think.
   ; This list is based on R6RS section 4.2.1, while adding [] and {},
@@ -702,12 +702,25 @@
             (#t
               (let ((rest-string (list->string (cons c rest))))
                 (cond
+                  ; Implement R6RS character names, see R6RS section 4.2.6.
                   ; As an extension, we will ALWAYS accept character names
                   ; of any case, no matter what the case-folding value is.
                   ((string-ci=? rest-string "space") #\space)
                   ((string-ci=? rest-string "newline") #\newline)
-                  ((string-ci=? rest-string "ht") tab)  ; Scheme extension.
-                  ((string-ci=? rest-string "tab") tab) ; Scheme extension.
+                  ((string-ci=? rest-string "tab") tab)
+                  ((string-ci=? rest-string "nul") (integer->char #x0000))
+                  ((string-ci=? rest-string "alarm") (integer->char #x0007))
+                  ((string-ci=? rest-string "backspace") (integer->char #x0008))
+                  ((string-ci=? rest-string "linefeed") (integer->char #x000A))
+                  ((string-ci=? rest-string "vtab") (integer->char #x000B))
+                  ((string-ci=? rest-string "page") (integer->char #x000C))
+                  ((string-ci=? rest-string "return") (integer->char #x000D))
+                  ((string-ci=? rest-string "esc") (integer->char #x001B))
+                  ((string-ci=? rest-string "delete") (integer->char #x007F))
+                  ; Additional character names as extensions:
+                  ((string-ci=? rest-string "ht") tab)
+                  ((string-ci=? rest-string "cr") (integer->char #x000d))
+                  ((string-ci=? rest-string "bs") (integer->char #x0008))
                   (#t (read-error "Invalid character name"))))))))))
 
   ; If fold-case is active on this port, return string "s" in folded case.

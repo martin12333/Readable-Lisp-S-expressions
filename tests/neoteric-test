@@ -309,6 +309,11 @@ This works on the current selection."
 (reader-test
 '("hi" 3))
 
+(reader-test #\space)
+
+(reader-test (integer->char #x000d))
+
+(reader-test (integer->char #x0008))
 
 
 ; Put new tests here.

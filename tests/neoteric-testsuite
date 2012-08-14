@@ -258,6 +258,12 @@ CHECKPOINT1
 
 "hi"(3)
 
+#\space
+
+#\return
+
+#\backspace
+
 ; Put new tests here.
 
 FINI
