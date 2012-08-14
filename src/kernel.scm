@@ -149,6 +149,12 @@
 ;   hash-pipe-comment-nests?
 ;   - a Boolean value that specifies whether #|...|# comments
 ;     should nest.
+;
+;   my-string-foldcase
+;   - a function to perform case-folding to lowercase, as mandated
+;     by Unicode.  If your implementation doesn't have Unicode, define
+;     this to be string-downcase.  Some implementations may also
+;     interpret "string-downcase" as foldcase anyway.
 
 
 ; On Guile 2.0, the define-module part needs to occur separately from
@@ -376,6 +382,8 @@
 
     (define hash-pipe-comment-nests? #t)
 
+    (define (my-string-foldcase s)
+      (string-downcase s))
     )
 ; -----------------------------------------------------------------------------
 ; R5RS Compatibility
@@ -447,12 +455,12 @@
     ; it as an extension, and make them nest.
     (define hash-pipe-comment-nests? #t)
 
+    ; If your Scheme supports "string-foldcase", use that instead of
+    ; string-downcase:
+    (define (my-string-foldcase s)
+      (string-downcase s))
     ))
 
-; If your Scheme supports "string-foldcase", use that instead of
-; string-downcase:
-(define (my-string-foldcase s)
-  (string-downcase s))
 
 
 ; -----------------------------------------------------------------------------
