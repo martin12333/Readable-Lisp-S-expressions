@@ -1,80 +1,56 @@
-#!/bin/sh
+#!/usr/bin/env clisp
 
-# Test curly-infix.cl.  Also has demo of its use.
+; Test curly-infix.cl.  Also has demo of its use.
 
-# Run this file on a Unix-like system to test curly-infix.cl.
-# You must have clisp, and "curly-infix.cl" must be in the current directory.
+; Run this file on a Unix-like system to test curly-infix.cl.
+; You must have clisp, and "curly-infix.cl" must be in the current directory.
 
-# It should print T for the successful loading of the file,
-# followed by a bunch of NILs (the result of successful asserts) and
-# some other calculations, WITHOUT any "assertion fails" messages.
-# If there is an assertion error message of the form:
-#  *** - ....
-# then you must fix something.
-
-# Copyright (C) 2007 by David A. Wheeler.
-# Released under the "MIT license":
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-# OTHER DEALINGS IN THE SOFTWARE.
+; Copyright (C) 2007-2012 by David A. Wheeler.
+; Released under the "MIT license":
+; Permission is hereby granted, free of charge, to any person obtaining a
+; copy of this software and associated documentation files (the "Software"),
+; to deal in the Software without restriction, including without limitation
+; the rights to use, copy, modify, merge, publish, distribute, sublicense,
+; and/or sell copies of the Software, and to permit persons to whom the
+; Software is furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included
+; in all copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+; OTHER DEALINGS IN THE SOFTWARE.
 
 
-clisp << TESTCOMMANDS
 (if (not (load (getenv "CURLYFILE") :if-does-not-exist t))
   (exit 1))
 
 
-(defun mytest (test)
+(defun mytest (input correct)
   (cond
-    (test  'PASS)
-    (t     (princ "FAIL!!!") (exit 1))))
+    ((equal input correct)
+      (princ "Success with: ")
+      (prin1 input)
+      (format t "~%"))
+    (t
+      (princ "FAIL!!!")
+      (print input)
+      (print correct)
+      (exit 1))))
 
-; Test lower-level routines:
-
-(mytest (even-and-op-prefix '+ '(+ 4)))
-(mytest (even-and-op-prefix '+ '(+ 4 + 5)))
-(mytest (not (even-and-op-prefix '+ '(+ 4 - 5))))
-(mytest (not (even-and-op-prefix '+ '(+ 4 +))))
-
-(mytest (simple-infix-listp '(1 + 2)))
-(mytest (simple-infix-listp '(1 + 2 + 3)))
-(mytest (not (simple-infix-listp '(1 + 2 * 3))))
-(mytest (not (simple-infix-listp '(1 + 2 +))))
-(mytest (not (simple-infix-listp '(1 +))))
-(mytest (not (simple-infix-listp '(1))))
-(mytest (not (simple-infix-listp '())))
-
-(mytest (equal (alternating-parameters '(1 2 3)) '(1 3)))
-(mytest (equal (alternating-parameters '(1 2 3 4 5)) '(1 3 5)))
-
-(mytest (equal (transform-simple-infix '(1 + 3)) '(+ 1 3)))
-(mytest (equal (transform-simple-infix '(1 + 3 + 5)) '(+ 1 3 5)))
-
-; Test {...} itself:
-
-(mytest (equal '{2 + 3} '(+ 2 3)))
-(mytest (equal '{2 * n} '(* 2 n)))
-(mytest (equal '{x eq y} '(eq x y)))
-(mytest (equal '{2 + 3 + 4} '(+ 2 3 4)))
-(mytest (equal '{2 + {3 * 4}} '(+ 2 (* 3 4))))
-(mytest (equal '{2 + 3 * 4} '(NFX 2 + 3 * 4)))
-(mytest (equal '{(- x) / 2} '(/ (- x) 2)))
-(mytest (equal '{x = 3 * 4} '(nfx x = 3 * 4)))
-(mytest (equal '{x = 3} '(= x 3)))
+(mytest '{2 + 3} '(+ 2 3))
+(mytest '{2 * n} '(* 2 n))
+(mytest '{x eq y} '(eq x y))
+(mytest '{2 + 3 + 4} '(+ 2 3 4))
+(mytest '{2 + {3 * 4}} '(+ 2 (* 3 4)))
+(mytest '{2 + 3 *** 4} '(nfx 2 + 3 *** 4))
+(mytest '{(- x) / 2} '(/ (- x) 2))
+(mytest '{x = 3 * 4} '(nfx x = 3 * 4))
+(mytest '{x = 3} '(= x 3))
 
 ; Demo its use:
 
@@ -92,8 +68,8 @@ clisp << TESTCOMMANDS
 (setf correct {1 <= x <= 10})
 
 ; Test that demo worked correctly:
-(mytest (= (fibfast 10) 55))
-(mytest correct)
+(mytest (fibfast 10) 55)
+(mytest correct t)
 
 ; More demos:
 
@@ -103,5 +79,4 @@ clisp << TESTCOMMANDS
 (princ "Tests complete!")
 (exit 0)
 (quit)
-TESTCOMMANDS
 
