@@ -1,0 +1,189 @@
+#!/usr/bin/env guile
+!#
+
+;  Test curly-infix-read in (readable kernel).  Also has demo of its use.
+;
+;  Copyright (C) 2008-2012 by David A. Wheeler.
+;  Released under the "MIT license":
+;  Permission is hereby granted, free of charge, to any person obtaining a
+;  copy of this software and associated documentation files (the "Software"),
+;  to deal in the Software without restriction, including without limitation
+;  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+;  and/or sell copies of the Software, and to permit persons to whom the
+;  Software is furnished to do so, subject to the following conditions:
+;
+;  The above copyright notice and this permission notice shall be included
+;  in all copies or substantial portions of the Software.
+;
+;  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+;  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+;  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+;  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+;  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+;  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+;  OTHER DEALINGS IN THE SOFTWARE.
+
+
+; guile-specific use-modules call:
+(use-modules (readable kernel))
+
+; Portable:
+
+(define test-error 0)
+(define test-correct 0)
+
+(define (test calculation correct . comparitor)
+  (if (null? comparitor)
+     (set! comparitor equal?)
+     (set! comparitor (car comparitor)))
+  (display "Comparing with ")
+  (write correct)
+  (newline)
+  (cond
+    ((comparitor calculation correct)
+      (set! test-correct (+ test-correct 1))
+      (display "CORRECT\n"))
+    (#t
+      (set! test-error (+ test-error 1))
+      (display "ERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+      (display "Got:\n")
+      (display calculation)
+      (display "\n\n")))
+  (display "\n"))
+
+(define (reader-test correct-value)
+  (test (curly-infix-read (current-input-port)) correct-value))
+
+
+; Check "test" function itself
+(display "Self-test:\n")
+(test 1 1)
+
+(display "Beginning tests:\n")
+
+(reader-test 'testing123)
+
+(reader-test '(hi))
+
+(reader-test '(hi))
+
+(reader-test '(+ 3 4))
+
+(reader-test 'q) ; Comment-only lines.
+(reader-test 'a) ; Inline comments.
+(reader-test 'b)
+
+(reader-test ''x)
+
+; Test quasi-quoting.
+(reader-test '`(x))
+
+(reader-test '(f x))
+
+(reader-test '(+ 3 (* 4 5)))
+
+(reader-test '`(,(x)))
+
+(reader-test '`(,@(x)))
+
+(reader-test '(+ 3 (* 4 5)))
+
+(reader-test '(+ 2 3))
+(reader-test ''(+ 2 3))
+
+(reader-test '(char=? c #\space))
+
+(reader-test '(and #f #t))
+
+(reader-test '(char=?-ci c #\[))
+
+(reader-test '(= i 10))
+
+(reader-test .2)
+
+(reader-test '(a ... b))
+
+(reader-test '(- -8 9))
+
+(reader-test '(string<? "\\a" "\\b"))
+
+(reader-test '(define (fibfast n) (if (< n 2) n (fibup n 2 1 0))))
+(reader-test
+ '(define (fibup max count n-1 n-2)
+    (if (= max count) (+ n-1 n-2)
+      (fibup max (+ count 1) (+ n-1 n-2) n-1))))
+
+(reader-test '(a . b))
+
+(reader-test '(a . b))
+
+(reader-test 'b) ; ( . b) is not _required_ by Scheme, but it's common and
+; it'll mean there's a portable way to express the group symbol in I-expr.
+
+(reader-test 'hi)
+
+(reader-test 'a123)
+
+(reader-test '(x y))
+
+(reader-test '#(0 1 2))
+
+(reader-test '())
+
+(reader-test '(f . b))
+
+; Common Lisp example
+
+(reader-test
+ '(defun factorial (n)
+   (if (<= n 1)
+       1
+       (* n (factorial (- n 1))))))
+
+(reader-test
+ '(defun factorial (n)
+   (if (<= n 1)
+       1
+       (* n (factorial (- n 1))))))
+
+; Scheme example
+
+(reader-test
+ '(define (factorial n)
+   (if (<= n 1)
+       1
+       (* n (factorial (- n 1))))))
+
+(reader-test
+ '(define (factorial n)
+   (if (<= n 1)
+       1
+       (* n (factorial (- n 1))))))
+
+; Nested expression.
+
+(reader-test '(and (<= 1 x 10)  (> x 0)))
+(reader-test '(and (<= 1 x 10)  (> x 0)))
+
+(reader-test 'xyz)
+(reader-test '(abc))
+
+; Put new tests here.
+
+(reader-test
+'FINI)
+
+
+
+(display "Tests complete!")
+(newline)
+(display "  Errors: ")
+(display test-error)
+(display "  Correct: ")
+(display test-correct)
+(newline)
+
+(if (= test-error 0)
+  (exit 0)
+  (exit 1))
+

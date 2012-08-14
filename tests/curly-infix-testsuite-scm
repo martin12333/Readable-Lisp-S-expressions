@@ -1,0 +1,123 @@
+   testing123
+
+(hi)
+
+[hi ]
+
+{3 + 4 }
+
+; This is a comment.
+   ; Here's another comment.
+; Another comment.
+q
+
+a ; inline comment.
+b
+
+'x ; quoted
+
+
+`(x)
+
+(f x)
+
+{3 + {4 * 5 } }
+
+
+`(,(x))
+
+`(,@(x))
+
+
+{3 + {4 * 5}}
+
+{2 + 3}
+
+'{2 + 3}
+
+ ; Check to make sure #-processing is delimited by closing curly brace,
+ ; in a variety of circumstances.
+
+ {c char=? #\space}
+
+ {#f and #t}
+
+ {c char=?-ci #\[}
+
+ {i = #xa}
+
+ .2
+
+ [a ... b]
+
+ {-8 - +9}
+
+ {"\\a" string<? "\\b"}
+
+
+(define (fibfast n)
+  (if {n < 2}
+    n
+    (fibup n 2 1 0)))
+
+(define (fibup max count n-1 n-2)
+  (if {max = count}
+    {n-1 + n-2}
+    (fibup max {count + 1} {n-1 + n-2} n-1)))
+
+(a . b)
+
+(a . b)
+
+( . b)
+
+|hi|
+
+(. a123)
+
+; Try out tab as separator
+(x	y)
+
+#(0 1 2)
+
+()
+
+(f . b)
+
+; Common Lisp example
+
+(defun factorial (n)
+  (if {n <= 1}
+       1
+       {n * (factorial {n - 1})}))
+
+(defun factorial (n)
+  (if (<= n 1)
+    1
+    (* n (factorial (- n 1)))))
+
+; Scheme example
+
+
+(define (factorial n)
+  (if {n <= 1}
+       1
+       {n * (factorial {n - 1})}))
+
+(define (factorial  n)
+  (if (<= n 1)
+    1
+    (* n (factorial (- n 1)))))
+
+{{1 <= x <= 10} and {x > 0}}
+
+(and (<= 1 x 10)  (> x 0))
+
+; NOT neoteric, so this is two datums:
+
+xyz(abc)
+
+; Put new tests here.
+
+FINI
+
