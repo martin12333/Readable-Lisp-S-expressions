@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<head>
+<meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+<title>Readable Lisp S-expressions / Wiki / SRFI-Curly</title>
+</head>
+<body>
+
+<h1 id="title">Title</h1>
+<p>Curly-infix-expressions</p>
+
+<h1 id="author">Author</h1>
+<p>David A. Wheeler</p>
+
+<h1 id="status">Status</h1>
+<p>This is a draft SRFI.  To see an explanation of each status that a SRFI can hold, see <a href="http://srfi.schemers.org/srfi-process.html" rel="nofollow">here</a>.</p>
+<p>To provide input on this SRFI, please  <a href="mailto:srfi%20minus%20???%20at%20srfi%20dot%20schemers%20dot%20org">mail to <code>&lt;srfi minus ??? at srfi dot schemers dot org&gt;</code></a>.  See  <a href="http://srfi.schemers.org/srfi-list-subscribe.html" rel="nofollow">instructions here</a> to subscribe to the list.  You can access previous messages via  <a href="http://srfi.schemers.org/mail-archive/maillist.html???" rel="nofollow">the archive of the mailing list</a>.</p>
+
+<h1 id="related-srfis">Related SRFIs</h1>
+<p>None</p>
+
+<h1 id="abstract">Abstract</h1>
+<p>Lisp-based languages, like Scheme, are almost the only programming languages in modern use that do not support infix notation.  Adding infix support to Scheme would eliminate a common complaint by developers who currently choose to use other languages.  Scheme currently reserves {...} "for possible future extensions to the language".  We propose that {...} be used to support "curly-infix" notation as a reader abbreviation, just as 'x is an abbreviation for (quote x).  If the curly-infix list represents a single operator with operands, the reader maps it to (operator operands); otherwise, it becomes (nfx original-parameters).</p>
+
+<h1 id="rationale">Rationale</h1>
+<p>Lisp-based languages, like Scheme, are almost the only programming languages in modern use that do not support infix notation.  Even some Lisp advocates, like Paul Graham, admit that they "don't find prefix math expressions natural." (<a href="http://www.paulgraham.com/pypar.html" rel="nofollow">http://www.paulgraham.com/pypar.html</a>)  Paul Prescod has said, "I have more faith that you could convince the world to use Esperanto than prefix notation."  Infix is not going away; nearly all new programming languages also include infix.  Adding infix support to Scheme would eliminate a common complaint by developers who currently choose to use other languages instead.</p>
+<p>Scheme currently reserves {...} "for possible future extensions to the language".  We propose that {...} be used to support "curly-infix" notation as a reader abbreviation, just as 'x is an abbreviation for (quote x).</p>
+<p>This proposal is an extremely <em>simple</em> and <em>straightforward</em> technique for supporting infix notation.  There is no complex precedence system, all other Scheme capabilities (including macros) work unchanged, and Scheme remains general and homoiconic. Curly-infix expressions are just a convenient reader abbreviation for infix notation, just like 'x is an abbreviation of (quote x). </p>
+<p>Many previous systems have implemented "infix" systems as a named macro or function (often "nfx" meaning infix).  This looks ugly, and it does the wrong thing - the resulting list always has "nfx" at the beginning, not the actual infix operator, so this approach can interfere with quoting, macros, and other capabilities.  Many of these past systems also created a whole new notation which simultaneously lost Lisp's abilities for quoting, quasiquoting, and so on.  This proposal avoids these problems.</p>
+<p>Many past "infix" systems for Lisp build in precedence.  However, Lisp systems often process other languages, freely mixing different languages, and thus the same symbol may have different meanings and precedence levels in different contexts.  The symbol might not even be defined where it is being used.  By avoiding precedence, a very simple yet useful infix system results.  In practice, we've found that simple infix is all that's needed most of the time.  By intentionally <em>not</em> building in a precedence system, we make things amazingly simple - we don't need to register functions, decide their order, or anything like it.  It obviously would be possible to extend this mechanism to provide a precedence system (e.g., if an expression is not simple, attempt to use various precedence rules), but such capabilities would be extensions not required by this SRFI (though some future SRFI might add it somehow).</p>
+<p>Some past efforts tried to automatically detect infix operators, but this turns out to not work well.  It's hard to express good rules for detecting infix operators, and the rules become too complex for users (e.g., "punctuation-only symbols" doesn't detect "and" or "or").  And in any case, if they were automatically detected, an escape mechanism would be needed anyway.  Allowing the user to expressly notate when infix was intended, using {...}, turns out to be far more clearer and more intuitive.  It is also very backwards-compatible: Normal lists work normally, and if you want infix, use {...}.</p>
+<p>At first I considered reporting an error if a simple infix expression isn't provided, but prepending "nfx" is much more flexible.</p>
+<p>Curly-infix requires that infix operators be delimited (e.g., by spaces).  This is consistent with Lisp history; operators are always delimited in traditional s-expressions (typically by left parentheses on the left, and space on the right).  It's also impractical to do otherwise; most Lisps, including Scheme, allow and predefine symbols that include characters (like "-") that are typically used for infix operators.  Many developers will put space around infix operators even in languages that don't require them, so syntactically requiring them is no burden.  In short, it is difficult to allow infix operators without delimiters, and the visual results are the same as many real-world uses in other languages, so the result appears quite customary to typical software developers.</p>
+<p>If a reader implements this SRFI, we would like it to <em>always</em> be enabled.  However, we provide a "enable-curly-infix" function so that implementors can make it optional, or to switch from whatever was their previous interpretation.  By having a standard mechanism for enabling it, we hope will encourage adoption.  The enabling mechanism doesn't use any module system; some implementations won't have one (or at least not a standard one).  Users should invoke "(enable-curly-infix)" before using curly-infix lists.  The "curly-infix-read" function allows reading external curly-infix data, even if the implementation doesn't implement it by default.  The "transform-not-simple-infix" function is suggested so that some future SRFI author can define some infix precedence system (if a future community decides it wants one), but it is not required.</p>
+<p>There's no explicit "disable-curly-infix".  There's no reason to disable it within this SRFI, and if some other action changes the meaning of braces, it would be that other action that disables it.</p>
+<p>There is no requirement that writers (e.g., "write") write out curly-infix expressions.  They may choose to do so, e.g., for lists of length 3-6 whose car is the symbol "and", symbol "or", or a punctuation-only symbol.  However, it would probably be wise to wait until many implementations can handle c-expressions.</p>
+<p>This is an unusually simple mechanism, but like much of any Lisp-based language, its power comes from its simplicity.</p>
+<p>Note that this is the first of three tiers developed by the "readable" project.  We intend to later submit two more SRFIs, for defining the other two tiers that build on top of curly-infix-expressions.</p>
+
+<h1 id="specification">Specification</h1>
+<p>"Curly-infix-expressions" (c-expressions) are s-expressions with an additional notation: The curly-infix list.  A curly-infix list is syntactically identical to a normal list, except it is surrounded by curly braces instead of by parentheses.  Once a curly-infix list is read, it is mapped differently than a regular list, depending on whether or not it is simple.  A simple curly-infix list is a curly-infix list that represents a single infix operation (it has an odd number of parameters, at least three parameters, and all even parameters are "eq?" symbols); a simple curly-infix list is mapped by the reader into a list with the even parameter followed by the odd parameters.  A non-simple curly-infix list is mapped to the list with the symbol "nfx" added to its front.</p>
+<p>A "curly-infix-expression" datum reader is a reader that can correctly read curly-infix-expressions.</p>
+<p>Here are some examples of c-expressions:</p>
+<ul>
+<li>{n &lt;= 2} maps to (&lt;= n 2)</li>
+<li>{2 * 3 * 4} maps to (* 2 3 4)</li>
+<li>{a * {b + c}} maps to (* a (+ b c))</li>
+<li>{q + r * s} maps to (nfx q + r * s)</li>
+<li>{x eqv? 'a} maps to (eqv? x 'a)</li>
+<li>{(- a) / b} maps to (/ (- a) b)</li>
+<li>{(f a b) + (g h)} maps to (+ (f a b) (g h))</li>
+<li>'{a + (f b) + x} maps to '(+ a (f b) x)</li>
+<li>{{a &gt; 0} and {b &gt;= 1}} maps to (and (&gt; a 0) (&gt;= b 1))</li>
+</ul>
+<p>Functions:</p>
+<ul>
+<li>Implementations must provide the function (curly-infix-read . port) that can read a c-expression.</li>
+<li>Implementations must provide the function (enable-curly-infix), which enables this capability in the default reader ("read" and "get-datum"), the reader used in the REPL, and the reader used by "load", whether or not it was previously enabled.   However, we encourage systems to <em>always</em> have this capability enabled, even if enable-curly-infix is not called.</li>
+<li>Implementations may provide an overrideable function (transform-not-simple-infix lyst) that can be "set!"; this receives the non-simple curly-infix list; and returns a transformation of it (e.g., a list with "nfx" in front).</li>
+</ul>
+<p>Note that, by definition, this SRFI modifies lexical syntax.</p>
+
+<h1 id="reference-implementation">Reference implementation</h1>
+<p>The implementation below is portable, with the exception that Scheme provides no standard mechanism to override {...} in its built-in reader.  Thus, implementations will typically have a modified reader that detects "{", starts reading a list until its matching "}", and then calls process-curly defined below.  We recommend that implementations <em>always</em> do this, but an implementation must at least activate this behavior when (enable-curly-infix) is called.</p>
+<p>This reference implementation is SRFI type 2: "A mostly-portable solution that uses some kind of hooks provided in some Scheme interpreter/compiler. In this case, a detailed specification of the hooks must be included so that the SRFI is self-contained."</p>
+
+<pre>
+; Return true if lyst has an even # of parameters, and the (alternating)
+; first parameters are "op".  Used to determine if a longer lyst is infix.
+; If passed empty list, returns true (so recursion works correctly).
+(define (even-and-op-prefix? op lyst)
+  (cond
+    ((null? lyst) #t)
+    ((not (pair? lyst)) #f) ; Not a list.
+    ((not (eq? op (car lyst))) #f) ; fail - operators not the same
+    ((null? (cdr lyst)) #f) ; fail - wrong # of parameters in lyst.
+    (#t (even-and-op-prefix? op (cddr lyst))))) ; recurse.
+
+; Return true if the lyst is in simple infix format
+; (and thus should be reordered at read time).
+(define (simple-infix-list? lyst)
+  (and
+    (pair? lyst)           ; Must have list;  '() doesn't count.
+    (pair? (cdr lyst))     ; Must have a second argument.
+    (pair? (cddr lyst))    ; Must have a third argument (we check it
+                           ; this way for performance)
+    (symbol? (cadr lyst))  ; 2nd parameter must be a symbol.
+    (even-and-op-prefix? (cadr lyst) (cdr lyst)))) ; true if rest is simple
+
+; Return alternating parameters in a lyst (1st, 3rd, 5th, etc.)
+(define (alternating-parameters lyst)
+  (if (or (null? lyst) (null? (cdr lyst)))
+    lyst
+    (cons (car lyst) (alternating-parameters (cddr lyst)))))
+
+; Transform a simple infix list - move 2nd parameter into first position,
+; followed by all the odd parameters.  Thus (3 + 4 + 5) becomes (+ 3 4 5).
+(define (transform-simple-infix lyst)
+   (cons (cadr lyst) (alternating-parameters lyst)))
+
+; Not a simple infix list - transform it.  Written as separate function
+; so that future experiments or SRFIs can easily replace just this piece.
+(define (transform-not-simple-infix lyst)
+   (cons 'nfx lyst))
+
+; Given curly-infix lyst, map it to its final internal format.
+(define (process-curly lyst)
+  (if (simple-infix-list? lyst)
+     (transform-simple-infix lyst) ; Simple infix expression.
+     (transform-not-simple-infix lyst)))
+
+; In the reader, when #\{ is detected, read (as a list) from that port
+; until its matching #\}, then process that list with "process-curly".
+</pre>
+
+
+<h1 id="references">References</h1>
+<p>The readable project website has more information: <a href="http://readable.sourceforge.net">http://readable.sourceforge.net</a></p>
+
+<h1 id="acknowledgments">Acknowledgments</h1>
+<p>I thank Alan Manuel Gloria for his helpful efforts in getting this available.</p>
+
+<h1 id="copyright">Copyright</h1>
+<p>Copyright (C) 2012 David A. Wheeler. All Rights Reserved.</p>
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
+<p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. </p></div>
+
+</body>
