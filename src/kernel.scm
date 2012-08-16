@@ -661,6 +661,7 @@
   (define (consume-whitespace port)
     (let ((char (my-peek-char port)))
       (cond
+        ((eof-object? char))
         ((eqv? char #\;)
           (consume-to-eol port)
           (consume-whitespace port))
@@ -1385,9 +1386,6 @@
   (define sweet-read (make-read sugar-start-expr))
 
   )
-
-; TODO: Fix bug if there's no end-of-line at the last line of file.
-;       Seems to be in the sweet-expression processing.
 
 ; vim: set expandtab shiftwidth=2 :
 
