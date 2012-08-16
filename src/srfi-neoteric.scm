@@ -330,7 +330,6 @@
               (neoteric-read-real port))
             ((my-char-whitespace? c)
               (read-char port)
-              (display "DEBUG - WHITESPACE\n")
               (neoteric-read-real port))
             ((char=? c #\( )
                (read-char port)
