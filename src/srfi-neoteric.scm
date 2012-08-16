@@ -84,7 +84,7 @@
 
   ; Create own version, in case underlying implementation omits some.
   (define (my-char-whitespace? c)
-    (char-whitespace? c))
+    (or (char-whitespace? c) (ismember? c whitespace-chars)))
 
   ; If fold-case is active on this port, return string "s" in folded case.
   ; Otherwise, just return "s".  This is needed to support our
@@ -121,7 +121,7 @@
   (define (consume-whitespace port)
     (let ((char (peek-char port)))
       (cond
-        ((eof-object? char))
+        ((eof-object? char) char)
         ((eqv? char #\;)
           (consume-to-eol port)
           (consume-whitespace port))
@@ -185,15 +185,7 @@
             ((char=? c #\( )  ; Vector.
               (list->vector (my-read-delimited-list #\) port)))
             ((char=? c #\\) (process-char port))
-            (#t
-              (let ((rv (parse-hash c port)))
-                (cond
-                  ((not rv)
-                    (read-error "Invalid #-prefixed string"))
-                  ((pair? rv)
-                    (car rv))
-                  (#t
-                    (read-error "****ERROR IN COMPATIBILITY LAYER parse-hash: must return #f '() or `(,obj)"))))))))))
+            (#t (read-error "Unsupported # extension")))))))
 
   (define (process-period port)
     ; We've peeked a period character.  Returns what it represents.
@@ -258,11 +250,16 @@
     ; This is like read-delimited-list of Common Lisp.
     ; This implements a useful extension: (. b) returns b. This is
     ; important as an escape for indented expressions, e.g., (. \\)
-    (consume-whitespace port)
     (let*
       ((c   (peek-char port)))
       (cond
         ((eof-object? c) (read-error "EOF in middle of list") c)
+        ((eqv? c #\;)
+          (consume-to-eol port)
+          (my-read-delimited-list stop-char port))
+        ((my-char-whitespace? c)
+          (read-char port)
+          (my-read-delimited-list stop-char port))
         ((char=? c stop-char)
           (read-char port)
           '())
@@ -284,6 +281,7 @@
                (#t
                    (cons datum
                      (my-read-delimited-list stop-char port)))))))))
+
 
   ; Implement neoteric-expression's prefixed (), [], and {}.
   ; At this point, we have just finished reading some expression, which
@@ -320,54 +318,64 @@
   ; after it reads in something, it calls neoteric-process-tail to
   ; see if there's a "tail" (and if so, read and use it).
   (define (neoteric-read-real port)
-    (consume-whitespace port)
-    ; This following line implements neoteric-read:
-    (neoteric-process-tail port
-      ; All of the following lines are just a normal Scheme reader:
-      (let* ((c (peek-char port)))
-        (cond
-          ((eof-object? c) c)
-          ((char=? c #\( )
-             (read-char port)
-             (my-read-delimited-list #\) port))
-          ((char=? c #\[ )
-             (read-char port)
-             (my-read-delimited-list #\] port))
-          ((char=? c #\{ )
-            (read-char port)
-            (process-curly
-                (my-read-delimited-list #\} port)))
-          ((char=? c #\") ; Strings are delimited by ", so can call directly
-            (default-scheme-read port))
-          ((char=? c #\')
-            (read-char port)
-            (list 'quote (neoteric-read-real port)))
-          ((char=? c #\`)
-            (read-char port)
-            (list 'quasiquote (neoteric-read-real port)))
-          ((char=? c #\,)
-            (read-char port)
-              (cond
-                ((char=? #\@ (peek-char port))
-                  (read-char port)
-                  (list 'unquote-splicing (neoteric-read-real port)))
-               (#t
-                (list 'unquote (neoteric-read-real port)))))
-          ((ismember? c digits) ; Initial digit.
-            (read-number port '()))
-          ((char=? c #\#) (process-sharp port))
-          ((char=? c #\.) (process-period port))
-          ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
-             (read-char port)
-             (if (ismember? (peek-char port) digits)
-               (read-number port (list c))
-               (string->symbol (fold-case-maybe port
-                 (list->string (cons c
-                    (read-until-delim port neoteric-delimiters)))))))
-          (#t ; Nothing else.  Must be a symbol start.
-            (string->symbol (fold-case-maybe port
-              (list->string
-                (read-until-delim port neoteric-delimiters)))))))))
+    (let* ((c (peek-char port)))
+      (if (eof-object? c)
+        c
+        ; This following line implements neoteric-read:
+        (let* ((result
+        ; From here on, this is just a normal Scheme reader:
+          (cond
+            ((char=? c #\;)
+              (consume-to-eol port)
+              (neoteric-read-real port))
+            ((my-char-whitespace? c)
+              (read-char port)
+              (display "DEBUG - WHITESPACE\n")
+              (neoteric-read-real port))
+            ((char=? c #\( )
+               (read-char port)
+               (my-read-delimited-list #\) port))
+            ((char=? c #\[ )
+               (read-char port)
+               (my-read-delimited-list #\] port))
+            ((char=? c #\{ )
+              (read-char port)
+              (process-curly
+                  (my-read-delimited-list #\} port)))
+            ((char=? c #\") ; Strings are delimited by ", so can call directly
+              (default-scheme-read port))
+            ((char=? c #\')
+              (read-char port)
+              (list 'quote (neoteric-read-real port)))
+            ((char=? c #\`)
+              (read-char port)
+              (list 'quasiquote (neoteric-read-real port)))
+            ((char=? c #\,)
+              (read-char port)
+                (cond
+                  ((char=? #\@ (peek-char port))
+                    (read-char port)
+                    (list 'unquote-splicing (neoteric-read-real port)))
+                 (#t
+                  (list 'unquote (neoteric-read-real port)))))
+            ((ismember? c digits) ; Initial digit.
+              (read-number port '()))
+            ((char=? c #\#) (process-sharp port))
+            ((char=? c #\.) (process-period port))
+            ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
+               (read-char port)
+               (if (ismember? (peek-char port) digits)
+                 (read-number port (list c))
+                 (string->symbol (fold-case-maybe port
+                   (list->string (cons c
+                      (read-until-delim port neoteric-delimiters)))))))
+            (#t ; Nothing else.  Must be a symbol start.
+              (string->symbol (fold-case-maybe port
+                (list->string
+                  (read-until-delim port neoteric-delimiters))))))))
+          (if (eof-object? result)
+            result
+            (neoteric-process-tail port result))))))
 
   (define (neoteric-read . args)
     (neoteric-read-real
@@ -387,7 +395,6 @@
           (write result)
           (display "\n")
           (process-input)))))
-  (enable-neoteric)
-  (process-input)
 
+  (process-input)
 
