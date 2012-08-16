@@ -1,11 +1,6 @@
-; This is a *simplified* reference implementation of a neoteric reader,
-; intended for a SRFI submission.  It intentionally strips out
-; all work to annotate the source, avoids creating a "my-read-char"
-; and friends, does not try to return a "comment-tag", and in general
-; tries to be simple.
+; This is a simplified reference implementation of a neoteric reader,
+; intended for a SRFI submission.
 
-; TODO: Hook into "make check"
-; TODO: Debug.
 
 ; -----------------------------------------------------------------------------
 ; Curly Infix support functions
@@ -70,7 +65,7 @@
   (define tab (integer->char #x0009))
   (define line-tab (integer->char #x000b))
   (define form-feed (integer->char #x000c))
-  (define line-ending-chars-ascii (list linefeed carriage-return))
+  (define line-ending-chars (list linefeed carriage-return))
   (define whitespace-chars
     (list tab linefeed line-tab form-feed carriage-return #\space))
 
@@ -173,7 +168,6 @@
       (append starting-lyst
         (read-until-delim port neoteric-delimiters)))))
 
-
   (define (process-sharp port)
     ; We've peeked a # character.  Returns what it represents.
     (read-char port) ; Remove #
@@ -189,7 +183,7 @@
                             #\I #\E #\B #\O #\D #\X))
               (read-number port (list #\# (char-downcase c))))
             ((char=? c #\( )  ; Vector.
-              (list->vector (read-delimited-list #\) port)))
+              (list->vector (my-read-delimited-list #\) port)))
             ((char=? c #\\) (process-char port))
             (#t
               (let ((rv (parse-hash c port)))
@@ -381,6 +375,10 @@
         (current-input-port)
         (car args))))
 
+  (define (enable-neoteric)
+    ; possibly also set get-datum
+    (set! read neoteric-read))
+
   ; repeatedly read in as neoteric, and write traditional s-expression out.
   (define (process-input)
     (let ((result (neoteric-read)))
@@ -389,6 +387,7 @@
           (write result)
           (display "\n")
           (process-input)))))
+  (enable-neoteric)
   (process-input)
 
 
