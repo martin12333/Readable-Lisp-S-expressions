@@ -11,11 +11,9 @@
 ; TODO: Remove unneeded material at end of file.
 
 ; -----------------------------------------------------------------------------
-; Curly Infix / Support
+; Curly Infix
 ; -----------------------------------------------------------------------------
 
-
-  (define (read-error message) (display message))
 
   ; Return true if lyst has an even # of parameters, and the (alternating)
   ; first parameters are "op".  Used to determine if a longer lyst is infix.
@@ -99,13 +97,39 @@
 ; Neoteric Expressions - for SRFI
 ; -----------------------------------------------------------------------------
 
+  (define digits '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
+
   (define linefeed (integer->char #x000A))        ; #\newline aka \n.
   (define carriage-return (integer->char #x000D)) ; \r.
+  (define tab (integer->char #x0009))
+  (define line-tab (integer->char #x000b))
+  (define form-feed (integer->char #x000c))
 
   (define line-ending-chars-ascii (list linefeed carriage-return))
 
   ; Returns a true value (not necessarily #t)
   (define (char-line-ending? char) (memq char line-ending-chars))
+
+  ; Should we fold case of symbols by default?
+  ; #f means case-sensitive (R6RS); #t means case-insensitive (R5RS).
+  ; Here we'll set it to be case-sensitive, which is consistent with R6RS
+  ; and guile, but NOT with R5RS.  Most people won't notice, I
+  ; _like_ case-sensitivity, and the latest spec is case-sensitive,
+  ; so let's start with #f (case-sensitive).
+  ; This doesn't affect character names; as an extension,
+  ; We always accept arbitrary case for them, e.g., #\newline or #\NEWLINE.
+  (define foldcase-default #f)
+
+  ; If fold-case is active on this port, return string "s" in folded case.
+  ; Otherwise, just return "s".  This is needed to support our
+  ; foldcase-default configuration value when processing symbols.
+  (define (fold-case-maybe port s)
+    (if foldcase-default
+      (my-string-foldcase s)
+      s))
+
+  (define whitespace-chars
+    (list tab linefeed line-tab form-feed carriage-return #\space))
 
   ; Create own version, in case underlying implementation omits some.
   (define (my-char-whitespace? c)
@@ -144,12 +168,84 @@
           (read-char port)
           (consume-whitespace port)))))
 
+  ; Identifying the list of delimiter characters is harder than you'd think.
+  ; This list is based on R6RS section 4.2.1, while adding [] and {},
+  ; but removing "#" from the delimiter set.
+  ; NOTE: R6RS has "#" has a delimiter.  However, R5RS does not, and
+  ; R7RS probably will not - http://trac.sacrideo.us/wg/wiki/WG1Ballot3Results
+  ; shows a strong vote AGAINST "#" being a delimiter.
+  ; Having the "#" as a delimiter means that you cannot have "#" embedded
+  ; in a symbol name, which hurts backwards compatibility, and it also
+  ; breaks implementations like Chicken (has many such identifiers) and
+  ; Gambit (which uses this as a namespace separator).
+  ; Thus, this list does NOT have "#" as a delimiter, contravening R6RS
+  ; (but consistent with R5RS, probably R7RS, and several implementations).
+  ; Also - R7RS draft 6 has "|" as delimiter, but we currently don't.
+  (define neoteric-delimiters
+     (append (list #\( #\) #\[ #\] #\{ #\}  ; Add [] {}
+                   #\" #\;)                 ; Could add #\# or #\|
+             whitespace-chars))
 
-  (define (my-read-delimited-list my-read stop-char port)
+  (define (read-until-delim port delims)
+    ; Read characters until eof or a character in "delims" is seen.
+    ; Do not consume the eof or delimiter.
+    ; Returns the list of chars that were read.
+    (let ((c (peek-char port)))
+      (cond
+         ((eof-object? c) '())
+         ((ismember? c delims) '())
+         (#t (cons (read-char port) (read-until-delim port delims))))))
+
+  (define (read-error message)
+    (display "Error: ")
+    (display message)
+    (display "\n")
+    '())
+
+  (define (read-number port starting-lyst)
+    (string->number (list->string
+      (append starting-lyst
+        (read-until-delim port neoteric-delimiters)))))
+
+
+  (define (process-char port)
+    ; We've read #\ - returns what it represents.
+    (cond
+      ((eof-object? (peek-char port)) (peek-char port))
+      (#t
+        ; Not EOF. Read in the next character, and start acting on it.
+        (let ((c (read-char port))
+              (rest (read-until-delim neoteric-delimiters)))
+          (cond
+            ((null? rest) c) ; only one char after #\ - so that's it!
+            (#t
+              (let ((rest-string (list->string (cons c rest))))
+                (cond
+                  ; Implement R6RS character names, see R6RS section 4.2.6.
+                  ; As an extension, we will ALWAYS accept character names
+                  ; of any case, no matter what the case-folding value is.
+                  ((string-ci=? rest-string "space") #\space)
+                  ((string-ci=? rest-string "newline") #\newline)
+                  ((string-ci=? rest-string "tab") tab)
+                  ((string-ci=? rest-string "nul") (integer->char #x0000))
+                  ((string-ci=? rest-string "alarm") (integer->char #x0007))
+                  ((string-ci=? rest-string "backspace") (integer->char #x0008))
+                  ((string-ci=? rest-string "linefeed") (integer->char #x000A))
+                  ((string-ci=? rest-string "vtab") (integer->char #x000B))
+                  ((string-ci=? rest-string "page") (integer->char #x000C))
+                  ((string-ci=? rest-string "return") (integer->char #x000D))
+                  ((string-ci=? rest-string "esc") (integer->char #x001B))
+                  ((string-ci=? rest-string "delete") (integer->char #x007F))
+                  ; Additional character names as extensions:
+                  ((string-ci=? rest-string "ht") tab)
+                  ((string-ci=? rest-string "cr") (integer->char #x000d))
+                  ((string-ci=? rest-string "bs") (integer->char #x0008))
+                  (#t (read-error "Invalid character name"))))))))))
+
+  (define (my-read-delimited-list stop-char port)
     ; Read the "inside" of a list until its matching stop-char, returning list.
     ; stop-char needs to be closing paren, closing bracket, or closing brace.
-    ; This is like read-delimited-list of Common Lisp, but it
-    ; calls the specified reader instead.
+    ; This is like read-delimited-list of Common Lisp.
     ; This implements a useful extension: (. b) returns b. This is
     ; important as an escape for indented expressions, e.g., (. \\)
     (consume-whitespace port)
@@ -159,13 +255,15 @@
         ((eof-object? c) (read-error "EOF in middle of list") c)
         ((char=? c stop-char)
           (read-char port)
-          '()))
-        ((ismember? c '(#\) #\] #\}))  (read-error "Bad closing character DEBUG") (display c) c)
+          '())
+        ((or (eq? c #\)) (eq? c #\]) (eq? c #\}))
+          (read-char port)
+          (read-error "Bad closing character"))
         (#t
-          (let ((datum (my-read port)))
+          (let ((datum (neoteric-read-real port)))
             (cond
                ((eq? datum '.)
-                 (let ((datum2 (my-read port)))
+                 (let ((datum2 (neoteric-read-real port)))
                    (consume-whitespace port)
                    (cond
                      ((not (eqv? (peek-char port) stop-char))
@@ -175,7 +273,7 @@
                        datum2))))
                (#t
                    (cons datum
-                     (my-read-delimited-list my-read stop-char port))))))))
+                     (my-read-delimited-list stop-char port)))))))))
 
 
   ; Implement neoteric-expression's prefixed (), [], and {}.
@@ -192,13 +290,13 @@
           ((char=? c #\( ) ; Implement f(x).
             (read-char port)
             (neoteric-process-tail port
-                (cons prefix (my-read-delimited-list neoteric-read-nocomment #\) port))))
+                (cons prefix (my-read-delimited-list #\) port))))
           ((char=? c #\[ )  ; Implement f[x]
             (read-char port)
             (neoteric-process-tail port
                   (cons 'bracketaccess
                     (cons prefix
-                      (my-read-delimited-list neoteric-read-nocomment #\] port)))))
+                      (my-read-delimited-list #\] port)))))
           ((char=? c #\{ )  ; Implement f{x}
             (neoteric-process-tail port
                 (list prefix
@@ -207,28 +305,104 @@
           (#t prefix))))
 
   ; This is the "real" implementation of neoteric-read.
-  ; It directly implements unprefixed (), [], and {} so we retain control;
-  ; it calls neoteric-process-tail so f(), f[], and f{} are implemented.
+  ; It implements an entire reader, as a demonstration, but if you have
+  ; an existing reader you can throw away nearly all of it.
+  ; The key part is that it implements [] and {} as delimiters, and
+  ; after it reads in something, it calls neoteric-process-tail to
+  ; see if there's a "tail" (and if so, read and use it).
   (define (neoteric-read-real port)
     (consume-whitespace port)
-    (if (eof-object? (peek-char port))
-      (peek-char port)
-      (neoteric-process-tail port
-        (let* ((c (peek-char port)))
-          (cond
-            ((char=? c #\( )
-               (read-char port)
-               (my-read-delimited-list neoteric-read-nocomment #\) port))
-            ((char=? c #\[ )
-               (read-char port)
-               (my-read-delimited-list neoteric-read-nocomment #\] port))
-            ((char=? c #\{ )
-              (read-char port)
-              (process-curly
-                  (my-read-delimited-list neoteric-read-nocomment #\} port)))
-            (#t (read port)))))))
+    (neoteric-process-tail port
+      (let* ((c (peek-char port)))
+        (cond
+          ((eof-object? c) c)
+          ((char=? c #\( )
+             (read-char port)
+             (my-read-delimited-list #\) port))
+          ((char=? c #\[ )
+             (read-char port)
+             (my-read-delimited-list #\] port))
+          ((char=? c #\{ )
+            (read-char port)
+            (process-curly
+                (my-read-delimited-list #\} port)))
+          ((char=? c #\") ; Strings are delimited by ", so can call directly
+            (default-scheme-read port))
+          ((char=? c #\')
+            (read-char port)
+            (list 'quote (neoteric-read-real port)))
+          ((char=? c #\`)
+            (read-char port)
+            (list 'quasiquote (neoteric-read-real port)))
+          ((char=? c #\,)
+            (read-char port)
+              (cond
+                ((char=? #\@ (peek-char port))
+                  (read-char port)
+                  (list 'unquote-splicing (neoteric-read-real port)))
+               (#t
+                (list 'unquote (neoteric-read-real port)))))
+          ((ismember? c digits) ; Initial digit.
+            (read-number port '()))
+          ((char=? c #\#) (process-sharp no-indent-read port))
+          ((char=? c #\.) (process-period port))
+          ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
+             (read-char port)
+             (if (ismember? (peek-char port) digits)
+               (read-number port (list c))
+               (string->symbol (fold-case-maybe port
+                 (list->string (cons c
+                    (read-until-delim port neoteric-delimiters)))))))
+          (#t ; Nothing else.  Must be a symbol start.
+            (string->symbol (fold-case-maybe port
+              (list->string
+                (read-until-delim port neoteric-delimiters)))))))))
+
+(define default-scheme-read read)
+
+;      (define (underlying-read no-indent-read port)
+;        (consume-whitespace port)
+;        (let* ((pos (get-sourceinfo port))
+;               (c   (peek-char port)))
+;          (cond
+;            (#t
+;              ; attach the source information to the item read-in
+;              (attach-sourceinfo pos
+;                (cond
+;                  ((ismember? c digits) ; Initial digit.
+;                    (read-number port '()))
+;                  ((char=? c #\#) (process-sharp no-indent-read port))
+;                  ((char=? c #\.) (process-period port))
+;                  ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
+;                    (read-char port)
+;                    (if (ismember? (peek-char port) digits)
+;                      (read-number port (list c))
+;                      (string->symbol (fold-case-maybe port
+;                        (list->string (cons c
+;                          (read-until-delim port neoteric-delimiters)))))))
+;                  ((char=? c #\( )
+;                      (read-char port)
+;                      (my-read-delimited-list no-indent-read #\) port))
+;                  ((char=? c #\[ )
+;                      (read-char port)
+;                      (my-read-delimited-list no-indent-read #\] port))
+;                  ((char=? c #\| )
+;                    ; Scheme extension, |...| symbol (like Common Lisp)
+;                    ; This is present in R7RS draft 6.
+;                    (read-char port) ; Consume the initial vertical bar.
+;                    (let ((newsymbol
+;                      ; Do NOT call fold-case-maybe; always use literal values.
+;                      (string->symbol (list->string
+;                        (read-until-delim port '(#\|))))))
+;                      (read-char port)
+;                      newsymbol))
+;                  (#t ; Nothing else.  Must be a symbol start.
+;                    (string->symbol (fold-case-maybe port
+;                      (list->string
+;                        (read-until-delim port neoteric-delimiters)))))))))))
 
 
+  ; TODO: Make port optional
   (define (neoteric-read port) (neoteric-read-real port))
 
 
@@ -745,8 +919,6 @@
 ;    
 ;      ; This definition of whitespace chars is per R6RS section 4.2.1.
 ;      ; R6RS doesn't explicitly list the #\space character, be sure to include!
-;      (define whitespace-chars-ascii
-;         (list tab linefeed line-tab form-feed carriage-return #\space))
 ;      (define whitespace-chars
 ;        (append
 ;          whitespace-chars-ascii
@@ -810,78 +982,6 @@
 ;    ; is ", so that is no problem) - this lets us use the implementation's
 ;    ; string extensions if any.
 ;    
-;      ; Identifying the list of delimiter characters is harder than you'd think.
-;      ; This list is based on R6RS section 4.2.1, while adding [] and {},
-;      ; but removing "#" from the delimiter set.
-;      ; NOTE: R6RS has "#" has a delimiter.  However, R5RS does not, and
-;      ; R7RS probably will not - http://trac.sacrideo.us/wg/wiki/WG1Ballot3Results
-;      ; shows a strong vote AGAINST "#" being a delimiter.
-;      ; Having the "#" as a delimiter means that you cannot have "#" embedded
-;      ; in a symbol name, which hurts backwards compatibility, and it also
-;      ; breaks implementations like Chicken (has many such identifiers) and
-;      ; Gambit (which uses this as a namespace separator).
-;      ; Thus, this list does NOT have "#" as a delimiter, contravening R6RS
-;      ; (but consistent with R5RS, probably R7RS, and several implementations).
-;      ; Also - R7RS draft 6 has "|" as delimiter, but we currently don't.
-;      (define neoteric-delimiters
-;         (append (list #\( #\) #\[ #\] #\{ #\}  ; Add [] {}
-;                       #\" #\;)                 ; Could add #\# or #\|
-;                 whitespace-chars))
-;    
-;      (define (read-until-delim port delims)
-;        ; Read characters until eof or a character in "delims" is seen.
-;        ; Do not consume the eof or delimiter.
-;        ; Returns the list of chars that were read.
-;        (let ((c (peek-char port)))
-;          (cond
-;             ((eof-object? c) '())
-;             ((ismember? c delims) '())
-;             (#t (cons (read-char port) (read-until-delim port delims))))))
-;    
-;      (define (read-error message)
-;        (display "Error: ")
-;        (display message)
-;        '())
-;    
-;      (define (read-number port starting-lyst)
-;        (string->number (list->string
-;          (append starting-lyst
-;            (read-until-delim port neoteric-delimiters)))))
-;    
-;    
-;      (define (process-char port)
-;        ; We've read #\ - returns what it represents.
-;        (cond
-;          ((eof-object? (peek-char port)) (peek-char port))
-;          (#t
-;            ; Not EOF. Read in the next character, and start acting on it.
-;            (let ((c (read-char port))
-;                  (rest (read-until-delim port neoteric-delimiters)))
-;              (cond
-;                ((null? rest) c) ; only one char after #\ - so that's it!
-;                (#t
-;                  (let ((rest-string (list->string (cons c rest))))
-;                    (cond
-;                      ; Implement R6RS character names, see R6RS section 4.2.6.
-;                      ; As an extension, we will ALWAYS accept character names
-;                      ; of any case, no matter what the case-folding value is.
-;                      ((string-ci=? rest-string "space") #\space)
-;                      ((string-ci=? rest-string "newline") #\newline)
-;                      ((string-ci=? rest-string "tab") tab)
-;                      ((string-ci=? rest-string "nul") (integer->char #x0000))
-;                      ((string-ci=? rest-string "alarm") (integer->char #x0007))
-;                      ((string-ci=? rest-string "backspace") (integer->char #x0008))
-;                      ((string-ci=? rest-string "linefeed") (integer->char #x000A))
-;                      ((string-ci=? rest-string "vtab") (integer->char #x000B))
-;                      ((string-ci=? rest-string "page") (integer->char #x000C))
-;                      ((string-ci=? rest-string "return") (integer->char #x000D))
-;                      ((string-ci=? rest-string "esc") (integer->char #x001B))
-;                      ((string-ci=? rest-string "delete") (integer->char #x007F))
-;                      ; Additional character names as extensions:
-;                      ((string-ci=? rest-string "ht") tab)
-;                      ((string-ci=? rest-string "cr") (integer->char #x000d))
-;                      ((string-ci=? rest-string "bs") (integer->char #x0008))
-;                      (#t (read-error "Invalid character name"))))))))))
 ;    
 ;      ; If fold-case is active on this port, return string "s" in folded case.
 ;      ; Otherwise, just return "s".  This is needed to support our
@@ -964,7 +1064,6 @@
 ;            (#t
 ;              (nest-comment fake-port)))))
 ;    
-;      (define digits '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
 ;    
 ;      (define (process-period port)
 ;        ; We've peeked a period character.  Returns what it represents.
@@ -990,69 +1089,6 @@
 ;      ; This additional parameter lets us easily implement additional semantics,
 ;      ; and then call down to this underlying-read function when basic reader
 ;      ; functionality (implemented here) is needed.
-;      (define (underlying-read no-indent-read port)
-;        (consume-whitespace port)
-;        (let* ((pos (get-sourceinfo port))
-;               (c   (peek-char port)))
-;          (cond
-;            ((eof-object? c) c)
-;            ((char=? c #\")
-;              ; old readers tend to read strings okay, call it.
-;              ; (guile 1.8 and gauche/gosh 1.8.11 are fine)
-;              (invoke-read default-scheme-read port))
-;            (#t
-;              ; attach the source information to the item read-in
-;              (attach-sourceinfo pos
-;                (cond
-;                  ((ismember? c digits) ; Initial digit.
-;                    (read-number port '()))
-;                  ((char=? c #\#) (process-sharp no-indent-read port))
-;                  ((char=? c #\.) (process-period port))
-;                  ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
-;                    (read-char port)
-;                    (if (ismember? (peek-char port) digits)
-;                      (read-number port (list c))
-;                      (string->symbol (fold-case-maybe port
-;                        (list->string (cons c
-;                          (read-until-delim port neoteric-delimiters)))))))
-;                  ((char=? c #\')
-;                    (read-char port)
-;                    (list (attach-sourceinfo pos 'quote)
-;                      (no-indent-read port)))
-;                  ((char=? c #\`)
-;                    (read-char port)
-;                    (list (attach-sourceinfo pos 'quasiquote)
-;                      (no-indent-read port)))
-;                  ((char=? c #\,)
-;                    (read-char port)
-;                      (cond
-;                        ((char=? #\@ (peek-char port))
-;                          (read-char port)
-;                          (list (attach-sourceinfo pos 'unquote-splicing)
-;                           (no-indent-read port)))
-;                       (#t
-;                        (list (attach-sourceinfo pos 'unquote)
-;                          (no-indent-read port)))))
-;                  ((char=? c #\( )
-;                      (read-char port)
-;                      (my-read-delimited-list no-indent-read #\) port))
-;                  ((char=? c #\[ )
-;                      (read-char port)
-;                      (my-read-delimited-list no-indent-read #\] port))
-;                  ((char=? c #\| )
-;                    ; Scheme extension, |...| symbol (like Common Lisp)
-;                    ; This is present in R7RS draft 6.
-;                    (read-char port) ; Consume the initial vertical bar.
-;                    (let ((newsymbol
-;                      ; Do NOT call fold-case-maybe; always use literal values.
-;                      (string->symbol (list->string
-;                        (read-until-delim port '(#\|))))))
-;                      (read-char port)
-;                      newsymbol))
-;                  (#t ; Nothing else.  Must be a symbol start.
-;                    (string->symbol (fold-case-maybe port
-;                      (list->string
-;                        (read-until-delim port neoteric-delimiters)))))))))))
 ;    
 ;    
 ;    ; -----------------------------------------------------------------------------
