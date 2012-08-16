@@ -95,18 +95,6 @@
       (string-downcase s)
       s))
 
-  ; Consume an end-of-line sequence. This is 2 unequal end-of-line
-  ; characters, or a single end-of-line character, whichever is longer.
-  (define (consume-end-of-line port)
-    (let ((c (peek-char port)))
-      (if (char-line-ending? c)
-        (begin
-          (read-char port)
-          (let ((next (peek-char port)))
-            (if (and (not (eq? c next))
-                     (char-line-ending? next))
-              (read-char port)))))))
-
   (define (consume-to-eol port)
     ; Consume every non-eol character in the current line.
     ; End on EOF or end-of-line char.
