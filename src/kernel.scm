@@ -951,7 +951,11 @@
     (cond
      ((eqv? lyst '())  ; Map empty curly-infix list {} to ().
        '())
-     ((simple-infix-list? lyst) ; Simple infix expression.
+     ((null? (cdr lyst)) ; Map {a} to a.
+       (car lyst))
+     ((null? (cddr lyst)) ; Map {a b} to (a b).
+       lyst)
+     ((simple-infix-list? lyst) ; Handle simple infix expression.
        (transform-simple-infix lyst))
      (#t  (transform-not-simple-infix lyst))))
 
