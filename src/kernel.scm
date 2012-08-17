@@ -1339,60 +1339,63 @@
           (cons next-level (attach-sourceinfo pos obj)))
         (#t (cons next-level (attach-sourceinfo pos block))))))
 
+  ; Read single complete I-expression.
   ; TODO: merge handling of ;-comments and #|...|# comments
   (define (sugar-start-expr port)
-    ; Read single complete I-expression.
-    (let* ((indentation (list->string (accumulate-hspace port)))
-           (pos (get-sourceinfo port))
-           (c   (my-peek-char port)))
-      (cond
-        ((eof-object? c) c) ; EOF - return it, we're done.
-        ((eqv? c #\; )    ; comment - consume and see what's after it.
-          (let ((d (consume-to-eol port)))
-            (cond
-              ((eof-object? d) d) ; If EOF after comment, return it.
-              (#t
-                (my-read-char port) ; Newline after comment.  Consume NL
-                (sugar-start-expr port))))) ; and try again
-        ; hashes are potential comments too
-        ((eqv? c #\#)
-          (let ((obj (neoteric-read-real port)))
-            (if (eq? obj comment-tag)
-                ; heh, comment.  Consume spaces and start again.
-                ; (Consuming horizontal spaces makes comments behave
-                ; as SPLIT when an item is after a comment on the
-                ; same line)
-                (begin
-                  (accumulate-hspace port)
-                  (sugar-start-expr port))
-                ; aaaaargh not a comment.  Use rotated version
-                ; of readblock-clean.
-                (let* ((sub-read (readblock-clean-rotated "" port pos obj))
-                       (block (cdr sub-read)))
-                  (cond
-                    ((eq? block '.)
-                      (attach-sourceinfo pos '()))
-                    (#t
-                      (attach-sourceinfo pos block)))))))
-        ((char-line-ending? c)
-          (consume-end-of-line port)
-          (sugar-start-expr port)) ; Consume and again
-        ((> (string-length indentation) 0) ; initial indentation disables
-          ; ignore indented comments
-          (let ((rv (neoteric-read-real port)))
-            (if (eq? rv comment-tag)
-                ; indented comment.  restart.
-                (sugar-start-expr port)
-                rv)))
-        (#t
-          (let* ((read (readblock-clean "" port))
-                 (level (car read))
-                 (block (cdr read)))
-            (cond
-             ((eq? block '.)
-                (attach-sourceinfo pos '()))
-             (#t
-                (attach-sourceinfo pos block))))))))
+    (let* ((c (my-peek-char port)))
+      (if (eof-object? c)
+        c
+        (let* ((indentation (list->string (accumulate-hspace port)))
+               (pos (get-sourceinfo port))
+               (c   (my-peek-char port)))
+          (cond
+            ((eof-object? c) c) ; EOF - return it, we're done.
+            ((eqv? c #\; )    ; comment - consume and see what's after it.
+              (let ((d (consume-to-eol port)))
+                (cond
+                  ((eof-object? d) d) ; If EOF after comment, return it.
+                  (#t
+                    (my-read-char port) ; Newline after comment.  Consume NL
+                    (sugar-start-expr port))))) ; and try again
+            ; hashes are potential comments too
+            ((eqv? c #\#)
+              (let ((obj (neoteric-read-real port)))
+                (if (eq? obj comment-tag)
+                    ; heh, comment.  Consume spaces and start again.
+                    ; (Consuming horizontal spaces makes comments behave
+                    ; as SPLIT when an item is after a comment on the
+                    ; same line)
+                    (begin
+                      (accumulate-hspace port)
+                      (sugar-start-expr port))
+                    ; aaaaargh not a comment.  Use rotated version
+                    ; of readblock-clean.
+                    (let* ((sub-read (readblock-clean-rotated "" port pos obj))
+                           (block (cdr sub-read)))
+                      (cond
+                        ((eq? block '.)
+                          (attach-sourceinfo pos '()))
+                        (#t
+                          (attach-sourceinfo pos block)))))))
+            ((char-line-ending? c)
+              (consume-end-of-line port)
+              (sugar-start-expr port)) ; Consume and again
+            ((> (string-length indentation) 0) ; initial indentation disables
+              ; ignore indented comments
+              (let ((rv (neoteric-read-real port)))
+                (if (eq? rv comment-tag)
+                    ; indented comment.  restart.
+                    (sugar-start-expr port)
+                    rv)))
+            (#t
+              (let* ((read (readblock-clean "" port))
+                     (level (car read))
+                     (block (cdr read)))
+                (cond
+                 ((eq? block '.)
+                    (attach-sourceinfo pos '()))
+                 (#t
+                    (attach-sourceinfo pos block))))))))))
 
 ; -----------------------------------------------------------------------------
 ; Comparison Functions
