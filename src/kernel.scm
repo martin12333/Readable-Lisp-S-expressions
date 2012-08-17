@@ -948,9 +948,12 @@
 
   ; Given curly-infix lyst, map it to its final internal format.
   (define (process-curly lyst)
-    (if (simple-infix-list? lyst)
-       (transform-simple-infix lyst) ; Simple infix expression.
-       (transform-not-simple-infix lyst)))
+    (cond
+     ((eqv? lyst '())  ; Map empty curly-infix list {} to ().
+       '())
+     ((simple-infix-list? lyst) ; Simple infix expression.
+       (transform-simple-infix lyst))
+     (#t  (transform-not-simple-infix lyst))))
 
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
@@ -1014,12 +1017,15 @@
           ((char=? c #\{ )  ; Implement f{x}
             (neoteric-process-tail port
               (attach-sourceinfo pos
-                (list prefix
-                  ; NOTE: although curly-infix-read-real could
-                  ; return comment-tag,
-                  ; at this point we know the next item is { }, so
-                  ; it cannot return a comment-tag in this context
-                  (curly-infix-read-real neoteric-read-nocomment port)))))
+                ; NOTE: although curly-infix-read-real could
+                ; return comment-tag,
+                ; at this point we know the next item is { }, so
+                ; it cannot return a comment-tag in this context
+                (let
+                  ((tail (curly-infix-read-real neoteric-read-nocomment port)))
+                  (if (eqv? tail '())
+                    (list prefix) ; Map f{} to (f), not (f ()).
+                    (list prefix tail))))))
           (#t prefix))))
 
   ; NOTE: this function can return comment-tag.  Program defensively
