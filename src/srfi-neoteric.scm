@@ -433,6 +433,7 @@
         ((not (eof-object? result))
           (write result)
           (display "\n")
+          (force-output)  ; flush, so can interactively control something else
           (process-input)))))
 
   (process-input)
