@@ -72,10 +72,12 @@
                   (neoteric-read-real port))))
           (#t prefix))))
 
+
   ; To implement neoteric-expressions, modify the reader so
-  ; that [] and {} are also delimiters, and that the reader does this:
+  ; that [] and {} are also delimiters, and make the reader do this:
   ; (let* ((prefix
-  ;           read-expression-as-usual))
+  ;           read-expression-as-usual
+  ;       ))
   ;   (if (eof-object? prefix)
   ;     prefix
   ;     (neoteric-process-tail port prefix)))
@@ -350,10 +352,11 @@
   ; neoteric-process-tail to see if there's a "tail"
   ; (and if so, read it's used).
   (define (neoteric-read-real port)
-    (let* ((c (peek-char port)))
-      ; This following line implements neoteric-read:
-      (let* ((result
-      ; From here on, this is just a normal Scheme reader:
+    (let*
+      ((c (peek-char port))
+       (prefix
+         ; This cond is a normal Scheme reader, puts result in "prefix"
+         ; This implements "read-expression-as-usual" as described above.
         (cond
           ((eof-object? c) c)
           ((char=? c #\;)
@@ -403,9 +406,10 @@
             (string->symbol (fold-case-maybe port
               (list->string
                 (read-until-delim port neoteric-delimiters))))))))
-        (if (eof-object? result)
-          result
-          (neoteric-process-tail port result)))))
+      ; Here's the big change to implement neoteric-expressions:
+      (if (eof-object? prefix)
+        prefix
+        (neoteric-process-tail port prefix))))
 
   (define (neoteric-read . args)
     (neoteric-read-real
