@@ -946,11 +946,16 @@
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
   (define (curly-infix-read-real no-indent-read port)
-    ; Skip whitespace; needed if neoteric- or sweet-expressions aren't active.
-    (consume-whitespace port)
     (let* ((pos (get-sourceinfo port))
-           (c   (my-peek-char port)))
+            (c   (my-peek-char port)))
       (cond
+        ((eof-object? c) c)
+        ((eqv? c #\;)
+          (consume-to-eol port)
+          (curly-infix-read-real no-indent-read port))
+        ((my-char-whitespace? c)
+          (my-read-char port)
+          (curly-infix-read-real no-indent-read port))
         ((eqv? c #\{)
           (my-read-char port)
           ; read in as infix
