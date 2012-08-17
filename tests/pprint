@@ -1,4 +1,4 @@
-#!guile -s
+#! /usr/bin/env guile
 !#
 ; Filter to pretty-print a file in traditional S-expression Scheme format.
 ; Requires Guile.
