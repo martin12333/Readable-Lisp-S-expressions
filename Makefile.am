@@ -269,10 +269,14 @@ check: readable/kernel.scm
 
 # Developer conveniences:
 # "make push" interpreted as "git push" when current branch is "develop".
+# "make pull" interpreted as "git pull"
 # "make test" interpreted as "make check"
 push:
 	[ "`git symbolic-ref HEAD`" = "refs/heads/develop" ] && \
 	    git push origin develop
+
+pull:
+	git pull
 
 test:
 	make check
