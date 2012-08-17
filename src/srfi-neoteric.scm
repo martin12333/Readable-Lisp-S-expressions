@@ -156,6 +156,26 @@
       (append starting-lyst
         (read-until-delim port neoteric-delimiters)))))
 
+  ; detect #| or |#
+  (define (nest-comment port)
+    (let ((c (read-char port)))
+      (cond
+        ((eof-object? c))
+        ((char=? c #\|)
+          (let ((c2 (peek-char port)))
+            (if (char=? c2 #\#)
+                (read-char port)
+                (nest-comment port))))
+        ((char=? c #\#)
+          (let ((c2 (peek-char port)))
+            (if (char=? c2 #\|)
+                (begin
+                  (read-char port)
+                  (nest-comment port)))
+            (nest-comment port)))
+        (#t
+          (nest-comment port)))))
+
   (define (process-sharp port)
     ; We've peeked a # character.  Returns what it represents.
     (read-char port) ; Remove #
@@ -173,6 +193,8 @@
             ((char=? c #\( )  ; Vector.
               (list->vector (my-read-delimited-list #\) port)))
             ((char=? c #\\) (process-char port))
+            ; This supports SRFI-30 #|...|#
+            ((char=? c #\|) (nest-comment port) (neoteric-read-real port))
             (#t (read-error "Unsupported # extension")))))))
 
   (define (process-period port)
