@@ -1013,28 +1013,37 @@
   ; This is the "real" implementation of neoteric-read.
   ; It directly implements unprefixed (), [], and {} so we retain control;
   ; it calls neoteric-process-tail so f(), f[], and f{} are implemented.
+  ;  (if (eof-object? (my-peek-char port))
   (define (neoteric-read-real port)
-    (consume-whitespace port)
-    (if (eof-object? (my-peek-char port))
-      (my-peek-char port)
-      (neoteric-process-tail port
-        (let* ((pos (get-sourceinfo port))
-               (c   (my-peek-char port)))
-          (cond
-            ((char=? c #\( )
-               (my-read-char port)
-               (attach-sourceinfo pos
-                 (my-read-delimited-list neoteric-read-nocomment #\) port)))
-            ((char=? c #\[ )
-               (my-read-char port)
-               (attach-sourceinfo pos
-                 (my-read-delimited-list neoteric-read-nocomment #\] port)))
-            ((char=? c #\{ )
-              (my-read-char port)
-              (attach-sourceinfo pos
-                (process-curly
-                  (my-read-delimited-list neoteric-read-nocomment #\} port))))
-            (#t (underlying-read neoteric-read-nocomment port)))))))
+    (let*
+      ((pos (get-sourceinfo port))
+       (c   (my-peek-char port))
+       (result
+         (cond
+           ((eof-object? c) c)
+           ((char=? c #\( )
+             (my-read-char port)
+             (attach-sourceinfo pos
+               (my-read-delimited-list neoteric-read-nocomment #\) port)))
+           ((char=? c #\[ )
+             (my-read-char port)
+             (attach-sourceinfo pos
+               (my-read-delimited-list neoteric-read-nocomment #\] port)))
+           ((char=? c #\{ )
+             (my-read-char port)
+             (attach-sourceinfo pos
+               (process-curly
+                 (my-read-delimited-list neoteric-read-nocomment #\} port))))
+           ((my-char-whitespace? c)
+             (my-read-char port)
+             (neoteric-read-real port))
+           ((eqv? c #\;)
+             (consume-to-eol port)
+             (neoteric-read-real port))
+           (#t (underlying-read neoteric-read-nocomment port)))))
+      (if (eof-object? result)
+        result
+        (neoteric-process-tail port result))))
 
   (define (neoteric-read-nocomment port)
     (let ((rv (neoteric-read-real port)))
