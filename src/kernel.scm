@@ -473,7 +473,8 @@
    ; comparison functions
    compare-read-file ; compare-read-string
    ; replacing the reader
-   replace-read restore-traditional-read enable-curly-infix)
+   replace-read restore-traditional-read
+   enable-curly-infix enable-neoteric enable-sweet)
 
   ; Should we fold case of symbols by default?
   ; #f means case-sensitive (R6RS); #t means case-insensitive (R5RS).
@@ -622,6 +623,14 @@
                  (eq? read neoteric-read)
                  (eq? read sweet-read)))
         (replace-read curly-infix-read)))
+
+  (define (enable-neoteric)
+    (if (not (or (eq? read neoteric-read)
+                 (eq? read sweet-read)))
+        (replace-read neoteric-infix-read)))
+
+  (define (enable-sweet)
+    (replace-read sweet-read))
 
 ; -----------------------------------------------------------------------------
 ; Scheme Reader re-implementation
