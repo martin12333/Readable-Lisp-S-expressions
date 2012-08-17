@@ -3,7 +3,7 @@
 
 
 ; -----------------------------------------------------------------------------
-; Curly Infix support functions
+; Curly Infix
 ; -----------------------------------------------------------------------------
 
   ; Return true if lyst has an even # of parameters, and the (alternating)
@@ -229,9 +229,6 @@
 ; Implement neoteric-expresions
 ; -----------------------------------------------------------------------------
 
-  ; Record the original read location, in case it's changed later.
-  (define default-scheme-read read)
-
   (define (my-read-delimited-list stop-char port)
     ; Read the "inside" of a list until its matching stop-char, returning list.
     ; stop-char needs to be closing paren, closing bracket, or closing brace.
@@ -299,12 +296,24 @@
                   (neoteric-read-real port))))
           (#t prefix))))
 
+  ; To implement neoteric-expressions, modify the reader so that it
+  ; reads an expression (the "prefix"), and if it's not eof, return:
+  ;   (neoteric-process-tail port prefix)
+
+
+; -----------------------------------------------------------------------------
+; Sample full reader
+; -----------------------------------------------------------------------------
+
+  ; Record the original read location, in case it's changed later.
+  (define default-scheme-read read)
+
   ; This is the "real" implementation of neoteric-read.
   ; It implements an entire reader, as a demonstration, but if you have
-  ; an existing reader you can throw away nearly all of it.
+  ; an existing reader just use your own instead.
   ; The key part is that it implements [] and {} as delimiters, and
   ; after it reads in something, it calls neoteric-process-tail to
-  ; see if there's a "tail" (and if so, read and use it).
+  ; see if there's a "tail" (and if so, read it's used).
   (define (neoteric-read-real port)
     (let* ((c (peek-char port)))
       (if (eof-object? c)
