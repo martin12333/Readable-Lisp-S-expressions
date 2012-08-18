@@ -14,7 +14,7 @@
     (let*
       ((c   (peek-char port)))
       (cond
-        ((eof-object? c) (read-error "EOF in middle of list") c)
+        ((eof-object? c) (read-error "EOF in middle of list") '())
         ((eqv? c #\;)
           (consume-to-eol port)
           (my-read-delimited-list stop-char port))
@@ -34,6 +34,9 @@
                  (let ((datum2 (neoteric-read-real port)))
                    (consume-whitespace port)
                    (cond
+                     ((eof-object? datum2)
+                      (read-error "Early eof in (... .)\n")
+                      '())
                      ((not (eqv? (peek-char port) stop-char))
                       (read-error "Bad closing character after . datum"))
                      (#t
