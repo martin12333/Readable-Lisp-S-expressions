@@ -592,7 +592,7 @@
         ((char=? c stop-char)
           (my-read-char port)
           (attach-sourceinfo pos '()))
-        ((ismember? c '(#\) #\] #\}))  (read-error "Bad closing character\n") c)
+        ((ismember? c '(#\) #\] #\}))  (read-error "Bad closing character") c)
         (#t
           (let ((datum (my-read port)))
             (cond
@@ -601,10 +601,10 @@
                    (consume-whitespace port)
                    (cond
                      ((eof-object? datum2)
-                      (read-error "Early eof in (... .)\n")
+                      (read-error "Early eof in (... .)")
                       '())
                      ((not (eqv? (my-peek-char port) stop-char))
-                      (read-error "Bad closing character after . datum\n")
+                      (read-error "Bad closing character after . datum")
                       datum2)
                      (#t
                        (my-read-char port)
