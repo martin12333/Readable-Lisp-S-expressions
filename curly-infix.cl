@@ -158,6 +158,12 @@
 ; This is necessary, else a cuddled } will be part of an atom:
 (set-macro-character #\} (get-macro-character #\) nil))
 
+; Make "[" and "]" delimiters. For now, make same as ().
+(set-macro-character #\[ (get-macro-character #\( nil))
+
+; This is necessary, else a cuddled } will be part of an atom:
+(set-macro-character #\] (get-macro-character #\) nil))
+
 ; Nonsense "eof-marker" to mark end of file.
 (defvar eof-marker (cons 'eof '()))
 
@@ -195,5 +201,6 @@
   (neoteric-process-tail stream (read stream nil eof-marker)))
 
 ; (neoteric-read *standard-input*)
+; (write (neoteric-read *standard-input*))
 
 
