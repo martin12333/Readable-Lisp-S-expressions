@@ -158,3 +158,42 @@
 ; This is necessary, else a cuddled } will be part of an atom:
 (set-macro-character #\} (get-macro-character #\) nil))
 
+; Nonsense "eof-marker" to mark end of file.
+(defvar eof-marker (cons 'eof '()))
+
+; Implement neoteric-expression's prefixed (), [], and {}.
+; At this point, we have just finished reading some expression, which
+; MIGHT be a prefix of some longer expression.  Examine the next
+; character to be consumed; if it's an opening paren, bracket, or brace,
+; then the expression "prefix" is actually a prefix.
+; Otherwise, just return the prefix and do not consume that next char.
+; This recurses, to handle formats like f(x)(y).
+(defun neoteric-process-tail (stream prefix)
+    (let* ((c (peek-char nil stream)))
+      (cond
+        ((eq c eof-marker) prefix)
+        ((eql c #\( ) ; Implement f(x).
+          (read-char stream nil eof-marker)
+          (neoteric-process-tail stream
+              (cons prefix (read-delimited-list #\) stream))))
+        ((eql c #\[ )  ; Implement f[x]
+          (read-char stream nil eof-marker)
+          (neoteric-process-tail stream
+                (cons 'bracketaccess
+                  (cons prefix
+                    (read-delimited-list #\] stream)))))
+        ((eql c #\{ )  ; Implement f{x}
+          (neoteric-process-tail stream
+              (list prefix
+                ; Call neoteric-read-real, which handles {...} curly-infix.
+                (neoteric-read stream))))
+        (t prefix))))
+
+; Read, the process through neoteric-tail to manage suffixes like f().
+(defun neoteric-read (stream)
+  (declare (ignore c))
+  (neoteric-process-tail stream (read stream nil eof-marker)))
+
+; (neoteric-read *standard-input*)
+
+
