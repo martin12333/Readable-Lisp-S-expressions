@@ -914,10 +914,10 @@
   (define (even-and-op-prefix? op lyst)
     (cond
       ((null? lyst) #t)
-      ((not (pair? lyst)) #f) ; Not a list.
+      ((not (pair? lyst)) #f) ; fail - we have an improper list
       ((not (eq? op (car lyst))) #f) ; fail - operators not the same
-      ((null? (cdr lyst)) #f) ; fail - wrong # of parameters in lyst.
-      (#t (even-and-op-prefix? op (cddr lyst))))) ; recurse.
+      ((not (pair? (cdr lyst)))  #f) ; fail - wrong # of parameters in lyst.
+      (#t   (even-and-op-prefix? op (cddr lyst))))) ; recurse.
 
   ; Return true if the lyst is in simple infix format
   ; (and thus should be reordered at read time).
@@ -1424,4 +1424,3 @@
   )
 
 ; vim: set expandtab shiftwidth=2 :
-
