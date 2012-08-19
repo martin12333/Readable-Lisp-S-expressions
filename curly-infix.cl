@@ -164,8 +164,12 @@
 ; This is necessary, else a cuddled } will be part of an atom:
 (set-macro-character #\] (get-macro-character #\) nil))
 
+; This is a no-op; we enable curly-infix on load.
+; But for consistency, we'll provide the function anyway.
+(defun enable-curly-infix ())
+
 ; Nonsense "eof-marker" to mark end of file.
-(defvar eof-marker (cons 'eof '()))
+(defvar neoteric-eof-marker (cons 'eof '()))
 
 ; Implement neoteric-expression's prefixed (), [], and {}.
 ; At this point, we have just finished reading some expression, which
@@ -174,33 +178,41 @@
 ; then the expression "prefix" is actually a prefix.
 ; Otherwise, just return the prefix and do not consume that next char.
 ; This recurses, to handle formats like f(x)(y).
-(defun neoteric-process-tail (stream prefix)
-    (let* ((c (peek-char nil stream)))
+(defun neoteric-process-tail (input-stream prefix)
+    (let* ((c (peek-char nil input-stream)))
       (cond
-        ((eq c eof-marker) prefix)
+        ((eq c neoteric-eof-marker) prefix)
         ((eql c #\( ) ; Implement f(x).
-          (read-char stream nil eof-marker)
-          (neoteric-process-tail stream
-              (cons prefix (read-delimited-list #\) stream))))
+          (read-char input-stream nil nil t) ; consume opening char
+          (neoteric-process-tail input-stream
+              (cons prefix (read-delimited-list #\) input-stream t))))
         ((eql c #\[ )  ; Implement f[x]
-          (read-char stream nil eof-marker)
-          (neoteric-process-tail stream
+          (read-char input-stream nil nil t) ; consume opening char
+          (neoteric-process-tail input-stream
                 (cons 'bracketaccess
                   (cons prefix
-                    (read-delimited-list #\] stream)))))
+                    (read-delimited-list #\] input-stream t)))))
         ((eql c #\{ )  ; Implement f{x}
-          (neoteric-process-tail stream
+          ; Do not consume opening char, recurse instead.
+          (neoteric-process-tail input-stream
               (list prefix
                 ; Call neoteric-read-real, which handles {...} curly-infix.
-                (neoteric-read stream))))
+                (neoteric-read input-stream t))))
         (t prefix))))
 
 ; Read, the process through neoteric-tail to manage suffixes like f().
-(defun neoteric-read (stream)
-  (declare (ignore c))
-  (neoteric-process-tail stream (read stream nil eof-marker)))
+(defun neoteric-read (&optional (input-stream *standard-input*))
+  (neoteric-process-tail input-stream
+    (read input-stream nil neoteric-eof-marker t)))
 
-; (neoteric-read *standard-input*)
-; (write (neoteric-read *standard-input*))
+; (write (neoteric-read))
+; (terpri)
+; (princ "Second value:")
+; (terpri)
+; (write (neoteric-read))
 
+
+; TODO: Handle comments inside neoteric-read.  This can be done by
+;       setting the #| handler on entry to neoteric-read (if not already
+;       set), and then restoring it if had been set earlier.
 
