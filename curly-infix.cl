@@ -154,6 +154,7 @@
       (transform-not-simple-infix result))))
 
 ; Read until }, then process list as infix list.
+; This shouldn't be invoked once we use neoteric-read; it takes precedence.
 (defun curly-brace-infix-reader (stream char)
   (let ((result (read-delimited-list #\} stream t)))
     (process-curly result)))
@@ -235,12 +236,12 @@
                 (cons 'bracketaccess
                   (cons prefix
                     (my-read-delimited-list #\] input-stream)))))
-        ((eql c #\{ )  ; Implement f{x}
-          ; Do not consume opening char, recurse instead.
+        ((eql c #\{ )  ; Implement f{x}.
+          (read-char input-stream nil nil t) ; consume opening char
           (neoteric-process-tail input-stream
-              (list prefix
-                ; Call neoteric-read-real, which handles {...} curly-infix.
-                (neoteric-read input-stream t nil t))))
+            (list prefix
+              (process-curly
+                (my-read-delimited-list #\} input-stream)))))
         (t prefix))))
 
 ; Read, then process it through neoteric-tail to manage suffixes.
@@ -320,7 +321,7 @@
  (handler-case
   (with-open-file (s (make-pathname :name filename) :direction :input)
     (do ((result (neoteric-read s) (neoteric-read s)))
-      (nil)
+      (nil nil)
       (eval result)))
   (end-of-file () )))
 
