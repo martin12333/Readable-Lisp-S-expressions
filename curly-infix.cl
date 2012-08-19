@@ -139,17 +139,21 @@
 ; pp. 542-548 and pp. 571-572.
 
 
-; Read until }, then process list as infix list.
-; If it's a simple infix list (odd # parameters, 3+ parameters, all even
-; parameters are equal symbols) then transform to infix. E.G.,
-;   {3 + 4 + 5} => (+ 3 4 5).
-; Otherwise, transform to (nfx list), and presume that some macro named
-; "nfx" will take care of things.
+; Take list that was in {...}, convert to final form.
 (defun process-curly (result)
-  (if (simple-infix-listp result)
-    (transform-simple-infix result) ; Simple infix expression.
-    (transform-not-simple-infix result)))
+  (cond
+    ((null result)
+      '())
+    ((null (cdr result)) ; Map {a} to a.
+      (car result))
+    ((null (cddr result)) ; Map {a b} to (a b).
+      result)
+    ((simple-infix-listp result)
+      (transform-simple-infix result))
+    (t
+      (transform-not-simple-infix result))))
 
+; Read until }, then process list as infix list.
 (defun curly-brace-infix-reader (stream char)
   (let ((result (read-delimited-list #\} stream t)))
     (process-curly result)))
@@ -317,10 +321,7 @@
   (with-open-file (s (make-pathname :name filename) :direction :input)
     (do ((result (neoteric-read s) (neoteric-read s)))
       (nil)
-      ; (eval result)
-      (write result)
-      (terpri)
-    ))
+      (eval result)))
   (end-of-file () )))
 
 ; TODO: Handle #|...|# comments inside neoteric-read.  This can be done by
