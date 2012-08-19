@@ -140,9 +140,17 @@
 
   ; Given curly-infix lyst, map it to its final internal format.
   (define (process-curly lyst)
-    (if (simple-infix-list? lyst)
-       (transform-simple-infix lyst) ; Simple infix expression.
-       (transform-not-simple-infix lyst)))
+    (cond
+     ((eqv? lyst '())  ; Map empty curly-infix list {} to ().
+       '())
+     ((null? (cdr lyst)) ; Map {a} to a.
+       (car lyst))
+     ((null? (cddr lyst)) ; Map {a b} to (a b).
+       lyst)
+     ((simple-infix-list? lyst) ; Handle simple infix expression.
+       (transform-simple-infix lyst))
+     (#t  (transform-not-simple-infix lyst))))
+
 
 
 ; -----------------------------------------------------------------------------
