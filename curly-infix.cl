@@ -145,12 +145,14 @@
 ;   {3 + 4 + 5} => (+ 3 4 5).
 ; Otherwise, transform to (nfx list), and presume that some macro named
 ; "nfx" will take care of things.
+(defun process-curly (result)
+  (if (simple-infix-listp result)
+    (transform-simple-infix result) ; Simple infix expression.
+    (transform-not-simple-infix result)))
+
 (defun curly-brace-infix-reader (stream char)
-  (declare (ignore char))
   (let ((result (read-delimited-list #\} stream t)))
-    (if (simple-infix-listp result)
-       (transform-simple-infix result) ; Simple infix expression.
-       (transform-not-simple-infix result))))
+    (process-curly result)))
 
 ; Invoke curly-brace-infix-reader when "{" is read in:
 (set-macro-character #\{ #'curly-brace-infix-reader)
@@ -245,6 +247,13 @@
   (neoteric-process-tail input-stream
     (let* ((c (peek-char t input-stream)))
       (cond
+        ((eql c #\( )
+          (read-char nil input-stream)
+          (my-read-delimited-list #\) input-stream))
+        ((eql c #\{ )
+          (read-char nil input-stream)
+          (process-curly
+            (my-read-delimited-list #\} input-stream)))
         (t
           ; Force recursive; even at the top level, when it reads what
           ; it *thinks* is a whole expression, we may be "inside" a
