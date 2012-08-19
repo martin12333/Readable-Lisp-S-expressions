@@ -245,7 +245,7 @@
 ; Perhaps we should special-case "load" here.
 (defun enable-neoteric ()
   (handler-case
-    (do ((result (neoteric-read)))
+    (do ((result (neoteric-read) (neoteric-read)))
       (nil nil)
       (write (eval result))
       (terpri))
