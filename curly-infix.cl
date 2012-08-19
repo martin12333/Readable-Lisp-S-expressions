@@ -171,6 +171,43 @@
 ; Nonsense marker for eof
 (defvar neoteric-eof-marker (cons 'eof '()))
 
+
+(defun my-read-delimited-list (stop-char input-stream)
+  (let*
+    ((c (peek-char t input-stream)))
+    (cond
+; ((eof-object? c) (read-error "EOF in middle of list") '())
+; TODO:
+;      ((eql c #\;)
+;        (consume-to-eol input-stream)
+;        (my-read-delimited-list stop-char input-stream))
+      ((eql c stop-char)
+        (read-char input-stream)
+        '())
+      ; Balance ([{
+      ((or (eql c #\)) (eql c #\]) (eql c #\}))
+        (read-char input-stream)
+        (read-error "Bad closing character"))
+      (t
+        (let ((datum (neoteric-read input-stream)))
+          (cond
+             ((eql datum '|.|)
+               (let ((datum2 (neoteric-read input-stream)))
+                 (consume-whitespace input-stream)
+                 (cond
+                   ; ((eof-object? datum2)
+                   ; (read-error "Early eof in (... .)\n")
+                   ; '())
+                   ((not (eql (peek-char nil input-stream) stop-char))
+                    (read-error "Bad closing character after . datum"))
+                   (t
+                     (read-char nil input-stream)
+                     datum2))))
+             (t
+                 (cons datum
+                   (my-read-delimited-list stop-char input-stream)))))))))
+
+
 ; Implement neoteric-expression's prefixed (), [], and {}.
 ; At this point, we have just finished reading some expression, which
 ; MIGHT be a prefix of some longer expression.  Examine the next
@@ -185,13 +222,13 @@
         ((eql c #\( ) ; Implement f(x).
           (read-char input-stream nil nil t) ; consume opening char
           (neoteric-process-tail input-stream
-              (cons prefix (read-delimited-list #\) input-stream t))))
+              (cons prefix (my-read-delimited-list #\) input-stream))))
         ((eql c #\[ )  ; Implement f[x]
           (read-char input-stream nil nil t) ; consume opening char
           (neoteric-process-tail input-stream
                 (cons 'bracketaccess
                   (cons prefix
-                    (read-delimited-list #\] input-stream t)))))
+                    (my-read-delimited-list #\] input-stream)))))
         ((eql c #\{ )  ; Implement f{x}
           ; Do not consume opening char, recurse instead.
           (neoteric-process-tail input-stream
@@ -206,10 +243,13 @@
 (defun neoteric-read (&optional (input-stream *standard-input*)
                         (eof-error-p t) (eof-value nil) (recursive-p nil))
   (neoteric-process-tail input-stream
-    ; Force recursive; even at the top level, when it reads what it *thinks*
-    ; is a whole expression, we may be "inside" a longer list.  Otherwise,
-    ; EOF handling can mess up in enable-neoteric:
-    (read input-stream eof-error-p eof-value t)))
+    (let* ((c (peek-char t input-stream)))
+      (cond
+        (t
+          ; Force recursive; even at the top level, when it reads what
+          ; it *thinks* is a whole expression, we may be "inside" a
+          ; longer list.  Otherwise, EOF handling can mess up.
+          (read input-stream eof-error-p eof-value t))))))
 
 ; Remarkably, Common Lisp provides no standard way to exit an image.
 ; Here's a mostly-portable mechanism to do so, from:
@@ -291,4 +331,6 @@
 ;       setting the #| handler on entry to neoteric-read (if not already
 ;       set), and then restoring it if had been set earlier.
 
+
+(write (neoteric-read))
 
