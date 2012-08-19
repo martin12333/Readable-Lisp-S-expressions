@@ -197,22 +197,76 @@
           (neoteric-process-tail input-stream
               (list prefix
                 ; Call neoteric-read-real, which handles {...} curly-infix.
-                (neoteric-read input-stream t))))
+                (neoteric-read input-stream t nil t))))
         (t prefix))))
 
-; Read, the process through neoteric-tail to manage suffixes like f().
-(defun neoteric-read (&optional (input-stream *standard-input*))
+; Read, then process it through neoteric-tail to manage suffixes.
+(defun neoteric-read (&optional (input-stream *standard-input*)
+                        (eof-error-p t) (eof-value nil) (recursive-p nil))
   (neoteric-process-tail input-stream
-    (read input-stream nil neoteric-eof-marker t)))
+    ; Force recursive; even at the top level, when it reads what it *thinks*
+    ; is a whole expression, we may be "inside" a longer list.  Otherwise,
+    ; EOF handling can mess up in enable-neoteric:
+    (read input-stream eof-error-p eof-value t)))
 
-; (write (neoteric-read))
-; (terpri)
-; (princ "Second value:")
-; (terpri)
-; (write (neoteric-read))
+; Remarkably, Common Lisp provides no standard way to exit an image.
+; Here's a mostly-portable mechanism to do so, from:
+; http://www.cliki.net/Portable%20Exit
+(defun my-portable-exit (&optional code)
+      ;; This group from "clocc-port/ext.lisp"
+      #+allegro (excl:exit code)
+      #+clisp (#+lisp=cl ext:quit #-lisp=cl lisp:quit code)
+      #+cmu (ext:quit code)
+      #+cormanlisp (win32:exitprocess code)
+      #+gcl (lisp:bye code)                     ; XXX Or is it LISP::QUIT?
+      #+lispworks (lw:quit :status code)
+      #+lucid (lcl:quit code)
+      #+sbcl (sb-ext:quit
+              :unix-code (typecase code (number code) (null 0) (t 1)))
+      ;; This group from Maxima
+      #+kcl (lisp::bye)                         ; XXX Does this take an arg?
+      #+scl (ext:quit code)                     ; XXX Pretty sure this *does*.
+      #+(or openmcl mcl) (ccl::quit)
+      #+abcl (cl-user::quit)
+      #+ecl (si:quit)
+      ;; This group from 
+      #+poplog (poplog::bye)                    ; XXX Does this take an arg?
+      #-(or allegro clisp cmu cormanlisp gcl lispworks lucid sbcl
+            kcl scl openmcl mcl abcl ecl)
+      (error 'not-implemented :proc (list 'quit code)))
 
+; Common Lisp provides no way to fully override the "read" function
+; such as (defun read #'neoteric-read).
+; We partly simulate it here by writing our own REPL, and exiting Lisp
+; when it ends.  The simulation is quite imperfect (a call to "read"
+; reveals the facade), but it's a start.
+; Perhaps we should special-case "load" here.
+(defun enable-neoteric ()
+  (handler-case
+    (do ()
+      (nil nil)
+      (write (eval (neoteric-read)))
+      (terpri))
+    (end-of-file () (my-portable-exit 0))))
+
+(defun neoteric-filter ()
+  (handler-case
+    (do ()
+      (nil nil)
+      (write (neoteric-read))
+      (terpri))
+    (end-of-file ())))
+
+(defun neoteric-load (filename)
+  (with-open-file (stream filename)
+    (do ((result (neoteric-read)))
+      (nil nil)
+      (eval result))))
+
+; (enable-neoteric)
 
 ; TODO: Handle comments inside neoteric-read.  This can be done by
 ;       setting the #| handler on entry to neoteric-read (if not already
 ;       set), and then restoring it if had been set earlier.
+
 
