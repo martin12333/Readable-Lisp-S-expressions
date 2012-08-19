@@ -253,7 +253,7 @@
 
 (defun neoteric-filter ()
   (handler-case
-    (do ((result (neoteric-read)))
+    (do ((result (neoteric-read) (neoteric-read)))
       (nil nil)
       (write result)
       (terpri))
