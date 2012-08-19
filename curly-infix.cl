@@ -168,7 +168,7 @@
 ; But for consistency, we'll provide the function anyway.
 (defun enable-curly-infix ())
 
-; Nonsense "eof-marker" to mark end of file.
+; Nonsense marker for eof
 (defvar neoteric-eof-marker (cons 'eof '()))
 
 ; Implement neoteric-expression's prefixed (), [], and {}.
@@ -243,25 +243,28 @@
 ; Perhaps we should special-case "load" here.
 (defun enable-neoteric ()
   (handler-case
-    (do ()
+    (do ((result (neoteric-read)))
       (nil nil)
-      (write (eval (neoteric-read)))
+      (write (eval result))
       (terpri))
     (end-of-file () (my-portable-exit 0))))
 
 (defun neoteric-filter ()
   (handler-case
-    (do ()
+    (do ((result (neoteric-read)))
       (nil nil)
-      (write (neoteric-read))
+      (write result)
       (terpri))
     (end-of-file ())))
 
 (defun neoteric-load (filename)
-  (with-open-file (stream filename)
-    (do ((result (neoteric-read)))
-      (nil nil)
-      (eval result))))
+  (with-open-file (s (make-pathname :name filename) :direction :input)
+    (handler-case
+      (do ((result (neoteric-read s nil neoteric-eof-marker)))
+        ((eq result neoteric-eof-marker))
+        (write result)
+        (eval result))
+      (end-of-file () ))))
 
 ; (enable-neoteric)
 
