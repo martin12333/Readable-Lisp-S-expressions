@@ -242,6 +242,7 @@
 ; Read, then process it through neoteric-tail to manage suffixes.
 ; Unlike Scheme, in Common Lisp we can force the reader to consider
 ; {} and [] as delimiters, so we don't have to re-implement some things.
+; TODO: Use handler-case to fully implement eof-error-p, etc.
 (defun neoteric-read (&optional (input-stream *standard-input*)
                         (eof-error-p t) (eof-value nil) (recursive-p nil))
   (neoteric-process-tail input-stream
@@ -254,6 +255,9 @@
           (read-char nil input-stream)
           (process-curly
             (my-read-delimited-list #\} input-stream)))
+        ((eql c #\; )
+          (read-line input-stream) ; Consume rest of the line.
+          (neoteric-read input-stream eof-error-p eof-value recursive-p))
         (t
           ; Force recursive; even at the top level, when it reads what
           ; it *thinks* is a whole expression, we may be "inside" a
@@ -319,27 +323,13 @@
     ))
   (end-of-file () )))
 
-;    (handler-case
-;      (do ((result (neoteric-read s nil 'doone)))
-;        ((eql result 'doone) nil)
-;        ; (t (write result) nil) ; ((eq result neoteric-eof-marker) nil)
-;        (write result)
-;        (terpri)
-;        (princ "Next one:")
-;        ; (write (neoteric-read s nil neoteric-eof-marker))
-;        ; (princ "Next one:")
-;        ; (terpri)
-;        ; (write (neoteric-read s nil neoteric-eof-marker))
-;        ; (terpri)
-;        (eval result))
-;      (end-of-file () ))))
-
-; (enable-neoteric)
-
-; TODO: Handle comments inside neoteric-read.  This can be done by
+; TODO: Handle #|...|# comments inside neoteric-read.  This can be done by
 ;       setting the #| handler on entry to neoteric-read (if not already
 ;       set), and then restoring it if had been set earlier.
 
 
-(write (neoteric-read))
+; Likely things to do from here:
+
+; (enable-neoteric)
+; (write (neoteric-read))
 
