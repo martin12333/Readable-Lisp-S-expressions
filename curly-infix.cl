@@ -201,6 +201,8 @@
         (t prefix))))
 
 ; Read, then process it through neoteric-tail to manage suffixes.
+; Unlike Scheme, in Common Lisp we can force the reader to consider
+; {} and [] as delimiters, so we don't have to re-implement some things.
 (defun neoteric-read (&optional (input-stream *standard-input*)
                         (eof-error-p t) (eof-value nil) (recursive-p nil))
   (neoteric-process-tail input-stream
@@ -258,13 +260,30 @@
     (end-of-file ())))
 
 (defun neoteric-load (filename)
+ (handler-case
   (with-open-file (s (make-pathname :name filename) :direction :input)
-    (handler-case
-      (do ((result (neoteric-read s nil neoteric-eof-marker)))
-        ((eq result neoteric-eof-marker))
-        (write result)
-        (eval result))
-      (end-of-file () ))))
+    (do ((result (neoteric-read s) (neoteric-read s)))
+      (nil)
+      ; (eval result)
+      (write result)
+      (terpri)
+    ))
+  (end-of-file () )))
+
+;    (handler-case
+;      (do ((result (neoteric-read s nil 'doone)))
+;        ((eql result 'doone) nil)
+;        ; (t (write result) nil) ; ((eq result neoteric-eof-marker) nil)
+;        (write result)
+;        (terpri)
+;        (princ "Next one:")
+;        ; (write (neoteric-read s nil neoteric-eof-marker))
+;        ; (princ "Next one:")
+;        ; (terpri)
+;        ; (write (neoteric-read s nil neoteric-eof-marker))
+;        ; (terpri)
+;        (eval result))
+;      (end-of-file () ))))
 
 ; (enable-neoteric)
 
