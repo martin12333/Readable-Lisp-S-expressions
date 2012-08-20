@@ -184,11 +184,8 @@
   (let*
     ((c (peek-char t input-stream)))
     (cond
-; ((eof-object? c) (read-error "EOF in middle of list") '())
-; TODO:
-;      ((eql c #\;)
-;        (consume-to-eol input-stream)
-;        (my-read-delimited-list stop-char input-stream))
+      ; TODO:
+      ; ((eof-object? c) (read-error "EOF in middle of list") '())
       ((eql c stop-char)
         (read-char input-stream)
         '())
