@@ -149,7 +149,7 @@
       (car result))
     ((null (cddr result)) ; Map {a b} to (a b).
       result)
-    ((simple-infix-listp result)
+    ((simple-infix-listp result) ; Map {a op b} to (op a b).
       (transform-simple-infix result))
     (t
       (transform-mixed-infix result))))
