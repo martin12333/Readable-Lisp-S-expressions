@@ -239,10 +239,13 @@
         ((eql c #\{ )  ; Implement f{x}.
           (read-char input-stream nil nil t) ; consume opening char
           (neoteric-process-tail input-stream
-            (list prefix
-              (process-curly
-                (my-read-delimited-list #\} input-stream)))))
+            (let ((tail (process-curly
+                          (my-read-delimited-list #\} input-stream))))
+              (if (null tail)
+                (list prefix) ; Map f{} to (f), not (f ()).
+                (list prefix tail)))))
         (t prefix))))
+
 
 ; Read, then process it through neoteric-tail to manage suffixes.
 ; Unlike Scheme, in Common Lisp we can force the reader to consider
@@ -358,4 +361,3 @@
 
 ; (enable-neoteric)
 ; (write (neoteric-read))
-
