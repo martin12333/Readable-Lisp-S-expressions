@@ -1,5 +1,7 @@
-; curly-infix.cl
-; Implements an infix reader macro: {...} surrounds an infix expression.
+; readable.cl
+; Implements the "readable" approach for Lisp.
+; On load, it turns on the curly-infix reader macro;
+; {...} surrounds an infix expression, so {7 + 8} maps to (+ 7 8) on read.
 ;
 ; Copyright (C) 2007-2012 by David A. Wheeler
 ;
@@ -86,7 +88,6 @@
 ; * No precedence list that must be memorized (unless you use an "nfx" macro)
 ; * Can work with an nfx macro (which COULD implement precedence) if needed
 ; Cons:
-; * Doesn't support traditional prefix notation, e.g., - x. Must use (- x).
 ; * Doesn't directly support precedence (if you want that) - nfx macro
 ;   must do that.
 ; * Doesn't rename functions, or give them new infix names.  You can define
