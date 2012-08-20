@@ -68,11 +68,12 @@
                   (cons 'bracketaccess
                     (cons prefix
                       (my-read-delimited-list #\] port)))))
-          ((char=? c #\{ )  ; Implement f{x}
+          ((char=? c #\{ )  ; Implement f{x}. Balance }
             (neoteric-process-tail port
-                (list prefix
-                  ; Call neoteric-read-real, which handles {...} curly-infix.
-                  (neoteric-read-real port))))
+              (let ((tail (neoteric-read port)))
+                (if (eqv? tail '())
+                  (list prefix) ; Map f{} to (f), not (f ()).
+                  (list prefix tail)))))
           (#t prefix))))
 
 
