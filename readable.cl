@@ -132,7 +132,7 @@
 
 ; Transform not-simple infix list.  Written as a separate function so that
 ; future versions/specifications can easily replace just this pieces.
-(defun transform-not-simple-infix (lyst)
+(defun transform-mixed-infix (lyst)
   (cons 'nfx lyst))
 
 ; The following install the {...} reader.
@@ -152,7 +152,7 @@
     ((simple-infix-listp result)
       (transform-simple-infix result))
     (t
-      (transform-not-simple-infix result))))
+      (transform-mixed-infix result))))
 
 ; Read until }, then process list as infix list.
 ; This shouldn't be invoked once we use neoteric-read; it takes precedence.

@@ -960,7 +960,7 @@
 
   ; Not a simple infix list - transform it.  Written as separate function
   ; so that future experiments or SRFIs can easily replace just this piece.
-  (define (transform-not-simple-infix lyst)
+  (define (transform-mixed-infix lyst)
      (cons 'nfx lyst))
 
   ; Given curly-infix lyst, map it to its final internal format.
@@ -974,7 +974,7 @@
        lyst)
      ((simple-infix-list? lyst) ; Handle simple infix expression.
        (transform-simple-infix lyst))
-     (#t  (transform-not-simple-infix lyst))))
+     (#t  (transform-mixed-infix lyst))))
 
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
