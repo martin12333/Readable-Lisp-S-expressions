@@ -250,10 +250,12 @@
 
 ; Read, then process it through neoteric-tail to manage suffixes.
 ; Unlike Scheme, in Common Lisp we can force the reader to consider
-; {} and [] as delimiters, so we don't have to re-implement some things.
-; TODO: Use handler-case to fully implement eof-error-p, etc.
+; {} and [] as delimiters, so we don't have to re-implement some parts of
+; the reader.  However, Common Lisp's approach to backquote and comma is
+; more complicated to implement.
 (defun neoteric-read (&optional (input-stream *standard-input*)
                         (eof-error-p t) (eof-value nil) (recursive-p nil))
+ (handler-case
   (neoteric-process-tail input-stream
     (let* ((c (peek-char t input-stream)))
       (cond
@@ -295,7 +297,11 @@
           ; Force recursive; even at the top level, when it reads what
           ; it *thinks* is a whole expression, we may be "inside" a
           ; longer list.  Otherwise, EOF handling can mess up.
-          (read input-stream eof-error-p eof-value t))))))
+          (read input-stream eof-error-p eof-value t)))))
+  (end-of-file (e)
+    (if eof-error-p
+      (signal e) ; re-raise error
+      eof-value))))
 
 ; Remarkably, Common Lisp provides no standard way to exit an image.
 ; Here's a mostly-portable mechanism to do so, from:
