@@ -190,8 +190,8 @@ bin/sweet-run: src/sweet-run my-subst
 	chmod a-w $@
 
 # Eventually we'll package this, but for now, just distribute
-# the Common Lisp curly-infix.cl implementation.
-EXTRA_DIST += curly-infix.cl
+# the Common Lisp implementation.
+EXTRA_DIST += readable.cl
 
 
 # Distribute examples (but don't install them).
@@ -251,7 +251,7 @@ EXTRA_DIST += \
 # TODO: Improve test harness & integration into overall system.
 
 check: readable/kernel.scm
-	CURLYFILE="$(srcdir)/curly-infix.cl" $(srcdir)/tests/curly-infix-test-cl
+	CURLYFILE="$(srcdir)/readable.cl" $(srcdir)/tests/curly-infix-test-cl
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/curly-infix-test-scm \
 	            < $(srcdir)/tests/curly-infix-testsuite-scm
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/neoteric-test \
