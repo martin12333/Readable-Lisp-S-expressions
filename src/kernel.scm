@@ -488,6 +488,7 @@
 
   ; special tag to denote comment return from hash-processing
   (define comment-tag (cons '() '())) ; all cons cells are unique
+  (define bad-comment-tag 'WRONG) ; Should NEVER see this
 
   ; Define the whitespace characters, in relatively portable ways
   ; Presumes ASCII, Latin-1, Unicode or similar.
@@ -750,17 +751,17 @@
   ; NOTE: this function can return comment-tag.  Program defensively
   ; against this when calling it.
   (define (process-sharp no-indent-read port)
-    ; We've peeked a # character.  Returns what it represents.
+    ; We've read a # character.  Returns what it represents.
     ; Note: Since we have to re-implement process-sharp anyway,
     ; the vector representation #(...) uses my-read-delimited-list, which in
     ; turn calls no-indent-read.
     ; TODO: Create a readtable for this case.
-    (my-read-char port) ; Remove #
-    (cond
-      ((eof-object? (my-peek-char port)) (my-peek-char port)) ; If eof, return eof.
-      (#t
-        ; Not EOF. Read in the next character, and start acting on it.
-        (let ((c (my-read-char port)))
+    (let ((c (my-peek-char port)))
+      (cond
+        ((eof-object? c) c) ; If eof, return eof.
+        (#t
+          ; Not EOF. Read in the next character, and start acting on it.
+          (my-read-char port)
           (cond
             ((char-ci=? c #\t)  #t)
             ((char-ci=? c #\f)  #f)
@@ -777,18 +778,18 @@
             ; t-expressions!
             ((char=? c #\;)
               (no-indent-read port)
-              comment-tag)
+              bad-comment-tag)
             ; handle nested comments
             ((char=? c #\|)
               (nest-comment port)
-              comment-tag)
+              bad-comment-tag)
             (#t
               (let ((rv (parse-hash no-indent-read c port)))
                 (cond
                   ((not rv)
                     (read-error "Invalid #-prefixed string"))
-                  ((null? rv)
-                    comment-tag)
+                  ((null? rv) ; Comment, re-read.
+                    (no-indent-read port))
                   ((pair? rv)
                     (car rv))
                   (#t
@@ -861,7 +862,9 @@
             (cond
               ((ismember? c digits) ; Initial digit.
                 (read-number port '()))
-              ((char=? c #\#) (process-sharp no-indent-read port))
+              ((char=? c #\#)
+                (my-read-char port)
+                (process-sharp no-indent-read port))
               ((char=? c #\.) (process-period port))
               ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
                 (my-read-char port)
@@ -1109,6 +1112,53 @@
   ; so that readblock-clean handles it properly:
   (define split-tag (cons '() '()))
 
+  (define (process-sharp-comment-tag no-indent-read port)
+    ; We've read a # character.  Returns what it represents.
+    ; Unlike process-sharp, this one may return a comment-tag to represent
+    ; a comment like #|...|# and #;datum.
+    (let ((c (my-peek-char port)))
+      (cond
+        ((eof-object? c) c) ; If eof, return eof.
+        (#t
+          ; Not EOF. Read in the next character, and start acting on it.
+          (cond
+            ; Handle #; (item comment).  This
+            ; only works at the item-level:
+            ;  it can only remove c-expressions
+            ;  or n-expressions, not whole
+            ; t-expressions!
+            ((char=? c #\;)
+              (my-read-char port)
+              (no-indent-read port)
+              comment-tag)
+            ; handle nested comments
+            ((char=? c #\|)
+              (my-read-char port)
+              (nest-comment port)
+              comment-tag)
+            (#t
+              (let ((rv (parse-hash no-indent-read c port)))
+                (cond
+                  ((null? rv) ; Comment, re-read.
+                    comment-tag)
+                  ((pair? rv)
+                    (car rv))
+                  (#t
+                    ; Use process-tail, so constructs like #f() work.
+                    (neoteric-process-tail port
+                      (process-sharp no-indent-read port)))))))))))
+
+  ; Call neoteric-read, but handle # specially, so that #|...|# at the
+  ; top level will return comment-tag instead.
+  (define (neoteric-read-real-comment-tag port)
+    (let ((c (my-peek-char port)))
+      (cond
+        ((eof-object? c) c)
+        ((eqv? c #\#)
+          (my-read-char port)
+          (process-sharp-comment-tag neoteric-read-real port))
+        (#t (neoteric-read-real port)))))
+
   (define (readquote level port qt)
     (let ((char (my-peek-char port)))
       (if (char-whitespace? char)
@@ -1136,7 +1186,7 @@
           (#t
             (attach-sourceinfo pos (readquote level port 'unquote)))))
        (#t
-          (neoteric-read-real port)))))
+          (neoteric-read-real-comment-tag port)))))
 
   (define (indentation>? indentation1 indentation2)
     (let ((len1 (string-length indentation1))
@@ -1386,7 +1436,7 @@
                     (sugar-start-expr port))))) ; and try again
             ; hashes are potential comments too
             ((eqv? c #\#)
-              (let ((obj (neoteric-read-real port)))
+              (let ((obj (neoteric-read-real-comment-tag port)))
                 (if (eq? obj comment-tag)
                     ; heh, comment.  Consume spaces and start again.
                     ; (Consuming horizontal spaces makes comments behave
@@ -1409,7 +1459,7 @@
               (sugar-start-expr port)) ; Consume and again
             ((> (string-length indentation) 0) ; initial indentation disables
               ; ignore indented comments
-              (let ((rv (neoteric-read-real port)))
+              (let ((rv (neoteric-read-real-comment-tag port)))
                 (if (eq? rv comment-tag)
                     ; indented comment.  restart.
                     (sugar-start-expr port)
