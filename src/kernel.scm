@@ -488,7 +488,6 @@
 
   ; special tag to denote comment return from hash-processing
   (define comment-tag (cons '() '())) ; all cons cells are unique
-  (define bad-comment-tag 'WRONG) ; Should NEVER see this
 
   ; Define the whitespace characters, in relatively portable ways
   ; Presumes ASCII, Latin-1, Unicode or similar.
@@ -771,18 +770,14 @@
             ((char=? c #\( )  ; Vector.
               (list->vector (my-read-delimited-list no-indent-read #\) port)))
             ((char=? c #\\) (process-char port))
-            ; Handle #; (item comment).  This
-            ; only works at the item-level:
-            ;  it can only remove c-expressions
-            ;  or n-expressions, not whole
-            ; t-expressions!
+            ; Handle #; (item comment).
             ((char=? c #\;)
-              (no-indent-read port)
-              bad-comment-tag)
+              (no-indent-read port)  ; Read the datum to be consumed.
+              (no-indent-read port)) ; Return the next one.
             ; handle nested comments
             ((char=? c #\|)
               (nest-comment port)
-              bad-comment-tag)
+              (no-indent-read port)) ; Recurse.
             (#t
               (let ((rv (parse-hash no-indent-read c port)))
                 (cond
