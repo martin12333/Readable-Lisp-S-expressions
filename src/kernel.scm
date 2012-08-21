@@ -487,7 +487,6 @@
   (define foldcase-default #f)
 
   ; special tag to denote comment return from hash-processing
-  (define comment-tag (cons '() '())) ; all cons cells are unique
 
   ; Define the whitespace characters, in relatively portable ways
   ; Presumes ASCII, Latin-1, Unicode or similar.
@@ -747,8 +746,6 @@
       (my-string-foldcase s)
       s))
 
-  ; NOTE: this function can return comment-tag.  Program defensively
-  ; against this when calling it.
   (define (process-sharp no-indent-read port)
     ; We've read a # character.  Returns what it represents.
     ; Note: Since we have to re-implement process-sharp anyway,
@@ -833,8 +830,6 @@
               (list->string (cons #\.
                 (read-until-delim port neoteric-delimiters)))))))))
 
-  ; NOTE: this function can return comment-tag.  Program defensively
-  ; against this when calling it.
   ; This implements a simple Scheme "read" implementation from "port",
   ; but if it must recurse to read, it will invoke "no-indent-read"
   ; (a reader that is NOT indentation-sensitive).
@@ -974,8 +969,6 @@
        (transform-simple-infix lyst))
      (#t  (transform-mixed-infix lyst))))
 
-  ; NOTE: this function can return comment-tag.  Program defensively
-  ; against this when calling it.
   (define (curly-infix-read-real no-indent-read port)
     (let* ((pos (get-sourceinfo port))
             (c   (my-peek-char port)))
@@ -996,14 +989,9 @@
         (#t
           (underlying-read no-indent-read port)))))
 
-  ; Read using curly-infix-read-real, but try again if we get a
-  ; comment tag (thus it will never return a comment tag)
+  ; Read using curly-infix-read-real
   (define (curly-infix-read-nocomment port)
-    (let ((rv (curly-infix-read-real curly-infix-read-nocomment port)))
-      (if (eq? rv comment-tag)
-          ; comment, so retry
-          (curly-infix-read-nocomment port)
-          rv)))
+    (curly-infix-read-real curly-infix-read-nocomment port))
 
 ; -----------------------------------------------------------------------------
 ; Neoteric Expressions
@@ -1036,10 +1024,6 @@
           ((char=? c #\{ )  ; Implement f{x}
             (neoteric-process-tail port
               (attach-sourceinfo pos
-                ; NOTE: although curly-infix-read-real could
-                ; return comment-tag,
-                ; at this point we know the next item is { }, so
-                ; it cannot return a comment-tag in this context
                 (let
                   ((tail (curly-infix-read-real neoteric-read-nocomment port)))
                   (if (eqv? tail '())
@@ -1047,8 +1031,6 @@
                     (list prefix tail))))))
           (#t prefix))))
 
-  ; NOTE: this function can return comment-tag.  Program defensively
-  ; against this when calling it.
   ; This is the "real" implementation of neoteric-read.
   ; It directly implements unprefixed (), [], and {} so we retain control;
   ; it calls neoteric-process-tail so f(), f[], and f{} are implemented.
@@ -1085,10 +1067,7 @@
         (neoteric-process-tail port result))))
 
   (define (neoteric-read-nocomment port)
-    (let ((rv (neoteric-read-real port)))
-      (if (eq? rv comment-tag)
-          (neoteric-read-nocomment port)
-          rv)))
+    (neoteric-read-real port))
 
 ; -----------------------------------------------------------------------------
 ; Sweet Expressions
@@ -1106,6 +1085,10 @@
   ; represent the existence of the split symbol
   ; so that readblock-clean handles it properly:
   (define split-tag (cons '() '()))
+
+  ; This is a special unique object that is used to
+  ; represent the existence of a comment such as #|...|#
+  (define comment-tag (cons '() '())) ; all cons cells are unique
 
   (define (process-sharp-comment-tag no-indent-read port)
     ; We've read a # character.  Returns what it represents.
