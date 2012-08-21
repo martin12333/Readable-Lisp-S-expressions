@@ -836,6 +836,8 @@
   ; This additional parameter lets us easily implement additional semantics,
   ; and then call down to this underlying-read function when basic reader
   ; functionality (implemented here) is needed.
+  ; This lets us implement both a curly-infix-ONLY-read
+  ; as well as a neoteric-read, without duplicating code.
   (define (underlying-read no-indent-read port)
     (consume-whitespace port)
     (let* ((pos (get-sourceinfo port))
@@ -1084,11 +1086,21 @@
   ; This is a special unique object that is used to
   ; represent the existence of the split symbol
   ; so that readblock-clean handles it properly:
-  (define split-tag (cons '() '()))
+  (define split-tag (cons 'split-tag! '()))
 
-  ; This is a special unique object that is used to
-  ; represent the existence of a comment such as #|...|#
-  (define comment-tag (cons '() '())) ; all cons cells are unique
+  ; This is a special unique object that is used to represent the
+  ; existence of a comment such as #|...|#, #!...!#, and #;datum.
+  ; The process-sharp for sweet-expressions is separately implemented,
+  ; and returns comment-tag for these commenting expressions, so that the
+  ; sweet-expression reader can properly handle newlines after them
+  ; (e.g., after a newline the "!" indents become active).
+  ; The problem is that "#" can introduce many constructs, not just comments,
+  ; and we'd need two-character lookahead (which isn't portable) to know
+  ; when that occurs.  So instead, we process #, and return comment-tag
+  ; when it's a comment.
+  ; We don't need use this for ;-comments; we can handle them directly,
+  ; since no lookahead is needed to disambiguate them.
+  (define comment-tag (cons 'comment-tag! '())) ; all cons cells are unique
 
   (define (process-sharp-comment-tag no-indent-read port)
     ; We've read a # character.  Returns what it represents.
@@ -1100,10 +1112,8 @@
         (#t
           ; Not EOF. Read in the next character, and start acting on it.
           (cond
-            ; Handle #; (item comment).  This
-            ; only works at the item-level:
-            ;  it can only remove c-expressions
-            ;  or n-expressions, not whole
+            ; Handle #; (item comment).  This only works at the item-level:
+            ; it can only remove c-expressions or n-expressions, not whole
             ; t-expressions!
             ((char=? c #\;)
               (my-read-char port)
@@ -1337,7 +1347,8 @@
                           (cons level (car block))
                           rest))
                     (#t
-                      (cons level (attach-sourceinfo pos (cons first block)))))))))))))
+                      (cons level (attach-sourceinfo pos
+                                       (cons first block)))))))))))))
 
   ;; Consumes as much horizontal, non-indent whitespace as
   ;; possible.  Treat comments as horizontal whitespace too.
