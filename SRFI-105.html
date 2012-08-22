@@ -323,7 +323,7 @@ that can correctly read and map curly-infix-expressions.</p>
 <p>Here are some examples of c-expressions:</p>
 <ul>
 <li><tt>{a * {b + c}}</tt> maps to <tt>(* a (+ b c))</tt></li>
-<li><tt>{x eqv? &lsquo;a}</tt> maps to <tt>(eqv? x &lsquo;a)</tt></li>
+<li><tt>{x eqv? `a}</tt> maps to <tt>(eqv? x `a)</tt></li>
 <li><tt>{(- a) / b}</tt> maps to <tt>(/ (- a) b)</tt></li>
 <li><tt>{(f a b) + (g h)}</tt> maps to <tt>(+ (f a b) (g h))</tt></li>
 <li><tt>&apos;{a + (f b) + x}</tt> maps to <tt>&apos;(+ a (f b) x)</tt></li>
