@@ -108,10 +108,6 @@
       ((null? (cdr lyst)) #f) ; fail - wrong # of parameters in lyst.
       (#t (even-and-op-prefix? op (cddr lyst))))) ; recurse.
 
-  ; Returns true if item is member of lyst, else false.
-  (define (ismember? item lyst)
-     (pair? (member item lyst)))
-
   ; Return true if the lyst is in simple infix format
   ; (and thus should be reordered at read time).
   (define (simple-infix-list? lyst)
@@ -180,6 +176,10 @@
 
   ; Returns a true value (not necessarily #t) if char ends a line.
   (define (char-line-ending? char) (memq char line-ending-chars))
+
+  ; Returns true if item is member of lyst, else false.
+  (define (ismember? item lyst)
+     (pair? (member item lyst)))
 
   ; Create own version, in case underlying implementation omits some.
   (define (my-char-whitespace? c)
