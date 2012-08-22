@@ -7,7 +7,7 @@
 <body>
 <h1 id="title">Title</h1>
 <p>Curly-infix-expressions</p>
-<h1 id="author">Authors</h1>
+<h1 id="author" id="authors">Authors</h1>
 <p>David A. Wheeler</p>
 <p>Alan Manuel K. Gloria</p>
 <h1 id="status">Status</h1>
@@ -29,10 +29,9 @@ access previous messages via <a href=
 <p>None</p>
 <h1 id="abstract">Abstract</h1>
 <p>Lisp-based languages, like Scheme, are almost the only
-programming languages in modern use that do not support infix
-notation. Adding infix support to Scheme would eliminate a common
-complaint by developers who currently choose to use other
-languages.
+programming languages in modern use that do not support infix notation.
+Adding standardized infix support to Scheme would eliminate a common
+complaint by developers who currently choose to use other languages.
 Scheme currently reserves <code>{</code>...<code>}</code>
 &ldquo;for possible future extensions to the language&rdquo;.
 We propose that <code>{</code>...<code>}</code> be used
@@ -56,19 +55,21 @@ e.g.,
 <p>Lisp-based languages, like Scheme, are almost the only
 programming languages in modern use that do not support infix
 notation. Even some Lisp advocates, like Paul Graham, admit that
-they &ldquo;don&rsquo;t find prefix math expressions
-natural.&rdquo; (<a href="http://www.paulgraham.com/pypar.html"
-rel="nofollow">http://www.paulgraham.com/pypar.html</a>) Paul
-Prescod has said, &ldquo;I have more faith that you could convince
-the world to use Esperanto than prefix notation.&rdquo; Infix is
-not going away; nearly all new programming languages also include
-infix. Adding infix support to Scheme would eliminate a common
-complaint by developers who currently choose to use other languages
-instead.</p>
-<p>Scheme currently reserves <code>{</code>...<code>}</code> &ldquo;for possible future
+they &ldquo;don&#8217;t find prefix math expressions
+natural&rdquo; (<a href="http://www.paulgraham.com/pypar.html"
+rel="nofollow">http://www.paulgraham.com/pypar.html</a>).
+Paul Prescod has said, &ldquo;I have more faith that you could convince
+the world to use Esperanto than prefix notation&rdquo;
+(<a href="http://people.csail.mit.edu/gregs/ll1-discuss-archive-html/msg01571.html" rel="nofollow">http://people.csail.mit.edu/gregs/ll1-discuss-archive-html/msg01571.html</a>).
+Infix is not going away; standard mathematical notation uses infix,
+infix notation is taught to most people (programmers or not) in school,
+and nearly all new programming languages include infix.
+Adding infix support to Scheme would eliminate a common complaint
+by developers who currently choose to use other languages instead.</p>
+<p>Scheme currently reserves
+<code>{</code>...<code>}</code> &ldquo;for possible future
 extensions to the language&rdquo;. We propose that
-<code>{</code>...<code>}</code> be used
-to
+<code>{</code>...<code>}</code> be used to
 support &ldquo;curly-infix&rdquo; notation as a reader
 abbreviation, just as
 <samp>&apos;x</samp> is an abbreviation for <samp>(quote x)</samp>.</p>
@@ -76,44 +77,49 @@ abbreviation, just as
 <em>straightforward</em> technique for supporting infix notation.
 There is no complex precedence system, all other Scheme
 capabilities (including macros and quasiquoting) work unchanged,
-and Scheme remains general and homoiconic. Curly-infix expressions
+any symbol can be used as an infix operation where desired,
+and Scheme remains general and homoiconic.
+Curly-infix expressions
 are just a convenient reader abbreviation for infix notation.</p>
-<p>At its simplest, this SRFI provides
-the &ldquo;simple&rdquo; curly-infix list that accepts ordinary
+<p>At its core, this SRFI provides
+the <em>simple</em> curly-infix list that accepts ordinary
 lists, merely written in a different order.
-The &ldquo;simple&rdquo; curly-infix list maps
-<samp>{operand-1 operator operand-2 operator operand-3 operator ...}</samp> is
+The simple curly-infix list
+<samp>{operand-1 operator operand-2 operator operand-3 operator ...}</samp>
+is mapped to
 <samp>(operator operand-1 operand-2 operand-3 ...)</samp> so that more than
-two operands are handled cleanly,
-e.g., <samp>{a + b + c}</samp> maps to <samp>(+ a b c)</samp>.</p>
+two operands are handled cleanly.
+E.g., <samp>{a + b + c}</samp> maps to <samp>(+ a b c)</samp>.</p>
 
-<h2 id="rationale_whychangethereader">Why Change the Reader?</h2>
+<h2 id="rationale_whychangethereader">Why change the reader?</h2>
 <p>Many previous systems have implemented &ldquo;infix&rdquo;
 systems as a named macro or procedure (e.g., <var>INFIX</var>). This looks
 ugly, and it does the wrong thing - the resulting list always has
 <var>INFIX</var> at the beginning, not the actual infix operator, so this
 approach can interfere with quoting, macros, and other
 capabilities. Many of these past systems also created a whole new
-notation which simultaneously lost Lisp&rsquo;s abilities for
-quoting, quasiquoting, and so on. This proposal avoids these
-problems. For example, in curly-infix,
+notation which simultaneously lost Lisp&#8217;s abilities for
+quoting, quasiquoting, and so on.
+This proposal avoids these problems.
+For example, in curly-infix,
 <samp>&apos;{a + b}</samp> maps cleanly to <samp>&apos;(+ a b)</samp>,
 which works as expected with all macros.</p>
 
-<h2 id="rationale_whyisntprecedencepartofthissrfi">Why Isn&apos;t Precedence Part of This SRFI?</h2>
+<h2 id="rationale_whyisntprecedencepartofthissrfi">Why isn&#8217;t precedence part of this SRFI?</h2>
 <p>Many past &ldquo;infix&rdquo; systems for Lisp build in
 precedence. However, Lisp systems often process other languages,
-freely mixing different languages, and thus the same symbol may
-have different meanings and precedence levels in different
-contexts. The symbol might not even be defined where it is being
+and they may freely mix these different languages.
+Thus, the same symbol may have different meanings
+and precedence levels in different contexts.
+The symbol might not even be defined where it is being
 used, and allowing precedence definitions would create subtle errors
 if files are read in a different order.
 By avoiding precedence, a very simple yet useful infix system
-results. In practice, we&rsquo;ve found that simple infix is all
-that&rsquo;s needed most of the time. By intentionally <em>not</em>
+results. In practice, we&#8217;ve found that simple infix is all
+that&#8217;s needed most of the time. By intentionally <em>not</em>
 building a precedence system into the reader,
 we make things amazingly simple -
-we don&rsquo;t need to register procedures, decide their order, or
+we don&#8217;t need to register procedures, decide their order, or
 anything like it. It would be possible to extend this
 mechanism to provide a precedence system (e.g., if an expression is
 not simple, attempt to use various precedence rules), but such
@@ -122,61 +128,69 @@ capabilities would be extensions not required by this SRFI.</p>
 can implement precedence by defining and controlling the scope of an
 &ldquo;<var>nfx</var>&rdquo; macro or procedure, or by later postprocessing
 of that symbol, instead of having it be built into the reader.
-Scheme macros are already quite powerful and capable
-of handling this; in these cases, <code>{</code>...<code>}</code> provides a more
-convenient notation. There are serious problems if users were
+Scheme macros are already quite powerful and capable of handling this;
+in these cases, <code>{</code>...<code>}</code> provides a more
+convenient notation.
+There are serious problems if users were
 expected to be able to hook in their own precedence system as part
 of the reader; there is no guarantee that their routine would be
 loaded before the reader, and it would be difficult to combine code
 written for different precedence systems. The curly-infix approach
 instead takes advantage of the existing Scheme scoping rules.</p>
-<p>At first I (David A. Wheeler) considered reporting an error
-if a simple infix
-expression isn&rsquo;t provided, but prepending &ldquo;<var>nfx</var>&rdquo;
+<p>At first David A. Wheeler, who started this project,
+considered reporting an error if a simple infix
+expression isn&#8217;t provided.
+However, prepending &ldquo;<var>nfx</var>&rdquo;
 is much more flexible.</p>
 
-<h2 id="rationale_whynotautodetectinfix">Why Not Autodetect Infix?</h2>
+<h2 id="rationale_whynotautodetectinfix">Why not autodetect infix?</h2>
 <p>Some past efforts tried to automatically detect infix operators,
-but this turns out to not work well. It&apos;s hard to express
+but this turns out to not work well. It&#8217;s hard to express
 good rules for detecting infix operators, and the rules become too
 complex for users (e.g., &ldquo;punctuation-only symbols&rdquo;
-doesn&rsquo;t detect &ldquo;<var>and</var>&rdquo; or &ldquo;<var>or</var>&rdquo;).
+doesn&#8217;t detect &ldquo;<var>and</var>&rdquo; or &ldquo;<var>or</var>&rdquo;).
 And in
 any case, if they were automatically detected, an escape mechanism
 would be needed anyway. Allowing the user to expressly notate when
 infix was intended, using <code>{</code>...<code>}</code>,
 turns out to be far more clearer
 and more intuitive. In particular, curly-infix allows the use of
-infix with any symbol, whenever you want... and where it&rsquo;s
-not convenient, you don&rsquo;t need to use it. It is also very
+infix with any symbol, whenever you want... and where it&#8217;s
+not convenient, you don&#8217;t need to use it. It is also very
 backwards-compatible: Normal lists work normally, and if you want
 infix, use <code>{</code>...<code>}</code>.</p>
 
-<h2 id="rationale_whyallthosespecialcases">Why All Those Special Cases?</h2>
+<h2 id="rationale_whyallthosespecialcases">Why are 0, 1, and 2 parameters special?</h2>
 <p>The empty curly-infix list
 <samp>{}</samp> maps to <samp>()</samp>,
 as it <em>is</em> an
 empty list, and this is the likely user meaning (reducing
 unnecessary errors).</p>
-<!-- Should we mention n-expr and t-expr at this stage? - AmkG -->
-<p>The one and two parameter cases are defined in part so that they
-better support two other notations that build on top of
-curly-infix-expressions (namely, neoteric-expressions and
-sweet-expressions). An &ldquo;escaping&rdquo;
+<!-- dwheeler says: I think we have to mention n-expressions and t-expressions
+here, because they are part of the rationale for these semantics. -->
+<p>The one and two parameter cases are defined in part to reduce user error,
+and in part to better support other notations
+that build on top of curly-infix-expressions (namely, neoteric-expressions and
+sweet-expressions):
+</p>
+<ol>
+<li>An &ldquo;escaping&rdquo;
 <samp>{e}</samp> is mapped to <samp>e</samp>
 so that the neoteric-expression
 <samp>f{x}</samp> becomes the likely-intended <samp>(f x)</samp>, and to
 provide an easy escape mechanism in sweet-expressions for symbols
-that would otherwise have other meanings.
-The &ldquo;unary-operation&rdquo; curly-infix list
+that would otherwise have other meanings.</li>
+<li>The &ldquo;unary-operation&rdquo; curly-infix list
 <samp>{e f}</samp> maps to <samp>(e f)</samp>,
 so that <samp>{- x}</samp> maps to <samp>(- x)</samp>,
 the likely interpretation, and also so that the neoteric-expression
-<samp>f{- x}</samp> will map correctly to <samp>(f (- x))</samp>.</p>
+<samp>f{- x}</samp> will map correctly to <samp>(f (- x))</samp>.
+</li>
+</ol>
 
-<h2 id="rationale_whatistransformmixedinfixgoodfor">What is <var>transform-mixed-infix</var> Good For?</h2>
+<h2 id="rationale_whatistransformmixedinfixgoodfor">What is <var>transform-mixed-infix</var> good for?</h2>
 <p>The &ldquo;<var>transform-mixed-infix</var>&rdquo; procedure is not
-intended for normal softwarew development use. Instead, it is
+intended for use in normal software development. Instead, it is
 suggested so that a future SRFI author could more easily implement
 a fixed precedence system that is built into the reader. We think
 that precedence is overrated. However, if a future community
@@ -186,45 +200,48 @@ only defined to help simplify implementing a plausible future SRFI;
 it is not required or expected in normal use. Application software
 developers should avoid redefining <var>transform-mixed-infix</var>.</p>
 
-<h2 id="rationale_whyareinfixoperatorssurroundedbyspaces">Why Are Infix Operators Surrounded by Spaces?</h2>
-<p>Curly-infix requires that infix operators be delimited (e.g., by
-spaces). This is consistent with Lisp history; operators are always
+<h2 id="rationale_whyareinfixoperatorssurroundedbyspaces">Why must infix operators be delimited?</h2>
+<p>Curly-infix requires that the infix operators be delimited (e.g., by
+spaces). This is consistent with Lisp history and current practice.
+Currently, in Lisp, operators are always
 delimited in traditional s-expressions (typically by left
-parentheses on the left, and space on the right). It&apos;s also
-impractical to do otherwise; most Lisps, including Scheme, allow
-and predefine symbols that include characters (like
-&ldquo;<var>-</var>&rdquo;) that are typically used for infix operators. Many
-developers will put space around infix operators even in languages
-that don&rsquo;t require them, so syntactically requiring them is
-no burden. In short, it is difficult to allow infix operators
+parentheses on the left, and by whitespace on the right).
+It&#8217;s impractical to do otherwise today; most Lisps,
+including Scheme, allow and predefine symbols that include characters (like
+&ldquo;<var>-</var>&rdquo;) that are typically used for infix operators.
+Many developers put space around infix operators even in languages
+that don&#8217;t require them, so syntactically requiring them is no burden.
+In short, it is difficult to allow infix operators
 without delimiters, and the visual results are the same as many
 real-world uses in other languages, so the result appears quite
 customary to typical software developers.</p>
-<!-- Shouldn't this part above be in Specifications?-->
 
-<h2 id="rationale_whyshouldcurlyinfixalwaysbeenabled">Why Should Curly-Infix Always Be Enabled?</h2>
+<h2 id="rationale_whyshouldcurlyinfixalwaysbeenabled">Why should curly-infix always be enabled?</h2>
 <p>If a reader implements this SRFI, we would like it to
-<em>always</em> be enabled. However, we provide a conventional name
-for an implementation to turn it on, and a
+<em>always</em> be enabled. However, we provide a conventional
+command line name (&ldquo;<var>curly-foo</var>&rdquo;)
+for an implementation to turn it on, and an
 &ldquo;<var>enable-curly-infix</var>&rdquo; procedure to turn it on as well.
 This way, implementors can make it optional in their
-&ldquo;native&rdquo; implementation, or to switch from whatever was
-their previous interpretation. By having a standard mechanism for
-enabling it, <!-- WARNING: nongrammatical.  dwheeler to check? -->we hope will encourage adoption. Users should invoke
+&ldquo;native&rdquo; implementation.
+We hope to encourage adoption by having a
+standard mechanism to enable curly-infix
+in cases where it is not the default.
+Users should invoke
 &ldquo;<var>(enable-curly-infix)</var>&rdquo; before using curly-infix lists.
 The &ldquo;<var>curly-infix-read</var>&rdquo; procedure allows reading
-external curly-infix data, even if the implementation doesn&apos;t
-implement it <!--"enable it in the built-in reader"--> by default.</p>
+external curly-infix data, even if the implementation doesn&#8217;t
+enable curly-infix-expressions by default.</p>
 <p>By intent, this SRFI (including the enabling mechanism)
-doesn&apos;t use or interact with any module system at all
+doesn&#8217;t use or interact with any module system at all
 (including the R6RS and R7RS module systems). This is because some
-implementations won&apos;t have a module system (or at least not a
+implementations won&#8217;t have a module system (or at least not a
 standard one). Curly-infix is an intentionally simple mechanism
-that can be built into even trivial Scheme implementation.
+that can be built into even trivial Scheme implementations.
 Mandating module support is unnecessary and might inhibit its
 adoption.</p>
-<p>There&apos;s no explicit &ldquo;<var>disable-curly-infix</var>&rdquo;.
-There&apos;s no reason to disable it within this SRFI, and if some
+<p>There&#8217;s no explicit &ldquo;<var>disable-curly-infix</var>&rdquo;.
+There&#8217;s no reason to disable it within this SRFI, and if some
 other action changes the meaning of braces, it would be that other
 action that disables it.</p>
 <p>There is no requirement that writers (e.g., &ldquo;<var>write</var>&rdquo;
@@ -236,7 +253,7 @@ or a
 punctuation-only symbol. However, it would probably be wise to wait
 until many implementations can handle c-expressions.</p>
 
-<h2 id="rationale_whatabouttheracketinfixconvention">What About the Racket &ldquo;Infix Convention&rdquo;?</h2>
+<h2 id="rationale_whatabouttheracketinfixconvention">What about the Racket &ldquo;infix convention&rdquo;?</h2>
 <p><a href=
 "http://docs.racket-lang.org/guide/Pairs__Lists__and_Racket_Syntax.html">
 Racket allows a notation called the &ldquo;infix convention&rdquo;
@@ -252,7 +269,7 @@ infix operator adds 6 characters. Infix operations are a very
 common operation, so convenience matters. An expression like
 <samp>(1 . + . 2)</samp> is far longer, and less convenient, than
 <samp>{1 + 2}</samp>.</li>
-<li>It doesn&apos;t look like other languages or math. A human
+<li>It doesn&#8217;t look like other languages or math. A human
 notation should be maximally understandable to people given what
 they already know. <samp>{a + b}</samp> is much more similar to standard
 notation "a + b" than <samp>(a . + . b)</samp>.</li>
@@ -260,7 +277,7 @@ notation "a + b" than <samp>(a . + . b)</samp>.</li>
 somewhere, you end up with the wrong result, and possibly without an
 error being flagged. This notation also
 makes it harder to see improper lists; improper lists are important
-but rare, so it&apos;s good to make them obvious - the Racket
+but rare, so it&#8217;s good to make them obvious - the Racket
 infix convention makes improper lists hard to distinguish. The
 Racket documentation even goes out of its way to emphasize that
 infix convention use is unrelated to improper lists... which
@@ -269,25 +286,30 @@ suggests that they are easily confused.</li>
 for sweet-expressions (a notation that builds on curly-infix). An
 alternative would be to use <samp>(. x)</samp> as an escape mechanism,
 but at that point dots-in-lists become busy and confusing.</li>
-<li>Racket&apos;s implementation does not allow multiple
-operations, e.g., <samp>(a . + . b . + . c . + . d)</samp>. That could be added,
-but using them makes the Racket infix convention notation even more
+<li>Racket&#8217;s implementation, according to its documentation,
+does not allow multiple operations,
+e.g., <samp>(a . + . b . + . c . + . d)</samp>. That could be added,
+but using them makes the Racket infix convention even more
 unwieldy. For example, compare
 <samp>(a . + . b . + . c . + . d)</samp> to <samp>{a + b + c + d}</samp>.</li>
-<li>Even Racket users don&apos;t use this convention often. Its
+<li>Even Racket users don&#8217;t use this convention often. Its
 documentation says that &ldquo;Racket programmers use the infix
 convention sparingly&mdash;mostly for asymmetric binary operators
-such as <var>&lt;</var> and <var>is-a?</var>.&rdquo; The documentation does not say why,
-but its extra length and awkwardness may be part of the
-reason.</li>
+such as <var>&lt;</var> and <var>is-a?</var>&rdquo;.
+The documentation does not say why,
+but its extra length and awkwardness may be part of the reason.
+In any case, the fact that the Racket documentation recommends that it
+be used &ldquo;sparingly&rdquo; does not encourage wider adoption.</li>
 </ul>
-<p>In short, infix is extremely common, so its notation should be
-convenient. The Racket &ldquo;infix convention&rdquo; may be the
+<p>In short, cases where infix notation would be useful are
+extremely common, so its notation should be convenient.
+The Racket &ldquo;infix convention&rdquo; may be the
 next-best notation for infix notation after curly-infix, but
-it&apos;s next-best, and we should strive for the <em>best</em>
-available notation for such a common need. Curly-infix does not
-<em>conflict</em> with the Racket infix convention; implementations
-could implement both. We recommend that an implementation that
+it&#8217;s next-best, and we should strive for the <em>best</em>
+available notation for such a common need.
+Curly-infix does not <em>conflict</em> with the
+Racket infix convention; implementations could implement both.
+We recommend that an implementation that
 implements the Racket infix convention should also allow multiple
 operands and use curly-infix semantics for them, pretending that
 <samp>. op .</samp> is a single parameter.
@@ -299,7 +321,7 @@ convention&rdquo; is additional evidence of the <em>need</em> for a
 standard infix convention; many have separately created mechanisms
 to try to provide infix support.</p>
 
-<h2 id="rationale_otherdetails">Other Details</h2>
+<h2 id="rationale_otherdetails">Other details</h2>
 <p>Curly-infix is designed so that it can work on other Lisps as
 well. We even have a working implementation in Common Lisp.</p>
 <p>Curly-infix is an unusually simple mechanism, but like much of
@@ -341,9 +363,7 @@ E.g., <samp>{- x}</samp> maps to <samp>(- x)</samp>.</li>
 E.g., <samp>{q + r * s}</samp> is mapped
 to <samp>(nfx q + r * s)</samp>.</li>
 </ol>
-<p>A &ldquo;curly-infix-expression&rdquo; datum reader is a reader
-that can correctly read and map curly-infix-expressions.</p>
-<p>Here are some examples of c-expressions:</p>
+<p>Here are some examples of c-expressions (note that all operators in curly-infix must be delimited):</p>
 <ul>
 <li><samp>{a * {b + c}}</samp> maps to <samp>(* a (+ b c))</samp></li>
 <li><samp>{x eqv? `a}</samp> maps to <samp>(eqv? x `a)</samp></li>
@@ -353,38 +373,58 @@ that can correctly read and map curly-infix-expressions.</p>
 <li><samp>{{a &gt; 0} and {b &gt;= 1}}</samp> maps to
 <samp>(and (&gt; a 0) (&gt;= b 1))</samp></li>
 </ul>
-<p>This specification implies that the braces &ldquo;<code>{</code>&ldquo; and
-&ldquo;<code>}</code>&rdquo; must be delimiters.</p>
+
+<p>A &ldquo;curly-infix-expression&rdquo; datum reader is a reader
+that can correctly read and map curly-infix-expressions.
+A curly-infix-expression reader must
+include the braces &ldquo;<code>{</code>&rdquo; and
+&ldquo;<code>}</code>&rdquo; as delimiters.</p>
+
 <p>Procedures:</p>
 <ul>
-<li>Implementations must provide the procedure
-<var>(curly-infix-read .  port)</var>
-that can read a c-expression.</li>
-<li>Implementations must provide the procedure
+<li>Implementations <em>must</em> provide the procedure
+<var>(curly-infix-read .  port)</var> as a curly-infix-expression reader.</li>
+<li>Implementations <em>must</em> provide the procedure
 <var>(enable-curly-infix)</var>,
-which enables this capability in the default reader
-(&ldquo;<var>read</var>&rdquo; and &ldquo;<var>get-datum</var>&rdquo;),
+which, on completion, ensures that the following readers
+are curly-infix-expression datum readers:
+the default readers
+(&ldquo;<var>read</var>&rdquo; and where appropriate
+&ldquo;<var>get-datum</var>&rdquo;),
 the reader used in the REPL,
 the reader used by &ldquo;<var>load</var>&rdquo;,
 and the reader used by whatever module-loading mechanism
-the implementation uses,
-whether or not it was previously enabled. However, we encourage
-systems to <em>always</em> have this capability enabled, even if
-<var>enable-curly-infix</var> is not called.</li>
+the implementation uses.
+The implementation <em>must</em> allow users to safely invoke
+<var>(enable-curly-infix)</var> repeatedly, even when curly-infix reading
+is already enabled.</li>
 <li>Implementations may provide an overrideable procedure
-<var>(transform-mixed-infix lyst)</var> that can be &ldquo;<var>set!</var>&rdquo;. This
+<var>(transform-mixed-infix lyst)</var> that can be
+&ldquo;<var>set!</var>&rdquo;. This
 procedure would receive a mixed curly-infix list and return a
 transformation of it. By default, this function returns the
-original list but with &ldquo;<var>nfx</var>&rdquo; in front; this procedure
-is suggested to simplify implementation of plausible future
+original list but with &ldquo;<var>nfx</var>&rdquo; in front.
+Application developers should not define or redefine this function;
+it is merely suggested to simplify implementation of plausible future
 SRFIs.</li>
 </ul>
-<p>If an implementation <em>foo</em> does not enable curly-infix by
-default, and it is possible to invoke it from a command line via
-&ldquo;<var>foo</var>&rdquo;, it
+
+<p>
+We encourage systems to <em>always</em> have
+this capability enabled, even when
+<var>enable-curly-infix</var> is not called and the curly-foo command
+is not run, but this is not required by this SRFI.
+However, if an implementation <em>foo</em> does not enable curly-infix by
+default, and it is possible to invoke it from a command line via some command
+&ldquo;<var>foo</var>&rdquo;, the implementation
 <em>must</em> provide an alternative command &ldquo;<var>curly-foo</var>&rdquo;
 (the command prefixed with &ldquo;<code>curly-</code>&rdquo;) that enables
-curly-infix by default.</p>
+curly-infix as if
+<var>(enable-curly-infix)</var> was invoked on start-up before any
+user-supplied modules or application code is loaded.
+</p>
+
+
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
 <h1 id="reference-implementation">Reference implementation</h1>
 <p>The implementation below is portable, with the exception that
@@ -403,82 +443,80 @@ some Scheme interpreter/compiler. In this case, a detailed
 specification of the hooks must be included so that the SRFI is
 self-contained.&rdquo;</p>
 <pre>
-; Return true if lyst has an even # of parameters, and the (alternating)
-; first parameters are "op".  Used to determine if a longer lyst is infix.
-; If passed empty list, returns true (so recursion works correctly).
-(define (even-and-op-prefix? op lyst)
-  (cond
-    ((null? lyst) #t)
-    ((not (pair? lyst)) #f) ; Not a list.
-    ((not (eq? op (car lyst))) #f) ; fail - operators not the same
-    ((null? (cdr lyst)) #f) ; fail - wrong # of parameters in lyst.
-    (#t (even-and-op-prefix? op (cddr lyst))))) ; recurse.
+  ; Return true if lyst has an even # of parameters, and the (alternating)
+  ; first parameters are "op".  Used to determine if a longer lyst is infix.
+  ; If passed empty list, returns true (so recursion works correctly).
+  (define (even-and-op-prefix? op lyst)
+    (cond
+      ((null? lyst) #t)
+      ((not (pair? lyst)) #f)
+      ((not (eq? op (car lyst))) #f) ; fail - operators not the same
+      ((not (pair? (cdr lyst)))  #f) ; Wrong # of parameters or improper
+      (#t   (even-and-op-prefix? op (cddr lyst))))) ; recurse.
 
-; Return true if the lyst is in simple infix format
-; (and thus should be reordered at read time).
-(define (simple-infix-list? lyst)
-  (and
-    (pair? lyst)           ; Must have list;  '() doesn't count.
-    (pair? (cdr lyst))     ; Must have a second argument.
-    (pair? (cddr lyst))    ; Must have a third argument (we check it
-                           ; this way for performance)
-    (symbol? (cadr lyst))  ; 2nd parameter must be a symbol.
-    (even-and-op-prefix? (cadr lyst) (cdr lyst)))) ; true if rest is simple
+  ; Return true if the lyst is in simple infix format
+  ; (and thus should be reordered at read time).
+  (define (simple-infix-list? lyst)
+    (and
+      (pair? lyst)           ; Must have list;  '() doesn't count.
+      (pair? (cdr lyst))     ; Must have a second argument.
+      (pair? (cddr lyst))    ; Must have a third argument (we check it
+                             ; this way for performance)
+      (symbol? (cadr lyst))  ; 2nd parameter must be a symbol.
+      (even-and-op-prefix? (cadr lyst) (cdr lyst)))) ; true if rest is simple
 
-; Return alternating parameters in a lyst (1st, 3rd, 5th, etc.)
-(define (alternating-parameters lyst)
-  (if (or (null? lyst) (null? (cdr lyst)))
-    lyst
-    (cons (car lyst) (alternating-parameters (cddr lyst)))))
+  ; Return alternating parameters in a list (1st, 3rd, 5th, etc.)
+  (define (alternating-parameters lyst)
+    (if (or (null? lyst) (null? (cdr lyst)))
+      lyst
+      (cons (car lyst) (alternating-parameters (cddr lyst)))))
 
-; Transform a simple infix list - move 2nd parameter into first position,
-; followed by all the odd parameters.  Thus (3 + 4 + 5) =&gt; (+ 3 4 5).
-(define (transform-simple-infix lyst)
-   (cons (cadr lyst) (alternating-parameters lyst)))
+  ; Not a simple infix list - transform it.  Written as a separate procedure
+  ; so that future experiments or SRFIs can easily replace just this piece.
+  (define (transform-mixed-infix lyst)
+     (cons 'nfx lyst))
 
-; Not a simple infix list - transform it.  Written as a separate procedure
-; so that future experiments or SRFIs can easily replace just this piece.
-(define (transform-mixed-infix lyst)
-   (cons 'nfx lyst))
+  ; Given curly-infix lyst, map it to its final internal format.
+  (define (process-curly lyst)
+    (cond
+     ((not (pair? lyst)) lyst) ; E.G., map {} to ().
+     ((null? (cdr lyst)) ; Map {a} to a.
+       (car lyst))
+     ((and (pair? (cdr lyst)) (null? (cddr lyst))) ; Map {a b} to (a b).
+       lyst)
+     ((simple-infix-list? lyst) ; Map {a OP b [OP c...]} to (OP a b [c...])
+       (cons (cadr lyst) (alternating-parameters lyst)))
+     (#t  (transform-mixed-infix lyst))))
 
-; Given curly-infix lyst, map it to its final internal format.
-(define (process-curly lyst)
-  (cond
-   ((eqv? lyst '())  ; Map empty curly-infix list {} to ().
-     '())
-   ((null? (cdr lyst)) ; Map {a} to a.
-     (car lyst))
-   ((null? (cddr lyst)) ; Map {a b} to (a b).
-     lyst)
-   ((simple-infix-list? lyst) ; Handle simple infix expression.
-     (transform-simple-infix lyst))
-   (#t  (transform-mixed-infix lyst))))
-
-; In the reader, when #\{ is detected, read (as a list) from that port
-; until its matching #\}, then process that list with "process-curly".
+  ; In the reader, when #\{ is detected, read (as a list) from that port
+  ; until its matching #\}, then process that list with "process-curly".
 </pre>
 <h1 id="references">References</h1>
 <p>The readable project website has more information: <a href=
 "http://readable.sourceforge.net">http://readable.sourceforge.net</a></p>
 <h1 id="acknowledgments">Acknowledgments</h1>
-<!-- Inappropriate, as Alan Manuel K. Gloria is now one of the
-authors.
-<p>I thank Alan Manuel Gloria for his helpful efforts in getting
-this available.</p>
--->
+<p>We that all the participants on the "readable-discuss" mailing list.</p>
+
+<h1 id="discussion">Discussion Items (to be removed from final SRFI)</h1>
+<p>
+<b>DISCUSSION ITEM:</b> Should the (enable-curly-infix) procedure
+be dropped, instead depending on a system either (1) building it in or
+(2) having a curly-foo command line capability?
+</p>
+
 <h1 id="copyright">Copyright</h1>
 <p>Copyright (C) 2012 David A. Wheeler and Alan Manuel K. Gloria.
 All Rights Reserved.</p>
 <p>Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
-files (the &ldquo;Software&rdquo;), to deal in the Software without
+files (the "Software"), to deal in the Software without
 restriction, including without limitation the rights to use, copy,
 modify, merge, publish, distribute, sublicense, and/or sell copies
 of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:</p>
 <p>The above copyright notice and this permission notice shall be
 included in all copies or substantial portions of the Software.</p>
-<p>THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY
 OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
 WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS

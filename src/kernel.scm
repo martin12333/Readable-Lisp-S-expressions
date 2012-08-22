@@ -942,7 +942,7 @@
       (symbol? (cadr lyst))  ; 2nd parameter must be a symbol.
       (even-and-op-prefix? (cadr lyst) (cdr lyst)))) ; true if rest is simple
 
-  ; Return alternating parameters in a lyst (1st, 3rd, 5th, etc.)
+  ; Return alternating parameters in a list (1st, 3rd, 5th, etc.)
   (define (alternating-parameters lyst)
     (if (or (null? lyst) (null? (cdr lyst)))
       lyst
