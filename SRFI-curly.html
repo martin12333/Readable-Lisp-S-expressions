@@ -80,16 +80,30 @@ precedence. However, Lisp systems often process other languages,
 freely mixing different languages, and thus the same symbol may
 have different meanings and precedence levels in different
 contexts. The symbol might not even be defined where it is being
-used. By avoiding precedence, a very simple yet useful infix system
+used, and allowing precedence definitions would create subtle errors
+if files are read in a different order.
+By avoiding precedence, a very simple yet useful infix system
 results. In practice, we&rsquo;ve found that simple infix is all
 that&rsquo;s needed most of the time. By intentionally <em>not</em>
-building in a precedence system, we make things amazingly simple -
+building a precedence system into the reader,
+we make things amazingly simple -
 we don&rsquo;t need to register procedures, decide their order, or
-anything like it. It obviously would be possible to extend this
+anything like it. It would be possible to extend this
 mechanism to provide a precedence system (e.g., if an expression is
 not simple, attempt to use various precedence rules), but such
-capabilities would be extensions not required by this SRFI (though
-some future SRFI might add it).</p>
+capabilities would be extensions not required by this SRFI.</p>
+<p>Instead, where precedence is desired, application and library writers
+can implement precedence by defining and controlling the scope of an
+&ldquo;nfx&rdquo; macro or procedure, or by later postprocessing
+of that symbol, instead of having it be built into the reader.
+Scheme macros are already quite powerful and capable
+of handling this; in these cases, {...} provides a more
+convenient notation. There are serious problems if users were
+expected to be able to hook in their own precedence system as part
+of the reader; there is no guarantee that their routine would be
+loaded before the reader, and it would be difficult to combine code
+written for different precedence systems. The curly-infix approach
+instead takes advantage of the existing Scheme scoping rules.</p>
 <p>Some past efforts tried to automatically detect infix operators,
 but this turns out to not work well. It&rsquo;s hard to express
 good rules for detecting infix operators, and the rules become too
@@ -123,20 +137,8 @@ f{- x} will map correctly to (f (- x)).</p>
 <p>At first I considered reporting an error if a simple infix
 expression isn&rsquo;t provided, but prepending &ldquo;nfx&rdquo;
 is much more flexible.</p>
-<p>Precedence is intentionally not included in curly-infix itself.
-Instead, where desired, application and library writers can
-implement precedence by defining and controlling the scope of an
-&ldquo;nfx&rdquo; macro or procedure that is <i>not</i> built into
-the reader. Scheme macros are already quite powerful, and capable
-of handling this; in these cases, {...} simply provides a more
-convenient notation. There are serious problems if users were
-expected to be able to hook in their own precedence system as part
-of the reader; there is no guarantee that their routine would be
-loaded before the reader, and it would be difficult to combine code
-written for different precedence systems. This approach instead
-takes advantage of the existing Scheme scoping rules.</p>
 <p>The &ldquo;transform-mixed-infix&rdquo; procedure is not
-intended for normal softwarew development use. Instead, it is
+intended for normal software development use. Instead, it is
 suggested so that a future SRFI author could more easily implement
 a fixed precedence system that is built into the reader. We think
 that precedence is overrated. However, if a future community
