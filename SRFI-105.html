@@ -357,8 +357,9 @@ is suggested to simplify implementation of plausible future
 SRFIs.</li>
 </ul>
 <p>If an implementation <i>foo</i> does not enable curly-infix by
-default, and it is possible to invoke it from a command line, it
-<i>must</i> provide an alternative command <i><tt>curly-foo</tt></i>
+default, and it is possible to invoke it from a command line via
+&ldquo;<tt>foo</tt>&rdquo;, it
+<i>must</i> provide an alternative command &ldquo;<tt>curly-foo</tt>&rdquo;
 (the command prefixed with &ldquo;<tt>curly-</tt>&rdquo;) that enables
 curly-infix by default.</p>
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
@@ -372,7 +373,7 @@ until its matching &ldquo;<tt>}</tt>&rdquo;, and then calls <tt>process-curly</t
 defined below. We recommend that implementations <em>always</em> do
 this, but an implementation must at least activate this behavior
 when <tt>(enable-curly-infix)</tt> is called and when
-<i><tt>curly-foo</tt></i> (for implementation foo) is invoked.</p>
+&ldquo;<tt>curly-foo</tt>&rdquo; (for implementation foo) is invoked.</p>
 <p>This reference implementation is SRFI type 2: &ldquo;A
 mostly-portable solution that uses some kind of hooks provided in
 some Scheme interpreter/compiler. In this case, a detailed
