@@ -747,45 +747,42 @@
       s))
 
   (define (process-sharp no-indent-read port)
-    ; We've read a # character.  Returns what it represents.
+    ; We've read a # character.  Returns a list of what it
+    ; represents; empty list means "comment".
     ; Note: Since we have to re-implement process-sharp anyway,
     ; the vector representation #(...) uses my-read-delimited-list, which in
     ; turn calls no-indent-read.
     ; TODO: Create a readtable for this case.
     (let ((c (my-peek-char port)))
       (cond
-        ((eof-object? c) c) ; If eof, return eof.
+        ((eof-object? c) (list c)) ; If eof, return eof.
         (#t
           ; Not EOF. Read in the next character, and start acting on it.
           (my-read-char port)
           (cond
-            ((char-ci=? c #\t)  #t)
-            ((char-ci=? c #\f)  #f)
+            ((char-ci=? c #\t)  '(#t))
+            ((char-ci=? c #\f)  '(#f))
             ((ismember? c '(#\i #\e #\b #\o #\d #\x
                             #\I #\E #\B #\O #\D #\X))
-              (read-number port (list #\# (char-downcase c))))
+              (list (read-number port (list #\# (char-downcase c)))))
             ((char=? c #\( )  ; Vector.
-              (list->vector (my-read-delimited-list no-indent-read #\) port)))
-            ((char=? c #\\) (process-char port))
+              (list (list->vector (my-read-delimited-list no-indent-read #\) port))))
+            ((char=? c #\\) (list (process-char port)))
             ; Handle #; (item comment).
             ((char=? c #\;)
               (no-indent-read port)  ; Read the datum to be consumed.
-              (no-indent-read port)) ; Return the next one.
+              '()) ; Return comment
             ; handle nested comments
             ((char=? c #\|)
               (nest-comment port)
-              (no-indent-read port)) ; Recurse.
+              '()) ; Return comment
             (#t
               (let ((rv (parse-hash no-indent-read c port)))
                 (cond
                   ((not rv)
                     (read-error "Invalid #-prefixed string"))
-                  ((null? rv) ; Comment, re-read.
-                    (no-indent-read port))
-                  ((pair? rv)
-                    (car rv))
                   (#t
-                    (read-error "****ERROR IN COMPATIBILITY LAYER parse-hash: must return #f '() or `(,obj)"))))))))))
+                    rv)))))))))
 
 
   ; detect #| or |#
@@ -856,7 +853,17 @@
                 (read-number port '()))
               ((char=? c #\#)
                 (my-read-char port)
-                (process-sharp no-indent-read port))
+                (let ((rv (process-sharp no-indent-read port)))
+                  ; process-sharp convention: null? means comment,
+                  ; pair? means object
+                  (cond
+                    ((null? rv)
+                      ; recurse
+                      (no-indent-read port))
+                    ((pair? rv)
+                      (car rv))
+                    (#t ; convention violated
+                      (read-error "readable/kernel: ***ERROR IN COMPATIBILITY LAYER parse-hash must return #f '() or `(,a)")))))
               ((char=? c #\.) (process-period port))
               ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
                 (my-read-char port)
@@ -1098,38 +1105,17 @@
   (define comment-tag (cons 'comment-tag! '())) ; all cons cells are unique
 
   (define (process-sharp-comment-tag no-indent-read port)
-    ; We've read a # character.  Returns what it represents.
-    ; Unlike process-sharp, this one may return a comment-tag to represent
-    ; a comment like #|...|# and #;datum.
-    (let ((c (my-peek-char port)))
+    ; this changes the convention of process-sharp
+    ; to be either the object itself, or a special
+    ; object called the comment-tag
+    (let ((rv (process-sharp no-indent-read port)))
       (cond
-        ((eof-object? c) c) ; If eof, return eof.
+        ((null? rv)
+          comment-tag)
+        ((pair? rv)
+          (neoteric-process-tail port (car rv)))
         (#t
-          ; Not EOF. Read in the next character, and start acting on it.
-          (cond
-            ; Handle #; (item comment).  This only works at the item-level:
-            ; it can only remove c-expressions or n-expressions, not whole
-            ; t-expressions!
-            ((char=? c #\;)
-              (my-read-char port)
-              (no-indent-read port)
-              comment-tag)
-            ; handle nested comments
-            ((char=? c #\|)
-              (my-read-char port)
-              (nest-comment port)
-              comment-tag)
-            (#t
-              (let ((rv (parse-hash no-indent-read c port)))
-                (cond
-                  ((null? rv) ; Comment, re-read.
-                    comment-tag)
-                  ((pair? rv)
-                    (car rv))
-                  (#t
-                    ; Use process-tail, so constructs like #f() work.
-                    (neoteric-process-tail port
-                      (process-sharp no-indent-read port)))))))))))
+          (read-error "the impossible happened: process-sharp returned incorrect value")))))
 
   ; Call neoteric-read, but handle # specially, so that #|...|# at the
   ; top level will return comment-tag instead.
