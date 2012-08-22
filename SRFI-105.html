@@ -78,6 +78,16 @@ There is no complex precedence system, all other Scheme
 capabilities (including macros and quasiquoting) work unchanged,
 and Scheme remains general and homoiconic. Curly-infix expressions
 are just a convenient reader abbreviation for infix notation.</p>
+<p>At its simplest, this SRFI provides
+the &ldquo;simple&rdquo; curly-infix list that accepts ordinary
+lists, merely written in a different order.
+The &ldquo;simple&rdquo; curly-infix list maps
+<tt>{operand-1 operator operand-2 operator operand-3 operator ...}</tt> is
+<tt>(operator operand-1 operand-2 operand-3 ...)</tt> so that more than
+two operands are handled cleanly,
+e.g., <tt>{a + b + c}</tt> maps to <tt>(+ a b c)</tt>.</p>
+
+<h2 id="rationale_whychangethereader">Why Change the Reader?</h2>
 <p>Many previous systems have implemented &ldquo;infix&rdquo;
 systems as a named macro or procedure (e.g., <tt>INFIX</tt>). This looks
 ugly, and it does the wrong thing - the resulting list always has
@@ -89,6 +99,8 @@ quoting, quasiquoting, and so on. This proposal avoids these
 problems. For example, in curly-infix,
 <tt>&apos;{a + b}</tt> maps cleanly to <tt>&apos;(+ a b)</tt>,
 which works as expected with all macros.</p>
+
+<h2 id="rationale_whyisntprecedencepartofthissrfi">Why Isn&apos;t Precedence Part of This SRFI?</h2>
 <p>Many past &ldquo;infix&rdquo; systems for Lisp build in
 precedence. However, Lisp systems often process other languages,
 freely mixing different languages, and thus the same symbol may
@@ -118,6 +130,12 @@ of the reader; there is no guarantee that their routine would be
 loaded before the reader, and it would be difficult to combine code
 written for different precedence systems. The curly-infix approach
 instead takes advantage of the existing Scheme scoping rules.</p>
+<p>At first I (David A. Wheeler) considered reporting an error
+if a simple infix
+expression isn&rsquo;t provided, but prepending &ldquo;<tt>nfx</tt>&rdquo;
+is much more flexible.</p>
+
+<h2 id="rationale_whynotautodetectinfix">Why Not Autodetect Infix?</h2>
 <p>Some past efforts tried to automatically detect infix operators,
 but this turns out to not work well. It&apos;s hard to express
 good rules for detecting infix operators, and the rules become too
@@ -133,11 +151,8 @@ infix with any symbol, whenever you want... and where it&rsquo;s
 not convenient, you don&rsquo;t need to use it. It is also very
 backwards-compatible: Normal lists work normally, and if you want
 infix, use <tt>{</tt>...<tt>}</tt>.</p>
-<p>The &ldquo;simple&rdquo; curly-infix list accepts ordinary
-lists, merely written in a different order. Its mapping is
-<tt>(even-parameter odd-parameters ...)</tt> so that more than
-two operands are handled cleanly,
-e.g., <tt>{a + b + c}</tt> maps to <tt>(+ a b c)</tt>.</p>
+
+<h2 id="rationale_whyallthosespecialcases">Why All Those Special Cases?</h2>
 <p>The empty curly-infix list
 <tt>{}</tt> maps to <tt>()</tt>,
 as it <i>is</i> an
@@ -158,9 +173,8 @@ The &ldquo;unary-operation&rdquo; curly-infix list
 so that <tt>{- x}</tt> maps to <tt>(- x)</tt>,
 the likely interpretation, and also so that the neoteric-expression
 <tt>f{- x}</tt> will map correctly to <tt>(f (- x))</tt>.</p>
-<p>At first I considered reporting an error if a simple infix
-expression isn&rsquo;t provided, but prepending &ldquo;<tt>nfx</tt>&rdquo;
-is much more flexible.</p>
+
+<h2 id="rationale_whatistransformmixedinfixgoodfor">What is <tt>transform-mixed-infix</tt> Good For?</h2>
 <p>The &ldquo;<tt>transform-mixed-infix</tt>&rdquo; procedure is not
 intended for normal softwarew development use. Instead, it is
 suggested so that a future SRFI author could more easily implement
@@ -171,6 +185,8 @@ decides it wants precedence built into the reader,
 only defined to help simplify implementing a plausible future SRFI;
 it is not required or expected in normal use. Application software
 developers should avoid redefining <tt>transform-mixed-infix</tt>.</p>
+
+<h2 id="rationale_whyareinfixoperatorssurroundedbyspaces">Why Are Infix Operators Surrounded by Spaces?</h2>
 <p>Curly-infix requires that infix operators be delimited (e.g., by
 spaces). This is consistent with Lisp history; operators are always
 delimited in traditional s-expressions (typically by left
@@ -184,6 +200,9 @@ no burden. In short, it is difficult to allow infix operators
 without delimiters, and the visual results are the same as many
 real-world uses in other languages, so the result appears quite
 customary to typical software developers.</p>
+<!-- Shouldn't this part above be in Specifications?-->
+
+<h2 id="rationale_whyshouldcurlyinfixalwaysbeenabled">Why Should Curly-Infix Always Be Enabled?</h2>
 <p>If a reader implements this SRFI, we would like it to
 <em>always</em> be enabled. However, we provide a conventional name
 for an implementation to turn it on, and a
@@ -216,10 +235,12 @@ the symbol &ldquo;<tt>or</tt>&rdquo;,
 or a
 punctuation-only symbol. However, it would probably be wise to wait
 until many implementations can handle c-expressions.</p>
+
+<h2 id="rationale_whatabouttheracketinfixconvention">What About the Racket &ldquo;Infix Convention&rdquo;?</h2>
 <p><a href=
 "http://docs.racket-lang.org/guide/Pairs__Lists__and_Racket_Syntax.html">
 Racket allows a notation called the &ldquo;infix convention&rdquo;
-with the form &ldquo;<tt>(a . <i>operation</i> . b)</tt>&rdquo;</a>. An
+with the form &ldquo;<tt>(a . operation . b)</tt>&rdquo;</a>. An
 advantage of this alternative is that it does not use the braces,
 so it might be easier to implement in Schemes which already define
 <tt>{</tt>...<tt>}</tt> in a local extension. However, the Racket &ldquo;infix
@@ -277,6 +298,8 @@ Note that the existence of the Racket &ldquo;infix
 convention&rdquo; is additional evidence of the <i>need</i> for a
 standard infix convention; many have separately created mechanisms
 to try to provide infix support.</p>
+
+<h2 id="rationale_otherdetails">Other Details</h2>
 <p>Curly-infix is designed so that it can work on other Lisps as
 well. We even have a working implementation in Common Lisp.</p>
 <p>Curly-infix is an unusually simple mechanism, but like much of
