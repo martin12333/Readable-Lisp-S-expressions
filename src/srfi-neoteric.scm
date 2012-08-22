@@ -2,7 +2,7 @@
 ; intended for a SRFI submission.
 
 ; -----------------------------------------------------------------------------
-; Key functions to implement neoteric-expresions
+; Key procedures to implement neoteric-expresions
 ; -----------------------------------------------------------------------------
 
   ; Read the "inside" of a list until its matching stop-char, returning list.
@@ -89,12 +89,12 @@
 
 
 ; Here is a demo, suitable so you can try it out in
-; standard Scheme.  The following provide the functions for supporting
+; standard Scheme.  The following provide the procedures for supporting
 ; curly infix, support for a reader, a reader, and a demo.
 
 
 ; -----------------------------------------------------------------------------
-; Curly Infix support functions
+; Curly Infix support procedures
 ; -----------------------------------------------------------------------------
 
   ; Return true if lyst has an even # of parameters, and the (alternating)
@@ -134,7 +134,7 @@
   (define (transform-simple-infix lyst)
      (cons (cadr lyst) (alternating-parameters lyst)))
 
-  ; Not a simple infix list - transform it.  Written as separate function
+  ; Not a simple infix list - transform it.  Written as a separate procedure
   ; so that future experiments or SRFIs can easily replace just this piece.
   (define (transform-mixed-infix lyst)
      (cons 'nfx lyst))

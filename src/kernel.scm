@@ -42,12 +42,12 @@
 ;       readable-kernel
 ;       sweetimpl
 ;   - The first element after the module-contents name is a list of exported
-;     functions.  This module shall never export a macro or syntax, not even
+;     procedures.  This module shall never export a macro or syntax, not even
 ;     in the future.
 ;   - If your Scheme requires module contents to be defined inside a top-level
 ;     module declaration (unlike Guile where module contents are declared as
 ;     top-level entities after the module declaration) then the other
-;     functions below should be defined inside the module context in order
+;     procedures below should be defined inside the module context in order
 ;     to reduce user namespace pollution.
 ;
 ;   (my-peek-char port)
@@ -60,14 +60,14 @@
 ;       fallback you can just ignore source location, which
 ;       will make debugging using sweet-expressions more
 ;       difficult.
-;   - "port" or fake port objects are created by the make-read function
+;   - "port" or fake port objects are created by the make-read procedure
 ;     below.
 ;   
-;   (make-read function)
-;   - The given function accepts exactly 1 argument, a "fake port" that can
+;   (make-read procedure)
+;   - The given procedure accepts exactly 1 argument, a "fake port" that can
 ;     be passed to my-peek-char et al.
-;   - make-read creates a new function that supports your Scheme's reader
-;     interface.  Usually, this means making a new function that accepts
+;   - make-read creates a new procedure that supports your Scheme's reader
+;     interface.  Usually, this means making a new procedure that accepts
 ;     either 0 or 1 parameters, defaulting to (current-input-port).
 ;   - If your Scheme doesn't support unlimited lookahead, you should make
 ;     the fake port that supports 2-char lookahead at this point.
@@ -75,14 +75,14 @@
 ;     automatically with the ports, you may again need to wrap it here.
 ;   - If your Scheme needs a particularly magical incantation to attach
 ;     source information to objects, then you might need to use a weak-key
-;     table in the attach-sourceinfo function below and then use that
+;     table in the attach-sourceinfo procedure below and then use that
 ;     weak-key table to perform the magical incantation.
 ;
 ;   (invoke-read read port)
-;   - Accepts a read function, which is a (most likely built-in) function
+;   - Accepts a read procedure, which is a (most likely built-in) procedure
 ;     that requires a *real* port, not a fake one.
 ;   - Should unwrap the fake port to a real port, then invoke the given
-;     read function on the actual real port.
+;     read procedure on the actual real port.
 ;
 ;   (get-sourceinfo port)
 ;   - Given a fake port, constructs some object (which the algorithm treats
@@ -93,7 +93,7 @@
 ;   - Attaches the source information pos, as constructed by get-sourceinfo,
 ;     to the given obj.
 ;   - obj can be any valid Scheme object.  If your Scheme can only track
-;     source location for a subset of Scheme object types, then this function
+;     source location for a subset of Scheme object types, then this procedure
 ;     should handle it gracefully.
 ;   - Returns an object with the source information attached - this can be
 ;     the same object, or a different object that should look-and-feel the
@@ -120,29 +120,29 @@
 ;       (define paragraph-separator (integer->char #x2029))
 ;
 ;   (parse-hash no-indent-read char fake-port)
-;   - a function that is invoked when an unrecognized, non-R5RS hash
+;   - a procedure that is invoked when an unrecognized, non-R5RS hash
 ;     character combination is encountered in the input port.
-;   - this function is passed a "fake port", as wrapped by the
-;     make-read function above.  You should probably use my-read-char
+;   - this procedure is passed a "fake port", as wrapped by the
+;     make-read procedure above.  You should probably use my-read-char
 ;     and my-peek-char in it, or at least unwrap the port (since
 ;     make-read does the wrapping, and you wrote make-read, we assume
 ;     you know how to unwrap the port).
-;   - if your function needs to parse a datum, invoke
-;     (no-indent-read fake-port).  Do NOT use any other read function.  The
-;     no-indent-read function accepts exactly one parameter - the fake port
-;     this function was passed in.
+;   - if your procedure needs to parse a datum, invoke
+;     (no-indent-read fake-port).  Do NOT use any other read procedure.  The
+;     no-indent-read procedure accepts exactly one parameter - the fake port
+;     this procedure was passed in.
 ;     - no-indent-read is either a version of curly-infix-read, or a version
 ;       of neoteric-read; this specal version accepts only a fake port.
 ;       It is never a version of sweet-read.  You don't normally want to
 ;       call sweet-read, because sweet-read presumes that it's starting
 ;       at the beginning of the line, with indentation processing still
 ;       active.  There's no reason either must be true when processing "#".
-;   - At the start of this function, both the # and the character
+;   - At the start of this procedure, both the # and the character
 ;     after it have been read in.
-;   - The function returns one of the following:
+;   - The procedure returns one of the following:
 ;       #f  - the hash-character combination is invalid/not supported.
 ;       ()  - the hash-character combination introduced a comment;
-;             at the return of this function with this value, the
+;             at the return of this procedure with this value, the
 ;             comment has been removed from the input port.
 ;       (a) - the datum read in is the value a
 ;
@@ -151,7 +151,7 @@
 ;     should nest.
 ;
 ;   my-string-foldcase
-;   - a function to perform case-folding to lowercase, as mandated
+;   - a procedure to perform case-folding to lowercase, as mandated
 ;     by Unicode.  If your implementation doesn't have Unicode, define
 ;     this to be string-downcase.  Some implementations may also
 ;     interpret "string-downcase" as foldcase anyway.
@@ -163,7 +163,7 @@
   (guile
     ; define the module
     ; this ensures that the user's module does not get contaminated with
-    ; our compatibility functions/macros
+    ; our compatibility procedures/macros
     (define-module (readable kernel))))
 (cond-expand
 ; -----------------------------------------------------------------------------
@@ -403,25 +403,25 @@
         ((readable-kernel-module-contents exports body ...)
           (begin body ...))))
 
-    ; We use my-* functions so that the
+    ; We use my-* procedures so that the
     ; "port" automatically keeps track of source position.
     ; On Schemes where that is not true (e.g. Racket, where
     ; source information is passed into a reader and the
     ; reader is supposed to update it by itself) we can wrap
     ; the port with the source information, and update that
-    ; source information in the my-* functions.
+    ; source information in the my-* procedures.
 
     (define (my-peek-char port) (peek-char port))
     (define (my-read-char port) (read-char port))
 
-    ; this wrapper function wraps a reader function
+    ; this wrapper procedure wraps a reader procedure
     ; that accepts a "fake" port above, and converts
-    ; it to an R5RS-compatible function.  On Schemes
+    ; it to an R5RS-compatible procedure.  On Schemes
     ; which support source-information annotation,
     ; but use a different way of annotating
-    ; source-information from Guile, this function
+    ; source-information from Guile, this procedure
     ; should also probably perform that attachment
-    ; on exit from the given inner function.
+    ; on exit from the given inner procedure.
     (define (make-read f)
       (lambda args
         (let ((real-port (if (null? args) (current-input-port) (car args))))
@@ -467,10 +467,10 @@
 ; Module declaration and useful utilities
 ; -----------------------------------------------------------------------------
 (readable-kernel-module-contents
-  ; exported functions
-  (; tier read functions
+  ; exported procedures
+  (; tier read procedures
    curly-infix-read neoteric-read sweet-read
-   ; comparison functions
+   ; comparison procedures
    compare-read-file ; compare-read-string
    ; replacing the reader
    replace-read restore-traditional-read
@@ -834,8 +834,8 @@
   ; but if it must recurse to read, it will invoke "no-indent-read"
   ; (a reader that is NOT indentation-sensitive).
   ; This additional parameter lets us easily implement additional semantics,
-  ; and then call down to this underlying-read function when basic reader
-  ; functionality (implemented here) is needed.
+  ; and then call down to this underlying-read procedure when basic reader
+  ; procedureality (implemented here) is needed.
   ; This lets us implement both a curly-infix-ONLY-read
   ; as well as a neoteric-read, without duplicating code.
   (define (underlying-read no-indent-read port)
@@ -953,7 +953,7 @@
   (define (transform-simple-infix lyst)
      (cons (cadr lyst) (alternating-parameters lyst)))
 
-  ; Not a simple infix list - transform it.  Written as separate function
+  ; Not a simple infix list - transform it.  Written as separate procedure
   ; so that future experiments or SRFIs can easily replace just this piece.
   (define (transform-mixed-infix lyst)
      (cons 'nfx lyst))
@@ -1153,7 +1153,7 @@
           (list qt)
           (list qt (neoteric-read-nocomment port)))))
 
-  ; NOTE: this function can return comment-tag.  Program defensively
+  ; NOTE: this procedure can return comment-tag.  Program defensively
   ; against this when calling it.
   (define (readitem level port)
     (let ((pos  (get-sourceinfo port))
@@ -1464,7 +1464,7 @@
                     (attach-sourceinfo pos block))))))))))
 
 ; -----------------------------------------------------------------------------
-; Comparison Functions
+; Comparison procedures
 ; -----------------------------------------------------------------------------
 
   (define compare-read-file '()) ; TODO
