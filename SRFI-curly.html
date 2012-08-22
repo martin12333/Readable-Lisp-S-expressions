@@ -77,8 +77,8 @@ approach can interfere with quoting, macros, and other
 capabilities. Many of these past systems also created a whole new
 notation which simultaneously lost Lisp&rsquo;s abilities for
 quoting, quasiquoting, and so on. This proposal avoids these
-problems. For example, in curly-infix, '{a + b} maps cleanly to '(+
-a b), which works as expected with all macros.</p>
+problems. For example, in curly-infix, &apos;{a + b} maps cleanly to
+&apos;(+ a b), which works as expected with all macros.</p>
 <p>Many past &ldquo;infix&rdquo; systems for Lisp build in
 precedence. However, Lisp systems often process other languages,
 freely mixing different languages, and thus the same symbol may
@@ -293,7 +293,7 @@ that can correctly read and map curly-infix-expressions.</p>
 <li>{x eqv? &lsquo;a} maps to (eqv? x &lsquo;a)</li>
 <li>{(- a) / b} maps to (/ (- a) b)</li>
 <li>{(f a b) + (g h)} maps to (+ (f a b) (g h))</li>
-<li>'{a + (f b) + x} maps to '(+ a (f b) x)</li>
+<li>&apos;{a + (f b) + x} maps to &apos;(+ a (f b) x)</li>
 <li>{{a &gt; 0} and {b &gt;= 1}} maps to (and (&gt; a 0) (&gt;= b
 1))</li>
 </ul>
