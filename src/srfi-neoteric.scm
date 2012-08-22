@@ -103,10 +103,10 @@
   (define (even-and-op-prefix? op lyst)
     (cond
       ((null? lyst) #t)
-      ((not (pair? lyst)) #f) ; Not a list.
+      ((not (pair? lyst)) #f)
       ((not (eq? op (car lyst))) #f) ; fail - operators not the same
-      ((null? (cdr lyst)) #f) ; fail - wrong # of parameters in lyst.
-      (#t (even-and-op-prefix? op (cddr lyst))))) ; recurse.
+      ((not (pair? (cdr lyst)))  #f) ; Wrong # of parameters or improper
+      (#t   (even-and-op-prefix? op (cddr lyst))))) ; recurse.
 
   ; Return true if the lyst is in simple infix format
   ; (and thus should be reordered at read time).
@@ -125,11 +125,6 @@
       lyst
       (cons (car lyst) (alternating-parameters (cddr lyst)))))
 
-  ; Transform a simple infix list - move 2nd parameter into first position,
-  ; followed by all the odd parameters.  Thus (3 + 4 + 5) => (+ 3 4 5).
-  (define (transform-simple-infix lyst)
-     (cons (cadr lyst) (alternating-parameters lyst)))
-
   ; Not a simple infix list - transform it.  Written as a separate procedure
   ; so that future experiments or SRFIs can easily replace just this piece.
   (define (transform-mixed-infix lyst)
@@ -138,14 +133,13 @@
   ; Given curly-infix lyst, map it to its final internal format.
   (define (process-curly lyst)
     (cond
-     ((eqv? lyst '())  ; Map empty curly-infix list {} to ().
-       '())
+     ((not (pair? lyst)) lyst) ; E.G., map {} to ().
      ((null? (cdr lyst)) ; Map {a} to a.
        (car lyst))
-     ((null? (cddr lyst)) ; Map {a b} to (a b).
+     ((and (pair? (cdr lyst)) (null? (cddr lyst))) ; Map {a b} to (a b).
        lyst)
-     ((simple-infix-list? lyst) ; Handle simple infix expression.
-       (transform-simple-infix lyst))
+     ((simple-infix-list? lyst) ; Map {a OP b [OP c...]} to (OP a b [c...])
+       (cons (cadr lyst) (alternating-parameters lyst)))
      (#t  (transform-mixed-infix lyst))))
 
 

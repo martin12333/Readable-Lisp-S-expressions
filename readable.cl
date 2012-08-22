@@ -125,11 +125,6 @@
     lyst
     (cons (car lyst) (alternating-parameters (cddr lyst)))))
 
-; Transform a simple infix list - move the 2nd parameter into first position,
-; followed by all the odd parameters.  Thus (3 + 4 + 5) => (+ 3 4 5).
-(defun transform-simple-infix (lyst)
-   (cons (cadr lyst) (alternating-parameters lyst)))
-
 ; Transform not-simple infix list.  Written as a separate function so that
 ; future versions/specifications can easily replace just this pieces.
 (defun transform-mixed-infix (lyst)
@@ -141,18 +136,18 @@
 
 
 ; Take list that was in {...}, convert to final form.
-(defun process-curly (result)
+(defun process-curly (lyst)
   (cond
-    ((null result)
-      '())
-    ((null (cdr result)) ; Map {a} to a.
-      (car result))
-    ((null (cddr result)) ; Map {a b} to (a b).
-      result)
-    ((simple-infix-listp result) ; Map {a op b} to (op a b).
-      (transform-simple-infix result))
+    ((not (consp lyst)) ; E.G., map {} to ().
+      lyst)
+    ((null (cdr lyst)) ; Map {a} to a.
+      (car lyst))
+    ((and (consp (cdr lyst)) (null (cddr lyst))) ; Map {a b} to (a b).
+      lyst)
+    ((simple-infix-listp lyst) ; Map {a op b} to (op a b).
+      (cons (cadr lyst) (alternating-parameters lyst)))
     (t
-      (transform-mixed-infix result))))
+      (transform-mixed-infix lyst))))
 
 ; Read until }, then process list as infix list.
 ; This shouldn't be invoked once we use neoteric-read; it takes precedence.
@@ -181,6 +176,7 @@
 
 
 (defun my-read-delimited-list (stop-char input-stream)
+ (handler-case
   (let*
     ((c (peek-char t input-stream)))
     (cond
@@ -210,7 +206,7 @@
                      datum2))))
              (t
                  (cons datum
-                   (my-read-delimited-list stop-char input-stream)))))))))
+                   (my-read-delimited-list stop-char input-stream))))))))))
 
 
 ; Implement neoteric-expression's prefixed (), [], and {}.
@@ -356,12 +352,19 @@
       (eval result)))
   (end-of-file () )))
 
-; TODO: Handle #|...|# comments inside neoteric-read.  This can be done by
-;       setting the #| handler on entry to neoteric-read (if not already
-;       set), and then restoring it if had been set earlier.
+; TODO: Handle improper lists, e.g., {a + b . c} should insert nfx, and
+; port(a . b) should generate (port a . b).
+
+; TODO: Handle #|...|# comments inside neoteric-read.
 
 
 ; Likely things to do from here:
 
 ; (enable-neoteric)
 ; (write (neoteric-read))
+
+; (do ((result (read) (read)))
+;   (nil nil)
+;   (write result)
+;   (terpri))
+
