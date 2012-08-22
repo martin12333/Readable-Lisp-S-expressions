@@ -859,7 +859,7 @@
                   (cond
                     ((null? rv)
                       ; recurse
-                      (underlying-read no-indent-read port))
+                      (no-indent-read port))
                     ((pair? rv)
                       (car rv))
                     (#t ; convention violated
