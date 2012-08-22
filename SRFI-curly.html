@@ -54,18 +54,18 @@ For example, {n > 2} maps to (&gt; n 2); {a + b + c} maps to (+ a b c), and {- x
 <p>Note that this is the first of three tiers developed by the "readable" project.  We intend to later submit two more SRFIs, for defining the other two tiers that build on top of curly-infix-expressions.</p>
 
 <h1 id="specification">Specification</h1>
-<p>"Curly-infix-expressions" (c-expressions) are s-expressions with an additional notation: The curly-infix list.  A curly-infix list is syntactically identical to a normal list, except it is surrounded by curly braces instead of by parentheses.  Once a curly-infix list is read, it is mapped differently than a regular list:
+<p>"Curly-infix-expressions" (c-expressions) are s-expressions with an additional notation: The curly-infix list.  A curly-infix list is syntactically identical to a normal list, except it is surrounded by curly braces instead of by parentheses.  Once a curly-infix list is read, it is mapped differently than a regular list by the reader:
 </p>
 <ol>
-<li>A simple curly-infix has an odd number of parameters, at least three parameters, and all even parameters are "eq?" symbols. A simple curly-infix list is mapped by the reader into a list with the even parameter followed by the odd parameters. 
+<li>A <i>simple</i> curly-infix list has an odd number of parameters, at least three parameters, and all even parameters are "eq?" symbols. A simple curly-infix list is mapped by the reader into a list with the even parameter followed by the odd parameters. 
 E.g., {n &lt;= 2} maps to (&lt;= n 2), and {2 * 3 * 4} maps to (* 2 3 4).</li>
-<li>The empty curly-infix list {} is mapped to the empty list ().</li>
-<li>The escaping curly-infix list {e} is mapped to e.</li>
-<li>The unary-operation curly-infix list {e1 e2} is mapped to (e1 e2). E.g., {- x} maps to (- x).</li>
-<li>Any other curly-infix list (including all improper lists) is mixed; it is mapped to the list with the symbol "nfx" added to its front. E.g., {q + r * s} maps to (nfx q + r * s).</li>
+<li>The <i>empty</i> curly-infix list {} is mapped to the empty list ().</li>
+<li>An <i>escaping</i> curly-infix list {e} is mapped to e.</li>
+<li>A <i>unary-operation</i> curly-infix list {e1 e2} is mapped to (e1 e2). E.g., {- x} maps to (- x).</li>
+<li>Any other curly-infix list (including all improper lists) is <i>mixed</i>; it is mapped to the list with the symbol "nfx" added to its front. E.g., {q + r * s} is mapped to (nfx q + r * s).</li>
 </ol>
 
-<p>A "curly-infix-expression" datum reader is a reader that can correctly read curly-infix-expressions.</p>
+<p>A "curly-infix-expression" datum reader is a reader that can correctly read and map curly-infix-expressions.</p>
 <p>Here are some examples of c-expressions:</p>
 <ul>
 <li>{a * {b + c}} maps to (* a (+ b c))</li>
@@ -76,7 +76,7 @@ E.g., {n &lt;= 2} maps to (&lt;= n 2), and {2 * 3 * 4} maps to (* 2 3 4).</li>
 <li>{{a &gt; 0} and {b &gt;= 1}} maps to (and (&gt; a 0) (&gt;= b 1))</li>
 </ul>
 
-<p>This implies that the braces { and } must be delimiters.</p>
+<p>This specification implies that the braces "{" and "}" must be delimiters.</p>
 
 <p>Procedures:</p>
 <ul>
