@@ -155,7 +155,7 @@ infix, use <tt>{</tt>...<tt>}</tt>.</p>
 <h2 id="rationale_whyallthosespecialcases">Why All Those Special Cases?</h2>
 <p>The empty curly-infix list
 <tt>{}</tt> maps to <tt>()</tt>,
-as it <i>is</i> an
+as it <em>is</em> an
 empty list, and this is the likely user meaning (reducing
 unnecessary errors).</p>
 <!-- Should we mention n-expr and t-expr at this stage? - AmkG -->
@@ -284,7 +284,7 @@ reason.</li>
 <p>In short, infix is extremely common, so its notation should be
 convenient. The Racket &ldquo;infix convention&rdquo; may be the
 next-best notation for infix notation after curly-infix, but
-it&apos;s next-best, and we should strive for the <i>best</i>
+it&apos;s next-best, and we should strive for the <em>best</em>
 available notation for such a common need. Curly-infix does not
 <em>conflict</em> with the Racket infix convention; implementations
 could implement both. We recommend that an implementation that
@@ -295,7 +295,7 @@ In that case,
 <tt>(a . + . b . + . c)</tt> would map to <tt>(+ a b c)</tt>,
 and <tt>(a . + . b . * . c)</tt> would map to <tt>(nfx a + b * c)</tt>.
 Note that the existence of the Racket &ldquo;infix
-convention&rdquo; is additional evidence of the <i>need</i> for a
+convention&rdquo; is additional evidence of the <em>need</em> for a
 standard infix convention; many have separately created mechanisms
 to try to provide infix support.</p>
 
@@ -321,22 +321,22 @@ except it is surrounded by curly braces instead of by parentheses.
 Once a curly-infix list is read, it is mapped differently than a
 regular list by the reader:</p>
 <ol>
-<li>A <i>simple</i> curly-infix list has an odd number of
+<li>A <dfn>simple</dfn> curly-infix list has an odd number of
 parameters, at least three parameters, and all even parameters are
 &ldquo;<tt>eq?</tt>&rdquo; symbols. A simple curly-infix list is mapped by
 the reader into a list with the even parameter followed by the odd
 parameters.
 E.g., <tt>{n &lt;= 2}</tt> maps to <tt>(&lt;= n 2)</tt>,
 and <tt>{2 * 3 * 4}</tt> maps to <tt>(* 2 3 4)</tt>.</li>
-<li>The <i>empty</i> curly-infix list
+<li>The <dfn>empty</dfn> curly-infix list
 <tt>{}</tt> is mapped to the empty list <tt>()</tt>.</li>
-<li>An <i>escaping</i> curly-infix list
+<li>An <dfn>escaping</dfn> curly-infix list
 <tt>{e}</tt> is mapped to <tt>e</tt>.</li>
-<li>A <i>unary-operation</i> curly-infix list
+<li>A <dfn>unary-operation</dfn> curly-infix list
 <tt>{e1 e2}</tt> is mapped to <tt>(e1 e2)</tt>.
 E.g., <tt>{- x}</tt> maps to <tt>(- x)</tt>.</li>
 <li>Any other curly-infix list (including all improper lists) is
-<i>mixed</i>; it is mapped to the list with the symbol
+<dfn>mixed</dfn>; it is mapped to the list with the symbol
 &ldquo;<tt>nfx</tt>&rdquo; added to its front.
 E.g., <tt>{q + r * s}</tt> is mapped
 to <tt>(nfx q + r * s)</tt>.</li>
@@ -379,10 +379,10 @@ original list but with &ldquo;<tt>nfx</tt>&rdquo; in front; this procedure
 is suggested to simplify implementation of plausible future
 SRFIs.</li>
 </ul>
-<p>If an implementation <i>foo</i> does not enable curly-infix by
+<p>If an implementation <em>foo</em> does not enable curly-infix by
 default, and it is possible to invoke it from a command line via
 &ldquo;<tt>foo</tt>&rdquo;, it
-<i>must</i> provide an alternative command &ldquo;<tt>curly-foo</tt>&rdquo;
+<em>must</em> provide an alternative command &ldquo;<tt>curly-foo</tt>&rdquo;
 (the command prefixed with &ldquo;<tt>curly-</tt>&rdquo;) that enables
 curly-infix by default.</p>
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
