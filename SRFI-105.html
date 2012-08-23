@@ -499,6 +499,12 @@ is mapped to
 <samp>(and (&gt; a 0) (&gt;= b 1))</samp></li>
 </ul>
 
+<p>
+The mapping of <samp>{&nbsp;.&nbsp;e}</spec> is unspecified
+(the reference implementation maps this to <samp>e</samp> case if
+<samp>(&nbsp;.&nbsp;e)</spec> returns <samp>e</samp>).
+</p>
+
 <p>A curly-infix reader is a datum reader
 that can correctly read and map curly-infix-expressions.
 A curly-infix reader <em>must</em>
