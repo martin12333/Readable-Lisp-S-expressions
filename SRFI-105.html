@@ -128,9 +128,9 @@ notation which simultaneously lost Lisp&#8217;s abilities for
 quoting, quasiquoting, and so on.
 This proposal avoids these problems.
 For example, in curly-infix,
-<samp>&apos;{a&nbsp;+&nbsp;b}</samp>
+<samp>`{,a&nbsp;+&nbsp;,b}</samp>
 maps cleanly to
-<samp>&apos;(+&nbsp;a&nbsp;b)</samp>,
+<samp>(+&nbsp;,a&nbsp;,b)</samp>,
 which works as expected with all macros.</p>
 
 <h2 id="rationale_noprecedence">Why isn&#8217;t precedence part of this SRFI?</h2>
