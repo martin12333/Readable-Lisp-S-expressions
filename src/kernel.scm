@@ -747,7 +747,7 @@
       s))
 
   (define (process-sharp no-indent-read port)
-    ; We've read a # character.  Returns a list of what it
+    ; We've read a # character.  Returns a list whose car is what it
     ; represents; empty list means "comment".
     ; Note: Since we have to re-implement process-sharp anyway,
     ; the vector representation #(...) uses my-read-delimited-list, which in
@@ -855,7 +855,7 @@
                 (my-read-char port)
                 (let ((rv (process-sharp no-indent-read port)))
                   ; process-sharp convention: null? means comment,
-                  ; pair? means object
+                  ; pair? means object (the object is in its car)
                   (cond
                     ((null? rv)
                       ; recurse
