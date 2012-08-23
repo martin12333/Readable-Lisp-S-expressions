@@ -461,7 +461,7 @@ well. We even have a working implementation in Common Lisp.</p>
 any Lisp-based language, its power comes from its simplicity.</p>
 
 <h1 id="specification">Specification</h1>
-<p>&ldquo;Curly-infix-expressions&rdquo; (c-expressions) are
+<p>&ldquo;<dfn>Curly-infix-expressions</dfn>&rdquo; (c-expressions) are
 s-expressions with an additional notation: The curly-infix list.
 A curly-infix list is syntactically identical to a normal list,
 except it is surrounded by curly braces instead of by parentheses.
@@ -520,13 +520,13 @@ is mapped to
 <samp>(and (&gt; a 0) (&gt;= b 1))</samp></li>
 </ul>
 
-<p>A curly-infix reader is a datum reader
+<p>A <dfn>curly-infix reader</dfn> is a datum reader
 that can correctly read and map curly-infix-expressions.
 A curly-infix reader <em>must</em>
 include the braces &ldquo;<code>{</code>&rdquo; and
 &ldquo;<code>}</code>&rdquo; as delimiters.</p>
 
-<p>The &ldquo;standard readers&rdquo;
+<p>The &ldquo;<dfn>standard readers</dfn>&rdquo;
 are the datum readers used in the REPL,
 the datum readers defined by the relevant Scheme standards
 (such as &ldquo;<var>read</var>&rdquo; and
@@ -535,7 +535,7 @@ and the readers used to load user-supplied code
 (e.g., the reader used by &ldquo;<var>load</var>&rdquo;,
 and module-loading mechanisms for user code).</p>
 
-<p>The standard readers are <i>curly-infix enabled</i> if the standard
+<p>The standard readers are <dfn>curly-infix enabled</dfn> if the standard
 readers are curly-infix readers.</p>
 
 <p>We encourage implementations to be have their standard readers
