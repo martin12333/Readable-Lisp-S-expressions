@@ -105,7 +105,7 @@ two operands are handled cleanly.
 E.g., <samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c}</samp> maps to
 <samp>(+&nbsp;a&nbsp;b&nbsp;c)</samp>.</p>
 
-<h2 id="rationale_whychangethereader">Why change the reader?</h2>
+<h2 id="rationale_changereader">Why change the reader?</h2>
 <p>Many previous systems have implemented &ldquo;infix&rdquo;
 systems as a named macro or procedure (e.g., <var>INFIX</var>). This looks
 ugly, and it does the wrong thing - the resulting list always has
@@ -121,7 +121,7 @@ maps cleanly to
 <samp>&apos;(+&nbsp;a&nbsp;b)</samp>,
 which works as expected with all macros.</p>
 
-<h2 id="rationale_whyisntprecedencepartofthissrfi">Why isn&#8217;t precedence part of this SRFI?</h2>
+<h2 id="rationale_noprecedence">Why isn&#8217;t precedence part of this SRFI?</h2>
 <p>Many past &ldquo;infix&rdquo; systems for Lisp build in
 precedence. However, Lisp systems often process other languages,
 and they may freely mix these different languages.
@@ -181,7 +181,7 @@ expression isn&#8217;t provided.
 However, prepending &ldquo;<var>nfx</var>&rdquo;
 is much more flexible.</p>
 
-<h2 id="rationale_whynotautodetectinfix">Why not autodetect infix?</h2>
+<h2 id="rationale_noautodetect">Why not autodetect infix?</h2>
 <p>Some past efforts tried to automatically detect infix operators,
 but this turns out to not work well. It&#8217;s hard to express
 good rules for detecting infix operators, and the rules become too
@@ -198,7 +198,7 @@ not convenient, you don&#8217;t need to use it. It is also very
 backwards-compatible: Normal lists work normally, and if you want
 infix, use <code>{</code>...<code>}</code>.</p>
 
-<h2 id="rationale_whyallthosespecialcases">Why are 0, 1, and 2 parameters special?</h2>
+<h2 id="rationale_specialcases">Why are 0, 1, and 2 parameters special?</h2>
 <p>The empty curly-infix list
 <samp>{}</samp> maps to <samp>()</samp>,
 as it <em>is</em> an
@@ -228,7 +228,7 @@ the likely interpretation, and also so that the neoteric-expression
 </li>
 </ol>
 
-<h2 id="rationale_whatistransformmixedinfixgoodfor">What is <var>transform-mixed-infix</var> good for?</h2>
+<h2 id="rationale_transformmixedinfix">What is <var>transform-mixed-infix</var> good for?</h2>
 <p>The &ldquo;<var>transform-mixed-infix</var>&rdquo; procedure is not
 intended for use in normal software development. Instead, it is
 suggested so that a future SRFI author could more easily implement
@@ -240,7 +240,7 @@ only defined to help simplify implementing a plausible future SRFI;
 it is not required or expected in normal use. Application software
 developers should avoid redefining <var>transform-mixed-infix</var>.</p>
 
-<h2 id="rationale_whyareinfixoperatorssurroundedbyspaces">Why must infix operators be delimited?</h2>
+<h2 id="rationale_delimiters">Why must infix operators be delimited?</h2>
 <p>Curly-infix requires that the infix operators be delimited (e.g., by
 spaces). This is consistent with Lisp history and current practice.
 Currently, in Lisp, operators are always
@@ -295,7 +295,7 @@ that can be built into even trivial Scheme implementations.
 Mandating module support is unnecessary and might inhibit its
 adoption.</p>
 
-<h2 id="rationale_whatabouttheracketinfixconvention">What about the Racket &ldquo;infix convention&rdquo;?</h2>
+<h2 id="rationale_racketinfixconvention">What about the Racket &ldquo;infix convention&rdquo;?</h2>
 <p><a href=
 "http://docs.racket-lang.org/guide/Pairs__Lists__and_Racket_Syntax.html">
 Racket allows a notation called the &ldquo;infix convention&rdquo;
