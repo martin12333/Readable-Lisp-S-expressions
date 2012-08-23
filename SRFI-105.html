@@ -389,6 +389,47 @@ convention&rdquo; is additional evidence of the <em>need</em> for a
 standard infix convention; many have separately created mechanisms
 to try to provide infix support.</p>
 
+<h2 id="rationale_six">What about Gambit&rsquo;s &ldquo;Scheme Infix eXtension (SIX)&rdquo;?</h2>
+<p>
+The Gambit reader includes a notation called the
+<a href="http://www.iro.umontreal.ca/~gambit/doc/gambit-c.html#Scheme-infix-syntax-extension">&ldquo;Scheme Infix eXtension (SIX)&rdquo;</a>
+that supports infix notation. SIX expressions begin with a backslash.</p>
+
+<p>Like curly-infix, SIX is a reader extension.
+But SIX has a number of problems compared to curly-infix:
+</p>
+<ol>
+<li>SIX has a long, complex grammar, requiring users to remember a complex grammar, and requiring a far more complex implementation.  Curly-infix, by contrast, is extremely simple.</li>
+<li>SIX is inflexible.  It only supports a fixed set of operators, and
+users cannot easily use other operators inside its notation.
+SIX even defines a small set of types and control structures
+which cannot be extended.
+People can easily create new operations in Scheme;
+We believe it is important that a Scheme infix system
+be able to immediately use them.</li>
+<li>SIX does not generate standard Scheme expressions, and thus it does
+not interact well with macros and quoting.
+SIX generates special markers when given infix expressions, and they
+must then be processed later for use.
+For example, in SIX, using an infix <samp>+</samp> in the input
+generates <samp>six.x+y</samp>, not <samp>+</samp>, in the read result.
+This means that macros may have to be specially designed to work with SIX.
+In contrast, in curly-infix, <samp>{x&nbsp;+&nbsp;y)</samp> actually
+generates <samp>{+&nbsp;x&nbsp;y)</samp>, so curly-infix works in a better
+way with other macros and with quoting rules.</li>
+</ol>
+
+<p>
+Like Racket, SIX does demonstrate that there is a <i>need</i> for
+an infix notation that can be used in Scheme.
+</p>
+
+<p>A system could simultanously implement curly-infix and SIX.
+However, curly-infix is far simpler, is more flexible (e.g., by allowing
+arbitary symbols), and works much more easily with macros and quoting.
+Thus, we believe that curly-infix is the better system and more
+appropriate for standardization across Scheme implementations.</p>
+
 <h2 id="rationale_otherdetails">Other details</h2>
 <p>There is no requirement that writers (e.g., &ldquo;<var>write</var>&rdquo;
 or a pretty-printer) write out curly-infix expressions. They may
