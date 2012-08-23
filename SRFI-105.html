@@ -448,6 +448,44 @@ arbitary symbols), and works much more easily with macros and quoting.
 Thus, we believe that curly-infix is the better system and more
 appropriate for standardization across Scheme implementations.</p>
 
+<h2 id="rationale_guile">What about Guile 1.4&rsquo;s &ldquo;reading infix&rdquo; module?</h2>
+<p><a href="http://gnuvola.org/software/guile/doc/index.html">Guile 1.4.x
+at gnuvola.org</a> is self-described as a
+&ldquo;(somewhat amicable) fork from the official Guile&rdquo;.
+It includes
+<a href="http://gnuvola.org/software/guile/doc/Reading-Infix.html">support
+for reading infix expressions</a>.
+Once activated, infix expressions are surrounded by #[ and ].
+Infix are surrounded by whitespace.
+It supports precedence, which sounds like an advantage,
+but operators must be registered before use (and few are predefined),
+creating an opportunity for terrible errors if the expression
+is read first.
+There is also the opportunity for serious problems if different programs
+are written assuming different precedence levels.
+Inside the infix notation a very different language is used
+(e.g., parentheses are used for grouping instead of necessarily
+creating lists, and parameters are separated by commas),
+so it is unclear how well
+it would work with other Scheme features such as quasiquotation.
+</p>
+
+
+<p>The guile 1.4 reading infix module has a more complex grammar
+requiring a more complex implementation and understanding.
+Its registration system creates serious problems when trying to use it
+for larger systems.
+This infix notation has not been accepted into the version of
+guile used by most people, so it is very much not portable.
+But perhaps the biggest problem is that this notation is fundamentally
+not homoiconic; it is harder to determine where lists begin and end
+with it.</p>
+
+<p>In contrast, curly-infix is simpler,
+requires no registration system or other complexities,
+works more clearly with macros and quasiquotation, and
+has the general advantage of being homoiconic.</p>
+
 <h2 id="rationale_otherdetails">Other details</h2>
 <p>There is no requirement that writers (e.g., &ldquo;<var>write</var>&rdquo;
 or a pretty-printer) write out curly-infix-expressions. They may
