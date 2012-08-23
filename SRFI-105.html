@@ -68,7 +68,7 @@ maps to
 <p>Note that this is the first of three tiers developed by the
 &ldquo;<a href="http://readable.sourceforge.net/">readable</a>&rdquo; project. We intend to later submit two more
 SRFIs, to define two other tiers that build on top of
-curly-infix-expressions (neoteric-expressions and
+curly-infix-expressions (namely, neoteric-expressions and
 sweet-expressions). However, curly-infix-expressions are useful on
 their own, even without these other notations.</p>
 
@@ -104,7 +104,7 @@ There is no complex precedence system, all other Scheme
 capabilities (including macros and quasiquoting) work unchanged,
 any symbol can be used as an infix operation where desired,
 and Scheme remains general and homoiconic.
-Curly-infix expressions
+Curly-infix-expressions (also known as c-expressions)
 are just a convenient reader abbreviation for infix notation.</p>
 <p>At its core, this SRFI provides
 the <em>simple</em> curly-infix list that accepts ordinary
@@ -185,8 +185,8 @@ include
 <code>{(-&nbsp;x)&nbsp;*&nbsp;(-&nbsp;y)}</code>
 and
 <code>{{-&nbsp;x}&nbsp;*&nbsp;{-&nbsp;y}}</code>.
-Another notation that builds on curly-infix (neoteric-expressions) can
-make unary operators even easier to use.</p>
+Another notation that builds on curly-infix (namely, neoteric-expressions)
+can make unary operators even easier to use.</p>
 <p>At first David A. Wheeler, who started this project,
 considered reporting an error if a simple infix
 expression isn&rsquo;t provided.
@@ -500,7 +500,7 @@ maps to
 <samp>{.&nbsp;e}</samp> to <samp>e</samp> if
 <samp>(.&nbsp;e)</samp> maps to <samp>e</samp>.)
 </li>
-<li>Any other curly-infix list (including all improper lists) is
+<li>Any other curly-infix list (including all other improper lists) is
 <dfn>mixed</dfn>.  Unless overridden by some other specification,
 a mixed curly-infix list is mapped to the list with the symbol
 &ldquo;<var>nfx</var>&rdquo; added to its front.
