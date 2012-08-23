@@ -5,11 +5,14 @@
 <meta content="text/html; charset=us-ascii" http-equiv="content-type">
 </head>
 <body>
+
 <h1 id="title">Title</h1>
 <p>Curly-infix-expressions</p>
+
 <h1 id="author" id="authors">Authors</h1>
 <p>David A. Wheeler</p>
 <p>Alan Manuel K. Gloria</p>
+
 <h1 id="status">Status</h1>
 <p>This is a draft Scheme Request for Implementation
 (SRFI). To see an explanation of each status that
@@ -25,8 +28,10 @@ org&gt;</code></a>. See <a href=
 access previous messages via <a href=
 "http://srfi.schemers.org/srfi-105/mail-archive/maillist.html" rel=
 "nofollow">the archive of the mailing list</a>.</p>
+
 <h1 id="related-srfis">Related SRFIs</h1>
 <p>None</p>
+
 <h1 id="abstract">Abstract</h1>
 <p>Lisp-based languages, like Scheme, are almost the only
 programming languages in modern use that do not support infix notation.
@@ -54,6 +59,7 @@ enable later macro processing, e.g.,
 <samp>{2&nbsp;+&nbsp;3&nbsp;*&nbsp;5}</samp>
 maps to
 <samp>(nfx&nbsp;2&nbsp;+&nbsp;3&nbsp;*&nbsp;5)</samp>.</p>
+
 <h1 id="rationale">Rationale</h1>
 <p>Lisp-based languages, like Scheme, are almost the only
 programming languages in modern use that do not support infix
@@ -249,20 +255,34 @@ without delimiters, and the visual results are the same as many
 real-world uses in other languages, so the result appears quite
 customary to typical software developers.</p>
 
-<h2 id="rationale_whyshouldcurlyinfixalwaysbeenabled">Why should curly-infix always be enabled?</h2>
-<p>If a reader implements this SRFI, we would like it to
-<em>always</em> be enabled. However, we provide a conventional
-command line name (&ldquo;<var>curly-foo</var>&rdquo;)
-for an implementation to turn it on, and an
-&ldquo;<var>enable-curly-infix</var>&rdquo; procedure to turn it on as well.
-This way, implementors can make it optional in their
-&ldquo;native&rdquo; implementation.
-We hope to encourage adoption by having a
-standard mechanism to enable curly-infix
-in cases where it is not the default.
-Users should invoke
-&ldquo;<var>(enable-curly-infix)</var>&rdquo; before using curly-infix lists.
-The &ldquo;<var>curly-infix-read</var>&rdquo; procedure allows reading
+<h2 id="rationale_curlyfooconvention">Why the curly-foo convention?</h2>
+
+<p>There needs to be a way for users to easily enable curly-infix
+for the default reader (e.g., <var>read</var>), read-eval-print loop (REPL),
+and loader (e.g., <var>load</var>).
+We would like implementations to enable curly-infix in their normal
+invocation, but some implementors may not want to do that.
+Thus, if implementors choose to not enable curly-infix in their default
+reader, a a conventional command line name &ldquo;<var>curly-foo</var>&rdquo;
+is defined for each implementation <var>foo</var> that enables it.
+</p>
+
+<h2 id="rationale_procedures">Why the procedures enable-curly-infix and curly-infix-read?</h2>
+<p>
+Early drafts of this SRFI <em>required</em> support for an
+&ldquo;<var>enable-curly-infix</var>&rdquo; procedure to enable
+curly-infix.
+But some implementations may have difficulty changing basic infrastructure
+(like the reader and loader) once they have started up.
+Thus, this procedure is not required, but
+simply <em>may</em> be available.
+This provides a simple convention for users who want to enable curly-infix,
+without leaving the system, on those systems where this is sensible.</p>
+<p>There&#8217;s no explicit &ldquo;<var>disable-curly-infix</var>&rdquo;.
+There&#8217;s no reason to disable it within this SRFI, and if some
+other action changes the meaning of braces, it would be that other
+action that disables it.</p>
+<p>The &ldquo;<var>curly-infix-read</var>&rdquo; procedure allows reading
 external curly-infix data, even if the implementation doesn&#8217;t
 enable curly-infix-expressions by default.</p>
 <p>By intent, this SRFI (including the enabling mechanism)
@@ -273,10 +293,6 @@ standard one). Curly-infix is an intentionally simple mechanism
 that can be built into even trivial Scheme implementations.
 Mandating module support is unnecessary and might inhibit its
 adoption.</p>
-<p>There&#8217;s no explicit &ldquo;<var>disable-curly-infix</var>&rdquo;.
-There&#8217;s no reason to disable it within this SRFI, and if some
-other action changes the meaning of braces, it would be that other
-action that disables it.</p>
 
 <h2 id="rationale_whatabouttheracketinfixconvention">What about the Racket &ldquo;infix convention&rdquo;?</h2>
 <p><a href=
@@ -381,13 +397,14 @@ sweet-expressions). However, curly-infix-expressions are useful on
 their own, even without these other notations.</p>
 <p>Curly-infix is an unusually simple mechanism, but like much of
 any Lisp-based language, its power comes from its simplicity.</p>
+
 <h1 id="specification">Specification</h1>
 <p>&ldquo;Curly-infix-expressions&rdquo; (c-expressions) are
-s-expressions with an additional notation: The curly-infix list. A
-curly-infix list is syntactically identical to a normal list,
+s-expressions with an additional notation: The curly-infix list.
+A curly-infix list is syntactically identical to a normal list,
 except it is surrounded by curly braces instead of by parentheses.
 Once a curly-infix list is read, it is mapped differently than a
-regular list by the reader:</p>
+regular list by a curly-infix reader:</p>
 <ol>
 <li>A <dfn>simple</dfn> curly-infix list has an odd number of
 parameters, at least three parameters, and all even parameters are
@@ -434,17 +451,34 @@ is mapped to
 <samp>(and (&gt; a 0) (&gt;= b 1))</samp></li>
 </ul>
 
-<p>A &ldquo;curly-infix-expression&rdquo; datum reader is a reader
+<p>A &ldquo;curly-infix-expression&rdquo; reader is a reader
 that can correctly read and map curly-infix-expressions.
 A curly-infix-expression reader must
 include the braces &ldquo;<code>{</code>&rdquo; and
 &ldquo;<code>}</code>&rdquo; as delimiters.</p>
 
+<p>We encourage systems to <em>always</em> have
+this capability enabled, even when
+<var>enable-curly-infix</var> is not called and the curly-foo command
+is not run, but this is not required by this SRFI.</p>
+<p>However, if an implementation <em>foo</em> does not enable curly-infix by
+default, and it is possible to invoke it from a command line via some command
+&ldquo;<var>foo</var>&rdquo;, the implementation
+<em>must</em> provide an alternative command &ldquo;<var>curly-foo</var>&rdquo;
+(the command prefixed with &ldquo;<code>curly-</code>&rdquo;) that enables
+curly-infix as if the procedure
+<var>(enable-curly-infix)</var> (as defined below)
+had been invoked on start-up before any
+user-supplied modules or application code is loaded, and before
+any REPL is engaged. Note that the procedure
+<var>(enable-curly-infix)</var> is not actually required; merely its
+effects are.</p>
+
 <p>Procedures:</p>
 <ul>
-<li>Implementations <em>must</em> provide the procedure
+<li>Implementations <em>may</em> provide the procedure
 <var>(curly-infix-read .  port)</var> as a curly-infix-expression reader.</li>
-<li>Implementations <em>must</em> provide the procedure
+<li>Implementations <em>may</em> provide the procedure
 <var>(enable-curly-infix)</var>,
 which, on completion, ensures that the following readers
 are curly-infix-expression datum readers:
@@ -452,40 +486,24 @@ the default readers
 (&ldquo;<var>read</var>&rdquo; and where appropriate
 &ldquo;<var>get-datum</var>&rdquo;),
 the reader used in the REPL,
-the reader used by &ldquo;<var>load</var>&rdquo;,
-and the reader used by whatever module-loading mechanism
-the implementation uses.
-The implementation <em>must</em> allow users to safely invoke
+and the readers used to load user-supplied code
+(e.g., the reader used by &ldquo;<var>load</var>&rdquo;,
+and by whatever module-loading mechanism the implementation uses).
+If implemented, this procedure <em>must</em> allow users to safely invoke
 <var>(enable-curly-infix)</var> repeatedly, even when curly-infix reading
 is already enabled.</li>
-<li>Implementations may provide an overrideable procedure
+<li>Implementations <em>may</em> provide an overrideable procedure
 <var>(transform-mixed-infix lyst)</var> that can be
 &ldquo;<var>set!</var>&rdquo;. This
 procedure would receive a mixed curly-infix list and return a
 transformation of it. By default, this function returns the
 original list but with &ldquo;<var>nfx</var>&rdquo; in front.
-Application developers should not define or redefine this function;
-it is merely suggested to simplify implementation of plausible future
-SRFIs.</li>
+Application developers <em>should not</em> use, define, or
+redefine this function; it is merely suggested to simplify
+implementation of plausible future SRFIs.</li>
 </ul>
-
-<p>
-We encourage systems to <em>always</em> have
-this capability enabled, even when
-<var>enable-curly-infix</var> is not called and the curly-foo command
-is not run, but this is not required by this SRFI.
-However, if an implementation <em>foo</em> does not enable curly-infix by
-default, and it is possible to invoke it from a command line via some command
-&ldquo;<var>foo</var>&rdquo;, the implementation
-<em>must</em> provide an alternative command &ldquo;<var>curly-foo</var>&rdquo;
-(the command prefixed with &ldquo;<code>curly-</code>&rdquo;) that enables
-curly-infix as if
-<var>(enable-curly-infix)</var> was invoked on start-up before any
-user-supplied modules or application code is loaded.
-</p>
-
-
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
+
 <h1 id="reference-implementation">Reference implementation</h1>
 <p>The implementation below is portable, with the exception that
 Scheme provides no standard mechanism to override
@@ -495,8 +513,9 @@ modified reader that detects &ldquo;<code>{</code>&ldquo;, starts reading a list
 until its matching &ldquo;<code>}</code>&rdquo;, and then calls <var>process-curly</var>
 defined below. We recommend that implementations <em>always</em> do
 this, but an implementation must at least activate this behavior
-when <var>(enable-curly-infix)</var> is called and when
-&ldquo;<var>curly-foo</var>&rdquo; (for implementation foo) is invoked.</p>
+&ldquo;<var>curly-foo</var>&rdquo; (for implementation foo) is invoked.
+If supported, it must also do it
+when <var>(enable-curly-infix)</var> is called.</p>
 <p>This reference implementation is SRFI type 2: &ldquo;A
 mostly-portable solution that uses some kind of hooks provided in
 some Scheme interpreter/compiler. In this case, a detailed
@@ -551,18 +570,13 @@ self-contained.&rdquo;</p>
   ; In the reader, when #\{ is detected, read (as a list) from that port
   ; until its matching #\}, then process that list with "process-curly".
 </pre>
+
 <h1 id="references">References</h1>
 <p>The readable project website has more information: <a href=
 "http://readable.sourceforge.net">http://readable.sourceforge.net</a></p>
+
 <h1 id="acknowledgments">Acknowledgments</h1>
 <p>We that all the participants on the "readable-discuss" mailing list.</p>
-
-<h1 id="discussion">Discussion Items (to be removed from final SRFI)</h1>
-<p>
-<b>DISCUSSION ITEM:</b> Should the (enable-curly-infix) procedure
-be dropped, instead depending on a system either (1) building it in or
-(2) having a curly-foo command line capability?
-</p>
 
 <h1 id="copyright">Copyright</h1>
 <p>Copyright (C) 2012 David A. Wheeler and Alan Manuel K. Gloria.
@@ -582,7 +596,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
 BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
 ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.</p>
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </body>
 </html>
+
