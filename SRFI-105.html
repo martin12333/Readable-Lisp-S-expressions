@@ -247,10 +247,19 @@ suggested so that a future SRFI author could more easily implement
 a fixed precedence system that is built into the reader. We think
 that precedence is overrated. However, if a future community
 decides it wants precedence built into the reader,
-<var>transform-mixed-infix</var> could be redefined to provide one. This is
-only defined to help simplify implementing a plausible future SRFI;
-it is not required or expected in normal use. Application software
-developers should avoid redefining <var>transform-mixed-infix</var>.</p>
+<var>transform-mixed-infix</var> could be redefined to provide one.
+Similarly, the mapping requirement for mixed curly-infix lists
+is intentionally worded to allow additional mappings of mixed
+curly-infix lists to handle precedence (so an implementation can
+legitimately say they implement curly-infix-expresssions even if they
+have such additional mappings).
+The mapping of mixed curly-infix expressions and the
+&ldquo;<var>transform-mixed-infix</var>&rdquo; procedure are
+only defined to help simplify implementing a plausible future SRFI.
+The &ldquo;<var>transform-mixed-infix</var>&rdquo; procedure is
+not required or expected to be used in normal cases.
+Application software developers should avoid
+redefining <var>transform-mixed-infix</var>.</p>
 
 <h2 id="rationale_delimiters">Why must infix operators be delimited?</h2>
 <p>Curly-infix requires that the infix operators be delimited (e.g., by
