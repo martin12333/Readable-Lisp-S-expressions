@@ -477,8 +477,15 @@ E.g.,
 <samp>{-&nbsp;x}</samp>
 maps to
 <samp>(-&nbsp;x)</samp>.</li>
+<li>The mapping of a curly-infix list beginning with the symbol
+&ldquo;.&rdquo; is unspecified.
+(Note: the reference implementation maps
+<samp>{.&nbsp;e}</samp> to <samp>e</samp> if
+<samp>(.&nbsp;e)</samp> maps to <samp>e</samp>.)
+</li>
 <li>Any other curly-infix list (including all improper lists) is
-<dfn>mixed</dfn>; it is mapped to the list with the symbol
+<dfn>mixed</dfn>.  Unless overridden by some other specification,
+a mixed curly-infix list is mapped to the list with the symbol
 &ldquo;<var>nfx</var>&rdquo; added to its front.
 E.g.,
 <samp>{q&nbsp;+&nbsp;r&nbsp;*&nbsp;s}</samp>
@@ -496,38 +503,36 @@ is mapped to
 <samp>(and (&gt; a 0) (&gt;= b 1))</samp></li>
 </ul>
 
-<p>
-The mapping of <samp>{&nbsp;.&nbsp;e}</samp> is unspecified
-(the reference implementation maps this to <samp>e</samp>
-if <samp>(&nbsp;.&nbsp;e)</samp> maps to <samp>e</samp>).
-</p>
-
 <p>A curly-infix reader is a datum reader
 that can correctly read and map curly-infix-expressions.
 A curly-infix reader <em>must</em>
 include the braces &ldquo;<code>{</code>&rdquo; and
 &ldquo;<code>}</code>&rdquo; as delimiters.</p>
 
-<p>We encourage systems to <em>always</em> have
-this capability enabled, even when the optional
-<var>enable-curly-infix</var> is not called and the curly-foo command
-is not run.  This is not required by this SRFI.
-However, if an implementation <em>foo</em> does not enable curly-infix by
-default, and it is possible to invoke the implementation
-from a command line via some command
+<p>The &ldquo;standard readers&rdquo;
+are the datum readers used in the REPL,
+the datum readers defined by the relevant Scheme standards
+(such as &ldquo;<var>read</var>&rdquo; and
+&ldquo;<var>get-datum</var>&rdquo;),
+and the readers used to load user-supplied code
+(e.g., the reader used by &ldquo;<var>load</var>&rdquo;,
+and module-loading mechanisms for user code).</p>
+
+<p>The standard readers are <i>curly-infix enabled</i> if the standard
+readers are curly-infix readers.</p>
+
+<p>We encourage implementations to be have their standard readers
+be curly-infix enabled in their default invocation.
+If an implementation is not, then if it can be invoked
+from a command line via the command
 &ldquo;<var>foo</var>&rdquo;, the implementation
 <em>must</em> provide an alternative command &ldquo;<var>curly-foo</var>&rdquo;
-(the command prefixed with &ldquo;<code>curly-</code>&rdquo;).
-This command <em>must</em> enable curly-infix as if the procedure
-<var>(enable-curly-infix)</var> (as defined below)
-had been invoked on start-up before any
-user-supplied modules or application code is loaded, and before
-any REPL is engaged. Note that the procedure
-<var>(enable-curly-infix)</var> is not actually required; merely its
-effects are.
-In addition, if the implementation is invokable as a GUI, it
-<em>must</em> provide a documented means to enable curly-infix as if
-<var>(enable-curly-infix)</var> was invoked.
+(the command prefixed with &ldquo;<code>curly-</code>&rdquo;) in which
+its standard readers are curly-infix enabled.
+In addition, if the implementation is invokable as a graphical user interface
+(GUI), it
+<em>must</em> provide a documented means to ensure that its
+standard readers are curly-infix enabled.
 </p>
 
 <p>Procedures:</p>
@@ -536,18 +541,10 @@ In addition, if the implementation is invokable as a GUI, it
 <var>(curly-infix-read .  port)</var> as a curly-infix reader.</li>
 <li>Implementations <em>may</em> provide the procedure
 <var>(enable-curly-infix)</var>,
-which, on completion, ensures that the following readers
-are curly-infix-expression datum readers:
-the default readers
-(&ldquo;<var>read</var>&rdquo; and where appropriate
-&ldquo;<var>get-datum</var>&rdquo;),
-the reader used in the REPL,
-and the readers used to load user-supplied code
-(e.g., the reader used by &ldquo;<var>load</var>&rdquo;,
-and by whatever module-loading mechanism the implementation uses).
+which on completion would ensure that the
+standard readers are curly-infix enabled.
 If implemented, this procedure <em>must</em> allow users to safely invoke
-<var>(enable-curly-infix)</var> repeatedly, even when curly-infix reading
-is already enabled.</li>
+<var>(enable-curly-infix)</var> repeatedly.</li>
 <li>Implementations <em>may</em> provide an overrideable procedure
 <var>(transform-mixed-infix lyst)</var> that can be
 &ldquo;<var>set!</var>&rdquo;. This
