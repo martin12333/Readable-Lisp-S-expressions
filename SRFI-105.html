@@ -404,8 +404,8 @@ But SIX has a number of problems compared to curly-infix:
 users cannot easily use other operators inside its notation.
 SIX even defines a small set of types and control structures
 which cannot be extended.
-People can easily create new operations in Scheme;
-We believe it is important that a Scheme infix system
+People can easily create new operations;
+it&rsquo;s important that an infix system
 be able to immediately use them.</li>
 <li>SIX does not generate standard Scheme expressions, and thus it does
 not interact well with macros and quoting.
@@ -440,9 +440,6 @@ punctuation-only symbol. However, it would probably be wise to wait
 until many implementations can handle c-expressions.</p>
 <p>Curly-infix is designed so that it can work on other Lisps as
 well. We even have a working implementation in Common Lisp.</p>
-<p>The &ldquo;<var>curly-foo</var>&rdquo; command convention is required so
-that users can easily invoke the implementation with curly-infix
-enabled to start with.</p>
 <p>Curly-infix is an unusually simple mechanism, but like much of
 any Lisp-based language, its power comes from its simplicity.</p>
 
@@ -500,9 +497,9 @@ is mapped to
 </ul>
 
 <p>
-The mapping of <samp>{&nbsp;.&nbsp;e}</spec> is unspecified
-(the reference implementation maps this to <samp>e</samp> case if
-<samp>(&nbsp;.&nbsp;e)</spec> returns <samp>e</samp>).
+The mapping of <samp>{&nbsp;.&nbsp;e}</samp> is unspecified
+(the reference implementation maps this to <samp>e</samp>
+if <samp>(&nbsp;.&nbsp;e)</samp> maps to <samp>e</samp>).
 </p>
 
 <p>A curly-infix reader is a datum reader
