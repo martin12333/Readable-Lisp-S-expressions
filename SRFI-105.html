@@ -60,6 +60,13 @@ enable later macro processing, e.g.,
 maps to
 <samp>(nfx&nbsp;2&nbsp;+&nbsp;3&nbsp;*&nbsp;5)</samp>.</p>
 
+<p>Note that this is the first of three tiers developed by the
+&ldquo;<a href="http://readable.sourceforge.net/">readable</a>&rdquo; project. We intend to later submit two more
+SRFIs, to define two other tiers that build on top of
+curly-infix-expressions (neoteric-expressions and
+sweet-expressions). However, curly-infix-expressions are useful on
+their own, even without these other notations.</p>
+
 <h1 id="rationale">Rationale</h1>
 <p>Lisp-based languages, like Scheme, are almost the only
 programming languages in modern use that do not support infix
@@ -390,12 +397,6 @@ well. We even have a working implementation in Common Lisp.</p>
 <p>The &ldquo;<var>curly-foo</var>&rdquo; command convention is required so
 that users can easily invoke the implementation with curly-infix
 enabled to start with.</p>
-<p>Note that this is the first of three tiers developed by the
-&ldquo;readable&rdquo; project. We intend to later submit two more
-SRFIs, to define two other tiers that build on top of
-curly-infix-expressions (neoteric-expressions and
-sweet-expressions). However, curly-infix-expressions are useful on
-their own, even without these other notations.</p>
 <p>Curly-infix is an unusually simple mechanism, but like much of
 any Lisp-based language, its power comes from its simplicity.</p>
 
