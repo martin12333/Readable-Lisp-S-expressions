@@ -120,7 +120,7 @@ E.g., <samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c}</samp> maps to
 <h2 id="rationale_changereader">Why change the reader?</h2>
 <p>Many previous systems have implemented &ldquo;infix&rdquo;
 systems as a named macro or procedure (e.g., <var>INFIX</var>). This looks
-ugly, and it does the wrong thing - the resulting list always has
+ugly, and it does the wrong thing &dash; the resulting list always has
 <var>INFIX</var> at the beginning, not the actual infix operator, so this
 approach can interfere with quoting, macros, and other
 capabilities. Many of these past systems also created a whole new
@@ -284,10 +284,18 @@ for the default reader (e.g., <var>read</var>), read-eval-print loop (REPL),
 and loader (e.g., <var>load</var>).
 We would like implementations to enable curly-infix in their normal
 invocation, but some implementors may not want to do that.
+For example, if an implementation already uses braces for a
+different local extension, they may not want to immediately
+switch to curly-infix in their default invocation.
 Thus, if implementors choose to not enable curly-infix in their default
 reader, a conventional command line name &ldquo;<var>curly-foo</var>&rdquo;
-is defined for each implementation <var>foo</var> that enables it.
-</p>
+is defined for each implementation <var>foo</var> that enables it.</p>
+
+<p>There is simply no single option flag (for example) that
+everyone could agree on to enable this.
+In practice, we expect that implementations will build this into their
+default readers and then control it via some special flag, but we do
+not want to mandate exactly how it is turned on or passed.</p>
 
 <h2 id="rationale_procedures">Why the procedures <var>enable-curly-infix</var> and <var>curly-infix-read</var>?</h2>
 <p>
