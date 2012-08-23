@@ -169,7 +169,7 @@ convenient notation.
 The curly-infix approach, instead of trying to manage both infix
 and precedence, handles simple cases and then
 takes advantage of the existing Scheme scoping rules and macro system for
-more complex cases when they are needed.</p>
+more complex cases (in the rare cases where they are needed).</p>
 <p>It would be possible to extend curly-infix to provide a full fixed
 precedence system (e.g., if an expression is mixed,
 attempt to use various precedence rules).
@@ -314,7 +314,8 @@ other action changes the meaning of braces, it would be that other
 action that disables it.</p>
 <p>The &ldquo;<var>curly-infix-read</var>&rdquo; procedure allows reading
 external curly-infix data, even if the implementation doesn&rsquo;t
-enable curly-infix-expressions by default.</p>
+enable curly-infix-expressions by default but does support
+curly-infix-expressions.</p>
 <p>By intent, this SRFI (including the enabling mechanism)
 doesn&rsquo;t use or interact with any module system at all
 (including the R6RS and R7RS module systems). This is because some
