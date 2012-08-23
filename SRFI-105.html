@@ -156,22 +156,23 @@ in these cases, <code>{</code>...<code>}</code> provides a more
 convenient notation.
 The curly-infix approach, instead of trying to manage both infix
 and precedence, handles simple cases and then
-takes advantage of the existing Scheme scoping rules for
+takes advantage of the existing Scheme scoping rules and macro system for
 more complex cases when they are needed.</p>
 <p>It would be possible to extend curly-infix to provide a full fixed
 precedence system (e.g., if an expression is mixed,
 attempt to use various precedence rules).
 However, such capabilities would be extensions
-not required by this SRFI.</p>
+not required by this SRFI.
+See the discussion on <var>transform-mixed-infix</var>, below.</p>
 <p>Note that curly-infix includes support for unary operators, but again,
 they are without precedence.
 As a result, they must be grouped separately.
 This does not lead to hard-to-read expressions, however.
 Examples of simple curly-infix lists combining infix and unary operations
 include
-{(-&nbsp;x)&nbsp;*&nbsp;(-&nbsp;y)}
+<code>{(-&nbsp;x)&nbsp;*&nbsp;(-&nbsp;y)}</code>
 and
-{{-&nbsp;x}&nbsp;*&nbsp;{-&nbsp;y}}.
+<code>{{-&nbsp;x}&nbsp;*&nbsp;{-&nbsp;y}}</code>.
 Another notation that builds on curly-infix (neoteric-expressions) can
 make unary operators even easier to use.</p>
 <p>At first David A. Wheeler, who started this project,
@@ -440,7 +441,7 @@ E.g.,
 is mapped to
 <samp>(nfx&nbsp;q&nbsp;+&nbsp;r&nbsp;*&nbsp;s)</samp>.</li>
 </ol>
-<p>Here are some examples of c-expressions (note that all operators in curly-infix must be delimited):</p>
+<p>Here are some examples of c-expressions (note all operators in curly-infix are delimited):</p>
 <ul>
 <li><samp>{a * {b + c}}</samp> maps to <samp>(* a (+ b c))</samp></li>
 <li><samp>{x eqv? `a}</samp> maps to <samp>(eqv? x `a)</samp></li>
@@ -451,33 +452,38 @@ is mapped to
 <samp>(and (&gt; a 0) (&gt;= b 1))</samp></li>
 </ul>
 
-<p>A &ldquo;curly-infix-expression&rdquo; reader is a reader
+<p>A curly-infix reader is a datum reader
 that can correctly read and map curly-infix-expressions.
-A curly-infix-expression reader must
+A curly-infix reader <em>must</em>
 include the braces &ldquo;<code>{</code>&rdquo; and
 &ldquo;<code>}</code>&rdquo; as delimiters.</p>
 
 <p>We encourage systems to <em>always</em> have
-this capability enabled, even when
+this capability enabled, even when the optional
 <var>enable-curly-infix</var> is not called and the curly-foo command
-is not run, but this is not required by this SRFI.</p>
-<p>However, if an implementation <em>foo</em> does not enable curly-infix by
-default, and it is possible to invoke it from a command line via some command
+is not run.  This is not required by this SRFI.
+However, if an implementation <em>foo</em> does not enable curly-infix by
+default, and it is possible to invoke the implementation
+from a command line via some command
 &ldquo;<var>foo</var>&rdquo;, the implementation
 <em>must</em> provide an alternative command &ldquo;<var>curly-foo</var>&rdquo;
-(the command prefixed with &ldquo;<code>curly-</code>&rdquo;) that enables
-curly-infix as if the procedure
+(the command prefixed with &ldquo;<code>curly-</code>&rdquo;).
+This command <em>must</em> enable curly-infix as if the procedure
 <var>(enable-curly-infix)</var> (as defined below)
 had been invoked on start-up before any
 user-supplied modules or application code is loaded, and before
 any REPL is engaged. Note that the procedure
 <var>(enable-curly-infix)</var> is not actually required; merely its
-effects are.</p>
+effects are.
+In addition, if the implementation is invokable as a GUI, it
+<em>must</em> provide a documented means to enable curly-infix as if
+<var>(enable-curly-infix)</var> was invoked.
+</p>
 
 <p>Procedures:</p>
 <ul>
 <li>Implementations <em>may</em> provide the procedure
-<var>(curly-infix-read .  port)</var> as a curly-infix-expression reader.</li>
+<var>(curly-infix-read .  port)</var> as a curly-infix reader.</li>
 <li>Implementations <em>may</em> provide the procedure
 <var>(enable-curly-infix)</var>,
 which, on completion, ensures that the following readers
@@ -513,9 +519,11 @@ modified reader that detects &ldquo;<code>{</code>&ldquo;, starts reading a list
 until its matching &ldquo;<code>}</code>&rdquo;, and then calls <var>process-curly</var>
 defined below. We recommend that implementations <em>always</em> do
 this, but an implementation must at least activate this behavior
-&ldquo;<var>curly-foo</var>&rdquo; (for implementation foo) is invoked.
-If supported, it must also do it
-when <var>(enable-curly-infix)</var> is called.</p>
+when &ldquo;<var>curly-foo</var>&rdquo; is invoked
+(if invoking <var>foo</var> on the command like would invoke the
+implementation without curly-infix).
+This is also enabled by
+<var>(enable-curly-infix)</var> if supported.</p>
 <p>This reference implementation is SRFI type 2: &ldquo;A
 mostly-portable solution that uses some kind of hooks provided in
 some Scheme interpreter/compiler. In this case, a detailed
