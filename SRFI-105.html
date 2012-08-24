@@ -578,12 +578,13 @@ include the braces &ldquo;<code>{</code>&rdquo; and
 &ldquo;<code>}</code>&rdquo; as delimiters.</p>
 
 <p>The &ldquo;<dfn>standard readers</dfn>&rdquo;
-are the datum readers used in the REPL,
+are the datum reader used by the REPL,
 the datum readers defined by the relevant Scheme standards
-(such as &ldquo;<var>read</var>&rdquo; and
+(such as &ldquo;<var>read</var>&rdquo; and where applicable
 &ldquo;<var>get-datum</var>&rdquo;),
 and the readers used to load user-supplied code
-(e.g., the reader used by &ldquo;<var>load</var>&rdquo;,
+as defined by the relevant Scheme standards
+(e.g., the reader used by &ldquo;<var>load</var>&rdquo;
 and module-loading mechanisms for user code).</p>
 The standard readers are <dfn>curly-infix enabled</dfn> if the standard
 readers are curly-infix readers.</p>
@@ -591,9 +592,9 @@ readers are curly-infix readers.</p>
 <p>
 An implementation of this SRFI <em>must</em>
 have its standard readers be curly-infix enabled.
-We encourage implementations&rsquo; default invocation to
+We encourage implementations&rsquo; <em>default</em> invocation to
 have their standard readers be curly-infix enabled,
-but this is not required.
+but this is <em>not</em> required.
 If the standard readers are not curly-infix enabled
 in an implementation&rsquo;s default invocation,
 then if it can be invoked from a command line via the command
@@ -605,6 +606,16 @@ In addition, if the implementation is invokable as a graphical user interface
 (GUI), it
 <em>must</em> provide a documented means to ensure that its
 standard readers are curly-infix enabled.
+</p>
+
+<p>When determining if a curly-infix list is simple or not,
+an implementation <em>may</em> allow the even parameters to be non-symbols,
+and it <em>may</em> use a more generous equality test
+(such as <var>equal?</var>); if it does, it
+<em>should</em> terminate even if the even parameters contain cycles.
+An implementation <em>may</em> perform a different mapping for
+a mixed curly-infix list (e.g., by implementing precedence
+using <var>transform-mixed-infix</var> as described below).
 </p>
 
 <p>Procedures:</p>
@@ -627,6 +638,7 @@ Application developers <em>should not</em> use, define, or
 redefine this function; it is merely suggested to simplify
 implementation of plausible future SRFIs.</li>
 </ul>
+
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
 
 <h1 id="reference-implementation">Reference implementation</h1>
