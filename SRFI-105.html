@@ -585,14 +585,18 @@ the datum readers defined by the relevant Scheme standards
 and the readers used to load user-supplied code
 (e.g., the reader used by &ldquo;<var>load</var>&rdquo;,
 and module-loading mechanisms for user code).</p>
-
-<p>The standard readers are <dfn>curly-infix enabled</dfn> if the standard
+The standard readers are <dfn>curly-infix enabled</dfn> if the standard
 readers are curly-infix readers.</p>
 
-<p>We encourage implementations to be have their standard readers
-be curly-infix enabled in their default invocation.
-If an implementation does not, then if it can be invoked
-from a command line via the command
+<p>
+An implementation of this SRFI <em>must</em>
+have its standard readers be curly-infix enabled.
+We encourage implementations&rsquo; default invocation to
+have their standard readers be curly-infix enabled,
+but this is not required.
+If the standard readers are not curly-infix enabled
+in an implementation&rsquo;s default invocation,
+then if it can be invoked from a command line via the command
 &ldquo;<var>foo</var>&rdquo;, the implementation
 <em>must</em> provide an alternative command &ldquo;<var>curly-foo</var>&rdquo;
 (the command prefixed with &ldquo;<code>curly-</code>&rdquo;) in which
