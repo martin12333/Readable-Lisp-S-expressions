@@ -50,19 +50,22 @@ CLEANFILES = readable/kernel.scm
 # Scripts
 
 script_sources = src/sweeten.sscm src/unsweeten \
-                 src/neoteric-guile src/sweet-guile src/sweet-run \
-                 src/kernel.scm src/sweet-scsh
+                 src/curly-guile src/neoteric-guile src/sweet-guile \
+                 src/sweet-run src/sweet-scsh \
+                 src/kernel.scm
 EXTRA_DIST += $(script_sources)
 
 # These scripts are generated at build time, so they're not distributed
 # (there's no dist_ prefix for bin_SCRIPTS here):
-bin_SCRIPTS  = bin/sweeten bin/unsweeten bin/neoteric-guile bin/sweet-guile
+bin_SCRIPTS  = bin/sweeten bin/unsweeten
+bin_SCRIPTS += bin/curly-guile bin/neoteric-guile bin/sweet-guile
 bin_SCRIPTS += bin/sweet-run bin/sweet-scsh
 CLEANFILES  += $(bin_SCRIPTS)
 
 # These are the local scripts, for testing, and are not installed.
 noinst_SCRIPTS = ./sweeten ./unsweeten \
-                 ./neoteric-guile ./sweet-guile ./sweet-scsh ./sweet-run
+                 ./curly-guile ./neoteric-guile ./sweet-guile \
+                 ./sweet-scsh ./sweet-run
 CLEANFILES += $(noinst_SCRIPTS)
 
 
@@ -101,6 +104,11 @@ bin/unsweeten: src/unsweeten my-subst
 	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
 	chmod a+x $@
 
+bin/curly-guile: src/curly-guile my-subst
+	$(MKDIR_P) bin
+	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
+	chmod a+x $@
+
 bin/neoteric-guile: src/neoteric-guile my-subst
 	$(MKDIR_P) bin
 	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
@@ -133,6 +141,12 @@ bin/sweet-run: src/sweet-run my-subst
 # (because its dependencies have been installed). Then other rules can just
 # depend on "./unsweeten", and they won't start until unsweeten is ready.
 ./unsweeten: src/unsweeten my-subst readable/kernel.scm
+	$(RM) -f $@
+	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
+	chmod a+x $@
+	chmod a-w $@
+
+./curly-guile: src/curly-guile my-subst
 	$(RM) -f $@
 	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
 	chmod a+x $@
@@ -176,8 +190,8 @@ bin/sweet-run: src/sweet-run my-subst
 	chmod a-w $@
 
 # Eventually we'll package this, but for now, just distribute
-# the Common Lisp curly-infix.cl implementation.
-EXTRA_DIST += curly-infix.cl
+# the Common Lisp implementation.
+EXTRA_DIST += readable.cl
 
 
 # Distribute examples (but don't install them).
@@ -195,12 +209,16 @@ EXTRA_DIST += \
 # Man pages
 dist_man_MANS = man/unsweeten.1 man/sweet-run.1 man/sweeten.1
 
+# Distribute some documentation.
+# README is distributed anyway; this just makes it clearer.
 # Distribute some description of the solution and tutorial,
 # in markdown format.  The website has the updated version, but for
 # those who just have this file, it'd be useful to have SOME useful
 # information on what this code is trying to do and how to use it.
 dist_doc_DATA = README COPYING AUTHORS ChangeLog solution.md tutorial.md
-# README is distributed anyway; this just makes it clearer.
+
+# Presentation in Open Document Format (.odp) about these formats:
+dist_doc_DATA += readable-s-expressions.odp
 
 # Distribute the specs.  They're not up-to-date, but they
 # are referred to in the README, so distribute them too
@@ -214,7 +232,9 @@ dist_doc_DATA += src/sweeten.sscm
 
 # Distribute test drivers and testsuites.
 EXTRA_DIST += \
- tests/curly-infix-test \
+ tests/curly-infix-test-cl \
+ tests/curly-infix-testsuite-scm \
+ tests/curly-infix-test-scm \
  tests/neoteric-test \
  tests/neoteric-testsuite \
  tests/sweet-test \
@@ -231,7 +251,9 @@ EXTRA_DIST += \
 # TODO: Improve test harness & integration into overall system.
 
 check: readable/kernel.scm
-	CURLYFILE="$(srcdir)/curly-infix.cl" $(srcdir)/tests/curly-infix-test
+	CURLYFILE="$(srcdir)/readable.cl" $(srcdir)/tests/curly-infix-test-cl
+	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/curly-infix-test-scm \
+	            < $(srcdir)/tests/curly-infix-testsuite-scm
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/neoteric-test \
 	            < $(srcdir)/tests/neoteric-testsuite
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/sweet-test \
@@ -247,10 +269,14 @@ check: readable/kernel.scm
 
 # Developer conveniences:
 # "make push" interpreted as "git push" when current branch is "develop".
+# "make pull" interpreted as "git pull"
 # "make test" interpreted as "make check"
 push:
 	[ "`git symbolic-ref HEAD`" = "refs/heads/develop" ] && \
 	    git push origin develop
+
+pull:
+	git pull
 
 test:
 	make check

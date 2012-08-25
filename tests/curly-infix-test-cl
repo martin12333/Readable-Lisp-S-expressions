@@ -1,0 +1,82 @@
+#!/usr/bin/env clisp
+
+; Test curly-infix.cl.  Also has demo of its use.
+
+; Run this file on a Unix-like system to test curly-infix.cl.
+; You must have clisp, and "curly-infix.cl" must be in the current directory.
+
+; Copyright (C) 2007-2012 by David A. Wheeler.
+; Released under the "MIT license":
+; Permission is hereby granted, free of charge, to any person obtaining a
+; copy of this software and associated documentation files (the "Software"),
+; to deal in the Software without restriction, including without limitation
+; the rights to use, copy, modify, merge, publish, distribute, sublicense,
+; and/or sell copies of the Software, and to permit persons to whom the
+; Software is furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included
+; in all copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+; OTHER DEALINGS IN THE SOFTWARE.
+
+
+(if (not (load (getenv "CURLYFILE") :if-does-not-exist t))
+  (exit 1))
+
+
+(defun mytest (input correct)
+  (cond
+    ((equal input correct)
+      (princ "Success with: ")
+      (prin1 input)
+      (format t "~%"))
+    (t
+      (princ "FAIL!!!")
+      (print input)
+      (print correct)
+      (exit 1))))
+
+(mytest '{2 + 3} '(+ 2 3))
+(mytest '{2 * n} '(* 2 n))
+(mytest '{x eq y} '(eq x y))
+(mytest '{2 + 3 + 4} '(+ 2 3 4))
+(mytest '{2 + {3 * 4}} '(+ 2 (* 3 4)))
+(mytest '{2 + 3 *** 4} '(nfx 2 + 3 *** 4))
+(mytest '{(- x) / 2} '(/ (- x) 2))
+(mytest '{x = 3 * 4} '(nfx x = 3 * 4))
+(mytest '{x = 3} '(= x 3))
+
+; Demo its use:
+
+(defun fibfast (n)
+  (if {n < 2}
+    n
+    (fibup n 2 1 0)))
+
+(defun fibup (max count n-1 n-2)
+  (if {max = count}
+    {n-1 + n-2}
+    (fibup max {count + 1} {n-1 + n-2} n-1)))
+
+(setf x 5)
+(setf correct {1 <= x <= 10})
+
+; Test that demo worked correctly:
+(mytest (fibfast 10) 55)
+(mytest correct t)
+
+; More demos:
+
+(setf y {3 + {4 * 5}})
+(setf z {{1 <= x <= 10} and {x > 0}})
+
+(princ "Tests complete!")
+(exit 0)
+(quit)
+

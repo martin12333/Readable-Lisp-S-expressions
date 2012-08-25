@@ -62,6 +62,7 @@ files from our git code repository & prepare it to be configured:
 
    git clone git://git.code.sf.net/p/readable/code readable-code
    cd readable-code
+   git checkout develop  # The "master" branch is for final releases
    autoreconf -i
 
 2. Configure
@@ -143,8 +144,14 @@ The spec-* files need to be updated (volunteers welcome).  For now, see
 *   src/sweeten.sscm: The source of the "sweeten" program.  It's written
     in Scheme using sweet-expressions, so if you want to see what
     sweet-expressions look like, well, here's an example.
-*   curly-infix.cl: A simple Common Lisp reader readtable macro that
-    implements infix operations in lists surrounded by {...}.  MIT license.
+*   readable.cl: Formerly named "curly-infix.cl".  This is Common Lisp
+    code to implement this.  On load, the reader readtable is modified
+    to implement curly-infix in lists surrounded by {...}.
+    The curly-infix implementation is fine and ready to go.
+    There is an initial neoteric-read implementation, but it's not
+    ready for full use yet (help wanted!).
+    To try it out, run your implentation (e.g., clisp), then:
+      (load "readable.cl")
 
 
 Key directories

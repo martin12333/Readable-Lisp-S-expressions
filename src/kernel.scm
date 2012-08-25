@@ -1,8 +1,8 @@
 ; kernel.scm
 ; Implementation of the sweet-expressions project by readable mailinglist.
 ;
-; Copyright (C) 2005-2012 by Egil Möller, David A. Wheeler,
-;   and Alan Manuel K. Gloria.
+; Copyright (C) 2005-2012 by David A. Wheeler, Alan Manuel K. Gloria,
+;                         and Egil Möller.
 ;
 ; This software is released as open source software under the "MIT" license:
 ;
@@ -24,7 +24,8 @@
 ; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ; OTHER DEALINGS IN THE SOFTWARE.
 
-; This file includes code from SRFI-49, but significantly modified.
+; This file includes code from SRFI-49 (by Egil Möller),
+; but significantly modified.
 
 ; -----------------------------------------------------------------------------
 ; Compatibility Layer
@@ -41,12 +42,12 @@
 ;       readable-kernel
 ;       sweetimpl
 ;   - The first element after the module-contents name is a list of exported
-;     functions.  This module shall never export a macro or syntax, not even
+;     procedures.  This module shall never export a macro or syntax, not even
 ;     in the future.
 ;   - If your Scheme requires module contents to be defined inside a top-level
 ;     module declaration (unlike Guile where module contents are declared as
 ;     top-level entities after the module declaration) then the other
-;     functions below should be defined inside the module context in order
+;     procedures below should be defined inside the module context in order
 ;     to reduce user namespace pollution.
 ;
 ;   (my-peek-char port)
@@ -59,14 +60,14 @@
 ;       fallback you can just ignore source location, which
 ;       will make debugging using sweet-expressions more
 ;       difficult.
-;   - "port" or fake port objects are created by the make-read function
+;   - "port" or fake port objects are created by the make-read procedure
 ;     below.
 ;   
-;   (make-read function)
-;   - The given function accepts exactly 1 argument, a "fake port" that can
+;   (make-read procedure)
+;   - The given procedure accepts exactly 1 argument, a "fake port" that can
 ;     be passed to my-peek-char et al.
-;   - make-read creates a new function that supports your Scheme's reader
-;     interface.  Usually, this means making a new function that accepts
+;   - make-read creates a new procedure that supports your Scheme's reader
+;     interface.  Usually, this means making a new procedure that accepts
 ;     either 0 or 1 parameters, defaulting to (current-input-port).
 ;   - If your Scheme doesn't support unlimited lookahead, you should make
 ;     the fake port that supports 2-char lookahead at this point.
@@ -74,14 +75,14 @@
 ;     automatically with the ports, you may again need to wrap it here.
 ;   - If your Scheme needs a particularly magical incantation to attach
 ;     source information to objects, then you might need to use a weak-key
-;     table in the attach-sourceinfo function below and then use that
+;     table in the attach-sourceinfo procedure below and then use that
 ;     weak-key table to perform the magical incantation.
 ;
 ;   (invoke-read read port)
-;   - Accepts a read function, which is a (most likely built-in) function
+;   - Accepts a read procedure, which is a (most likely built-in) procedure
 ;     that requires a *real* port, not a fake one.
 ;   - Should unwrap the fake port to a real port, then invoke the given
-;     read function on the actual real port.
+;     read procedure on the actual real port.
 ;
 ;   (get-sourceinfo port)
 ;   - Given a fake port, constructs some object (which the algorithm treats
@@ -92,7 +93,7 @@
 ;   - Attaches the source information pos, as constructed by get-sourceinfo,
 ;     to the given obj.
 ;   - obj can be any valid Scheme object.  If your Scheme can only track
-;     source location for a subset of Scheme object types, then this function
+;     source location for a subset of Scheme object types, then this procedure
 ;     should handle it gracefully.
 ;   - Returns an object with the source information attached - this can be
 ;     the same object, or a different object that should look-and-feel the
@@ -118,36 +119,42 @@
 ;       (define line-separator (integer->char #x2028))
 ;       (define paragraph-separator (integer->char #x2029))
 ;
-;   (parse-hash top-read char fake-port)
-;   - a function that is invoked when an unrecognized, non-R5RS hash
+;   (parse-hash no-indent-read char fake-port)
+;   - a procedure that is invoked when an unrecognized, non-R5RS hash
 ;     character combination is encountered in the input port.
-;   - this function is passed a "fake port", as wrapped by the
-;     make-read function above.  You should probably use my-read-char
+;   - this procedure is passed a "fake port", as wrapped by the
+;     make-read procedure above.  You should probably use my-read-char
 ;     and my-peek-char in it, or at least unwrap the port (since
 ;     make-read does the wrapping, and you wrote make-read, we assume
 ;     you know how to unwrap the port).
-;   - if your function needs to parse a datum, invoke
-;     (top-read fake-port).  Do NOT use any other read function.  The
-;     top-read function accepts exactly one parameter - the fake port
-;     this function was passed in.
-;     - top-read is either a version of curly-infix-read, or a version
+;   - if your procedure needs to parse a datum, invoke
+;     (no-indent-read fake-port).  Do NOT use any other read procedure.  The
+;     no-indent-read procedure accepts exactly one parameter - the fake port
+;     this procedure was passed in.
+;     - no-indent-read is either a version of curly-infix-read, or a version
 ;       of neoteric-read; this specal version accepts only a fake port.
 ;       It is never a version of sweet-read.  You don't normally want to
 ;       call sweet-read, because sweet-read presumes that it's starting
 ;       at the beginning of the line, with indentation processing still
 ;       active.  There's no reason either must be true when processing "#".
-;   - At the start of this function, both the # and the character
+;   - At the start of this procedure, both the # and the character
 ;     after it have been read in.
-;   - The function returns one of the following:
+;   - The procedure returns one of the following:
 ;       #f  - the hash-character combination is invalid/not supported.
 ;       ()  - the hash-character combination introduced a comment;
-;             at the return of this function with this value, the
+;             at the return of this procedure with this value, the
 ;             comment has been removed from the input port.
 ;       (a) - the datum read in is the value a
 ;
 ;   hash-pipe-comment-nests?
 ;   - a Boolean value that specifies whether #|...|# comments
 ;     should nest.
+;
+;   my-string-foldcase
+;   - a procedure to perform case-folding to lowercase, as mandated
+;     by Unicode.  If your implementation doesn't have Unicode, define
+;     this to be string-downcase.  Some implementations may also
+;     interpret "string-downcase" as foldcase anyway.
 
 
 ; On Guile 2.0, the define-module part needs to occur separately from
@@ -156,7 +163,7 @@
   (guile
     ; define the module
     ; this ensures that the user's module does not get contaminated with
-    ; our compatibility functions/macros
+    ; our compatibility procedures/macros
     (define-module (readable kernel))))
 (cond-expand
 ; -----------------------------------------------------------------------------
@@ -295,7 +302,7 @@
     ; to figure out what exactly it does.
     ; On Guile, #:x is a keyword.  Keywords have symbol
     ; syntax.
-    (define (parse-hash top-read char fake-port)
+    (define (parse-hash no-indent-read char fake-port)
       (let* ((ver (effective-version))
              (c   (string-ref ver 0))
              (>=2 (and (not (char=? c #\0)) (not (char=? c #\1)))))
@@ -313,7 +320,7 @@
             ; and even on 1.6 it is unlikely to cause problems.
             ; NOTE: This behavior means that #:foo(bar) will cause
             ; problems on neoteric and higher tiers.
-            (let ((s (top-read fake-port)))
+            (let ((s (no-indent-read fake-port)))
               (if (symbol? s)
                   `( ,(symbol->keyword s) )
                   #f)))
@@ -321,17 +328,17 @@
           ; guard against it here because of differences in
           ; Guile 1.6 and 1.8.
           ((and >=2 (char=? char #\'))
-            `( (syntax ,(top-read fake-port)) ))
+            `( (syntax ,(no-indent-read fake-port)) ))
           ((and >=2 (char=? char #\`))
-            `( (quasisyntax ,(top-read fake-port)) ))
+            `( (quasisyntax ,(no-indent-read fake-port)) ))
           ((and >=2 (char=? char #\,))
             (let ((c2 (my-peek-char fake-port)))
               (cond
                 ((char=? c2 #\@)
                   (my-read-char fake-port)
-                  `( (unsyntax-splicing ,(top-read fake-port)) ))
+                  `( (unsyntax-splicing ,(no-indent-read fake-port)) ))
                 (#t
-                  `( (unsyntax ,(top-read fake-port)) )))))
+                  `( (unsyntax ,(no-indent-read fake-port)) )))))
           ; #{ }# syntax
           ((char=? char #\{ )  ; Special symbol, through till ...}#
             `( ,(list->symbol (special-symbol fake-port))))
@@ -375,6 +382,8 @@
 
     (define hash-pipe-comment-nests? #t)
 
+    (define (my-string-foldcase s)
+      (string-downcase s))
     )
 ; -----------------------------------------------------------------------------
 ; R5RS Compatibility
@@ -394,25 +403,25 @@
         ((readable-kernel-module-contents exports body ...)
           (begin body ...))))
 
-    ; We use my-* functions so that the
+    ; We use my-* procedures so that the
     ; "port" automatically keeps track of source position.
     ; On Schemes where that is not true (e.g. Racket, where
     ; source information is passed into a reader and the
     ; reader is supposed to update it by itself) we can wrap
     ; the port with the source information, and update that
-    ; source information in the my-* functions.
+    ; source information in the my-* procedures.
 
     (define (my-peek-char port) (peek-char port))
     (define (my-read-char port) (read-char port))
 
-    ; this wrapper function wraps a reader function
+    ; this wrapper procedure wraps a reader procedure
     ; that accepts a "fake" port above, and converts
-    ; it to an R5RS-compatible function.  On Schemes
+    ; it to an R5RS-compatible procedure.  On Schemes
     ; which support source-information annotation,
     ; but use a different way of annotating
-    ; source-information from Guile, this function
+    ; source-information from Guile, this procedure
     ; should also probably perform that attachment
-    ; on exit from the given inner function.
+    ; on exit from the given inner procedure.
     (define (make-read f)
       (lambda args
         (let ((real-port (if (null? args) (current-input-port) (car args))))
@@ -446,22 +455,38 @@
     ; it as an extension, and make them nest.
     (define hash-pipe-comment-nests? #t)
 
+    ; If your Scheme supports "string-foldcase", use that instead of
+    ; string-downcase:
+    (define (my-string-foldcase s)
+      (string-downcase s))
     ))
+
+
 
 ; -----------------------------------------------------------------------------
 ; Module declaration and useful utilities
 ; -----------------------------------------------------------------------------
 (readable-kernel-module-contents
-  ; exported functions
-  (; tier read functions
+  ; exported procedures
+  (; tier read procedures
    curly-infix-read neoteric-read sweet-read
-   ; comparison functions
+   ; comparison procedures
    compare-read-file ; compare-read-string
    ; replacing the reader
-   replace-read restore-traditional-read)
+   replace-read restore-traditional-read
+   enable-curly-infix enable-neoteric enable-sweet)
+
+  ; Should we fold case of symbols by default?
+  ; #f means case-sensitive (R6RS); #t means case-insensitive (R5RS).
+  ; Here we'll set it to be case-sensitive, which is consistent with R6RS
+  ; and guile, but NOT with R5RS.  Most people won't notice, I
+  ; _like_ case-sensitivity, and the latest spec is case-sensitive,
+  ; so let's start with #f (case-sensitive).
+  ; This doesn't affect character names; as an extension,
+  ; We always accept arbitrary case for them, e.g., #\newline or #\NEWLINE.
+  (define foldcase-default #f)
 
   ; special tag to denote comment return from hash-processing
-  (define comment-tag (cons '() '())) ; all cons cells are unique
 
   ; Define the whitespace characters, in relatively portable ways
   ; Presumes ASCII, Latin-1, Unicode or similar.
@@ -574,8 +599,12 @@
                  (let ((datum2 (my-read port)))
                    (consume-whitespace port)
                    (cond
+                     ((eof-object? datum2)
+                      (read-error "Early eof in (... .)")
+                      '())
                      ((not (eqv? (my-peek-char port) stop-char))
-                      (read-error "Bad closing character after . datum"))
+                      (read-error "Bad closing character after . datum")
+                      datum2)
                      (#t
                        (my-read-char port)
                        datum2))))
@@ -592,29 +621,59 @@
   (define replace-read replace-read-with)
   (define (restore-traditional-read) (replace-read-with default-scheme-read))
 
+  (define (enable-curly-infix)
+    (if (not (or (eq? read curly-infix-read)
+                 (eq? read neoteric-read)
+                 (eq? read sweet-read)))
+        (replace-read curly-infix-read)))
+
+  (define (enable-neoteric)
+    (if (not (or (eq? read neoteric-read)
+                 (eq? read sweet-read)))
+        (replace-read neoteric-infix-read)))
+
+  (define (enable-sweet)
+    (replace-read sweet-read))
+
 ; -----------------------------------------------------------------------------
 ; Scheme Reader re-implementation
 ; -----------------------------------------------------------------------------
 
-; Unfortunately, since most Scheme readers will consume [, {, }, and ],
-; we have to re-implement our own Scheme reader.  Ugh.
-; If you fix your Scheme's "read" so that [, {, }, and ] are considered
-; delimiters (and thus not consumed when reading symbols, numbers, etc.),
-; you can just call default-scheme-read instead of using underlying-read below,
-; with the limitation that vector constants #(...) will not support curly-infix
-; or neoteric-function-expressions.
-; We WILL call default-scheme-read on string reading (that DOES seem to work
-; in common cases, and lets us use the implementation's string extensions).
+; We have to re-implement our own Scheme reader.
+; This takes more code than it would otherwise because many
+; Scheme readers will not consider [, ], {, and } as delimiters
+; (they are not required delimiters in R5RS and R6RS).
+; Thus, we cannot call down to the underlying reader to implement reading
+; many types of values such as symbols.
+; If your Scheme's "read" also considers [, ], {, and } as
+; delimiters (and thus are not consumed when reading symbols, numbers, etc.),
+; then underlying-read could be much simpler.
+; We WILL call default-scheme-read on string reading (the ending delimiter
+; is ", so that is no problem) - this lets us use the implementation's
+; string extensions if any.
 
-  ; See R6RS section 4.2.1
+  ; Identifying the list of delimiter characters is harder than you'd think.
+  ; This list is based on R6RS section 4.2.1, while adding [] and {},
+  ; but removing "#" from the delimiter set.
+  ; NOTE: R6RS has "#" has a delimiter.  However, R5RS does not, and
+  ; R7RS probably will not - http://trac.sacrideo.us/wg/wiki/WG1Ballot3Results
+  ; shows a strong vote AGAINST "#" being a delimiter.
+  ; Having the "#" as a delimiter means that you cannot have "#" embedded
+  ; in a symbol name, which hurts backwards compatibility, and it also
+  ; breaks implementations like Chicken (has many such identifiers) and
+  ; Gambit (which uses this as a namespace separator).
+  ; Thus, this list does NOT have "#" as a delimiter, contravening R6RS
+  ; (but consistent with R5RS, probably R7RS, and several implementations).
+  ; Also - R7RS draft 6 has "|" as delimiter, but we currently don't.
   (define neoteric-delimiters
-     (append (list #\( #\) #\[ #\] #\{ #\})
-             (list #\" #\; #\#)   ; TODO: ADD???
+     (append (list #\( #\) #\[ #\] #\{ #\}  ; Add [] {}
+                   #\" #\;)                 ; Could add #\# or #\|
              whitespace-chars))
 
   (define (consume-whitespace port)
     (let ((char (my-peek-char port)))
       (cond
+        ((eof-object? char))
         ((eqv? char #\;)
           (consume-to-eol port)
           (consume-whitespace port))
@@ -635,6 +694,7 @@
   (define (read-error message)
     (display "Error: ")
     (display message)
+    (newline)
     '())
 
   (define (read-number port starting-lyst)
@@ -656,59 +716,73 @@
             (#t
               (let ((rest-string (list->string (cons c rest))))
                 (cond
+                  ; Implement R6RS character names, see R6RS section 4.2.6.
+                  ; As an extension, we will ALWAYS accept character names
+                  ; of any case, no matter what the case-folding value is.
                   ((string-ci=? rest-string "space") #\space)
                   ((string-ci=? rest-string "newline") #\newline)
-                  ((string-ci=? rest-string "ht") tab)  ; Scheme extension.
-                  ((string-ci=? rest-string "tab") tab) ; Scheme extension.
+                  ((string-ci=? rest-string "tab") tab)
+                  ((string-ci=? rest-string "nul") (integer->char #x0000))
+                  ((string-ci=? rest-string "alarm") (integer->char #x0007))
+                  ((string-ci=? rest-string "backspace") (integer->char #x0008))
+                  ((string-ci=? rest-string "linefeed") (integer->char #x000A))
+                  ((string-ci=? rest-string "vtab") (integer->char #x000B))
+                  ((string-ci=? rest-string "page") (integer->char #x000C))
+                  ((string-ci=? rest-string "return") (integer->char #x000D))
+                  ((string-ci=? rest-string "esc") (integer->char #x001B))
+                  ((string-ci=? rest-string "delete") (integer->char #x007F))
+                  ; Additional character names as extensions:
+                  ((string-ci=? rest-string "ht") tab)
+                  ((string-ci=? rest-string "cr") (integer->char #x000d))
+                  ((string-ci=? rest-string "bs") (integer->char #x0008))
                   (#t (read-error "Invalid character name"))))))))))
 
+  ; If fold-case is active on this port, return string "s" in folded case.
+  ; Otherwise, just return "s".  This is needed to support our
+  ; foldcase-default configuration value when processing symbols.
+  ; TODO: If R7RS adds #!fold-case and #!no-fold-case, add support here.
+  (define (fold-case-maybe port s)
+    (if foldcase-default
+      (my-string-foldcase s)
+      s))
 
-  ; NOTE: this function can return comment-tag.  Program defensively
-  ; against this when calling it.
-  (define (process-sharp top-read port)
-    ; We've peeked a # character.  Returns what it represents.
+  (define (process-sharp no-indent-read port)
+    ; We've read a # character.  Returns a list whose car is what it
+    ; represents; empty list means "comment".
     ; Note: Since we have to re-implement process-sharp anyway,
     ; the vector representation #(...) uses my-read-delimited-list, which in
-    ; turn calls top-read.
+    ; turn calls no-indent-read.
     ; TODO: Create a readtable for this case.
-    (my-read-char port) ; Remove #
-    (cond
-      ((eof-object? (my-peek-char port)) (my-peek-char port)) ; If eof, return eof.
-      (#t
-        ; Not EOF. Read in the next character, and start acting on it.
-        (let ((c (my-read-char port)))
+    (let ((c (my-peek-char port)))
+      (cond
+        ((eof-object? c) (list c)) ; If eof, return eof.
+        (#t
+          ; Not EOF. Read in the next character, and start acting on it.
+          (my-read-char port)
           (cond
-            ((char-ci=? c #\t)  #t)
-            ((char-ci=? c #\f)  #f)
+            ((char-ci=? c #\t)  '(#t))
+            ((char-ci=? c #\f)  '(#f))
             ((ismember? c '(#\i #\e #\b #\o #\d #\x
                             #\I #\E #\B #\O #\D #\X))
-              (read-number port (list #\# (char-downcase c))))
+              (list (read-number port (list #\# (char-downcase c)))))
             ((char=? c #\( )  ; Vector.
-              (list->vector (my-read-delimited-list top-read #\) port)))
-            ((char=? c #\\) (process-char port))
-            ; Handle #; (item comment).  This
-            ; only works at the item-level:
-            ;  it can only remove c-expressions
-            ;  or n-expressions, not whole
-            ; t-expressions!
+              (list (list->vector (my-read-delimited-list no-indent-read #\) port))))
+            ((char=? c #\\) (list (process-char port)))
+            ; Handle #; (item comment).
             ((char=? c #\;)
-              (top-read port)
-              comment-tag)
+              (no-indent-read port)  ; Read the datum to be consumed.
+              '()) ; Return comment
             ; handle nested comments
             ((char=? c #\|)
               (nest-comment port)
-              comment-tag)
+              '()) ; Return comment
             (#t
-              (let ((rv (parse-hash top-read c port)))
+              (let ((rv (parse-hash no-indent-read c port)))
                 (cond
                   ((not rv)
                     (read-error "Invalid #-prefixed string"))
-                  ((null? rv)
-                    comment-tag)
-                  ((pair? rv)
-                    (car rv))
                   (#t
-                    (read-error "****ERROR IN COMPATIBILITY LAYER parse-hash: must return #f '() or `(,obj)"))))))))))
+                    rv)))))))))
 
 
   ; detect #| or |#
@@ -748,15 +822,20 @@
         (#t
           ; At this point, Scheme only requires support for "." or "...".
           ; As an extension we can support them all.
-          (string->symbol (list->string (cons #\.
-            (read-until-delim port neoteric-delimiters))))))))
+          (string->symbol
+            (fold-case-maybe port
+              (list->string (cons #\.
+                (read-until-delim port neoteric-delimiters)))))))))
 
-  ; NOTE: this function can return comment-tag.  Program defensively
-  ; against this when calling it.
-  (define (underlying-read top-read port)
-    ; Note: This reader is case-sensitive, which is consistent with R6RS
-    ; and guile, but NOT with R5RS.  Most people won't notice, and I
-    ; _like_ case-sensitivity.
+  ; This implements a simple Scheme "read" implementation from "port",
+  ; but if it must recurse to read, it will invoke "no-indent-read"
+  ; (a reader that is NOT indentation-sensitive).
+  ; This additional parameter lets us easily implement additional semantics,
+  ; and then call down to this underlying-read procedure when basic reader
+  ; procedureality (implemented here) is needed.
+  ; This lets us implement both a curly-infix-ONLY-read
+  ; as well as a neoteric-read, without duplicating code.
+  (define (underlying-read no-indent-read port)
     (consume-whitespace port)
     (let* ((pos (get-sourceinfo port))
            (c   (my-peek-char port)))
@@ -772,136 +851,164 @@
             (cond
               ((ismember? c digits) ; Initial digit.
                 (read-number port '()))
-              ((char=? c #\#) (process-sharp top-read port))
+              ((char=? c #\#)
+                (my-read-char port)
+                (let ((rv (process-sharp no-indent-read port)))
+                  ; process-sharp convention: null? means comment,
+                  ; pair? means object (the object is in its car)
+                  (cond
+                    ((null? rv)
+                      ; recurse
+                      (no-indent-read port))
+                    ((pair? rv)
+                      (car rv))
+                    (#t ; convention violated
+                      (read-error "readable/kernel: ***ERROR IN COMPATIBILITY LAYER parse-hash must return #f '() or `(,a)")))))
               ((char=? c #\.) (process-period port))
               ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
                 (my-read-char port)
                 (if (ismember? (my-peek-char port) digits)
                   (read-number port (list c))
-                  (string->symbol (list->string (cons c
-                    (read-until-delim port neoteric-delimiters))))))
-
-              ; We'll reimplement abbreviations, list open, and ;.
-              ; These actually should be done by neoteric-read (and thus
-              ; we won't see them), but redoing it here doesn't
-              ; cost us anything,
-              ; and it makes some kinds of testing simpler.  It also means that
-              ; this function is a fully-usable Scheme reader, and thus perhaps
-              ; useful for other purposes.
+                  (string->symbol (fold-case-maybe port
+                    (list->string (cons c
+                      (read-until-delim port neoteric-delimiters)))))))
               ((char=? c #\')
                 (my-read-char port)
                 (list (attach-sourceinfo pos 'quote)
-                  (top-read port)))
+                  (no-indent-read port)))
               ((char=? c #\`)
                 (my-read-char port)
                 (list (attach-sourceinfo pos 'quasiquote)
-                  (top-read port)))
-              ((char=? c #\`)
+                  (no-indent-read port)))
+              ((char=? c #\,)
                 (my-read-char port)
                   (cond
                     ((char=? #\@ (my-peek-char port))
                       (my-read-char port)
                       (list (attach-sourceinfo pos 'unquote-splicing)
-                       (top-read port)))
+                       (no-indent-read port)))
                    (#t
                     (list (attach-sourceinfo pos 'unquote)
-                      (top-read port)))))
-              ; The open parent calls neoteric-read, but since this one
-              ; shouldn't normally be used anyway (neoteric-read
-              ; will get first crack at it), it doesn't matter:
-              ((char=? c #\( ) ; )
+                      (no-indent-read port)))))
+              ((char=? c #\( )
                   (my-read-char port)
-                  (my-read-delimited-list top-read #\) port))
+                  (my-read-delimited-list no-indent-read #\) port))
+              ((char=? c #\) )
+                (read-char port)
+                (read-error "Closing parenthesis without opening")
+                (underlying-read no-indent-read port))
+              ((char=? c #\[ )
+                  (my-read-char port)
+                  (my-read-delimited-list no-indent-read #\] port))
+              ((char=? c #\] )
+                (read-char port)
+                (read-error "Closing bracket without opening")
+                (underlying-read no-indent-read port))
+              ((char=? c #\} )
+                (read-char port)
+                (read-error "Closing brace without opening")
+                (underlying-read no-indent-read port))
               ((char=? c #\| )
                 ; Scheme extension, |...| symbol (like Common Lisp)
-                ; Disable this if you don't like it.
-                (my-read-char port) ; Skip |
+                ; This is present in R7RS draft 6.
+                (my-read-char port) ; Consume the initial vertical bar.
                 (let ((newsymbol
+                  ; Do NOT call fold-case-maybe; always use literal values.
                   (string->symbol (list->string
                     (read-until-delim port '(#\|))))))
                   (my-read-char port)
                   newsymbol))
               (#t ; Nothing else.  Must be a symbol start.
-                (string->symbol (list->string
-                  (read-until-delim port neoteric-delimiters))))))))))
+                (string->symbol (fold-case-maybe port
+                  (list->string
+                    (read-until-delim port neoteric-delimiters)))))))))))
 
 ; -----------------------------------------------------------------------------
 ; Curly Infix
 ; -----------------------------------------------------------------------------
 
-  ; Return true if lyst has an even # of parameters, and the (alternating) first
-  ; ones are "op".  Used to determine if a longer lyst is infix.
-  ; Otherwise it returns false.
+  ; Return true if lyst has an even # of parameters, and the (alternating)
+  ; first parameters are "op".  Used to determine if a longer lyst is infix.
   ; If passed empty list, returns true (so recursion works correctly).
-  (define (even-and-op-prefix op lyst)
+  (define (even-and-op-prefix? op lyst)
     (cond
       ((null? lyst) #t)
-      ((not (pair? lyst)) #f) ; Not a list.
-      ((not (eq? op (car lyst))) #f) ; fail - operators not all equal?.
-      ((null? (cdr lyst)) #f) ; fail - odd # of parameters in lyst.
-      (#t (even-and-op-prefix op (cddr lyst))))) ; recurse.
+      ((not (pair? lyst)) #f)
+      ((not (eq? op (car lyst))) #f) ; fail - operators not the same
+      ((not (pair? (cdr lyst)))  #f) ; Wrong # of parameters or improper
+      (#t   (even-and-op-prefix? op (cddr lyst))))) ; recurse.
 
-  ; Return True if the lyst is in simple infix format (and should be converted
-  ; at read time).  Else returns NIL.
-  (define (simple-infix-listp lyst)
+  ; Return true if the lyst is in simple infix format
+  ; (and thus should be reordered at read time).
+  (define (simple-infix-list? lyst)
     (and
       (pair? lyst)           ; Must have list;  '() doesn't count.
       (pair? (cdr lyst))     ; Must have a second argument.
       (pair? (cddr lyst))    ; Must have a third argument (we check it
                              ; this way for performance)
       (symbol? (cadr lyst))  ; 2nd parameter must be a symbol.
-      (even-and-op-prefix (cadr lyst) (cdr lyst)))) ; even parameters equal??
+      (even-and-op-prefix? (cadr lyst) (cdr lyst)))) ; true if rest is simple
 
-  ; Return alternating parameters in a lyst (1st, 3rd, 5th, etc.)
+  ; Return alternating parameters in a list (1st, 3rd, 5th, etc.)
   (define (alternating-parameters lyst)
     (if (or (null? lyst) (null? (cdr lyst)))
       lyst
       (cons (car lyst) (alternating-parameters (cddr lyst)))))
 
-  ; Transform a simple infix list - move the 2nd parameter into first position,
-  ; followed by all the odd parameters.  Thus (3 + 4 + 5) => (+ 3 4 5).
-  (define (transform-simple-infix lyst)
-     (cons (cadr lyst) (alternating-parameters lyst)))
+  ; Not a simple infix list - transform it.  Written as a separate procedure
+  ; so that future experiments or SRFIs can easily replace just this piece.
+  (define (transform-mixed-infix lyst)
+     (cons 'nfx lyst))
 
+  ; Given curly-infix lyst, map it to its final internal format.
   (define (process-curly lyst)
-    (if (simple-infix-listp lyst)
-       (transform-simple-infix lyst) ; Simple infix expression.
-       (cons 'nfx lyst))) ; Non-simple; prepend "nfx" to the list.
+    (cond
+     ((not (pair? lyst)) lyst) ; E.G., map {} to ().
+     ((null? (cdr lyst)) ; Map {a} to a.
+       (car lyst))
+     ((and (pair? (cdr lyst)) (null? (cddr lyst))) ; Map {a b} to (a b).
+       lyst)
+     ((simple-infix-list? lyst) ; Map {a OP b [OP c...]} to (OP a b [c...])
+       (cons (cadr lyst) (alternating-parameters lyst)))
+     (#t  (transform-mixed-infix lyst))))
 
-  ; NOTE: this function can return comment-tag.  Program defensively
-  ; against this when calling it.
-  (define (read-at-curly top-read port)
+
+  (define (curly-infix-read-real no-indent-read port)
     (let* ((pos (get-sourceinfo port))
-           (c   (my-peek-char port)))
+            (c   (my-peek-char port)))
       (cond
+        ((eof-object? c) c)
+        ((eqv? c #\;)
+          (consume-to-eol port)
+          (curly-infix-read-real no-indent-read port))
+        ((my-char-whitespace? c)
+          (my-read-char port)
+          (curly-infix-read-real no-indent-read port))
         ((eqv? c #\{)
           (my-read-char port)
           ; read in as infix
           (attach-sourceinfo pos
             (process-curly
-              (my-read-delimited-list top-read #\} port))))
+              (my-read-delimited-list no-indent-read #\} port))))
         (#t
-          (underlying-read top-read port)))))
+          (underlying-read no-indent-read port)))))
 
-  ; NOTE: this function can return comment-tag.  Program defensively
-  ; against this when calling it.
-  (define (curly-infix-read-func port)
-    (read-at-curly curly-infix-read-nocomment-func port))
-  (define (curly-infix-read-nocomment-func port)
-    (let ((rv (curly-infix-read-func port)))
-      (if (eq? rv comment-tag)
-          ; comment, so retry
-          (curly-infix-read-nocomment-func port)
-          rv)))
+  ; Read using curly-infix-read-real
+  (define (curly-infix-read-nocomment port)
+    (curly-infix-read-real curly-infix-read-nocomment port))
 
 ; -----------------------------------------------------------------------------
 ; Neoteric Expressions
 ; -----------------------------------------------------------------------------
 
+  ; Implement neoteric-expression's prefixed (), [], and {}.
+  ; At this point, we have just finished reading some expression, which
+  ; MIGHT be a prefix of some longer expression.  Examine the next
+  ; character to be consumed; if it's an opening paren, bracket, or brace,
+  ; then the expression "prefix" is actually a prefix.
+  ; Otherwise, just return the prefix and do not consume that next char.
+  ; This recurses, to handle formats like f(x)(y).
   (define (neoteric-process-tail port prefix)
-      ; See if we've just finished reading a prefix, and if so, process.
-      ; This recurses, to handle formats like f(x)(y).
-      ; This implements prefixed (), [], and {}
       (let* ((pos (get-sourceinfo port))
              (c   (my-peek-char port)))
         (cond
@@ -910,78 +1017,61 @@
             (my-read-char port)
             (neoteric-process-tail port
               (attach-sourceinfo pos
-                (cons prefix (my-read-delimited-list neoteric-read-nocomment-func #\) port)))))
+                (cons prefix (my-read-delimited-list neoteric-read-nocomment #\) port)))))
           ((char=? c #\[ )  ; Implement f[x]
             (my-read-char port)
             (neoteric-process-tail port
                 (attach-sourceinfo pos
                   (cons (attach-sourceinfo pos 'bracketaccess)
                     (cons prefix
-                      (my-read-delimited-list neoteric-read-nocomment-func #\] port))))))
+                      (my-read-delimited-list neoteric-read-nocomment #\] port))))))
           ((char=? c #\{ )  ; Implement f{x}
             (neoteric-process-tail port
               (attach-sourceinfo pos
-                (list prefix
-                  ; NOTE: although read-at-curly could return comment-tag,
-                  ; at this point we know the next item is { }, so
-                  ; it cannot return a comment-tag in this context
-                  (read-at-curly neoteric-read-nocomment-func port)))))
+                (let
+                  ((tail (curly-infix-read-real neoteric-read-nocomment port)))
+                  (if (eqv? tail '())
+                    (list prefix) ; Map f{} to (f), not (f ()).
+                    (list prefix tail))))))
           (#t prefix))))
 
-  ; NOTE: this function can return comment-tag.  Program defensively
-  ; against this when calling it.
-  (define (neoteric-read-func port)
-    ; Read using "neoteric Lisp notation".
-    ; This implements unprefixed (), [], and {}
-    (consume-whitespace port)
+  ; This is the "real" implementation of neoteric-read.
+  ; It directly implements unprefixed (), [], and {} so we retain control;
+  ; it calls neoteric-process-tail so f(), f[], and f{} are implemented.
+  ;  (if (eof-object? (my-peek-char port))
+  (define (neoteric-read-real port)
+    (let*
+      ((pos (get-sourceinfo port))
+       (c   (my-peek-char port))
+       (result
+         (cond
+           ((eof-object? c) c)
+           ((char=? c #\( )
+             (my-read-char port)
+             (attach-sourceinfo pos
+               (my-read-delimited-list neoteric-read-nocomment #\) port)))
+           ((char=? c #\[ )
+             (my-read-char port)
+             (attach-sourceinfo pos
+               (my-read-delimited-list neoteric-read-nocomment #\] port)))
+           ((char=? c #\{ )
+             (my-read-char port)
+             (attach-sourceinfo pos
+               (process-curly
+                 (my-read-delimited-list neoteric-read-nocomment #\} port))))
+           ((my-char-whitespace? c)
+             (my-read-char port)
+             (neoteric-read-real port))
+           ((eqv? c #\;)
+             (consume-to-eol port)
+             (neoteric-read-real port))
+           (#t (underlying-read neoteric-read-nocomment port)))))
+      (if (eof-object? result)
+        result
+        (neoteric-process-tail port result))))
 
-    (neoteric-process-tail port
-      (let* ((pos (get-sourceinfo port))
-             (c   (my-peek-char port)))
-        ; (write c)
-        (cond
-          ; We need to directly implement abbreviations ', etc., so that
-          ; we retain control over the reading process.
-          ((eof-object? c) c)
-          (#t
-            (attach-sourceinfo pos
-              (cond
-                ((char=? c #\')
-                  (my-read-char port)
-                  (list (attach-sourceinfo pos 'quote)
-                    (neoteric-read-nocomment-func port)))
-                ((char=? c #\`)
-                  (my-read-char port)
-                  (list (attach-sourceinfo pos 'quasiquote)
-                    (neoteric-read-nocomment-func port)))
-                ((char=? c #\,)
-                  (my-read-char port)
-                    (cond
-                      ((char=? #\@ (my-peek-char port))
-                        (my-read-char port)
-                        (list (attach-sourceinfo pos 'unquote-splicing)
-                         (neoteric-read-nocomment-func port)))
-                     (#t
-                      (list (attach-sourceinfo pos 'unquote)
-                        (neoteric-read-nocomment-func port)))))
-                ((char=? c #\( )
-                   (my-read-char port)
-                   (my-read-delimited-list neoteric-read-nocomment-func #\) port))
-                ((char=? c #\[ )
-                    (my-read-char port)
-                    (my-read-delimited-list neoteric-read-nocomment-func #\] port))
-                ((char=? c #\{ )
-                  (my-read-char port)
-                  (process-curly
-                    (my-read-delimited-list neoteric-read-nocomment-func #\} port)))
-                (#t (let ((result (underlying-read neoteric-read-nocomment-func port)))
-                        result)))))))))
-
-  (define (neoteric-read-nocomment-func port)
-    (let ((rv (neoteric-read-func port)))
-      (if (eq? rv comment-tag)
-          (neoteric-read-nocomment-func port)
-          rv)))
+  (define (neoteric-read-nocomment port)
+    (neoteric-read-real port))
 
 ; -----------------------------------------------------------------------------
 ; Sweet Expressions
@@ -998,15 +1088,53 @@
   ; This is a special unique object that is used to
   ; represent the existence of the split symbol
   ; so that readblock-clean handles it properly:
-  (define split-tag (cons '() '()))
+  (define split-tag (cons 'split-tag! '()))
+
+  ; This is a special unique object that is used to represent the
+  ; existence of a comment such as #|...|#, #!...!#, and #;datum.
+  ; The process-sharp for sweet-expressions is separately implemented,
+  ; and returns comment-tag for these commenting expressions, so that the
+  ; sweet-expression reader can properly handle newlines after them
+  ; (e.g., after a newline the "!" indents become active).
+  ; The problem is that "#" can introduce many constructs, not just comments,
+  ; and we'd need two-character lookahead (which isn't portable) to know
+  ; when that occurs.  So instead, we process #, and return comment-tag
+  ; when it's a comment.
+  ; We don't need use this for ;-comments; we can handle them directly,
+  ; since no lookahead is needed to disambiguate them.
+  (define comment-tag (cons 'comment-tag! '())) ; all cons cells are unique
+
+  (define (process-sharp-comment-tag no-indent-read port)
+    ; this changes the convention of process-sharp
+    ; to be either the object itself, or a special
+    ; object called the comment-tag
+    (let ((rv (process-sharp no-indent-read port)))
+      (cond
+        ((null? rv)
+          comment-tag)
+        ((pair? rv)
+          (neoteric-process-tail port (car rv)))
+        (#t
+          (read-error "the impossible happened: process-sharp returned incorrect value")))))
+
+  ; Call neoteric-read, but handle # specially, so that #|...|# at the
+  ; top level will return comment-tag instead.
+  (define (neoteric-read-real-comment-tag port)
+    (let ((c (my-peek-char port)))
+      (cond
+        ((eof-object? c) c)
+        ((eqv? c #\#)
+          (my-read-char port)
+          (process-sharp-comment-tag neoteric-read-real port))
+        (#t (neoteric-read-real port)))))
 
   (define (readquote level port qt)
     (let ((char (my-peek-char port)))
       (if (char-whitespace? char)
           (list qt)
-          (list qt (neoteric-read-nocomment-func port)))))
+          (list qt (neoteric-read-nocomment port)))))
 
-  ; NOTE: this function can return comment-tag.  Program defensively
+  ; NOTE: this procedure can return comment-tag.  Program defensively
   ; against this when calling it.
   (define (readitem level port)
     (let ((pos  (get-sourceinfo port))
@@ -1027,7 +1155,7 @@
           (#t
             (attach-sourceinfo pos (readquote level port 'unquote)))))
        (#t
-          (neoteric-read-func port)))))
+          (neoteric-read-real-comment-tag port)))))
 
   (define (indentation>? indentation1 indentation2)
     (let ((len1 (string-length indentation1))
@@ -1200,10 +1328,12 @@
                           (cons level (car block))
                           rest))
                     (#t
-                      (cons level (attach-sourceinfo pos (cons first block)))))))))))))
+                      (cons level (attach-sourceinfo pos
+                                       (cons first block)))))))))))))
 
   ;; Consumes as much horizontal, non-indent whitespace as
   ;; possible.  Treat comments as horizontal whitespace too.
+  ;; Note that this does NOT consume any end-of-line characters.
   (define (consume-horizontal-whitespace port)
     (let ((char (my-peek-char port)))
       (cond
@@ -1213,7 +1343,7 @@
         ((eqv? char #\;)
            (consume-to-eol port)))))
 
-  ;; reads a block and handles (quote), (unquote),
+  ;; Reads a block and handles (quote), (unquote),
   ;; (unquote-splicing) and (quasiquote).
   (define (readblock-clean level port)
     (let* ((read (readblock level port))
@@ -1256,63 +1386,66 @@
           (cons next-level (attach-sourceinfo pos obj)))
         (#t (cons next-level (attach-sourceinfo pos block))))))
 
+  ; Read single complete I-expression.
   ; TODO: merge handling of ;-comments and #|...|# comments
   (define (sugar-start-expr port)
-    ; Read single complete I-expression.
-    (let* ((indentation (list->string (accumulate-hspace port)))
-           (pos (get-sourceinfo port))
-           (c   (my-peek-char port)))
-      (cond
-        ((eof-object? c) c) ; EOF - return it, we're done.
-        ((eqv? c #\; )    ; comment - consume and see what's after it.
-          (let ((d (consume-to-eol port)))
-            (cond
-              ((eof-object? d) d) ; If EOF after comment, return it.
-              (#t
-                (my-read-char port) ; Newline after comment.  Consume NL
-                (sugar-start-expr port))))) ; and try again
-        ; hashes are potential comments too
-        ((eqv? c #\#)
-          (let ((obj (neoteric-read-func port)))
-            (if (eq? obj comment-tag)
-                ; heh, comment.  Consume spaces and start again.
-                ; (Consuming horizontal spaces makes comments behave
-                ; as SPLIT when an item is after a comment on the
-                ; same line)
-                (begin
-                  (accumulate-hspace port)
-                  (sugar-start-expr port))
-                ; aaaaargh not a comment.  Use rotated version
-                ; of readblock-clean.
-                (let* ((sub-read (readblock-clean-rotated "" port pos obj))
-                       (block (cdr sub-read)))
-                  (cond
-                    ((eq? block '.)
-                      (attach-sourceinfo pos '()))
-                    (#t
-                      (attach-sourceinfo pos block)))))))
-        ((char-line-ending? c)
-          (consume-end-of-line port)
-          (sugar-start-expr port)) ; Consume and again
-        ((> (string-length indentation) 0) ; initial indentation disables
-          ; ignore indented comments
-          (let ((rv (neoteric-read-func port)))
-            (if (eq? rv comment-tag)
-                ; indented comment.  restart.
-                (sugar-start-expr port)
-                rv)))
-        (#t
-          (let* ((read (readblock-clean "" port))
-                 (level (car read))
-                 (block (cdr read)))
-            (cond
-             ((eq? block '.)
-                (attach-sourceinfo pos '()))
-             (#t
-                (attach-sourceinfo pos block))))))))
+    (let* ((c (my-peek-char port)))
+      (if (eof-object? c)
+        c
+        (let* ((indentation (list->string (accumulate-hspace port)))
+               (pos (get-sourceinfo port))
+               (c   (my-peek-char port)))
+          (cond
+            ((eof-object? c) c) ; EOF - return it, we're done.
+            ((eqv? c #\; )    ; comment - consume and see what's after it.
+              (let ((d (consume-to-eol port)))
+                (cond
+                  ((eof-object? d) d) ; If EOF after comment, return it.
+                  (#t
+                    (my-read-char port) ; Newline after comment.  Consume NL
+                    (sugar-start-expr port))))) ; and try again
+            ; hashes are potential comments too
+            ((eqv? c #\#)
+              (let ((obj (neoteric-read-real-comment-tag port)))
+                (if (eq? obj comment-tag)
+                    ; heh, comment.  Consume spaces and start again.
+                    ; (Consuming horizontal spaces makes comments behave
+                    ; as SPLIT when an item is after a comment on the
+                    ; same line)
+                    (begin
+                      (accumulate-hspace port)
+                      (sugar-start-expr port))
+                    ; aaaaargh not a comment.  Use rotated version
+                    ; of readblock-clean.
+                    (let* ((sub-read (readblock-clean-rotated "" port pos obj))
+                           (block (cdr sub-read)))
+                      (cond
+                        ((eq? block '.)
+                          (attach-sourceinfo pos '()))
+                        (#t
+                          (attach-sourceinfo pos block)))))))
+            ((char-line-ending? c)
+              (consume-end-of-line port)
+              (sugar-start-expr port)) ; Consume and again
+            ((> (string-length indentation) 0) ; initial indentation disables
+              ; ignore indented comments
+              (let ((rv (neoteric-read-real-comment-tag port)))
+                (if (eq? rv comment-tag)
+                    ; indented comment.  restart.
+                    (sugar-start-expr port)
+                    rv)))
+            (#t
+              (let* ((read (readblock-clean "" port))
+                     (level (car read))
+                     (block (cdr read)))
+                (cond
+                 ((eq? block '.)
+                    (attach-sourceinfo pos '()))
+                 (#t
+                    (attach-sourceinfo pos block))))))))))
 
 ; -----------------------------------------------------------------------------
-; Comparison Functions
+; Comparison procedures
 ; -----------------------------------------------------------------------------
 
   (define compare-read-file '()) ; TODO
@@ -1321,14 +1454,10 @@
 ; Exported Interface
 ; -----------------------------------------------------------------------------
 
-  (define curly-infix-read (make-read curly-infix-read-nocomment-func))
-  (define neoteric-read (make-read neoteric-read-nocomment-func))
+  (define curly-infix-read (make-read curly-infix-read-nocomment))
+  (define neoteric-read (make-read neoteric-read-nocomment))
   (define sweet-read (make-read sugar-start-expr))
 
   )
 
-; TODO: Fix bug if there's no end-of-line at the last line of file.
-;       Seems to be in the sweet-expression processing.
-
 ; vim: set expandtab shiftwidth=2 :
-

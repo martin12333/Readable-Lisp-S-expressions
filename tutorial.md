@@ -20,10 +20,8 @@ Proposed solution
 
 To solve this, we've developed three tiers of notation, each building on the previous. These are simply new abbreviations for common cases; you can continue to use normally-formatted s-expressions wherever you want to. These new notations/abbreviations are, in summary:
 
-1.   *Curly-infix-expressions* (*c-expressions*): Curly braces {...} contain an *infix list*. A *simple infix list* has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  Other infix lists map to "(nfx parameters)".   By intent, there is no precedence and you *must* use another {...} for an embedded infix list.
-    * Example: {n <= 2} maps to (<= n 2)
-2.   *Neoteric-expressions* (*n-expressions*): This includes curly-infix-expressions, and adds special meanings to some prefixed symbols. An e(...) maps to (e ...); an e{...} maps to e({...}); and an e[...] maps to (bracketaccess e ...), where "e" is any expression. There must be no whitespace between e and the open parenthesis. Also, an unprefixed "( . e)" must evaluate as "e".
-    * Example: f(1 2) maps to (f 1 2)
+1.   *Curly-infix-expressions* (*c-expressions*): Curly braces {...} contain an *infix list*. A *simple infix list* has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  By intent, there is no precedence and you *must* use another {...} for an embedded infix list. For example, {n <= 2} maps to (<= n 2)
+2.   *Neoteric-expressions* (*n-expressions*): This includes curly-infix-expressions, and adds special meanings to some prefixed symbols. An e(...) maps to (e ...), and an e{...} maps to (e {...}). There must be no whitespace between e and the opening character.  For example, f(1 2) maps to (f 1 2)
 3.   *Sweet-expressions* (*t-expressions*): Includes neoteric-expressions, and deduces parentheses from indentation. Basic rules:
 
     - An indented line is a parameter of its parent.
@@ -59,7 +57,7 @@ We've created implementations of curly infix, neoteric-expressions, and sweet-ex
 To try all the demos, make sure you have:
 
 *   [GNU Guile](http://www.gnu.org/software/guile/guile.html) (an implementation of the *Scheme* dialect of Lisp).  It's best if you use a guile with built-in readline support (normally it is), but the demos will work if it isn't.
-*   a Common Lisp implementation; here we'll presume it is clisp, but it doesn't really matter (sbcl is known to work).  You can use guile instead if you don't want to install a Common Lisp.
+*   a Common Lisp implementation; here we'll presume it is clisp, but it doesn't really matter (sbcl is known to work).  This actually isn't necessary; you can use guile instead if you don't want to install a Common Lisp.
 *   expect
 
 If you plan to use the development (not stable) version, you'll also need:
@@ -82,6 +80,7 @@ If you *instead* want to get the *development* version, do this instead:
 
      git clone git://git.code.sf.net/p/readable/code readable-code
      cd readable-code
+     git checkout develop  # Switch to "develop" branch
      autoreconf -i
 
 If you use one of the rare systems that doesn't support /usr/bin/env, then you'll need to install one ("ln -s /bin/env /usr/bin/env") or change the first lines of some of the scripts.
@@ -113,7 +112,7 @@ You actually don't have to install it to use it, if you just want to play with i
 
 This will probably require privileges, so you may need to run "su" first or use sudo ("sudo make install") to get those privileges.
 
-The instructions below assume you haven't installed it.  If you *have* installed it, you don't need to include the "./" prefixes in the command names below.  Another way you can avoid the "./" prefixes is to include directory with these commands in your PATH; on a Bourne-like shell, you can do this:
+The instructions below assume you haven't installed it.  If you *have* installed it, you don't need to include the "./" prefixes in the command names below.  Another way you can avoid the "./" prefixes is to include, in your PATH, the directory that contains these commands in your PATH. On a Bourne-like shell (the usual kind), you can do this to fix your path if your current directory has the commands:
 
     export PATH="$(pwd)/$PATH"
 
@@ -122,14 +121,16 @@ The instructions below assume you haven't installed it.  If you *have* installed
 Using curly-infix-expressions (c-expressions)
 =============================================
 
-Let's first try out "curly-infix-expressions" (c-expressions). Start up your Common Lisp (I'll presume it's clisp), and load the curly-infix demo:
+Let's first try out "curly-infix-expressions" (c-expressions). You use either Common Lisp or guile (a Scheme implementation) to do this.
+
+If you want to try it with Common Lisp, you'll need to start one (I'll presume in these instructions it's clisp), and load our implementation:
 
      clisp
-     (load "curly-infix.cl")
+     (load "readable.cl")
 
-(If you really don't want to install Common Lisp, you can run "./neoteric-guile" instead, which also supports curly-infix-expressions using guile instead of clisp.)
+If you want to try it out with Scheme instead, run "./curly-guile".
 
-Any of these three new notations (curly-infix-expressions, neoteric-expressions, and sweet-expressions) can also accept normally-formatted s-expressions. To demonstrate, type at the command line:
+Any of these three new notations (curly-infix-expressions, neoteric-expressions, and sweet-expressions) can also accept normally-formatted s-expressions. To demonstrate that, type at the command line:
 
      (+ 2 3)
 
@@ -149,7 +150,7 @@ There is intentionally no support for precedence between different operators. Wh
 
     {2 + {3 * 4}}
 
-You *can* "chain" the same infix operator, e.g., {2 + 3 + 4} is fine, and it will map to (+ 2 3 4). This works with comparisons, too, e.g.:
+You *can* "chain" the same infix operator, e.g., {2 + 3 + 4} is fine, and it will map to (+ 2 3 4). This works with comparisons, too, as long as the comparisons are the same.  Here's an example:
 
     {5 <= 7 <= 10}
 
@@ -159,7 +160,7 @@ But what happens to infix lists that aren't simple infix lists?  The answer is t
 
 Note that curly-infix-expressions intentionally do not force a particular precedence, nor do they automatically switch to infix operators recursively inside {...}. Many previous systems did that, but this turned out to interfere with many of Lisp's power (which needs homoiconicity and generality). It also does not attempt to guess when infix operators are used. [After many experiments with real problems, David A. Wheeler found that this rule works better for Lisps than those alternatives.](http://www.dwheeler.com/readable/version02.html)
 
-You can type control-D (Windows: control-Z) to end this demo.  Or run "(exit)" to get out.
+Just execute "(exit)" to get out.
 
 
 Using Neoteric-expressions (n-expressions)

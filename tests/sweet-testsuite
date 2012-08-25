@@ -101,14 +101,14 @@ i
   j k
   m
 
-(nfx)
+()
 {}
 
-(nfx 1)
+1
 {1}
 
-(nfx 3 +)
-{3 +}
+(- x)
+{- x}
 
 (+ 3 4)
 {3 + 4}
@@ -127,6 +127,28 @@ i
 
 (nfx 3 + 5 * 6)
 {3 + 5 * 6}
+
+(nfx a . z)
+{a . z}
+
+(nfx a + . z)
+{a + . z}
+
+(nfx a + b . z)
+{a + b . z}
+
+(nfx a + b + . z)
+{a + b + . z}
+
+(nfx a + b + c . z)
+{a + b + c . z}
+
+(nfx a + b + c + . z)
+{a + b + c + . z}
+
+; This isn't spec'ed, but we sure don't want to crash, so force this.
+z
+{. z}
 
 (f)
 f()
@@ -677,7 +699,7 @@ b(c . port)
 (f)
 f()
 
-(f (nfx))
+(f)
 f{}
 
 (f (+ a b))
