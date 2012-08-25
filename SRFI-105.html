@@ -639,6 +639,15 @@ redefine this function; it is merely suggested to simplify
 implementation of plausible future SRFIs.</li>
 </ul>
 
+<p>
+If an implementation supports SRFI 55 require-extension, then
+<samp>(require-extension (srfi 105))</samp> <em>should</em> implement
+the functionality of <var>enable-curly-infix</var>.
+Similarly,
+if an implementation imports the module <samp>(srfi 105)</samp>, then
+it <em>should</em> have the same effect as <var>enable-curly-infix</var>.
+</p>
+
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
 
 <h1 id="reference-implementation">Reference implementation</h1>
