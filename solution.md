@@ -1,21 +1,26 @@
 As discussed in the [Problem] page, many developers find standard Lisp notation hard to read.  Early Lisp was even harder to read, so abbreviations were added; one example is being able to abbreviate (quote x) as 'x.  Our approach is to add *additional* abbreviations for common cases, so that expressions in any Lisp-based language will be even easier to read.  Well-formatted S-expressions should work as-is, but if you use our abbreviations, the result should be easier for humans to understand.
 
-Unlike most past efforts to make Lisp more readable, our approach is **generic** (the notation does not depend on an underlying semantic) and **homoiconic** (the underlying data structure is clear from the syntax).  We believe these are necessary conditions for a readable Lisp notation (and their lack is why past efforts often failed).
+Unlike most past efforts to make Lisp more readable, our approach is **generic** (the notation does not depend on an underlying semantic) and **homoiconic** (the underlying data structure is clear from the syntax).  We believe these are necessary conditions for a readable Lisp notation.  Previous efforts, like McCarthy's M-expressions, failed because they lacked these properties.
 
-Readable abbreviation rules
-===========================
+Readable abbreviation specification
+===================================
 
-We have three notation tiers, each of which builds on the previous one ("&rArr;" means "maps to"):
+We have three notation tiers, each of which builds on the previous one. Curly-infix adds support for traditional infix notation; neoteric-expressions add support for traditional function notation; and sweet-expressions reduce the number of explicit parentheses needed (by deducing them from indentation).  Here's the complete specification of these abbreviations (where "&rArr;" means "maps to"):
 
-1.   *Curly-infix-expressions* (*c-expressions*): Curly braces {...} contain an *infix list*. A *simple infix list* has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  Other infix lists map to "(nfx parameters)".   By intent, there is no precedence and you *must* use another {...} for an embedded infix list.
-    * Example: {n <= 2} &rArr; (<= n 2)
-    * Example: {2 * 3 * 4} &rArr; (* 2 3 4)
-    * Example: {2 + 3 * 4} &rArr; (nfx 2 + 3 * 4)
-    * Example: {2 + {3 * 4}} &rArr; (+ 2 (* 3 4))
-2.   *Neoteric-expressions* (*n-expressions*): This includes curly-infix-expressions, and adds special meanings to some prefixed symbols. An e(...) maps to (e ...); an e{...} maps to e({...}); and an e[...] maps to (bracketaccess e ...), where "e" is any expression. There must be no whitespace between e and the open parenthesis. Also, an unprefixed "( . e)" must evaluate as "e".
-    * Example: f(1 2) &rArr; (f 1 2)
-    * Example: f{n - 1} &rArr; f({n - 1}) &rArr; (f (- n 1))
-    * Example: f{n - 1}(x) &rArr; f({n - 1})(x) &rArr; (f (- n 1))(x) &rArr; ((f (- n 1)) x)
+1.   *Curly-infix-expressions* (*c-expressions*): Curly braces {...} contain an *infix list*.
+    * A *simple* infix list represents one operation in infix order.  It has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol (aka eq? or eq).  It maps to "(even-parameter odd-parameters)".  E.g., {n <= 2} &rArr; (<= n 2), and {7 + 8 + 9} &rArr; (+ 7 8 9).
+    * The *empty* {} maps to (), the *escaping* {e} maps to e, and the *unary-op* {e1 e2} maps to (e1 e2).  Thus, {$} &rArr; $, and {- x} &rArr; (- x).
+    * Curly-infix lists beginning with the "." symbol have an unspecified mapping.
+    * Other infix lists are mixed and map to "(nfx parameters)".  E.g., {2 + 3 * 4} &rArr; (nfx 2 + 3 * 4)
+    * By intent, there is no precedence; just use another list. E.g., {2 + {3 * 4}} &rArr; (+ 2 (* 3 4))
+    * Curly-infix-expressions are defined for Scheme in [SRFI 105](http://srfi.schemers.org/srfi-105/).
+2.   *Neoteric-expressions* (*n-expressions*): This includes curly-infix-expressions, and adds special meanings to some prefixed symbols.
+    * An e(...) maps to (e ...).  E.g., f(1 2) &rArr; (f 1 2), exit() &rArr; (exit), and read(. port) &rArr; (read . port).
+    * An e{} maps to (e), otherwise, e{...} maps to (e {...}). E.g., f{n - 1} &rArr; (f {n - 1}) &rArr; (f (- n 1)), and g{- x} &rArr; (g (- x)).
+    * An e\[...] maps to (bracketaccess e ...)
+    * In the above, "e" is any datum expression. There must be no whitespace between e and the open paired character.
+    * An unprefixed "( . e)" must evaluate as "e".
+    * These recurse left-to-right.  E.G., f{n - 1}(x) &rArr; f({n - 1})(x) &rArr; (f (- n 1))(x) &rArr; ((f (- n 1)) x)
 3.   *Sweet-expressions* (*t-expressions*): Includes neoteric-expressions, and deduces parentheses from indentation. Basic rules:
 
     - An indented line is a parameter of its parent.
@@ -24,26 +29,30 @@ We have three notation tiers, each of which builds on the previous one ("&rArr;"
     - An empty line ends the expression; empty lines *before* expressions are ignored.
     - Indentation processing does not occur inside ( ), [ ], and { }, whether they are prefixed or not; they're just neoteric-expressions.  This makes sweet-expressions highly backwards-compatible.
 
-    Sweet-expression rule refinements:
+    Sweet-expression rule clarifications:
 
     - Lines with only a ;-comment are completely ignored - even their indentation (if any) is irrelevant.
     - You can indent using one-or-more space, tab, and/or exclamation point (!) characters.
     - A line with only indentation is an empty line.
-    - If an expression *starts* indented, then indentation is completely ignored (that line switches to neoteric-expressions).
+    - An expression that *starts* indented enables "indented-compatibility" mode, where indentation is completely ignored (that line switches to neoteric-expressions).
+    - Scheme's #; datum comment comments out the next *neoteric* expression, not the next *sweet* expression.
+
+    Sweet-expressions also include these advanced capabilities:
+
     - A \\\\ (aka SPLIT) starts a new line at the current indentation.  If it's immediately after indentation (aka GROUP in that case), it represents no symbol at all (at that indentation) - this is useful for lists of lists.
     - A $ (aka SUBLIST) in the middle of list restarts list processing; the right-hand-side (including its sub-blocks) is the last parameter of the left-hand side (of just that line). If there's no left-hand-side, the right-hand-side is put in a list.
     - A leading traditional abbreviation (quote, comma, backquote, or comma-at), followed by space or tab, is that operator applied to the sweet-expression starting at the same line.
-    - Scheme's #; datum comment comments out the next *neoteric* expression, not the next *sweet* expression.
 
     Sweet-expression examples are shown below.
 
-Curly-infix adds support for traditional infix notation; neoteric-expressions add support for traditional function notation; and sweet-expressions reduce the the number of explicit parentheses needed (by deducing them from indentation).  See [Rationale] for why these rules are the way they are.
+See [Rationale] for why these rules are the way they are, and [Retort] if you were told that Lisp's s-expression notation can't be improved on.
 
 Beginning an expression with indentation causes that line's indentation to be ignored, improving backwards compatibility.  We recommend that editors highlight these lines as warnings, to reduce the risk of their accidental use.  It might be also useful for an editor to highlight blank lines (as they separate expressions) and lines beginning at the left column.
 
 Individual implementations may have *additional* abbreviations that are useful for their semantics; our goal is to devise general abbreviations that others can build on if they choose.
 
-This is version 0.4 of notation specification; we believe the only area that *might* change are the sweet-expression refinements.
+This is version 0.5 of our notation specification.  We aren't expecting major changes from here on, but there is certainly the possibility of small refinements.
+
 
 Quick Examples
 ==============
@@ -116,90 +125,21 @@ define factorial(n)
 
 Notice that infix operations and function calls are much easier to read, and notice how much easier it is to read when there are fewer parentheses.  Now you don't need to use indentation tools to keep the code indented correctly; the indentation is part of the code itself.
 
-See [Examples] for many more examples.
+More Examples
+==============
 
+See the [Examples] page for many more examples, including with Lisp macros (they work just fine).
 
-Macros
-======
+The code distribution comes with "sweeten.sscm"; this is a program that translates traditional S-expressions into sweet-expressions, and is itself written using sweet-expressions.
 
-Everyone **knows** macros need s-expressions.  Or do they?  We think not!  Here's an example implementation of `let*`:
-
-<table>
-<tr>
-<th align="center">Sweet-expression</th>
-<th align="center">(Awkward) S-expression</th>
-</tr>
-
-<tr>
-<td>
-<pre>
-define-syntax let*
-  syntax-rules ()
-    \\
-    ! let* ()
-    !   body
-    !   ...
-    ! \\ begin
-    ! !    body
-    ! !    ...
-    \\
-    ! let*
-    !   \\
-    !     assignment
-    !     assignments
-    !     ...
-    !   body
-    !   ...
-    ! \\ let (assignment)
-    ! !    let*
-    ! !      \\
-    ! !        assignments
-    ! !        ...
-    ! !      body
-    ! !      ...
-</pre>
-</td>
-<td>
-<pre>
-(define-syntax let*
-  (syntax-rules ()
-    (
-     (let* ()
-       body
-       ...)
-      (begin
-        body
-        ...))
-    (
-     (let*
-       (
-        assignment
-        assignments
-        ...)
-       body
-       ...)
-      (let (assignment)
-        (let*
-          (
-           assignments
-           ...)
-          body
-          ...)))))
-</pre>
-</td>
-</tr>
-</table>
-
-Note that \\\\ as the first symbol after indentation represents "nothing".  This is helpful for creating lists of lists, by putting nothing after it.  If there are symbols after an initial \\\\, the \\\\ has no semantic meaning (nothing+something = something), but in this case it visually sets off the following symbols as being special in some way.
-
-The "!" is an indent character, which is unusual, but notice that it can be used to visually create vertical markers to visually indicate an important group; in the above example, the pattern to match for syntax-rules has one `!` before it, while the resulting expansion has two `!` - thus giving a good visual indicator and guide.  The "!" can also be used when using a system that erases horizontal spaces and tabs (e.g., some email systems), resolving a common complaint about indentation-sensitive syntax.
+"Letterfall" by Alan Manuel Gloria is a game written using sweet-expressions; you can see it here: https://github.com/AmkG/letterfall
 
 
 Credits
 =======
 
-*   David A. Wheeler was the initiator of the"readable" project.  He created the initial three tiers, and developed first drafts of the specifications and code.
-*   Alan Manuel K. Gloria made a number of specification suggestions and wrote significant pieces of the implementation.
+*   David A. Wheeler was the initiator of the "readable" project.  He created the initial three tiers, and developed first drafts of the specifications and code.
+*   Alan Manuel K. Gloria made a number of specification suggestions (e.g., adding the SUBLIST "$") and wrote significant pieces of the implementation.
 *   Egil Möller developed SRFI-49, an indentation semantic for Scheme and sample implementation. The sweet-expression indentation semantics and implementation are based on this.
 
 Also, thanks to the many other mailing list participants who provided feedback.
