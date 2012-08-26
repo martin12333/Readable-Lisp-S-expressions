@@ -618,6 +618,35 @@ a mixed curly-infix list (e.g., by implementing precedence
 using <var>transform-mixed-infix</var> as described below).
 </p>
 
+<p>
+An implementation <em>must not</em>, by default, bind the symbol
+&ldquo;<var>nfx</var>&rdquo; to a procedure, macro, or syntax;
+this symbol is reserved
+for use by library writers and application writers.
+</p>
+<p>
+<em>However</em>, an implementation <em>may</em> provide a <em>library</em> that
+binds the &ldquo;<var>nfx</var>&rdquo; symbol
+(as it is then a library,
+this case actually falls under
+the "reserved for use by library writers" clause above).
+Application writers and other library writers
+using that implementation
+are then free to use or not use
+the implementation's provided &ldquo;<var>nfx</var>&rdquo;.
+(an implementation may even provide more than one, if they
+so desire)
+</p>
+<p>
+A later SRFI <em>may</em> mandate that
+an implementation bind
+&ldquo;<var>nfx</var>&rdquo; to some procedure, macro, or syntax;
+we expect such a SRFI to be proposed,
+<strong><em>if ever</em></strong>,
+after the Scheme community has had some experience with
+using the <em>mixed</em> form described in this SRFI.
+</p>
+
 <p>Procedures:</p>
 <ul>
 <li>Implementations <em>may</em> provide the procedure
