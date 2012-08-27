@@ -314,12 +314,15 @@ define sweeten-boring-list(x first? pos next-indent)
     null?(x) '(#\newline)
     first?
       ; if first, force its disply, even if that goes beyond width max.
-      let (item(unit(car(x))))
+      let
+        $ item unit(car(x))
         append item 
           sweeten-boring-list(cdr(x) #f {pos + length(item)} next-indent)
     #t ; Not first.
-      let (item(unit(car(x))))
-        let (item-sameline(append(LISTSPACE group-list LISTSPACE item)))
+      let
+        $ item unit(car(x))
+        let
+          $ item-sameline append(LISTSPACE group-list LISTSPACE item)
           if {{pos + length(item-sameline)} < maxwidth}
             append item-sameline
               sweeten-boring-list cdr(x) #f
@@ -488,7 +491,8 @@ define consume-end-of-line()
     if memq(c end-of-line-chars)
       begin
         read-char()
-        let ( next(peek-char()) )
+        let
+          $ next peek-char()
           if {not(eq?(c next)) and memq(next end-of-line-chars)}
             begin
               read-char()
@@ -496,7 +500,8 @@ define consume-end-of-line()
 ; Copy one line from stdin to stdout, end on EOF or end-of-line.
 ; Consume the end of line.
 define copy-line(port)
-  let ((c peek-char(port)))
+  let
+    $ c peek-char(port)
     cond
       eof-object?(c)   c
       memq(c end-of-line-chars)
@@ -511,7 +516,8 @@ define copy-line(port)
 define sweeten-filter()
   if build-on-sweet
     restore-traditional-read()
-  let ((c peek-char(current-input-port())))
+  let
+    $ c peek-char(current-input-port())
     cond
       eof-object?(c)
         c
