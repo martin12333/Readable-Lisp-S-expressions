@@ -117,14 +117,40 @@ two operands are handled cleanly.
 E.g., <samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c}</samp> maps to
 <samp>(+&nbsp;a&nbsp;b&nbsp;c)</samp>.</p>
 
-<h2 id="rationale_changereader">Why not macros or radically different reader notations?</h2>
+<h2 id="rationale_changereader">Why not macros? Why replace the reader?</h2>
 <p>Many previous systems have implemented &ldquo;infix&rdquo;
 systems as a named macro or procedure (e.g., <var>INFIX</var>).
 This looks ugly, and it does the wrong thing &dash; the resulting list
 always has <var>INFIX</var> at the beginning,
 not the actual infix operator, so this
 approach can interfere with quoting, macros, and other capabilities.
+In particular,
+consider the following <var>syntax-rules</var> macro
+for function composition:
 </p>
+<pre>
+(define-syntax o
+  (syntax-rules ()
+    ({f o g}
+     (lambda args
+       (f (apply g args))))
+    ({f o g o h o ...}
+     {(lambda (x)
+        (f (g x))) o g o ...})))
+</pre>
+<p>
+This example takes advantage of the fact that
+<samp>{f&nbsp;o&nbsp;g&nbsp;o&nbsp;h&nbsp;o&nbsp;...}</samp>
+maps to
+<samp>(o&nbsp;f&nbsp;g&nbsp;h&nbsp;...)</samp>.
+Infix cannot be implemented as a macro alone,
+as the <var>syntax-rules</var> form has
+a particular treatment for the pattern.
+A macro for infix would very likely confuse
+the <var>syntax-rules</var> form.
+</p>
+
+<h2 id="rationale_othersyntax">Why not completely different notation for infix?</h2>
 <p>Other systems build notations into the reader, but the
 infix notation would be a notation radically different from
 normal Lisp notation.
