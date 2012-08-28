@@ -136,7 +136,7 @@ for function composition:
        (f (apply g args))))
     ({f o g o h o ...}
      {(lambda (x)
-        (f (g x))) o g o ...})))
+        (f (g x))) o h o ...})))
 </pre>
 <p>
 This example takes advantage of the fact that
