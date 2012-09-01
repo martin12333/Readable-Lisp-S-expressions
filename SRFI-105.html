@@ -569,8 +569,12 @@ any Lisp-based language, its power comes from its simplicity.</p>
 <h1 id="specification">Specification</h1>
 <p>&ldquo;<dfn>Curly-infix-expressions</dfn>&rdquo; (c-expressions) are
 s-expressions with an additional notation: The curly-infix list.
-A curly-infix list is syntactically identical to a normal list,
-except it is surrounded by curly braces instead of by parentheses.
+A curly-infix list is syntactically almost identical to a regular list;
+it begins with &ldquo;{&rdquo;, optional whitespace,
+a sequence of zero or more whitespace-separated
+<em>neoteric-expressions</em>, optionally more whitespace (if there
+were any neoteric-expressions), and
+a matching &ldquo;}&rdquo;.
 Once a curly-infix list is read, it is mapped differently than a
 regular list by a curly-infix reader:</p>
 <ol>
@@ -622,6 +626,21 @@ is mapped to
 <samp>(nfx&nbsp;q&nbsp;+&nbsp;r&nbsp;.&nbsp;s)</samp>.
 </li>
 </ol>
+<p>
+A neoteric-expression (<em>n-expression</em>)
+is a curly-infix-expression, with the following modifications where
+<var>e</var> is any datum expression:
+<ol>
+<li>An e(...) maps to (e ...).  E.g., f(1 2) &rArr; (f 1 2), exit() &rArr; (exit), and read(. port) &rArr; (read . port).</li>
+<li>An e{} with zero or more whitespace characters within the braces maps to (e); otherwise, e{...} maps to (e {...}). E.g., f{n - 1} &rArr; (f {n - 1}) &rArr; (f (- n 1)), and g{- x} &rArr; (g (- x)).</li>
+<li>An e[...] maps to (bracketaccess&nbsp;e&nbsp;...)</li>
+<li>There must be no whitespace between e and the open paired character.</li>
+<li>An unprefixed "(&nbsp;.&nbsp;e)" must evaluate as "e".</li>
+<li>These recurse within lists, so lists contains sequences of zero or more <em>neoteric</em> expressions, not s-expressions.
+<li>These recurse left-to-right.  E.g., f{n - 1}(x) &rArr; f({n - 1})(x) &rArr; (f (- n 1))(x) &rArr; ((f (- n 1)) x)</li>
+</ul>
+</li>
+</p>
 <p>Here are some examples of c-expressions (note all operators in curly-infix are delimited):</p>
 <ul>
 <li><samp>{n&nbsp;&lt;=&nbsp;2}</samp> maps to
@@ -634,8 +653,10 @@ maps to
 <li><samp>{a * {b + c}}</samp> maps to <samp>(* a (+ b c))</samp></li>
 <li><samp>{x eqv? `a}</samp> maps to <samp>(eqv? x `a)</samp></li>
 <li><samp>{(- a) / b}</samp> maps to <samp>(/ (- a) b)</samp></li>
+<li><samp>{-(a) / b}</samp> also maps to <samp>(/ (- a) b)</samp></li>
 <li><samp>{(f a b) + (g h)}</samp> maps to <samp>(+ (f a b) (g h))</samp></li>
-<li><samp>&apos;{a + (f b) + x}</samp> maps to <samp>&apos;(+ a (f b) x)</samp></li>
+<li><samp>{f(a b) + g(h)}</samp> also maps to <samp>(+ (f a b) (g h))</samp></li>
+<li><samp>&apos;{a + f(b) + x}</samp> maps to <samp>&apos;(+ a (f b) x)</samp></li>
 <li><samp>{{a &gt; 0} and {b &gt;= 1}}</samp> maps to
 <samp>(and (&gt; a 0) (&gt;= b 1))</samp></li>
 </ul>
