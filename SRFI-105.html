@@ -336,25 +336,53 @@ In practice, we expect that implementations will build this into their
 default readers and then control it via some special flag, but we do
 not want to mandate exactly how it is turned on or passed.</p>
 
-<h2 id="rationale_procedures">Why the procedures <var>enable-curly-infix</var> and <var>curly-infix-read</var>?</h2>
+<h2 id="rationale_procedures">Why the marker <var>#!srfi-105</var>?</h2>
 <p>
-Early drafts of this SRFI <em>required</em> support for an
-&ldquo;<var>enable-curly-infix</var>&rdquo; procedure to enable
-curly-infix.
-But some implementations may have difficulty changing basic infrastructure
-(like the reader and loader) once they have started up.
-Thus, this procedure is not required, but
-simply <em>may</em> be available.
-This provides a simple convention for users who want to enable curly-infix,
-without leaving the system, on those systems where this is sensible.</p>
-<p>There&rsquo;s no explicit &ldquo;<var>disable-curly-infix</var>&rdquo;.
-There&rsquo;s no reason to disable it within this SRFI, and if some
-other action changes the meaning of braces, it would be that other
-action that disables it.</p>
-<p>The &ldquo;<var>curly-infix-read</var>&rdquo; procedure allows reading
-external curly-infix data, even if the implementation doesn&rsquo;t
-enable curly-infix-expressions by default but does support
-curly-infix-expressions.</p>
+We would like implementations to always have curly-infix enabled.
+However, some implementations may have other extensions that use {...},
+and we want a simple way to identify code that uses curly-infix
+so that readers can switch to it, if they need to switch.
+<a href="http://srfi.schemers.org/srfi-105/mail-archive/msg00027.html">
+This marker was recommended during discussion of SRFI-105</a>.
+After all, R6RS and R7RS (draft 6) already use #!fold-case and #!no-fold-case
+as special markers to control the reader;
+using <var>#!srfi-105</var> is a simple, similar-looking marker
+for a similar situation.
+What's more, it implies a reasonable convention for reader extensions:
+markers that begin with <var>#!</var>, followed by an ASCII letter, should
+have the rest read as an identifier (up to a whitespace)
+and use that to control the reader, and <var>srfi-</var> should be namespace
+for SRFIs.
+</p>
+
+<p>
+This marker need not interfere with other uses of <var>#!</var>.
+<a href="http://srfi.schemers.org/srfi-22/srfi-22.html">SRFI-22</a> supports
+#! followed by space as a comment to the end of the line; this is supported
+by several implementations, but this is clearly distinguished from this
+marker by the space.
+Guile, clisp, and several other Lisps support <var>#! ... !#</var>
+as a multi-line comment, enabling scripts with mixed languages and
+multi-line arguments.
+But in practice the <var>#!</var> is almost always
+followed immediately by "/" or ".", and other scripts
+could be trivially fixed to make that so.
+R6RS had a non-normative recommendation to accept <var>#!</var> or
+<var>#!</var> followed by a space as ignoring a line, but this is
+non-normative.
+Thus, implementations could trivially support simultaneously markers such as
+#!srfi-105 to identify curly-infix, the SRFI-22 #!+space marker, and
+#!+FILENAME...!# multi-line comment convention.
+Note that this SRFI does not mandate support for
+SRFI-22, #!fold-case, #!no-fold-case, or #! followed by slash or period;
+it is merely designed so that implementations could implement them
+all simultaneously.
+We recommend that <var>#!srfi-105</var> not be the first two characters
+in a file; if the file were made executable, and execution was attempted,
+this might confuse some systems into trying to run the
+program <var>srfi-105</var>.
+</p>
+
 <p>By intent, this SRFI (including the enabling mechanism)
 doesn&rsquo;t use or interact with any module system at all
 (including the R6RS and R7RS module systems). This is because some
@@ -618,6 +646,21 @@ A curly-infix reader <em>must</em>
 include the braces &ldquo;<code>{</code>&rdquo; and
 &ldquo;<code>}</code>&rdquo; as delimiters.</p>
 
+<p>
+An implementation of this SRFI <i>must</i> accept the marker
+<var>#!srfi-105</var> followed by a whitespace character.
+This marker (including the trailing whitespace character)
+is consumed and considered whitespace;
+after reading this marker, the reader <i>must</i> accept
+curly-infix expressions in subsequent datums
+until it reaches an end-of-file.
+We encourage implementations to always implement curly-infix expressions,
+however, portable applications must include this marker before any
+curly-infix expression.
+We recommend that portable applications not use this marker as the
+first characters of a file (e.g., they should precede it with a newline).
+</p>
+
 <p>The &ldquo;<dfn>standard readers</dfn>&rdquo;
 are the datum reader used by the REPL,
 the datum readers defined by the relevant Scheme standards
@@ -680,12 +723,6 @@ rebound by users of that library.
 <ul>
 <li>Implementations <em>may</em> provide the procedure
 <var>(curly-infix-read .  port)</var> as a curly-infix reader.</li>
-<li>Implementations <em>may</em> provide the procedure
-<var>(enable-curly-infix)</var>,
-which on completion would ensure that the
-standard readers are curly-infix enabled.
-If implemented, this procedure <em>must</em> allow users to safely invoke
-<var>(enable-curly-infix)</var> repeatedly.</li>
 </ul>
 
 <p>
@@ -709,10 +746,7 @@ until its matching &ldquo;<code>}</code>&rdquo;, and then calls <var>process-cur
 defined below. We recommend that implementations <em>always</em> do
 this, but an implementation must at least activate this behavior
 when &ldquo;<var>curly-foo</var>&rdquo; is invoked
-(if invoking <var>foo</var> on the command like would invoke the
-implementation without curly-infix).
-This is also enabled by
-<var>(enable-curly-infix)</var> if supported.</p>
+or when they read <var>#!srfi-105</var>.
 <p>This reference implementation is SRFI type 2: &ldquo;A
 mostly-portable solution that uses some kind of hooks provided in
 some Scheme interpreter/compiler. In this case, a detailed
