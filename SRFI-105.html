@@ -34,9 +34,12 @@ access previous messages via <a href=
 
 <h1 id="abstract">Abstract</h1>
 <p>Lisp-based languages, like Scheme, are almost the only
-programming languages in modern use that do not support infix notation.
-Adding standardized infix support to Scheme would eliminate a common
-complaint by developers who currently choose to use other languages.
+programming languages in modern use that do not support infix notation,
+and most languages support combining infix notation
+with function call notation of the form f(x).
+This SRFI provides these capabilities, for both
+developers who already use Scheme but would like these conveniences, as 
+as well as for other developers who currently choose to use other languages.
 Scheme currently reserves <code>{</code>...<code>}</code>
 &ldquo;for possible future extensions to the language&rdquo;.
 We propose that <code>{</code>...<code>}</code> be used
@@ -78,15 +81,21 @@ programming languages in modern use that do not support infix
 notation. Even some Lisp advocates, like Paul Graham, admit that
 they &ldquo;don&rsquo;t find prefix math expressions
 natural&rdquo; (<a href="http://www.paulgraham.com/pypar.html"
-rel="nofollow">http://www.paulgraham.com/pypar.html</a>).
+rel="nofollow">http://www.paulgraham.com/pypar.html</a>) even after
+decades of experience with Lisp-based languages.
 Paul Prescod has said, &ldquo;I have more faith that you could convince
 the world to use Esperanto than prefix notation&rdquo;
 (<a href="http://people.csail.mit.edu/gregs/ll1-discuss-archive-html/msg01571.html" rel="nofollow">http://people.csail.mit.edu/gregs/ll1-discuss-archive-html/msg01571.html</a>).
 Infix is not going away; standard mathematical notation uses infix,
 infix notation is taught to most people (programmers or not) in school,
 and nearly all new programming languages include infix.
-Adding infix support to Scheme would eliminate a common complaint
-by developers who currently choose to use other languages instead.</p>
+</p>
+<p>
+Adding infix support to Scheme would be a useful convenience for
+some existing developers who use Scheme, and it would also
+eliminate a common complaint
+by developers who currently choose to use other languages instead.
+</p>
 <p>Scheme currently reserves
 <code>{</code>...<code>}</code> &ldquo;for possible future
 extensions to the language&rdquo;. We propose that
