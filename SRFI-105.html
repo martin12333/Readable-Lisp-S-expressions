@@ -34,12 +34,13 @@ access previous messages via <a href=
 
 <h1 id="abstract">Abstract</h1>
 <p>Lisp-based languages, like Scheme, are almost the only
-programming languages in modern use that do not support infix notation,
-and most languages support combining infix notation
+programming languages in modern use that do not support infix notation.
+In addition, most languages allow infix expressions to be combined
 with function call notation of the form f(x).
-This SRFI provides these capabilities, for both
-developers who already use Scheme but would like these conveniences, as 
-as well as for other developers who currently choose to use other languages.
+This SRFI provides these capabilities, both for
+developers who already use Scheme and want these conveniences,
+and also for other developers who currently choose to use other languages
+in part because they miss these conveniences.
 Scheme currently reserves <code>{</code>...<code>}</code>
 &ldquo;for possible future extensions to the language&rdquo;.
 We propose that <code>{</code>...<code>}</code> be used
@@ -50,8 +51,8 @@ It is an abbreviation in much the same way that
 <samp>&apos;x</samp> is an abbreviation for <samp>(quote&nbsp;x)</samp>.
 </p>
 <p>
-A <dfn>curly-infix list</dfn> is a list whose visual presentation is in
-infix order instead of prefix order.
+A <dfn>curly-infix list</dfn> introduces a list whose visual presentation
+is in infix order instead of prefix order.
 For example,
 <samp>{n&nbsp;&gt;&nbsp;2}</samp> maps to <samp>(&gt;&nbsp;n&nbsp;2)</samp>,
 and
@@ -66,13 +67,16 @@ Forms with mixed infix operators and other complications have
 enable later macro processing, e.g.,
 <samp>{2&nbsp;+&nbsp;3&nbsp;*&nbsp;5}</samp>
 maps to
-<samp>(nfx&nbsp;2&nbsp;+&nbsp;3&nbsp;*&nbsp;5)</samp>.</p>
+<samp>(nfx&nbsp;2&nbsp;+&nbsp;3&nbsp;*&nbsp;5)</samp>.
+Also, inside a curly-infix list (recursively),
+expressions of the form f(...) are simply
+an abbreviation for (f&nbsp;...)</p>
 
-<p>Note that this is the first of three tiers developed by the
-&ldquo;<a href="http://readable.sourceforge.net/">readable</a>&rdquo; project. We intend to later submit two more
-SRFIs, to define two other tiers that build on top of
-curly-infix-expressions (namely, neoteric-expressions and
-sweet-expressions). However, curly-infix-expressions are useful on
+<p>Note that this is derived from the
+&ldquo;<a href="http://readable.sourceforge.net/">readable</a>&rdquo; project.
+We intend to later submit at least one additional SRFI that will build on
+top of this SRFI.
+However, curly-infix-expressions are useful on
 their own, even without these other notations.</p>
 
 <h1 id="rationale">Rationale</h1>
