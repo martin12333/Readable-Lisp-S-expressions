@@ -216,9 +216,7 @@ more complex cases (in the rare cases where they are needed).</p>
 <p>It would be possible to extend curly-infix to provide a full fixed
 precedence system (e.g., if an expression is mixed,
 attempt to use various precedence rules).
-However, such capabilities would be extensions
-not required by this SRFI.
-See the discussion on <var>transform-mixed-infix</var>, below.</p>
+However, such capabilities would be extensions beyon this SRFI.
 <p>Note that curly-infix includes support for unary operators, but again,
 they are without precedence.
 As a result, they must be grouped separately.
@@ -297,27 +295,6 @@ could use the normal Scheme <var>equal?</var> comparison instead of
 having to implement a special comparison operator for this
 particular case.
 </p>
-
-<h2 id="rationale_transformmixedinfix">What is <var>transform-mixed-infix</var> good for?</h2>
-<p>The &ldquo;<var>transform-mixed-infix</var>&rdquo; procedure is not
-intended for use in normal software development. Instead, it is
-suggested so that a future SRFI author could more easily implement
-a fixed precedence system that is built into the reader. We think
-that precedence is overrated. However, if a future community
-decides it wants precedence built into the reader,
-<var>transform-mixed-infix</var> could be redefined to provide one.
-Similarly, the mapping requirement for mixed curly-infix lists
-is intentionally worded to allow additional mappings of mixed
-curly-infix lists to handle precedence (so an implementation can
-legitimately say they implement curly-infix-expresssions even if they
-have such additional mappings).
-The mapping of mixed curly-infix-expressions and the
-&ldquo;<var>transform-mixed-infix</var>&rdquo; procedure are
-only defined to help simplify implementing a plausible future SRFI.
-The &ldquo;<var>transform-mixed-infix</var>&rdquo; procedure is
-not required or expected to be used in normal cases.
-Application software developers should avoid
-redefining <var>transform-mixed-infix</var>.</p>
 
 <h2 id="rationale_delimiters">Why must infix operators be delimited?</h2>
 <p>Curly-infix requires that the infix operators be delimited (e.g., by
@@ -665,16 +642,6 @@ In addition, if the implementation is invokable as a graphical user interface
 standard readers are curly-infix enabled.
 </p>
 
-<p>When determining if a curly-infix list is simple or not,
-an implementation <em>may</em> allow the even parameters to be non-symbols,
-and it <em>may</em> use a more generous equality test
-(such as <var>equal?</var>); if it does, it
-<em>should</em> terminate even if the even parameters contain cycles.
-An implementation <em>may</em> perform a different mapping for
-a mixed curly-infix list (e.g., by implementing precedence
-using <var>transform-mixed-infix</var> as described below).
-</p>
-
 <p>
 An implementation <em>must not</em>, by default, bind the symbol
 &ldquo;<var>nfx</var>&rdquo; to a procedure, macro, or syntax
@@ -712,15 +679,6 @@ which on completion would ensure that the
 standard readers are curly-infix enabled.
 If implemented, this procedure <em>must</em> allow users to safely invoke
 <var>(enable-curly-infix)</var> repeatedly.</li>
-<li>Implementations <em>may</em> provide an overrideable procedure
-<var>(transform-mixed-infix lyst)</var> that can be
-&ldquo;<var>set!</var>&rdquo;. This
-procedure would receive a mixed curly-infix list and return a
-transformation of it. By default, this function returns the
-original list but with &ldquo;<var>nfx</var>&rdquo; in front.
-Application developers <em>should not</em> use, define, or
-redefine this function; it is merely suggested to simplify
-implementation of plausible future SRFIs.</li>
 </ul>
 
 <p>
