@@ -988,7 +988,7 @@
           ; read in as infix
           (attach-sourceinfo pos
             (process-curly
-              (my-read-delimited-list no-indent-read #\} port))))
+              (my-read-delimited-list neoteric-read-real #\} port))))
         (#t
           (underlying-read no-indent-read port)))))
 
