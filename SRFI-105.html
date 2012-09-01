@@ -702,16 +702,15 @@ this symbol is reserved for use by <em>other</em> libraries)
 and application writers.
 </p>
 <p>
-<em>However</em>, an implementation <em>may</em> provide a <em>library</em> that
-binds the &ldquo;<var>nfx</var>&rdquo; symbol
-(as it is then a library,
-this case actually falls under
+<em>However</em>, an implementation <em>may</em> provide a default
+<em>library</em> that binds the &ldquo;<var>nfx</var>&rdquo; symbol
+(as it is then a library, this case actually falls under
 the "reserved for use by library writers" clause above).
 Application writers and other library writers
 using that implementation
 are then free to use or not use
 the implementation's provided &ldquo;<var>nfx</var>&rdquo;.
-(an implementation may even provide more than one, if they so desire).
+An implementation may even provide more than one, if they so desire.
 For a library-based implementation of this SRFI,
 any &ldquo;<var>nfx</var>&rdquo; implementation or
 implementations <em>may</em> be provided,
@@ -724,15 +723,6 @@ rebound by users of that library.
 <li>Implementations <em>may</em> provide the procedure
 <var>(curly-infix-read .  port)</var> as a curly-infix reader.</li>
 </ul>
-
-<p>
-If an implementation supports SRFI 55 require-extension, then
-<samp>(require-extension (srfi 105))</samp> <em>should</em> implement
-the functionality of <var>enable-curly-infix</var>.
-Similarly,
-if an implementation imports the module <samp>(srfi 105)</samp>, then
-it <em>should</em> have the same effect as <var>enable-curly-infix</var>.
-</p>
 
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
 
