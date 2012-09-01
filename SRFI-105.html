@@ -908,8 +908,96 @@ self-contained.&rdquo;</p>
        (cons (cadr lyst) (alternating-parameters lyst)))
      (#t  (transform-mixed-infix lyst))))
 
-  ; In the reader, when #\{ is detected, read (as a list) from that port
+
+  ; -----------------------------------------------------------------------------
+  ; Key procedures to implement neoteric-expresions
+  ; -----------------------------------------------------------------------------
+
+  ; Read the "inside" of a list until its matching stop-char, returning list.
+  ; stop-char needs to be closing paren, closing bracket, or closing brace.
+  ; This is like read-delimited-list of Common Lisp.
+  ; This implements a useful extension: (. b) returns b.
+  (define (my-read-delimited-list stop-char port)
+    (let*
+      ((c   (peek-char port)))
+      (cond
+        ((eof-object? c) (read-error "EOF in middle of list") '())
+        ((eqv? c #\;)
+          (consume-to-eol port)
+          (my-read-delimited-list stop-char port))
+        ((my-char-whitespace? c)
+          (read-char port)
+          (my-read-delimited-list stop-char port))
+        ((char=? c stop-char)
+          (read-char port)
+          '())
+        ((or (eq? c #\)) (eq? c #\]) (eq? c #\}))
+          (read-char port)
+          (read-error "Bad closing character"))
+        (#t
+          (let ((datum (neoteric-read-real port)))
+            (cond
+               ((eq? datum '.)
+                 (let ((datum2 (neoteric-read-real port)))
+                   (consume-whitespace port)
+                   (cond
+                     ((eof-object? datum2)
+                      (read-error "Early eof in (... .)\n")
+                      '())
+                     ((not (eqv? (peek-char port) stop-char))
+                      (read-error "Bad closing character after . datum"))
+                     (#t
+                       (read-char port)
+                       datum2))))
+               (#t
+                   (cons datum
+                     (my-read-delimited-list stop-char port)))))))))
+
+
+  ; Implement neoteric-expression's prefixed (), [], and {}.
+  ; At this point, we have just finished reading some expression, which
+  ; MIGHT be a prefix of some longer expression.  Examine the next
+  ; character to be consumed; if it's an opening paren, bracket, or brace,
+  ; then the expression "prefix" is actually a prefix.
+  ; Otherwise, just return the prefix and do not consume that next char.
+  ; This recurses, to handle formats like f(x)(y).
+  (define (neoteric-process-tail port prefix)
+      (let* ((c (peek-char port)))
+        (cond
+          ((eof-object? c) prefix)
+          ((char=? c #\( ) ; Implement f(x).
+            (read-char port)
+            (neoteric-process-tail port
+                (cons prefix (my-read-delimited-list #\) port))))
+          ((char=? c #\[ )  ; Implement f[x]
+            (read-char port)
+            (neoteric-process-tail port
+                  (cons 'bracketaccess
+                    (cons prefix
+                      (my-read-delimited-list #\] port)))))
+          ((char=? c #\{ )  ; Implement f{x}. Balance }
+            (neoteric-process-tail port
+              (let ((tail (neoteric-read port)))
+                (if (eqv? tail '())
+                  (list prefix) ; Map f{} to (f), not (f ()).
+                  (list prefix tail)))))
+          (#t prefix))))
+
+
+  ; To implement neoteric-expressions, modify the reader so
+  ; that [] and {} are also delimiters.
+  ; When #\{ is detected, read using my-read-delimiated-list any list from that port
   ; until its matching #\}, then process that list with "process-curly".
+  ; Then after reading each datum, call neoteric-process-tail to process any suffixes
+  ; (...), [...], or {...} that might be present, like this:
+  ; (let* ((prefix
+  ;           read-expression-as-usual
+  ;       ))
+  ;   (if (eof-object? prefix)
+  ;     prefix
+  ;     (neoteric-process-tail port prefix)))
+
+
 </pre>
 
 <h1 id="references">References</h1>
