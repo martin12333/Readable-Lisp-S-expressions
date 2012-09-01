@@ -9,7 +9,7 @@
 <h1 id="title">Title</h1>
 <p>Curly-infix-expressions</p>
 
-<h1 id="author" id="authors">Authors</h1>
+<h1 id="author"><a name="authors">Authors</a></h1>
 <p><a href="http://www.dwheeler.com">David A. Wheeler</a></p>
 <p>Alan Manuel K. Gloria</p>
 
@@ -48,7 +48,7 @@ to support &ldquo;curly-infix&rdquo; notation as a homoiconic
 infix abbreviation,
 as a modification of the Scheme reader.
 It is an abbreviation in much the same way that
-<samp>&apos;x</samp> is an abbreviation for <samp>(quote&nbsp;x)</samp>.
+<samp>&#39;x</samp> is an abbreviation for <samp>(quote&nbsp;x)</samp>.
 </p>
 <p>
 A <dfn>curly-infix list</dfn> introduces a list whose visual presentation
@@ -106,7 +106,7 @@ extensions to the language&rdquo;. We propose that
 <code>{</code>...<code>}</code> be used to
 support &ldquo;curly-infix&rdquo; notation as a reader
 abbreviation, just as
-<samp>&apos;x</samp> is an abbreviation for <samp>(quote&nbsp;x)</samp> and
+<samp>&#39;x</samp> is an abbreviation for <samp>(quote&nbsp;x)</samp> and
 <samp>(x&nbsp;y&nbsp;z)</samp>
 is an abbreviation for
 <samp>(x&nbsp;.&nbsp;(y&nbsp;.&nbsp;(z&nbsp;.&nbsp;())))</samp>.
@@ -133,7 +133,7 @@ E.g., <samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c}</samp> maps to
 <h2 id="rationale_changereader">Why not macros? Why replace the reader?</h2>
 <p>Many previous systems have implemented &ldquo;infix&rdquo;
 systems as a named macro or procedure (e.g., <var>INFIX</var>).
-This looks ugly, and it does the wrong thing &dash; the resulting list
+This looks ugly, and it does the wrong thing &mdash; the resulting list
 always has <var>INFIX</var> at the beginning,
 not the actual infix operator, so this
 approach can interfere with quoting, macros, and other capabilities.
@@ -553,8 +553,7 @@ requires no registration system or other complexities,
 works more clearly with macros and quasiquotation, and
 has the general advantage of being homoiconic.</p>
 
-<h2 id=rationale_neoteric">Why neoteric-expressions?</h2>
-</p>
+<h2 id="rationale_neoteric">Why neoteric-expressions?</h2>
 <p>Lisp&#8217;s standard notation is different from &#8220;normal&#8221; notation in that the parentheses <i>precede</i> the function name, rather than follow it.  Others have commented that it'd be valueable to be able to say name(x) instead of (name x):</p>
 <ul>
 <li><a href="http://sourceware.org/ml/guile/2000-07/msg00155.html" rel="nofollow">Jorgen &#8216;forcer&#8217; Schaefer argues that this is a more serious problem than the lack of infix notation</a>; on July 2000 he said &#8220;I think most people would like Scheme a lot better if they could say lambda (expression) ...  instead of (lambda (expression) ...&#8221;</li>
@@ -576,12 +575,12 @@ often encloses infix "and" and "or".
 Thus, f{n - 1} maps to (f (-  n  1)).
 When there is more than one function parameter,
 use the normal term-prefixing format instead, e.g., f({x - 1} {y - 1})
-maps to (f  (-  x  1)  (-  y  1)).</em>
+maps to (f  (-  x  1)  (-  y  1)).
 </li>
 <li>Prefixed square brackets e[...] maps to (bracketaccess e ...).
 This is intended to simplify use of indexed arrays, associative arrays, and similar constructs.
 </li>
-</ol>
+</ul>
 <p>
 The (. e) rule handles expressions like read(. port), ensuring that
 they map to (read . port).  If (. x) didn't mean x, then it would
@@ -729,6 +728,7 @@ is mapped to
 A neoteric-expression (<em>n-expression</em>)
 is a curly-infix-expression, with the following modifications where
 <var>e</var> is any datum expression:
+</p>
 <ol>
 <li>An e(...) maps to (e ...).  E.g., f(1 2) &rArr; (f 1 2), exit() &rArr; (exit), and read(. port) &rArr; (read . port).</li>
 <li>An e{} with zero or more whitespace characters within the braces maps to (e); otherwise, e{...} maps to (e {...}). E.g., f{n - 1} &rArr; (f {n - 1}) &rArr; (f (- n 1)), and g{- x} &rArr; (g (- x)).</li>
@@ -737,9 +737,7 @@ is a curly-infix-expression, with the following modifications where
 <li>An unprefixed "(&nbsp;.&nbsp;e)" must evaluate as "e".</li>
 <li>These recurse within lists, so lists contains sequences of zero or more <em>neoteric</em> expressions, not s-expressions.
 <li>These recurse left-to-right.  E.g., f{n - 1}(x) &rArr; f({n - 1})(x) &rArr; (f (- n 1))(x) &rArr; ((f (- n 1)) x)</li>
-</ul>
-</li>
-</p>
+</ol>
 <p>Here are some examples of c-expressions (note all operators in curly-infix are delimited):</p>
 <ul>
 <li><samp>{n&nbsp;&lt;=&nbsp;2}</samp> maps to
@@ -755,7 +753,7 @@ maps to
 <li><samp>{-(a) / b}</samp> also maps to <samp>(/ (- a) b)</samp></li>
 <li><samp>{(f a b) + (g h)}</samp> maps to <samp>(+ (f a b) (g h))</samp></li>
 <li><samp>{f(a b) + g(h)}</samp> also maps to <samp>(+ (f a b) (g h))</samp></li>
-<li><samp>&apos;{a + f(b) + x}</samp> maps to <samp>&apos;(+ a (f b) x)</samp></li>
+<li><samp>&#39;{a + f(b) + x}</samp> maps to <samp>&#39;(+ a (f b) x)</samp></li>
 <li><samp>{{a &gt; 0} and {b &gt;= 1}}</samp> maps to
 <samp>(and (&gt; a 0) (&gt;= b 1))</samp></li>
 </ul>
@@ -789,7 +787,7 @@ the datum readers defined by the relevant Scheme standards
 and the readers used to load user-supplied code
 as defined by the relevant Scheme standards
 (e.g., the reader used by &ldquo;<var>load</var>&rdquo;
-and module-loading mechanisms for user code).</p>
+and module-loading mechanisms for user code).
 The standard readers are <dfn>curly-infix enabled</dfn> if the standard
 readers are curly-infix readers.</p>
 
@@ -1028,4 +1026,9 @@ ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </body>
 </html>
+<!--
+Note: &apos; is in XML 1.0 and HTML 4.0, but not in HTML 3.2, so
+we use &#39; for single vertical apostrophe.  That way it will
+not be converted later to curly quotes.
+-->
 
