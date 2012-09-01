@@ -934,7 +934,7 @@
     (cond
       ((null? lyst) #t)
       ((not (pair? lyst)) #f)
-      ((not (eq? op (car lyst))) #f) ; fail - operators not the same
+      ((not (equal? op (car lyst))) #f) ; fail - operators not the same
       ((not (pair? (cdr lyst)))  #f) ; Wrong # of parameters or improper
       (#t   (even-and-op-prefix? op (cddr lyst))))) ; recurse.
 
@@ -946,7 +946,6 @@
       (pair? (cdr lyst))     ; Must have a second argument.
       (pair? (cddr lyst))    ; Must have a third argument (we check it
                              ; this way for performance)
-      (symbol? (cadr lyst))  ; 2nd parameter must be a symbol.
       (even-and-op-prefix? (cadr lyst) (cdr lyst)))) ; true if rest is simple
 
   ; Return alternating parameters in a list (1st, 3rd, 5th, etc.)
