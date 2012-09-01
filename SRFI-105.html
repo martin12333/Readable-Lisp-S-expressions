@@ -603,9 +603,7 @@ maps to
 <samp>(.&nbsp;e)</samp> maps to <samp>e</samp>.)
 </li>
 <li>Any other curly-infix list (including all other improper lists) is
-<dfn>mixed</dfn>.  Unless overridden by some other specification,
-a mixed curly-infix list is mapped to the list with the symbol
-&ldquo;<var>nfx</var>&rdquo; added to its front.
+<dfn>mixed</dfn>.  A mixed curly-infix list <em>must</em> be mapped to that list with &ldquo;<var>nfx</var>&rdquo; added to its front.
 E.g.,
 <samp>{q&nbsp;+&nbsp;r&nbsp;*&nbsp;s}</samp>
 is mapped to
@@ -680,7 +678,7 @@ using <var>transform-mixed-infix</var> as described below).
 <p>
 An implementation <em>must not</em>, by default, bind the symbol
 &ldquo;<var>nfx</var>&rdquo; to a procedure, macro, or syntax
-that cannot be overridden.
+that <em>cannot</em> be overridden.
 This symbol is reserved for use by library writers
 (in the case of a library-based implementation of this SRFI,
 this symbol is reserved for use by <em>other</em> libraries)
@@ -696,24 +694,12 @@ Application writers and other library writers
 using that implementation
 are then free to use or not use
 the implementation's provided &ldquo;<var>nfx</var>&rdquo;.
-(an implementation may even provide more than one, if they
-so desire)
+(an implementation may even provide more than one, if they so desire).
 For a library-based implementation of this SRFI,
 any &ldquo;<var>nfx</var>&rdquo; implementation or
 implementations <em>may</em> be provided,
 as long as the &ldquo;<var>nfx</var>&rdquo; symbol can be
 rebound by users of that library.
-</p>
-<p>
-A later SRFI <em>may</em> mandate that
-an implementation bind
-&ldquo;<var>nfx</var>&rdquo; to some procedure, macro, or syntax.
-Alternatively, a later SRFI may implement some additional precedence system
-for mixed curly infix lists.
-We expect such a SRFI to be proposed,
-<strong><em>if ever</em></strong>,
-after the Scheme community has had some experience with
-using the <em>mixed</em> form described in this SRFI.
 </p>
 
 <p>Procedures:</p>
