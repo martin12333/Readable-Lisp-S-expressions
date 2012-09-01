@@ -278,6 +278,17 @@ the likely interpretation, and also so that the neoteric-expression
 </li>
 </ol>
 
+<h2 id="rationale_equal">Why use equal?</h2>
+<p>
+Operators are compared using <var>equal?</var> so that constructs
+like ,op are legal operators, e.g., {x&nbsp;,op&nbsp;y&nbsp;,op&nbsp;z}.
+Note that if the operator construct contains a cycle, it might not terminate
+if <var>equal?</var> does not terminate in this case, so that implementors
+could use the normal Scheme <var>equal?</var> comparison instead of
+having to implement a special comparison operator for this
+particular case.
+</p>
+
 <h2 id="rationale_transformmixedinfix">What is <var>transform-mixed-infix</var> good for?</h2>
 <p>The &ldquo;<var>transform-mixed-infix</var>&rdquo; procedure is not
 intended for use in normal software development. Instead, it is
@@ -547,9 +558,14 @@ regular list by a curly-infix reader:</p>
 <ol>
 <li>A <dfn>simple</dfn> curly-infix list has an odd number of
 parameters, at least three parameters, and all even parameters are
-&ldquo;<var>eq?</var>&rdquo; symbols. A simple curly-infix list is mapped by
-the reader into a list with the even parameter followed by the odd
-parameters.
+&ldquo;<var>equal?</var>&rdquo;.
+If there is more than one even parameter, and
+an even parameter contains a cycle, then
+the <var>equal?</var> comparison <em>must</em> terminate
+if <var>equal?</var> terminates (otherwise
+the comparison <em>may</em> terminate).
+A simple curly-infix list is mapped by
+the reader into a list with the even parameter followed by the odd parameters.
 E.g.,
 <samp>{n&nbsp;&lt;=&nbsp;2}</samp>
 maps to
@@ -592,6 +608,10 @@ is mapped to
 </ol>
 <p>Here are some examples of c-expressions (note all operators in curly-infix are delimited):</p>
 <ul>
+<li><samp>{n&nbsp;&lt;=&nbsp;2}</samp> maps to
+    <samp>(&lt;=&nbsp;n&nbsp;2)</samp></li>
+<li><samp>{x&nbsp;,op&nbsp;y&nbsp;,op&nbsp;z}</samp> maps to
+    <samp>(,op&nbsp;x&nbsp;y&nbsp;z}</samp>
 <li><samp>{a * {b + c}}</samp> maps to <samp>(* a (+ b c))</samp></li>
 <li><samp>{x eqv? `a}</samp> maps to <samp>(eqv? x `a)</samp></li>
 <li><samp>{(- a) / b}</samp> maps to <samp>(/ (- a) b)</samp></li>
@@ -746,9 +766,10 @@ self-contained.&rdquo;</p>
     (cond
       ((null? lyst) #t)
       ((not (pair? lyst)) #f)
-      ((not (eq? op (car lyst))) #f) ; fail - operators not the same
+      ((not (equal? op (car lyst))) #f) ; fail - operators not the same
       ((not (pair? (cdr lyst)))  #f) ; Wrong # of parameters or improper
       (#t   (even-and-op-prefix? op (cddr lyst))))) ; recurse.
+
 
   ; Return true if the lyst is in simple infix format
   ; (and thus should be reordered at read time).
@@ -758,7 +779,6 @@ self-contained.&rdquo;</p>
       (pair? (cdr lyst))     ; Must have a second argument.
       (pair? (cddr lyst))    ; Must have a third argument (we check it
                              ; this way for performance)
-      (symbol? (cadr lyst))  ; 2nd parameter must be a symbol.
       (even-and-op-prefix? (cadr lyst) (cdr lyst)))) ; true if rest is simple
 
   ; Return alternating parameters in a list (1st, 3rd, 5th, etc.)
