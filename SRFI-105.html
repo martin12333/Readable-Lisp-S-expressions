@@ -227,11 +227,11 @@ As a result, they must be grouped separately.
 This does not lead to hard-to-read expressions, however.
 Examples of simple curly-infix lists combining infix and unary operations
 include
-<code>{(-&nbsp;x)&nbsp;*&nbsp;(-&nbsp;y)}</code>
+<code>{-(x)&nbsp;*&nbsp;-(y)}</code>
 and
-<code>{{-&nbsp;x}&nbsp;*&nbsp;{-&nbsp;y}}</code>.
-Another notation that builds on curly-infix (namely, neoteric-expressions)
-can make unary operators even easier to use.</p>
+<code>{-{x}&nbsp;*&nbsp;-{y}}</code>
+(the notation is designed so that both work).
+<p>
 <p>At first David A. Wheeler, who started this project,
 considered reporting an error if a simple infix
 expression isn&rsquo;t provided.
@@ -268,16 +268,16 @@ unnecessary errors).</p>
 <!-- dwheeler says: I think we have to mention n-expressions and t-expressions
 here, because they are part of the rationale for these semantics. -->
 <p>The one and two parameter cases are defined in part to reduce user error,
-and in part to better support other notations
-that build on top of curly-infix-expressions (namely, neoteric-expressions and
-sweet-expressions):
+and in part to provide better support:
 </p>
 <ol>
 <li>An &ldquo;escaping&rdquo;
 <samp>{e}</samp> is mapped to <samp>e</samp>
 so that the neoteric-expression
-<samp>f{x}</samp> becomes the likely-intended <samp>(f x)</samp>, and to
-provide an easy escape mechanism in sweet-expressions for symbols
+<samp>f{x}</samp> becomes the likely-intended <samp>(f x)</samp>.
+It also makes it easy to use prefix notation; e.g.,
+{&nbsp;f(x)&nbsp;} is just another way to write (&nbsp;f&nbsp;x).
+It also provides an easy escape mechanism in sweet-expressions for symbols
 that would otherwise have other meanings.</li>
 <li>The &ldquo;unary-operation&rdquo; curly-infix list
 <samp>{e&nbsp;f}</samp> maps to <samp>(e&nbsp;f)</samp>,
@@ -552,6 +552,105 @@ with it.</p>
 requires no registration system or other complexities,
 works more clearly with macros and quasiquotation, and
 has the general advantage of being homoiconic.</p>
+
+<h2 id=rationale_neoteric">Why neoteric-expressions?</h2>
+</p>
+<p>Lisp&#8217;s standard notation is different from &#8220;normal&#8221; notation in that the parentheses <i>precede</i> the function name, rather than follow it.  Others have commented that it'd be valueable to be able to say name(x) instead of (name x):</p>
+<ul>
+<li><a href="http://sourceware.org/ml/guile/2000-07/msg00155.html" rel="nofollow">Jorgen &#8216;forcer&#8217; Schaefer argues that this is a more serious problem than the lack of infix notation</a>; on July 2000 he said &#8220;I think most people would like Scheme a lot better if they could say lambda (expression) ...  instead of (lambda (expression) ...&#8221;</li>
+<li>Peter Norvig had a reader implementation in which &#8220;if a function name ends with an open parentheses, move it inside the list (when converting to an s-expression)&#8221;.  This means that &#8220;(fact x)&#8221; and &#8220;fact(x)&#8221; will mean the same thing.</li>
+<li><a href="http://portal.acm.org/ft_gateway.cfm?id=174185&amp;type=pdf&amp;coll=portal&amp;dl=ACM&amp;CFID=72577012&amp;CFTOKEN=50239143" rel="nofollow">Skill</a> from Cadence, a proprietary Lisp-based extension language, also supports name-prefixing.</li>
+</ul>
+
+<p>
+Neoteric-expressions allow users to use a more traditional-looking notation for
+function calls.
+Again, quoting rules and macros continue to work as usual.
+<ul>
+<li>The prefixed e(...) form provides a more traditional-looking format for function calls,
+ e.g., -(x) instead of (-&nbsp;x).</li>
+<li>The prefixed e{...} form simplifies combining function calls and infix expressions
+when there is only one parameter to the function call.
+This is a common case; for example, "not" (which is normally given only one parameter)
+often encloses infix "and" and "or".
+Thus, f{n - 1} maps to (f (-  n  1)).
+When there is more than one function parameter,
+use the normal term-prefixing format instead, e.g., f({x - 1} {y - 1})
+maps to (f  (-  x  1)  (-  y  1)).</em>
+</li>
+<li>Prefixed square brackets e[...] maps to (bracketaccess e ...).
+This is intended to simplify use of indexed arrays, associative arrays, and similar constructs.
+</li>
+</ol>
+<p>
+The (. e) rule handles expressions like read(. port), ensuring that
+they map to (read . port).  If (. x) didn't mean x, then it would
+be easy to get this case wrong.  Also, if someone wanted to build on
+top of an existing reader, they would have to reimplement parts of the
+list-processing system if this wasn't handled.  It is already true that
+(. x) is x in guile, so there was already a working example that this
+is a reasonable extension.  In fact, in a typical implementation of a
+list reader, it takes extra effort to <em>prevent</em> this extension,
+so this is a relatively easy extension to include.</p>
+
+<h2 id="comma-separated-parameters">Comma-separated parameters</h2>
+<p>
+It would be possible to define neoteric-expressions to have
+comma-separated values in a function call; this would make it even
+more similar to traditional function call notation. A simple way would be to simply
+remove all commas, but this would interfere with ,-lifting, and thus was immediately rejected.</p>
+<p>A better rule, that would indeed work, would be to <em>require</em>
+each parameter to end with a comma, and then remove that ending comma.
+However, this rule:</p>
+<ul>
+<li>would obscure any comma used for ,-lifting (making them hard to find).</li>
+<li>is inconsistent with "normal" Lisp lists, which do
+not use commas this way, as well as being inconsistent with the simple
+space-separated parameters of sweet-expressions. This
+would make it harder to switch formats and possibly hamper adoption.</li>
+<li>clutters the code and is extremely inconvenient.
+Parameters are very common, so creating an additional required character for
+every parameter turned out to be unpleasant to read and write use in experimentation.</li>
+<li>is completely unnecessary.  Whitespace is quite sufficient (and clear)
+for syntactically separating parameters</li>
+</ul>
+<p>Many other languages do use commas, but they are required in those
+languages because infix operators are not surrounded by any marker.
+Since infix operations are already surrounded by {...} in our notation,
+there is no need for the additional commas for parameter separation.</p>
+<p>Experimentation found that separating parameters solely by whitespace
+worked well, so that approach was selected.</p>
+
+<h2 id="neoteric-comments">Other comments on neoteric-expressions</h2>
+<p>Originally the prefix had to be a symbol or list.  The theory was
+that by ignoring others, the sweet-reader would be backwards-compatible
+with some badly-formatted code, and some errors might not result in
+incorrectly-interpreted expressions.  But this was an odd limitation,
+and in some cases other prefixes made sense (e.g., for strings).
+This was changed to eliminate the inconsistency.</p>
+
+<p>Neoteric-expressions used to be called "modern-expressions".  But some
+people didn't like that name, and obvious abbreviation ("m-expression")
+was easily confused with the original Lisp M-expression language.
+So the name was changed to neoteric, which has a similar meaning and
+abbreviates nicely.  It wasn't called "function-expressions" because
+"f-expressions" are previously used (and can sound bad if said quickly),
+and they weren't called "prefix-expressions" because "p-expressions"
+sound like "pee-expressions".  It's not called "name-prefix" because
+the prefix need not be a name.</p>
+
+<p>The neoteric rules do introduce the risk of someone inserting
+a space between the function name and the opening &#8220;(&#8221;.
+But whitespace is already significant as a parameter separator, so this
+is consistent with how the system works anyway... this is not really a
+change at all.</p>
+
+<p>Obviously, this is trivial to parse.  We don&#8217;t lose any power,
+because this is completely optional -- we only use it when we want to,
+and we can switch back to the traditional s-expression notation if we
+want to.  It&#8217;s trivially quoted... if you quote a symbol followed
+by &#8220;(&#8221;, just keep going until its matching &#8220;)&#8221;, which is
+essentially the same rule as before!</p>
 
 <h2 id="rationale_otherdetails">Other details</h2>
 <p>There is no requirement that writers (e.g., &ldquo;<var>write</var>&rdquo;
