@@ -280,11 +280,16 @@ and in part to provide better support:
 <ol>
 <li>An &ldquo;escaping&rdquo;
 <samp>{e}</samp> is mapped to <samp>e</samp>
-so that the neoteric-expression
-<samp>f{x}</samp> becomes the likely-intended <samp>(f x)</samp>.
-It also makes it easy to use prefix notation; e.g.,
+so that <code>{</code>...<code>}</code> can conceptually be used
+for grouping:
+<samp>{{{{a}&nbsp;+&nbsp;b}}}</samp>
+is equivalent to
+<samp>{{{{a}&nbsp;+&nbsp;b}}}</samp>.
+It also ensures that the neoteric-expression
+<samp>f{x}</samp> becomes the likely-intended <samp>(f x)</samp>,
+and also makes it easy to use prefix notation; e.g.,
 {&nbsp;f(x)&nbsp;} is just another way to write (&nbsp;f&nbsp;x).
-It also provides an easy escape mechanism in sweet-expressions for symbols
+Finally, it also provides an easy escape mechanism in sweet-expressions for symbols
 that would otherwise have other meanings.</li>
 <li>The &ldquo;unary-operation&rdquo; curly-infix list
 <samp>{e&nbsp;f}</samp> maps to <samp>(e&nbsp;f)</samp>,
