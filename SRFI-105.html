@@ -358,7 +358,7 @@ After all, R6RS and R7RS (draft 6) already use
 as special markers to control the reader.
 Using <var>#!srfi-105</var> is a simple, similar-looking marker
 for a similar situation.
-What's more, it implies a reasonable convention for reader extensions:
+What&rsquo;s more, it implies a reasonable convention for reader extensions:
 markers that begin with <code>#!</code>, followed by an ASCII letter, should
 have the rest read as an identifier (up to a whitespace)
 and use that to control the reader, and <code>srfi-</code> should be
@@ -576,7 +576,7 @@ from &ldquo;normal&rdquo; notation
 in that the parentheses <em>precede</em> the function name,
 rather than follow it.
 Others have commented that
-it'd be valueable to be able to say
+it&rsquo;d be valueable to be able to say
 <samp>name(x)</samp> instead of <samp>(name x)</samp>:</p>
 <ul>
 <li><a href="http://sourceware.org/ml/guile/2000-07/msg00155.html" rel="nofollow">Jorgen &ldquo;forcer&rdquo; Schaefer argues that
@@ -637,10 +637,10 @@ This is intended to simplify use of indexed arrays, associative arrays, and simi
 <p>
 The <samp>(.&nbsp;e)</samp> rule handles expressions like <samp>read(.&nbsp;port)</samp>,
 ensuring that they map to <samp>(read&nbsp;.&nbsp;port)</samp>.
-If <samp>(.&nbsp;x)</samp> didn't mean <samp>x</samp>, then it would
+If <samp>(.&nbsp;x)</samp> didn&rsquo;t mean <samp>x</samp>, then it would
 be easy to get this case wrong.  Also, if someone wanted to build on
 top of an existing reader, they would have to reimplement parts of the
-list-processing system if this wasn't handled.
+list-processing system if this wasn&rsquo;t handled.
 It is already true that
 <samp>(.&nbsp;x)</samp> is <samp>x</samp> in guile,
 so there was already a working example that this
@@ -687,18 +687,18 @@ and in some cases other prefixes made sense (e.g., for strings).
 This was changed to eliminate the inconsistency.</p>
 
 <p>Neoteric-expressions used to be called &ldquo;modern-expressions&rdquo;.
-But some people didn't like that name,
+But some people didn&rsquo;t like that name,
 and the obvious abbreviation (&ldquo;m-expression&rdquo;)
 was easily confused with the original Lisp M-expression language.
 So the name was changed to neoteric, which has a similar meaning and
 abbreviates nicely.
-It wasn't called &ldquo;function-expressions&rdquo; because
+It wasn&rsquo;t called &ldquo;function-expressions&rdquo; because
 &ldquo;f-expressions&rdquo; are previously used
 (and can sound bad if said quickly),
-and they weren't called &ldquo;prefix-expressions&rdquo;
+and they weren&rsquo;t called &ldquo;prefix-expressions&rdquo;
 because &ldquo;p-expressions&rdquo;
 sound like &ldquo;pee-expressions&rdquo;.
-It's not called &ldquo;name-prefix&rdquo; because
+It&rsquo;s not called &ldquo;name-prefix&rdquo; because
 the prefix need not be a name.</p>
 
 <p>The neoteric rules do introduce the risk of someone inserting
@@ -955,7 +955,7 @@ the &ldquo;reserved for use by library writers&rdquo; clause above).
 Application writers and other library writers
 using that implementation
 are then free to use or not use
-the implementation's provided &ldquo;<var>nfx</var>&rdquo;.
+the implementation&rsquo;s provided &ldquo;<var>nfx</var>&rdquo;.
 An implementation may even provide more than one, if they so desire.
 For a library-based implementation of this SRFI,
 any &ldquo;<var>nfx</var>&rdquo; implementation or
