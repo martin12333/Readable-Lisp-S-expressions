@@ -301,15 +301,16 @@ the likely interpretation, and also so that the neoteric-expression
 </li>
 </ol>
 
-<h2 id="rationale_equal">Why use equal?</h2>
+<h2 id="rationale_equal">Why use <var>equal?</var> to compare operators in a &ldquo;simple&rdquo; curly-infix-list for equality?</h2>
 <p>
 Operators are compared using <var>equal?</var> so that
 constructs like <samp>,op</samp> are legal operators,
 e.g., <samp>{x&nbsp;,op&nbsp;y&nbsp;,op&nbsp;z}</samp>.
-Note that if the operator construct contains a cycle, it might not terminate
-if <var>equal?</var> does not terminate in this case, so that implementors
+Note that unfortunately if the operator construct contains a cycle, it might not terminate
+if <var>equal?</var> does not terminate in the presence of cycles.
+This was specified this way so that implementors
 could use the normal Scheme <var>equal?</var> comparison instead of
-having to implement a special comparison operator for this
+having to implement a special comparison operator just for this
 particular case.
 </p>
 
