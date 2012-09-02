@@ -1,9 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
-
-<!-- almkglor: SRFI process requires HTML 3, we
-labeled our doc above HTML 4.01, isn't this technically
-incorrect?  -->
-
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <html>
 <head>
 <title>Draft SRFI 105: Curly-infix-expressions</title>
@@ -61,9 +56,9 @@ A
 introduces a list whose visual presentation
 is in infix order instead of prefix order.
 For example,
-<samp>{n&nbsp;&gt;&nbsp;2}</samp> maps to <samp>(&gt;&nbsp;n&nbsp;2)</samp>,
+<samp>{n&nbsp;&gt;&nbsp;2}</samp> &rArr; <samp>(&gt;&nbsp;n&nbsp;2)</samp>,
 and
-<samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c}</samp> maps to
+<samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c}</samp> &rArr;
 <samp>(+&nbsp;a&nbsp;b&nbsp;c)</samp>.
 By intent, there is no precedence, but e.g.,
 <samp>{x&nbsp;+&nbsp;{y&nbsp;*&nbsp;z}}</samp>
@@ -72,8 +67,7 @@ maps cleanly to
 Forms with mixed infix operators and other complications have
 &ldquo;<var>nfx</var>&rdquo; prepended to
 enable later macro processing, e.g.,
-<samp>{2&nbsp;+&nbsp;3&nbsp;*&nbsp;5}</samp>
-maps to
+<samp>{2&nbsp;+&nbsp;3&nbsp;*&nbsp;5}</samp> &rArr;
 <samp>(nfx&nbsp;2&nbsp;+&nbsp;3&nbsp;*&nbsp;5)</samp>.
 Also, inside a curly-infix list (recursively),
 expressions of the form <samp>f(...)</samp> are simply
@@ -134,7 +128,7 @@ The simple curly-infix list
 is mapped to
 <samp>(operator operand-1 operand-2 operand-3 ...)</samp> so that more than
 two operands are handled cleanly.
-E.g., <samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c}</samp> maps to
+E.g., <samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c}</samp> &rArr;
 <samp>(+&nbsp;a&nbsp;b&nbsp;c)</samp>.</p>
 
 <h2 id="rationale_changereader">Why not macros? Why replace the reader?</h2>
@@ -161,8 +155,7 @@ for function composition:
 <p>
 This example takes advantage of the fact that
 <samp>{f&nbsp;o&nbsp;g&nbsp;o&nbsp;h&nbsp;o&nbsp;...}</samp>
-maps to
-<samp>(o&nbsp;f&nbsp;g&nbsp;h&nbsp;...)</samp>.
+&rArr; <samp>(o&nbsp;f&nbsp;g&nbsp;h&nbsp;...)</samp>.
 Infix cannot be implemented as a macro alone,
 as the <var>syntax-rules</var> form has
 a particular treatment for the pattern.
@@ -268,7 +261,7 @@ infix, use <code>{</code>...<code>}</code>.</p>
 
 <h2 id="rationale_specialcases">Why are 0, 1, and 2 parameters special?</h2>
 <p>The empty curly-infix list
-<samp>{}</samp> maps to <samp>()</samp>,
+<samp>{}</samp> is intentionally mapped to <samp>()</samp>,
 as it <em>is</em> an
 empty list, and this is the likely user meaning (reducing
 unnecessary errors).</p>
@@ -282,21 +275,22 @@ and in part to provide better support:
 <samp>{e}</samp> is mapped to <samp>e</samp>
 so that <code>{</code>...<code>}</code> can conceptually be used
 for grouping:
-<samp>{{{{a}&nbsp;+&nbsp;b}}}</samp>
+<samp>{{{a}&nbsp;+&nbsp;{b}}}</samp>
 is equivalent to
-<samp>{a&nbsp;+&nbsp;b}</samp>.
-It also ensures that the neoteric-expression
+<samp>(+&nbsp;a&nbsp;b)</samp>.
+It ensures that the neoteric-expression
 <samp>f{x}</samp> becomes the likely-intended <samp>(f x)</samp>,
 and also makes it easy to use prefix notation; e.g.,
 <samp>{&nbsp;f(x)&nbsp;}</samp> is just another way to write <samp>(&nbsp;f&nbsp;x)</samp>.
-Finally, it also provides an easy escape mechanism in sweet-expressions for symbols
+Finally, it also provides an easy escape mechanism
+in sweet-expressions for symbols
 that would otherwise have other meanings.</li>
 <li>The &ldquo;unary-operation&rdquo; curly-infix list
-<samp>{e&nbsp;f}</samp> maps to <samp>(e&nbsp;f)</samp>,
+<samp>{e&nbsp;f}</samp> &rArr; <samp>(e&nbsp;f)</samp>,
 so that
-<samp>{-&nbsp;x}</samp> maps to <samp>(-&nbsp;x)</samp>,
-the likely interpretation, and also so that the neoteric-expression
-<samp>f{-&nbsp;x}</samp> will map correctly to
+<samp>{-&nbsp;x}</samp> &rArr; <samp>(-&nbsp;x)</samp>,
+the likely interpretation, and also so that the neoteric-expressions like
+<samp>f{-&nbsp;x}</samp> &rArr;
 <samp>(f&nbsp;(-&nbsp;x))</samp>.
 </li>
 </ol>
@@ -350,18 +344,19 @@ In practice, we expect that implementations will build this into their
 default readers and then control it via some special flag, but we do
 not want to mandate exactly how it is turned on or passed.</p>
 
-<h2 id="rationale_procedures">Why the marker <var>#!srfi-105</var>?</h2>
+<h2 id="rationale_marker">Why the marker <var>#!srfi-105</var>?</h2>
 <p>
 We would like implementations to always have curly-infix enabled.
-However, some implementations may have other extensions that use <code>{</code>...<code>}</code>,
-and we want a simple way to identify code that uses curly-infix
-so that readers can switch to it, if they need to switch.
+However, some implementations may have other extensions
+that use <code>{</code>...<code>}</code>.
+We want a simple, standard way to identify code that uses curly-infix
+so that readers will switch to curly-infix if they need to switch.
 <a href="http://srfi.schemers.org/srfi-105/mail-archive/msg00027.html">
 This marker was recommended during discussion of SRFI-105</a>.
 After all, R6RS and R7RS (draft 6) already use
 <var>#!fold-case</var> and <var>#!no-fold-case</var>
-as special markers to control the reader;
-using <var>#!srfi-105</var> is a simple, similar-looking marker
+as special markers to control the reader.
+Using <var>#!srfi-105</var> is a simple, similar-looking marker
 for a similar situation.
 What's more, it implies a reasonable convention for reader extensions:
 markers that begin with <code>#!</code>, followed by an ASCII letter, should
@@ -377,15 +372,17 @@ This marker need not interfere with other uses of <var>#!</var>.
 followed by space as a comment to the end of the line; this is supported
 by several implementations, but this is easily distinguished from this
 marker by the space.
-Guile, clisp, and several other Lisps support <code>#!</code>...<code>!#</code>
+Guile, clisp, and several other Lisps support
+<code>#!</code>...<code>!#</code>
 as a multi-line comment, enabling scripts with mixed languages and
 multi-line arguments.
 But in practice the <var>#!</var> is almost always
 followed immediately by <code>/</code> or </code>.</code>, and other scripts
 could be trivially fixed to make that so.
-R6RS had a non-normative recommendation to accept <var>#!</var> or
-<var>#!</var> followed by a space as ignoring a line, but this is
-non-normative.
+R6RS had a non-normative recommendation to ignore a line that began
+with <var>#!/usr/bin/env</var>, as well
+as a <var>#!&nbsp;/usr/bin/env</var>, but this is non-normative;
+an implementation could easily implement the first and not the second part.
 Thus, implementations could trivially support simultaneously markers such as
 <var>#!srfi-105</var>
 to identify curly-infix, the SRFI-22 <var>#!</var>+space marker, and a
@@ -578,7 +575,7 @@ Lisp&rsquo;s standard notation is different
 from &ldquo;normal&rdquo; notation
 in that the parentheses <em>precede</em> the function name,
 rather than follow it.
-thers have commented that
+Others have commented that
 it'd be valueable to be able to say
 <samp>name(x)</samp> instead of <samp>(name x)</samp>:</p>
 <ul>
@@ -624,16 +621,16 @@ for example, &ldquo;<var>not</var>&rdquo;
 often encloses infix &ldquo;<var>and</var>&rdquo; and &ldquo;</var>or</var>&rdquo;.
 Thus,
 <samp>f{n&nbsp;-&nbsp;1}</samp>
-maps to
+&rArr;
 <samp>(f&nbsp;(-&nbsp;n&nbsp;1))</samp>.
 When there is more than one function parameter,
 use the normal term-prefixing format instead, e.g.,
-<samp>f({x&nbsp;-&nbsp;1}&nbsp;{y&nbsp;-&nbsp;1})</samp>
-maps to
+<samp>f({x&nbsp;-&nbsp;1}&nbsp;{y&nbsp;-&nbsp;1})</samp> &rArr;
 <samp>(f&nbsp;(-&nbsp;x&nbsp;1)&nbsp;(-&nbsp;y&nbsp;1))</samp>.
 </li>
 <li>
-Prefixed square brackets <samp>e[...]</samp> map to <samp>(bracketaccess&nbsp;e&nbsp;...)</samp>.
+Prefixed square brackets <samp>e[...]</samp> &rArr;
+<samp>(bracketaccess&nbsp;e&nbsp;...)</samp>.
 This is intended to simplify use of indexed arrays, associative arrays, and similar constructs.
 </li>
 </ul>
@@ -651,7 +648,7 @@ is a reasonable extension.  In fact, in a typical implementation of a
 list reader, it takes extra effort to <em>prevent</em> this extension,
 so this is a relatively easy extension to include.</p>
 
-<h2 id="comma-separated-parameters">Comma-separated parameters</h2>
+<h2 id="rationale_comma">Comma-separated parameters</h2>
 <p>
 It would be possible to define neoteric-expressions to have
 comma-separated values in a function call; this would make it even
@@ -681,8 +678,7 @@ there is no need for the additional commas for parameter separation.</p>
 <p>Experimentation found that separating parameters solely by whitespace
 worked well, so that approach was selected.</p>
 
-<!-- almkglor: id here is inconsistent with convention of other h2 sections in rationale-->
-<h2 id="neoteric-comments">Other comments on neoteric-expressions</h2>
+<h2 id="rationale_other_neoteric">Other comments on neoteric-expressions</h2>
 <p>Originally the prefix had to be a symbol or list.  The theory was
 that by ignoring others, the sweet-reader would be backwards-compatible
 with some badly-formatted code, and some errors might not result in
@@ -748,12 +744,10 @@ A simple curly-infix list is mapped by
 the reader into a list with the first even parameter
 followed by the odd parameters.
 E.g.,
-<samp>{n&nbsp;&lt;=&nbsp;2}</samp>
-maps to
+<samp>{n&nbsp;&lt;=&nbsp;2}</samp> &rArr;
 <samp>(&lt;=&nbsp;n&nbsp;2)</samp>,
 and
-<samp>{2&nbsp;*&nbsp;3&nbsp;*&nbsp;4}</samp>
-maps to
+<samp>{2&nbsp;*&nbsp;3&nbsp;*&nbsp;4}</samp> &rArr;
 <samp>(*&nbsp;2&nbsp;3&nbsp;4)</samp>.</li>
 <li>The <dfn>empty</dfn> curly-infix list
 <samp>{}</samp> is mapped to the empty list <samp>()</samp>.</li>
@@ -765,8 +759,7 @@ E.g., <samp>{5}</samp> is mapped to <samp>5</samp>.</li>
 is mapped to
 <samp>(e1&nbsp;e2)</samp>.
 E.g.,
-<samp>{-&nbsp;x}</samp>
-maps to
+<samp>{-&nbsp;x}</samp> &rArr;
 <samp>(-&nbsp;x)</samp>.</li>
 <li>The mapping of a curly-infix list beginning with the symbol
 &ldquo;<var>.</var>&rdquo; is unspecified.
@@ -820,28 +813,21 @@ is a curly-infix-expression, with the following modifications where
 </p>
 <ol>
 <li>
-<samp>e(...)</samp>
-maps to
+<samp>e(...)</samp> &rArr;
 <samp>(e&nbsp;...)</samp>.
 E.g.,
-<samp>f(1&nbsp;2)</samp>
-&rArr; <!-- almkglor: we should probably use &rArr; vs. "maps to" more consistently -->
+<samp>f(1&nbsp;2)</samp> &rArr;
 <samp>(f&nbsp;1&nbsp;2)</samp>,
-<samp>exit()</samp>
-&rArr;
+<samp>exit()</samp> &rArr;
 <samp>(exit)</samp>, and
-<samp>read(.&nbsp;port)</samp>
-&rArr;
+<samp>read(.&nbsp;port)</samp> &rArr;
 <samp>(read&nbsp;.&nbsp;port)</samp>.</li>
 <li>
-<samp>e{}</samp> with zero or more whitespace characters
-within the braces
-maps to
-<samp>(e)</samp>;
+<samp>e{}</samp> &rArr; <samp>(e)</samp>
+when there are zero or more whitespace characters
+within the braces;
 otherwise,
-<samp>e{...}</samp>
-maps to
-<samp>(e&nbsp;{...})</samp>.
+<samp>e{...}</samp> &rArr; <samp>(e&nbsp;{...})</samp>.
 E.g.,
 <samp>f{n&nbsp;-&nbsp;1}</samp>
 &rArr;
@@ -852,7 +838,8 @@ and
 <samp>g{-&nbsp;x}</samp>
 &rArr;
 <samp>(g&nbsp;(-&nbsp;x))</samp>.</li>
-<li><samp>e[...]</samp> maps to <samp>(bracketaccess&nbsp;e&nbsp;...)</samp></li>
+<li><samp>e[...]</samp> &rArr;
+<samp>(bracketaccess&nbsp;e&nbsp;...)</samp></li>
 <li>There must be no whitespace between <samp>e</samp> and the open paired character.</li>
 <li>An unprefixed <samp>(&nbsp;.&nbsp;e)</samp> must evaluate as <samp>e</samp>.</li>
 <li>
@@ -874,21 +861,21 @@ E.g.,
 </ol>
 <p>Here are some examples of c-expressions (note all operators in curly-infix are delimited):</p>
 <ul>
-<li><samp>{n&nbsp;&lt;=&nbsp;2}</samp> maps to
+<li><samp>{n&nbsp;&lt;=&nbsp;2}</samp> &rArr;
     <samp>(&lt;=&nbsp;n&nbsp;2)</samp></li>
 <li><samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c}</samp>
-maps to
+&rArr;
 <samp>(+&nbsp;a&nbsp;b&nbsp;c)</samp>.</li>
-<li><samp>{x&nbsp;,op&nbsp;y&nbsp;,op&nbsp;z}</samp> maps to
+<li><samp>{x&nbsp;,op&nbsp;y&nbsp;,op&nbsp;z}</samp> &rArr;
     <samp>(,op&nbsp;x&nbsp;y&nbsp;z}</samp>
-<li><samp>{a * {b + c}}</samp> maps to <samp>(* a (+ b c))</samp></li>
-<li><samp>{x eqv? `a}</samp> maps to <samp>(eqv? x `a)</samp></li>
-<li><samp>{(- a) / b}</samp> maps to <samp>(/ (- a) b)</samp></li>
-<li><samp>{-(a) / b}</samp> also maps to <samp>(/ (- a) b)</samp></li>
-<li><samp>{(f a b) + (g h)}</samp> maps to <samp>(+ (f a b) (g h))</samp></li>
-<li><samp>{f(a b) + g(h)}</samp> also maps to <samp>(+ (f a b) (g h))</samp></li>
-<li><samp>&#39;{a + f(b) + x}</samp> maps to <samp>&#39;(+ a (f b) x)</samp></li>
-<li><samp>{{a &gt; 0} and {b &gt;= 1}}</samp> maps to
+<li><samp>{a * {b + c}}</samp> &rArr; <samp>(* a (+ b c))</samp></li>
+<li><samp>{x eqv? `a}</samp> &rArr; <samp>(eqv? x `a)</samp></li>
+<li><samp>{(- a) / b}</samp> &rArr; <samp>(/ (- a) b)</samp></li>
+<li><samp>{-(a) / b}</samp> &rArr; <samp>(/ (- a) b)</samp> as well</li>
+<li><samp>{(f a b) + (g h)}</samp> &rArr; <samp>(+ (f a b) (g h))</samp></li>
+<li><samp>{f(a b) + g(h)}</samp> &rArr; <samp>(+ (f a b) (g h))</samp> as well</li>
+<li><samp>&#39;{a + f(b) + x}</samp> &rArr; <samp>&#39;(+ a (f b) x)</samp></li>
+<li><samp>{{a &gt; 0} and {b &gt;= 1}}</samp> &rArr;
 <samp>(and (&gt; a 0) (&gt;= b 1))</samp></li>
 </ul>
 
