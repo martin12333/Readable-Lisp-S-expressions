@@ -326,10 +326,13 @@ customary to typical software developers.</p>
 
 <h2 id="rationale_curlyfooconvention">Why the <var>curly-foo</var> convention?</h2>
 
-<p>There needs to be a way for users to easily enable curly-infix
+<p>
+We would like to have a convention for users to easily enable curly-infix
+everywhere, e.g.,
 for the default reader (e.g., <var>read</var>), read-eval-print loop (REPL),
 and loader (e.g., <var>load</var>).
-We would like implementations to enable curly-infix in their normal
+Our ideal would be that implementations would
+enable curly-infix in their normal
 invocation, but some implementors may not want to do that.
 For example, if an implementation already uses braces for a
 different local extension, they may not want to immediately
@@ -340,8 +343,9 @@ is defined for each implementation <var>foo</var> that enables it.</p>
 
 <p>There is simply no single option flag (for example) that
 everyone could agree on to enable this.
-In practice, we expect that implementations will build this into their
-default readers and then control it via some special flag, but we do
+In practice, we expect that implementations will build this capability
+into their default readers and then control it via
+some special flag, but we do
 not want to mandate exactly how it is turned on or passed.</p>
 
 <h2 id="rationale_marker">Why the marker <var>#!srfi-105</var>?</h2>
