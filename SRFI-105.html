@@ -39,7 +39,7 @@ In addition, most languages allow infix expressions to be combined
 with function call notation of the form f(x).
 This SRFI provides these capabilities, both for
 developers who already use Scheme and want these conveniences,
-and also for other developers who currently choose to use other languages
+and also for other developers who may choose to use other languages
 in part because they miss these conveniences.
 Scheme currently reserves <code>{</code>...<code>}</code>
 &ldquo;for possible future extensions to the language&rdquo;.
@@ -51,7 +51,9 @@ It is an abbreviation in much the same way that
 <samp>&#39;x</samp> is an abbreviation for <samp>(quote&nbsp;x)</samp>.
 </p>
 <p>
-A <dfn>curly-infix list</dfn> introduces a list whose visual presentation
+A
+<a href="#specification"><dfn>curly-infix list</dfn></a>
+introduces a list whose visual presentation
 is in infix order instead of prefix order.
 For example,
 <samp>{n&nbsp;&gt;&nbsp;2}</samp> maps to <samp>(&gt;&nbsp;n&nbsp;2)</samp>,
@@ -73,11 +75,11 @@ expressions of the form f(...) are simply
 an abbreviation for (f&nbsp;...)</p>
 
 <p>Note that this is derived from the
-&ldquo;<a href="http://readable.sourceforge.net/">readable</a>&rdquo; project.
+&ldquo;<a href="http://readable.sourceforge.net/">readable</a>&rdquo;
+project.
 We intend to later submit at least one additional SRFI that will build on
-top of this SRFI.
-However, curly-infix-expressions are useful on
-their own, even without these other notations.</p>
+top of this SRFI, but curly-infix-expressions are useful on their own.
+</p>
 
 <h1 id="rationale">Rationale</h1>
 <p>Lisp-based languages, like Scheme, are almost the only
@@ -120,8 +122,8 @@ and Scheme remains general and homoiconic.
 Curly-infix-expressions (also known as c-expressions)
 are just a convenient reader abbreviation for infix notation.</p>
 <p>At its core, this SRFI provides
-the <em>simple</em> curly-infix list that accepts ordinary
-lists, merely written in a different order.
+the <em>simple</em> curly-infix list that a list of expressions,
+with the difference that values are written in a different order.
 The simple curly-infix list
 <samp>{operand-1 operator operand-2 operator operand-3 operator ...}</samp>
 is mapped to
@@ -344,22 +346,24 @@ and we want a simple way to identify code that uses curly-infix
 so that readers can switch to it, if they need to switch.
 <a href="http://srfi.schemers.org/srfi-105/mail-archive/msg00027.html">
 This marker was recommended during discussion of SRFI-105</a>.
-After all, R6RS and R7RS (draft 6) already use #!fold-case and #!no-fold-case
+After all, R6RS and R7RS (draft 6) already use
+<var>#!fold-case</var> and <var>#!no-fold-case</var>
 as special markers to control the reader;
 using <var>#!srfi-105</var> is a simple, similar-looking marker
 for a similar situation.
 What's more, it implies a reasonable convention for reader extensions:
 markers that begin with <var>#!</var>, followed by an ASCII letter, should
 have the rest read as an identifier (up to a whitespace)
-and use that to control the reader, and <var>srfi-</var> should be namespace
-for SRFIs.
+and use that to control the reader, and <var>srfi-</var> should be
+the namespace for SRFIs.
 </p>
 
 <p>
 This marker need not interfere with other uses of <var>#!</var>.
 <a href="http://srfi.schemers.org/srfi-22/srfi-22.html">SRFI-22</a> supports
-#! followed by space as a comment to the end of the line; this is supported
-by several implementations, but this is clearly distinguished from this
+<var>#!</var>
+followed by space as a comment to the end of the line; this is supported
+by several implementations, but this is easily distinguished from this
 marker by the space.
 Guile, clisp, and several other Lisps support <var>#! ... !#</var>
 as a multi-line comment, enabling scripts with mixed languages and
@@ -371,12 +375,15 @@ R6RS had a non-normative recommendation to accept <var>#!</var> or
 <var>#!</var> followed by a space as ignoring a line, but this is
 non-normative.
 Thus, implementations could trivially support simultaneously markers such as
-#!srfi-105 to identify curly-infix, the SRFI-22 #!+space marker, and
-#!+FILENAME...!# multi-line comment convention.
-Note that this SRFI does not mandate support for
-SRFI-22, #!fold-case, #!no-fold-case, or #! followed by slash or period;
-it is merely designed so that implementations could implement them
-all simultaneously.
+<var>#!srfi-105</var>
+to identify curly-infix, the SRFI-22 <var>#!</var>+space marker, and a
+<var>#!/&nbsp;...!#</var> and <var>#!.&nbsp;...!#</var>
+multi-line comment convention.
+Note that this SRFI does <em>not</em> mandate support for
+SRFI-22, <var>#!fold-case</var>, <var>#!no-fold-case</var>, or
+<var>#!</var> followed by slash or period;
+it is merely designed so that implementations <em>could</em>
+implement them all simultaneously.
 We recommend that <var>#!srfi-105</var> not be the first two characters
 in a file; if the file were made executable, and execution was attempted,
 this might confuse some systems into trying to run the
@@ -667,12 +674,10 @@ any Lisp-based language, its power comes from its simplicity.</p>
 <h1 id="specification">Specification</h1>
 <p>&ldquo;<dfn>Curly-infix-expressions</dfn>&rdquo; (c-expressions) are
 s-expressions with an additional notation: The curly-infix list.
-A curly-infix list is syntactically almost identical to a regular list;
-it begins with &ldquo;{&rdquo;, optional whitespace,
-a sequence of zero or more whitespace-separated
-<em>neoteric-expressions</em>, optionally more whitespace (if there
-were any neoteric-expressions), and
-a matching &ldquo;}&rdquo;.
+A curly-infix list is syntactically almost identical to a regular list,
+but it is surrounded by braces instead of by parentheses, and instead of
+a sequence of s-expressions it contains a sequence of
+neoteric-expressions (which add support for formats like <var>f(x)</var>).
 Once a curly-infix list is read, it is mapped differently than a
 regular list by a curly-infix reader:</p>
 <ol>
@@ -685,7 +690,8 @@ the <var>equal?</var> comparison <em>must</em> terminate
 if <var>equal?</var> terminates (otherwise
 the comparison <em>may</em> terminate).
 A simple curly-infix list is mapped by
-the reader into a list with the even parameter followed by the odd parameters.
+the reader into a list with the first even parameter
+followed by the odd parameters.
 E.g.,
 <samp>{n&nbsp;&lt;=&nbsp;2}</samp>
 maps to
@@ -710,8 +716,7 @@ maps to
 <li>The mapping of a curly-infix list beginning with the symbol
 &ldquo;.&rdquo; is unspecified.
 (Note: the reference implementation maps
-<samp>{.&nbsp;e}</samp> to <samp>e</samp> if
-<samp>(.&nbsp;e)</samp> maps to <samp>e</samp>.)
+<samp>{.&nbsp;e}</samp> to <samp>e</samp>.)
 </li>
 <li>Any other curly-infix list (including all other improper lists) is
 <dfn>mixed</dfn>.  A mixed curly-infix list <em>must</em> be mapped to that list with &ldquo;<var>nfx</var>&rdquo; added to its front.
@@ -724,6 +729,35 @@ is mapped to
 <samp>(nfx&nbsp;q&nbsp;+&nbsp;r&nbsp;.&nbsp;s)</samp>.
 </li>
 </ol>
+<p>
+Here is the precise definition of a curly-infix list
+(which nearly identical to a traditional list):
+</p>
+<table border="0">
+<tr>
+<td valign="top">
+curly-infix-list &#8594;
+</td>
+<td valign="top">
+&ldquo;<tt>{</tt>&rdquo;
+&lt;whitespace&gt;*
+[ &lt;n-expression&gt;
+[ &lt;whitespace&gt;+ &lt;n-expression&gt; ]*
+<br />
+[ &lt;whitespace&gt;+ .
+  &lt;whitespace&gt;+ &lt;n-expression&gt; ]
+&lt;whitespace&gt;* ]
+&ldquo;<tt>}</tt>&rdquo;
+</td>
+</tr>
+</table>
+<!--
+it begins with &ldquo;{&rdquo;, optional whitespace,
+a sequence of zero or more whitespace-separated
+<em>neoteric-expressions</em>, optionally more whitespace (if there
+were any neoteric-expressions), and
+a matching &ldquo;}&rdquo;.
+-->
 <p>
 A neoteric-expression (<em>n-expression</em>)
 is a curly-infix-expression, with the following modifications where
@@ -771,10 +805,12 @@ This marker (including the trailing whitespace character)
 is consumed and considered whitespace;
 after reading this marker, the reader <i>must</i> accept
 curly-infix expressions in subsequent datums
-until it reaches an end-of-file.
-We encourage implementations to always implement curly-infix expressions,
-however, portable applications must include this marker before any
-curly-infix expression.
+until it reaches an end-of-file or some other conflicting marker
+(no conflicting marker is specified here).
+We encourage implementations to <em>always</em>
+implement curly-infix expressions, even when the marker is not received.
+However, portable applications <em>must</em>
+include this marker before any curly-infix expressions.
 We recommend that portable applications not use this marker as the
 first characters of a file (e.g., they should precede it with a newline).
 </p>
@@ -804,8 +840,8 @@ then if it can be invoked from a command line via the command
 <em>must</em> provide an alternative command &ldquo;<var>curly-foo</var>&rdquo;
 (the command prefixed with &ldquo;<code>curly-</code>&rdquo;) in which
 its standard readers <em>are</em> curly-infix enabled.
-In addition, if the implementation is invokable as a graphical user interface
-(GUI), it
+In addition, if the implementation is invokable as
+a graphical user interface (GUI), it
 <em>must</em> provide a documented means to ensure that its
 standard readers are curly-infix enabled.
 </p>
@@ -836,11 +872,10 @@ as long as the &ldquo;<var>nfx</var>&rdquo; symbol can be
 rebound by users of that library.
 </p>
 
-<p>Procedures:</p>
-<ul>
-<li>Implementations <em>may</em> provide the procedure
-<var>(curly-infix-read .  port)</var> as a curly-infix reader.</li>
-</ul>
+<p>
+Implementations <em>may</em> provide the procedure
+<var>(curly-infix-read .  port)</var> as a curly-infix reader.
+</p>
 
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
 
