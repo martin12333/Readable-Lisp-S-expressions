@@ -1,4 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+
+<!-- almkglor: SRFI process requires HTML 3, we
+labeled our doc above HTML 4.01, isn't this technically
+incorrect?  -->
+
 <html>
 <head>
 <title>Draft SRFI 105: Curly-infix-expressions</title>
@@ -71,8 +76,8 @@ enable later macro processing, e.g.,
 maps to
 <samp>(nfx&nbsp;2&nbsp;+&nbsp;3&nbsp;*&nbsp;5)</samp>.
 Also, inside a curly-infix list (recursively),
-expressions of the form f(...) are simply
-an abbreviation for (f&nbsp;...)</p>
+expressions of the form <samp>f(...)</samp> are simply
+an abbreviation for <samp>(f&nbsp;...)</samp>.</p>
 
 <p>Note that this is derived from the
 &ldquo;<a href="http://readable.sourceforge.net/">readable</a>&rdquo;
@@ -293,8 +298,9 @@ the likely interpretation, and also so that the neoteric-expression
 
 <h2 id="rationale_equal">Why use equal?</h2>
 <p>
-Operators are compared using <var>equal?</var> so that constructs
-like ,op are legal operators, e.g., {x&nbsp;,op&nbsp;y&nbsp;,op&nbsp;z}.
+Operators are compared using <var>equal?</var> so that
+constructs like <samp>,op</samp> are legal operators,
+e.g., <samp>{x&nbsp;,op&nbsp;y&nbsp;,op&nbsp;z}</samp>.
 Note that if the operator construct contains a cycle, it might not terminate
 if <var>equal?</var> does not terminate in this case, so that implementors
 could use the normal Scheme <var>equal?</var> comparison instead of
@@ -310,7 +316,7 @@ delimited in traditional s-expressions (typically by left
 parentheses on the left, and by whitespace on the right).
 It&rsquo;s impractical to do otherwise today; most Lisps,
 including Scheme, allow and predefine symbols that include characters (like
-&ldquo;<var>-</var>&rdquo;) that are typically used for infix operators.
+&ldquo;<code>-</code>&rdquo;) that are typically used for infix operators.
 Many developers put space around infix operators even in languages
 that don&rsquo;t require them, so syntactically requiring them is no burden.
 In short, it is difficult to allow infix operators
@@ -365,11 +371,11 @@ This marker need not interfere with other uses of <var>#!</var>.
 followed by space as a comment to the end of the line; this is supported
 by several implementations, but this is easily distinguished from this
 marker by the space.
-Guile, clisp, and several other Lisps support <var>#! ... !#</var>
+Guile, clisp, and several other Lisps support <code>#!</code>...<code>!#</code>
 as a multi-line comment, enabling scripts with mixed languages and
 multi-line arguments.
 But in practice the <var>#!</var> is almost always
-followed immediately by "/" or ".", and other scripts
+followed immediately by <code>/</code> or </code>.</code>, and other scripts
 could be trivially fixed to make that so.
 R6RS had a non-normative recommendation to accept <var>#!</var> or
 <var>#!</var> followed by a space as ignoring a line, but this is
@@ -512,7 +518,7 @@ way with other macros and with quoting rules.</li>
 </ul>
 
 <p>
-Like Racket, SIX does demonstrate that there is a <i>need</i> for
+Like Racket, SIX does demonstrate that there is a <em>need</em> for
 an infix notation that can be used in Scheme.
 </p>
 
@@ -561,11 +567,36 @@ works more clearly with macros and quasiquotation, and
 has the general advantage of being homoiconic.</p>
 
 <h2 id="rationale_neoteric">Why neoteric-expressions?</h2>
-<p>Lisp&#8217;s standard notation is different from &#8220;normal&#8221; notation in that the parentheses <i>precede</i> the function name, rather than follow it.  Others have commented that it'd be valueable to be able to say name(x) instead of (name x):</p>
+<p>
+Lisp&rsquo;s standard notation is different
+from &ldquo;normal&rdquo; notation
+in that the parentheses <em>precede</em> the function name,
+rather than follow it.
+thers have commented that
+it'd be valueable to be able to say
+<samp>name(x)</samp> instead of <samp>(name x)</samp>:</p>
 <ul>
-<li><a href="http://sourceware.org/ml/guile/2000-07/msg00155.html" rel="nofollow">Jorgen &#8216;forcer&#8217; Schaefer argues that this is a more serious problem than the lack of infix notation</a>; on July 2000 he said &#8220;I think most people would like Scheme a lot better if they could say lambda (expression) ...  instead of (lambda (expression) ...&#8221;</li>
-<li>Peter Norvig had a reader implementation in which &#8220;if a function name ends with an open parentheses, move it inside the list (when converting to an s-expression)&#8221;.  This means that &#8220;(fact x)&#8221; and &#8220;fact(x)&#8221; will mean the same thing.</li>
-<li><a href="http://portal.acm.org/ft_gateway.cfm?id=174185&amp;type=pdf&amp;coll=portal&amp;dl=ACM&amp;CFID=72577012&amp;CFTOKEN=50239143" rel="nofollow">Skill</a> from Cadence, a proprietary Lisp-based extension language, also supports name-prefixing.</li>
+<li><a href="http://sourceware.org/ml/guile/2000-07/msg00155.html" rel="nofollow">Jorgen &#8216;forcer&#8217; Schaefer argues that
+this is a more serious problem than
+the lack of infix notation</a>;
+on July 2000 he said
+&ldquo;I think most people would like Scheme
+a lot better
+if they could say lambda (expression) ...  instead of (lambda (expression) ...&rdquo;
+</li>
+<li>
+Peter Norvig had a reader implementation
+in which
+&ldquo;if a function name ends with an open parentheses,
+move it inside the list (when converting to an s-expression)&rdquo;.
+This means that <samp>(fact x)</samp> and
+<samp>fact(x)</samp> will mean the same thing.
+</li>
+<li>
+<a href="http://portal.acm.org/ft_gateway.cfm?id=174185&amp;type=pdf&amp;coll=portal&amp;dl=ACM&amp;CFID=72577012&amp;CFTOKEN=50239143" rel="nofollow">Skill</a> from Cadence,
+a proprietary Lisp-based extension language,
+also supports name-prefixing.
+</li>
 </ul>
 
 <p>
@@ -573,28 +604,43 @@ Neoteric-expressions allow users to use a more traditional-looking notation for
 function calls.
 Again, quoting rules and macros continue to work as usual.
 <ul>
-<li>The prefixed e(...) form provides a more traditional-looking format for function calls,
- e.g., -(x) instead of (-&nbsp;x).</li>
-<li>The prefixed e{...} form simplifies combining function calls and infix expressions
+<li>
+The prefixed <samp>e(...)</samp> form provides
+a more traditional-looking format for function calls,
+ e.g., <samp>-(x)</samp> instead of <samp>(-&nbsp;x)</samp>.</li>
+<li>
+The prefixed <samp>e{...}</samp> form simplifies
+combining function calls and infix expressions
 when there is only one parameter to the function call.
-This is a common case; for example, "not" (which is normally given only one parameter)
-often encloses infix "and" and "or".
-Thus, f{n - 1} maps to (f (-  n  1)).
+This is a common case;
+for example, &ldquo;<var>not</var>&rdquo;
+(which is normally given only one parameter)
+often encloses infix &ldquo;<var>and</var>&rdquo; and &ldquo;</var>or</var>&rdquo;.
+Thus,
+<samp>f{n&nbsp;-&nbsp;1}</samp>
+maps to
+<samp>(f&nbsp;(-&nbsp;n&nbsp;1))</samp>.
 When there is more than one function parameter,
-use the normal term-prefixing format instead, e.g., f({x - 1} {y - 1})
-maps to (f  (-  x  1)  (-  y  1)).
+use the normal term-prefixing format instead, e.g.,
+<samp>f({x&nbsp;-&nbsp;1}&nbsp;{y&nbsp;-&nbsp;1})</samp>
+maps to
+<samp>(f&nbsp;(-&nbsp;x&nbsp;1)&nbsp;(-&nbsp;y&nbsp;1))</samp>.
 </li>
-<li>Prefixed square brackets e[...] maps to (bracketaccess e ...).
+<li>
+Prefixed square brackets <samp>e[...]<samp> map to <samp>(bracketaccess&nbsp;e&nbsp;...)</samp>.
 This is intended to simplify use of indexed arrays, associative arrays, and similar constructs.
 </li>
 </ul>
 <p>
-The (. e) rule handles expressions like read(. port), ensuring that
-they map to (read . port).  If (. x) didn't mean x, then it would
+The <samp>(.&nbsp;e)</samp> rule handles expressions like <samp>read(.&nbsp;port)</samp>,
+ensuring that they map to <samp>(read&nbsp;.&nbsp;port)</samp>.
+If <samp>(.&nbsp;x)</samp> didn't mean <samp>x</samp>, then it would
 be easy to get this case wrong.  Also, if someone wanted to build on
 top of an existing reader, they would have to reimplement parts of the
-list-processing system if this wasn't handled.  It is already true that
-(. x) is x in guile, so there was already a working example that this
+list-processing system if this wasn't handled.
+It is already true that
+<samp>(.&nbsp;x)</samp> is <samp>x</samp> in guile,
+so there was already a working example that this
 is a reasonable extension.  In fact, in a typical implementation of a
 list reader, it takes extra effort to <em>prevent</em> this extension,
 so this is a relatively easy extension to include.</p>
@@ -604,13 +650,15 @@ so this is a relatively easy extension to include.</p>
 It would be possible to define neoteric-expressions to have
 comma-separated values in a function call; this would make it even
 more similar to traditional function call notation. A simple way would be to simply
-remove all commas, but this would interfere with ,-lifting, and thus was immediately rejected.</p>
+remove all commas, but this would interfere with <code>,</code>-lifting,
+and thus was immediately rejected.
+</p>
 <p>A better rule, that would indeed work, would be to <em>require</em>
 each parameter to end with a comma, and then remove that ending comma.
 However, this rule:</p>
 <ul>
-<li>would obscure any comma used for ,-lifting (making them hard to find).</li>
-<li>is inconsistent with "normal" Lisp lists, which do
+<li>would obscure any comma used for <code>,</code>-lifting (making them hard to find).</li>
+<li>is inconsistent with &ldquo;normal&rdquo; Lisp lists, which do
 not use commas this way, as well as being inconsistent with the simple
 space-separated parameters of sweet-expressions. This
 would make it harder to switch formats and possibly hamper adoption.</li>
@@ -622,11 +670,12 @@ for syntactically separating parameters</li>
 </ul>
 <p>Many other languages do use commas, but they are required in those
 languages because infix operators are not surrounded by any marker.
-Since infix operations are already surrounded by {...} in our notation,
+Since infix operations are already surrounded by <code>{</code>...<code>}</code> in our notation,
 there is no need for the additional commas for parameter separation.</p>
 <p>Experimentation found that separating parameters solely by whitespace
 worked well, so that approach was selected.</p>
 
+<!-- almkglor: id here is inconsistent with convention of other h2 sections in rationale-->
 <h2 id="neoteric-comments">Other comments on neoteric-expressions</h2>
 <p>Originally the prefix had to be a symbol or list.  The theory was
 that by ignoring others, the sweet-reader would be backwards-compatible
@@ -635,27 +684,27 @@ incorrectly-interpreted expressions.  But this was an odd limitation,
 and in some cases other prefixes made sense (e.g., for strings).
 This was changed to eliminate the inconsistency.</p>
 
-<p>Neoteric-expressions used to be called "modern-expressions".  But some
-people didn't like that name, and obvious abbreviation ("m-expression")
+<p>Neoteric-expressions used to be called &ldquo;modern-expressions&rdquo;.  But some
+people didn't like that name, and obvious abbreviation (&ldquo;m-expression&rdquo;)
 was easily confused with the original Lisp M-expression language.
 So the name was changed to neoteric, which has a similar meaning and
-abbreviates nicely.  It wasn't called "function-expressions" because
-"f-expressions" are previously used (and can sound bad if said quickly),
-and they weren't called "prefix-expressions" because "p-expressions"
-sound like "pee-expressions".  It's not called "name-prefix" because
+abbreviates nicely.  It wasn't called &ldquo;function-expressions&rdquo; because
+&ldquo;f-expressions&rdquo; are previously used (and can sound bad if said quickly),
+and they weren't called &ldquo;prefix-expressions&rdquo; because &ldquo;p-expressions&rdquo;
+sound like &ldquo;pee-expressions&rdquo;.  It's not called &ldquo;name-prefix&rdquo; because
 the prefix need not be a name.</p>
 
 <p>The neoteric rules do introduce the risk of someone inserting
-a space between the function name and the opening &#8220;(&#8221;.
+a space between the function name and the opening <code>(</code>.
 But whitespace is already significant as a parameter separator, so this
 is consistent with how the system works anyway... this is not really a
 change at all.</p>
 
-<p>Obviously, this is trivial to parse.  We don&#8217;t lose any power,
+<p>Obviously, this is trivial to parse.  We don&rsquo;t lose any power,
 because this is completely optional -- we only use it when we want to,
 and we can switch back to the traditional s-expression notation if we
-want to.  It&#8217;s trivially quoted... if you quote a symbol followed
-by &#8220;(&#8221;, just keep going until its matching &#8220;)&#8221;, which is
+want to.  It&rsquo;s trivially quoted... if you quote a symbol followed
+by <code>(</code>, just keep going until its matching <code>)</code>, which is
 essentially the same rule as before!</p>
 
 <h2 id="rationale_otherdetails">Other details</h2>
@@ -672,12 +721,12 @@ well. We even have a working implementation in Common Lisp.</p>
 any Lisp-based language, its power comes from its simplicity.</p>
 
 <h1 id="specification">Specification</h1>
-<p>&ldquo;<dfn>Curly-infix-expressions</dfn>&rdquo; (c-expressions) are
+<p>&ldquo;<dfn>Curly-infix-expressions</dfn>&rdquo; or &ldquo;<dfn>c-expressions</dfn>&rdquo; are
 s-expressions with an additional notation: The curly-infix list.
 A curly-infix list is syntactically almost identical to a regular list,
 but it is surrounded by braces instead of by parentheses, and instead of
 a sequence of s-expressions it contains a sequence of
-neoteric-expressions (which add support for formats like <var>f(x)</var>).
+neoteric-expressions (which add support for formats like <samp>f(x)</samp>).
 Once a curly-infix list is read, it is mapped differently than a
 regular list by a curly-infix reader:</p>
 <ol>
@@ -714,7 +763,7 @@ E.g.,
 maps to
 <samp>(-&nbsp;x)</samp>.</li>
 <li>The mapping of a curly-infix list beginning with the symbol
-&ldquo;.&rdquo; is unspecified.
+&ldquo;<var>.</var>&rdquo; is unspecified.
 (Note: the reference implementation maps
 <samp>{.&nbsp;e}</samp> to <samp>e</samp>.)
 </li>
@@ -759,18 +808,63 @@ were any neoteric-expressions), and
 a matching &ldquo;}&rdquo;.
 -->
 <p>
-A neoteric-expression (<em>n-expression</em>)
+A &ldquo;<dfn>neoteric-expression</dfn>&rdquo; or &ldquo;<dfn>n-expression</dfn>&rdquo;
 is a curly-infix-expression, with the following modifications where
 <var>e</var> is any datum expression:
 </p>
 <ol>
-<li>An e(...) maps to (e ...).  E.g., f(1 2) &rArr; (f 1 2), exit() &rArr; (exit), and read(. port) &rArr; (read . port).</li>
-<li>An e{} with zero or more whitespace characters within the braces maps to (e); otherwise, e{...} maps to (e {...}). E.g., f{n - 1} &rArr; (f {n - 1}) &rArr; (f (- n 1)), and g{- x} &rArr; (g (- x)).</li>
-<li>An e[...] maps to (bracketaccess&nbsp;e&nbsp;...)</li>
-<li>There must be no whitespace between e and the open paired character.</li>
-<li>An unprefixed "(&nbsp;.&nbsp;e)" must evaluate as "e".</li>
-<li>These recurse within lists, so lists contains sequences of zero or more <em>neoteric</em> expressions, not s-expressions.
-<li>These recurse left-to-right.  E.g., f{n - 1}(x) &rArr; f({n - 1})(x) &rArr; (f (- n 1))(x) &rArr; ((f (- n 1)) x)</li>
+<li>
+<samp>e(...)</samp>
+maps to
+<samp>(e&nbsp;...)</samp>.
+E.g.,
+<samp>f(1&nbsp;2)</samp>
+&rArr; <!-- almkglor: we should probably use &rArr; vs. "maps to" more consistently -->
+<samp>(f&nbsp;1&nbsp;2)</samp>,
+<samp>exit()</samp>
+&rArr;
+<samp>(exit)</samp>, and
+<samp>read(.&nbsp;port)</samp>
+&rArr;
+<samp>(read&nbsp;.&nbsp;port)</samp>.</li>
+<li>
+<samp>e{}</samp> with zero or more whitespace characters
+within the braces
+maps to
+<samp>(e)</samp>;
+otherwise,
+<samp>e{...}</samp>
+maps to
+<samp>(e&nbsp;{...})</samp>.
+E.g.,
+<samp>f{n&nbsp;-&nbsp;1}</samp>
+&rArr;
+<samp>(f&nbsp;{n&nbsp;-&nbsp;1})</samp>
+&rArr;
+<samp>(f&nbsp;(-&nbsp;n&nbsp;1))</samp>,
+and
+<samp>g{-&nbsp;x}</samp>
+&rArr;
+<samp>(g&nbsp;(-&nbsp;x))</samp>.</li>
+<li><samp>e[...]</samp> maps to <samp>(bracketaccess&nbsp;e&nbsp;...)</samp></li>
+<li>There must be no whitespace between <samp>e</samp> and the open paired character.</li>
+<li>An unprefixed <samp>(&nbsp;.&nbsp;e)</samp> must evaluate as <samp>e</samp>.</li>
+<li>
+These recurse within lists,
+so lists contains sequences
+of zero or more <em>neoteric</em> expressions,
+not s-expressions.
+<li>
+These recurse left-to-right.
+E.g.,
+<samp>f{n&nbsp;-&nbsp;1}(x)</samp>
+&rArr;
+<samp>f({n&nbsp;-&nbsp;1})(x)</samp>
+&rArr;
+<samp>(f&nbsp;(-&nbsp;n&nbsp;1))(x)</samp>
+&rArr;
+<samp>((f&nbsp;(-&nbsp;n&nbsp;1))&nbsp;x)</samp>
+</li>
 </ol>
 <p>Here are some examples of c-expressions (note all operators in curly-infix are delimited):</p>
 <ul>
@@ -799,11 +893,11 @@ include the braces &ldquo;<code>{</code>&rdquo; and
 &ldquo;<code>}</code>&rdquo; as delimiters.</p>
 
 <p>
-An implementation of this SRFI <i>must</i> accept the marker
+An implementation of this SRFI <em>must</em> accept the marker
 <var>#!srfi-105</var> followed by a whitespace character.
 This marker (including the trailing whitespace character)
 is consumed and considered whitespace;
-after reading this marker, the reader <i>must</i> accept
+after reading this marker, the reader <em>must</em> accept
 curly-infix expressions in subsequent datums
 until it reaches an end-of-file or some other conflicting marker
 (no conflicting marker is specified here).
@@ -859,7 +953,7 @@ and application writers.
 <em>However</em>, an implementation <em>may</em> provide a default
 <em>library</em> that binds the &ldquo;<var>nfx</var>&rdquo; symbol
 (as it is then a library, this case actually falls under
-the "reserved for use by library writers" clause above).
+the &ldquo;reserved for use by library writers&rdquo; clause above).
 Application writers and other library writers
 using that implementation
 are then free to use or not use
@@ -1038,7 +1132,7 @@ self-contained.&rdquo;</p>
 "http://readable.sourceforge.net">http://readable.sourceforge.net</a></p>
 
 <h1 id="acknowledgments">Acknowledgments</h1>
-<p>We thank all the participants on the "readable-discuss" mailing list.</p>
+<p>We thank all the participants on the &ldquo;readable-discuss&rdquo; mailing list.</p>
 
 <h1 id="copyright">Copyright</h1>
 <p>Copyright (C) 2012 David A. Wheeler and Alan Manuel K. Gloria.
