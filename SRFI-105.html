@@ -175,9 +175,9 @@ not homoiconic.
 <p>
 In contrast, this curly-infix-expression proposal avoids these problems.
 For example, in curly-infix,
-<samp>`{,a&nbsp;+&nbsp;,b}</samp>
+<samp>&#96;{,a&nbsp;+&nbsp;,b}</samp>
 maps cleanly to
-<samp>`(+&nbsp;,a&nbsp;,b)</samp>,
+<samp>&#96;(+&nbsp;,a&nbsp;,b)</samp>,
 which works as expected with all macros.</p>
 
 <h2 id="rationale_noprecedence">Why isn&rsquo;t precedence part of this SRFI?</h2>
@@ -686,14 +686,19 @@ incorrectly-interpreted expressions.  But this was an odd limitation,
 and in some cases other prefixes made sense (e.g., for strings).
 This was changed to eliminate the inconsistency.</p>
 
-<p>Neoteric-expressions used to be called &ldquo;modern-expressions&rdquo;.  But some
-people didn't like that name, and obvious abbreviation (&ldquo;m-expression&rdquo;)
+<p>Neoteric-expressions used to be called &ldquo;modern-expressions&rdquo;.
+But some people didn't like that name,
+and the obvious abbreviation (&ldquo;m-expression&rdquo;)
 was easily confused with the original Lisp M-expression language.
 So the name was changed to neoteric, which has a similar meaning and
-abbreviates nicely.  It wasn't called &ldquo;function-expressions&rdquo; because
-&ldquo;f-expressions&rdquo; are previously used (and can sound bad if said quickly),
-and they weren't called &ldquo;prefix-expressions&rdquo; because &ldquo;p-expressions&rdquo;
-sound like &ldquo;pee-expressions&rdquo;.  It's not called &ldquo;name-prefix&rdquo; because
+abbreviates nicely.
+It wasn't called &ldquo;function-expressions&rdquo; because
+&ldquo;f-expressions&rdquo; are previously used
+(and can sound bad if said quickly),
+and they weren't called &ldquo;prefix-expressions&rdquo;
+because &ldquo;p-expressions&rdquo;
+sound like &ldquo;pee-expressions&rdquo;.
+It's not called &ldquo;name-prefix&rdquo; because
 the prefix need not be a name.</p>
 
 <p>The neoteric rules do introduce the risk of someone inserting
@@ -869,7 +874,7 @@ E.g.,
 <li><samp>{x&nbsp;,op&nbsp;y&nbsp;,op&nbsp;z}</samp> &rArr;
     <samp>(,op&nbsp;x&nbsp;y&nbsp;z}</samp>
 <li><samp>{a * {b + c}}</samp> &rArr; <samp>(* a (+ b c))</samp></li>
-<li><samp>{x eqv? `a}</samp> &rArr; <samp>(eqv? x `a)</samp></li>
+<li><samp>{x eqv? &#96;a}</samp> &rArr; <samp>(eqv? x &#96;a)</samp></li>
 <li><samp>{(- a) / b}</samp> &rArr; <samp>(/ (- a) b)</samp></li>
 <li><samp>{-(a) / b}</samp> &rArr; <samp>(/ (- a) b)</samp> as well</li>
 <li><samp>{(f a b) + (g h)}</samp> &rArr; <samp>(+ (f a b) (g h))</samp></li>
@@ -1130,22 +1135,30 @@ self-contained.&rdquo;</p>
 <h1 id="copyright">Copyright</h1>
 <p>Copyright (C) 2012 David A. Wheeler and Alan Manuel K. Gloria.
 All Rights Reserved.</p>
-<p>Permission is hereby granted, free of charge, to any person
+<pre>
+Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without
 restriction, including without limitation the rights to use, copy,
 modify, merge, publish, distribute, sublicense, and/or sell copies
 of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:</p>
-<p>The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.</p>
-<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY
+furnished to do so, subject to the following conditions:
+</pre>
+<br />
+<pre>
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+</pre>
+<br />
+<pre>
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY
 OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
 WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
 BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
 ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+</pre>
 </body>
 </html>
 <!--
