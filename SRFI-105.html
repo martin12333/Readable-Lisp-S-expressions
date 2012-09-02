@@ -353,7 +353,7 @@ not want to mandate exactly how it is turned on or passed.</p>
 <h2 id="rationale_procedures">Why the marker <var>#!srfi-105</var>?</h2>
 <p>
 We would like implementations to always have curly-infix enabled.
-However, some implementations may have other extensions that use {...},
+However, some implementations may have other extensions that use <code>{</code>...<code>}</code>,
 and we want a simple way to identify code that uses curly-infix
 so that readers can switch to it, if they need to switch.
 <a href="http://srfi.schemers.org/srfi-105/mail-archive/msg00027.html">
@@ -364,9 +364,9 @@ as special markers to control the reader;
 using <var>#!srfi-105</var> is a simple, similar-looking marker
 for a similar situation.
 What's more, it implies a reasonable convention for reader extensions:
-markers that begin with <var>#!</var>, followed by an ASCII letter, should
+markers that begin with <code>#!</code>, followed by an ASCII letter, should
 have the rest read as an identifier (up to a whitespace)
-and use that to control the reader, and <var>srfi-</var> should be
+and use that to control the reader, and <code>srfi-</code> should be
 the namespace for SRFIs.
 </p>
 
