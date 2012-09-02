@@ -27,7 +27,14 @@ org&gt;</code></a>. See <a href=
 "nofollow">instructions here</a> to subscribe to the list. You can
 access previous messages via <a href=
 "http://srfi.schemers.org/srfi-105/mail-archive/maillist.html" rel=
-"nofollow">the archive of the mailing list</a>.</p>
+"nofollow">the archive of the mailing list</a>.
+This SRFI contains all the required sections, including
+an <a href="#abstract">abstract</a>,
+<a href="#rationale">rationale</a>,
+<a href="#specification">specification</a>,
+and
+<a href="reference-implementation">reference implementation</a>.
+</p>
 
 <h1 id="related-srfis">Related SRFIs</h1>
 <p>None</p>
@@ -163,9 +170,9 @@ A macro for infix would very likely confuse
 the <var>syntax-rules</var> form.
 </p>
 
-<h2 id="rationale_othersyntax">Why not completely different notation for infix?</h2>
+<h2 id="rationale_othersyntax">Why not a completely different notation for infix?</h2>
 <p>Other systems build notations into the reader, but the
-infix notation would be a notation radically different from
+infix notation are often a notation radically different from
 normal Lisp notation.
 The result, in some cases, would be that these notations would
 simultaneously lose Lisp&rsquo;s abilities for
@@ -567,6 +574,12 @@ guile used by most people, so it is very much not portable.
 But perhaps the biggest problem is that this notation is fundamentally
 not homoiconic; it is harder to determine where lists begin and end
 with it.</p>
+
+<p>
+Like Racket and SIX, this module does demonstrate
+that there is a <em>need</em> for
+an infix notation that can be used in Scheme.
+</p>
 
 <p>In contrast, curly-infix is simpler,
 requires no registration system or other complexities,
