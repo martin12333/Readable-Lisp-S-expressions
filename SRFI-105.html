@@ -679,7 +679,8 @@ and thus was immediately rejected.
 each parameter to end with a comma, and then remove that ending comma.
 However, this rule:</p>
 <ul>
-<li>would obscure any comma used for <code>,</code>-lifting (making them hard to find).</li>
+<li>would obscure any comma used for <code>,</code>-lifting
+(making them hard to find).</li>
 <li>is inconsistent with &#8220;normal&#8221; Lisp lists, which do
 not use commas this way, as well as being inconsistent with the simple
 space-separated parameters of sweet-expressions. This
@@ -689,11 +690,12 @@ Parameters are very common, so creating an additional required character for
 every parameter turned out to be unpleasant to read and write
 when this was tried in experimentation.</li>
 <li>is completely unnecessary.  Whitespace is quite sufficient (and clear)
-for syntactically separating parameters</li>
+for syntactically separating parameters.</li>
 </ul>
 <p>Many other languages do use commas, but they are required in those
 languages because infix operators are not surrounded by any marker.
-Since infix operations are already surrounded by <code>{</code>...<code>}</code> in our notation,
+Since infix operations are already surrounded by
+<code>{</code>...<code>}</code> in our notation,
 there is no need for the additional commas for parameter separation.</p>
 <p>Experimentation found that separating parameters solely by whitespace
 worked well, so that approach was selected.</p>
@@ -735,8 +737,8 @@ change at all.</p>
 because this is completely optional -- we only use it when we want to,
 and we can switch back to the traditional s-expression notation if we
 want to.  It&#8217;s trivially quoted... if you quote a symbol followed
-by <code>(</code>, just keep going until its matching <code>)</code>, which is
-essentially the same rule as before!</p>
+by <code>(</code>, just keep going until its matching <code>)</code>,
+which is essentially the same rule as before!</p>
 
 <h2><a name="rationale_otherdetails">Other details</a></h2>
 <p>There is no requirement that writers (e.g., &#8220;<var>write</var>&#8221;
