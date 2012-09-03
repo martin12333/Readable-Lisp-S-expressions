@@ -354,8 +354,7 @@
   ; This is a simple R5RS reader, with a few minor (common) extensions.
   ; The key part is that it implements [] and {} as delimiters, and
   ; after it reads in some datum (the "prefix"), it calls
-  ; neoteric-process-tail to see if there's a "tail"
-  ; (and if so, read it's used).
+  ; neoteric-process-tail to see if there's a "tail".
   (define (neoteric-read-real port)
     (let*
       ((c (peek-char port))
