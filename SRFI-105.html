@@ -1140,26 +1140,98 @@ self-contained.&rdquo;</p>
                   (list prefix tail)))))
           (#t prefix))))
 
+  (define (neoteric-read . port)
+    (if (null? port)
+      (neoteric-read-real (current-input-port))
+      (neoteric-read-real (car port))))
+  
+  ; This is the "real" implementation of neoteric-read
+  ; (neoteric-read just figures out the port and calls neoteric-read-real).
+  ; It implements an entire reader, as a demonstration, but if you can
+  ; update your existing reader you should just update that instead.
+  ; This is a simple R5RS reader, with a few minor (common) extensions.
+  ; The key part is that it implements [] and {} as delimiters, and
+  ; after it reads in some datum (the "prefix"), it calls
+  ; neoteric-process-tail to see if there's a "tail"
+  ; (and if so, read it's used).
+  (define (neoteric-read-real port)
+    (let*
+      ((c (peek-char port))
+       (prefix
+         ; This cond is a normal Scheme reader, puts result in "prefix"
+         ; This implements "read-expression-as-usual" as described above.
+        (cond
+          ((eof-object? c) c)
+          ((char=? c #\;)
+            (consume-to-eol port)
+            (neoteric-read-real port))
+          ((my-char-whitespace? c)
+            (read-char port)
+            (neoteric-read-real port))
+          ((char=? c #\( )
+             (read-char port)
+             (my-read-delimited-list #\) port))
+          ((char=? c #\) )
+             (read-char port)
+             (read-error "Closing parenthesis without opening")
+             (neoteric-read-real port))
+          ((char=? c #\[ )
+             (read-char port)
+             (my-read-delimited-list #\] port))
+          ((char=? c #\] )
+             (read-char port)
+             (read-error "Closing bracket without opening")
+             (neoteric-read-real port))
+          ((char=? c #\{ )
+            (read-char port)
+            (process-curly
+                (my-read-delimited-list #\} port)))
+          ((char=? c #\} )
+             (read-char port)
+             (read-error "Closing brace without opening")
+             (neoteric-read-real port))
+          ((char=? c #\") ; Strings are delimited by ", so can call directly
+            (default-scheme-read port))
+          ((char=? c #\')
+            (read-char port)
+            (list 'quote (neoteric-read-real port)))
+          ((char=? c #\`)
+            (read-char port)
+            (list 'quasiquote (neoteric-read-real port)))
+          ((char=? c #\,)
+            (read-char port)
+              (cond
+                ((char=? #\@ (peek-char port))
+                  (read-char port)
+                  (list 'unquote-splicing (neoteric-read-real port)))
+               (#t
+                (list 'unquote (neoteric-read-real port)))))
+          ((ismember? c digits) ; Initial digit.
+            (read-number port '()))
+          ((char=? c #\#) (process-sharp port))
+          ((char=? c #\.) (process-period port))
+          ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
+             (read-char port)
+             (if (ismember? (peek-char port) digits)
+               (read-number port (list c))
+               (string->symbol (fold-case-maybe port
+                 (list->string (cons c
+                    (read-until-delim port neoteric-delimiters)))))))
+          (#t ; Nothing else.  Must be a symbol start.
+            (string->symbol (fold-case-maybe port
+              (list->string
+                (read-until-delim port neoteric-delimiters))))))))
+      ; Here's the big change to implement neoteric-expressions:
+      (if (eof-object? prefix)
+        prefix
+        (neoteric-process-tail port prefix))))
 
-  ; Modify the reader so
-  ; that [] and {} are also delimiters.
-  ; When #\{ is detected, read using my-read-delimited-list
-  ; any list from that port
-  ; until its matching #\}, then process that list with "process-curly".
 
-  ; neoteric-read is just like regular read, except that
-  ; (...) calls my-read-delimited-list and thus recurses through
-  ; neoteric-read.  It also processes {...} and, if you wish, [...].
-  ; Then after reading each datum, call neoteric-process-tail
-  ; to process any suffixes (...), [...], or {...} that might be
-  ; present, so expressions like f(x) work.  Basically, neoteric-read
-  ; looks like this:
-  ; (let* ((prefix
-  ;           (read-expression-as-usual port)))
-  ;   (if (eof-object? prefix)
-  ;     prefix
-  ;     (neoteric-process-tail port prefix)))
-
+  ; Modify the main reader so that [] and {} are also delimiters, and so
+  ; that when #\{ is detected, read using my-read-delimited-list
+  ; any list from that port until its matching #\}, then process
+  ; that list with "process-curly", like this:
+  ;   (process-curly (my-read-delimited-list #\} port))
 
 </pre>
 

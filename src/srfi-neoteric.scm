@@ -428,11 +428,10 @@
         prefix
         (neoteric-process-tail port prefix))))
 
-  (define (neoteric-read . args)
-    (neoteric-read-real
-      (if (null? args)
-        (current-input-port)
-        (car args))))
+  (define (neoteric-read . port)
+    (if (null? port)
+      (neoteric-read-real (current-input-port))
+      (neoteric-read-real (car port))))
 
   (define (enable-neoteric)
     ; possibly also set get-datum
