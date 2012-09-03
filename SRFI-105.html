@@ -1,4 +1,14 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN" [
+<!ENTITY ldquo "&#8220;">
+<!ENTITY rdquo "&#8221;">
+<!ENTITY lsquo "&#8216;">
+<!ENTITY rsquo "&#8217;">
+<!ENTITY larr  "&#8592;">
+<!ENTITY rarr  "&#8594;">
+<!ENTITY lArr  "&#8656;">
+<!ENTITY rArr  "&#8658;">
+<!ENTITY mdash "&#8212;">
+]>
 <html>
 <head>
 <title>Draft SRFI 105: Curly-infix-expressions</title>
@@ -6,14 +16,15 @@
 </head>
 <body>
 
-<h1 id="title">Title</h1>
+<h1><a name="title">Title</a></h1>
 <p>Curly-infix-expressions</p>
 
-<h1 id="author"><a name="authors">Authors</a></h1>
+<!-- Some old browsers have problem with empty names. Work around here: -->
+<h1><a name="authors">Authors</a><a name="author">&nbsp;</a></h1>
 <p><a href="http://www.dwheeler.com">David A. Wheeler</a></p>
 <p>Alan Manuel K. Gloria</p>
 
-<h1 id="status">Status</h1>
+<h1><a name="status">Status</a></h1>
 <p>This is a draft Scheme Request for Implementation (SRFI) for
 SRFI 105. To see an explanation of each status that
 a SRFI can hold, see <a href=
@@ -36,10 +47,10 @@ and
 <a href="reference-implementation">reference implementation</a>.
 </p>
 
-<h1 id="related-srfis">Related SRFIs</h1>
+<h1><a name="related-srfis">Related SRFIs</a></h1>
 <p>None</p>
 
-<h1 id="abstract">Abstract</h1>
+<h1><a name="abstract">Abstract</a></h1>
 <p>Lisp-based languages, like Scheme, are almost the only
 programming languages in modern use that do not support infix notation.
 In addition, most languages allow infix expressions to be combined
@@ -87,7 +98,7 @@ We intend to later submit at least one additional SRFI that will build on
 top of this SRFI, but curly-infix-expressions are useful on their own.
 </p>
 
-<h1 id="rationale">Rationale</h1>
+<h1><a name="rationale">Rationale</a></h1>
 <p>Lisp-based languages, like Scheme, are almost the only
 programming languages in modern use that do not support infix
 notation. Even some Lisp advocates, like Paul Graham, admit that
@@ -138,7 +149,7 @@ two operands are handled cleanly.
 E.g., <samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c}</samp> &rArr;
 <samp>(+&nbsp;a&nbsp;b&nbsp;c)</samp>.</p>
 
-<h2 id="rationale_changereader">Why not macros? Why replace the reader?</h2>
+<h2><a name="rationale_changereader">Why not macros? Why replace the reader?</a></h2>
 <p>Many previous systems have implemented &ldquo;infix&rdquo;
 systems as a named macro or procedure (e.g., <var>INFIX</var>).
 This looks ugly, and it does the wrong thing &mdash; the resulting list
@@ -170,7 +181,7 @@ A macro for infix would very likely confuse
 the <var>syntax-rules</var> form.
 </p>
 
-<h2 id="rationale_othersyntax">Why not a completely different notation for infix?</h2>
+<h2><a name="rationale_othersyntax">Why not a completely different notation for infix?</a></h2>
 <p>Other systems build notations into the reader, but the
 infix notation are often a notation radically different from
 normal Lisp notation.
@@ -187,7 +198,7 @@ maps cleanly to
 <samp>&#96;(+&nbsp;,a&nbsp;,b)</samp>,
 which works as expected with all macros.</p>
 
-<h2 id="rationale_noprecedence">Why isn&rsquo;t precedence part of this SRFI?</h2>
+<h2><a name="rationale_noprecedence">Why isn&rsquo;t precedence part of this SRFI?</a></h2>
 <p>Many past &ldquo;infix&rdquo; systems for Lisp build in
 precedence. However, Lisp systems often process other languages,
 and they may freely mix these different languages.
@@ -245,7 +256,7 @@ expression isn&rsquo;t provided.
 However, prepending &ldquo;<var>nfx</var>&rdquo;
 is much more flexible.</p>
 
-<h2 id="rationale_noautodetect">Why not autodetect infix?</h2>
+<h2><a name="rationale_noautodetect">Why not autodetect infix?</a></h2>
 <p>Some past efforts tried to automatically detect infix operators,
 but this turns out to not work well. It&rsquo;s hard to express
 good rules for detecting infix operators, and the rules become too
@@ -266,7 +277,7 @@ not convenient, you don&rsquo;t need to use it. It is also very
 backwards-compatible: Normal lists work normally, and if you want
 infix, use <code>{</code>...<code>}</code>.</p>
 
-<h2 id="rationale_specialcases">Why are 0, 1, and 2 parameters special?</h2>
+<h2><a name="rationale_specialcases">Why are 0, 1, and 2 parameters special?</a></h2>
 <p>The empty curly-infix list
 <samp>{}</samp> is intentionally mapped to <samp>()</samp>,
 as it <em>is</em> an
@@ -302,7 +313,7 @@ the likely interpretation, and also so that the neoteric-expressions like
 </li>
 </ol>
 
-<h2 id="rationale_equal">Why use <var>equal?</var> to compare operators in a &ldquo;simple&rdquo; curly-infix-list for equality?</h2>
+<h2><a name="rationale_equal">Why use <var>equal?</var> to compare operators in a &ldquo;simple&rdquo; curly-infix-list for equality?</a></h2>
 <p>
 Operators are compared using <var>equal?</var> so that
 constructs like <samp>,op</samp> are legal operators,
@@ -315,7 +326,7 @@ having to implement a special comparison operator just for this
 particular case.
 </p>
 
-<h2 id="rationale_delimiters">Why must infix operators be delimited?</h2>
+<h2><a name="rationale_delimiters">Why must infix operators be delimited?</a></h2>
 <p>Curly-infix requires that the infix operators be delimited (e.g., by
 spaces). This is consistent with Lisp history and current practice.
 Currently, in Lisp, operators are always
@@ -331,7 +342,7 @@ without delimiters, and the visual results are the same as many
 real-world uses in other languages, so the result appears quite
 customary to typical software developers.</p>
 
-<h2 id="rationale_curlyfooconvention">Why the <var>curly-foo</var> convention?</h2>
+<h2><a name="rationale_curlyfooconvention">Why the <var>curly-foo</var> convention?</a></h2>
 
 <p>
 We would like to have a convention for users to easily enable curly-infix
@@ -355,7 +366,7 @@ into their default readers and then control it via
 some special flag, but we do
 not want to mandate exactly how it is turned on or passed.</p>
 
-<h2 id="rationale_marker">Why the marker <var>#!srfi-105</var>?</h2>
+<h2><a name="rationale_marker">Why the marker <var>#!srfi-105</var>?</a></h2>
 <p>
 We would like implementations to always have curly-infix enabled.
 However, some implementations may have other extensions
@@ -388,7 +399,7 @@ Guile, clisp, and several other Lisps support
 as a multi-line comment, enabling scripts with mixed languages and
 multi-line arguments.
 But in practice the <var>#!</var> is almost always
-followed immediately by <code>/</code> or </code>.</code>, and other scripts
+followed immediately by <code>/</code> or <code>.</code>, and other scripts
 could be trivially fixed to make that so.
 R6RS had a non-normative recommendation to ignore a line that began
 with <var>#!/usr/bin/env</var>, as well
@@ -419,7 +430,7 @@ that can be built into even trivial Scheme implementations.
 Mandating module support is unnecessary and might inhibit its
 adoption.</p>
 
-<h2 id="rationale_racketinfixconvention">What about the Racket &ldquo;infix convention&rdquo;?</h2>
+<h2><a name="rationale_racketinfixconvention">What about the Racket &ldquo;infix convention&rdquo;?</a></h2>
 <p><a href=
 "http://docs.racket-lang.org/guide/Pairs__Lists__and_Racket_Syntax.html">
 Racket allows a notation called the &ldquo;infix convention&rdquo;
@@ -501,7 +512,7 @@ convention&rdquo; is additional evidence of the <em>need</em> for a
 standard infix convention; many have separately created mechanisms
 to try to provide infix support.</p>
 
-<h2 id="rationale_six">What about Gambit&rsquo;s &ldquo;Scheme Infix eXtension (SIX)&rdquo;?</h2>
+<h2><a name="rationale_six">What about Gambit&rsquo;s &ldquo;Scheme Infix eXtension (SIX)&rdquo;?</a></h2>
 <p>
 The Gambit reader includes a notation called the
 <a href="http://www.iro.umontreal.ca/~gambit/doc/gambit-c.html#Scheme-infix-syntax-extension">&ldquo;Scheme Infix eXtension (SIX)&rdquo;</a>
@@ -536,13 +547,13 @@ Like Racket, SIX does demonstrate that there is a <em>need</em> for
 an infix notation that can be used in Scheme.
 </p>
 
-<p>A system could simultanously implement curly-infix and SIX.
+<p>A system could simultaneously implement curly-infix and SIX.
 However, curly-infix is far simpler, is more flexible (e.g., by allowing
-arbitary symbols), and works much more easily with macros and quoting.
+arbitrary symbols), and works much more easily with macros and quoting.
 Thus, we believe that curly-infix is the better system and more
 appropriate for standardization across Scheme implementations.</p>
 
-<h2 id="rationale_guile">What about Guile 1.4&rsquo;s &ldquo;reading infix&rdquo; module?</h2>
+<h2><a name="rationale_guile">What about Guile 1.4&rsquo;s &ldquo;reading infix&rdquo; module?</a></h2>
 <p><a href="http://gnuvola.org/software/guile/doc/index.html">Guile 1.4.x
 at gnuvola.org</a> is self-described as a
 &ldquo;(somewhat amicable) fork from the official Guile&rdquo;.
@@ -586,7 +597,7 @@ requires no registration system or other complexities,
 works more clearly with macros and quasiquotation, and
 has the general advantage of being homoiconic.</p>
 
-<h2 id="rationale_neoteric">Why neoteric-expressions?</h2>
+<h2><a name="rationale_neoteric">Why neoteric-expressions?</a></h2>
 <p>
 Lisp&rsquo;s standard notation is different
 from &ldquo;normal&rdquo; notation
@@ -635,7 +646,8 @@ when there is only one parameter to the function call.
 This is a common case;
 for example, &ldquo;<var>not</var>&rdquo;
 (which is normally given only one parameter)
-often encloses infix &ldquo;<var>and</var>&rdquo; and &ldquo;</var>or</var>&rdquo;.
+often encloses infix &ldquo;<var>and</var>&rdquo; and
+&ldquo;<var>or</var>&rdquo;.
 Thus,
 <samp>f{n&nbsp;-&nbsp;1}</samp>
 &rArr;
@@ -665,7 +677,7 @@ is a reasonable extension.  In fact, in a typical implementation of a
 list reader, it takes extra effort to <em>prevent</em> this extension,
 so this is a relatively easy extension to include.</p>
 
-<h2 id="rationale_comma">Comma-separated parameters</h2>
+<h2><a name="rationale_comma">Comma-separated parameters</a></h2>
 <p>
 It would be possible to define neoteric-expressions to have
 comma-separated values in a function call; this would make it even
@@ -695,7 +707,7 @@ there is no need for the additional commas for parameter separation.</p>
 <p>Experimentation found that separating parameters solely by whitespace
 worked well, so that approach was selected.</p>
 
-<h2 id="rationale_other_neoteric">Other comments on neoteric-expressions</h2>
+<h2><a name="rationale_other_neoteric">Other comments on neoteric-expressions</a></h2>
 <p>Originally the prefix had to be a symbol or list.  The theory was
 that by ignoring others, the sweet-reader would be backwards-compatible
 with some badly-formatted code, and some errors might not result in
@@ -735,7 +747,7 @@ want to.  It&rsquo;s trivially quoted... if you quote a symbol followed
 by <code>(</code>, just keep going until its matching <code>)</code>, which is
 essentially the same rule as before!</p>
 
-<h2 id="rationale_otherdetails">Other details</h2>
+<h2><a name="rationale_otherdetails">Other details</a></h2>
 <p>There is no requirement that writers (e.g., &ldquo;<var>write</var>&rdquo;
 or a pretty-printer) write out curly-infix-expressions. They may
 choose to do so, e.g., for lists of length 3-6 whose car is the
@@ -748,7 +760,7 @@ well. We even have a working implementation in Common Lisp.</p>
 <p>Curly-infix is an unusually simple mechanism, but like much of
 any Lisp-based language, its power comes from its simplicity.</p>
 
-<h1 id="specification">Specification</h1>
+<h1><a name="specification">Specification</a></h1>
 <p>&ldquo;<dfn>Curly-infix-expressions</dfn>&rdquo; or &ldquo;<dfn>c-expressions</dfn>&rdquo; are
 s-expressions with an additional notation: The curly-infix list.
 A curly-infix list is syntactically almost identical to a regular list,
@@ -817,7 +829,6 @@ curly-infix-list &rarr;
 &lt;whitespace&gt;*
 [ &lt;n-expression&gt;
 [ &lt;whitespace&gt;+ &lt;n-expression&gt; ]*
-<br />
 [ &lt;whitespace&gt;+ .
   &lt;whitespace&gt;+ &lt;n-expression&gt; ]
 &lt;whitespace&gt;* ]
@@ -993,7 +1004,7 @@ Implementations <em>may</em> provide the procedure
 
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
 
-<h1 id="reference-implementation">Reference implementation</h1>
+<h1><a name="reference-implementation">Reference implementation</a></h1>
 <p>The implementation below is portable, with the exception that
 Scheme provides no standard mechanism to override
 <code>{</code>...<code>}</code> in its
@@ -1056,9 +1067,9 @@ self-contained.&rdquo;</p>
      (#t  (transform-mixed-infix lyst))))
 
 
-  ; -----------------------------------------------------------------------------
-  ; Key procedures to implement neoteric-expresions
-  ; -----------------------------------------------------------------------------
+  ; ------------------------------------------------
+  ; Key procedures to implement neoteric-expressions
+  ; ------------------------------------------------
 
   ; Read the "inside" of a list until its matching stop-char, returning list.
   ; stop-char needs to be closing paren, closing bracket, or closing brace.
@@ -1082,10 +1093,10 @@ self-contained.&rdquo;</p>
           (read-char port)
           (read-error "Bad closing character"))
         (#t
-          (let ((datum (neoteric-read-real port)))
+          (let ((datum (neoteric-read port)))
             (cond
                ((eq? datum '.)
-                 (let ((datum2 (neoteric-read-real port)))
+                 (let ((datum2 (neoteric-read port)))
                    (consume-whitespace port)
                    (cond
                      ((eof-object? datum2)
@@ -1130,31 +1141,109 @@ self-contained.&rdquo;</p>
                   (list prefix tail)))))
           (#t prefix))))
 
+  (define (neoteric-read . port)
+    (if (null? port)
+      (neoteric-read-real (current-input-port))
+      (neoteric-read-real (car port))))
+  
+  ; This is the "real" implementation of neoteric-read
+  ; (neoteric-read just figures out the port and calls neoteric-read-real).
+  ; It implements an entire reader, as a demonstration, but if you can
+  ; update your existing reader you should just update that instead.
+  ; This is a simple R5RS reader, with a few minor (common) extensions.
+  ; The key part is that it implements [] and {} as delimiters, and
+  ; after it reads in some datum (the "prefix"), it calls
+  ; neoteric-process-tail to see if there's a "tail"
+  ; (and if so, read it's used).
+  (define (neoteric-read-real port)
+    (let*
+      ((c (peek-char port))
+       (prefix
+         ; This cond is a normal Scheme reader, puts result in "prefix"
+         ; This implements "read-expression-as-usual" as described above.
+        (cond
+          ((eof-object? c) c)
+          ((char=? c #\;)
+            (consume-to-eol port)
+            (neoteric-read-real port))
+          ((my-char-whitespace? c)
+            (read-char port)
+            (neoteric-read-real port))
+          ((char=? c #\( )
+             (read-char port)
+             (my-read-delimited-list #\) port))
+          ((char=? c #\) )
+             (read-char port)
+             (read-error "Closing parenthesis without opening")
+             (neoteric-read-real port))
+          ((char=? c #\[ )
+             (read-char port)
+             (my-read-delimited-list #\] port))
+          ((char=? c #\] )
+             (read-char port)
+             (read-error "Closing bracket without opening")
+             (neoteric-read-real port))
+          ((char=? c #\{ )
+            (read-char port)
+            (process-curly
+                (my-read-delimited-list #\} port)))
+          ((char=? c #\} )
+             (read-char port)
+             (read-error "Closing brace without opening")
+             (neoteric-read-real port))
+          ((char=? c #\") ; Strings are delimited by ", so can call directly
+            (default-scheme-read port))
+          ((char=? c #\')
+            (read-char port)
+            (list 'quote (neoteric-read-real port)))
+          ((char=? c #\`)
+            (read-char port)
+            (list 'quasiquote (neoteric-read-real port)))
+          ((char=? c #\,)
+            (read-char port)
+              (cond
+                ((char=? #\@ (peek-char port))
+                  (read-char port)
+                  (list 'unquote-splicing (neoteric-read-real port)))
+               (#t
+                (list 'unquote (neoteric-read-real port)))))
+          ((ismember? c digits) ; Initial digit.
+            (read-number port '()))
+          ((char=? c #\#) (process-sharp port))
+          ((char=? c #\.) (process-period port))
+          ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
+             (read-char port)
+             (if (ismember? (peek-char port) digits)
+               (read-number port (list c))
+               (string->symbol (fold-case-maybe port
+                 (list->string (cons c
+                    (read-until-delim port neoteric-delimiters)))))))
+          (#t ; Nothing else.  Must be a symbol start.
+            (string->symbol (fold-case-maybe port
+              (list->string
+                (read-until-delim port neoteric-delimiters))))))))
+      ; Here's the big change to implement neoteric-expressions:
+      (if (eof-object? prefix)
+        prefix
+        (neoteric-process-tail port prefix))))
 
-  ; To implement neoteric-expressions, modify the reader so
-  ; that [] and {} are also delimiters.
-  ; When #\{ is detected, read using my-read-delimiated-list any list from that port
-  ; until its matching #\}, then process that list with "process-curly".
-  ; Then after reading each datum, call neoteric-process-tail to process any suffixes
-  ; (...), [...], or {...} that might be present, like this:
-  ; (let* ((prefix
-  ;           read-expression-as-usual
-  ;       ))
-  ;   (if (eof-object? prefix)
-  ;     prefix
-  ;     (neoteric-process-tail port prefix)))
 
+  ; Modify the main reader so that [] and {} are also delimiters, and so
+  ; that when #\{ is detected, read using my-read-delimited-list
+  ; any list from that port until its matching #\}, then process
+  ; that list with "process-curly", like this:
+  ;   (process-curly (my-read-delimited-list #\} port))
 
 </pre>
 
-<h1 id="references">References</h1>
+<h1><a name="references">References</a></h1>
 <p>The readable project website has more information: <a href=
 "http://readable.sourceforge.net">http://readable.sourceforge.net</a></p>
 
-<h1 id="acknowledgments">Acknowledgments</h1>
+<h1><a name="acknowledgments">Acknowledgments</a></h1>
 <p>We thank all the participants on the &ldquo;readable-discuss&rdquo; mailing list.</p>
 
-<h1 id="copyright">Copyright</h1>
+<h1><a name="copyright">Copyright</a></h1>
 <p>Copyright (C) 2012 David A. Wheeler and Alan Manuel K. Gloria.
 All Rights Reserved.</p>
 <pre>
@@ -1182,8 +1271,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 </body>
 </html>
 <!--
+Note: HTML 3.2 has no attribute "id", so using <a name="ID">...</a>.
+-->
+<!--
 Note: &apos; is in XML 1.0 and HTML 4.0, but not in HTML 3.2, so
-we use &#39; for single vertical apostrophe.  That way it will
-not be converted later to curly quotes.
+we cannot use "&apos;" to represent it.  Instead, this file
+uses &#39; for single vertical apostrophe.  That way, it will
+not be converted later to curly quotes by "quoter" and similar tools.
 -->
 
