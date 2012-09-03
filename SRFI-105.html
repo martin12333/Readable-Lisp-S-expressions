@@ -1055,9 +1055,9 @@ self-contained.&rdquo;</p>
      (#t  (transform-mixed-infix lyst))))
 
 
-  ; -----------------------------------------------------------------------------
+  ; ------------------------------------------------
   ; Key procedures to implement neoteric-expressions
-  ; -----------------------------------------------------------------------------
+  ; ------------------------------------------------
 
   ; Read the "inside" of a list until its matching stop-char, returning list.
   ; stop-char needs to be closing paren, closing bracket, or closing brace.
@@ -1081,10 +1081,10 @@ self-contained.&rdquo;</p>
           (read-char port)
           (read-error "Bad closing character"))
         (#t
-          (let ((datum (neoteric-read-real port)))
+          (let ((datum (neoteric-read port)))
             (cond
                ((eq? datum '.)
-                 (let ((datum2 (neoteric-read-real port)))
+                 (let ((datum2 (neoteric-read port)))
                    (consume-whitespace port)
                    (cond
                      ((eof-object? datum2)
@@ -1130,15 +1130,21 @@ self-contained.&rdquo;</p>
           (#t prefix))))
 
 
-  ; To implement neoteric-expressions, modify the reader so
+  ; Modify the reader so
   ; that [] and {} are also delimiters.
-  ; When #\{ is detected, read using my-read-delimited-list any list from that port
+  ; When #\{ is detected, read using my-read-delimited-list
+  ; any list from that port
   ; until its matching #\}, then process that list with "process-curly".
-  ; Then after reading each datum, call neoteric-process-tail to process any suffixes
-  ; (...), [...], or {...} that might be present, like this:
+
+  ; neoteric-read is just like regular read, except that
+  ; (...) calls my-read-delimited-list and thus recurses through
+  ; neoteric-read.  It also processes {...} and, if you wish, [...].
+  ; Then after reading each datum, call neoteric-process-tail
+  ; to process any suffixes (...), [...], or {...} that might be
+  ; present, so expressions like f(x) work.  Basically, neoteric-read
+  ; looks like this:
   ; (let* ((prefix
-  ;           read-expression-as-usual
-  ;       ))
+  ;           (read-expression-as-usual port)))
   ;   (if (eof-object? prefix)
   ;     prefix
   ;     (neoteric-process-tail port prefix)))
@@ -1182,7 +1188,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 </html>
 <!--
 Note: &apos; is in XML 1.0 and HTML 4.0, but not in HTML 3.2, so
-we use &#39; for single vertical apostrophe.  That way it will
-not be converted later to curly quotes.
+we cannot use "&apos;" to represent it.  Instead, this file
+uses &#39; for single vertical apostrophe.  That way, it will
+not be converted later to curly quotes by "quoter" and similar tools.
 -->
 
