@@ -394,19 +394,24 @@ could be trivially fixed to make that so.
 R6RS had a non-normative recommendation to ignore a line that began
 with <var>#!/usr/bin/env</var>, as well
 as a <var>#!&nbsp;/usr/bin/env</var>, but this is non-normative;
-an implementation could easily implement the first and not the second part.
+an implementation could easily implement <var>#!</var> followed by space
+as an ignored line, and treat <var>#!</var> followed by
+<code>/</code> or <code>.</code> differently.
 Thus, implementations could trivially support simultaneously markers such as
 <var>#!srfi-105</var>
-to identify curly-infix, the SRFI-22 <var>#!</var>+space marker, and a
-<var>#!/&nbsp;...!#</var> and <var>#!.&nbsp;...!#</var>
-multi-line comment convention.
-Note that this SRFI does <em>not</em> mandate support for
-SRFI-22, <var>#!fold-case</var>, <var>#!no-fold-case</var>, or
-<var>#!</var> followed by slash or period;
+to identify curly-infix, the SRFI-22 <var>#!</var>+space marker as
+an ignored line, and support
+<var>#!/&nbsp;...!#</var> and <var>#!.&nbsp;...!#</var> as a
+multi-line comment.
+Note that this SRFI does <em>not</em> mandate support or any particular
+semantics for <var>#!fold-case</var>, <var>#!no-fold-case</var>,
+the SRFI-22 <var>#!</var>+space convention, or
+<var>#!</var> followed by a slash or period;
 it is merely designed so that implementations <em>could</em>
 implement them all simultaneously.
 We recommend that <var>#!srfi-105</var> not be the first two characters
-in a file; if the file were made executable, and execution was attempted,
+in a file (e.g., put a newline in front of it).
+If the file were made executable, and execution was attempted,
 this might confuse some systems into trying to run the
 program <var>srfi-105</var>.
 </p>
