@@ -227,7 +227,7 @@ more complex cases (in the rare cases where they are needed).</p>
 <p>It would be possible to extend curly-infix to provide a full fixed
 precedence system (e.g., if an expression is mixed,
 attempt to use various precedence rules).
-However, such capabilities would be extensions beyon this SRFI.
+However, such capabilities would be extensions beyond this SRFI.
 <p>Note that curly-infix includes support for unary operators, but again,
 they are without precedence.
 As a result, they must be grouped separately.
@@ -536,9 +536,9 @@ Like Racket, SIX does demonstrate that there is a <em>need</em> for
 an infix notation that can be used in Scheme.
 </p>
 
-<p>A system could simultanously implement curly-infix and SIX.
+<p>A system could simultaneously implement curly-infix and SIX.
 However, curly-infix is far simpler, is more flexible (e.g., by allowing
-arbitary symbols), and works much more easily with macros and quoting.
+arbitrary symbols), and works much more easily with macros and quoting.
 Thus, we believe that curly-infix is the better system and more
 appropriate for standardization across Scheme implementations.</p>
 
@@ -1056,7 +1056,7 @@ self-contained.&rdquo;</p>
 
 
   ; -----------------------------------------------------------------------------
-  ; Key procedures to implement neoteric-expresions
+  ; Key procedures to implement neoteric-expressions
   ; -----------------------------------------------------------------------------
 
   ; Read the "inside" of a list until its matching stop-char, returning list.
@@ -1132,7 +1132,7 @@ self-contained.&rdquo;</p>
 
   ; To implement neoteric-expressions, modify the reader so
   ; that [] and {} are also delimiters.
-  ; When #\{ is detected, read using my-read-delimiated-list any list from that port
+  ; When #\{ is detected, read using my-read-delimited-list any list from that port
   ; until its matching #\}, then process that list with "process-curly".
   ; Then after reading each datum, call neoteric-process-tail to process any suffixes
   ; (...), [...], or {...} that might be present, like this:
