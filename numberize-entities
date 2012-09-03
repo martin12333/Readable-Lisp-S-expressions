@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Translate HTML entity names to numbered entities.
+# E.g., translate "ldquo;" to "&#8220;".
+# This is because HTML 3.2 (and XML) don't accept most entity names.
+# Filter, reads stdin and write stdout.
+
+sed \
+ -e 's/&ldquo;/\&#8220;/g'  \
+ -e 's/&rdquo;/\&#8221;/g'  \
+ -e 's/&lsquo;/\&#8216;/g'  \
+ -e 's/&rsquo;/\&#8217;/g'  \
+ -e 's/&mdash;/\&#8212;/g'  \
+ -e  's/&larr;/\&#8592;/g'  \
+ -e  's/&rarr;/\&#8594;/g'  \
+ -e  's/&lArr;/\&#8656;/g'  \
+ -e  's/&rArr;/\&#8658;/g'
+
