@@ -411,7 +411,8 @@ it is merely designed so that implementations <em>could</em>
 implement them all simultaneously.
 We recommend that <var>#!srfi-105</var> not be the first two characters
 in a file (e.g., put a newline in front of it).
-If the file were made executable, and execution was attempted,
+If the file began with <var>#!srfi-105</var>, is made executable,
+and then execution is attempted,
 this might confuse some systems into trying to run the
 program <var>srfi-105</var>.
 </p>
@@ -698,10 +699,10 @@ when this was tried in experimentation.</li>
 for syntactically separating parameters.</li>
 </ul>
 <p>Many other languages do use commas, but they are required in those
-languages because infix operators are not surrounded by any marker.
-Since infix operations are already surrounded by
+languages because infix operators need not be surrounded by any marker.
+Since infix operations must be surrounded by
 <code>{</code>...<code>}</code> in our notation,
-there is no need for the additional commas for parameter separation.</p>
+there is no need for <em>additional</em> commas for parameter separation.</p>
 <p>Experimentation found that separating parameters solely by whitespace
 worked well, so that approach was selected.</p>
 
@@ -819,6 +820,12 @@ is mapped to
 Here is the precise definition of a curly-infix list
 (which is nearly identical to a traditional list):
 </p>
+<!-- Note: "style" is not included in HTML 3.2. However, an HTML 3.2
+browser can easily ignore it and back off to a plausible display.
+It's hard to make this look nice in HTML 3.2, so we add a "style" value
+here so that it looks nicer in later HTML versions while still being
+able to back off to HTML 3.2.
+-->
 <p style="margin-left: 8em; text-indent: -8em;">
 curly-infix-list&nbsp;&#8594;
 &#8220;<tt>{</tt>&#8221;
@@ -1013,7 +1020,7 @@ until its matching &#8220;<code>}</code>&#8221;, and then calls <var>process-cur
 defined below. We recommend that implementations <em>always</em> do
 this, but an implementation must at least activate this behavior
 when &#8220;<var>curly-foo</var>&#8221; is invoked
-or when they read <var>#!srfi-105</var>.
+or when they read <var>#!srfi-105</var> followed by whitespace.
 <p>This reference implementation is SRFI type 2: &#8220;A
 mostly-portable solution that uses some kind of hooks provided in
 some Scheme interpreter/compiler. In this case, a detailed
