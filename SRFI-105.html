@@ -675,6 +675,23 @@ so there was already a working example that this
 is a reasonable extension.  In fact, in a typical implementation of a
 list reader, it takes extra effort to <em>prevent</em> this extension,
 so this is a relatively easy extension to include.</p>
+<p>
+Neoteric-expressions could be useful outside of curly-infix-expressions, and
+the sweet-expression notation (not defined here)
+builds on neoteric-expressions.
+However, accepting neoteric-expressions outside of any braces could
+change the interpretation of some existing Scheme code.
+Such code would arguably be badly formatted, and the code could be quickly
+fixed by a pretty-printer, but nevertheless changing already-standard
+syntax is clearly a larger change.
+It is anticipated that some users will want an infix notation and
+more traditional function call notation <em>without</em> changing the
+meaning of portable Scheme code.
+This SRFI is designed to meet the desires of those users.
+Other specifications could build on this SRFI without this limitation, e.g.,
+other specifications could require
+support for neoeteric-expressions <em>outside</em> all braces.
+</p>
 
 <h2><a name="rationale_comma">Comma-separated parameters</a></h2>
 <p>
@@ -739,7 +756,7 @@ pay no attention to &#8220;Microcosmic God&#8221; by Theodore Sturgeon :-).
 <p>The neoteric rules do introduce the risk of someone inserting
 a space between the function name and the opening <code>(</code>.
 But whitespace is already significant as a parameter separator, so this
-is consistent with how the system works anyway... this is not really a
+is consistent with how Scheme works today... this is not really a
 change at all.</p>
 
 <p>Obviously, this is trivial to parse.  We don&#8217;t lose any power,
@@ -1284,11 +1301,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 </html>
 <!--
 Notes on HTML 3.2:
-* HTML 3.2 has no attribute "id", so using <a name="ID">...</a> instead.
+* HTML 3.2 has no attribute "id", so we use <a name="ID">...</a> instead.
 * We do use one "style" entry, which isn't in HTML 3.2, but HTML 3.2
-  will just gracefully back off to a less-pretty form so this is
-  considered okay.
-* HTML 3.2 lacks many named entities, so using numbered entities.
+  will just gracefully back off to a less-pretty form so we
+  think this is okay.
+* HTML 3.2 lacks many named entities, so we use numbered entities.
   Although HTML 3.2 includes a mechanism to define new entities inline
   (as part of the DOCTYPE), this is not supported by more modern
   systems (e.g., Firefox).  In contrast, *EVERYONE* supports HTML
@@ -1296,7 +1313,7 @@ Notes on HTML 3.2:
 * The character ' is fine in HTML and XML, but the "quoter" tool
   (that automatically convert single and double quotes into curly quotes)
   will convert them.  That's fine for constructs like "doesn't", but
-  is wrong when referrring to Scheme's "quote" abbreviation.
+  is wrong when referring to Scheme's "quote" abbreviation.
   A useful solution is to represent it as an HTML entity.
   The named entity &apos; is in XML 1.0 and HTML 4.0, but not in HTML 3.2,
   so we cannot use "&apos;" to represent it.  Instead, this file
