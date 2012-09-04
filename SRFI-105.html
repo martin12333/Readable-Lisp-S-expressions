@@ -910,6 +910,10 @@ E.g.,
 <li><samp>{{a &gt; 0} and {b &gt;= 1}}</samp> &#8658;
 <samp>(and (&gt; a 0) (&gt;= b 1))</samp></li>
 <li><samp>{&#39;f(x)}</samp> &#8658; <samp>(quote&nbsp;(f&nbsp;x))</samp></li>
+<li>
+<samp>{length(x)&nbsp;&gt;=&nbsp;3}</samp>
+&#8658;
+<samp>(&gt;=&nbsp;(length&nbsp;x)&nbsp;3)</samp>
 </ul>
 
 <p>A <dfn>curly-infix reader</dfn> is a datum reader
