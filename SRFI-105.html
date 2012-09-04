@@ -817,23 +817,18 @@ is mapped to
 Here is the precise definition of a curly-infix list
 (which is nearly identical to a traditional list):
 </p>
-<table border="0">
-<tr>
-<td valign="top">
+<p style="margin-left: 8em; text-indent: -8em;">
 curly-infix-list&nbsp;&#8594;
-</td>
-<td valign="top">
 &#8220;<tt>{</tt>&#8221;
 &lt;whitespace&gt;*
 [ &lt;n-expression&gt;
 [ &lt;whitespace&gt;+ &lt;n-expression&gt; ]*
-[ &lt;whitespace&gt;+ .
+[ &lt;whitespace&gt;+ &nbsp;<b>.</b>&nbsp;
   &lt;whitespace&gt;+ &lt;n-expression&gt; ]
 &lt;whitespace&gt;* ]
 &#8220;<tt>}</tt>&#8221;
-</td>
-</tr>
-</table>
+</p>
+
 <!--
 it begins with &#8220;{&#8221;, optional whitespace,
 a sequence of zero or more whitespace-separated
