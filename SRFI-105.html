@@ -3,6 +3,9 @@
 <head>
 <title>Draft SRFI 105: Curly-infix-expressions</title>
 <meta content="text/html; charset=us-ascii" http-equiv="content-type">
+<meta name="description" content="Definition curly-infix-expressions (c-expressions) for Scheme.  Includes a definition of neoteric-expressions (n-expressions). This defines an approach to making Scheme more 'readable' by supporting infix and functions whose names precede the opening parenthesis.">
+<meta name="keywords" content="curly-infix, curly-infix-expression, c-expression, infix, Scheme, Lisp, neoteric-expression, n-expression, readable, notation, s-expression, s-expr, M-expression, precedence, SRFI, SRFI-105, SRFI 105, implementation, SIX, Racket, guile, gauche, David Wheeler, David A. Wheeler, Alan Manuel Gloria, Alan Manuel K. Gloria">
+<meta name="generator" content="vim">
 </head>
 <body>
 
@@ -409,7 +412,7 @@ the SRFI-22 <var>#!</var>+space convention, or
 <var>#!</var> followed by a slash or period;
 it is merely designed so that implementations <em>could</em>
 implement them all simultaneously.
-We recommend that <var>#!srfi-105</var> not be the first two characters
+We recommend that <var>#!srfi-105</var> not be the very first characters
 in a file (e.g., put a newline in front of it).
 If the file began with <var>#!srfi-105</var>, is made executable,
 and then execution is attempted,
@@ -1246,10 +1249,14 @@ self-contained.&#8221;</p>
 "http://readable.sourceforge.net">http://readable.sourceforge.net</a></p>
 
 <h1><a name="acknowledgments">Acknowledgments</a></h1>
-<p>We thank all the participants on the &#8220;readable-discuss&#8221; mailing list.</p>
+<p>We thank all the participants on the &#8220;readable-discuss&#8221;
+and &#8220;SRFI-105&#8221; mailing lists,
+including John Cowan, Shiro Kawai, and many others whose names
+should be here but aren&#8217;t.</p>
 
 <h1><a name="copyright">Copyright</a></h1>
-<p>Copyright (C) 2012 David A. Wheeler and Alan Manuel K. Gloria.
+<p>Copyright (C) 2012 <a href="http://www.dwheeler.com">David A. Wheeler</a>
+and Alan Manuel K. Gloria.
 All Rights Reserved.</p>
 <pre>
 Permission is hereby granted, free of charge, to any person
@@ -1276,12 +1283,24 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 </body>
 </html>
 <!--
-Note: HTML 3.2 has no attribute "id", so using <a name="ID">...</a>.
--->
-<!--
-Note: &apos; is in XML 1.0 and HTML 4.0, but not in HTML 3.2, so
-we cannot use "&apos;" to represent it.  Instead, this file
-uses &#39; for single vertical apostrophe.  That way, it will
-not be converted later to curly quotes by "quoter" and similar tools.
+Notes on HTML 3.2:
+* HTML 3.2 has no attribute "id", so using <a name="ID">...</a> instead.
+* We do use one "style" entry, which isn't in HTML 3.2, but HTML 3.2
+  will just gracefully back off to a less-pretty form so this is
+  considered okay.
+* HTML 3.2 lacks many named entities, so using numbered entities.
+  Although HTML 3.2 includes a mechanism to define new entities inline
+  (as part of the DOCTYPE), this is not supported by more modern
+  systems (e.g., Firefox).  In contrast, *EVERYONE* supports HTML
+  numbered entities.
+* The character ' is fine in HTML and XML, but the "quoter" tool
+  (that automatically convert single and double quotes into curly quotes)
+  will convert them.  That's fine for constructs like "doesn't", but
+  is wrong when referrring to Scheme's "quote" abbreviation.
+  A useful solution is to represent it as an HTML entity.
+  The named entity &apos; is in XML 1.0 and HTML 4.0, but not in HTML 3.2,
+  so we cannot use "&apos;" to represent it.  Instead, this file
+  uses &#39; for single vertical apostrophe.  That way, it will
+  not be converted later to curly quotes by "quoter" and similar tools.
 -->
 
