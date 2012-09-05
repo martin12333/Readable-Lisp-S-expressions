@@ -132,13 +132,13 @@ and Scheme remains general and homoiconic.
 Curly-infix-expressions (also known as c-expressions)
 are just a convenient reader abbreviation for infix notation.</p>
 <p>At its core, this SRFI provides
-the <em>simple</em> curly-infix list that a list of expressions,
-with the difference that values are written in a different order.
+the <em>simple</em> curly-infix list,
+a list whose visual presentation is in infix order instead of prefix order.
 The simple curly-infix list
 <samp>{operand-1 operator operand-2 operator operand-3 operator ...}</samp>
 is mapped to
-<samp>(operator operand-1 operand-2 operand-3 ...)</samp> so that more than
-two operands are handled cleanly.
+<samp>(operator operand-1 operand-2 operand-3 ...)</samp> so that two or
+more operands are handled cleanly.
 E.g., <samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c}</samp> &#8658;
 <samp>(+&nbsp;a&nbsp;b&nbsp;c)</samp>.</p>
 
@@ -292,7 +292,8 @@ is equivalent to
 It ensures that the neoteric-expression
 <samp>f{x}</samp> becomes the likely-intended <samp>(f x)</samp>,
 and also makes it easy to use prefix notation; e.g.,
-<samp>{&nbsp;f(x)&nbsp;}</samp> is just another way to write <samp>(&nbsp;f&nbsp;x)</samp>.
+<samp>{&nbsp;f(x)&nbsp;}</samp> is just another way to write
+<samp>(f&nbsp;x)</samp>.
 Finally, it also provides an easy escape mechanism
 in sweet-expressions for symbols
 that would otherwise have other meanings.</li>
@@ -302,7 +303,7 @@ so that
 <samp>{-&nbsp;x}</samp> &#8658; <samp>(-&nbsp;x)</samp>,
 the likely interpretation, and also so that the neoteric-expressions like
 <samp>f{-&nbsp;x}</samp> &#8658;
-<samp>(f&nbsp;(-&nbsp;x))</samp>.
+<samp>(f&nbsp;(-&nbsp;x))</samp> are interpreted properly.
 </li>
 </ol>
 
@@ -457,9 +458,10 @@ is much more similar to the standard notation
 somewhere, you end up with the wrong result, and possibly without an
 error being flagged. This notation also
 makes it harder to see improper lists; improper lists are important
-but rare, so it&#8217;s good to make them obvious - the Racket
-infix convention makes improper lists hard to distinguish. The
-Racket documentation even goes out of its way to emphasize that
+but rare, so it&#8217;s good to make them obvious.
+In contrast, the Racket infix convention
+makes improper lists hard to distinguish.
+The Racket documentation even goes out of its way to emphasize that
 infix convention use is unrelated to improper lists... which
 suggests that they are easily confused.</li>
 <li>Without <code>{</code>...<code>}</code>, <samp>{x}</samp> is no longer useful as an escape mechanism
@@ -611,8 +613,9 @@ this is a more serious problem than
 the lack of infix notation</a>;
 on July 2000 he said
 &#8220;I think most people would like Scheme
-a lot better
-if they could say lambda (expression) ...  instead of (lambda (expression) ...&#8221;
+a lot better if they could say...
+display(... instead of
+(display&nbsp;... &#8221;
 </li>
 <li>
 Peter Norvig had a reader implementation
@@ -1255,6 +1258,16 @@ self-contained.&#8221;</p>
         prefix
         (neoteric-process-tail port prefix))))
 
+  (define (consume-to-eol port)
+    ; Consume every non-eol character in the current line.
+    ; End on EOF or end-of-line char.
+    ; Do NOT consume the end-of-line character(s).
+    (let ((c (peek-char port)))
+      (cond
+        ((not (or (eof-object? c)
+                  (char-line-ending? c)))
+          (read-char port)
+          (consume-to-eol port)))))
 
   ; Modify the main reader so that [] and {} are also delimiters, and so
   ; that when #\{ is detected, read using my-read-delimited-list
