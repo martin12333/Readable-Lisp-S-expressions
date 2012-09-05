@@ -562,6 +562,122 @@ convention&#8221; is additional evidence of the <em>need</em> for a
 standard infix convention; many have separately created mechanisms
 to try to provide infix support.</p>
 
+<h2><a name="rationale_racket_infix_plt">What about the Racket infix.plt package?</a></h2>
+
+<p>
+The
+<a href="http://planet.racket-lang.org/display.ss?package=infix.plt&owner=soegaard"> &#8220;Infix Expressions for PLT Scheme&#8221; package by
+Jens Axel Søgaard</a>, called here the &#8220;Racket infix.plt&#8221; package,
+provides an infix notation for PLT Scheme (now called Racket).
+The
+<a href="http://planet.racket-lang.org/package-source/soegaard/infix.plt/1/0/planet-docs/manual/index.html">manual for the Racket infix.plt package</a>
+lists a number of examples and constructs.
+</p>
+
+<p>
+In this approach, the 3-character sequence &#8220;@${&#8220; begins an infix expression,
+which switches to a completely different language that
+ends with a matching &#8220;}&#8221;.
+The <a href="http://planet.racket-lang.org/package-source/soegaard/infix.plt/1/0/parser.ss">parser.ss source code</a> defines the grammar of this
+language as follows:
+</p>
+
+<pre>
+&lt;e&gt; :== &lt;num&gt;
+     |  &lt;id&gt;                   variable reference
+     |  &lt;e&gt; [ &lt;args&gt; ]         application
+     |  { &lt;args&gt; }             list construction
+     |  &lt;e&gt; + &lt;e&gt;              addition
+     |  &lt;e&gt; - &lt;e&gt;              subtraction
+     |  &lt;e&gt; * &lt;e&gt;              multiplication
+     |  &lt;e&gt; / &lt;e&gt;              division
+     |  &lt;e&gt; ^ &lt;e&gt;              exponentiation
+     |  - &lt;e&gt;                  negation
+     | ( &lt;e&gt; )                 grouping
+
+&lt;id&gt;   An identifier begins with a letter,
+       and is optionally followed by series of letters, digits or underscores.
+       An underscore is converted to a -. Thus list_ref will refer to list-ref.
+
+&lt;num&gt;  A number is an non-empty series of digits,
+       optionally followed by a period followed by a series of digits.
+</pre>
+
+<p>
+There are some advantages of this approach.
+It provides precedence of * and /
+over + and -, infix operators need not be separated by whitespace,
+and it builds in a simple assignment statement if you want it.
+Like many infix notations (including curly-infix), for many expressions
+the infix.plt package is a far clearer notation than the
+traditional s-expression.
+</p>
+
+<p>
+However, there are many negatives to the infix.plt approach:
+</p>
+<ol>
+<li>
+Because it has a fixed built-in grammar,
+only a few fixed symbols can be used as infix operators; you cannot use
+any other symbol such as <samp>eq?</samp> as an infix operator.
+For example, <samp>and</samp> and <samp>or</samp>
+are not supported as infix operators, yet they are also commonly
+used in infix position in other languages.
+More generally, it demonstrates a basic problem with fixing the set
+of operators in a notation: Scheme (like all Lisps) allows for easy
+creation of new procedures and macros.
+An infix notation should make it easy to <em>use</em> those
+procedures and macros, in whatever position is most natural,
+and even if they have not been defined yet.
+</li>
+<li>There seems to be no provision for Scheme capabilities
+such as quoting and quasiquoting; a quasiquoted variable does not seem to
+be allowed.
+</li>
+<li>
+Many variables and operators cannot be referred to, and some that can
+must be spelled differently (and thus inconsistently).
+Identifiers (which are also used for function names) must
+&#8220;begin with a letter, and is optionally followed by series of letters,
+digits or underscores.  An underscore is converted to a -&#8221;.
+Thus, it is not possible to call procedures with names like
+&#8220;char?=&#8221;,
+variables with &#8220;*&#8221; embedded in them likewise cannot be referenced.
+In short, many identifiers are inaccessible to this notation, either
+as variables or as procedure names.
+The approach does references to variable names with &#8220;-&#8221;,
+but the names must be spelled differently (and thus inconsistently,
+namely, variables like &#8220;list-ref&#8221; must be spelled &#8220;list_ref&#8221;).
+This approach also
+makes it impossible to refer to variables with underscores in them.
+These are fundamental side-effects of not requiring infix operators
+to be delimited,
+and cannot be changed without a significant change to the notation.
+</li>
+<li>
+The notation is completely different and inconsistent
+with the surrounding Lisp notation.
+The curly braces {...} are suddenly used for list creation operation,
+square brackets x[...] are used for function application, and
+(...) is used for grouping (not for list creation).
+This can create confusion, since the same symbol can have a completely
+different meaning, and that confusion could easily lead to
+hard-to-find errors.
+</li>
+</ol>
+
+<p>
+Note that an implementation could support both curly-infix and
+the Racket infix.plt package simultaneously.
+</p>
+
+<p>
+Like the Racket &#8220;infix convention&#8221;,
+the infix.plt package does demonstrate that there is a <em>need</em> for
+an infix notation that can be used in Scheme.
+</p>
+
 <h2><a name="rationale_six">What about Gambit&#8217;s &#8220;Scheme Infix eXtension (SIX)&#8221;?</a></h2>
 <p>
 The Gambit reader includes a notation called the
@@ -593,7 +709,8 @@ way with other macros and with quoting rules.</li>
 </ul>
 
 <p>
-Like Racket, SIX does demonstrate that there is a <em>need</em> for
+Like the Racket &#8220;infix convention&#8221; and Racket infix.plt package,
+SIX does demonstrate that there is a <em>need</em> for
 an infix notation that can be used in Scheme.
 </p>
 
@@ -770,6 +887,10 @@ when this was tried in experimentation.</li>
 <li>is completely unnecessary.  Whitespace is quite sufficient (and clear)
 for syntactically separating parameters.</li>
 </ul>
+<!--
+Many implementations allow an identifier to end in a comma, see:
+http://trac.sacrideo.us/wg/wiki/CommaInIdentifiers
+-->
 <p>Many other languages do use commas, but they are required in those
 languages because infix operators need not be surrounded by any marker.
 Since infix operations must be surrounded by
