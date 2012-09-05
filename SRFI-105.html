@@ -867,8 +867,8 @@ a matching &#8220;}&#8221;.
 -->
 <p>
 A &#8220;<dfn>neoteric-expression</dfn>&#8221; or &#8220;<dfn>n-expression</dfn>&#8221;
-is a curly-infix-expression, with the following modifications where
-<var>e</var> is any datum expression:
+is a curly-infix-expression, with the following additional syntaxes
+for a datum where <var>e</var> is any datum expression:
 </p>
 <ol>
 <li>
@@ -937,6 +937,9 @@ E.g.,
 <li><samp>{{a &gt; 0} and {b &gt;= 1}}</samp> &#8658;
 <samp>(and (&gt; a 0) (&gt;= b 1))</samp></li>
 <li><samp>{&#39;f(x)}</samp> &#8658; <samp>(quote&nbsp;(f&nbsp;x))</samp></li>
+<li><samp>#1=f(#1#)</samp> &#8658; <samp>#1=(f #1#)</samp>
+if there is support for an SRFI-38-like
+external representation for data With shared structure 
 <li>
 <samp>{length(x)&nbsp;&gt;=&nbsp;3}</samp>
 &#8658;
