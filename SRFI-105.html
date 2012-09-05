@@ -636,19 +636,23 @@ such as quoting and quasiquoting; a quasiquoted variable does not seem to
 be allowed.
 </li>
 <li>
-Many variables and operators cannot be referred to, and some that can
+Many variables and operators cannot be referred to, and some that can be
 must be spelled differently (and thus inconsistently).
 Identifiers (which are also used for function names) must
 &#8220;begin with a letter, and is optionally followed by series of letters,
 digits or underscores.  An underscore is converted to a -&#8221;.
 Thus, it is not possible to call procedures with names like
-&#8220;char=?&#8221;,
-variables with &#8220;*&#8221; embedded in them likewise cannot be referenced.
-In short, many identifiers are inaccessible to this notation, either
+&#8220;char=?&#8221;.
+Similarly, variables with &#8220;*&#8221; embedded
+in them likewise cannot be referenced.
+In short, many identifiers are inaccessible in this notation, either
 as variables or as procedure names.
-The approach does references to variable names with &#8220;-&#8221;,
-but the names must be spelled differently (and thus inconsistently,
-namely, variables like &#8220;list-ref&#8221; must be spelled &#8220;list_ref&#8221;).
+The approach does allow references to variable names with &#8220;-&#8221;
+embedded in them,
+but the names must be spelled differently (and thus inconsistently)
+by replacing every &#8220;-&#8221; with &#8220;_&#8221;.
+Thus, variables like &#8220;list-ref&#8221; must
+be spelled as &#8220;list_ref&#8221; inside the infix.plt notation.
 This approach also
 makes it impossible to refer to variables with underscores in them.
 These are fundamental side-effects of not requiring infix operators
