@@ -289,7 +289,8 @@ hardship than it might appear.</p>
 building a precedence system into the reader,
 a very simple yet useful infix system results.
 We don&#8217;t need to register procedures, ensure that declarations
-of precedence precede their use, or anything like it.
+of precedence precede their use, gain widespread agreement on some
+precedence order, or anything like it.
 We also ensure that the notation is clearly homoiconic.</p>
 <p>Instead, where precedence is desired, application and library writers
 can implement precedence by defining and controlling the scope of an
@@ -342,12 +343,15 @@ prepends &#8220;nfx&#8221; if it does not meet the requirements.  In this extens
 the operators are compared to the table to determine precedence.
 </li>
 <li>
-Operators not in the fixed table are
-re-compared by removing from its symbol all &#8220;-&#8221; surrounded by alphanumerics,
-all alphanumerics, and then all other characters not in an operator above.
+Operators not in the fixed table are re-compared by
+removing from its symbol all &#8220;-&#8221; surrounded by alphanumerics,
+all alphanumerics, and then all other characters
+not in an operator of the precedence table.
 This allows the use of many more operators, e.g.,
-&#8220;char<=?&#8221; is considered the same, for precedence purposes, as &#8220;<=&#8221;.
-If there&#8217;s no match, it does not meet the &#8220;simple math&#8221; ruleset.
+&#8220;char<=?&#8221; would be considered an operator with the
+same precedence as &#8220;<=&#8221;.
+If there&#8217;s still no match,
+the expression does not meet the &#8220;simple math&#8221; ruleset.
 </li>
 <li>
 When the same operator is repeated, the operator simply gains another operand, so {a + b + c * d} is the &#8220;+&#8221; operator applied to three operands: a, b, and (* c d).
@@ -358,15 +362,17 @@ Other different operators of the same precedence are interpreted in left-to-righ
 </ol>
 
 <p>
-But there would be be substantial arguments about the semantics of
+But there would be substantial arguments about the semantics of
 any precedence system.
-For example, should {a &lt; b &lt;= c} support creating an &#8220;and&#8221; between them?
+For example, should there be support for combining different ranged
+comparisons, to support notations such as {a &lt; b &lt;= c}?
 Should some operators be right-associative, and if so, which ones?
 There would also be substantial disagreement on exactly what operators
 should be in the precedence table, their order, and whether
-the table should be &#8220;big&#8221; or &#8220;small&#8221;.
+the table should be &#8220;big&#8221; or &#8220;small&#8221;
+(since it is fixed, there are arguments for a larger one).
 Below is one possible order, in high-to-low precedence order
-(where ... matches 0 or more characters);
+(where ... matches 0 or more characters), presuming all is left-to-right;
 the point in part is to show that it
 would be challenging to get agreement on such a list:
 </p>
@@ -391,8 +397,8 @@ Ranged: &lt; , &lt;= , &gt;=, &gt;  {Unicode: &#8805;, &#8804;, &#8715;, &#8713;
 </ol>
 
 <p>
-The key point is that although SRFI does not include a precedence system,
-one (like this one) could be added later.
+The key point is that although this SRFI does not include a precedence system,
+one (such as this one) could be added later.
 If a precedence system were added, all existing code using simple
 curly-infix expressions, or 0..2 parameter expressions, would work unchanged.
 Even when it&#8217;s not, many &#8220;nfx&#8221; processors would likely generate the
@@ -715,12 +721,18 @@ any other symbol such as <samp>eq?</samp> as an infix operator.
 For example, <samp>and</samp> and <samp>or</samp>
 are not supported as infix operators, yet they are also commonly
 used in infix position in other languages.
-More generally, it demonstrates a basic problem with fixing the set
-of operators in a notation: Scheme (like all Lisps) allows for easy
+Similarly, it does not support the many other
+procedures that might be useful in infix position, such as
+<var>char-ci&gt;?</var>.
+This demonstrates a basic problem with only allowing a fixed set
+of infix operators in a notation: Scheme (like all Lisps) allows for easy
 creation of new procedures and macros.
 An infix notation should make it easy to <em>use</em> those
 procedures and macros, in whatever position is most natural,
 and even if they have not been defined yet.
+</li>
+<li>Because it has a precedence system, it is necessarily less homoiconic
+when precedence is used.
 </li>
 <li>There seems to be no provision for Scheme capabilities
 such as quoting and quasiquoting; a quasiquoted variable does not seem to
