@@ -527,6 +527,13 @@ the namespace for SRFIs.
 </p>
 
 <p>
+Another marker was suggested: <var>#!curly-infix</var>.
+This marker has the advantage of making it much more obvious what was
+being enabled.
+However, it is not as obvious <em>where</em> to go to learn more information.
+</p>
+
+<p>
 This marker need not interfere with other uses of <var>#!</var>.
 <a href="http://srfi.schemers.org/srfi-22/srfi-22.html">SRFI-22</a> supports
 <var>#!</var>
@@ -1243,10 +1250,12 @@ until it reaches an end-of-file or some other conflicting marker
 (no conflicting marker is specified here).
 We encourage implementations to <em>always</em>
 implement curly-infix expressions, even when the marker is not received.
-However, portable applications <em>must</em>
-include this marker before any curly-infix expressions.
-We recommend that portable applications not use this marker as the
-first characters of a file (e.g., they should precede it with a newline).
+Applications may include this marker before using any curly-infix expressions,
+typically near the top of a file.
+We recommend that portable applications do <em>not</em>
+use this marker as the first characters
+of a file (e.g., a newline should precede it),
+to prevent misinterpretation as an executable script header.
 </p>
 
 <p>The &#8220;<dfn>standard readers</dfn>&#8221;
