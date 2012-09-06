@@ -514,6 +514,8 @@ We want a simple, standard way to identify code that uses curly-infix
 so that readers will switch to curly-infix if they need to switch.
 <a href="http://srfi.schemers.org/srfi-105/mail-archive/msg00027.html">
 This marker was recommended during discussion of SRFI-105</a>.
+The <var>#!</var> marker prefix was suggested due to its similarity
+to other markers.
 After all, R6RS and R7RS (draft 6) already use
 <var>#!fold-case</var> and <var>#!no-fold-case</var>
 as special markers to control the reader.
@@ -527,9 +529,16 @@ the namespace for SRFIs.
 </p>
 
 <p>
+The marker is read up to a whitespace; this is consistent with
+<a href="http://trac.sacrideo.us/wg/ticket/447">Scheme R7RS ticket #447</a>,
+and makes it clearly differentiated from <var>#!srfi-1050</var>
+should there ever be one :-).
+</p>
+
+<p>
 Another marker was suggested: <var>#!curly-infix</var>.
-This marker has the advantage of making it much more obvious what was
-being enabled.
+This alternative marker has the advantage of being more obvious of
+what was being enabled.
 However, it is not as obvious <em>where</em> to go to learn more information.
 </p>
 
@@ -565,6 +574,13 @@ the SRFI-22 <var>#!</var>+space convention, or
 <var>#!</var> followed by a slash or period;
 it is merely designed so that implementations <em>could</em>
 implement them all simultaneously.
+</p>
+
+<p>
+We do not require that applications include this marker;
+our hope is that over time everyone will just support this
+natively, making the marker unnecessary, and we do not want to require
+that users include an unneeded marker.
 We recommend that <var>#!srfi-105</var> not be the very first characters
 in a file (e.g., put a newline in front of it).
 If the file began with <var>#!srfi-105</var>, is made executable,
