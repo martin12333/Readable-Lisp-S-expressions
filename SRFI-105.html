@@ -724,9 +724,9 @@ language as follows:
 </pre>
 
 <p>
-There are some advantages of this approach.
-It provides precedence of * and /
-over + and -, infix operators need not be separated by whitespace,
+Differences in this approach, which some may see as advantages, are that
+infix operators need not be separated by whitespace,
+it provides precedence of * and / over + and -,
 and it builds in a simple assignment statement if you want it.
 Like many infix notations (including curly-infix), for many expressions
 the infix.plt package is a far clearer notation than the
@@ -739,14 +739,13 @@ However, there are many negatives to the infix.plt approach:
 <ol>
 <li>
 Because it has a fixed built-in grammar,
-only a few fixed symbols can be used as infix operators; you cannot use
-any other symbol such as <samp>eq?</samp> as an infix operator.
+only a few fixed symbols can be used as infix operators.
 For example, <samp>and</samp> and <samp>or</samp>
-are not supported as infix operators, yet they are also commonly
+are not supported as infix operators, yet they are commonly
 used in infix position in other languages.
 Similarly, it does not support the many other
 procedures that might be useful in infix position, such as
-<var>char-ci&gt;?</var>.
+<samp>char-ci&gt;?</samp> and <samp>eq?</samp>.
 This demonstrates a basic problem with only allowing a fixed set
 of infix operators in a notation: Scheme (like all Lisps) allows for easy
 creation of new procedures and macros.
@@ -756,6 +755,9 @@ and even if they have not been defined yet.
 </li>
 <li>Because it has a precedence system, it is necessarily less homoiconic
 when precedence is used.
+Note that curly-infix supports precedence via <var>nfx</var>, and
+a built-in precedence system <em>could</em> be added later
+if this was desired by the community.
 </li>
 <li>There seems to be no provision for Scheme capabilities
 such as quoting and quasiquoting; a quasiquoted variable does not seem to
@@ -769,8 +771,8 @@ Identifiers (which are also used for function names) must
 digits or underscores.  An underscore is converted to a -&#8221;.
 Thus, it is not possible to call procedures with names like
 &#8220;char=?&#8221;.
-Similarly, variables with &#8220;*&#8221; embedded
-in them likewise cannot be referenced.
+Similarly, variables with &#8220;*&#8221; or other such symbols
+embedded in them cannot be referenced.
 In short, many identifiers are inaccessible in this notation, either
 as variables or as procedure names.
 The approach does allow references to variable names with &#8220;-&#8221;
