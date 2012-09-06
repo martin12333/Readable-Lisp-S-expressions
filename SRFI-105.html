@@ -368,7 +368,8 @@ For example, should there be support for combining different ranged
 comparisons, to support notations such as {a &lt; b &lt;= c}?
 Should some operators be right-associative, and if so, which ones?
 There would also be substantial disagreement on exactly what operators
-should be in the precedence table, their order, and whether
+should be in the precedence table (including which combinations and if
+Unicode characters should be included), their order, and whether
 the table should be &#8220;big&#8221; or &#8220;small&#8221;
 (since it is fixed, there are arguments for a larger one).
 Below is one possible order, in high-to-low precedence order
@@ -378,7 +379,7 @@ would be challenging to get agreement on such a list:
 </p>
 <ol>
 <li>Subscript/down-arrow: sub {Unicode: &#8595;, &#8659;}</li>
-<li>Exponentiation/Superscript/up-arrow: **, ^, sup {Unicode: &#8593;, &#8657;}</li>
+<li>Exponentiation/superscript/up-arrow: **, ^, sup {Unicode: &#8593;, &#8657;}</li>
 <li>Multiplication/division: *, /, div..., mod..., quo...   {Unicode: &#247;, &#215;}</li>
 <li>Addition/subtraction: +, -</li>
 <li>Bitwise and: bit...and, log...and, &amp;</li>
@@ -386,14 +387,14 @@ would be challenging to get agreement on such a list:
 <li>Comparison:
 <ul>
 <li>
-Ranged: &lt; , &lt;= , &gt;=, &gt;  {Unicode: &#8805;, &#8804;, &#8715;, &#8713;, &#8836;, &#8834;, &#8838;, &#8835;, &#8839;)
+Ranged: &lt; , &lt;= , &gt;=, &gt;  {Unicode: &#8805;, &#8804;, &#8715;, &#8713;, &#8836;, &#8834;, &#8838;, &#8835;, &#8839;}
 </li>
 <li>Unranged:  =, ==, !=, &lt;&gt;, =/=, eq..., in, is {Unicode: &#8800;, &#8776;, &#8773;}</li>
 </ul>
 <li>Logical conjunction: and {Unicode: &#8745;, &#8743;}</li>
 <li>Logical/exclusive disjunction: or, xor, eor {Unicode: &#8746;, &#8744;, &#8853;}</li>
-<li>Implication/Right Arrows/Doubled arrows: -&gt;, =&gt;,  &lt;-&gt;, &lt;=&gt;, --&gt;, ==&gt;, &lt;--&gt;, &lt;==&gt; {Unicode: &#8596;, &#8660;, &#8594;, &#8658;}</li>
-<li>Definition/Assignment/Left arrow: &lt;-, &lt;--, &lt;==, :=, ::=  {Unicode: &#8801;  &#8592;, &#8656;}</li>
+<li>Implication/right Arrows/Doubled arrows: -&gt;, =&gt;,  &lt;-&gt;, &lt;=&gt;, --&gt;, ==&gt;, &lt;--&gt;, &lt;==&gt; {Unicode: &#8596;, &#8660;, &#8594;, &#8658;}</li>
+<li>Definition/assignment/left arrow: &lt;-, &lt;--, &lt;==, :=, ::=  {Unicode: &#8801;  &#8592;, &#8656;}</li>
 </ol>
 
 <p>
