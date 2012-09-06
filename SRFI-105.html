@@ -191,64 +191,6 @@ maps cleanly to
 <samp>&#96;(+&nbsp;,a&nbsp;,b)</samp>,
 which works as expected with all macros.</p>
 
-<h2><a name="rationale_noprecedence">Why isn&#8217;t precedence part of this SRFI?</a></h2>
-<p>Many past &#8220;infix&#8221; systems for Lisp build in
-precedence. However, Lisp systems often process other languages,
-and they may freely mix these different languages.
-Thus, the same symbol may have different meanings
-and precedence levels in different contexts.
-The symbol might not even be defined where it is being
-used, and allowing precedence definitions would create subtle errors
-if files are read in a different order.
-If users hook in their own precedence system into a reader, it could
-even become difficult to combine code written for different precedence systems.
-In short, building precedence into a
-Lisp reader creates many complexities.</p>
-<p>Yet the complexity of precedence systems is often unnecessary.
-In practice, we&#8217;ve found that simple infix is all
-that&#8217;s needed most of the time in Lisp-based languages.
-Even in other languages, many developers unnecessarily use
-grouping symbols with infix operators to make their order clear.
-Thus, requiring grouping symbols is less of a
-hardship than it might appear.</p>
-<p>By intentionally <em>not</em>
-building a precedence system into the reader,
-a very simple yet useful infix system results.
-We don&#8217;t need to register procedures, ensure that declarations
-of precedence precede their use, or anything like it.
-We also ensure that the notation is clearly homoiconic.</p>
-<p>Instead, where precedence is desired, application and library writers
-can implement precedence by defining and controlling the scope of an
-&#8220;<var>nfx</var>&#8221; macro or procedure, or by later postprocessing
-of that symbol.
-Scheme macros are already quite powerful and capable of handling this;
-in these cases, <code>{</code>...<code>}</code> provides a more
-convenient notation.
-The curly-infix approach, instead of trying to manage both infix
-and precedence, handles simple cases and then
-takes advantage of the existing Scheme scoping rules and macro system for
-more complex cases (in the rare cases where they are needed).</p>
-<p>It would be possible to extend curly-infix to provide a full fixed
-precedence system (e.g., if an expression is mixed,
-attempt to use various precedence rules).
-However, such capabilities would be extensions beyond this SRFI.
-<p>Note that curly-infix includes support for unary operators, but again,
-they are without precedence.
-As a result, they must be grouped separately.
-This does not lead to hard-to-read expressions, however.
-Examples of simple curly-infix lists combining infix and unary operations
-include
-<code>{-(x)&nbsp;*&nbsp;-(y)}</code>
-and
-<code>{-{x}&nbsp;*&nbsp;-{y}}</code>
-(the notation is designed so that both work).
-<p>
-<p>At first David A. Wheeler, who started this project,
-considered reporting an error if a simple infix
-expression isn&#8217;t provided.
-However, prepending &#8220;<var>nfx</var>&#8221;
-is much more flexible.</p>
-
 <h2><a name="rationale_noautodetect">Why not autodetect infix?</a></h2>
 <p>Some past efforts tried to automatically detect infix operators,
 but this turns out to not work well. It&#8217;s hard to express
@@ -318,6 +260,151 @@ or identifier characters&#8221;.
 That is a remarkably small number of Scheme implementations where this
 use of curly braces would conflict with some special semantic.
 </p>
+
+
+<h2><a name="rationale_noprecedence">Why isn&#8217;t precedence part of this SRFI?</a></h2>
+<p>Many past &#8220;infix&#8221; systems for Lisp build in
+precedence. However, Lisp systems often process other languages,
+and they may freely mix these different languages.
+Thus, the same symbol may have different meanings
+and precedence levels in different contexts.
+The symbol might not even be defined where it is being
+used, and allowing precedence definitions would create subtle errors
+if files are read in a different order.
+If users hook in their own precedence system into a reader, it could
+even become difficult to combine code written for different precedence systems.
+In short, building precedence into a
+Lisp reader creates many complexities.</p>
+<p>Yet the complexity of precedence systems is often unnecessary.
+In practice, we&#8217;ve found that simple infix is all
+that&#8217;s needed most of the time in Lisp-based languages.
+Even in other languages, many developers unnecessarily use
+grouping symbols with infix operators to make their order clear.
+Thus, requiring grouping symbols is less of a
+hardship than it might appear.</p>
+<p>By intentionally <em>not</em>
+building a precedence system into the reader,
+a very simple yet useful infix system results.
+We don&#8217;t need to register procedures, ensure that declarations
+of precedence precede their use, or anything like it.
+We also ensure that the notation is clearly homoiconic.</p>
+<p>Instead, where precedence is desired, application and library writers
+can implement precedence by defining and controlling the scope of an
+&#8220;<var>nfx</var>&#8221; macro or procedure, or by later postprocessing
+of that symbol.
+Scheme macros are already quite powerful and capable of handling this;
+in these cases, <code>{</code>...<code>}</code> provides a more
+convenient notation.
+The curly-infix approach, instead of trying to manage both infix
+and precedence, handles simple cases and then
+takes advantage of the existing Scheme scoping rules and macro system for
+more complex cases (in the rare cases where they are needed).</p>
+
+<p>Note that curly-infix includes support for unary operators, but again,
+they are without precedence.
+As a result, they must be grouped separately.
+This does not lead to hard-to-read expressions, however.
+Examples of simple curly-infix lists combining infix and unary operations
+include
+<code>{-(x)&nbsp;*&nbsp;-(y)}</code>
+and
+<code>{-{x}&nbsp;*&nbsp;-{y}}</code>
+(the notation is designed so that both work).
+</p>
+
+<p>It would be <em>possible</em>
+to extend curly-infix to provide a full fixed
+precedence system (e.g., if an expression is mixed,
+attempt to use various precedence rules).
+Here is a discussion how this could be accomplished in the future
+(should that be necessary), which may also show why such systems were
+not proposed in this SRFI.
+It is important to understand that
+such capabilities would be extensions <em>beyond</em> this SRFI.
+It would be best if the precedence rules (if any) were absolutely fixed;
+otherwise, subtle bugs would happen if files were read after the
+precedence was declared, and code would be hard to port between systems
+with different precedence rules.
+However, the precedence rules can be fixed while still allowing
+arbitrary new symbols, as shown below.
+Here is an example of such an extension, called a "simple math" extension.
+In this extension, if a mixed curly-infix list is seen,
+it first attempts to apply the "simple math" ruleset, and only
+prepends "nfx" if it does not meet the requirements.  In this extension:
+</p>
+<ol>
+<li>All even-numbered parameters must be operator symbols, there must be an odd number of parameters, and there must be at least five parameters.
+</li>
+<li>A fixed set of operators is supported, in a fixed order of precedence;
+the operators are compared to the table to determine precedence.
+</li>
+<li>
+Operators not in the fixed table are
+re-compared by removing from its symbol all "-" surrounded by alphanumerics,
+all alphanumerics, and then all other characters not in an operator above.
+This allows the use of many more operators, e.g.,
+"char<=?" is considered the same, for precedence purposes, as "<=".
+If there's no match, it does not meet the "simple math" ruleset.
+</li>
+<li>
+When the same operator is repeated, the operator simply gains another operand, so {a + b + c * d} is the "+" operator applied to three operands: a, b, and (* c d).
+</li>
+<li>
+Other different operators of the same precedence are interpreted in left-to-right order, so {a + b - c} maps to {{a + b} - c}.
+</li>
+</ol>
+
+<p>
+But there would be be substantial arguments about the semantics of
+any precedence system.
+For example, should {a &lt; b &lt;= c} support creating an "and" between them?
+Should some operators be right-associative, and if so, which ones?
+There would also be substantial disagreement on exactly what operators
+should be in the precedence table, their order, and whether
+the table should be "big" or "small".
+Below is one possible order, in high-to-low precedence order
+(where ... matches 0 or more characters);
+the point in part is to show that it
+would be challenging to get agreement on such a list:
+</p>
+<ol>
+<li>Subscript/down-arrow: sub {Unicode: &#8595;, &#8659;}</li>
+<li>Exponentiation/Superscript/up-arrow: **, ^, sup {Unicode: &#8593;, &#8657;}</li>
+<li>Multiplication/division: *, /, div..., mod..., quo...   {Unicode: &#247;, &#215;}</li>
+<li>Addition/subtraction: +, -</li>
+<li>Bitwise and: bit...and, log...and, &amp;</li>
+<li>Bitwise or/xor: bit...or, log...or, |</li>
+<li>Comparison:
+<ul>
+<li>
+Ranged: &lt; , &lt;= , &gt;=, &gt;  {Unicode: &#8805;, &#8804;, &#8715;, &#8713;, &#8836;, &#8834;, &#8838;, &#8835;, &#8839;)
+</li>
+<li>Unranged:  =, ==, !=, &lt;&gt;, =/=, eq..., in, is {Unicode: &#8800;, &#8776;, &#8773;}</li>
+</ul>
+<li>Logical conjunction: and {Unicode: &#8745;, &#8743;}</li>
+<li>Logical/exclusive disjunction: or, xor, eor {Unicode: &#8746;, &#8744;, &#8853;}</li>
+<li>Implication/Right Arrows/Doubled arrows: -&gt;, =&gt;,  &lt;-&gt;, &lt;=&gt;, --&gt;, ==&gt;, &lt;--&gt;, &lt;==&gt; {Unicode: &#8596;, &#8660;, &#8594;, &#8658;}</li>
+<li>Definition/Assignment/Left arrow: &lt;-, &lt;--, &lt;==, :=, ::=  {Unicode: &#8801;  &#8592;, &#8656;}</li>
+</ol>
+
+<p>
+The key point is that although SRFI does not include a precedence system,
+one (like this one) could be added later.
+If a precedence system were added, all existing code using simple
+curly-infix expressions, or 0..2 parameter expressions, would work unchanged.
+Even when it's not, many "nfx" processors would likely generate the
+same order in most actual cases.
+Since it would be difficult to gain such agreement, and the value of
+such a system is doubtful, it is better to provide a much simpler
+system that does not include precedence.
+Again, any support for precedence is an extension beyond this SRFI.
+</p>
+
+<p>At first David A. Wheeler, who started this project,
+considered reporting an error if a simple infix
+expression isn&#8217;t provided.
+However, prepending &#8220;<var>nfx</var>&#8221;
+is much more flexible.</p>
 
 <h2><a name="rationale_specialcases">Why are 0, 1, and 2 parameters special?</a></h2>
 <p>The empty curly-infix list
