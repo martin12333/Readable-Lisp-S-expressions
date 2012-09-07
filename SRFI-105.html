@@ -174,14 +174,91 @@ A macro for infix would very likely confuse
 the <var>syntax-rules</var> form.
 </p>
 
-<h2><a name="rationale_othersyntax">Why not a completely different notation for infix?</a></h2>
-<p>Other systems build notations into the reader, but the
-infix notation is often radically different from
-normal Lisp notation.
+<h2><a name="rationale_braces">Why use brace characers for infix?</a></h2>
+<p>
+There is no perfect character, but braces (aka curly braces) are pretty close.
+A key issue is that you want a balanced pair of characters to identify infix,
+since you can have infix-in-infix.
+The curly braces are visually pleasant pairs, so
+it makes sense to use these precious characters on something
+extremely common: infix notation.
+</p>
+<p>
+All other character pairs other than braces have serious problems.
+Parentheses are already spoken for, of course.
+R6RS Scheme already uses up square brackets as a synonym for parentheses.
+Angle brackets are already used for comparison.
+Paired characters outside the ASCII set have other problems:
+some Schemes do not support characters outside the ASCII character set,
+such characters are not as well supported by other tools
+(and are sometimes corrupted by such tools),
+they are more complicated to deal with due to
+character encoding problems, and they are harder to enter on many keyboards.
+</p>
+<p>
+In contrast, curly braces are in the ASCII character set and are
+already available for this purpose.
+They do not have a standardized meaning in any Scheme specification.
+There is even a Scheme
+<a href="http://trac.sacrideo.us/wg/ticket/468">R7RS ticket #468</a>
+that would expressly forbid brackets and curly braces in identifiers;
+if accepted (which seems likely at this writing) it would even further
+enshrine the notion that braces are special and should be reserved
+for some special syntactic purpose other than being in identifiers.
+They are also widely available in many other Lisp-derived languages,
+such as Common Lisp
+(as we&#8217;d like this notation to be widely useful across Lisps,
+even beyond Scheme).
+</p>
+<p>
+Although curly braces <em>can</em> be used as local Scheme extensions,
+there are few Scheme implementations which do so.
+On
+<a href="http://srfi.schemers.org/srfi-105/mail-archive/msg00063.html">
+September 5, 2012, John Cowan posted</a> the
+<a href="http://trac.sacrideo.us/wg/wiki/BracketsBraces">results</a>
+analyzing the
+meanings of square brackets and curly braces in his Scheme test suite
+(of 45 Scheme implementations).
+Only 2 (Chibi and RScheme) of 45 currently do something
+special with braces; &#8220;the other implementations treat them
+as either synonyms for parentheses, lexical syntax errors,
+or identifier characters&#8221;.
+That is a remarkably small number of Scheme implementations where this
+use of curly braces would conflict with some special semantic.
+Donovan Kolbly reported that
+&#8220;RScheme uses braces to delimit C code embedded in Scheme code...
+that said, a scanner hack could
+easily mode-switch to SRFI-105 interpretation where needed.&#8221;
+The Chibi extension using braces can be added or removed through a
+compile-time option, so not even all Chibi executables have a
+conflicting use of brace characters.
+</p>
+
+<p>
+It&#8217;s true that {...} are often used in math for set notation. But
+infix notation is far more basic, and common, than sets.
+Also, traditional function call notation and infix are helpful when working
+with sets, so infix notation is the more important need.
+Once you allow neoteric-expressions,
+the notation set(...) is a reasonable alternative.
+</p>
+
+<h2><a name="rationale_notdifferentsyntax">Why not use a completely different notation inside the expression?</a></h2>
+<p>
+Some past systems have built infix notations into the reader, but the
+infix notation was radically different from normal Lisp notation.
+For example, the symbol for procedure calls might change, the names of
+variables or procedures might be spelled differently (at least in some cases),
+and so on.
 The result, in some cases, would be that these notations would
 simultaneously lose Lisp&#8217;s abilities for
 quoting, quasiquoting, and so on, and these notations were
 not homoiconic.
+It may become impossible to refer to certain symbols, since their
+names might include a character that is interpreted as an infix operator.
+They can also be confusing; the same symbols (e.g., parentheses) would have
+a completely different meaning inside and outside the parentheses.
 </p>
 <p>
 In contrast, this curly-infix-expression proposal avoids these problems.
@@ -212,62 +289,35 @@ not convenient, you don&#8217;t need to use it. It is also very
 backwards-compatible: Normal lists work normally, and if you want
 infix, use <code>{</code>...<code>}</code>.</p>
 
-<h2><a name="rationale_braces">Why use brace characers for infix?</a></h2>
+
+<h2><a name="rationale_equal">Why use <var>equal?</var> to compare operators in a &#8220;simple&#8221; curly-infix-list for equality?</a></h2>
 <p>
-There is no perfect character, but braces are pretty close.
-You want a balanced pair of characters to identify infix,
-since you can have infix-in-infix.
-Parentheses are already spoken for.
-R6RS Scheme already uses up square brackets as a synonym for parentheses.
-Angle brackets are already used for comparison.
-Paired characters outside the ASCII set are not as well supported by
-tools, are sometimes corrupted, and tend to be harder to enter on
-some keyboards.
-In contrast, curly braces specifically do not have a standardized
-meaning in any Scheme specification.
-What&#8217;s more, the curly braces are visually pleasant pairs.
-It makes sense to use these precious characters on something
-extremely common: infix notation.
-They are also widely available for use
-in many (though not all) Lisp implementations
-(as we&#8217;d like this notation to be widely useful across Lisps,
-even beyond Scheme).
-We&#8217;re sorry to interfere with the implementations that
-use {...} for something else, but there
-are few such Lisp implementations.
-For example, they are not standard in Common Lisp or Scheme,
-so at most they are local extensions in those languages
-(which could be enabled and disabled, and code that uses them isn&#8217;t
-portable anyway).
-</p>
-<p>
-It&#8217;s true that {...} are often used in math for set notation. But
-infix notation is far more basic, and common, than sets.
-Also, traditional function call notation and infix are helpful when working
-with sets, so infix notation is the more important need.
-Once you allow neoteric-expressions,
-the notation set(...) is a reasonable alternative.
-</p>
-<p>
-On
-<a href="http://srfi.schemers.org/srfi-105/mail-archive/msg00063.html">
-September 5, 2012, John Cowan posted</a> the
-<a href="http://trac.sacrideo.us/wg/wiki/BracketsBraces">results</a>
-analyzing the
-meanings of square brackets and curly braces in his Scheme test suite
-(of 45 Scheme implementations).
-Only 2 (Chibi and RScheme) of 45 currently do something
-special with braces; &#8220;the other implementations treat them
-as either synonyms for parentheses, lexical syntax errors,
-or identifier characters&#8221;.
-That is a remarkably small number of Scheme implementations where this
-use of curly braces would conflict with some special semantic.
-Donovan Kolbly reported that
-&#8220;RScheme uses braces to delimit C code embedded in Scheme code...
-that said, a scanner hack could
-easily mode-switch to SRFI-105 interpretation where needed.&#8221;
+Operators are compared using <var>equal?</var> so that
+constructs like <samp>,op</samp> are legal operators,
+e.g., <samp>{x&nbsp;,op&nbsp;y&nbsp;,op&nbsp;z}</samp>.
+Note that unfortunately if the operator construct contains a cycle, it might not terminate
+if <var>equal?</var> does not terminate in the presence of cycles.
+This was specified this way so that implementors
+could use the normal Scheme <var>equal?</var> comparison instead of
+having to implement a special comparison operator just for this
+particular case.
 </p>
 
+<h2><a name="rationale_delimiters">Why must infix operators be delimited?</a></h2>
+<p>Curly-infix requires that the infix operators be delimited (e.g., by
+spaces). This is consistent with Lisp history and current practice.
+Currently, in Lisp, operators are always
+delimited in traditional s-expressions (typically by left
+parentheses on the left, and by whitespace on the right).
+It&#8217;s impractical to do otherwise today; most Lisps,
+including Scheme, allow and predefine symbols that include characters (like
+&#8220;<code>-</code>&#8221;) that are typically used for infix operators.
+Many developers put space around infix operators even in languages
+that don&#8217;t require them, so syntactically requiring them is no burden.
+In short, it is difficult to allow infix operators
+without delimiters, and the visual results are the same as many
+real-world uses in other languages, so the result appears quite
+customary to typical software developers.</p>
 
 <h2><a name="rationale_noprecedence">Why isn&#8217;t precedence part of this SRFI?</a></h2>
 <p>Many past &#8220;infix&#8221; systems for Lisp build in
@@ -341,21 +391,24 @@ it first attempts to apply the &#8220;simple math&#8221; ruleset, and only
 prepends &#8220;nfx&#8221; if it does not meet the requirements.  In this extension:
 </p>
 <ol>
-<li>All even-numbered parameters must be operator symbols, there must be an odd number of parameters, and there must be at least five parameters.
+<li>All even-numbered parameters must be symbols, there must be an odd number of parameters, and there must be at least five parameters (the minimum to have more than one operator).
 </li>
 <li>A fixed set of operators is supported, in a fixed order of precedence;
-the operators are compared to the table to determine precedence.
+the operators are compared to the table below to determine precedence.
 </li>
 <li>
-Operators not in the fixed table are re-compared by
-removing from its symbol all &#8220;-&#8221; surrounded by alphanumerics,
-all alphanumerics, and then all other characters
-not in an operator of the precedence table.
+If an operator is not in the fixed table, but it is a symbol,
+a new symbol is created by
+removing from the symbol all &#8220;-&#8221; surrounded by alphanumerics,
+removing all alphanumerics, and then removing all characters not in
+an operator of the precedence table; that new symbol is then compared to
+the table.
 This allows the use of many more operators, e.g.,
-&#8220;char<=?&#8221; would be considered an operator with the
-same precedence as &#8220;<=&#8221;.
-If there&#8217;s still no match,
-the expression does not meet the &#8220;simple math&#8221; ruleset.
+&#8220;char-ci&lt;=?&#8221; would be considered an operator with the
+same precedence as &#8220;&lt;=&#8221;.
+If there&#8217;s still no match for any operator,
+the expression does not meet the &#8220;simple math&#8221; ruleset, and
+the normal mixed rules are used (<var>nfx</var> is inserted at the front).
 </li>
 <li>
 When the same operator is repeated, the operator simply gains another operand, so {a + b + c * d} is the &#8220;+&#8221; operator applied to three operands: a, b, and (* c d).
@@ -384,7 +437,7 @@ would be challenging to get agreement on such a list:
 <ol>
 <li>Subscript/down-arrow: sub {Unicode: &#8595;, &#8659;}</li>
 <li>Exponentiation/superscript/up-arrow: **, ^, sup {Unicode: &#8593;, &#8657;}</li>
-<li>Multiplication/division: *, /, div..., mod..., quo...   {Unicode: &#247;, &#215;, &#183;}</li>
+<li>Multiplication/division: *, /, div..., mod..., quo...   {Unicode: &#247;, &#215;}</li>
 <li>Addition/subtraction: +, -</li>
 <li>Bitwise and: bit...and, log...and, &amp;</li>
 <li>Bitwise or/xor: bit...or, log...or, |</li>
@@ -456,35 +509,6 @@ the likely interpretation, and also so that the neoteric-expressions like
 <samp>(f&nbsp;(-&nbsp;x))</samp> are interpreted properly.
 </li>
 </ol>
-
-<h2><a name="rationale_equal">Why use <var>equal?</var> to compare operators in a &#8220;simple&#8221; curly-infix-list for equality?</a></h2>
-<p>
-Operators are compared using <var>equal?</var> so that
-constructs like <samp>,op</samp> are legal operators,
-e.g., <samp>{x&nbsp;,op&nbsp;y&nbsp;,op&nbsp;z}</samp>.
-Note that unfortunately if the operator construct contains a cycle, it might not terminate
-if <var>equal?</var> does not terminate in the presence of cycles.
-This was specified this way so that implementors
-could use the normal Scheme <var>equal?</var> comparison instead of
-having to implement a special comparison operator just for this
-particular case.
-</p>
-
-<h2><a name="rationale_delimiters">Why must infix operators be delimited?</a></h2>
-<p>Curly-infix requires that the infix operators be delimited (e.g., by
-spaces). This is consistent with Lisp history and current practice.
-Currently, in Lisp, operators are always
-delimited in traditional s-expressions (typically by left
-parentheses on the left, and by whitespace on the right).
-It&#8217;s impractical to do otherwise today; most Lisps,
-including Scheme, allow and predefine symbols that include characters (like
-&#8220;<code>-</code>&#8221;) that are typically used for infix operators.
-Many developers put space around infix operators even in languages
-that don&#8217;t require them, so syntactically requiring them is no burden.
-In short, it is difficult to allow infix operators
-without delimiters, and the visual results are the same as many
-real-world uses in other languages, so the result appears quite
-customary to typical software developers.</p>
 
 <h2><a name="rationale_curlyfooconvention">Why the <var>curly-foo</var> convention?</a></h2>
 
@@ -726,6 +750,19 @@ language as follows:
 
 &lt;num&gt;  A number is an non-empty series of digits,
        optionally followed by a period followed by a series of digits.
+</pre>
+
+<p>
+This grammar is incomplete; infix.plt also supports (per its documentation
+or source code):
+</p>
+<pre>
+  &lt;e&gt; OP &lt;e&gt;  comparison. OP is &lt;, &lt;=, =, &lt;&gt;, &gt;,=, &gt; (and Unicode)
+  &lt;e&gt; := &lt;e&gt;  assignment
+  &lt;e&gt; ; &lt;e&gt;   sequence
+  (&#955; ids . expr)     anonymous function
+  &#8730&lt;e&gt;         square root (Unicode character)
+  &#172;&lt;e&gt;         logical not
 </pre>
 
 <p>
