@@ -534,41 +534,38 @@ into their default readers and then control it via
 some special flag, but we do
 not want to mandate exactly how it is turned on or passed.</p>
 
-<h2><a name="rationale_marker">Why the marker <var>#!srfi-105</var>?</a></h2>
+<h2><a name="rationale_marker">Why a marker starting with <var>#!</var> and a letter?</a></h2>
+
 <p>
 We would like implementations to always have curly-infix enabled.
 However, some implementations may have other extensions
 that use <code>{</code>...<code>}</code>.
 We want a simple, standard way to identify code that uses curly-infix
 so that readers will switch to curly-infix if they need to switch.
-<a href="http://srfi.schemers.org/srfi-105/mail-archive/msg00027.html">
-This marker was recommended during discussion of SRFI-105</a>.
+This is especially important for those few Scheme implementations that
+already use braces for some other purpose.
+</p>
+
+<p>
 The <var>#!</var> marker prefix was suggested due to its similarity
 to other markers.
 After all, R6RS and R7RS (draft 6) already use
 <var>#!fold-case</var> and <var>#!no-fold-case</var>
 as special markers to control the reader.
-Using <var>#!srfi-105</var> is a simple, similar-looking marker
+Using another marker beginning with
+<var>#!</var> and a letter allows for a simple, similar-looking marker
 for a similar situation.
 What&#8217;s more, it implies a reasonable convention for reader extensions:
 markers that begin with <code>#!</code>, followed by an ASCII letter, should
 have the rest read as an identifier (up to a whitespace)
-and use that to control the reader, and <code>srfi-</code> should be
-the namespace for SRFIs.
+and use that to control the reader.
 </p>
 
 <p>
 The marker is read up to a whitespace; this is consistent with
-<a href="http://trac.sacrideo.us/wg/ticket/447">Scheme R7RS ticket #447</a>,
-and makes it clearly differentiated from <var>#!srfi-1050</var>
-should there ever be one :-).
-</p>
-
-<p>
-Another marker was suggested: <var>#!curly-infix</var>.
-This alternative marker has the advantage of being more obvious of
-what was being enabled.
-However, it is not as obvious <em>where</em> to go to learn more information.
+<a href="http://trac.sacrideo.us/wg/ticket/447">Scheme R7RS ticket #447</a>.
+This makes easy to distinguish between markers if one marker
+begins with the same characters as another entire marker.
 </p>
 
 <p>
@@ -591,11 +588,11 @@ as a <var>#!&nbsp;/usr/bin/env</var>, but this is non-normative;
 an implementation could easily implement <var>#!</var> followed by space
 as an ignored line, and treat <var>#!</var> followed by
 <code>/</code> or <code>.</code> differently.
-Thus, implementations could trivially support simultaneously markers such as
-<var>#!srfi-105</var>
-to identify curly-infix, the SRFI-22 <var>#!</var>+space marker as
-an ignored line, and support
-<var>#!/&nbsp;...!#</var> and <var>#!.&nbsp;...!#</var> as a
+Thus, implementations could trivially support (simultaneously) markers
+beginning with <var>#!</var> followed by a letter
+(such as the one to identify curly-infix),
+the SRFI-22 <var>#!</var>+space marker as an ignored line,
+and the format <var>#!/&nbsp;...!#</var> and <var>#!.&nbsp;...!#</var> as a
 multi-line comment.
 Note that this SRFI does <em>not</em> mandate support or any particular
 semantics for <var>#!fold-case</var>, <var>#!no-fold-case</var>,
@@ -606,10 +603,13 @@ implement them all simultaneously.
 </p>
 
 <p>
-We do not require that applications include this marker;
-our hope is that over time everyone will just support this
+We do not <em>require</em> that applications include this marker.
+Our hope is that over time everyone will just support this
 natively, making the marker unnecessary, and we do not want to require
 that users include an unneeded marker.
+</p>
+
+<p>
 We recommend that <var>#!srfi-105</var> not be the very first characters
 in a file (e.g., put a newline in front of it).
 If the file began with <var>#!srfi-105</var>, is made executable,
@@ -626,6 +626,30 @@ standard one). Curly-infix is an intentionally simple mechanism
 that can be built into even trivial Scheme implementations.
 Mandating module support is unnecessary and might inhibit its
 adoption.</p>
+
+<h2><a name="rationale_marker_105">Why the marker <var>#!srfi-105</var>?</a></h2>
+
+<p>
+There were two competing alternatives:
+<var>#!srfi-105</var> and <var>#!curly-infix</var>
+</p>
+
+<p>
+The <var>#!curly-infix</var> marker
+has the advantage of being more obvious about what is being enabled,
+and some may argue that it is easier to understand.
+However, it is not as obvious <em>where</em> to go to learn more information.
+</p>
+
+<p>
+In contrast,
+<a href="http://srfi.schemers.org/srfi-105/mail-archive/msg00027.html">
+the <var>#!srfi-105</var> recommended during discussion of SRFI-105</a>,
+in part because it makes it clear where more information can be gathered.
+Also, it suggests that <code>srfi-</code> should be
+the namespace for SRFIs, a plausible convention.
+</p>
+
 
 <h2><a name="rationale_racketinfixconvention">What about the Racket &#8220;infix convention&#8221;?</a></h2>
 <p><a href=
