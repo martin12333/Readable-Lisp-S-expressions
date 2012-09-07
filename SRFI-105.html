@@ -1211,15 +1211,14 @@ is mapped to
 Here is the precise definition of a curly-infix list
 (which is nearly identical to a traditional list):
 </p>
-<!-- Note: "style" is not included in HTML 3.2. However, an HTML 3.2
-browser can easily ignore it and back off to a plausible display.
-It's hard to make this look nice in HTML 3.2, so we add a "style" value
-here so that it looks nicer in later HTML versions while still being
-able to back off to HTML 3.2.
+<!--
+Note: CSS "style" is not included in HTML 3.2, so we'll use
+a table to force a reasonable format.
 -->
-<p style="margin-left: 8em; text-indent: -8em;">
-curly-infix-list&nbsp;&#8594;
-&#8220;<tt>{</tt>&#8221;
+<table>
+<tr valign="top">
+<td>curly&#8209;infix&#8209;list&nbsp;&#8594;</td>
+<td>&#8220;<tt>{</tt>&#8221;
 &lt;whitespace&gt;*
 [ &lt;n-expression&gt;
 [ &lt;whitespace&gt;+ &lt;n-expression&gt; ]*
@@ -1227,7 +1226,9 @@ curly-infix-list&nbsp;&#8594;
   &lt;whitespace&gt;+ &lt;n-expression&gt; ]
 &lt;whitespace&gt;* ]
 &#8220;<tt>}</tt>&#8221;
-</p>
+</td>
+</tr>
+</table>
 
 <!--
 it begins with &#8220;{&#8221;, optional whitespace,
@@ -1688,9 +1689,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 <!--
 Notes on HTML 3.2:
 * HTML 3.2 has no attribute "id", so we use <a name="ID">...</a> instead.
-* We do use one "style" entry, which isn't in HTML 3.2, but HTML 3.2
-  will just gracefully back off to a less-pretty form so we
-  think this is okay.
+* HTML 3.2 doesn't include CSS "style", so a table is is used to format
+  the curly-infix-list BNF.
 * HTML 3.2 lacks many named entities, so we use numbered entities.
   Although HTML 3.2 includes a mechanism to define new entities inline
   (as part of the DOCTYPE), this is not supported by more modern
