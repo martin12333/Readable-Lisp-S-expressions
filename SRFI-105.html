@@ -371,7 +371,7 @@ and
 </p>
 
 <p>It would be <em>possible</em>
-to extend curly-infix to provide a full fixed
+to extend curly-infix to provide a fixed
 precedence system (e.g., if an expression is mixed,
 attempt to use various precedence rules).
 Here is a discussion how this could be accomplished in the future
@@ -385,9 +385,9 @@ precedence was declared, and code would be hard to combine
 if it used different precedence rules.
 However, the precedence rules can be fixed while still allowing
 arbitrary new symbols, as shown below.
-Here is an example of such an extension, called a &#8220;simple math&#8221; extension.
+Here is an example of such an extension, called a &#8220;math&#8221; extension.
 In this extension, if a mixed curly-infix list is seen,
-it first attempts to apply the &#8220;simple math&#8221; ruleset, and only
+it first attempts to apply the &#8220;math&#8221; ruleset, and only
 prepends &#8220;nfx&#8221; if it does not meet the requirements.  In this extension:
 </p>
 <ol>
@@ -407,7 +407,7 @@ This allows the use of many more operators, e.g.,
 &#8220;char-ci&lt;=?&#8221; would be considered an operator with the
 same precedence as &#8220;&lt;=&#8221;.
 If there&#8217;s still no match for any operator,
-the expression does not meet the &#8220;simple math&#8221; ruleset, and
+the expression does not meet the &#8220;math&#8221; ruleset, and
 the normal mixed rules are used (<var>nfx</var> is inserted at the front).
 </li>
 <li>
@@ -453,6 +453,17 @@ Ranged: &lt; , &lt;= , &gt;=, &gt;  {Unicode: &#8805;, &#8804;, &#8715;, &#8713;
 <li>Implication/right arrows/doubled arrows: -&gt;, =&gt;,  &lt;-&gt;, &lt;=&gt;, --&gt;, ==&gt;, &lt;--&gt;, &lt;==&gt; {Unicode: &#8596;, &#8660;, &#8594;, &#8658;}</li>
 <li>Definition/assignment/left arrow: &lt;-, &lt;--, &lt;==, :=, ::=  {Unicode: &#8801;, &#8592;, &#8656;}</li>
 </ol>
+
+<p>
+Think that is too complicated?
+Many other variations are possible.
+A &#8220;simple math&#8221; ruleset could be devised instead,
+e.g., perhaps it has a shorter list of built-in operators.
+The extant code using curly-infix tends to combine these:
+*, /; +, -; &lt; , &lt;= , &gt;=, &gt; =;
+<var>and</var>; and <var>or</var>;
+adding exponentiation and implication would make sense for a short list.
+</p>
 
 <p>
 The key point is that although this SRFI does not include a precedence system,
