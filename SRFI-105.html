@@ -246,8 +246,8 @@ the notation set(...) is a reasonable alternative.
 
 <h2><a name="rationale_notdifferentsyntax">Why not use a completely different notation inside the expression?</a></h2>
 <p>
-Some past systems have built infix notations into the reader, but the
-infix notation was radically different from normal Lisp notation.
+Some past systems have built infix notations into the reader
+in which the infix notation was radically different from normal Lisp notation.
 For example, the symbol for procedure calls might change, the names of
 variables or procedures might be spelled differently (at least in some cases),
 and so on.
@@ -262,11 +262,15 @@ a completely different meaning inside and outside the parentheses.
 </p>
 <p>
 In contrast, this curly-infix-expression proposal avoids these problems.
+The lists inside use almost exactly the same syntax inside and outside.
 For example, in curly-infix,
 <samp>&#96;{,a&nbsp;+&nbsp;,b}</samp>
 maps cleanly to
 <samp>&#96;(+&nbsp;,a&nbsp;,b)</samp>,
-which works as expected with all macros.</p>
+which works as expected with all macros.
+The main difference is that, in a curly-infix expression, the position of
+the operator in its surface syntax in a different location (infix)
+than its actual final location.</p>
 
 <h2><a name="rationale_noautodetect">Why not autodetect infix?</a></h2>
 <p>Some past efforts tried to automatically detect infix operators,
@@ -312,6 +316,10 @@ parentheses on the left, and by whitespace on the right).
 It&#8217;s impractical to do otherwise today; most Lisps,
 including Scheme, allow and predefine symbols that include characters (like
 &#8220;<code>-</code>&#8221;) that are typically used for infix operators.
+If infix operators were not delimited, it would be impractical or
+complicated to refer to standard Scheme identifiers.
+By requiring delimiters (as is already true for the rest of Scheme),
+any procedure may be used as an infix operator, not just a fixed list.
 Many developers put space around infix operators even in languages
 that don&#8217;t require them, so syntactically requiring them is no burden.
 In short, it is difficult to allow infix operators
