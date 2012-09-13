@@ -461,7 +461,7 @@ define display-skip-last-eol(x)
       ; In this program, strings only happen from indents:
       set! column1 #f
       display-skip-last-eol(cdr(x))
-    {char?(car(x)) and null?(cdr(x)) and eq?(car(x) #\newline)}
+    {char?(car(x)) and null?(cdr(x)) and {car(x) eq? #\newline}}
       #t
     char?(car(x))
       write-char(car(x))
@@ -493,7 +493,7 @@ define consume-end-of-line()
         read-char()
         let
           $ next peek-char()
-          if {not(eq?(c next)) and memq(next end-of-line-chars)}
+          if {not{c eq? next} and memq(next end-of-line-chars)}
             begin
               read-char()
 
@@ -526,10 +526,10 @@ define sweeten-filter()
         newline()
         set! column1 #t
         sweeten-filter()
-      char=?(c #\;)
+      {c char=? #\;}
         copy-line current-input-port()
         sweeten-filter()
-      {char=?(c #\space) or char=?(c tab)}
+      {{c char=? #\space} or {c char=? tab}}
         ; Do not copy space or tab directly to output; instead,
         ; skip past them.  Initial indents (from space/tab)
         ; disable sweet-expression processing, which is not what we want.
