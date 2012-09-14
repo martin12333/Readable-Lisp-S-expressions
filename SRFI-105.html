@@ -634,9 +634,9 @@ that users include an unneeded marker.
 </p>
 
 <p>
-We recommend that <var>#!srfi-105</var> not be the very first characters
+We recommend that <var>#!curly-infix</var> not be the very first characters
 in a file (e.g., put a newline in front of it).
-If the file began with <var>#!srfi-105</var>, is made executable,
+If the file began with <var>#!curly-infix</var>, is made executable,
 and then execution is attempted,
 this might confuse some systems into trying to run the
 program <var>srfi-105</var>.
@@ -651,7 +651,7 @@ that can be built into even trivial Scheme implementations.
 Mandating module support is unnecessary and might inhibit its
 adoption.</p>
 
-<h2><a name="rationale_marker_105">Why the marker <var>#!srfi-105</var>?</a></h2>
+<h2><a name="rationale_marker_105">Why the marker <var>#!curly-infix</var>?</a></h2>
 
 <p>
 There were two competing alternatives:
@@ -659,19 +659,21 @@ There were two competing alternatives:
 </p>
 
 <p>
-The <var>#!curly-infix</var> marker
-has the advantage of being more obvious about what is being enabled,
-and some may argue that it is easier to understand.
-However, it is not as obvious <em>where</em> to go to learn more information.
-</p>
-
-<p>
-In contrast,
+The
 <a href="http://srfi.schemers.org/srfi-105/mail-archive/msg00027.html">
-the <var>#!srfi-105</var> recommended during discussion of SRFI-105</a>,
+<var>#!srfi-105</var> was recommended during discussion of SRFI-105</a>,
 in part because it makes it clear where more information can be gathered.
 Also, it suggests that <code>srfi-</code> should be
 the namespace for SRFIs, a plausible convention.
+</p>
+
+<p>
+However, <var>#!curly-infix</var> marker
+has the advantage of being more obvious about what is being enabled.
+Modern search engines make it easy to find where information is, using
+either naming convention.
+Finally, if this capability were accepted into future Scheme specification,
+its name would not need to change.
 </p>
 
 
@@ -1350,7 +1352,7 @@ include the braces &#8220;<code>{</code>&#8221; and
 
 <p>
 An implementation of this SRFI <em>must</em> accept the marker
-<var>#!srfi-105</var> followed by a whitespace character.
+<var>#!curly-infix</var> followed by a whitespace character.
 This marker (including the trailing whitespace character)
 is consumed and considered whitespace;
 after reading this marker, the reader <em>must</em> accept
@@ -1441,7 +1443,7 @@ until its matching &#8220;<code>}</code>&#8221;, and then calls <var>process-cur
 defined below. We recommend that implementations <em>always</em> do
 this, but an implementation must at least activate this behavior
 when &#8220;<var>curly-foo</var>&#8221; is invoked
-or when they read <var>#!srfi-105</var> followed by whitespace.
+or when they read <var>#!curly-infix</var> followed by whitespace.
 <p>This reference implementation is SRFI type 2: &#8220;A
 mostly-portable solution that uses some kind of hooks provided in
 some Scheme interpreter/compiler. In this case, a detailed
