@@ -544,14 +544,19 @@ different local extension, they may not want to immediately
 switch to curly-infix in their default invocation.
 Thus, if implementors choose to not enable curly-infix in their default
 reader, a conventional command line name &#8220;<var>curly-foo</var>&#8221;
-is defined for each implementation <var>foo</var> that enables it.</p>
+is defined for each implementation <var>foo</var> that enables it.
+Implementations may have a host of special command-line invocation names,
+but presumably one or a few are the usual invocation commands; there
+is no requirement to have a curly-foo alternative for a rarely-used
+invocation.</p>
 
 <p>There is simply no single option flag (for example) that
-everyone could agree on to enable this.
+everyone could agree on to enable curly-infix.
 In practice, we expect that implementations will build this capability
 into their default readers and then control it via
 some special flag, but we do
-not want to mandate exactly how it is turned on or passed.</p>
+not want to mandate exactly how it this capability is turned on or
+passed to the reader.</p>
 
 <h2><a name="rationale_marker">Why a marker starting with <var>#!</var> and a letter?</a></h2>
 
@@ -1382,7 +1387,7 @@ have their standard readers be curly-infix enabled,
 but this is <em>not</em> required.
 If the standard readers are not curly-infix enabled
 in an implementation&#8217;s default invocation,
-then if it can be invoked from a command line via the command
+then if it has a default command line invocation line using some command
 &#8220;<var>foo</var>&#8221;, the implementation
 <em>must</em> provide an alternative command &#8220;<var>curly-foo</var>&#8221;
 (the command prefixed with &#8220;<code>curly-</code>&#8221;) in which
@@ -1390,7 +1395,7 @@ its standard readers <em>are</em> curly-infix enabled.
 In addition, if the implementation is invokable as
 a graphical user interface (GUI), it
 <em>must</em> provide a documented means to ensure that its
-standard readers are curly-infix enabled.
+standard readers are curly-infix enabled on startup.
 </p>
 
 <p>
