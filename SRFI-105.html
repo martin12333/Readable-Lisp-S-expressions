@@ -1412,6 +1412,10 @@ standard readers are curly-infix enabled on startup.
 An implementation <em>must not</em>, by default, bind the symbol
 &#8220;<var>nfx</var>&#8221; to a procedure, macro, or syntax
 that <em>cannot</em> be overridden.
+An implementation <em>should not</em> bind the symbol
+&#8220;<var>nfx</var>&#8221; to a procedure, macro, or syntax in the
+default environment, with the exception that it
+may bind it by default to something that produces an error.
 This symbol is reserved for use by library writers
 (in the case of a library-based implementation of this SRFI,
 this symbol is reserved for use by <em>other</em> libraries)
@@ -1423,15 +1427,10 @@ and application writers.
 (as it is then a library, this case actually falls under
 the &#8220;reserved for use by library writers&#8221; clause above).
 Application writers and other library writers
-using that implementation
-are then free to use or not use
-the implementation&#8217;s provided &#8220;<var>nfx</var>&#8221;.
+using that implementation are then free to use or not use
+the implementation&#8217;s provided &#8220;<var>nfx</var>&#8221;,
+and it is then immediately obvious to users what library is in use.
 An implementation may even provide more than one, if they so desire.
-For a library-based implementation of this SRFI,
-any &#8220;<var>nfx</var>&#8221; implementation or
-implementations <em>may</em> be provided,
-as long as the &#8220;<var>nfx</var>&#8221; symbol can be
-rebound by users of that library.
 </p>
 
 <p>
