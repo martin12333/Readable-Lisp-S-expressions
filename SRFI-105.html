@@ -614,8 +614,9 @@ But in practice the <var>#!</var> is almost always
 followed immediately by <code>/</code> or <code>.</code>, and other scripts
 could be trivially fixed to make that so.
 R6RS had a non-normative recommendation to ignore a line that began
-with <var>#!/usr/bin/env</var>, as well
-as a <var>#!&nbsp;/usr/bin/env</var>, but this is non-normative;
+with <var>#!/usr/bin/env</var> (without a space), as well
+as a <var>#!&nbsp;/usr/bin/env</var> (with a space before the slash),
+but this is non-normative;
 an implementation could easily implement <var>#!</var> followed by space
 as an ignored line, and treat <var>#!</var> followed by
 <code>/</code> or <code>.</code> differently.
