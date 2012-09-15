@@ -499,6 +499,27 @@ expression isn&#8217;t provided.
 However, prepending &#8220;<var>nfx</var>&#8221;
 is much more flexible.</p>
 
+<h2><a name="rationale_nfx_undefined">Why is nfx not predefined?</a></h2>
+<p>Implementations should not predefine a meaning for <i>nfx</i>,
+other than possibly to something that always produces an error
+(e.g., raises an exception).
+</p>
+<p>
+If anyone wrote code that depended on some local implementation of nfx,
+then by definition it would become implementation-dependent.
+Yet the point of the "nfx" macro is to allow application authors
+the ability to control what to do in that case,
+not to make them unwittingly dependent on an implementation.
+</p>
+<p>
+Of course, an implementation could provide a pre-canned macro that could
+be used as a definition of nfx.  But in that case, importing the
+library would be an explicit act,
+easily seen in the code, instead of being hidden.
+That way, it is easy to determine when an implementation-dependent
+capability is being used.
+</p>
+
 <h2><a name="rationale_specialcases">Why are 0, 1, and 2 parameters special?</a></h2>
 <p>The empty curly-infix list
 <samp>{}</samp> is intentionally mapped to <samp>()</samp>,
