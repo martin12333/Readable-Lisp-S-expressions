@@ -67,7 +67,7 @@ A
 introduces a list whose visual presentation
 is in infix order instead of prefix order.
 For example,
-<samp>{n&nbsp;&gt;&nbsp;2}</samp> &#8658; <samp>(&gt;&nbsp;n&nbsp;2)</samp>,
+<samp>{n&nbsp;&gt;&nbsp;5}</samp> &#8658; <samp>(&gt;&nbsp;n&nbsp;5)</samp>,
 and
 <samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c}</samp> &#8658;
 <samp>(+&nbsp;a&nbsp;b&nbsp;c)</samp>.
@@ -78,8 +78,8 @@ maps cleanly to
 Forms with mixed infix operators and other complications have
 &#8220;<var>nfx</var>&#8221; prepended to
 enable later macro processing, e.g.,
-<samp>{2&nbsp;+&nbsp;3&nbsp;*&nbsp;5}</samp> &#8658;
-<samp>(nfx&nbsp;2&nbsp;+&nbsp;3&nbsp;*&nbsp;5)</samp>.
+<samp>{4&nbsp;+&nbsp;5&nbsp;*&nbsp;6}</samp> &#8658;
+<samp>(nfx&nbsp;4&nbsp;+&nbsp;5&nbsp;*&nbsp;6)</samp>.
 Also, inside a curly-infix list (recursively),
 expressions of the form <samp>f(...)</samp> are simply
 an abbreviation for <samp>(f&nbsp;...)</samp>.</p>
@@ -684,7 +684,7 @@ adoption.</p>
 
 <p>
 There were two competing alternatives:
-<var>#!srfi-105</var> and <var>#!curly-infix</var>
+<var>#!srfi-105</var> and <var>#!curly-infix</var>.
 </p>
 
 <p>
@@ -1227,11 +1227,11 @@ A simple curly-infix list is mapped by
 the reader into a list with the first even parameter
 followed by the odd parameters.
 E.g.,
-<samp>{n&nbsp;&lt;=&nbsp;2}</samp> &#8658;
-<samp>(&lt;=&nbsp;n&nbsp;2)</samp>,
+<samp>{n&nbsp;&lt;=&nbsp;5}</samp> &#8658;
+<samp>(&lt;=&nbsp;n&nbsp;5)</samp>,
 and
-<samp>{2&nbsp;*&nbsp;3&nbsp;*&nbsp;4}</samp> &#8658;
-<samp>(*&nbsp;2&nbsp;3&nbsp;4)</samp>.</li>
+<samp>{4&nbsp;*&nbsp;5&nbsp;*&nbsp;6}</samp> &#8658;
+<samp>(*&nbsp;4&nbsp;5&nbsp;6)</samp>.</li>
 <li>The <dfn>empty</dfn> curly-infix list
 <samp>{}</samp> is mapped to the empty list <samp>()</samp>.
 An implementation <em>must</em> permit, and not require,
@@ -1302,8 +1302,10 @@ for a datum where <var>e</var> is any datum expression:
 <samp>e(...)</samp> &#8658;
 <samp>(e&nbsp;...)</samp>.
 E.g.,
-<samp>f(1&nbsp;2)</samp> &#8658;
-<samp>(f&nbsp;1&nbsp;2)</samp>,
+<samp>cos(x)</samp> &#8658;
+<samp>(cos&nbsp;x)</samp>,
+<samp>f(a&nbsp;b)</samp> &#8658;
+<samp>(f&nbsp;a&nbsp;b)</samp>,
 <samp>exit()</samp> &#8658;
 <samp>(exit)</samp>, and
 <samp>read(.&nbsp;port)</samp> &#8658;
@@ -1347,8 +1349,8 @@ E.g.,
 </ol>
 <p>Here are some examples of c-expressions (note all operators in curly-infix are delimited):</p>
 <ul>
-<li><samp>{n&nbsp;&lt;=&nbsp;2}</samp> &#8658;
-    <samp>(&lt;=&nbsp;n&nbsp;2)</samp></li>
+<li><samp>{n&nbsp;&lt;=&nbsp;5}</samp> &#8658;
+    <samp>(&lt;=&nbsp;n&nbsp;5)</samp></li>
 <li><samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c}</samp>
 &#8658;
 <samp>(+&nbsp;a&nbsp;b&nbsp;c)</samp></li>
@@ -1368,9 +1370,9 @@ E.g.,
 if there is support for the SRFI-38 external representation
 for data with shared structure
 <li>
-<samp>{length(x)&nbsp;&gt;=&nbsp;3}</samp>
+<samp>{length(x)&nbsp;&gt;=&nbsp;6}</samp>
 &#8658;
-<samp>(&gt;=&nbsp;(length&nbsp;x)&nbsp;3)</samp>
+<samp>(&gt;=&nbsp;(length&nbsp;x)&nbsp;6)</samp>
 </ul>
 
 <p>A <dfn>curly-infix reader</dfn> is a datum reader
