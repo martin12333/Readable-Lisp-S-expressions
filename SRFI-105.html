@@ -174,7 +174,7 @@ A macro for infix would very likely confuse
 the <var>syntax-rules</var> form.
 </p>
 
-<h2><a name="rationale_braces">Why use brace characers for infix?</a></h2>
+<h2><a name="rationale_braces">Why use brace characters for infix?</a></h2>
 <p>
 There is no perfect character, but braces (aka curly braces) are pretty close.
 A key issue is that you want a balanced pair of characters to identify infix,
@@ -301,7 +301,7 @@ constructs like <samp>,op</samp> are legal operators,
 e.g., <samp>{x&nbsp;,op&nbsp;y&nbsp;,op&nbsp;z}</samp>.
 Note that unfortunately if the operator construct contains a cycle, it might not terminate
 if <var>equal?</var> does not terminate in the presence of cycles.
-This was specified this way so that implementors
+This was specified this way so that implementers
 could use the normal Scheme <var>equal?</var> comparison instead of
 having to implement a special comparison operator just for this
 particular case.
@@ -566,11 +566,11 @@ for the default reader (e.g., <var>read</var>), read-eval-print loop (REPL),
 and loader (e.g., <var>load</var>).
 Our ideal would be that implementations would
 enable curly-infix in their normal
-invocation, but some implementors may not want to do that.
+invocation, but some implementers may not want to do that.
 For example, if an implementation already uses braces for a
 different local extension, they may not want to immediately
 switch to curly-infix in their default invocation.
-Thus, if implementors choose to not enable curly-infix in their default
+Thus, if implementers choose to not enable curly-infix in their default
 reader, a conventional command line name &#8220;<var>curly-foo</var>&#8221;
 is defined for each implementation <var>foo</var> that enables it.
 Implementations may have a host of special command-line invocation names,
