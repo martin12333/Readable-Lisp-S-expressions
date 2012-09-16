@@ -165,7 +165,7 @@
           ((char=? c #\{ )
             (read-char port)
             (process-curly
-                (my-read-delimited-list my-read #\} port)))
+                (my-read-delimited-list neoteric-read-real #\} port)))
           ; Handle missing (, [, { :
           ((char=? c #\) )
              (read-char port)
@@ -212,7 +212,7 @@
                 (read-until-delim port neoteric-delimiters))))))))
 
   (define (curly-infix-read-real port)
-    (underlying-read neoteric-read-real port))
+    (underlying-read curly-infix-read-real port))
 
   (define (curly-infix-read . port)
     (if (null? port)
