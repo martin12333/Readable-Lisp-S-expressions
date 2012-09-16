@@ -1685,6 +1685,40 @@ self-contained.&#8221;</p>
         prefix
         (neoteric-process-tail port prefix))))
 
+  ; Support definitions
+
+  (define linefeed (integer->char #x000A))        ; #\newline aka \n.
+  (define carriage-return (integer->char #x000D)) ; \r.
+  (define tab (integer->char #x0009))
+  (define line-tab (integer->char #x000b))
+  (define form-feed (integer->char #x000c))
+  (define line-ending-chars (list linefeed carriage-return))
+  (define whitespace-chars
+    (list tab linefeed line-tab form-feed carriage-return #\space))
+  (define neoteric-delimiters
+     (append (list #\( #\) #\[ #\] #\{ #\}  ; Add [] {}
+                   #\" #\;)                 ; Could add #\# or #\|
+             whitespace-chars))
+
+  (define (char-line-ending? char) (memq char line-ending-chars))
+  (define (ismember? item lyst)
+     (pair? (member item lyst)))
+
+  (define (read-until-delim port delims)
+    ; Read characters until eof or a character in "delims" is seen.
+    ; Do not consume the eof or delimiter.
+    ; Returns the list of chars that were read.
+    (let ((c (peek-char port)))
+      (cond
+         ((eof-object? c) '())
+         ((ismember? c delims) '())
+         (#t (cons (read-char port) (read-until-delim port delims))))))
+
+  (define (read-number port starting-lyst)
+    (string->number (list->string
+      (append starting-lyst
+        (read-until-delim port neoteric-delimiters)))))
+
   (define (consume-to-eol port)
     ; Consume every non-eol character in the current line.
     ; End on EOF or end-of-line char.
@@ -1695,6 +1729,17 @@ self-contained.&#8221;</p>
                   (char-line-ending? c)))
           (read-char port)
           (consume-to-eol port)))))
+
+  (define (consume-whitespace port)
+    (let ((char (peek-char port)))
+      (cond
+        ((eof-object? char) char)
+        ((eqv? char #\;)
+          (consume-to-eol port)
+          (consume-whitespace port))
+        ((my-char-whitespace? char)
+          (read-char port)
+          (consume-whitespace port)))))
 
   ; Modify the main reader so that [] and {} are also delimiters, and so
   ; that when #\{ is detected, read using my-read-delimited-list
