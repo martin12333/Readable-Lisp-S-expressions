@@ -212,7 +212,7 @@
                 (read-until-delim port neoteric-delimiters))))))))
 
   (define (curly-infix-read-real port)
-    (underlying-read curly-infix-read-real port))
+    (underlying-read neoteric-read-real port))
 
   (define (curly-infix-read . port)
     (if (null? port)
