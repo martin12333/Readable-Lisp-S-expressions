@@ -1,15 +1,65 @@
-; This is a simplified reference implementation of a neoteric reader,
-; intended for a SRFI submission.
+; This is a simplified reference implementation of a curly-infix and
+; neoteric reader, intended for a SRFI submission.
+; If run, it invokes a neoteric-reader (which of course accepts curly-infix
+; as well)
 
-; -----------------------------------------------------------------------------
-; Key procedures to implement neoteric-expresions
-; -----------------------------------------------------------------------------
+  ; ------------------------------
+  ; Curly-infix support procedures
+  ; ------------------------------
+
+  ; Return true if lyst has an even # of parameters, and the (alternating)
+  ; first parameters are "op".  Used to determine if a longer lyst is infix.
+  ; If passed empty list, returns true (so recursion works correctly).
+  (define (even-and-op-prefix? op lyst)
+    (cond
+      ((null? lyst) #t)
+      ((not (pair? lyst)) #f)
+      ((not (equal? op (car lyst))) #f) ; fail - operators not the same
+      ((not (pair? (cdr lyst)))  #f) ; Wrong # of parameters or improper
+      (#t   (even-and-op-prefix? op (cddr lyst))))) ; recurse.
+
+  ; Return true if the lyst is in simple infix format
+  ; (and thus should be reordered at read time).
+  (define (simple-infix-list? lyst)
+    (and
+      (pair? lyst)           ; Must have list;  '() doesn't count.
+      (pair? (cdr lyst))     ; Must have a second argument.
+      (pair? (cddr lyst))    ; Must have a third argument (we check it
+                             ; this way for performance)
+      (even-and-op-prefix? (cadr lyst) (cdr lyst)))) ; true if rest is simple
+
+  ; Return alternating parameters in a lyst (1st, 3rd, 5th, etc.)
+  (define (alternating-parameters lyst)
+    (if (or (null? lyst) (null? (cdr lyst)))
+      lyst
+      (cons (car lyst) (alternating-parameters (cddr lyst)))))
+
+  ; Not a simple infix list - transform it.  Written as a separate procedure
+  ; so that future experiments or SRFIs can easily replace just this piece.
+  (define (transform-mixed-infix lyst)
+     (cons 'nfx lyst))
+
+  ; Given curly-infix lyst, map it to its final internal format.
+  (define (process-curly lyst)
+    (cond
+     ((not (pair? lyst)) lyst) ; E.G., map {} to ().
+     ((null? (cdr lyst)) ; Map {a} to a.
+       (car lyst))
+     ((and (pair? (cdr lyst)) (null? (cddr lyst))) ; Map {a b} to (a b).
+       lyst)
+     ((simple-infix-list? lyst) ; Map {a OP b [OP c...]} to (OP a b [c...])
+       (cons (cadr lyst) (alternating-parameters lyst)))
+     (#t  (transform-mixed-infix lyst))))
+
+
+  ; ------------------------------------------------
+  ; Key procedures to implement neoteric-expressions
+  ; ------------------------------------------------
 
   ; Read the "inside" of a list until its matching stop-char, returning list.
   ; stop-char needs to be closing paren, closing bracket, or closing brace.
   ; This is like read-delimited-list of Common Lisp.
-  ; This implements a useful extension: (. b) returns b. This is important
-  ; as an escape for notations that can build on neoteric-expressions
+  ; This implements a useful extension: (. b) returns b.
   (define (my-read-delimited-list stop-char port)
     (let*
       ((c   (peek-char port)))
@@ -87,65 +137,102 @@
   ;     (neoteric-process-tail port prefix)))
 
 
+  ; ------------------------------------------------
+  ; Demo procedures to implement curly-infix and neoteric readers
+  ; ------------------------------------------------
 
-; Here is a demo, suitable so you can try it out in
-; standard Scheme.  The following provide the procedures for supporting
-; curly infix, support for a reader, a reader, and a demo.
+  ; The following provide the procedures for supporting
+  ; curly infix, support for a reader, a reader, and a demo.
+
+  ; This is a "real" sample implementation of neoteric-read
+  ; (neoteric-read just figures out the port and calls neoteric-read-real).
+  ; It implements an entire reader, as a demonstration, but if you can
+  ; update your existing reader you should just update that instead.
+  ; This is a simple R5RS reader, with a few minor (common) extensions.
+  ; The key part is that it implements [] and {} as delimiters, and
+  ; after it reads in some datum (the "prefix"), it calls
+  ; neoteric-process-tail to see if there's a "tail".
+  (define (neoteric-read-real port)
+    (let*
+      ((c (peek-char port))
+       (prefix
+         ; This cond is a normal Scheme reader, puts result in "prefix"
+         ; This implements "read-expression-as-usual" as described above.
+        (cond
+          ((eof-object? c) c)
+          ((char=? c #\;)
+            (consume-to-eol port)
+            (neoteric-read-real port))
+          ((my-char-whitespace? c)
+            (read-char port)
+            (neoteric-read-real port))
+          ((char=? c #\( )
+             (read-char port)
+             (my-read-delimited-list #\) port))
+          ((char=? c #\) )
+             (read-char port)
+             (read-error "Closing parenthesis without opening")
+             (neoteric-read-real port))
+          ((char=? c #\[ )
+             (read-char port)
+             (my-read-delimited-list #\] port))
+          ((char=? c #\] )
+             (read-char port)
+             (read-error "Closing bracket without opening")
+             (neoteric-read-real port))
+          ((char=? c #\{ )
+            (read-char port)
+            (process-curly
+                (my-read-delimited-list #\} port)))
+          ((char=? c #\} )
+             (read-char port)
+             (read-error "Closing brace without opening")
+             (neoteric-read-real port))
+          ((char=? c #\") ; Strings are delimited by ", so can call directly
+            (default-scheme-read port))
+          ((char=? c #\')
+            (read-char port)
+            (list 'quote (neoteric-read-real port)))
+          ((char=? c #\`)
+            (read-char port)
+            (list 'quasiquote (neoteric-read-real port)))
+          ((char=? c #\,)
+            (read-char port)
+              (cond
+                ((char=? #\@ (peek-char port))
+                  (read-char port)
+                  (list 'unquote-splicing (neoteric-read-real port)))
+               (#t
+                (list 'unquote (neoteric-read-real port)))))
+          ((ismember? c digits) ; Initial digit.
+            (read-number port '()))
+          ((char=? c #\#) (process-sharp port))
+          ((char=? c #\.) (process-period port))
+          ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
+             (read-char port)
+             (if (ismember? (peek-char port) digits)
+               (read-number port (list c))
+               (string->symbol (fold-case-maybe port
+                 (list->string (cons c
+                    (read-until-delim port neoteric-delimiters)))))))
+          (#t ; Nothing else.  Must be a symbol start.
+            (string->symbol (fold-case-maybe port
+              (list->string
+                (read-until-delim port neoteric-delimiters))))))))
+      ; Here's the big change to implement neoteric-expressions:
+      (if (eof-object? prefix)
+        prefix
+        (neoteric-process-tail port prefix))))
+
+  (define (neoteric-read . port)
+    (if (null? port)
+      (neoteric-read-real (current-input-port))
+      (neoteric-read-real (car port))))
 
 
-; -----------------------------------------------------------------------------
-; Curly Infix support procedures
-; -----------------------------------------------------------------------------
-
-  ; Return true if lyst has an even # of parameters, and the (alternating)
-  ; first parameters are "op".  Used to determine if a longer lyst is infix.
-  ; If passed empty list, returns true (so recursion works correctly).
-  (define (even-and-op-prefix? op lyst)
-    (cond
-      ((null? lyst) #t)
-      ((not (pair? lyst)) #f)
-      ((not (equal? op (car lyst))) #f) ; fail - operators not the same
-      ((not (pair? (cdr lyst)))  #f) ; Wrong # of parameters or improper
-      (#t   (even-and-op-prefix? op (cddr lyst))))) ; recurse.
-
-  ; Return true if the lyst is in simple infix format
-  ; (and thus should be reordered at read time).
-  (define (simple-infix-list? lyst)
-    (and
-      (pair? lyst)           ; Must have list;  '() doesn't count.
-      (pair? (cdr lyst))     ; Must have a second argument.
-      (pair? (cddr lyst))    ; Must have a third argument (we check it
-                             ; this way for performance)
-      (even-and-op-prefix? (cadr lyst) (cdr lyst)))) ; true if rest is simple
-
-  ; Return alternating parameters in a lyst (1st, 3rd, 5th, etc.)
-  (define (alternating-parameters lyst)
-    (if (or (null? lyst) (null? (cdr lyst)))
-      lyst
-      (cons (car lyst) (alternating-parameters (cddr lyst)))))
-
-  ; Not a simple infix list - transform it.  Written as a separate procedure
-  ; so that future experiments or SRFIs can easily replace just this piece.
-  (define (transform-mixed-infix lyst)
-     (cons 'nfx lyst))
-
-  ; Given curly-infix lyst, map it to its final internal format.
-  (define (process-curly lyst)
-    (cond
-     ((not (pair? lyst)) lyst) ; E.G., map {} to ().
-     ((null? (cdr lyst)) ; Map {a} to a.
-       (car lyst))
-     ((and (pair? (cdr lyst)) (null? (cddr lyst))) ; Map {a b} to (a b).
-       lyst)
-     ((simple-infix-list? lyst) ; Map {a OP b [OP c...]} to (OP a b [c...])
-       (cons (cadr lyst) (alternating-parameters lyst)))
-     (#t  (transform-mixed-infix lyst))))
-
-
-
-; -----------------------------------------------------------------------------
-; Support functions used to re-implement a basic Scheme "read" function
-; -----------------------------------------------------------------------------
+  ; ------------------
+  ; Support procedures
+  ; ------------------
 
   (define digits '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
   (define linefeed (integer->char #x000A))        ; #\newline aka \n.
@@ -340,106 +427,23 @@
                   (#t (read-error "Invalid character name"))))))))))
 
 
-; -----------------------------------------------------------------------------
-; Sample reader
-; -----------------------------------------------------------------------------
+; ---------------------------------------------------
+
+  ; -------------
+  ; Sample reader
+  ; -------------
 
   ; Record the original read location, in case it's changed later.
   (define default-scheme-read read)
-
-  ; This is the "real" implementation of neoteric-read
-  ; (neoteric-read just figures out the port and calls neoteric-read-real).
-  ; It implements an entire reader, as a demonstration, but if you can
-  ; update your existing reader you should just update that instead.
-  ; This is a simple R5RS reader, with a few minor (common) extensions.
-  ; The key part is that it implements [] and {} as delimiters, and
-  ; after it reads in some datum (the "prefix"), it calls
-  ; neoteric-process-tail to see if there's a "tail".
-  (define (neoteric-read-real port)
-    (let*
-      ((c (peek-char port))
-       (prefix
-         ; This cond is a normal Scheme reader, puts result in "prefix"
-         ; This implements "read-expression-as-usual" as described above.
-        (cond
-          ((eof-object? c) c)
-          ((char=? c #\;)
-            (consume-to-eol port)
-            (neoteric-read-real port))
-          ((my-char-whitespace? c)
-            (read-char port)
-            (neoteric-read-real port))
-          ((char=? c #\( )
-             (read-char port)
-             (my-read-delimited-list #\) port))
-          ((char=? c #\) )
-             (read-char port)
-             (read-error "Closing parenthesis without opening")
-             (neoteric-read-real port))
-          ((char=? c #\[ )
-             (read-char port)
-             (my-read-delimited-list #\] port))
-          ((char=? c #\] )
-             (read-char port)
-             (read-error "Closing bracket without opening")
-             (neoteric-read-real port))
-          ((char=? c #\{ )
-            (read-char port)
-            (process-curly
-                (my-read-delimited-list #\} port)))
-          ((char=? c #\} )
-             (read-char port)
-             (read-error "Closing brace without opening")
-             (neoteric-read-real port))
-          ((char=? c #\") ; Strings are delimited by ", so can call directly
-            (default-scheme-read port))
-          ((char=? c #\')
-            (read-char port)
-            (list 'quote (neoteric-read-real port)))
-          ((char=? c #\`)
-            (read-char port)
-            (list 'quasiquote (neoteric-read-real port)))
-          ((char=? c #\,)
-            (read-char port)
-              (cond
-                ((char=? #\@ (peek-char port))
-                  (read-char port)
-                  (list 'unquote-splicing (neoteric-read-real port)))
-               (#t
-                (list 'unquote (neoteric-read-real port)))))
-          ((ismember? c digits) ; Initial digit.
-            (read-number port '()))
-          ((char=? c #\#) (process-sharp port))
-          ((char=? c #\.) (process-period port))
-          ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
-             (read-char port)
-             (if (ismember? (peek-char port) digits)
-               (read-number port (list c))
-               (string->symbol (fold-case-maybe port
-                 (list->string (cons c
-                    (read-until-delim port neoteric-delimiters)))))))
-          (#t ; Nothing else.  Must be a symbol start.
-            (string->symbol (fold-case-maybe port
-              (list->string
-                (read-until-delim port neoteric-delimiters))))))))
-      ; Here's the big change to implement neoteric-expressions:
-      (if (eof-object? prefix)
-        prefix
-        (neoteric-process-tail port prefix))))
-
-  (define (neoteric-read . port)
-    (if (null? port)
-      (neoteric-read-real (current-input-port))
-      (neoteric-read-real (car port))))
 
   (define (enable-neoteric)
     ; possibly also set get-datum
     (set! read neoteric-read))
 
 
-; -----------------------------------------------------------------------------
-; Demo of reader
-; -----------------------------------------------------------------------------
+  ; --------------
+  ; Demo of reader
+  ; --------------
 
   ; repeatedly read in as neoteric, and write traditional s-expression out.
   (define (process-input)
