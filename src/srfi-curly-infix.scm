@@ -147,6 +147,7 @@
   ; This implements an entire reader, as a demonstration, but if you can
   ; update your existing reader you should just update that instead.
   ; This is a simple R5RS reader, with a few minor (common) extensions.
+  ; The "no-indent-read" is called if it has to recurse.
   (define (underlying-read no-indent-read port)
     (let*
       ((c (peek-char port)))
@@ -275,7 +276,8 @@
   ; If fold-case is active on this port, return string "s" in folded case.
   ; Otherwise, just return "s".  This is needed to support our
   ; foldcase-default configuration value when processing symbols.
-  ; The "string-foldcase" function isn't everywhere, so use "string-downcase".
+  ; The "string-foldcase" procedure isn't everywhere,
+  ; so we use "string-downcase".
   (define (fold-case-maybe port s)
     (if foldcase-default
       (string-downcase s)
@@ -434,35 +436,21 @@
                   (#t (read-error "Invalid character name"))))))))))
 
 
-; ---------------------------------------------------
-
-  ; -------------
-  ; Sample reader
-  ; -------------
-
-  ; Record the original read location, in case it's changed later.
+  ; Record the original read location, in case it's changed later:
   (define default-scheme-read read)
-
-  (define (enable-neoteric)
-    ; possibly also set get-datum
-    (set! read neoteric-read))
-
-  (define (enable-curly-infix)
-    ; possibly also set get-datum
-    (set! read curly-infix-read))
 
   ; --------------
   ; Demo of reader
   ; --------------
 
-  ; repeatedly read in as neoteric, and write traditional s-expression out.
+  ; repeatedly read in curly-infix and write traditional s-expression.
   (define (process-input)
     (let ((result (curly-infix-read)))
       (cond
         ((not (eof-object? result))
           (write result)
           (display "\n")
-          (force-output)  ; flush, so can interactively control something else
+          ; (force-output) ; flush, so can interactively control something else
           (process-input)))))
 
   (process-input)
