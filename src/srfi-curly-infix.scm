@@ -144,66 +144,59 @@
   ; The following provide the procedures for supporting
   ; curly infix, support for a reader, a reader, and a demo.
 
-  ; This is a "real" sample implementation of neoteric-read
-  ; (neoteric-read just figures out the port and calls neoteric-read-real).
-  ; It implements an entire reader, as a demonstration, but if you can
+  ; This implements an entire reader, as a demonstration, but if you can
   ; update your existing reader you should just update that instead.
   ; This is a simple R5RS reader, with a few minor (common) extensions.
-  ; The key part is that it implements [] and {} as delimiters, and
-  ; after it reads in some datum (the "prefix"), it calls
-  ; neoteric-process-tail to see if there's a "tail".
-  (define (neoteric-read-real port)
+  (define (underlying-read no-indent-read port)
     (let*
-      ((c (peek-char port))
-       (prefix
-         ; This cond is a normal Scheme reader, puts result in "prefix"
-         ; This implements "read-expression-as-usual" as described above.
+      ((c (peek-char port)))
         (cond
           ((eof-object? c) c)
           ((char=? c #\;)
             (consume-to-eol port)
-            (neoteric-read-real port))
+            (no-indent-read port))
           ((my-char-whitespace? c)
             (read-char port)
-            (neoteric-read-real port))
+            (no-indent-read port))
           ((char=? c #\( )
              (read-char port)
              (my-read-delimited-list #\) port))
-          ((char=? c #\) )
-             (read-char port)
-             (read-error "Closing parenthesis without opening")
-             (neoteric-read-real port))
           ((char=? c #\[ )
              (read-char port)
              (my-read-delimited-list #\] port))
-          ((char=? c #\] )
-             (read-char port)
-             (read-error "Closing bracket without opening")
-             (neoteric-read-real port))
           ((char=? c #\{ )
             (read-char port)
             (process-curly
                 (my-read-delimited-list #\} port)))
+          ; Handle missing (, [, { :
+          ((char=? c #\) )
+             (read-char port)
+             (read-error "Closing parenthesis without opening")
+             (no-indent-read port))
+          ((char=? c #\] )
+             (read-char port)
+             (read-error "Closing bracket without opening")
+             (no-indent-read port))
           ((char=? c #\} )
              (read-char port)
              (read-error "Closing brace without opening")
-             (neoteric-read-real port))
+             (no-indent-read port))
           ((char=? c #\") ; Strings are delimited by ", so can call directly
             (default-scheme-read port))
           ((char=? c #\')
             (read-char port)
-            (list 'quote (neoteric-read-real port)))
+            (list 'quote (no-indent-read port)))
           ((char=? c #\`)
             (read-char port)
-            (list 'quasiquote (neoteric-read-real port)))
+            (list 'quasiquote (no-indent-read port)))
           ((char=? c #\,)
             (read-char port)
               (cond
                 ((char=? #\@ (peek-char port))
                   (read-char port)
-                  (list 'unquote-splicing (neoteric-read-real port)))
+                  (list 'unquote-splicing (no-indent-read port)))
                (#t
-                (list 'unquote (neoteric-read-real port)))))
+                (list 'unquote (no-indent-read port)))))
           ((ismember? c digits) ; Initial digit.
             (read-number port '()))
           ((char=? c #\#) (process-sharp port))
@@ -219,7 +212,21 @@
             (string->symbol (fold-case-maybe port
               (list->string
                 (read-until-delim port neoteric-delimiters))))))))
-      ; Here's the big change to implement neoteric-expressions:
+
+  (define (curly-infix-read-real port)
+    (underlying-read curly-infix-read-real port))
+
+  (define (curly-infix-read . port)
+    (if (null? port)
+      (curly-infix-read-real (current-input-port))
+      (curly-infix-read-real (car port))))
+
+  ; Here's a real neoteric reader.
+  ; The key part is that it implements [] and {} as delimiters, and
+  ; after it reads in some datum (the "prefix"), it calls
+  ; neoteric-process-tail to see if there's a "tail".
+  (define (neoteric-read-real port)
+    (let* ((prefix (underlying-read neoteric-read-real port)))
       (if (eof-object? prefix)
         prefix
         (neoteric-process-tail port prefix))))
@@ -440,6 +447,9 @@
     ; possibly also set get-datum
     (set! read neoteric-read))
 
+  (define (enable-curly-infix)
+    ; possibly also set get-datum
+    (set! read curly-infix-read))
 
   ; --------------
   ; Demo of reader
@@ -447,7 +457,7 @@
 
   ; repeatedly read in as neoteric, and write traditional s-expression out.
   (define (process-input)
-    (let ((result (neoteric-read)))
+    (let ((result (curly-infix-read)))
       (cond
         ((not (eof-object? result))
           (write result)
