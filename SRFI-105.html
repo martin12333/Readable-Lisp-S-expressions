@@ -1683,70 +1683,69 @@ part 2.
   ; This is a simple R5RS reader, with a few minor (common) extensions.
   ; The "my-read" is called if it has to recurse.
   (define (underlying-read my-read port)
-    (let*
-      ((c (peek-char port)))
-        (cond
-          ((eof-object? c) c)
-          ((char=? c #\;)
-            (consume-to-eol port)
-            (my-read port))
-          ((my-char-whitespace? c)
-            (read-char port)
-            (my-read port))
-          ((char=? c #\( )
-             (read-char port)
-             (my-read-delimited-list my-read #\) port))
-          ((char=? c #\[ )
-             (read-char port)
-             (my-read-delimited-list my-read #\] port))
-          ((char=? c #\{ )
-            (read-char port)
-            (process-curly
-                (my-read-delimited-list neoteric-read-real #\} port)))
-          ; Handle missing (, [, { :
-          ((char=? c #\) )
-             (read-char port)
-             (read-error "Closing parenthesis without opening")
-             (my-read port))
-          ((char=? c #\] )
-             (read-char port)
-             (read-error "Closing bracket without opening")
-             (my-read port))
-          ((char=? c #\} )
-             (read-char port)
-             (read-error "Closing brace without opening")
-             (my-read port))
-          ((char=? c #\") ; Strings are delimited by ", so can call directly
-            (default-scheme-read port))
-          ((char=? c #\')
-            (read-char port)
-            (list 'quote (my-read port)))
-          ((char=? c #\`)
-            (read-char port)
-            (list 'quasiquote (my-read port)))
-          ((char=? c #\,)
-            (read-char port)
-              (cond
-                ((char=? #\@ (peek-char port))
-                  (read-char port)
-                  (list 'unquote-splicing (my-read port)))
-               (#t
-                (list 'unquote (my-read port)))))
-          ((ismember? c digits) ; Initial digit.
-            (read-number port '()))
-          ((char=? c #\#) (process-sharp my-read port))
-          ((char=? c #\.) (process-period port))
-          ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
-             (read-char port)
-             (if (ismember? (peek-char port) digits)
-               (read-number port (list c))
-               (string->symbol (fold-case-maybe port
-                 (list->string (cons c
-                    (read-until-delim port neoteric-delimiters)))))))
-          (#t ; Nothing else.  Must be a symbol start.
-            (string->symbol (fold-case-maybe port
-              (list->string
-                (read-until-delim port neoteric-delimiters))))))))
+    (let* ((c (peek-char port)))
+      (cond
+        ((eof-object? c) c)
+        ((char=? c #\;)
+          (consume-to-eol port)
+          (my-read port))
+        ((my-char-whitespace? c)
+          (read-char port)
+          (my-read port))
+        ((char=? c #\( )
+           (read-char port)
+           (my-read-delimited-list my-read #\) port))
+        ((char=? c #\[ )
+           (read-char port)
+           (my-read-delimited-list my-read #\] port))
+        ((char=? c #\{ )
+          (read-char port)
+          (process-curly
+              (my-read-delimited-list neoteric-read-real #\} port)))
+        ; Handle missing (, [, { :
+        ((char=? c #\) )
+           (read-char port)
+           (read-error "Closing parenthesis without opening")
+           (my-read port))
+        ((char=? c #\] )
+           (read-char port)
+           (read-error "Closing bracket without opening")
+           (my-read port))
+        ((char=? c #\} )
+           (read-char port)
+           (read-error "Closing brace without opening")
+           (my-read port))
+        ((char=? c #\") ; Strings are delimited by ", so can call directly
+          (default-scheme-read port))
+        ((char=? c #\')
+          (read-char port)
+          (list 'quote (my-read port)))
+        ((char=? c #\`)
+          (read-char port)
+          (list 'quasiquote (my-read port)))
+        ((char=? c #\,)
+          (read-char port)
+            (cond
+              ((char=? #\@ (peek-char port))
+                (read-char port)
+                (list 'unquote-splicing (my-read port)))
+             (#t
+              (list 'unquote (my-read port)))))
+        ((ismember? c digits) ; Initial digit.
+          (read-number port '()))
+        ((char=? c #\#) (process-sharp my-read port))
+        ((char=? c #\.) (process-period port))
+        ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
+           (read-char port)
+           (if (ismember? (peek-char port) digits)
+             (read-number port (list c))
+             (string->symbol (fold-case-maybe port
+               (list->string (cons c
+                  (read-until-delim port neoteric-delimiters)))))))
+        (#t ; Nothing else.  Must be a symbol start.
+          (string->symbol (fold-case-maybe port
+            (list->string
+              (read-until-delim port neoteric-delimiters))))))))
 
   (define (curly-infix-read-real port)
     (underlying-read curly-infix-read-real port))
