@@ -1500,23 +1500,6 @@ the symbol &#8220;<var>or</var>&#8221;, or a
 punctuation-only symbol. However, it would probably be wise to wait
 until many implementations can handle c-expressions.</p>
 
-<p>
-An s-expression of the form (superop op a b c ...)
-can be expressed in a c-expression dotted notation as:
-(superop&nbsp;.&nbsp;{a&nbsp;op&nbsp;b&nbsp;op&nbsp;c&nbsp;op&nbsp;...})
-So for example, if you want a list of the sum of the numbers in two
-other lists as and bs, you can express that as:
-</p>
-<pre>
-  (map . {as + bs})
-</pre>
-<p>
-Similarly, if you want a procedure that adds 2 to its argument:
-</p>
-<pre>
-  (cut . {&lt;&gt; + 2})
-</pre>
-
 <p>Curly-infix is designed so that it can work on other Lisps as
 well. We even have a working implementation in Common Lisp.</p>
 <p>Curly-infix is an unusually simple mechanism, but like much of
