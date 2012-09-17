@@ -156,28 +156,28 @@
           (read-char port)
           (my-read port))
         ((char=? c #\( )
-           (read-char port)
-           (my-read-delimited-list my-read #\) port))
+          (read-char port)
+          (my-read-delimited-list my-read #\) port))
         ((char=? c #\[ )
-           (read-char port)
-           (my-read-delimited-list my-read #\] port))
+          (read-char port)
+          (my-read-delimited-list my-read #\] port))
         ((char=? c #\{ )
           (read-char port)
           (process-curly
               (my-read-delimited-list neoteric-read-real #\} port)))
         ; Handle missing (, [, { :
         ((char=? c #\) )
-           (read-char port)
-           (read-error "Closing parenthesis without opening")
-           (my-read port))
+          (read-char port)
+          (read-error "Closing parenthesis without opening")
+          (my-read port))
         ((char=? c #\] )
-           (read-char port)
-           (read-error "Closing bracket without opening")
-           (my-read port))
+          (read-char port)
+          (read-error "Closing bracket without opening")
+          (my-read port))
         ((char=? c #\} )
-           (read-char port)
-           (read-error "Closing brace without opening")
-           (my-read port))
+          (read-char port)
+          (read-error "Closing brace without opening")
+          (my-read port))
         ((char=? c #\") ; Strings are delimited by ", so can call directly
           (default-scheme-read port))
         ((char=? c #\')
@@ -192,19 +192,19 @@
               ((char=? #\@ (peek-char port))
                 (read-char port)
                 (list 'unquote-splicing (my-read port)))
-             (#t
-              (list 'unquote (my-read port)))))
+              (#t
+                (list 'unquote (my-read port)))))
         ((ismember? c digits) ; Initial digit.
           (read-number port '()))
         ((char=? c #\#) (process-sharp my-read port))
         ((char=? c #\.) (process-period port))
         ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
-           (read-char port)
-           (if (ismember? (peek-char port) digits)
-             (read-number port (list c))
-             (string->symbol (fold-case-maybe port
-               (list->string (cons c
-                  (read-until-delim port neoteric-delimiters)))))))
+          (read-char port)
+          (if (ismember? (peek-char port) digits)
+            (read-number port (list c))
+            (string->symbol (fold-case-maybe port
+              (list->string (cons c
+                (read-until-delim port neoteric-delimiters)))))))
         (#t ; Nothing else.  Must be a symbol start.
           (string->symbol (fold-case-maybe port
             (list->string
