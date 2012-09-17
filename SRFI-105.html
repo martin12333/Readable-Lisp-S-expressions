@@ -457,6 +457,21 @@ a particular treatment for the pattern.
 A macro for infix would very likely confuse
 the <var>syntax-rules</var> form.
 </p>
+<p>
+A reader notation that
+maps to a simple and obvious s-expression structure
+also allows
+notations such as
+<samp>(map&nbsp;.&nbsp;{as&nbsp;+&nbsp;bs})</samp>
+&#8658;
+<samp>(map&nbsp;+&nbsp;as&nbsp;bs)</samp>.
+For example,
+in combination with
+<a href="http://srfi.schemers.org/srfi-26/srfi-26.html">SRFI-26</a>,
+you can express
+templated procedures:
+<samp>(cut&nbsp;.&nbsp;{&lt;&gt;&nbsp;&lt;&nbsp;42})</samp>
+</p>
 
 <h2><a name="rationale_braces">Why use brace characters for infix?</a></h2>
 <p>
