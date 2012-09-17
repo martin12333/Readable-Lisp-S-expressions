@@ -142,6 +142,33 @@ more operands are handled cleanly.
 E.g., <samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c}</samp> &#8658;
 <samp>(+&nbsp;a&nbsp;b&nbsp;c)</samp>.</p>
 
+<p>A few examples of c-expressions and their mappings are:</p>
+<ul>
+<li><samp>{n&nbsp;&lt;=&nbsp;5}</samp> &#8658;
+    <samp>(&lt;=&nbsp;n&nbsp;5)</samp></li>
+<li><samp>{a * {b + c}}</samp> &#8658; <samp>(* a (+ b c))</samp></li>
+<li><samp>{x eqv? &#96;a}</samp> &#8658; <samp>(eqv? x &#96;a)</samp></li>
+<li><samp>{-(a) / b}</samp> &#8658; <samp>(/ (- a) b)</samp></li>
+<li><samp>{f(a b) + g(h)}</samp> &#8658; <samp>(+ (f a b) (g h))</samp></li>
+<li><samp>{{a &gt; 0} and {b &gt;= 1}}</samp> &#8658;
+<samp>(and (&gt; a 0) (&gt;= b 1))</samp></li>
+<li>
+<samp>{length(x)&nbsp;&gt;=&nbsp;6}</samp>
+&#8658;
+<samp>(&gt;=&nbsp;(length&nbsp;x)&nbsp;6)</samp>
+</ul>
+
+<p>
+This SRFI rationale is unusually long, especially when you compare it to
+the simplicity of its specification.
+However, the notation described in this SRFI builds on the
+lessons learned from the many previous infix mechanisms that have been
+developed for Scheme and related Lisp-based languages.
+The authors believe that it is important to document why various
+decisions were made, in particular, to show why this approach is
+an improvement over past approaches and more likely to gain wide acceptance.
+</p>
+
 <h2><a name="rationale_changereader">Why not macros? Why modify the reader?</a></h2>
 <p>Many previous systems have implemented &#8220;infix&#8221;
 systems as a named macro or procedure (e.g., <var>INFIX</var>).
