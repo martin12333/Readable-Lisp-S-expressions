@@ -407,6 +407,15 @@ Implementations <em>may</em> provide the procedure
 <var>(curly-infix-read .  port)</var> as a curly-infix reader.
 </p>
 
+<p>
+Security implication: If the implementation does not check for
+circularity when doing equality comparisons, and a supplier of
+malicious data supplier can specify a circularity,
+the reader could fail to terminate when comparing infix operators.
+In the worst case this could cause a a denial of service.
+A solution is to check for circularity when comparing operators.
+</p>
+
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
 
 <h1><a name="design-rationale">Design Rationale</a></h1>
