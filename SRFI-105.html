@@ -273,7 +273,7 @@ and
 &#8658;
 <samp>(g&nbsp;(-&nbsp;x))</samp>.</li>
 <li><samp>e[...]</samp> &#8658;
-<samp>(bracketaccess&nbsp;e&nbsp;...)</samp></li>
+<samp>($bracket-apply$&nbsp;e&nbsp;...)</samp></li>
 <li>There must be no whitespace between <samp>e</samp> and the open paired character.</li>
 <li>An unprefixed <samp>(&nbsp;.&nbsp;e)</samp> must evaluate as <samp>e</samp>.</li>
 <li>
@@ -1396,7 +1396,7 @@ use the normal term-prefixing format instead, e.g.,
 </li>
 <li>
 Prefixed square brackets <samp>e[...]</samp> &#8658;
-<samp>(bracketaccess&nbsp;e&nbsp;...)</samp>.
+<samp>($bracket-apply$&nbsp;e&nbsp;...)</samp>.
 This is intended to simplify use of indexed arrays, associative arrays, and similar constructs.
 </li>
 </ul>
@@ -1475,6 +1475,14 @@ with some badly-formatted code, and some errors might not result in
 incorrectly-interpreted expressions.  But this was an odd limitation,
 and in some cases other prefixes made sense (e.g., for strings).
 This was changed to eliminate the inconsistency.</p>
+
+<p>
+The symbol <var>$bracket-apply$</var> was once <var>bracketaccess</var>,
+but it turns out that the Kawa Scheme implementation already used
+<var>$bracket-apply$</var>.
+The symbol <var>$bracket-apply$</var> is somewhat more awkward to type
+directly, but this is actually a good thing; this means it is even more
+unlikely to be used unintentionally by user code.
 
 <p>Neoteric-expressions used to be called &#8220;modern-expressions&#8221;.
 But some people didn&#8217;t like that name,
@@ -1658,7 +1666,7 @@ part 2.
           ((char=? c #\[ )  ; Implement f[x]
             (read-char port)
             (neoteric-process-tail port
-                  (cons 'bracketaccess
+                  (cons '$bracket-apply$
                     (cons prefix
                       (my-read-delimited-list neoteric-read-real #\] port)))))
           ((char=? c #\{ )  ; Implement f{x}. Balance }
