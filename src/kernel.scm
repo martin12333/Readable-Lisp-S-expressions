@@ -1021,7 +1021,7 @@
             (my-read-char port)
             (neoteric-process-tail port
                 (attach-sourceinfo pos
-                  (cons (attach-sourceinfo pos 'bracketaccess)
+                  (cons (attach-sourceinfo pos '$bracket-apply$)
                     (cons prefix
                       (my-read-delimited-list neoteric-read-nocomment #\] port))))))
           ((char=? c #\{ )  ; Implement f{x}

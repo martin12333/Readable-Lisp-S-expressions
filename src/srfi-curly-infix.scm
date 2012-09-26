@@ -115,7 +115,7 @@
           ((char=? c #\[ )  ; Implement f[x]
             (read-char port)
             (neoteric-process-tail port
-                  (cons 'bracketaccess
+                  (cons '$bracket-apply$
                     (cons prefix
                       (my-read-delimited-list neoteric-read-real #\] port)))))
           ((char=? c #\{ )  ; Implement f{x}. Balance }

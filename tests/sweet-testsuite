@@ -682,11 +682,11 @@ zz
      ; ignore
 
 
-(bracketaccess b)
+($bracket-apply$ b)
 b[]
 
 
-(bracketaccess b q)
+($bracket-apply$ b q)
 b[q]
 
 (a . port)
