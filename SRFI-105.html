@@ -410,7 +410,7 @@ Implementations <em>may</em> provide the procedure
 <p>
 Security implication: If the implementation does not check for
 circularity when doing equality comparisons, and a supplier of
-malicious data supplier can specify a circularity,
+malicious data can specify a circularity,
 the reader could fail to terminate when comparing infix operators.
 In the worst case this could cause a a denial of service.
 A solution is to check for circularity when comparing operators.
@@ -507,12 +507,14 @@ character encoding problems, and they are harder to enter on many keyboards.
 In contrast, curly braces are in the ASCII character set and are
 already available for this purpose.
 They do not have a standardized meaning in any Scheme specification.
+<!-- Status unclear at time of this writing, so omitted:
 There is even a Scheme
 <a href="http://trac.sacrideo.us/wg/ticket/468">R7RS ticket #468</a>
 that would expressly forbid brackets and curly braces in identifiers;
 if accepted (which seems likely at this writing) it would even further
 enshrine the notion that braces are special and should be reserved
 for some special syntactic purpose other than being in identifiers.
+-->
 They are also widely available in many other Lisp-derived languages,
 such as Common Lisp
 (as we&#8217;d like this notation to be widely useful across Lisps,
@@ -1273,8 +1275,8 @@ For example, in SIX, using an infix <samp>+</samp> in the input
 generates <samp>six.x+y</samp>, not <samp>+</samp>, in the read result.
 This means that macros may have to be specially designed to work with SIX.
 In contrast, in curly-infix, <samp>{x&nbsp;+&nbsp;y}</samp> actually
-generates <samp>(+&nbsp;x&nbsp;y)</samp>, so curly-infix works in a better
-way with other macros and with quoting rules.</li>
+generates <samp>(+&nbsp;x&nbsp;y)</samp>, so curly-infix cleanly
+interacts with macros and quoting.</li>
 </ul>
 
 <p>
@@ -1297,7 +1299,7 @@ It includes
 <a href="http://gnuvola.org/software/guile/doc/Reading-Infix.html">support
 for reading infix expressions</a>.
 Once activated, infix expressions are surrounded by #[ and ].
-Infix are surrounded by whitespace.
+Infix operators are surrounded by whitespace.
 It supports precedence, which sounds like an advantage,
 but operators must be registered before use (and few are predefined),
 creating an opportunity for terrible errors if the expression
@@ -1317,7 +1319,7 @@ requiring a more complex implementation and understanding.
 Its registration system creates serious problems when trying to use it
 for larger systems.
 This infix notation has not been accepted into the version of
-guile used by most people, so it is very much not portable.
+guile used by most people, so it is not even portable among most guile users.
 But perhaps the biggest problem is that this notation is fundamentally
 not homoiconic; it is harder to determine where lists begin and end
 with it.</p>
@@ -1460,9 +1462,10 @@ for syntactically separating parameters.</li>
 Many implementations allow an identifier to end in a comma, see:
 http://trac.sacrideo.us/wg/wiki/CommaInIdentifiers
 -->
-<p>Many other languages do use commas, but they are required in those
-languages because infix operators need not be surrounded by any marker.
-Since infix operations must be surrounded by
+<p>Many other languages do use commas, but they are required
+because an expression that uses infix order
+need not be surrounded by any marker.
+Since an infix expression must be surrounded by
 <code>{</code>...<code>}</code> in our notation,
 there is no need for <em>additional</em> commas for parameter separation.</p>
 <p>Experimentation found that separating parameters solely by whitespace
@@ -1504,17 +1507,18 @@ pay no attention to &#8220;Microcosmic God&#8221; by Theodore Sturgeon :-).
 </p>
 
 <p>The neoteric rules do introduce the risk of someone inserting
-a space between the function name and the opening <code>(</code>.
-But whitespace is already significant as a parameter separator, so this
-is consistent with how Scheme works today... this is not really a
-change at all.</p>
+a space between the function name and the opening character
+(e.g., an open parenthesis).
+But whitespace is already significant as a parameter separator; since
+this is how Scheme already works, this represents no change at all.</p>
 
-<p>Obviously, this is trivial to parse.  We don&#8217;t lose any power,
-because this is completely optional -- we only use it when we want to,
-and we can switch back to the traditional s-expression notation if we
-want to.  It&#8217;s trivially quoted... if you quote a symbol followed
+<p>Obviously, this is trivial to parse.
+No power is lost, because this is completely optional;
+developers can use it when they want to,
+and they can use traditional s-expression notation if they want to.
+It&#8217;s trivially quoted... if you quote a symbol followed
 by <code>(</code>, just keep going until its matching <code>)</code>,
-which is essentially the same rule as before!</p>
+which is essentially the same rule as before.</p>
 
 <h2><a name="rationale_otherdetails">Other details</a></h2>
 <p>There is no requirement that writers (e.g., &#8220;<var>write</var>&#8221;
@@ -1525,8 +1529,9 @@ the symbol &#8220;<var>or</var>&#8221;, or a
 punctuation-only symbol. However, it would probably be wise to wait
 until many implementations can handle c-expressions.</p>
 
-<p>Curly-infix is designed so that it can work on other Lisps as
-well. We even have a working implementation in Common Lisp.</p>
+<p>Curly-infix is designed so that it can work on other Lisps as well,
+which should simplify adoption elsewhere.</p>
+
 <p>Curly-infix is an unusually simple mechanism, but like much of
 any Lisp-based language, its power comes from its simplicity.</p>
 
@@ -1552,7 +1557,7 @@ to show its use.
 This SRFI is trivial to implement, so most of the code is actually in
 part 2.
 </p>
-<h2>Key code to implement SRFI</h2>
+<h2>Key code to implement this SRFI</h2>
 <pre>
   ; ------------------------------
   ; Curly-infix support procedures
