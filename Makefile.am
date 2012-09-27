@@ -15,7 +15,7 @@ SHELL = /bin/sh
 
 # As a convenience for testing, we *also* create scripts in the *current*
 # (top) directory that will depend on the local "readable/" versions,
-# *EVEN IF* another version of the reable library is installed.
+# *EVEN IF* another version of the readable library is installed.
 # This way, when testing, you can just use
 # ./unsweeten (or whatever) and it will depend on the development version
 # without having to set an environment variable (which is easy to forget).
