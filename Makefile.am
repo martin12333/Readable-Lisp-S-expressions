@@ -52,7 +52,8 @@ CLEANFILES = readable/kernel.scm
 script_sources = src/sweeten.sscm src/unsweeten \
                  src/curly-guile src/neoteric-guile src/sweet-guile \
                  src/sweet-run src/sweet-scsh \
-                 src/kernel.scm
+                 src/kernel.scm \
+                 src/srfi-curly-infix.scm
 EXTRA_DIST += $(script_sources)
 
 # These scripts are generated at build time, so they're not distributed
@@ -220,6 +221,9 @@ dist_doc_DATA = README COPYING AUTHORS ChangeLog solution.md tutorial.md
 # Presentation in Open Document Format (.odp) about these formats:
 dist_doc_DATA += readable-s-expressions.odp
 
+# Include SRFI-105 specification as documentation (defines curly-infix):
+dist_doc_DATA += SRFI-105.html
+
 # Distribute the specs.  They're not up-to-date, but they
 # are referred to in the README, so distribute them too
 # as users may be puzzled if they're not there.
@@ -280,4 +284,3 @@ pull:
 
 test:
 	make check
-
