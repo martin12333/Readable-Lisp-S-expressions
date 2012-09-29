@@ -341,16 +341,17 @@ after reading this marker, the reader <em>must</em> accept
 curly-infix expressions in subsequent datums
 until it reaches an end-of-file or some other conflicting marker
 (no conflicting marker is specified here).
-We encourage implementations to <em>always</em>
+Implementations <em>should</em> always
 implement curly-infix expressions, even when the marker is not received.
-Applications should include this marker before
+Applications <em>should</em> include this marker before
 using curly-infix expressions, typically near the top of a file.
-We recommend that portable applications do <em>not</em>
-use this marker as the first characters
+Portable applications <em>should not</em>
+use this marker as the very first characters
 of a file (e.g., a newline should precede it),
 to prevent misinterpretation as an executable script header.
 </p>
 
+<!--
 <p>The &#8220;<dfn>standard readers</dfn>&#8221;
 are the datum reader used by the REPL,
 the datum readers defined by the relevant Scheme standards
@@ -381,30 +382,42 @@ a graphical user interface (GUI), it
 <em>must</em> provide a documented means to ensure that its
 standard readers are curly-infix enabled on startup.
 </p>
+-->
 
 <p>
-An implementation <em>must not</em>, by default, bind the symbol
-&#8220;<var>nfx</var>&#8221; to a procedure, macro, or syntax
+An implementation <em>must not</em>, by default,
+bind the symbols
+&#8220;<var>nfx</var>&#8221; or
+&#8220;<var>$bracket-access$</var>&#8221;
+to a procedure, macro, or syntax
 that <em>cannot</em> be overridden.
-An implementation <em>should not</em> bind the symbol
-&#8220;<var>nfx</var>&#8221; to a procedure, macro, or syntax in the
+An implementation <em>should not</em> bind the symbols
+&#8220;<var>nfx</var>&#8221; or
+&#8220;<var>$bracket-access$</var>&#8221;
+to a procedure, macro, or syntax in the
 default environment, with the exception that it
-may bind it by default to something that produces an error.
-This symbol is reserved for use by library writers
+may bind them by default to something that produces an error.
+These symbols are reserved for use by library writers
 (in the case of a library-based implementation of this SRFI,
-this symbol is reserved for use by <em>other</em> libraries)
+these symbols are
+reserved for use by <em>other</em> libraries)
 and application writers.
 </p>
 <p>
-<em>However</em>, an implementation <em>may</em> provide one or more
+<em>However</em>, an implementation <em>may</em>
+provide one or more
 <em>libraries</em> that when imported
-bind the &#8220;<var>nfx</var>&#8221; symbol
+bind the &#8220;<var>nfx</var>&#8221; and/or
+&#8220;<var>$bracket-access$</var>&#8221;
+symbols
 (as it is then a library, this case actually falls under
 the &#8220;reserved for use by library writers&#8221; clause above).
 Application writers and other library writers
 using that implementation are then free to use or not use
-the implementation&#8217;s provided &#8220;<var>nfx</var>&#8221; as provided
-by those libraries.
+the implementation&#8217;s provided
+&#8220;<var>nfx</var>&#8221; and/or
+&#8220;<var>$bracket-access$</var>&#8221;
+as provided by those libraries.
 </p>
 
 <p>
@@ -422,6 +435,13 @@ A solution is to check for circularity when comparing operators.
 </p>
 
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
+
+<p>
+The key words &#8220;MUST&#8221;, &#8220;MUST NOT&#8221;, &#8220;REQUIRED&#8221;, &#8220;SHALL&#8221;,
+&#8220;SHALL NOT&#8221;, &#8220;SHOULD&#8221;, &#8220;SHOULD NOT&#8221;,
+&#8220;RECOMMENDED&#8221;, &#8220;MAY&#8221;, and &#8220;OPTIONAL&#8221; in this
+document are to be interpreted as described in IETF RFC 2119.
+</p>
 
 <h1><a name="design-rationale">Design Rationale</a></h1>
 
