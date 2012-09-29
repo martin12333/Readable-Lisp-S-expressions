@@ -152,10 +152,11 @@ for details on why the notation is designed the way it is.
 
 
 <h1><a name="specification">Specification</a></h1>
-<p>&#8220;<dfn>Curly-infix-expressions</dfn>&#8221; or &#8220;<dfn>c-expressions</dfn>&#8221; are
-s-expressions with an additional notation: The curly-infix list.
+<p>&#8220;<dfn>Curly-infix-expressions</dfn>&#8221; (aka &#8220;<dfn>c-expressions</dfn>&#8221;) are
+s-expressions with an additional supported notation:
+The curly-infix list.
 A curly-infix list is syntactically almost identical to a regular list,
-but it is surrounded by braces instead of by parentheses, and instead of
+but it is surrounded by a matched pair of braces instead of by a pair of parentheses, and instead of
 a sequence of s-expressions it contains a sequence of
 neoteric-expressions (which add support for formats like <samp>f(x)</samp>).
 Once a curly-infix list is read, it is mapped differently than a
@@ -239,7 +240,7 @@ were any neoteric-expressions), and
 a matching &#8220;}&#8221;.
 -->
 <p>
-A &#8220;<dfn>neoteric-expression</dfn>&#8221; or &#8220;<dfn>n-expression</dfn>&#8221;
+A &#8220;<dfn>neoteric-expression</dfn>&#8221; (aka &#8220;<dfn>n-expression</dfn>&#8221;)
 is a curly-infix-expression, with the following additional syntaxes
 for a datum where <var>e</var> is any datum expression:
 </p>
@@ -293,6 +294,10 @@ E.g.,
 <samp>((f&nbsp;(-&nbsp;n&nbsp;1))&nbsp;x)</samp>
 </li>
 </ol>
+
+<p>
+Note that since n-expressions include unsuffixed c-expressions, and c-expressions include s-expressions, an unsuffixed s-expression is also an n-expression.</p>
+
 <p>Here are some examples of c-expressions (note that all operators in curly-infix are delimited):</p>
 <ul>
 <li><samp>{n&nbsp;&lt;=&nbsp;5}</samp> &#8658;
