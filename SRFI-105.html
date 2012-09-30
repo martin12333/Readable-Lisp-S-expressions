@@ -168,12 +168,17 @@ for details on why the notation is designed the way it is.
 
 <h1><a name="specification">Specification</a></h1>
 <p>
-The key words &#8220;MUST&#8221;, &#8220;MUST NOT&#8221;,
-&#8220;REQUIRED&#8221;, &#8220;SHALL&#8221;,
-&#8220;SHALL NOT&#8221;, &#8220;SHOULD&#8221;,
-&#8220;SHOULD NOT&#8221;,
-&#8220;RECOMMENDED&#8221;, &#8220;MAY&#8221;,
-and &#8220;OPTIONAL&#8221; in this
+The key words
+&#8220;<em>MUST</em>&#8221;,
+&#8220;<em>MUST NOT</em>&#8221;,
+&#8220;<em>REQUIRED</em>&#8221;,
+&#8220;<em>SHALL</em>&#8221;,
+&#8220;<em>SHALL NOT</em>&#8221;,
+&#8220;<em>SHOULD</em>&#8221;,
+&#8220;<em>SHOULD NOT</em>&#8221;,
+&#8220;<em>RECOMMENDED</em>&#8221;,
+&#8220;<em>MAY</em>&#8221;,
+and &#8220;<em>OPTIONAL</em>&#8221; in this
 document are to be interpreted as described in
 <a href="http://www.ietf.org/rfc/rfc2119.txt">RFC 2119</a>.
 </p>
@@ -347,24 +352,28 @@ for data with shared structure
 
 <p>A <dfn>curly-infix reader</dfn> is a datum reader
 that can correctly read and map curly-infix-expressions.
-A curly-infix reader <em>must</em>
+A curly-infix reader <em>MUST</em>
 include the braces &#8220;<code>{</code>&#8221; and
 &#8220;<code>}</code>&#8221; as delimiters.</p>
 
 <p>
-An implementation of this SRFI <em>must</em> accept the marker
+An implementation of this SRFI <em>MUST</em> accept the marker
 <var>#!curly-infix</var> followed by a whitespace character.
 This marker (including the trailing whitespace character)
-is consumed and considered whitespace;
-after reading this marker, the reader <em>must</em> accept
+<em>MUST</em> be consumed and considered whitespace.
+After reading this marker, the reader <em>MUST</em> accept
 curly-infix expressions in subsequent datums
 until it reaches an end-of-file or some other conflicting marker
 (no conflicting marker is specified here).
-Implementations <em>should</em> always
-implement curly-infix expressions, even when the marker is not received.
-Applications <em>should</em> include this marker before
+</p>
+
+<p>
+Implementations of this SRFI <em>SHOULD</em>
+implement curly-infix expressions in their datum readers by default,
+even when the marker is not received.
+Applications <em>SHOULD</em> include this marker before
 using curly-infix expressions, typically near the top of a file.
-Portable applications <em>should not</em>
+Portable applications <em>SHOULD NOT</em>
 use this marker as the very first characters
 of a file (e.g., a newline should precede it),
 to prevent misinterpretation as an executable script header.
@@ -404,26 +413,26 @@ standard readers are curly-infix enabled on startup.
 -->
 
 <p>
-An implementation <em>must not</em>, by default,
+An implementation <em>MUST NOT</em>
 bind the symbols
 &#8220;<var>nfx</var>&#8221; or
 &#8220;<var>$bracket-access$</var>&#8221;
-to a procedure, macro, or syntax
+by default to a procedure, macro, or syntax
 that <em>cannot</em> be overridden.
-An implementation <em>should not</em> bind the symbols
+An implementation <em>SHOULD NOT</em> bind the symbols
 &#8220;<var>nfx</var>&#8221; or
 &#8220;<var>$bracket-access$</var>&#8221;
 to a procedure, macro, or syntax in the
 default environment, with the exception that it
 may bind them by default to something that produces an error.
-These symbols are reserved for use by library writers
+These two symbols are reserved for use by library writers
 (in the case of a library-based implementation of this SRFI,
 these symbols are
 reserved for use by <em>other</em> libraries)
 and application writers.
 </p>
 <p>
-<em>However</em>, an implementation <em>may</em>
+<em>However</em>, an implementation <em>MAY</em>
 provide one or more
 <em>libraries</em> that when imported
 bind the &#8220;<var>nfx</var>&#8221; and/or
@@ -440,8 +449,9 @@ as provided by those libraries.
 </p>
 
 <p>
-Implementations <em>may</em> provide the procedure
-<var>(curly-infix-read [port])</var> as a curly-infix reader with optional port parameter.
+Implementations <em>MAY</em> provide the procedure
+<var>(curly-infix-read [port])</var> as a
+curly-infix reader with optional port parameter.
 </p>
 
 <p>
