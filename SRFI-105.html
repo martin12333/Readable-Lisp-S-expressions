@@ -2086,5 +2086,10 @@ Notes on HTML 3.2:
   so we cannot use "&apos;" to represent it.  Instead, this file
   uses &#39; for single vertical apostrophe.  That way, it will
   not be converted later to curly quotes by "quoter" and similar tools.
+* HTML 3.2 doesn't allow <style...> in the head; but this is
+  commonly-implemented, and implementations that don't will just
+  back off to a less-pretty format.
+* HTML 3.2 doesn't allow <div> to declare a class, but this is
+  widely implemented, and helpful for the CSS.  Systems that
+  don't implement it can trivially back off of it.
 -->
-
