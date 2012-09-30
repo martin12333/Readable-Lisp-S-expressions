@@ -379,39 +379,6 @@ of a file (e.g., a newline should precede it),
 to prevent misinterpretation as an executable script header.
 </p>
 
-<!--
-<p>The &#8220;<dfn>standard readers</dfn>&#8221;
-are the datum reader used by the REPL,
-the datum readers defined by the relevant Scheme standards
-(such as &#8220;<var>read</var>&#8221; and where applicable
-&#8220;<var>get-datum</var>&#8221;),
-and the readers used to load user-supplied code
-as defined by the relevant Scheme standards
-(e.g., the reader used by &#8220;<var>load</var>&#8221;
-and module-loading mechanisms for user code).
-The standard readers are <dfn>curly-infix enabled</dfn> if the standard
-readers are curly-infix readers.</p>
-
-<p>
-An implementation of this SRFI <em>must</em>
-have its standard readers be curly-infix enabled.
-We encourage implementations&#8217; <em>default</em> invocation to
-have their standard readers be curly-infix enabled,
-but this is <em>not</em> required.
-If the standard readers are not curly-infix enabled
-in an implementation&#8217;s default invocation,
-then if it has a default command line invocation line using some command
-&#8220;<var>foo</var>&#8221;, the implementation
-<em>must</em> provide an alternative command &#8220;<var>curly-foo</var>&#8221;
-(the command prefixed with &#8220;<code>curly-</code>&#8221;) in which
-its standard readers <em>are</em> curly-infix enabled.
-In addition, if the implementation is invokable as
-a graphical user interface (GUI), it
-<em>must</em> provide a documented means to ensure that its
-standard readers are curly-infix enabled on startup.
-</p>
--->
-
 <p>
 An implementation <em>MUST NOT</em>
 bind the symbols
@@ -554,14 +521,6 @@ character encoding problems, and they are harder to enter on many keyboards.
 In contrast, curly braces are in the ASCII character set and are
 already available for this purpose.
 They do not have a standardized meaning in any Scheme specification.
-<!-- Status unclear at time of this writing, so omitted:
-There is even a Scheme
-<a href="http://trac.sacrideo.us/wg/ticket/468">R7RS ticket #468</a>
-that would expressly forbid brackets and curly braces in identifiers;
-if accepted (which seems likely at this writing) it would even further
-enshrine the notion that braces are special and should be reserved
-for some special syntactic purpose other than being in identifiers.
--->
 They are also widely available in many other Lisp-derived languages,
 such as Common Lisp
 (as we&#8217;d like this notation to be widely useful across Lisps,
@@ -891,7 +850,7 @@ capability is being used.
 as it <em>is</em> an
 empty list, and this is the likely user meaning (reducing
 unnecessary errors).</p>
-<!-- dwheeler says: I think we have to mention n-expressions and t-expressions
+<!-- dwheeler says: I think we have to mention t-expressions
 here, because they are part of the rationale for these semantics. -->
 <p>The one and two parameter cases are defined in part to reduce user error,
 and in part to provide better support:
