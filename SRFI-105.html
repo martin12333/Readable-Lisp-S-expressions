@@ -152,6 +152,17 @@ for details on why the notation is designed the way it is.
 
 
 <h1><a name="specification">Specification</a></h1>
+<p>
+The key words &#8220;MUST&#8221;, &#8220;MUST NOT&#8221;,
+&#8220;REQUIRED&#8221;, &#8220;SHALL&#8221;,
+&#8220;SHALL NOT&#8221;, &#8220;SHOULD&#8221;,
+&#8220;SHOULD NOT&#8221;,
+&#8220;RECOMMENDED&#8221;, &#8220;MAY&#8221;,
+and &#8220;OPTIONAL&#8221; in this
+document are to be interpreted as described in
+<a href="http://www.ietf.org/rfc/rfc2119.txt">RFC 2119</a>.
+</p>
+
 <p>&#8220;<dfn>Curly-infix-expressions</dfn>&#8221; (aka &#8220;<dfn>c-expressions</dfn>&#8221;) are
 s-expressions with an additional supported notation:
 The curly-infix list.
@@ -232,13 +243,6 @@ a table to force a reasonable format.
 </tr>
 </table>
 
-<!--
-it begins with &#8220;{&#8221;, optional whitespace,
-a sequence of zero or more whitespace-separated
-<em>neoteric-expressions</em>, optionally more whitespace (if there
-were any neoteric-expressions), and
-a matching &#8220;}&#8221;.
--->
 <p>
 A &#8220;<dfn>neoteric-expression</dfn>&#8221; (aka &#8220;<dfn>n-expression</dfn>&#8221;)
 is a curly-infix-expression, with the following additional syntaxes
@@ -435,13 +439,6 @@ A solution is to check for circularity when comparing operators.
 </p>
 
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
-
-<p>
-The key words &#8220;MUST&#8221;, &#8220;MUST NOT&#8221;, &#8220;REQUIRED&#8221;, &#8220;SHALL&#8221;,
-&#8220;SHALL NOT&#8221;, &#8220;SHOULD&#8221;, &#8220;SHOULD NOT&#8221;,
-&#8220;RECOMMENDED&#8221;, &#8220;MAY&#8221;, and &#8220;OPTIONAL&#8221; in this
-document are to be interpreted as described in IETF RFC 2119.
-</p>
 
 <h1><a name="design-rationale">Design Rationale</a></h1>
 
