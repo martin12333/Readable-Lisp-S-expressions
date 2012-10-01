@@ -198,7 +198,7 @@ parameters, at least three parameters, and all even parameters are
 &#8220;<var>equal?</var>&#8221;.
 If there is more than one even parameter, and
 an even parameter contains a cycle, then
-the <var>equal?</var> comparison <em>must</em> terminate
+the <var>equal?</var> comparison <em>MUST</em> terminate
 if <var>equal?</var> terminates (otherwise
 the comparison <em>may</em> terminate).
 A simple curly-infix list is mapped by
@@ -212,7 +212,7 @@ and
 <samp>(*&nbsp;4&nbsp;5&nbsp;6)</samp>.</li>
 <li>The <dfn>empty</dfn> curly-infix list
 <samp>{}</samp> is mapped to the empty list <samp>()</samp>.
-An implementation <em>must</em> permit, and not require,
+An implementation <em>MUST</em> permit, and not require,
 whitespace between the braces in an empty curly-infix list.</li>
 <li>An <dfn>escaping</dfn> curly-infix list
 <samp>{e}</samp> is mapped to <samp>e</samp>.
@@ -230,7 +230,7 @@ E.g.,
 <samp>{.&nbsp;e}</samp> to <samp>e</samp>.)
 </li>
 <li>Any other curly-infix list (including all other improper lists) is
-<dfn>mixed</dfn>.  A mixed curly-infix list <em>must</em> be mapped to that list with &#8220;<var>nfx</var>&#8221; added to its front.
+<dfn>mixed</dfn>.  A mixed curly-infix list <em>MUST</em> be mapped to that list with &#8220;<var>nfx</var>&#8221; added to its front.
 E.g.,
 <samp>{q&nbsp;+&nbsp;r&nbsp;*&nbsp;s}</samp>
 is mapped to
@@ -299,8 +299,8 @@ and
 <samp>(g&nbsp;(-&nbsp;x))</samp>.</li>
 <li><samp>e[...]</samp> &#8658;
 <samp>($bracket-apply$&nbsp;e&nbsp;...)</samp></li>
-<li>There must be no whitespace between <samp>e</samp> and the open paired character.</li>
-<li>An unprefixed <samp>(&nbsp;.&nbsp;e)</samp> must evaluate as <samp>e</samp>.</li>
+<li>There <em>MUST NOT</em> be whitespace between <samp>e</samp> and the open paired character for this mapping to apply.</li>
+<li>An unprefixed <samp>(&nbsp;.&nbsp;e)</samp> <em>MUST</em> evaluate as <samp>e</samp>.</li>
 <li>
 These recurse within lists,
 so lists contains sequences
@@ -360,8 +360,10 @@ include the braces &#8220;<code>{</code>&#8221; and
 &#8220;<code>}</code>&#8221; as delimiters.</p>
 
 <p>
-An implementation of this SRFI <em>MUST</em> accept the marker
-<var>#!curly-infix</var> followed by a whitespace character.
+An implementation of this SRFI <em>MUST</em> accept
+the marker <var>#!curly-infix</var> followed by a whitespace character
+in its standard datum readers (e.g., <var>read</var> and, if applicable,
+the default implementation REPL).
 This marker (including the trailing whitespace character)
 <em>MUST</em> be consumed and considered whitespace.
 After reading this marker, the reader <em>MUST</em> accept
@@ -378,7 +380,7 @@ Portable applications <em>SHOULD</em> include this marker before
 using curly-infix expressions, typically near the top of a file.
 Portable applications <em>SHOULD NOT</em>
 use this marker as the very first characters
-of a file (e.g., a newline should precede it),
+of a file (e.g., it could be preceded by a newline),
 to prevent misinterpretation as an executable script header.
 </p>
 
