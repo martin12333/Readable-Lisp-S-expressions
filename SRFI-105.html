@@ -200,7 +200,7 @@ If there is more than one even parameter, and
 an even parameter contains a cycle, then
 the <var>equal?</var> comparison <em>MUST</em> terminate
 if <var>equal?</var> terminates (otherwise
-the comparison <em>may</em> terminate).
+the comparison <em>MAY</em> terminate).
 A simple curly-infix list is mapped by
 the reader into a list with the first even parameter
 followed by the odd parameters.
@@ -299,7 +299,7 @@ and
 <samp>(g&nbsp;(-&nbsp;x))</samp>.</li>
 <li><samp>e[...]</samp> &#8658;
 <samp>($bracket-apply$&nbsp;e&nbsp;...)</samp></li>
-<li>There <em>MUST NOT</em> be whitespace between <samp>e</samp> and the open paired character for this mapping to apply.</li>
+<li>There <em>MUST NOT</em> be whitespace between <samp>e</samp> and the open paired character for the above mappings to apply.</li>
 <li>An unprefixed <samp>(&nbsp;.&nbsp;e)</samp> <em>MUST</em> evaluate as <samp>e</samp>.</li>
 <li>
 These recurse within lists,
@@ -396,7 +396,7 @@ An implementation <em>SHOULD NOT</em> bind the symbols
 &#8220;<var>$bracket-access$</var>&#8221;
 to a procedure, macro, or syntax in the
 default environment, with the exception that it
-may bind them by default to something that produces an error.
+<em>MAY</em> bind them by default to something that produces an error.
 These two symbols are reserved for use by library writers
 (in the case of a library-based implementation of this SRFI,
 these symbols are
