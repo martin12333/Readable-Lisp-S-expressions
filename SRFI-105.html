@@ -871,9 +871,9 @@ for grouping:
 is equivalent to
 <samp>(+&nbsp;a&nbsp;b)</samp>.
 It ensures that the neoteric-expression
-<samp>f{x}</samp> becomes the likely-intended <samp>(f x)</samp>,
-and also makes it easy to use prefix notation; e.g.,
-<samp>{&nbsp;f(x)&nbsp;}</samp> is just another way to write
+<samp>f{x}</samp> becomes the likely-intended <samp>(f x)</samp>.
+It easy to use prefix notation; e.g.,
+<samp>{&nbsp;f(x)&nbsp;}</samp> is another way to write
 <samp>(f&nbsp;x)</samp>.
 Finally, it also provides an easy escape mechanism
 in sweet-expressions for symbols
@@ -887,6 +887,21 @@ the likely interpretation, and also so that the neoteric-expressions like
 <samp>(f&nbsp;(-&nbsp;x))</samp> are interpreted properly.
 </li>
 </ol>
+<p>
+Note that prefix notation can be enabled throughout a
+define statement by surrounding it with curly braces, since
+enclosing a single datum (such as a single list)
+simply passes it through:
+</p>
+<pre>
+{(define my_cadr(x)
+  car(cdr(x)))}
+{(define my_abs(x)
+  (if {x >= 0}
+    x
+    -(x)))}
+</pre>
+
 
 <h2><a name="rationale_marker">Why a marker starting with <var>#!</var> and a letter?</a></h2>
 
