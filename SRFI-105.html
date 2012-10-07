@@ -388,12 +388,12 @@ to prevent misinterpretation as an executable script header.
 An implementation <em>MUST NOT</em>
 bind the symbols
 &#8220;<var>nfx</var>&#8221; or
-&#8220;<var>$bracket-access$</var>&#8221;
+&#8220;<var>$bracket-apply$</var>&#8221;
 by default to a procedure, macro, or syntax
 that <em>cannot</em> be overridden.
 An implementation <em>SHOULD NOT</em> bind the symbols
 &#8220;<var>nfx</var>&#8221; or
-&#8220;<var>$bracket-access$</var>&#8221;
+&#8220;<var>$bracket-apply$</var>&#8221;
 to a procedure, macro, or syntax in the
 default environment, with the exception that it
 <em>MAY</em> bind them by default to something that produces an error.
@@ -408,7 +408,7 @@ and application writers.
 provide one or more
 <em>libraries</em> that when imported
 bind the &#8220;<var>nfx</var>&#8221; and/or
-&#8220;<var>$bracket-access$</var>&#8221;
+&#8220;<var>$bracket-apply$</var>&#8221;
 symbols
 (as it is then a library, this case actually falls under
 the &#8220;reserved for use by library writers&#8221; clause above).
@@ -416,7 +416,7 @@ Application writers and other library writers
 using that implementation are then free to use or not use
 the implementation&#8217;s provided
 &#8220;<var>nfx</var>&#8221; and/or
-&#8220;<var>$bracket-access$</var>&#8221;
+&#8220;<var>$bracket-apply$</var>&#8221;
 as provided by those libraries.
 </p>
 
