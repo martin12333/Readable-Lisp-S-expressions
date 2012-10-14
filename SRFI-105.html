@@ -381,7 +381,8 @@ using curly-infix expressions, typically near the top of a file.
 Portable applications <em>SHOULD NOT</em>
 use this marker as the very first characters
 of a file (e.g., it could be preceded by a newline),
-to prevent misinterpretation as an executable script header.
+because they might be misinterpreted on some platforms
+as an executable script header.
 </p>
 
 <p>
@@ -1485,6 +1486,7 @@ but it turns out that the Kawa Scheme implementation already used
 The symbol <var>$bracket-apply$</var> is somewhat more awkward to type
 directly, but this is actually a good thing; this means it is even more
 unlikely to be used unintentionally by user code.
+Similar reasoning applies to <var>$nfx$</var>.
 
 <p>Neoteric-expressions used to be called &#8220;modern-expressions&#8221;.
 But some people didn&#8217;t like that name,
