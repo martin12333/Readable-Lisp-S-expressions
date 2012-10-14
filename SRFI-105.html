@@ -92,10 +92,10 @@ By intent, there is no precedence, but e.g.,
 maps cleanly to
 <samp>(+&nbsp;x&nbsp;(*&nbsp;y&nbsp;z))</samp>.
 Forms with mixed infix operators and other complications have
-&#8220;<var>nfx</var>&#8221; prepended to
+&#8220;<var>$nfx$</var>&#8221; prepended to
 enable later macro processing, e.g.,
 <samp>{4&nbsp;+&nbsp;5&nbsp;*&nbsp;6}</samp> &#8658;
-<samp>(nfx&nbsp;4&nbsp;+&nbsp;5&nbsp;*&nbsp;6)</samp>.
+<samp>($nfx$&nbsp;4&nbsp;+&nbsp;5&nbsp;*&nbsp;6)</samp>.
 Also, inside a curly-infix list (recursively),
 expressions of the form <samp>f(...)</samp> are simply
 an abbreviation for <samp>(f&nbsp;...)</samp>.</p>
@@ -230,14 +230,14 @@ E.g.,
 <samp>{.&nbsp;e}</samp> to <samp>e</samp>.)
 </li>
 <li>Any other curly-infix list (including all other improper lists) is
-<dfn>mixed</dfn>.  A mixed curly-infix list <em>MUST</em> be mapped to that list with &#8220;<var>nfx</var>&#8221; added to its front.
+<dfn>mixed</dfn>.  A mixed curly-infix list <em>MUST</em> be mapped to that list with &#8220;<var>$nfx$</var>&#8221; added to its front.
 E.g.,
 <samp>{q&nbsp;+&nbsp;r&nbsp;*&nbsp;s}</samp>
 is mapped to
-<samp>(nfx&nbsp;q&nbsp;+&nbsp;r&nbsp;*&nbsp;s)</samp>, and
+<samp>($nfx$&nbsp;q&nbsp;+&nbsp;r&nbsp;*&nbsp;s)</samp>, and
 <samp>{q&nbsp;+&nbsp;r&nbsp;.&nbsp;s}</samp>
 is mapped to
-<samp>(nfx&nbsp;q&nbsp;+&nbsp;r&nbsp;.&nbsp;s)</samp>.
+<samp>($nfx$&nbsp;q&nbsp;+&nbsp;r&nbsp;.&nbsp;s)</samp>.
 </li>
 </ol>
 <p>
@@ -387,12 +387,12 @@ to prevent misinterpretation as an executable script header.
 <p>
 An implementation <em>MUST NOT</em>
 bind the symbols
-&#8220;<var>nfx</var>&#8221; or
+&#8220;<var>$nfx$</var>&#8221; or
 &#8220;<var>$bracket-apply$</var>&#8221;
 by default to a procedure, macro, or syntax
 that <em>cannot</em> be overridden.
 An implementation <em>SHOULD NOT</em> bind the symbols
-&#8220;<var>nfx</var>&#8221; or
+&#8220;<var>$nfx$</var>&#8221; or
 &#8220;<var>$bracket-apply$</var>&#8221;
 to a procedure, macro, or syntax in the
 default environment, with the exception that it
@@ -407,7 +407,7 @@ and application writers.
 <em>However</em>, an implementation <em>MAY</em>
 provide one or more
 <em>libraries</em> that when imported
-bind the &#8220;<var>nfx</var>&#8221; and/or
+bind the &#8220;<var>$nfx$</var>&#8221; and/or
 &#8220;<var>$bracket-apply$</var>&#8221;
 symbols
 (as it is then a library, this case actually falls under
@@ -415,7 +415,7 @@ the &#8220;reserved for use by library writers&#8221; clause above).
 Application writers and other library writers
 using that implementation are then free to use or not use
 the implementation&#8217;s provided
-&#8220;<var>nfx</var>&#8221; and/or
+&#8220;<var>$nfx$</var>&#8221; and/or
 &#8220;<var>$bracket-apply$</var>&#8221;
 as provided by those libraries.
 </p>
@@ -689,7 +689,7 @@ precedence order, or anything like it.
 We also ensure that the notation is clearly homoiconic.</p>
 <p>Instead, where precedence is desired, application and library writers
 can implement precedence by defining and controlling the scope of an
-&#8220;<var>nfx</var>&#8221; macro or procedure, or by later postprocessing
+&#8220;<var>$nfx$</var>&#8221; macro or procedure, or by later postprocessing
 of that symbol.
 Scheme macros are already quite powerful and capable of handling this;
 in these cases, <code>{</code>...<code>}</code> provides a more
@@ -715,7 +715,7 @@ and
 who started this project,
 considered reporting an error if a simple infix
 expression isn&#8217;t provided.
-However, prepending &#8220;<var>nfx</var>&#8221;
+However, prepending &#8220;<var>$nfx$</var>&#8221;
 is much more flexible.</p>
 
 <h2><a name="rationale_precedence_addable">Could precedence be added?</a></h2>
@@ -737,7 +737,7 @@ arbitrary new symbols, as shown below.
 Here is an example of such an extension, called a &#8220;math&#8221; extension.
 In this extension, if a mixed curly-infix list is seen,
 it first attempts to apply the &#8220;math&#8221; ruleset, and only
-prepends &#8220;nfx&#8221; if it does not meet the requirements.  In this extension:
+prepends &#8220;$nfx$&#8221; if it does not meet the requirements.  In this extension:
 </p>
 <ol>
 <li>All even-numbered parameters must be symbols, there must be an odd number of parameters, and there must be at least five parameters (the minimum to have more than one operator).
@@ -757,7 +757,7 @@ This allows the use of many more operators, e.g.,
 same precedence as &#8220;&lt;=&#8221;.
 If there&#8217;s still no match for any operator,
 the expression does not meet the &#8220;math&#8221; ruleset, and
-the normal mixed rules are used (<var>nfx</var> is inserted at the front).
+the normal mixed rules are used (<var>$nfx$</var> is inserted at the front).
 </li>
 <li>
 When the same operator is repeated, the operator simply gains another operand, so {a + b + c * d} is the &#8220;+&#8221; operator applied to three operands: a, b, and (* c d).
@@ -822,7 +822,7 @@ The key point is that although this SRFI does not include a precedence system,
 one (such as these) could be added later.
 If a precedence system were added, all existing code using simple
 curly-infix expressions, or 0..2 parameter expressions, would work unchanged.
-Even when it&#8217;s not, many &#8220;nfx&#8221; processors would likely generate the
+Even when it&#8217;s not, many &#8220;$nfx$&#8221; processors would likely generate the
 same order in most actual cases.
 Since it would be difficult to gain such agreement, and the value of
 such a system is doubtful, it is better to provide a much simpler
@@ -830,21 +830,21 @@ system that does not include precedence.
 Again, any support for precedence is an extension beyond this SRFI.
 </p>
 
-<h2><a name="rationale_nfx_undefined">Why is nfx not predefined?</a></h2>
-<p>Implementations should not predefine a meaning for <i>nfx</i>,
+<h2><a name="rationale_nfx_undefined">Why is $nfx$ not predefined?</a></h2>
+<p>Implementations should not predefine a meaning for <i>$nfx$</i>,
 other than possibly to something that always produces an error
 (e.g., raises an exception).
 </p>
 <p>
-If anyone wrote code that depended on some local implementation of nfx,
+If anyone wrote code that depended on some local implementation of $nfx$,
 then by definition it would become implementation-dependent.
-Yet the point of the &#8220;nfx&#8221; macro is to allow application authors
+Yet the point of the &#8220;$nfx$&#8221; macro is to allow application authors
 the ability to control what to do in that case,
 not to make them unwittingly dependent on an implementation.
 </p>
 <p>
 Of course, an implementation could provide a pre-canned macro that could
-be used as a definition of nfx.  But in that case, importing the
+be used as a definition of $nfx$.  But in that case, importing the
 library would be an explicit act,
 easily seen in the code, instead of being hidden.
 That way, it is easy to determine when an implementation-dependent
@@ -1100,7 +1100,7 @@ would map to
 and
 <samp>(a&nbsp;.&nbsp;+&nbsp;.&nbsp;b&nbsp;.&nbsp;*&nbsp;.&nbsp;c)</samp>
 would map to
-<samp>(nfx&nbsp;a&nbsp;+&nbsp;b&nbsp;*&nbsp;c)</samp>.
+<samp>($nfx$&nbsp;a&nbsp;+&nbsp;b&nbsp;*&nbsp;c)</samp>.
 Note that the existence of the Racket &#8220;infix
 convention&#8221; is additional evidence of the <em>need</em> for a
 standard infix convention; many have separately created mechanisms
@@ -1193,7 +1193,7 @@ and even if they have not been defined yet.
 </li>
 <li>Because it has a precedence system, it is necessarily less homoiconic
 when precedence is used.
-Note that curly-infix supports precedence via <var>nfx</var>, and
+Note that curly-infix supports precedence via <var>$nfx$</var>, and
 a built-in precedence system <em>could</em> be added later
 if this was desired by the community.
 </li>
@@ -1595,7 +1595,7 @@ part 2.
   ; Not a simple infix list - transform it.  Written as a separate procedure
   ; so that future experiments or SRFIs can easily replace just this piece.
   (define (transform-mixed-infix lyst)
-     (cons 'nfx lyst))
+     (cons '$nfx$ lyst))
 
   ; Given curly-infix lyst, map it to its final internal format.
   (define (process-curly lyst)
