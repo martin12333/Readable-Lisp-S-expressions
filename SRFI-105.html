@@ -241,7 +241,7 @@ is mapped to
 </li>
 </ol>
 <p>
-Here is the precise definition of a curly-infix list
+Here is the syntax of a curly-infix list
 (which is nearly identical to a traditional list):
 </p>
 <!--
@@ -266,7 +266,8 @@ a table to force a reasonable format.
 <p>
 A &#8220;<dfn>neoteric-expression</dfn>&#8221; (aka &#8220;<dfn>n-expression</dfn>&#8221;)
 is a curly-infix-expression, with the following additional syntaxes
-for a datum where <var>e</var> is any datum expression:
+and mappings
+for a datum (where <var>e</var> is any datum expression):
 </p>
 <ol>
 <li>
@@ -1483,10 +1484,13 @@ This was changed to eliminate the inconsistency.</p>
 The symbol <var>$bracket-apply$</var> was once <var>bracketaccess</var>,
 but it turns out that the Kawa Scheme implementation already used
 <var>$bracket-apply$</var>.
-The symbol <var>$bracket-apply$</var> is somewhat more awkward to type
+Originally <var>$nfx$</var> was <var>nfx</var>, as this was used by some
+predefined macros for infix notation; it was changed slightly so that it
+would not interfere with any pre-existing <var>nfx</var> procedure or macro.
+The symbols <var>$bracket-apply$</var>
+and <var>$nfx$</var> are somewhat more awkward to type
 directly, but this is actually a good thing; this means it is even more
 unlikely to be used unintentionally by user code.
-Similar reasoning applies to <var>$nfx$</var>.
 
 <p>Neoteric-expressions used to be called &#8220;modern-expressions&#8221;.
 But some people didn&#8217;t like that name,
