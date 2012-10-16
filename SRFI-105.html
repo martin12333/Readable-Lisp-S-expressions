@@ -303,10 +303,18 @@ and
 <li>There <em>MUST NOT</em> be whitespace between <samp>e</samp> and the open paired character for the above mappings to apply.</li>
 <li>An unprefixed <samp>(&nbsp;.&nbsp;e)</samp> <em>MUST</em> evaluate as <samp>e</samp>.</li>
 <li>
-These recurse within lists,
-so lists contains sequences
+These <em>MUST</em> recurse within lists and vectors,
+so any list or vector
+in a position that accepts a neoteric expression
+<em>MUST</em> accept a sequence
 of zero or more <em>neoteric</em> expressions,
-not s-expressions.
+not just s-expressions.
+(Note that this occurs if they are directly or directly
+within a curly-infix list or a neoteric-expression.)
+Any other implementation-specific constructs
+in a position that accepts a neoteric expression
+<em>SHOULD</em> accept neoteric-expressions within it.
+</li>
 <li>
 These recurse left-to-right.
 E.g.,
@@ -324,6 +332,8 @@ E.g.,
 Note that any s-expression is also an n-expression,
 because n-expressions include c-expressions
 and c-expressions include s-expressions.
+Also note that where datum comments are supported using <samp>#;</samp>,
+it <em>SHOULD</em> comment the datum as defined above.
 </p>
 
 <p>Here are some examples of c-expressions (note that all operators in curly-infix are delimited):</p>
@@ -334,7 +344,7 @@ and c-expressions include s-expressions.
 &#8658;
 <samp>(+&nbsp;a&nbsp;b&nbsp;c)</samp></li>
 <li><samp>{x&nbsp;,op&nbsp;y&nbsp;,op&nbsp;z}</samp> &#8658;
-    <samp>(,op&nbsp;x&nbsp;y&nbsp;z}</samp>
+    <samp>(,op&nbsp;x&nbsp;y&nbsp;z}</samp></li>
 <li><samp>{a * {b + c}}</samp> &#8658; <samp>(* a (+ b c))</samp></li>
 <li><samp>{x eqv? &#96;a}</samp> &#8658; <samp>(eqv? x &#96;a)</samp></li>
 <li><samp>{(- a) / b}</samp> &#8658; <samp>(/ (- a) b)</samp></li>
@@ -347,11 +357,29 @@ and c-expressions include s-expressions.
 <li><samp>{&#39;f(x)}</samp> &#8658; <samp>(quote&nbsp;(f&nbsp;x))</samp></li>
 <li><samp>#1=f(#1#)</samp> &#8658; <samp>#1=(f #1#)</samp>
 if there is support for the SRFI-38 external representation
-for data with shared structure
+for data with shared structure</li>
 <li>
 <samp>{length(x)&nbsp;&gt;=&nbsp;6}</samp>
 &#8658;
-<samp>(&gt;=&nbsp;(length&nbsp;x)&nbsp;6)</samp>
+<samp>(&gt;=&nbsp;(length&nbsp;x)&nbsp;6)</samp></li>
+<li>
+<samp>{&nbsp;(f&nbsp;(g&nbsp;h(x)))&nbsp;}</samp>
+&#8658;
+<samp>(f&nbsp;(g&nbsp;(h&nbsp;x)))</samp>
+... note that this is not
+<samp>(f&nbsp;(g&nbsp;h&nbsp;(x)))</samp>
+</li>
+<li>
+<samp>{#(1&nbsp;2&nbsp;f(a)&nbsp;4)}</samp>
+&#8658;
+<samp>#(1&nbsp;2&nbsp;(f&nbsp;a)&nbsp;4)</samp></li>
+<li>
+<samp>{(f&nbsp;#;g(x)&nbsp;h(x))}</samp>
+&#8658;
+<samp>(f&nbsp;(h&nbsp;x))</samp>
+if datum comments are supported... note that this is not
+<samp>(f&nbsp;(x)&nbsp;(h&nbsp;x))</samp>
+</li>
 </ul>
 
 <p>A <dfn>curly-infix reader</dfn> is a datum reader
