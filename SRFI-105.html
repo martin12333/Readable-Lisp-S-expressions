@@ -380,6 +380,51 @@ for data with shared structure</li>
 if datum comments are supported... note that this is not
 <samp>(f&nbsp;(x)&nbsp;(h&nbsp;x))</samp>
 </li>
+<li>
+<samp>{n-1&nbsp;+&nbsp;n-2}</samp>
+&#8658;
+<samp>(+&nbsp;n-1&nbsp;n-2)</samp>
+</li>
+<li>
+<samp>{(map&nbsp;-&nbsp;ns)}</samp>
+&#8658;
+<samp>(map&nbsp;-&nbsp;ns)</samp>
+</li>
+<li>
+<samp>{map(-&nbsp;ns)}</samp>
+&#8658;
+<samp>(map&nbsp;-&nbsp;ns)</samp>
+</li>
+<li>
+<samp>{n * factorial{n - 1}}</samp>
+&#8658;
+<samp>(* n (factorial (- n 1)))</samp>
+</li>
+<li>
+<samp>{3 + 4 +}</samp>
+&#8658;
+<samp>($nfx$ 3 + 4 +)</samp>
+</li>
+<li>
+<samp>{3 + 4 + 5 +}</samp>
+&#8658;
+<samp>($nfx$ 3 + 4 + 5 +)</samp>
+</li>
+<li>
+<samp>{a . z}</samp>
+&#8658;
+<samp>($nfx$ a . z)</samp>
+</li>
+<li>
+<samp>{a + b - c}</samp>
+&#8658;
+<samp>($nfx$ a + b - c)</samp>
+</li>
+<li>
+<samp>{f(x) + g(y) + h(z)}</samp>
+&#8658;
+<samp>(+ (f x) (g y) (h z))</samp>
+</li>
 </ul>
 
 <p>A <dfn>curly-infix reader</dfn> is a datum reader
