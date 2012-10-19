@@ -329,11 +329,11 @@ E.g.,
 </ol>
 
 <p>
+Where datum comments are supported using <samp>#;</samp>,
+datum comments <em>SHOULD</em> comment the datum as defined above.
 Note that any s-expression is also an n-expression,
 because n-expressions include c-expressions
 and c-expressions include s-expressions.
-Also note that where datum comments are supported using <samp>#;</samp>,
-it <em>SHOULD</em> comment the datum as defined above.
 </p>
 
 <p>Here are some examples of c-expressions (note that all operators in curly-infix are delimited):</p>
@@ -354,7 +354,8 @@ it <em>SHOULD</em> comment the datum as defined above.
 <li><samp>&#39;{a + f(b) + x}</samp> &#8658; <samp>&#39;(+ a (f b) x)</samp></li>
 <li><samp>{{a &gt; 0} and {b &gt;= 1}}</samp> &#8658;
 <samp>(and (&gt; a 0) (&gt;= b 1))</samp></li>
-<li><samp>{&#39;f(x)}</samp> &#8658; <samp>(quote&nbsp;(f&nbsp;x))</samp></li>
+<li><samp>{&#39;f(x)}</samp> &#8658; <samp>&#39;(f&nbsp;x)</samp></li>
+<li><samp>{&#39;a + b}</samp> &#8658; <samp>(+&nbsp;&#39;a&nbsp;b)</samp></li>
 <li><samp>#1=f(#1#)</samp> &#8658; <samp>#1=(f #1#)</samp>
 if there is support for the SRFI-38 external representation
 for data with shared structure</li>
@@ -393,7 +394,7 @@ if datum comments are supported... note that this is not
 <li>
 <samp>{map(-&nbsp;ns)}</samp>
 &#8658;
-<samp>(map&nbsp;-&nbsp;ns)</samp>
+<samp>(map&nbsp;-&nbsp;ns)</samp> as well
 </li>
 <li>
 <samp>{n * factorial{n - 1}}</samp>
@@ -421,9 +422,41 @@ if datum comments are supported... note that this is not
 <samp>($nfx$ a + b - c)</samp>
 </li>
 <li>
+<samp>{{a + b} - c}</samp>
+&#8658;
+<samp>(- (+ a b) c)</samp>
+</li>
+<li>
 <samp>{f(x) + g(y) + h(z)}</samp>
 &#8658;
 <samp>(+ (f x) (g y) (h z))</samp>
+</li>
+<li>
+<samp>{}</samp>
+&#8658;
+<samp>()</samp>
+</li>
+<li>
+<samp>{5}</samp>
+&#8658;
+<samp>5</samp>
+</li>
+<li>
+<samp>{- x}</samp>
+&#8658;
+<samp>(- x)</samp>
+</li>
+<li>
+<samp>{read(.&nbsp;options)}</samp> &#8658;
+<samp>(read&nbsp;.&nbsp;options)</samp>
+</li>
+<li>
+<samp>{e{}}</samp> &#8658;
+<samp>(e)</samp>
+</li>
+<li>
+<samp>{pi()}</samp> &#8658;
+<samp>(pi)</samp>
 </li>
 </ul>
 
@@ -1010,6 +1043,8 @@ The marker is read up to a whitespace; this is consistent with
 <a href="http://trac.sacrideo.us/wg/ticket/447">Scheme R7RS ticket #447</a>.
 This makes easy to distinguish between markers if one marker
 begins with the same characters as another entire marker.
+The marker semantics are assigned to the port (not to the end-of-file),
+again, to make it more consistent with other markers.
 </p>
 
 <p>
