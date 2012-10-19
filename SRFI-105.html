@@ -309,7 +309,7 @@ in a position that accepts a neoteric expression
 <em>MUST</em> accept a sequence
 of zero or more <em>neoteric</em> expressions,
 not just s-expressions.
-(Note that this occurs if they are directly or directly
+(Note that this occurs if they are directly or indirectly
 within a curly-infix list or a neoteric-expression.)
 Any other implementation-specific constructs
 in a position that accepts a neoteric expression
@@ -442,7 +442,7 @@ This marker (including the trailing whitespace character)
 <em>MUST</em> be consumed and considered whitespace.
 After reading this marker, the reader <em>MUST</em> accept
 curly-infix expressions in subsequent datums
-until it reaches an end-of-file or some other conflicting marker
+read from the same port until some other conflicting marker is given
 (no conflicting marker is specified here).
 </p>
 
