@@ -1567,6 +1567,26 @@ and <var>$nfx$</var> are somewhat more awkward to type
 directly, but this is actually a good thing; this means it is even more
 unlikely to be used unintentionally by user code.
 
+<p>
+This SRFI is intentionally silent on the interpretation of unprefixed
+square brackets, because
+different Schemes (as well as other Lisps) interpret
+square brackets differently.
+One
+<a href="http://trac.sacrideo.us/wg/wiki/BracketsBraces">survey of
+Scheme implementations with brackets and braces</a>
+shows these differences;
+several Scheme implementations follow the R6RS specification that
+accepts <samp>[...]</samp> as a synonym for <samp>(...)</samp>,
+GNU Kawa interprets <samp>[...]</samp> as the redefinable constructor
+<samp>($bracket-list$&nbsp;...)</samp>,
+and two implementations (Rep and FemtoLisp) use them as vector constructors.
+By intentionally not defining the interpretation of unprefixed
+square brackets, implementations are free to continue to use whatever
+interpretation their users are used to, and users can easily access
+that interpretation.
+</p>
+
 <p>Neoteric-expressions used to be called &#8220;modern-expressions&#8221;.
 But some people didn&#8217;t like that name,
 and the obvious abbreviation (&#8220;m-expression&#8221;)
