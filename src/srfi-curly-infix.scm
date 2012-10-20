@@ -121,7 +121,7 @@
           ((char=? c #\{ )  ; Implement f{x}
             (read-char port)
             (neoteric-process-tail port
-              (let ((tail (process-curly 
+              (let ((tail (process-curly
                       (my-read-delimited-list neoteric-read-real #\} port))))
                 (if (eqv? tail '())
                   (list prefix) ; Map f{} to (f), not (f ()).
@@ -166,7 +166,7 @@
         ((char=? c #\{ )
           (read-char port)
           (process-curly
-              (my-read-delimited-list neoteric-read-real #\} port)))
+            (my-read-delimited-list neoteric-read-real #\} port)))
         ; Handle missing (, [, { :
         ((char=? c #\) )
           (read-char port)
