@@ -337,32 +337,79 @@ and c-expressions include s-expressions.
 </p>
 
 <p>Here are some examples of c-expressions (note that all operators in curly-infix are delimited):</p>
-<ul>
+<ol>
 <li><samp>{n&nbsp;&lt;=&nbsp;5}</samp> &#8658;
     <samp>(&lt;=&nbsp;n&nbsp;5)</samp></li>
+<li><samp>{x&nbsp;+&nbsp;1}</samp>
+&#8658;
+<samp>(+&nbsp;x&nbsp;1)</samp></li>
 <li><samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c}</samp>
 &#8658;
 <samp>(+&nbsp;a&nbsp;b&nbsp;c)</samp></li>
 <li><samp>{x&nbsp;,op&nbsp;y&nbsp;,op&nbsp;z}</samp> &#8658;
     <samp>(,op&nbsp;x&nbsp;y&nbsp;z)</samp></li>
-<li><samp>{a * {b + c}}</samp> &#8658; <samp>(* a (+ b c))</samp></li>
 <li><samp>{x eqv? &#96;a}</samp> &#8658; <samp>(eqv? x &#96;a)</samp></li>
-<li><samp>{(- a) / b}</samp> &#8658; <samp>(/ (- a) b)</samp></li>
-<li><samp>{-(a) / b}</samp> &#8658; <samp>(/ (- a) b)</samp> as well</li>
-<li><samp>{(f a b) + (g h)}</samp> &#8658; <samp>(+ (f a b) (g h))</samp></li>
-<li><samp>{f(a b) + g(h)}</samp> &#8658; <samp>(+ (f a b) (g h))</samp> as well</li>
-<li><samp>&#39;{a + f(b) + x}</samp> &#8658; <samp>&#39;(+ a (f b) x)</samp></li>
+<li><samp>{&#39;a eq? b}</samp> &#8658; <samp>(eq?&nbsp;&#39;a&nbsp;b)</samp></li>
+<li>
+<samp>{n-1&nbsp;+&nbsp;n-2}</samp>
+&#8658;
+<samp>(+&nbsp;n-1&nbsp;n-2)</samp>
+</li>
+<li><samp>{a * {b + c}}</samp> &#8658; <samp>(* a (+ b c))</samp></li>
+<li>
+<samp>{a + {b - c}}</samp>
+&#8658;
+<samp>(+ a (- b c))</samp>
+</li>
+<li>
+<samp>{{a + b} - c}</samp>
+&#8658;
+<samp>(- (+ a b) c)</samp>
+</li>
 <li><samp>{{a &gt; 0} and {b &gt;= 1}}</samp> &#8658;
 <samp>(and (&gt; a 0) (&gt;= b 1))</samp></li>
-<li><samp>{&#39;f(x)}</samp> &#8658; <samp>&#39;(f&nbsp;x)</samp></li>
-<li><samp>{&#39;a eq? b}</samp> &#8658; <samp>(eq?&nbsp;&#39;a&nbsp;b)</samp></li>
-<li><samp>#1=f(#1#)</samp> &#8658; <samp>#1=(f #1#)</samp>
-if there is support for the SRFI-38 external representation
-for data with shared structure</li>
+<li>
+<samp>{}</samp>
+&#8658;
+<samp>()</samp>
+</li>
+<li>
+<samp>{5}</samp>
+&#8658;
+<samp>5</samp>
+</li>
+<li>
+<samp>{- x}</samp>
+&#8658;
+<samp>(- x)</samp>
+</li>
 <li>
 <samp>{length(x)&nbsp;&gt;=&nbsp;6}</samp>
 &#8658;
 <samp>(&gt;=&nbsp;(length&nbsp;x)&nbsp;6)</samp></li>
+<li><samp>{(f a b) + (g h)}</samp> &#8658; <samp>(+ (f a b) (g h))</samp></li>
+<li><samp>{f(a b) + g(h)}</samp> &#8658; <samp>(+ (f a b) (g h))</samp> as well</li>
+<li>
+<samp>{f(x) + g(y) + h(z)}</samp>
+&#8658;
+<samp>(+ (f x) (g y) (h z))</samp>
+</li>
+<li><samp>&#39;{a + f(b) + x}</samp> &#8658; <samp>&#39;(+ a (f b) x)</samp></li>
+<li><samp>{(- a) / b}</samp> &#8658; <samp>(/ (- a) b)</samp></li>
+<li><samp>{-(a) / b}</samp> &#8658; <samp>(/ (- a) b)</samp> as well</li>
+<li><samp>{cos(q)}</samp> &#8658; <samp>(cos q)</samp></li>
+<li>
+<samp>{e{}}</samp> &#8658;
+<samp>(e)</samp>
+</li>
+<li>
+<samp>{pi()}</samp> &#8658;
+<samp>(pi)</samp>
+</li>
+<li><samp>{&#39;f(x)}</samp> &#8658; <samp>&#39;(f&nbsp;x)</samp></li>
+<li><samp>#1=f(#1#)</samp> &#8658; <samp>#1=(f #1#)</samp>
+if there is support for the SRFI-38 external representation
+for data with shared structure</li>
 <li>
 <samp>{&nbsp;(f&nbsp;(g&nbsp;h(x)))&nbsp;}</samp>
 &#8658;
@@ -380,11 +427,6 @@ for data with shared structure</li>
 <samp>(f&nbsp;(h&nbsp;x))</samp>
 if datum comments are supported... note that this is not
 <samp>(f&nbsp;(x)&nbsp;(h&nbsp;x))</samp>
-</li>
-<li>
-<samp>{n-1&nbsp;+&nbsp;n-2}</samp>
-&#8658;
-<samp>(+&nbsp;n-1&nbsp;n-2)</samp>
 </li>
 <li>
 <samp>{(map&nbsp;-&nbsp;ns)}</samp>
@@ -422,43 +464,10 @@ if datum comments are supported... note that this is not
 <samp>($nfx$ a + b - c)</samp>
 </li>
 <li>
-<samp>{{a + b} - c}</samp>
-&#8658;
-<samp>(- (+ a b) c)</samp>
-</li>
-<li>
-<samp>{f(x) + g(y) + h(z)}</samp>
-&#8658;
-<samp>(+ (f x) (g y) (h z))</samp>
-</li>
-<li>
-<samp>{}</samp>
-&#8658;
-<samp>()</samp>
-</li>
-<li>
-<samp>{5}</samp>
-&#8658;
-<samp>5</samp>
-</li>
-<li>
-<samp>{- x}</samp>
-&#8658;
-<samp>(- x)</samp>
-</li>
-<li>
 <samp>{read(.&nbsp;options)}</samp> &#8658;
 <samp>(read&nbsp;.&nbsp;options)</samp>
 </li>
-<li>
-<samp>{e{}}</samp> &#8658;
-<samp>(e)</samp>
-</li>
-<li>
-<samp>{pi()}</samp> &#8658;
-<samp>(pi)</samp>
-</li>
-</ul>
+</ol>
 
 <p>A <dfn>curly-infix reader</dfn> is a datum reader
 that can correctly read and map curly-infix-expressions.
