@@ -387,13 +387,13 @@ and c-expressions include s-expressions.
 <samp>{length(x)&nbsp;&gt;=&nbsp;6}</samp>
 &#8658;
 <samp>(&gt;=&nbsp;(length&nbsp;x)&nbsp;6)</samp></li>
-<li><samp>{(f a b) + (g h)}</samp> &#8658; <samp>(+ (f a b) (g h))</samp></li>
-<li><samp>{f(a b) + g(h)}</samp> &#8658; <samp>(+ (f a b) (g h))</samp> as well</li>
 <li>
 <samp>{f(x) + g(y) + h(z)}</samp>
 &#8658;
 <samp>(+ (f x) (g y) (h z))</samp>
 </li>
+<li><samp>{(f a b) + (g h)}</samp> &#8658; <samp>(+ (f a b) (g h))</samp></li>
+<li><samp>{f(a b) + g(h)}</samp> &#8658; <samp>(+ (f a b) (g h))</samp> as well</li>
 <li><samp>&#39;{a + f(b) + x}</samp> &#8658; <samp>&#39;(+ a (f b) x)</samp></li>
 <li><samp>{(- a) / b}</samp> &#8658; <samp>(/ (- a) b)</samp></li>
 <li><samp>{-(a) / b}</samp> &#8658; <samp>(/ (- a) b)</samp> as well</li>
@@ -444,6 +444,11 @@ if datum comments are supported... note that this is not
 <samp>(* n (factorial (- n 1)))</samp>
 </li>
 <li>
+<samp>{2 * sin{- x}}</samp>
+&#8658;
+<samp>(* 2 (sin (- x)))</samp>
+</li>
+<li>
 <samp>{3 + 4 +}</samp>
 &#8658;
 <samp>($nfx$ 3 + 4 +)</samp>
@@ -467,6 +472,10 @@ if datum comments are supported... note that this is not
 <samp>{read(.&nbsp;options)}</samp> &#8658;
 <samp>(read&nbsp;.&nbsp;options)</samp>
 </li>
+<li>
+<samp>{a(x)(y)}</samp>
+&#8658;
+<samp>((a x) y)</samp>
 </ol>
 
 <p>A <dfn>curly-infix reader</dfn> is a datum reader
