@@ -1,0 +1,40 @@
+{n <= 5}
+{x + 1}
+{a + b + c}
+{x ,op y ,op z}
+{x eqv? `a}
+{'a eq? b}
+{n-1 + n-2}
+{a * {b + c}}
+{a + {b - c}}
+{{a + b} - c}
+{{a > 0} and {b >= 1}}
+{}
+{5}
+{- x}
+{length(x) >= 6}
+{f(x) + g(y) + h(z)}
+{(f a b) + (g h)}
+{f(a b) + g(h)}
+'{a + f(b) + x}
+{(- a) / b}
+{-(a) / b}
+{cos(q)}
+{e{}}
+{pi()}
+{'f(x)}
+{f()}
+{ (f (g h(x))) }
+{#(1 2 f(a) 4)}
+{(map - ns)}
+{map(- ns)}
+{n * factorial{n - 1}}
+{2 * sin{- x}}
+{3 + 4 +}
+{3 + 4 + 5 +}
+{a . z}
+{a + b - c}
+{read(. options)}
+{a(x)(y)}
+{f{n - 1}(x)}
+{f{n - 1}{y - 1}}

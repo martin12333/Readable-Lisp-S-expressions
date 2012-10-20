@@ -249,8 +249,9 @@ EXTRA_DIST += \
  tests/sweeten-testsuite \
  tests/sweeten-correct \
  tests/unsweeten-testsuite \
- tests/unsweeten-correct
-
+ tests/unsweeten-correct \
+ tests/curly-infix-correct2 \
+ tests/curly-infix-testsuite2
 
 # TODO: Improve test harness & integration into overall system.
 
@@ -262,6 +263,11 @@ check: readable/kernel.scm
 	            < $(srcdir)/tests/neoteric-testsuite
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/sweet-test \
 	            < $(srcdir)/tests/sweet-testsuite
+	@echo "Running srfi-curly-infix, showing diffs from correct results:"
+	GUILE_LOAD_PATH="$(builddir)" guile \
+	            $(srcdir)/src/srfi-curly-infix.scm < \
+	            $(srcdir)/tests/curly-infix-testsuite2 | \
+	          diff -u - "$(srcdir)/tests/curly-infix-correct2"
 	@echo "Running unsweeten, showing differences from correct results:"
 	"$(builddir)/unsweeten" < "$(srcdir)/tests/unsweeten-testsuite" | \
 	     diff -b -u - "$(srcdir)/tests/unsweeten-correct"
