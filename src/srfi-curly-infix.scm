@@ -37,7 +37,7 @@
   ; Not a simple infix list - transform it.  Written as a separate procedure
   ; so that future experiments or SRFIs can easily replace just this piece.
   (define (transform-mixed-infix lyst)
-     (cons 'nfx lyst))
+     (cons '$nfx$ lyst))
 
   ; Given curly-infix lyst, map it to its final internal format.
   (define (process-curly lyst)
@@ -108,7 +108,7 @@
       (let* ((c (peek-char port)))
         (cond
           ((eof-object? c) prefix)
-          ((char=? c #\( ) ; Implement f(x).
+          ((char=? c #\( ) ; Implement f(x)
             (read-char port)
             (neoteric-process-tail port
                 (cons prefix (my-read-delimited-list neoteric-read-real #\) port))))
@@ -118,9 +118,11 @@
                   (cons '$bracket-apply$
                     (cons prefix
                       (my-read-delimited-list neoteric-read-real #\] port)))))
-          ((char=? c #\{ )  ; Implement f{x}. Balance }
+          ((char=? c #\{ )  ; Implement f{x}
+            (read-char port)
             (neoteric-process-tail port
-              (let ((tail (neoteric-read port)))
+              (let ((tail (process-curly 
+                      (my-read-delimited-list neoteric-read-real #\} port))))
                 (if (eqv? tail '())
                   (list prefix) ; Map f{} to (f), not (f ()).
                   (list prefix tail)))))
