@@ -36,5 +36,12 @@
 {a + b - c}
 {read(. options)}
 {a(x)(y)}
+{x[a]}
+{y[a b]}
 {f{n - 1}(x)}
 {f{n - 1}{y - 1}}
+{f{- x}[y]}
+{g(h){a + b}}
+{x(a)(b)(c)}
+{y(a)[b](c)}
+{m{x - 1}{y - 2}{z - 3}}
