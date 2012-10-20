@@ -1012,7 +1012,7 @@
              (c   (my-peek-char port)))
         (cond
           ((eof-object? c) prefix)
-          ((char=? c #\( ) ; Implement f(x).
+          ((char=? c #\( ) ; Implement f(x)
             (my-read-char port)
             (neoteric-process-tail port
               (attach-sourceinfo pos
@@ -1025,14 +1025,17 @@
                     (cons prefix
                       (my-read-delimited-list neoteric-read-nocomment #\] port))))))
           ((char=? c #\{ )  ; Implement f{x}
+            (read-char port)
             (neoteric-process-tail port
               (attach-sourceinfo pos
                 (let
-                  ((tail (curly-infix-read-real neoteric-read-nocomment port)))
+                  ((tail (process-curly
+                      (my-read-delimited-list neoteric-read-nocomment #\} port))))
                   (if (eqv? tail '())
                     (list prefix) ; Map f{} to (f), not (f ()).
                     (list prefix tail))))))
           (#t prefix))))
+
 
   ; This is the "real" implementation of neoteric-read.
   ; It directly implements unprefixed (), [], and {} so we retain control;

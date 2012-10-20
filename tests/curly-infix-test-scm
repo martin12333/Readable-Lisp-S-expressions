@@ -165,6 +165,10 @@
 (reader-test '(and (<= 1 x 10)  (> x 0)))
 (reader-test '(and (<= 1 x 10)  (> x 0)))
 
+(reader-test '((f (- n 1)) x))
+(reader-test '((f (- n 1)) (- y 1)))
+(reader-test '($bracket-apply$ (f (- x)) y))
+
 (reader-test 'xyz)
 (reader-test '(abc))
 

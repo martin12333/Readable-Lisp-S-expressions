@@ -113,6 +113,10 @@ b
 
 (and (<= 1 x 10)  (> x 0))
 
+{f{n - 1}(x)}
+{f{n - 1}{y - 1}}
+{f{- x}[y]}
+
 ; NOT neoteric, so this is two datums:
 
 xyz(abc)
