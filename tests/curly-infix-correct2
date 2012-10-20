@@ -45,3 +45,8 @@
 (((x a) b) c)
 (($bracket-apply$ (y a) b) c)
 (((m (- x 1)) (- y 2)) (- z 3))
+($bracket-apply$ z)
+($bracket-apply$ ((d a) b) c)
+((($bracket-apply$ y g) h) i)
+($bracket-apply$ ((e (+ a 1)) b + 2) c + 3)
+((($bracket-apply$ w g + 3) h + 4) (+ i 5))
