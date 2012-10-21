@@ -957,7 +957,7 @@
   ; Not a simple infix list - transform it.  Written as a separate procedure
   ; so that future experiments or SRFIs can easily replace just this piece.
   (define (transform-mixed-infix lyst)
-     (cons 'nfx lyst))
+     (cons '$nfx$ lyst))
 
   ; Given curly-infix lyst, map it to its final internal format.
   (define (process-curly lyst)

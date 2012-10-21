@@ -27,14 +27,14 @@ Sweet-expressions are actually the top of three tiers of notation,
 each of which builds on the previous one:
 
 .IP 1. 4
-\fICurly-infix-expressions\fR (\fIc-expressions\fR): Curly braces {...} contain an \fIinfix list\fR. A \fIsimple infix list\fR has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  The empty {} maps to (), escaping {e} maps to e, unary-op {e1 e2} maps to (e1 e2), and curly-infix lists beginning with the symbol "." are unspecified.  Other infix lists map to "(nfx parameters)".   By intent, there is no precedence and you \fImust\fR use another {...} for an embedded infix list.  Inside a curly-infix-expression is a list of neoteric-expressions (below).
+\fICurly-infix-expressions\fR (\fIc-expressions\fR): Curly braces {...} contain an \fIinfix list\fR. A \fIsimple infix list\fR has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  The empty {} maps to (), escaping {e} maps to e, unary-op {e1 e2} maps to (e1 e2), and curly-infix lists beginning with the symbol "." are unspecified.  Other infix lists map to "($nfx$ parameters)".   By intent, there is no precedence and you \fImust\fR use another {...} for an embedded infix list.  Inside a curly-infix-expression is a list of neoteric-expressions (below).
 .RS 6
 .IP \(bu 2
 Example: {n <= 2} maps to (<= n 2)
 .IP \(bu 2
 Example: {2 * 3 * 4} maps to (* 2 3 4)
 .IP \(bu 2
-Example: {2 + 3 * 4} maps to (nfx 2 + 3 * 4)
+Example: {2 + 3 * 4} maps to ($nfx$ 2 + 3 * 4)
 .IP \(bu 2
 Example: {2 + {3 * 4}} maps to (+ 2 (* 3 4))
 .RE

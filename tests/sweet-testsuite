@@ -113,37 +113,37 @@ i
 (+ 3 4)
 {3 + 4}
 
-(nfx 3 + 4 +)
+($nfx$ 3 + 4 +)
 {3 + 4 +}
 
 (+ 3 4 5)
 {3 + 4 + 5}
 
-(nfx 3 + 4 + 5 +)
+($nfx$ 3 + 4 + 5 +)
 {3 + 4 + 5 +}
 
 (+ 3 (* 5 6))
 {3 + {5 * 6}}
 
-(nfx 3 + 5 * 6)
+($nfx$ 3 + 5 * 6)
 {3 + 5 * 6}
 
-(nfx a . z)
+($nfx$ a . z)
 {a . z}
 
-(nfx a + . z)
+($nfx$ a + . z)
 {a + . z}
 
-(nfx a + b . z)
+($nfx$ a + b . z)
 {a + b . z}
 
-(nfx a + b + . z)
+($nfx$ a + b + . z)
 {a + b + . z}
 
-(nfx a + b + c . z)
+($nfx$ a + b + c . z)
 {a + b + c . z}
 
-(nfx a + b + c + . z)
+($nfx$ a + b + c + . z)
 {a + b + c + . z}
 
 ; This isn't spec'ed, but we sure don't want to crash, so force this.
@@ -708,7 +708,7 @@ f{a + b}
 (f (+ a b))
 f({a + b})
 
-(f (nfx a + b * c))
+(f ($nfx$ a + b * c))
 f{a + b * c}
 
 (- 5)
