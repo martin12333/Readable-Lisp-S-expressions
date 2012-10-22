@@ -1045,12 +1045,12 @@ enclosing a single datum (such as a single list)
 simply passes it through:
 </p>
 <pre>
-{(define my_cadr(x)
-  car(cdr(x)))}
-{(define my_abs(x)
-  (if {x >= 0}
-    x
-    -(x)))}
+  {(define my_cadr(x)
+    car(cdr(x)))}
+  {(define my_abs(x)
+    (if {x >= 0}
+      x
+      -(x)))}
 </pre>
 
 
@@ -1283,7 +1283,7 @@ language as follows:
 <pre>
 &lt;e&gt; :== &lt;num&gt;
      |  &lt;id&gt;                   variable reference
-     |  &lt;e&gt; [ &lt;args&gt; ]         application
+     |  &lt;e&gt; [ &lt;args&gt; ]         application (like Mathematica)
      |  { &lt;args&gt; }             list construction
      |  &lt;e&gt; + &lt;e&gt;              addition
      |  &lt;e&gt; - &lt;e&gt;              subtraction
@@ -1325,7 +1325,7 @@ traditional s-expression.
 </p>
 
 <p>
-However, there are many negatives to the infix.plt approach:
+However, there are some negatives to the infix.plt approach:
 </p>
 <ol>
 <li>
@@ -1340,9 +1340,10 @@ procedures that might be useful in infix position, such as
 This demonstrates a basic problem with only allowing a fixed set
 of infix operators in a notation: Scheme (like all Lisps) allows for easy
 creation of new procedures and macros.
-An infix notation should make it easy to <em>use</em> those
-procedures and macros, in whatever position is most natural,
-and even if they have not been defined yet.
+The SRFI-105 authors believe an infix notation should
+make it easy to <em>use</em> any
+procedures and macros in whatever position is most natural...
+including procedures and macros that have not yet been defined.
 </li>
 <li>Because it has a precedence system, it is necessarily less homoiconic
 when precedence is used.
@@ -1355,37 +1356,45 @@ such as quoting and quasiquoting; a quasiquoted variable does not seem to
 be allowed.
 </li>
 <li>
-Many variables and operators cannot be referred to, and some that can be
-must be spelled differently (and thus inconsistently).
+Many variables and operators are more difficult to refer to
+and/or must be spelled differently (and thus inconsistently).
 Identifiers (which are also used for function names) must
 &#8220;begin with a letter, and is optionally followed by series of letters,
 digits or underscores.  An underscore is converted to a -&#8221;.
-Thus, it is not possible to call procedures with names like
-&#8220;char=?&#8221;.
+Thus, it is not possible without effort to call procedures with names like
+&#8220;<samp>char=?</samp>&#8221;.
 Similarly, variables with &#8220;*&#8221; or other such symbols
-embedded in them cannot be referenced.
-In short, many identifiers are inaccessible in this notation, either
-as variables or as procedure names.
+embedded in them cannot be referenced without effort.
 The approach does allow references to variable names with &#8220;-&#8221;
-embedded in them,
+embedded in them without effort,
 but the names must be spelled differently (and thus inconsistently)
 by replacing every &#8220;-&#8221; with &#8220;_&#8221;.
 Thus, variables like &#8220;list-ref&#8221; must
-be spelled as &#8220;list_ref&#8221; inside the infix.plt notation.
-This approach also
-makes it impossible to refer to variables with underscores in them.
-These are fundamental side-effects of not requiring infix operators
-to be delimited,
-and cannot be changed without a significant change to the notation.
+be spelled as &#8220;list_ref&#8221; inside the infix.plt notation
+without effort.
+The infix.plt documentation did not, at the time of this writing,
+document any way around this limitation.
+However, on 2012-10-21,
+Jens Axel S&#248;gaard reported that other identifiers <em>can</em>
+be referred to using the |...| syntax.
+This works around the problem, but is slightly more cumbersome when
+it is necessary.
+These are fundamental side-effects of not <em>requiring</em> infix operators
+to be delimited (e.g., by whitespace).
 </li>
 <li>
 The notation is completely different and inconsistent
 with the surrounding Lisp notation.
-The curly braces {...} are suddenly used for list creation operation,
-square brackets x[...] are used for function application, and
-(...) is used for grouping (not for list creation).
+The curly braces {...} are suddenly used for the list creation operation
+instead of parentheses,
+square brackets x[...] are used for function application
+instead of parentheses, and the parentheses (...) are
+instead used for grouping (and not for list creation or function application).
 This can create confusion, since the same symbol can have a completely
-different meaning, and that confusion could easily lead to
+different meaning in different contexts,
+and that confusion could easily lead to hard-to-find errors.
+Similarly, some symbols must be escaped with |...| inside infix.plt, yet they
+do not need to be escaped otherwise, again, leading to potentially
 hard-to-find errors.
 </li>
 </ol>
