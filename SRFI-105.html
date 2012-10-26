@@ -736,14 +736,15 @@ a completely different meaning inside and outside the parentheses.
 </p>
 <p>
 In contrast, this curly-infix-expression proposal avoids these problems.
-The lists inside use almost exactly the same syntax inside and outside.
+The syntax for list creation, quasiquotation, and so on is almost
+identical in a curly-infix-expression when compared to traditional notation.
 For example, in curly-infix,
 <samp>&#96;{,a&nbsp;+&nbsp;,b}</samp>
 maps cleanly to
 <samp>&#96;(+&nbsp;,a&nbsp;,b)</samp>,
 which works as expected with all macros.
 The main difference is that, in a curly-infix expression, the position of
-the operator in its surface syntax in a different location (infix)
+the operator in its surface syntax may be in a different location (infix)
 than its actual final location.</p>
 
 <h2><a name="rationale_noautodetect">Why not autodetect infix?</a></h2>
@@ -760,7 +761,7 @@ for getting a new list with
 the numbers in <var>ns</var> negated.
 Allowing the user to expressly notate when
 infix was intended, using <code>{</code>...<code>}</code>,
-turns out to be far more clearer
+turns out to be clearer
 and more intuitive. In particular, curly-infix allows the use of
 infix with any symbol, whenever you want... and where it&#8217;s
 not convenient, you don&#8217;t need to use it. It is also very
@@ -1016,7 +1017,7 @@ and in part to provide better support:
 <ol>
 <li>An &#8220;escaping&#8221;
 <samp>{e}</samp> is mapped to <samp>e</samp>
-so that <code>{</code>...<code>}</code> can conceptually be used
+so that <code>{</code>...<code>}</code> can be used
 for grouping:
 <samp>{{{a}&nbsp;+&nbsp;{b}}}</samp>
 is equivalent to
@@ -1331,7 +1332,7 @@ However, there are some negatives to the infix.plt approach:
 <li>
 Because it has a fixed built-in grammar,
 only a few fixed symbols can be used as infix operators.
-For example, <samp>and</samp> and <samp>or</samp>
+For example, &#8220;<samp>and</samp>&#8221; and &#8220;<samp>or</samp>&#8221;
 are not supported as infix operators, yet they are commonly
 used in infix position in other languages.
 Similarly, it does not support the many other
@@ -1591,7 +1592,7 @@ meaning of portable Scheme code.
 This SRFI is designed to meet the desires of those users.
 Other specifications could build on this SRFI without this limitation, e.g.,
 other specifications could require
-support for neoeteric-expressions <em>outside</em> all braces.
+support for neoteric-expressions <em>outside</em> all braces.
 </p>
 
 <h2><a name="rationale_comma">Comma-separated parameters</a></h2>
@@ -1704,7 +1705,7 @@ No power is lost, because this is completely optional;
 developers can use it when they want to,
 and they can use traditional s-expression notation if they want to.
 It&#8217;s trivially quoted... if you quote a symbol followed
-by <code>(</code>, just keep going until its matching <code>)</code>,
+by &#8220;<code>(</code>&#8221;, just keep going until its matching &#8220;<code>)</code>&#8221;,
 which is essentially the same rule as before.</p>
 
 <h2><a name="rationale_otherdetails">Other details</a></h2>
@@ -1731,7 +1732,7 @@ modified reader that detects &#8220;<code>{</code>&#8220;, starts reading a list
 until its matching &#8220;<code>}</code>&#8221;, and then calls <var>process-curly</var>
 defined below.
 Implementations should <em>always</em> do
-this, but an implementation tht complies with this SRFI must
+this, but an implementation that complies with this SRFI must
 at least activate this behavior
 when they read the <var>#!curly-infix</var> marker
 followed by whitespace.
