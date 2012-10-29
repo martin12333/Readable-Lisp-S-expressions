@@ -112,8 +112,8 @@ top of this SRFI, but curly-infix-expressions are useful on their own.
 programming languages in modern use that do not support infix
 notation. Even some Lisp advocates, like Paul Graham, admit that
 they &#8220;don&#8217;t find prefix math expressions
-natural&#8221; (<a href="http://www.paulgraham.com/pypar.html"
-rel="nofollow">http://www.paulgraham.com/pypar.html</a>) even after
+natural&#8221; (<a href="http://www.paulgraham.com/popular.html"
+rel="nofollow">http://www.paulgraham.com/popular.html</a>) even after
 decades of experience with Lisp-based languages.
 Paul Prescod has said, &#8220;I have more faith that you could convince
 the world to use Esperanto than prefix notation&#8221;
@@ -300,7 +300,9 @@ and
 <samp>(g&nbsp;(-&nbsp;x))</samp>.</li>
 <li><samp>e[...]</samp> &#8658;
 <samp>($bracket-apply$&nbsp;e&nbsp;...)</samp></li>
-<li>There <em>MUST NOT</em> be whitespace between <samp>e</samp> and the open paired character for the above mappings to apply.</li>
+<li>The above mappings <em>MUST NOT</em> be applied
+if one or more whitespace characters are present between e and the open
+paired character.</li>
 <li>An unprefixed <samp>(&nbsp;.&nbsp;e)</samp> <em>MUST</em> evaluate as <samp>e</samp>.</li>
 <li>
 These <em>MUST</em> recurse within lists and vectors,
@@ -316,11 +318,11 @@ in a position that accepts a neoteric expression
 <em>SHOULD</em> accept neoteric-expressions within it.
 </li>
 <li>
-These recurse left-to-right.
+These <em>MUST</em> recurse left-to-right.
 E.g.,
 <samp>f{n&nbsp;-&nbsp;1}(x)</samp>
 &#8658;
-<samp>f({n&nbsp;-&nbsp;1})(x)</samp>
+<samp>(f {n&nbsp;-&nbsp;1})(x)</samp>
 &#8658;
 <samp>(f&nbsp;(-&nbsp;n&nbsp;1))(x)</samp>
 &#8658;
@@ -331,6 +333,8 @@ E.g.,
 <p>
 Where datum comments are supported using <samp>#;</samp>,
 datum comments <em>SHOULD</em> comment the datum as defined above.
+(Datum comments are defined in SRFI-62; they are also included in
+R6RS and R7RS draft 6.)
 Note that any s-expression is also an n-expression,
 because n-expressions include c-expressions
 and c-expressions include s-expressions.
@@ -407,7 +411,7 @@ and c-expressions include s-expressions.
 <samp>(pi)</samp>
 </li>
 <li><samp>{&#39;f(x)}</samp> &#8658; <samp>&#39;(f&nbsp;x)</samp></li>
-<li><samp>#1=f(#1#)</samp> &#8658; <samp>#1=(f #1#)</samp>
+<li><samp>{#1=f(#1#)}</samp> &#8658; <samp>#1=(f #1#)</samp>
 if there is support for the SRFI-38 external representation
 for data with shared structure</li>
 <li>
@@ -1342,7 +1346,7 @@ This demonstrates a basic problem with only allowing a fixed set
 of infix operators in a notation: Scheme (like all Lisps) allows for easy
 creation of new procedures and macros.
 The SRFI-105 authors believe an infix notation should
-make it easy to <em>use</em> any
+make it easy to use <em>any</em>
 procedures and macros in whatever position is most natural...
 including procedures and macros that have not yet been defined.
 </li>
@@ -1382,6 +1386,9 @@ This works around the problem, but is slightly more cumbersome when
 it is necessary.
 These are fundamental side-effects of not <em>requiring</em> infix operators
 to be delimited (e.g., by whitespace).
+Since some symbols must be escaped with |...| inside infix.plt, yet they
+do not need to be escaped otherwise, this inconsistency can lead
+to potentially hard-to-find errors.
 </li>
 <li>
 The notation is completely different and inconsistent
@@ -1394,9 +1401,6 @@ instead used for grouping (and not for list creation or function application).
 This can create confusion, since the same symbol can have a completely
 different meaning in different contexts,
 and that confusion could easily lead to hard-to-find errors.
-Similarly, some symbols must be escaped with |...| inside infix.plt, yet they
-do not need to be escaped otherwise, again, leading to potentially
-hard-to-find errors.
 </li>
 </ol>
 
@@ -1534,12 +1538,12 @@ also supports name-prefixing.
 <p>
 Neoteric-expressions allow users to use a more traditional-looking notation for
 function calls.
-Again, quoting rules and macros continue to work as usual.
+Quoting rules and macros continue to work as usual. In addition:
 <ul>
 <li>
 The prefixed <samp>e(...)</samp> form provides
 a more traditional-looking format for function calls,
- e.g., <samp>-(x)</samp> instead of <samp>(-&nbsp;x)</samp>.</li>
+ e.g., <samp>cos(x)</samp> instead of <samp>(cos&nbsp;x)</samp>.</li>
 <li>
 The prefixed <samp>e{...}</samp> form simplifies
 combining function calls and infix expressions
@@ -1716,6 +1720,37 @@ symbol &#8220;<var>and</var>&#8221;,
 the symbol &#8220;<var>or</var>&#8221;, or a
 punctuation-only symbol. However, it would probably be wise to wait
 until many implementations can handle c-expressions.</p>
+
+<p>
+The <samp>$nfx$</samp> and <samp>$bracket-apply</samp> symbols are
+unhygienic, in the sense that programs that need it would
+in many cases need to begin by defining them, even though these identifiers
+do not appear literally in the neoteric code.
+However, we see no way around this without
+losing the benefits that these (optional) features are meant to provide.
+As noted in a
+<a href="http://www.mail-archive.com/guile-devel@gnu.org/msg10088.html">
+guile-devel post by Mark H. Weaver on 2012-10-26</a>,
+&#8220;apart from the fact that <samp>$nfx$</samp>
+et are meant to be defined by the user,
+it is exactly the same situation as for
+&#8216;quote&#8217;, &#8216;quasiquote&#8217;,
+&#8216;unquote&#8217;, &#8216;unquote-splicing&#8217;, &#8216;quasisyntax&#8217;, etc.
+The whole point of
+these shorthand notations is to avoid having to type the associated
+identifier, and yet this means that an identifier is being referenced
+without appearing literally in the code.
+These shorthand notations always involve a tradeoff.  It means that the
+syntax is not quite as simple as the original s-expressions (as printed
+by &#8216;write&#8217;), and the user has to know a few more rules for how to
+interpret the notation.  Experience shows that humans tend to prefer a
+bit more complexity in their syntax if there is something to be gained
+from it.
+I think it&#8217;s worthwhile to add a few more rules in exchange
+for the option to use infix notation in selected areas, as long as the
+resulting notation is homoiconic and the total number of rules is kept
+small.&#8221;
+</p>
 
 <p>Curly-infix is designed so that it can work on other Lisps as well,
 which should simplify adoption elsewhere.</p>
