@@ -1363,32 +1363,35 @@ be allowed.
 <li>
 Many variables and operators are more difficult to refer to
 and/or must be spelled differently (and thus inconsistently).
-Identifiers (which are also used for function names) must
+Its documentation states that
+identifiers (which are also used for function names) must
 &#8220;begin with a letter, and is optionally followed by series of letters,
 digits or underscores.  An underscore is converted to a -&#8221;.
-Thus, it is not possible without effort to call procedures with names like
-&#8220;<samp>char=?</samp>&#8221;.
-Similarly, variables with &#8220;*&#8221; or other such symbols
-embedded in them cannot be referenced without effort.
-The approach does allow references to variable names with &#8220;-&#8221;
-embedded in them without effort,
-but the names must be spelled differently (and thus inconsistently)
+Under these rules, it is not possible to call procedures with names like
+&#8220;<samp>char=?</samp>&#8221; or use variables
+with &#8220;*&#8221; embedded in them.
+It does allow references to variable names with &#8220;-&#8221;
+embedded in them, but in this approach
+names must be spelled differently (and thus inconsistently)
 by replacing every &#8220;-&#8221; with &#8220;_&#8221;.
 Thus, variables like &#8220;list-ref&#8221; must
 be spelled as &#8220;list_ref&#8221; inside the infix.plt notation
-without effort.
+as documented.
 The infix.plt documentation did not, at the time of this writing,
 document any way around this limitation.
 However, on 2012-10-21,
 Jens Axel S&#248;gaard reported that other identifiers <em>can</em>
 be referred to using the |...| syntax.
 This works around the problem, but is slightly more cumbersome when
-it is necessary.
+it is necessary, and is inconsistent with other code where |...|
+is not required.
 These are fundamental side-effects of not <em>requiring</em> infix operators
 to be delimited (e.g., by whitespace).
-Since some symbols must be escaped with |...| inside infix.plt, yet they
-do not need to be escaped otherwise, this inconsistency can lead
-to potentially hard-to-find errors.
+Since some symbols must be escaped with |...| inside infix.plt
+but not outside, and some symbols require
+replacing every &#8220;-&#8221; with &#8220;_&#8221; where this is not done,
+some symbols are represented inconsistently... and this
+inconsistency can lead to potentially hard-to-find errors.
 </li>
 <li>
 The notation is completely different and inconsistent
@@ -1398,9 +1401,10 @@ instead of parentheses,
 square brackets x[...] are used for function application
 instead of parentheses, and the parentheses (...) are
 instead used for grouping (and not for list creation or function application).
-This can create confusion, since the same symbol can have a completely
-different meaning in different contexts,
-and that confusion could easily lead to hard-to-find errors.
+The same punctuation mark
+can have a completely different meaning in different contexts,
+leading to a potential for confusion, and this
+confusion could easily lead to hard-to-find errors.
 </li>
 </ol>
 
@@ -1722,20 +1726,23 @@ punctuation-only symbol. However, it would probably be wise to wait
 until many implementations can handle c-expressions.</p>
 
 <p>
-The <samp>$nfx$</samp> and <samp>$bracket-apply</samp> symbols are
+The <samp>$nfx$</samp> and <samp>$bracket-apply$</samp> symbols are
 unhygienic, in the sense that programs that need it would
 in many cases need to begin by defining them, even though these identifiers
-do not appear literally in the neoteric code.
+do not appear literally in the code.
 However, we see no way around this without
 losing the benefits that these (optional) features are meant to provide.
+<!-- The following message is also recorded as
+     http://www.mail-archive.com/guile-devel@gnu.org/msg10088.html -->
 As noted in a
-<a href="http://www.mail-archive.com/guile-devel@gnu.org/msg10088.html">
+<a href="http://lists.gnu.org/archive/html/guile-devel/2012-10/msg00134.html">
 guile-devel post by Mark H. Weaver on 2012-10-26</a>,
 &#8220;apart from the fact that <samp>$nfx$</samp>
-et are meant to be defined by the user,
+etc. are meant to be defined by the user,
 it is exactly the same situation as for
 &#8216;quote&#8217;, &#8216;quasiquote&#8217;,
-&#8216;unquote&#8217;, &#8216;unquote-splicing&#8217;, &#8216;quasisyntax&#8217;, etc.
+&#8216;unquote&#8217;, &#8216;unquote-splicing&#8217;,
+&#8216;quasisyntax&#8217;, etc.
 The whole point of
 these shorthand notations is to avoid having to type the associated
 identifier, and yet this means that an identifier is being referenced
@@ -1744,8 +1751,7 @@ These shorthand notations always involve a tradeoff.  It means that the
 syntax is not quite as simple as the original s-expressions (as printed
 by &#8216;write&#8217;), and the user has to know a few more rules for how to
 interpret the notation.  Experience shows that humans tend to prefer a
-bit more complexity in their syntax if there is something to be gained
-from it.
+bit more complexity in their syntax if there is something to be gained from it.
 I think it&#8217;s worthwhile to add a few more rules in exchange
 for the option to use infix notation in selected areas, as long as the
 resulting notation is homoiconic and the total number of rules is kept
