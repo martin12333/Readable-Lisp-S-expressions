@@ -838,6 +838,61 @@ c-expressions do not embed an opening brace; this means that precedence
 is irrelevant for more than two-thirds of these top-level c-expressions.
 Thus, requiring grouping symbols is less of a
 hardship than it might appear.</p>
+<p>
+In addition, there is some experimental evidence that developers
+(1) rarely use precedence rules and
+(2) often apply them incorrectly.
+The paper
+<a href="http://www.knosof.co.uk/cbook/accu06.html">
+&#8220;Developer beliefs about binary operator precedence (part 1)&#8221;
+by Derek M. Jones</a> documents analysis of developer use and
+understanding of precedence rules:
+</p>
+<ul>
+<li>
+They first measured the visible source code of a number of
+large C programs (e.g., gcc, idsoftware, Linux, netscape,
+openafs, openMotif, and postgresql).
+Once they excluded operations not normally considered binary operators
+(array subscript, function call, direct and indirect member
+selection, and the assignment operators), they found that only
+1.9% of all expressions had at least two binary operators
+(where precedence would make a difference).
+Of the expressions with at least one binary operator,
+74% (more than two-thirds)
+had only one binary operator - yet only expressions with more than one
+could possibly benefit from precedence.
+(Note that this is similar to the 71% result above.)
+<!-- See table .1; the 1.9% = 100-92.82-5.25.
+     The 74% = 1-1.9/(5.28+1.9) = 0.73537604456824512 -->
+In those cases where precedence could have been used
+(the 1.9% of all expressions), 67%
+(102,822/154,575) of the operator pairs were explicitly parenthesized
+(making any precedence rule moot).
+</li>
+<li>
+The authors then described a survey of developers
+at the 2006 ACCU conference to determine if they correctly applied
+the precedence and associativity of
+the binary operators common to C, C++, C#, Java, Perl, and PHP.
+In this experiment only 66.7% of the answers were correct (standard
+deviation 8.8, poorest performer 45.2% correct, best performer 80.5% correct);
+this was not much better than random chance (50%).
+Even many widely-used operator pairs had relatively poor results;
+only 94% of the problems were correctly solved when they combined
+<code>*</code> and <code>+</code>,
+92% when they combined <code>*</code> and <code>-</code>,
+and 69% when they combined <code>/</code> and <code>+</code>.
+These were far short of the 100% one might expect.
+These developers ranged from 5 to 25 years of professional experience,
+and the more-experienced developers did not do better (!).
+It is possible that a different sample would produce 
+a higher percentage of correct answers.
+Nevertheless, these results clearly suggest that precedence rules may harm,
+instead of help, the process of developing correct code.
+</li>
+</ul>
+
 <p>By intentionally <em>not</em>
 building a precedence system into the reader,
 a very simple yet useful infix system results.
@@ -932,11 +987,29 @@ For example, should there be support for combining different ranged
 comparisons, to support notations such as <samp>{a&nbsp;&lt;&nbsp;b&nbsp;&lt;=&nbsp;c}</samp>?
 Should some operators be right-associative, and if so, which ones?
 (Exponentiation and assignment are often right-associative.)
+Should unranged comparisons (e.g., <code>=</code>) have a different
+precedence than ranged comparisons (e.g., <code>&gt;=</code>)?
+Although many languages (including C and Java)
+treat multiplication and division with the
+same left-associative precedence, even that is not universal;
+<a href="http://en.wikipedia.org/w/index.php?title=Order_of_operations&oldid=520621877">multiplication is considered higher precedence than division</a> in
+the manuscript submission instructions for the <i>Physical Review</i> journals,
+the <i>Course of Theoretical Physics</i> by Landau and Lifshitz,
+and the <i>Feynman Lectures on Physics</i>.
+In addition,
+Wolfram Alpha considers implied (but not explicit) multiplication
+higher precedence than division.
+Dennis M. Ritchie, in his
+<a href="http://cm.bell-labs.com/cm/cs/who/dmr/chist.html">
+<i>The Development of the C language</i></a>,
+notes that of the precedence rules were infelicitous;
+should they be used or not?
 There would also be substantial disagreement on exactly what operators
 should be in the precedence table (including which combinations and if
 Unicode characters should be included), their order, and whether
 the table should be &#8220;big&#8221; or &#8220;small&#8221;
-(since it is fixed, there are arguments for a larger one).
+(since it is fixed, there are arguments for a larger one, but a larger
+one is harder to remember).
 Below is one possible order, in high-to-low precedence order
 (where ... matches 0 or more characters), presuming all is left-to-right;
 the point in part is to show that it
