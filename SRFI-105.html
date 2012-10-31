@@ -1278,11 +1278,55 @@ lists a number of examples and constructs.
 </p>
 
 <p>
-In this approach, the 3-character sequence &#8220;@${&#8220; begins an infix expression,
+Jens Axel S&#248;gaard stated on the SRFI-105 mailing list on
+2012-10-30 that infix.plt was not meant to be
+&#8220;the final say in infix notation&#8221; and
+that its implementation on Planet was
+&#8220;just meant to be something to try out.
+In fact I have changed some of the decisions in Bracket&#8221;.
+Still, infix.plt is widely available, and it is a reasonable representative
+example of an infix system that has been developed for Scheme.
+Jens Axel S&#248;gaard explained that its design rationale was as follows:
+</p>
+<ol type="i">
+<li>The operations + - * / ^ [are] written using their standard syntax</li>
+<li>No other operations get special syntax</li>
+<li>function application is name[]
+(same choice as Mathematica - but it could
+easily be name() instead)</li>
+<li>Since - is used in Scheme names, one can use _ to write names using -</li>
+<li>Other names can be written using | | syntax.</li>
+</ol>
+
+<p>
+He added that, &#8220;The implementation has a few more bells and whistles
+mostly stolen from:
+<a href="http://reference.wolfram.com/mathematica/guide/Syntax.html">
+http://reference.wolfram.com/mathematica/guide/Syntax.html</a>.
+The rationale is to keep the infix operations to the essentials in
+order not to interfere too much with builtin names of Scheme.
+Since - is so common in the variable names, a special syntax _
+is needed. Other names can be used by the standard | | syntax
+for peculiar variable names.&#8221;
+</p>
+
+<p>
+He noted that he hadn&#8217;t &#8220;mentioned the syntax
+chosen to delimit the infix expressions. That&#8217;s on purpose,
+since I had and haven&#8217;t decided what I like best yet.&#8221;
+In the sample implementation,
+the 3-character sequence &#8220;@${&#8220; begins an infix expression,
 which switches to a completely different language that
 ends with a matching &#8220;}&#8221;.
-The <a href="http://planet.racket-lang.org/package-source/soegaard/infix.plt/1/0/parser.ss">parser.ss source code</a> defines the grammar of this
-language as follows:
+</p>
+
+<p>
+Given this rationale, we can examine its documentation and source
+code to see its specifics.
+No single location gives a concise and complete definition of the infix.plt
+grammar, but 
+the <a href="http://planet.racket-lang.org/package-source/soegaard/infix.plt/1/0/parser.ss">parser.ss source code</a> includes a partial grammar.
+This partial grammar is:
 </p>
 
 <pre>
