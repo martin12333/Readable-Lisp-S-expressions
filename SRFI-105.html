@@ -303,7 +303,7 @@ and
 <li><code><var>e</var>[</code>...<code>]</code> &#8658;
 <code>($bracket-apply$&nbsp;<var>e</var>&nbsp;</code>...<code>)</code></li>
 <li>The above mappings <em>MUST NOT</em> be applied
-if one or more whitespace characters are present between e and the open
+if one or more whitespace characters are present between <var>e</var> and the open
 paired character.</li>
 <li>An unprefixed <code>(&nbsp;.&nbsp;<var>e</var>)</code> <em>MUST</em> map to <code><var>e</var></code>.</li>
 <li>
@@ -1020,8 +1020,8 @@ would be challenging to get agreement on such a list:
 <li>Exponentiation/superscript/up-arrow: <code>exp</code>..., <code>**</code>, <code>^</code>, <code>sup</code> {Unicode: &#8593;, &#8657;}</li>
 <li>Multiplication/division: <code>*</code>, <code>/</code>, <code>div</code>..., <code>mod</code>..., <code>quo</code>...   {Unicode: &#247;, &#215;}</li>
 <li>Addition/subtraction: <code>+</code>, <code>-</code></li>
-<li>Bitwise and: <code>bit...and</code>, <code>log...and</code>, <code>&amp;</code></li>
-<li>Bitwise or/xor: <code>bit...or</code>, <code>log...or</code>, <code>|</code></li>
+<li>Bitwise and: <code>bit</code>...<code>and</code>, <code>log</code>...<code>and</code>, <code>&amp;</code></li>
+<li>Bitwise or/xor: <code>bit</code>...<code>or</code>, <code>log</code>...<code>or</code>, <code>|</code></li>
 <li>Comparison:
 <ul>
 <li>
@@ -1096,7 +1096,7 @@ and in part to provide better support:
 </p>
 <ol>
 <li>An &#8220;escaping&#8221;
-<samp>{e}</samp> is mapped to <samp>e</samp>
+<code>{<var>e</var>}</code> is mapped to <code><var>e</var></code>
 so that <code>{</code>...<code>}</code> can be used
 for grouping:
 <samp>{{{a}&nbsp;+&nbsp;{b}}}</samp>
@@ -1111,7 +1111,7 @@ Finally, it also provides an easy escape mechanism
 in sweet-expressions for symbols
 that would otherwise have other meanings.</li>
 <li>The &#8220;unary-operation&#8221; curly-infix list
-<samp>{e&nbsp;f}</samp> &#8658; <samp>(e&nbsp;f)</samp>,
+<code>{<var>e</var>&nbsp;<var>f</var>}</code> &#8658; <code>(<var>e</var>&nbsp;<var>f</var>)</code>,
 so that
 <samp>{-&nbsp;x}</samp> &#8658; <samp>(-&nbsp;x)</samp>,
 the likely interpretation, and also so that the neoteric-expressions like
@@ -1663,11 +1663,11 @@ function calls.
 Quoting rules and macros continue to work as usual. In addition:
 <ul>
 <li>
-The prefixed <samp>e(...)</samp> form provides
+The prefixed <code><var>e</var>(</code>...<code>)</code> form provides
 a more traditional-looking format for function calls,
  e.g., <samp>cos(x)</samp> instead of <samp>(cos&nbsp;x)</samp>.</li>
 <li>
-The prefixed <samp>e{...}</samp> form simplifies
+The prefixed <code><var>e</var>{</code>...<code>}</code> form simplifies
 combining function calls and infix expressions
 when there is only one parameter to the function call.
 This is a common case;
@@ -1685,20 +1685,20 @@ use the normal term-prefixing format instead, e.g.,
 <samp>(f&nbsp;(-&nbsp;x&nbsp;1)&nbsp;(-&nbsp;y&nbsp;1))</samp>.
 </li>
 <li>
-Prefixed square brackets <samp>e[...]</samp> &#8658;
-<samp>($bracket-apply$&nbsp;e&nbsp;...)</samp>.
+Prefixed square brackets <code><var>e</var>[</code>...<code>]</code> &#8658;
+<code>($bracket-apply$&nbsp;<var>e</var>&nbsp;</code>...<code>)</code>.
 This is intended to simplify use of indexed arrays, associative arrays, and similar constructs.
 </li>
 </ul>
 <p>
-The <samp>(.&nbsp;e)</samp> rule handles expressions like <samp>read(.&nbsp;port)</samp>,
+The <code>(.&nbsp;<var>e</var>)</code> rule handles expressions like <samp>read(.&nbsp;port)</samp>,
 ensuring that they map to <samp>(read&nbsp;.&nbsp;port)</samp>.
-If <samp>(.&nbsp;x)</samp> didn&#8217;t mean <samp>x</samp>, then it would
+If <code>(.&nbsp;<var>x</var>)</code> didn&#8217;t mean <code><var>x</var></code>, then it would
 be easy to get this case wrong.  Also, if someone wanted to build on
 top of an existing reader, they would have to reimplement parts of the
 list-processing system if this wasn&#8217;t handled.
 It is already true that
-<samp>(.&nbsp;x)</samp> is <samp>x</samp> in guile,
+<code>(.&nbsp;<var>x</var>)</code> is <code><var>x</var></code> in guile,
 so there was already a working example that this
 is a reasonable extension.  In fact, in a typical implementation of a
 list reader, it takes extra effort to <em>prevent</em> this extension,
@@ -1791,9 +1791,9 @@ One
 Scheme implementations with brackets and braces</a>
 shows these differences;
 several Scheme implementations follow the R6RS specification that
-accepts <samp>[...]</samp> as a synonym for <samp>(...)</samp>,
-GNU Kawa interprets <samp>[...]</samp> as the redefinable constructor
-<samp>($bracket-list$&nbsp;...)</samp>,
+accepts <code>[</code>...<code>]</code> as a synonym for <code>(</code>...<code>)</code>,
+GNU Kawa interprets <code>[</code>...<code>]</code> as the redefinable constructor
+<code>($bracket-list$&nbsp;</code>...<code>)</code>,
 and two implementations (Rep and FemtoLisp) use them as vector constructors.
 By intentionally not defining the interpretation of unprefixed
 square brackets, implementations are free to continue to use whatever
