@@ -216,7 +216,7 @@ An implementation <em>MUST</em> permit, and not require,
 whitespace between the braces in an empty curly-infix list.</li>
 <li>An <dfn>escaping</dfn> curly-infix list
 <code>{<var>e</var>}</code> is mapped to <code><var>e</var></code>.
-E.g., <samp>{5}</samp> is mapped to <samp>5</samp>.</li>
+E.g., <samp>{5}</samp> &#8658; <samp>5</samp>.</li>
 <li>A <dfn>unary-operation</dfn> curly-infix list
 <code>{<var>e1</var>&nbsp;<var>e2</var>}</code>
 is mapped to
@@ -233,10 +233,10 @@ E.g.,
 <dfn>mixed</dfn>.  A mixed curly-infix list <em>MUST</em> be mapped to that list with &#8220;<code>$nfx$</code>&#8221; added to its front.
 E.g.,
 <samp>{q&nbsp;+&nbsp;r&nbsp;*&nbsp;s}</samp>
-is mapped to
+&#8658;
 <samp>($nfx$&nbsp;q&nbsp;+&nbsp;r&nbsp;*&nbsp;s)</samp>, and
 <samp>{q&nbsp;+&nbsp;r&nbsp;.&nbsp;s}</samp>
-is mapped to
+&#8658;
 <samp>($nfx$&nbsp;q&nbsp;+&nbsp;r&nbsp;.&nbsp;s)</samp>.
 </li>
 </ol>
