@@ -63,7 +63,8 @@ and
 <p>Lisp-based languages, like Scheme, are almost the only
 programming languages in modern use that do not support infix notation.
 In addition, most languages allow infix expressions to be combined
-with function call notation of the form f(x).
+with function call notation of the form
+<code><var>f</var>(<var>x</var>)</code>.
 This SRFI provides these capabilities, both for
 developers who already use Scheme and want these conveniences,
 and also for other developers who may choose to use other languages
@@ -189,7 +190,8 @@ The curly-infix list.
 A curly-infix list is syntactically almost identical to a regular list,
 but it is surrounded by a matched pair of braces instead of by a pair of parentheses, and instead of
 a sequence of s-expressions it contains a sequence of
-neoteric-expressions (which add support for formats like <samp>f(x)</samp>).
+neoteric-expressions (which add support for formats like
+<code><var>f</var>(<var>x</var>)</code>).
 Once a curly-infix list is read, it is mapped differently than a
 regular list by a curly-infix reader:</p>
 <ol>
@@ -929,6 +931,7 @@ any precedence system.
 For example, should there be support for combining different ranged
 comparisons, to support notations such as <samp>{a&nbsp;&lt;&nbsp;b&nbsp;&lt;=&nbsp;c}</samp>?
 Should some operators be right-associative, and if so, which ones?
+(Exponentiation is often, but not always, right-associative.)
 There would also be substantial disagreement on exactly what operators
 should be in the precedence table (including which combinations and if
 Unicode characters should be included), their order, and whether
@@ -1286,7 +1289,8 @@ that its implementation on Planet was
 In fact I have changed some of the decisions in Bracket&#8221;.
 Still, infix.plt is widely available, and it is a reasonable representative
 example of an infix system that has been developed for Scheme.
-Jens Axel S&#248;gaard explained that its design rationale was as follows:
+Jens Axel S&#248;gaard explained that
+its original design rationale was as follows:
 </p>
 <ol type="i">
 <li>The operations <code>+</code> <code>-</code> <code>*</code> <code>/</code> <code>^</code> [are] written using their standard syntax</li>
@@ -1308,14 +1312,11 @@ order not to interfere too much with builtin names of Scheme.
 Since <code>-</code> is so common in the variable names, a special syntax <code>_</code>
 is needed. Other names can be used by the standard <code>|</code>&nbsp;<code>|</code> syntax
 for peculiar variable names.&#8221;
-</p>
-
-<p>
 He noted that he hadn&#8217;t &#8220;mentioned the syntax
 chosen to delimit the infix expressions. That&#8217;s on purpose,
-since I had and haven&#8217;t decided what I like best yet.&#8221;
-In the sample implementation,
-the 3-character sequence &#8220;<code>@${</code>&#8220; begins an infix expression,
+since I [haven&#8217;t] decided what I like best yet.&#8221;
+In the sample implementation, the 3-character sequence
+&#8220;<code>@${</code>&#8220; begins an infix expression,
 which switches to a completely different language that
 ends with a matching &#8220;<code>}</code>&#8221;.
 </p>
