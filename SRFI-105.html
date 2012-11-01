@@ -72,7 +72,7 @@ in part because they miss these conveniences.
 Scheme currently reserves <code>{</code>...<code>}</code>
 &#8220;for possible future extensions to the language&#8221;.
 We propose that <code>{</code>...<code>}</code> be used
-to support &#8220;curly-infix&#8221; notation as a homoiconic
+to support &#8220;curly-infix-expression&#8221; notation as a homoiconic
 infix abbreviation,
 as a modification of the Scheme reader.
 It is an abbreviation in much the same way that
@@ -82,7 +82,7 @@ It is an abbreviation in much the same way that
 A
 <a href="#specification"><dfn>curly-infix list</dfn></a>
 introduces a list whose visual presentation
-is in infix order instead of prefix order.
+can be in infix order instead of prefix order.
 For example,
 <samp>{n&nbsp;&gt;&nbsp;5}</samp> &#8658; <samp>(&gt;&nbsp;n&nbsp;5)</samp>,
 and
@@ -94,7 +94,7 @@ maps cleanly to
 <samp>(+&nbsp;x&nbsp;(*&nbsp;y&nbsp;z))</samp>.
 Forms with mixed infix operators and other complications have
 &#8220;<code>$nfx$</code>&#8221; prepended to
-enable later macro processing, e.g.,
+enable later processing, e.g.,
 <samp>{4&nbsp;+&nbsp;5&nbsp;*&nbsp;6}</samp> &#8658;
 <samp>($nfx$&nbsp;4&nbsp;+&nbsp;5&nbsp;*&nbsp;6)</samp>.
 Also, inside a curly-infix list (recursively),
@@ -133,7 +133,7 @@ by developers who currently choose to use other languages instead.
 <code>{</code>...<code>}</code> &#8220;for possible future
 extensions to the language&#8221;. We propose that
 <code>{</code>...<code>}</code> be used to
-support &#8220;curly-infix&#8221; notation as a reader
+support &#8220;curly-infix-expression&#8221; notation as a reader
 abbreviation, just as
 <samp>&#39;x</samp> is an abbreviation for <samp>(quote&nbsp;x)</samp> and
 <samp>(x&nbsp;y&nbsp;z)</samp>
@@ -166,6 +166,12 @@ See the <a href="#design-rationale">design rationale</a>
 for details on why the notation is designed the way it is.
 </p>
 
+<!--
+Note the hyphenation convention:
+ curly-infix-expression(s) == c-expression(s)
+ curly-infix list
+ curly-infix reader
+-->
 
 <h1><a name="specification">Specification</a></h1>
 <p>
@@ -342,7 +348,8 @@ because n-expressions include c-expressions
 and c-expressions include s-expressions.
 </p>
 
-<p>Here are some examples of c-expressions (note that all operators in curly-infix are delimited):</p>
+<p>Here are some examples of c-expressions (note that all operators
+in curly-infix-expressions are delimited):</p>
 <ol>
 <li><samp>{n&nbsp;&lt;=&nbsp;5}</samp> &#8658;
     <samp>(&lt;=&nbsp;n&nbsp;5)</samp></li>
@@ -523,17 +530,17 @@ the default implementation REPL).
 This marker (including the trailing whitespace character)
 <em>MUST</em> be consumed and considered whitespace.
 After reading this marker, the reader <em>MUST</em> accept
-curly-infix expressions in subsequent datums
+curly-infix-expressions in subsequent datums
 read from the same port until some other conflicting marker is given
 (no conflicting marker is specified here).
 </p>
 
 <p>
 Implementations of this SRFI <em>SHOULD</em>
-implement curly-infix expressions in their datum readers by default,
+implement curly-infix-expressions in their datum readers by default,
 even when the marker is not received.
 Portable applications <em>SHOULD</em> include this marker before
-using curly-infix expressions, typically near the top of a file.
+using curly-infix-expressions, typically near the top of a file.
 Portable applications <em>SHOULD NOT</em>
 use this marker as the very first characters
 of a file (e.g., it could be preceded by a newline),
@@ -744,12 +751,12 @@ a completely different meaning inside and outside the parentheses.
 In contrast, this curly-infix-expression proposal avoids these problems.
 The syntax for list creation, quasiquotation, and so on is almost
 identical in a curly-infix-expression when compared to traditional notation.
-For example, in curly-infix,
+For example, in curly-infix-expressions,
 <samp>&#96;{,a&nbsp;+&nbsp;,b}</samp>
 maps cleanly to
 <samp>&#96;(+&nbsp;,a&nbsp;,b)</samp>,
 which works as expected with all macros.
-The main difference is that, in a curly-infix expression, the position of
+The main difference is that, in a curly-infix-expression, the position of
 the operator in its surface syntax may be in a different location (infix)
 than its actual final location.</p>
 
@@ -768,14 +775,14 @@ the numbers in <var>ns</var> negated.
 Allowing the user to expressly notate when
 infix was intended, using <code>{</code>...<code>}</code>,
 turns out to be clearer
-and more intuitive. In particular, curly-infix allows the use of
+and more intuitive. In particular, curly-infix-expressions allow the use of
 infix with any symbol, whenever you want... and where it&#8217;s
 not convenient, you don&#8217;t need to use it. It is also very
 backwards-compatible: Normal lists work normally, and if you want
 infix, use <code>{</code>...<code>}</code>.</p>
 
 
-<h2><a name="rationale_equal">Why use <code>equal?</code> to compare operators in a &#8220;simple&#8221; curly-infix-list for equality?</a></h2>
+<h2><a name="rationale_equal">Why use <code>equal?</code> to compare operators in a &#8220;simple&#8221; curly-infix list for equality?</a></h2>
 <p>
 Operators are compared using <code>equal?</code> so that
 constructs like <samp>,op</samp> are legal operators,
@@ -789,7 +796,7 @@ particular case.
 </p>
 
 <h2><a name="rationale_delimiters">Why must infix operators be delimited?</a></h2>
-<p>Curly-infix requires that the infix operators be delimited (e.g., by
+<p>Curly-infix lists require that the infix operators be delimited (e.g., by
 spaces). This is consistent with Lisp history and current practice.
 Currently, in Lisp, operators are always
 delimited in traditional s-expressions (typically by left
@@ -832,7 +839,7 @@ In practice, we&#8217;ve found that simple infix is all
 that&#8217;s needed most of the time in Lisp-based languages.
 Even in other languages, many developers unnecessarily use
 grouping symbols with infix operators to make their order clear.
-An examination of two Scheme programs written using curly-infix
+An examination of two Scheme programs written using curly-infix-expressions
 (posted 2012-09-14) found that 55/78 (71%) of the top-level
 c-expressions do not embed an opening brace; this means that precedence
 is irrelevant for more than two-thirds of these top-level c-expressions.
@@ -907,12 +914,13 @@ of that symbol.
 Scheme macros are already quite powerful and capable of handling this;
 in these cases, <code>{</code>...<code>}</code> provides a more
 convenient notation.
-The curly-infix approach, instead of trying to manage both infix
+The curly-infix-expression approach, instead of trying to manage both infix
 and precedence, handles simple cases and then
 takes advantage of the existing Scheme scoping rules and macro system for
 more complex cases (in the rare cases where they are needed).</p>
 
-<p>Note that curly-infix includes support for unary operators, but again,
+<p>Note that curly-infix-expressions
+include support for unary operators, but again,
 they are without precedence.
 As a result, they must be grouped separately.
 This does not lead to hard-to-read expressions, however.
@@ -933,7 +941,7 @@ is much more flexible.</p>
 
 <h2><a name="rationale_precedence_addable">Could precedence be added?</a></h2>
 <p>It would be <em>possible</em>
-to extend curly-infix to provide a fixed
+to extend curly-infix-expressions to provide a fixed
 precedence system (e.g., if an expression is mixed,
 attempt to use various precedence rules).
 Here is a discussion how this could be accomplished in the future
@@ -993,7 +1001,7 @@ contexts), and this complicates setting precedence levels of some operators.
 
 <p>
 Here is an example of a precedence system that could extend
-curly-infix, called here the &#8220;math&#8221; extension.
+curly-infix-expressions, called here the &#8220;math&#8221; extension.
 In this extension, if a mixed curly-infix list is seen,
 it first attempts to apply the &#8220;math&#8221; ruleset, and only
 prepends &#8220;<code>$nfx$</code>&#8221; if it does not meet the requirements.  In this extension:
@@ -1058,7 +1066,7 @@ Think that is too complicated?
 Many other variations are possible.
 A &#8220;simple math&#8221; ruleset could be devised instead,
 e.g., perhaps it has a shorter list of built-in operators.
-The extant code using curly-infix tends to combine these:
+The extant code using curly-infix-expressions tends to combine these:
 <code>*</code>, <code>/</code>; <code>+</code>, <code>-</code>;
 <code>&lt;</code> , <code>&lt;=</code> , <code>&gt;=</code>,
 <code>&gt;</code>, <code>=</code>, <code>&lt;&gt;</code>, <code>eq</code>...;
@@ -1075,8 +1083,8 @@ but it would be odd to omit it from a precedence list.)
 The key point is that although this SRFI does not include a precedence system,
 one (such as these) could be added later
 (using a different marker).
-If a precedence system were added, all existing code using simple
-curly-infix expressions, or 0..2 parameter expressions, would work unchanged.
+If a precedence system were added, all existing code using
+curly-infix lists other than mixed curly-infix lists would work unchanged.
 Even when it&#8217;s not, many &#8220;<code>$nfx$</code>&#8221;
 processors would likely generate the same order in most actual cases,
 making transition easy should this ever occur.
@@ -1162,11 +1170,14 @@ simply passes it through:
 <h2><a name="rationale_marker">Why a marker starting with <code>#!</code> and a letter?</a></h2>
 
 <p>
-We would like implementations to always have curly-infix enabled.
+We would like implementations to always have curly-infix-expression
+parsing enabled.
 However, some implementations may have other extensions
 that use <code>{</code>...<code>}</code>.
-We want a simple, standard way to identify code that uses curly-infix
-so that readers will switch to curly-infix if they need to switch.
+We want a simple, standard way to identify code that uses
+curly-infix-expressions
+so that readers will switch to supporting
+curly-infix-expressions if they need to switch.
 This is especially important for those few Scheme implementations that
 already use braces for some other purpose.
 </p>
@@ -1218,7 +1229,7 @@ as an ignored line, and treat <code>#!</code> followed by
 <code>/</code> or <code>.</code> differently.
 Thus, implementations could trivially support (simultaneously) markers
 beginning with <code>#!</code> followed by a letter
-(such as the one to identify curly-infix),
+(such as the one to identify support for curly-infix-expressions),
 the SRFI-22 <code>#!</code>+space marker as an ignored line,
 and the format <code>#!/</code>&nbsp;...&nbsp;<code>!#</code> and <code>#!.</code>&nbsp;...&nbsp;<code>!#</code> as a
 multi-line comment.
@@ -1250,7 +1261,7 @@ program <var>curly-infix</var>.
 doesn&#8217;t use or interact with any module system at all
 (including the R6RS and R7RS module systems). This is because some
 implementations won&#8217;t have a module system (or at least not a
-standard one). Curly-infix is an intentionally simple mechanism
+standard one). Curly-infix-expressions are an intentionally simple mechanism
 that can be built into even trivial Scheme implementations.
 Mandating module support is unnecessary and might inhibit its
 adoption.</p>
@@ -1292,8 +1303,9 @@ so it might be easier to implement in Schemes which already define
 convention&#8221; has many problems:</p>
 <ul>
 <li>The Racket infix convention is much longer and more awkward
-than curly-infix notation. In the Racket infix convention, every
-infix operator adds 6 characters. Infix operations are a very
+than curly-infix-expressions.  In the Racket infix convention, every
+infix operator adds 6 characters when compared to curly-infix-expressions.
+Infix operations are a very
 common operation, so convenience matters. An expression like
 <samp>(1&nbsp;.&nbsp;+&nbsp;.&nbsp;2)</samp>
 is far longer, and less convenient, than
@@ -1316,7 +1328,7 @@ The Racket documentation even goes out of its way to emphasize that
 infix convention use is unrelated to improper lists... which
 suggests that they are easily confused.</li>
 <li>Without <code>{</code>...<code>}</code>, <samp>{x}</samp> is no longer useful as an escape mechanism
-for sweet-expressions (a notation that builds on curly-infix). An
+for sweet-expressions (a notation that builds on curly-infix-expressions). An
 alternative would be to use <samp>(. x)</samp> as an escape mechanism,
 but at that point dots-in-lists become busy and confusing.</li>
 <li>Racket&#8217;s implementation, according to its documentation,
@@ -1341,14 +1353,14 @@ be used &#8220;sparingly&#8221; does not encourage wider adoption.</li>
 <p>In short, cases where infix notation would be useful are
 extremely common, so its notation should be convenient.
 The Racket &#8220;infix convention&#8221; may be the
-next-best notation for infix notation after curly-infix, but
+next-best notation for infix notation after curly-infix-expressions, but
 it&#8217;s next-best, and we should strive for the <em>best</em>
 available notation for such a common need.
-Curly-infix does not <em>conflict</em> with the
+Curly-infix-expressions do not <em>conflict</em> with the
 Racket infix convention; implementations could implement both.
 We recommend that an implementation that
 implements the Racket infix convention should also allow multiple
-operands and use curly-infix semantics for them, pretending that
+operands and use curly-infix-expression semantics for them, pretending that
 <samp>.&nbsp;op&nbsp;.</samp>
 is a single parameter.
 In that case,
@@ -1466,7 +1478,8 @@ Differences in this approach, which some may see as advantages, are that
 infix operators need not be separated by whitespace,
 it provides precedence of <code>*</code> and <code>/</code> over <code>+</code> and <code>-</code>,
 and it builds in a simple assignment statement if you want it.
-Like many infix notations (including curly-infix), for many expressions
+Like many infix notations (including curly-infix-expressions),
+for many expressions
 the infix.plt package is a far clearer notation than the
 traditional s-expression.
 </p>
@@ -1494,8 +1507,8 @@ including procedures and macros that have not yet been defined.
 </li>
 <li>Because it has a precedence system, it is necessarily less homoiconic
 when precedence is used.
-Note that curly-infix supports precedence via <code>$nfx$</code>, and
-a built-in precedence system <em>could</em> be added later
+Note that curly-infix-expressions support precedence via <code>$nfx$</code>,
+and a built-in precedence system <em>could</em> be added later
 if this was desired by the community.
 </li>
 <li>There seems to be no provision for Scheme capabilities
@@ -1551,7 +1564,7 @@ confusion could easily lead to hard-to-find errors.
 </ol>
 
 <p>
-Note that an implementation could support both curly-infix and
+Note that an implementation could support both curly-infix-expressions and
 the Racket infix.plt package simultaneously.
 </p>
 
@@ -1567,11 +1580,13 @@ The Gambit reader includes a notation called the
 <a href="http://www.iro.umontreal.ca/~gambit/doc/gambit-c.html#Scheme-infix-syntax-extension">&#8220;Scheme Infix eXtension (SIX)&#8221;</a>
 that supports infix notation. SIX expressions begin with a backslash.</p>
 
-<p>Like curly-infix, SIX is a reader extension.
-But SIX has a number of problems compared to curly-infix:
+<p>Like curly-infix-expressions, SIX is a reader extension.
+But SIX has a number of problems compared to curly-infix-expressions:
 </p>
 <ul>
-<li>SIX has a long, complex grammar, requiring users to remember a complex grammar, and requiring a far more complex implementation.  Curly-infix, by contrast, is extremely simple.</li>
+<li>SIX has a long, complex grammar, requiring users to remember
+a complex grammar, and requiring a far more complex implementation.
+Curly-infix-expressions, by contrast, are extremely simple.</li>
 <li>SIX is inflexible.  It only supports a fixed set of operators, and
 users cannot easily use other operators inside its notation.
 SIX even defines a small set of types and control structures
@@ -1586,9 +1601,10 @@ must then be processed later for use.
 For example, in SIX, using an infix <samp>+</samp> in the input
 generates <samp>six.x+y</samp>, not <samp>+</samp>, in the read result.
 This means that macros may have to be specially designed to work with SIX.
-In contrast, in curly-infix, <samp>{x&nbsp;+&nbsp;y}</samp> actually
-generates <samp>(+&nbsp;x&nbsp;y)</samp>, so curly-infix cleanly
-interacts with macros and quoting.</li>
+In contrast, in curly-infix-expressions,
+<samp>{x&nbsp;+&nbsp;y}</samp> actually
+generates <samp>(+&nbsp;x&nbsp;y)</samp>, so curly-infix-expressions cleanly
+interact with macros and quoting.</li>
 </ul>
 
 <p>
@@ -1597,10 +1613,11 @@ SIX does demonstrate that there is a <em>need</em> for
 an infix notation that can be used in Scheme.
 </p>
 
-<p>A system could simultaneously implement curly-infix and SIX.
-However, curly-infix is far simpler, is more flexible (e.g., by allowing
-arbitrary symbols), and works much more easily with macros and quoting.
-Thus, we believe that curly-infix is the better system and more
+<p>A system could simultaneously implement curly-infix-expressions and SIX.
+However, curly-infix-expressions are
+far simpler, are more flexible (e.g., by allowing
+arbitrary symbols), and work much more easily with macros and quoting.
+Thus, we believe that curly-infix-expressions are the better system and more
 appropriate for standardization across Scheme implementations.</p>
 
 <h2><a name="rationale_guile">What about Guile 1.4&#8217;s &#8220;reading infix&#8221; module?</a></h2>
@@ -1642,7 +1659,7 @@ that there is a <em>need</em> for
 an infix notation that can be used in Scheme.
 </p>
 
-<p>In contrast, curly-infix is simpler,
+<p>In contrast, curly-infix-expressions are simpler,
 requires no registration system or other complexities,
 works more clearly with macros and quasiquotation, and
 has the general advantage of being homoiconic.</p>
@@ -1861,7 +1878,7 @@ which is essentially the same rule as before.</p>
 <h2><a name="rationale_otherdetails">Other details</a></h2>
 <p>There is no requirement that writers (e.g., &#8220;<code>write</code>&#8221;
 or a pretty-printer) write out curly-infix-expressions. They may
-choose to do so, e.g., for lists of length 3-6 whose car is the
+choose to do so, e.g., for lists of length 3-6 whose <code>car</code> is the
 symbol &#8220;<code>and</code>&#8221;,
 the symbol &#8220;<code>or</code>&#8221;, or a
 punctuation-only symbol. However, it would probably be wise to wait
@@ -1869,8 +1886,8 @@ until many implementations can handle c-expressions.</p>
 
 <p>
 The <code>$nfx$</code> and <code>$bracket-apply$</code> symbols are
-unhygienic, in the sense that programs that need it would
-in many cases need to begin by defining them, even though these identifiers
+unhygienic, in the sense that programs that use them may
+begin by defining them even though these identifiers
 do not appear literally in the code.
 However, we see no way around this without
 losing the benefits that these (optional) features are meant to provide.
@@ -1900,10 +1917,12 @@ resulting notation is homoiconic and the total number of rules is kept
 small.&#8221;
 </p>
 
-<p>Curly-infix is designed so that it can work on other Lisps as well,
+<p>Curly-infix-expressions are designed so that they can work on
+other Lisps as well,
 which should simplify adoption elsewhere.</p>
 
-<p>Curly-infix is an unusually simple mechanism, but like much of
+<p>Curly-infix-expression notation is an unusually simple mechanism,
+but like much of
 any Lisp-based language, its power comes from its simplicity.</p>
 
 <h1><a name="reference-implementation">Reference implementation</a></h1>
@@ -2441,7 +2460,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Notes on HTML 3.2:
 * HTML 3.2 has no attribute "id", so we use <a name="ID">...</a> instead.
 * HTML 3.2 doesn't include CSS "style", so a table is is used to format
-  the curly-infix-list BNF.
+  the curly-infix list BNF.
 * HTML 3.2 lacks many named entities, so we use numbered entities.
   Although HTML 3.2 includes a mechanism to define new entities inline
   (as part of the DOCTYPE), this is not supported by more modern
