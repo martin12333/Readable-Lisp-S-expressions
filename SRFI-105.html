@@ -941,13 +941,59 @@ Here is a discussion how this could be accomplished in the future
 not proposed in this SRFI.
 It is important to understand that
 such capabilities would be extensions <em>beyond</em> this SRFI.
+</p>
+
+<p>
 It would be best if the precedence rules (if any) were absolutely fixed;
-otherwise, subtle bugs would happen if files were read after the
-precedence was declared, and code would be hard to combine
-if it used different precedence rules.
+otherwise, subtle bugs would happen if only some files were read after the
+precedence was declared, and code would be hard to correctly combine
+and move if different code sections used different precedence rules.
 However, the precedence rules can be fixed while still allowing
 arbitrary new symbols, as shown below.
-Here is an example of such an extension, called a &#8220;math&#8221; extension.
+</p>
+
+<p>
+Unfortunately, there would be substantial arguments about the semantics
+(including the operators and precedence levels) of any precedence system,
+making it difficult to gain widespread implementation of a single
+precedence system.
+For example, should there be support for combining different ranged
+comparisons, to support notations such as
+<samp>{a&nbsp;&lt;&nbsp;b&nbsp;&lt;=&nbsp;c}</samp>?
+Should some operators be right-associative, and if so, which ones?
+(Exponentiation and assignment are often right-associative.)
+Should unranged comparisons (e.g., <code>=</code>) have a different
+precedence than ranged comparisons (e.g., <code>&gt;=</code>)?
+Although many languages (including C and Java)
+give multiplication and division the
+same left-associative precedence, even that is not universal;
+<a href="http://en.wikipedia.org/w/index.php?title=Order_of_operations&amp;oldid=520621877">multiplication is considered higher precedence than division</a> in
+the manuscript submission instructions for the <i>Physical Review</i> journals,
+the <i>Course of Theoretical Physics</i> by Landau and Lifshitz,
+and the <i>Feynman Lectures on Physics</i>.
+In addition,
+Wolfram Alpha considers implied (but not explicit) multiplication
+higher precedence than division.
+In
+<a href="http://cm.bell-labs.com/cm/cs/who/dmr/chist.html">
+<i>The Development of the C Language</i></a>,
+Dennis M. Ritchie
+notes that some of the precedence rules of C were infelicitous;
+should those problematic rules be used or not?
+There would also be substantial disagreement on exactly what operators
+should be in the precedence table (including which combinations and if
+Unicode characters should be included), their order, and whether
+the table should be &#8220;big&#8221; or &#8220;small&#8221;
+(since it is fixed, there are arguments for a larger one, but a larger
+one is harder to remember).
+Some symbols have different semantics in different contexts
+(e.g., <code>=</code> may mean equal-to or assignment in different
+contexts), and this complicates setting precedence levels of some operators.
+</p>
+
+<p>
+Here is an example of a precedence system that could extend
+curly-infix, called here the &#8220;math&#8221; extension.
 In this extension, if a mixed curly-infix list is seen,
 it first attempts to apply the &#8220;math&#8221; ruleset, and only
 prepends &#8220;<code>$nfx$</code>&#8221; if it does not meet the requirements.  In this extension:
@@ -973,7 +1019,7 @@ the expression does not meet the &#8220;math&#8221; ruleset, and
 the normal mixed rules are used (<code>$nfx$</code> is inserted at the front).
 </li>
 <li>
-When the same operator is repeated, the operator simply gains another operand, so <samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c&nbsp;*&nbsp;d}</samp> is the &#8220;<code>+</code>&#8221; operator applied to three operands: <samp>a</samp>, <samp>b</samp>, and <samp>(*&nbsp;c&nbsp;d)</samp>.
+When the same (unmodified) operator is repeated, the operator simply gains another operand, so <samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;c&nbsp;*&nbsp;d}</samp> is the &#8220;<code>+</code>&#8221; operator applied to three operands: <samp>a</samp>, <samp>b</samp>, and <samp>(*&nbsp;c&nbsp;d)</samp>.
 </li>
 <li>
 Other different operators of the same precedence are interpreted in left-to-right order, so <samp>{a&nbsp;+&nbsp;b&nbsp;-&nbsp;c}</samp> maps to <samp>{{a&nbsp;+&nbsp;b}&nbsp;-&nbsp;c}</samp>.
@@ -981,39 +1027,11 @@ Other different operators of the same precedence are interpreted in left-to-righ
 </ol>
 
 <p>
-But there would be substantial arguments about the semantics of
-any precedence system.
-For example, should there be support for combining different ranged
-comparisons, to support notations such as <samp>{a&nbsp;&lt;&nbsp;b&nbsp;&lt;=&nbsp;c}</samp>?
-Should some operators be right-associative, and if so, which ones?
-(Exponentiation and assignment are often right-associative.)
-Should unranged comparisons (e.g., <code>=</code>) have a different
-precedence than ranged comparisons (e.g., <code>&gt;=</code>)?
-Although many languages (including C and Java)
-treat multiplication and division with the
-same left-associative precedence, even that is not universal;
-<a href="http://en.wikipedia.org/w/index.php?title=Order_of_operations&amp;oldid=520621877">multiplication is considered higher precedence than division</a> in
-the manuscript submission instructions for the <i>Physical Review</i> journals,
-the <i>Course of Theoretical Physics</i> by Landau and Lifshitz,
-and the <i>Feynman Lectures on Physics</i>.
-In addition,
-Wolfram Alpha considers implied (but not explicit) multiplication
-higher precedence than division.
-Dennis M. Ritchie, in his
-<a href="http://cm.bell-labs.com/cm/cs/who/dmr/chist.html">
-<i>The Development of the C language</i></a>,
-notes that some of the precedence rules were infelicitous;
-should those problematic rules be used or not?
-There would also be substantial disagreement on exactly what operators
-should be in the precedence table (including which combinations and if
-Unicode characters should be included), their order, and whether
-the table should be &#8220;big&#8221; or &#8220;small&#8221;
-(since it is fixed, there are arguments for a larger one, but a larger
-one is harder to remember).
-Below is one possible order, in high-to-low precedence order
-(where ... matches 0 or more characters), presuming all is left-to-right;
-the point in part is to show that it
-would be challenging to get agreement on such a list:
+Below is one possible precedence table for the &#8220;math&#8221; extension,
+in high-to-low precedence order
+(where ... matches 0 or more characters), presuming all is left-to-right
+(the point in part is to show that it
+would be challenging to get agreement on such a list):
 </p>
 <ol>
 <li>Subscript/down-arrow: <code>sub</code> {Unicode: &#8595;, &#8659;}</li>
@@ -1041,21 +1059,27 @@ Many other variations are possible.
 A &#8220;simple math&#8221; ruleset could be devised instead,
 e.g., perhaps it has a shorter list of built-in operators.
 The extant code using curly-infix tends to combine these:
-<code>*</code>, <code>/</code>; <code>+</code>, <code>-</code>; <code>&lt;</code> , <code>&lt;=</code> , <code>&gt;=</code>, <code>&gt;</code>, <code>=</code>, <code>&lt;&gt;</code>, <code>eq</code>...;
+<code>*</code>, <code>/</code>; <code>+</code>, <code>-</code>;
+<code>&lt;</code> , <code>&lt;=</code> , <code>&gt;=</code>,
+<code>&gt;</code>, <code>=</code>, <code>&lt;&gt;</code>, <code>eq</code>...;
 <code>and</code>; and <code>or</code>;
-adding exponentiation (e.g., <code>**</code> and <code>exp</code>...) at a higher precedence level,
-and implication (e.g., <code>-&gt;</code> and <code>=&gt;</code>) would make sense for a short list.
-(The <code>&lt;&gt;</code> isn&#8217;t in many Scheme specifications, but it is odd to omit
-it from a precedence list.)
+adding exponentiation (e.g., <code>**</code> and <code>exp</code>...)
+at a higher precedence level,
+and implication (e.g., <code>-&gt;</code> and <code>=&gt;</code>)
+would make sense for a short list.
+(The operator <code>&lt;&gt;</code> isn&#8217;t in many Scheme specifications,
+but it would be odd to omit it from a precedence list.)
 </p>
 
 <p>
 The key point is that although this SRFI does not include a precedence system,
-one (such as these) could be added later.
+one (such as these) could be added later
+(using a different marker).
 If a precedence system were added, all existing code using simple
 curly-infix expressions, or 0..2 parameter expressions, would work unchanged.
-Even when it&#8217;s not, many &#8220;<code>$nfx$</code>&#8221; processors would likely generate the
-same order in most actual cases.
+Even when it&#8217;s not, many &#8220;<code>$nfx$</code>&#8221;
+processors would likely generate the same order in most actual cases,
+making transition easy should this ever occur.
 Since it would be difficult to gain such agreement, and the value of
 such a system is doubtful, it is better to provide a much simpler
 system that does not include precedence.
@@ -2173,7 +2197,7 @@ part 2.
   ; _like_ case-sensitivity, and the latest spec is case-sensitive,
   ; so let's start with #f (case-sensitive).
   ; This doesn't affect character names; as an extension,
-  ; We always accept arbitrary case for them, e.g., #\newline or #\NEWLINE.
+  ; we always accept arbitrary case for them, e.g., #\newline or #\NEWLINE.
   (define foldcase-default #f)
 
   ; Returns a true value (not necessarily #t) if char ends a line.
