@@ -970,6 +970,9 @@ comparisons, to support notations such as
 <samp>{a&nbsp;&lt;&nbsp;b&nbsp;&lt;=&nbsp;c}</samp>?
 Should unranged comparisons (e.g., <code>=</code>) have a different
 precedence than ranged comparisons (e.g., <code>&gt;=</code>)?
+Some symbols have different semantics in different contexts
+(e.g., <code>=</code> may mean equal-to or assignment in different
+contexts), and this complicates setting precedence levels of some operators.
 Should some operators be right-associative, and if so, which ones?
 (Exponentiation and assignment are often right-associative.)
 Although many languages (including C and Java)
@@ -994,9 +997,6 @@ Unicode characters should be included), their order, and whether
 the table should be &#8220;big&#8221; or &#8220;small&#8221;
 (since it is fixed, there are arguments for a larger one, but a larger
 one is harder to remember).
-Some symbols have different semantics in different contexts
-(e.g., <code>=</code> may mean equal-to or assignment in different
-contexts), and this complicates setting precedence levels of some operators.
 </p>
 
 <p>
