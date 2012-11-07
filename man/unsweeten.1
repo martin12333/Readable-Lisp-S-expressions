@@ -39,14 +39,14 @@ Example: {2 + 3 * 4} maps to ($nfx$ 2 + 3 * 4)
 Example: {2 + {3 * 4}} maps to (+ 2 (* 3 4))
 .RE
 .IP 2. 4
-\fINeoteric-expressions\fR (\fIn-expressions\fR): This includes curly-infix-expressions, and adds special meanings to some prefixed symbols. An e(...) maps to (e ...); an e{} maps to (e) and otherwise e{...} maps to e({...}); and an e[...] maps to ($bracket-apply$ e ...). In all cases, "e" is any expression. There must be no whitespace between e and the open parenthesis. Also, an unprefixed "( . e)" must evaluate as "e".
+\fINeoteric-expressions\fR (\fIn-expressions\fR): This includes curly-infix-expressions, and adds special meanings to some prefixed symbols. An e(...) maps to (e ...); an e{} maps to (e) and otherwise e{...} maps to (e {...}); and an e[...] maps to ($bracket-apply$ e ...). In all cases, "e" is any expression. There must be no whitespace between e and the open parenthesis. Also, an unprefixed "( . e)" must evaluate as "e".
 .RS 6
 .IP \(bu 2
 Example: f(1 2) maps to (f 1 2)
 .IP \(bu 2
 Example: f{n - 1} maps to f({n - 1}) which maps to (f (- n 1))
 .IP \(bu 2
-Example: f{n - 1}(x) maps to f({n - 1})(x) which maps to (f (- n 1))(x) which maps to ((f (- n 1)) x)
+Example: f{n - 1}(x) maps to (f {n - 1})(x) which maps to (f (- n 1))(x) which maps to ((f (- n 1)) x)
 .RE
 .IP 3. 4
 \fISweet-expressions\fR (\fIt-expressions\fR): Includes neoteric-expressions, and deduces parentheses from indentation. Basic rules:
