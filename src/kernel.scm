@@ -308,9 +308,12 @@
              (>=2 (and (not (char=? c #\0)) (not (char=? c #\1)))))
         (cond
           ((char=? char #\!)
-            ; non-nestable comment #! ... !#
-            (non-nest-comment fake-port)
-            '())
+            (if (consume-curly-infix fake-port)
+              '()  ; We saw #!curly-infix, we're done.
+              ; Otherwise, process non-nestable comment #! ... !#
+              (begin
+                (non-nest-comment fake-port)
+                '())))
           ((char=? char #\:)
             ; On Guile 1.6, #: reads characters until it finds non-symbol
             ; characters.
@@ -448,8 +451,14 @@
     (define line-separator #f)
     (define paragraph-separator #f)
 
-    ; R5RS has no hash extensions
-    (define (parse-hash . _) #f)
+    ; R5RS has no hash extensions, but handle #!curly-infix.
+    (define (parse-hash no-indent-read char fake-port)
+      (cond
+        ((eq? c #\!)
+          (if (consume-curly-infix fake-port)
+             '()  ; Found #!curly-infix, quietly accept it.
+             #f))
+        (#t #f))) ; No other hash extensions.
 
     ; Hash-pipe comment is not in R5RS, but support
     ; it as an extension, and make them nest.
@@ -560,6 +569,24 @@
                   (char-line-ending? c)))
           (my-read-char port)
           (consume-to-eol port)))))
+
+  ; Consume exactly lyst from port.
+  (define (consume-exactly port lyst)
+    (cond
+      ((null? lyst) #t)
+      ((eq? (my-peek-char port) (car lyst))
+        (my-read-char port)
+        (consume-exactly port (cdr lyst)))
+      (#t #f)))
+
+  ; Consume exactly "curly-infix" WHITESPACE, for use in #!curly-infix
+  (define (consume-curly-infix port)
+    (if (and (consume-exactly port (string->list "curly-infix"))
+             (my-char-whitespace? (my-peek-char port)))
+      (begin
+        (my-read-char port)
+        #t)
+      #f))
 
   (define (ismember? item lyst)
     ; Returns true if item is member of lyst, else false.
