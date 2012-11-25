@@ -11,17 +11,18 @@ We have three notation tiers, each of which builds on the previous one. Curly-in
     * A *simple* infix list represents one operation in infix order.  It has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol (aka eq? or eq).  It maps to "(even-parameter odd-parameters)".  E.g., {n <= 2} &rArr; (<= n 2), and {7 + 8 + 9} &rArr; (+ 7 8 9).
     * The *empty* {} maps to (), the *escaping* {e} maps to e, and the *unary-op* {e1 e2} maps to (e1 e2).  Thus, {$} &rArr; $, and {- x} &rArr; (- x).
     * Curly-infix lists beginning with the "." symbol have an unspecified mapping.
-    * Other infix lists are mixed and map to "(nfx parameters)".  E.g., {2 + 3 * 4} &rArr; (nfx 2 + 3 * 4)
+    * Other infix lists are mixed and map to "($nfx$ parameters)".  E.g., {2 + 3 * 4} &rArr; (nfx 2 + 3 * 4)
     * By intent, there is no precedence; just use another list. E.g., {2 + {3 * 4}} &rArr; (+ 2 (* 3 4))
+    * Each of the parameters in a curly-infix-expression are neoteric-expressions, as defined below, so f(x) is interpreted as (f x).
     * Curly-infix-expressions are defined for Scheme in [SRFI 105](http://srfi.schemers.org/srfi-105/).
-2.   *Neoteric-expressions* (*n-expressions*): This includes curly-infix-expressions, and adds special meanings to some prefixed symbols.
+2.   *Neoteric-expressions* (*n-expressions*): This includes curly-infix-expressions, and adds special meanings to some prefixed expressions.
     * An e(...) maps to (e ...).  E.g., f(1 2) &rArr; (f 1 2), exit() &rArr; (exit), and read(. port) &rArr; (read . port).
     * An e{} maps to (e), otherwise, e{...} maps to (e {...}). E.g., f{n - 1} &rArr; (f {n - 1}) &rArr; (f (- n 1)), and g{- x} &rArr; (g (- x)).
-    * An e\[...] maps to (bracketaccess e ...)
+    * An e\[...] maps to ($bracket-apply$ e ...)
     * In the above, "e" is any datum expression. There must be no whitespace between e and the open paired character.
     * An unprefixed "( . e)" must evaluate as "e".
-    * These recurse left-to-right.  E.G., f{n - 1}(x) &rArr; f({n - 1})(x) &rArr; (f (- n 1))(x) &rArr; ((f (- n 1)) x)
-3.   *Sweet-expressions* (*t-expressions*): Includes neoteric-expressions, and deduces parentheses from indentation. Basic rules:
+    * These recurse left-to-right.  E.g., f{n - 1}(x) &rArr; f({n - 1})(x) &rArr; (f (- n 1))(x) &rArr; ((f (- n 1)) x)
+3.   *Sweet-expressions* (*t-expressions*): Includes neoteric-expressions, and deduce parentheses from indentation. Basic rules:
 
     - An indented line is a parameter of its parent.
     - Later terms on a line are parameters of the first term.
@@ -51,7 +52,7 @@ Beginning an expression with indentation causes that line's indentation to be ig
 
 Individual implementations may have *additional* abbreviations that are useful for their semantics; our goal is to devise general abbreviations that others can build on if they choose.
 
-This is version 0.5 of our notation specification.  We aren't expecting major changes from here on, but there is certainly the possibility of small refinements.
+This is version 0.6 of our notation specification.  We aren't expecting major changes from here on, but there is certainly the possibility of small refinements.
 
 
 Quick Examples

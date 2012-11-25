@@ -20,7 +20,7 @@ Proposed solution
 
 To solve this, we've developed three tiers of notation, each building on the previous. These are simply new abbreviations for common cases; you can continue to use normally-formatted s-expressions wherever you want to. These new notations/abbreviations are, in summary:
 
-1.   *Curly-infix-expressions* (*c-expressions*): Curly braces {...} contain an *infix list*. A *simple infix list* has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  By intent, there is no precedence and you *must* use another {...} for an embedded infix list. For example, {n <= 2} maps to (<= n 2)
+1.   *Curly-infix-expressions* (*c-expressions*): Curly braces {...} contain an *infix list*. A *simple infix list* has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  By intent, there is no precedence and you *must* use another {...} for an embedded infix list. For example, {n <= 2} maps to (<= n 2).  The items in an infix list are neoteric expressions.
 2.   *Neoteric-expressions* (*n-expressions*): This includes curly-infix-expressions, and adds special meanings to some prefixed symbols. An e(...) maps to (e ...), and an e{...} maps to (e {...}). There must be no whitespace between e and the opening character.  For example, f(1 2) maps to (f 1 2)
 3.   *Sweet-expressions* (*t-expressions*): Includes neoteric-expressions, and deduces parentheses from indentation. Basic rules:
 
@@ -54,10 +54,9 @@ Getting our implementations
 
 We've created implementations of curly infix, neoteric-expressions, and sweet-expressions. We really want people to try this out and give feedback.
 
-To try all the demos, make sure you have:
+To try all the Scheme demos, make sure you have:
 
 *   [GNU Guile](http://www.gnu.org/software/guile/guile.html) (an implementation of the *Scheme* dialect of Lisp).  It's best if you use a guile with built-in readline support (normally it is), but the demos will work if it isn't.
-*   a Common Lisp implementation; here we'll presume it is clisp, but it doesn't really matter (sbcl is known to work).  This actually isn't necessary; you can use guile instead if you don't want to install a Common Lisp.
 *   expect
 
 If you plan to use the development (not stable) version, you'll also need:
@@ -65,6 +64,8 @@ If you plan to use the development (not stable) version, you'll also need:
 *   git (to download the software)
 *   autoconf and automake (to build it)
 *   guile development libraries (e.g., "guile-devel" on Fedora and Cygwin)
+
+We have a draft Common Lisp implementation.  We test it with clisp, but it doesn't really matter (sbcl is known to work).
 
 You should be running on a POSIX system; if you use Windows, you may need to install Cygwin first. Any modern GNU/Linux system will do nicely.
 
@@ -121,14 +122,9 @@ The instructions below assume you haven't installed it.  If you *have* installed
 Using curly-infix-expressions (c-expressions)
 =============================================
 
-Let's first try out "curly-infix-expressions" (c-expressions). You use either Common Lisp or guile (a Scheme implementation) to do this.
+Let's first try out "curly-infix-expressions" (c-expressions). Let's use guile (a Scheme implementation) to do this.
 
-If you want to try it with Common Lisp, you'll need to start one (I'll presume in these instructions it's clisp), and load our implementation:
-
-     clisp
-     (load "readable.cl")
-
-If you want to try it out with Scheme instead, run "./curly-guile".
+Just run "./curly-guile".
 
 Any of these three new notations (curly-infix-expressions, neoteric-expressions, and sweet-expressions) can also accept normally-formatted s-expressions. To demonstrate that, type at the command line:
 
@@ -156,17 +152,25 @@ You *can* "chain" the same infix operator, e.g., {2 + 3 + 4} is fine, and it wil
 
 In short, a *simple infix list* has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  By intent, there is no precedence and you *must* use another {...} for an embedded infix list.
 
-But what happens to infix lists that aren't simple infix lists?  The answer is that they map to "(nfx parameters)".   You can then define a macro named "nfx" to process the list (e.g., to implement a precedence system), or define "nfx" as an error to prevent its use.
+If a curly-infix list has 0, 1, or 2 parameters, they are treated specially.  {} is a synonym for (), since they are both empty lists.  { e } maps to just e, and { - x } maps to (- x).
+
+But what happens to infix lists that aren't any of these?  The answer is that they map to "($nfx$ parameters)".   You can then define a macro named "$nfx$" to process the list (e.g., to implement a precedence system), or define "$nfx$" as an error to prevent its use.  The dollar signs make it unlikely that you'd define or use this by accident.
 
 Note that curly-infix-expressions intentionally do not force a particular precedence, nor do they automatically switch to infix operators recursively inside {...}. Many previous systems did that, but this turned out to interfere with many of Lisp's power (which needs homoiconicity and generality). It also does not attempt to guess when infix operators are used. [After many experiments with real problems, David A. Wheeler found that this rule works better for Lisps than those alternatives.](http://www.dwheeler.com/readable/version02.html)
 
+The list elements inside {...} can be neoteric-expressions, not just ordinary list datums.  In particular, that means an expression of the form f(...) is treated the same as (f ...).  Thus, inside a curly-infix list, cos(0) is treated the same as (cos 0), which evaluates to 1.  So we can do this:
+
+    {cos(0) + 1}
+
 Just execute "(exit)" to get out.
+
+(Note: If you want to try the draft curly-infix implementation in Common Lisp, run a Common Lisp implementation such as clisp, and then execute (load "readable.cl")).
 
 
 Using Neoteric-expressions (n-expressions)
 ===========================================
 
-Now let's try out neoteric-expressions (which include curly-infix-expressions).  This time we'll use guile, a Scheme implementation.   You'll need to have guile and expect for this to work; assuming you do, try this:
+Now let's do more with neoteric-expressions (which include curly-infix-expressions).  This time we'll use guile, a Scheme implementation.   You'll need to have guile and expect for this to work; assuming you do, try this:
 
       ./neoteric-guile
 
@@ -207,7 +211,7 @@ It's actually quite common to have a function call pass one parameter, where the
 
 Just like traditional s-expressions, spaces separate parameters, so it's *important* that there be *no* space between the function name and the opening "(". Since spaces separate parameters, a space between the function name and the opening "(" would create two parameters instead of a single function call. The same is basically true for traditional s-expressions, too; (a b) and (ab) are not the same thing.
 
-Here's the real rule: in neoteric-expressions, e(...) maps to (e ...), e{...} maps to (e {...}), e[ ... ] maps to (bracketaccess e), and (. e) maps to e. The "bracketaccess" is so that you can write a macro to access arrays and other mappings.  The (. e) rule lets you escape expressions (e.g., for the sweet-expressions we'll describe next).  Note that "neoteric-expressions" used be called "modern-expressions"; you may see some older documents using that name.
+Here's the real rule: in neoteric-expressions, e(...) maps to (e ...), e{} maps to (e), other e{...} maps to (e {...}), e[ ... ] maps to ($bracket-apply$ e), and (. e) maps to e. The "$bracket-apply$" is so that you can write a macro to access arrays and other mappings.  The (. e) rule lets you escape expressions (e.g., for the sweet-expressions we'll describe next).  Note that "neoteric-expressions" used be called "modern-expressions"; you may see some older documents using that name.
 
 Normally, people and pretty-printers will format Lisp code so that parameters inside a list are *separated* by whitespace, e.g., (a b c), so it turns out that this change in interpretation doesn't change the meaning of typically-formatted modern Lisp code (and you can pretty-print code to fix it in the rare cases you need to). What's more, typical Lisp-aware text editors can often work with neoteric-expressions as they are, without change... so if you don't want to change the way you work, but have a somewhat more readable notation, neoteric-expressions can help. But we still have to do all that parentheses-balancing, which hinders readability. Sweet-expressions, our next stop, address this.  To get out of this demo, type *exit()* *Enter* or *control-D* *Enter*.
 

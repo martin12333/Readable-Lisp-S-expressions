@@ -39,13 +39,13 @@
 ; If the expression has (1) an odd number of parameters,
 ; (2) at least 3 parameters, and (3) all the even parameters are equal symbols,
 ; then it's "simple infix" and maps to (even-parameter odd-parameters).
-; Otherwise, it's not simple, and it maps to (nfx parameters).
+; Otherwise, it's not simple, and it maps to ($nfx$ parameters).
 ; Thus:
 ;  {2 * n}       maps to (* 2 n)
 ;  {x eq y}      maps to (eq x y)
 ;  {2 + 3 + 4}   maps to (+ 2 3 4)   - chaining/fungibility works
 ;  {2 + {3 * 4}} maps to (+ 2 (* 3 4)) - Nesting works + keeps things simple
-;  {2 + 3 * 4}   maps to (nfx 2 + 3 * 4) - non-simple.
+;  {2 + 3 * 4}   maps to ($nfx$ 2 + 3 * 4) - non-simple.
 ;
 ; If you always use simple infix expressions, e.g., by never mixing
 ; operators in the same list, then every list (after reading)
@@ -58,22 +58,22 @@
 ; {2 + {3 * 4}}.  You can nest ordinary lists too, e.g., to use
 ; prefix functions.  Thus {(- x) / 2} maps to (/ (- x) 2).
 ;
-; If you want automatic precedence, define a macro named "nfx"
+; If you want automatic precedence, define a macro named "$nfx$"
 ; and have it implement the precedence. Note that if another macro recurses
-; into the nfx expression BEFORE nfx has a chance to modify its parameters,
+; into the $nfx$ expression BEFORE $nfx$ has a chance to modify its parameters,
 ; the other macro will see the lists in a different order than it may expect.
 ; Precedence is intentionally NOT handled by this reader macro,
 ; because it's easy to get precedence quietly wrong when using a reader macro.
 ; Instead, this reader macro is designed to work WITH an execution-time
 ; macro if that's desired.
 ;
-; If want to avoid using an "nfx" macro entirely, just define the
-; "nfx" macro as an error.
+; If want to avoid using an "$nfx$" macro entirely, just define the
+; "$nfx$" macro as an error.
 ;
-; Warning: if you use an "nfx" macro, don't have nfx override the name
+; Warning: if you use an "$nfx$" macro, don't have $nfx$ override the name
 ; of an existing function, or it will be confusing to use.  E.G., if
-; "nfx" renames "=" as "setf", then you could have this confusing case:
-; {x = 3 * 4} maps to (nfx x = 3 * 4) maps to (setf x (* 3 4)), but
+; "$nfx$" renames "=" as "setf", then you could have this confusing case:
+; {x = 3 * 4} maps to ($nfx$ x = 3 * 4) maps to (setf x (* 3 4)), but
 ; {x = 3} maps to (= x 3) which is a comparison, not a value-setting operation.
 ; Instead, create normal functions/macros for each infix operator and just
 ; use them directly, e.g., use "<-" for assignment and define a macro
@@ -85,10 +85,10 @@
 ; * Easily understood/verified implementation - less to "go wrong"
 ; * Works 100% trivially with execution macros, particularly if only
 ;   "simple" infix forms are used.
-; * No precedence list that must be memorized (unless you use an "nfx" macro)
-; * Can work with an nfx macro (which COULD implement precedence) if needed
+; * No precedence list that must be memorized (unless you use an "$nfx$" macro)
+; * Can work with an $nfx$ macro (which COULD implement precedence) if needed
 ; Cons:
-; * Doesn't directly support precedence (if you want that) - nfx macro
+; * Doesn't directly support precedence (if you want that) - $nfx$ macro
 ;   must do that.
 ; * Doesn't rename functions, or give them new infix names.  You can define
 ;   functions/macros with traditional infix names separately, if desired.
@@ -128,7 +128,7 @@
 ; Transform not-simple infix list.  Written as a separate function so that
 ; future versions/specifications can easily replace just this pieces.
 (defun transform-mixed-infix (lyst)
-  (cons 'nfx lyst))
+  (cons '$nfx$ lyst))
 
 ; The following install the {...} reader.
 ; See "Common Lisp: The Language" by Guy L. Steele, 2nd edition,
@@ -227,7 +227,7 @@
         ((eql c #\[ )  ; Implement f[x]
           (read-char input-stream nil nil t) ; consume opening char
           (neoteric-process-tail input-stream
-                (cons 'bracketaccess
+                (cons '$bracket-apply$
                   (cons prefix
                     (my-read-delimited-list #\] input-stream)))))
         ((eql c #\{ )  ; Implement f{x}.
@@ -352,7 +352,7 @@
       (eval result)))
   (end-of-file () )))
 
-; TODO: Handle improper lists, e.g., {a + b . c} should insert nfx, and
+; TODO: Handle improper lists, e.g., {a + b . c} should insert $nfx$, and
 ; port(a . b) should generate (port a . b).
 
 ; TODO: Handle #|...|# comments inside neoteric-read.

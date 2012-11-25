@@ -47,9 +47,9 @@
 (mytest '{x eq y} '(eq x y))
 (mytest '{2 + 3 + 4} '(+ 2 3 4))
 (mytest '{2 + {3 * 4}} '(+ 2 (* 3 4)))
-(mytest '{2 + 3 *** 4} '(nfx 2 + 3 *** 4))
+(mytest '{2 + 3 *** 4} '($nfx$ 2 + 3 *** 4))
 (mytest '{(- x) / 2} '(/ (- x) 2))
-(mytest '{x = 3 * 4} '(nfx x = 3 * 4))
+(mytest '{x = 3 * 4} '($nfx$ x = 3 * 4))
 (mytest '{x = 3} '(= x 3))
 
 ; Demo its use:

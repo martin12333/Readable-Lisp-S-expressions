@@ -91,7 +91,7 @@
 
 (reader-test '(+ 3 (* 4 5)))
 
-(reader-test '(bracketaccess f a))
+(reader-test '($bracket-apply$ f a))
 
 (reader-test '(f (+ 2 3)))
 

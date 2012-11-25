@@ -27,26 +27,26 @@ Sweet-expressions are actually the top of three tiers of notation,
 each of which builds on the previous one:
 
 .IP 1. 4
-\fICurly-infix-expressions\fR (\fIc-expressions\fR): Curly braces {...} contain an \fIinfix list\fR. A \fIsimple infix list\fR has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  The empty {} maps to (), escaping {e} maps to e, unary-op {e1 e2} maps to (e1 e2), and curly-infix lists beginning with the symbol "." are unspecified.  Other infix lists map to "(nfx parameters)".   By intent, there is no precedence and you \fImust\fR use another {...} for an embedded infix list.
+\fICurly-infix-expressions\fR (\fIc-expressions\fR): Curly braces {...} contain an \fIinfix list\fR. A \fIsimple infix list\fR has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  The empty {} maps to (), escaping {e} maps to e, unary-op {e1 e2} maps to (e1 e2), and curly-infix lists beginning with the symbol "." are unspecified.  Other infix lists map to "($nfx$ parameters)".   By intent, there is no precedence and you \fImust\fR use another {...} for an embedded infix list.  Inside a curly-infix-expression is a list of neoteric-expressions (below).
 .RS 6
 .IP \(bu 2
 Example: {n <= 2} maps to (<= n 2)
 .IP \(bu 2
 Example: {2 * 3 * 4} maps to (* 2 3 4)
 .IP \(bu 2
-Example: {2 + 3 * 4} maps to (nfx 2 + 3 * 4)
+Example: {2 + 3 * 4} maps to ($nfx$ 2 + 3 * 4)
 .IP \(bu 2
 Example: {2 + {3 * 4}} maps to (+ 2 (* 3 4))
 .RE
 .IP 2. 4
-\fINeoteric-expressions\fR (\fIn-expressions\fR): This includes curly-infix-expressions, and adds special meanings to some prefixed symbols. An e(...) maps to (e ...); an e{} maps to (e) and otherwise e{...} maps to e({...}); and an e[...] maps to (bracketaccess e ...). In all cases, "e" is any expression. There must be no whitespace between e and the open parenthesis. Also, an unprefixed "( . e)" must evaluate as "e".
+\fINeoteric-expressions\fR (\fIn-expressions\fR): This includes curly-infix-expressions, and adds special meanings to some prefixed symbols. An e(...) maps to (e ...); an e{} maps to (e) and otherwise e{...} maps to (e {...}); and an e[...] maps to ($bracket-apply$ e ...). In all cases, "e" is any expression. There must be no whitespace between e and the open parenthesis. Also, an unprefixed "( . e)" must evaluate as "e".
 .RS 6
 .IP \(bu 2
 Example: f(1 2) maps to (f 1 2)
 .IP \(bu 2
 Example: f{n - 1} maps to f({n - 1}) which maps to (f (- n 1))
 .IP \(bu 2
-Example: f{n - 1}(x) maps to f({n - 1})(x) which maps to (f (- n 1))(x) which maps to ((f (- n 1)) x)
+Example: f{n - 1}(x) maps to (f {n - 1})(x) which maps to (f (- n 1))(x) which maps to ((f (- n 1)) x)
 .RE
 .IP 3. 4
 \fISweet-expressions\fR (\fIt-expressions\fR): Includes neoteric-expressions, and deduces parentheses from indentation. Basic rules:

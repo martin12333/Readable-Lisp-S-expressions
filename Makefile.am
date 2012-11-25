@@ -15,7 +15,7 @@ SHELL = /bin/sh
 
 # As a convenience for testing, we *also* create scripts in the *current*
 # (top) directory that will depend on the local "readable/" versions,
-# *EVEN IF* another version of the reable library is installed.
+# *EVEN IF* another version of the readable library is installed.
 # This way, when testing, you can just use
 # ./unsweeten (or whatever) and it will depend on the development version
 # without having to set an environment variable (which is easy to forget).
@@ -52,7 +52,8 @@ CLEANFILES = readable/kernel.scm
 script_sources = src/sweeten.sscm src/unsweeten \
                  src/curly-guile src/neoteric-guile src/sweet-guile \
                  src/sweet-run src/sweet-scsh \
-                 src/kernel.scm
+                 src/kernel.scm \
+                 src/srfi-curly-infix.scm
 EXTRA_DIST += $(script_sources)
 
 # These scripts are generated at build time, so they're not distributed
@@ -220,6 +221,9 @@ dist_doc_DATA = README COPYING AUTHORS ChangeLog solution.md tutorial.md
 # Presentation in Open Document Format (.odp) about these formats:
 dist_doc_DATA += readable-s-expressions.odp
 
+# Include SRFI-105 specification as documentation (defines curly-infix):
+dist_doc_DATA += SRFI-105.html
+
 # Distribute the specs.  They're not up-to-date, but they
 # are referred to in the README, so distribute them too
 # as users may be puzzled if they're not there.
@@ -245,8 +249,9 @@ EXTRA_DIST += \
  tests/sweeten-testsuite \
  tests/sweeten-correct \
  tests/unsweeten-testsuite \
- tests/unsweeten-correct
-
+ tests/unsweeten-correct \
+ tests/curly-infix-correct2 \
+ tests/curly-infix-testsuite2
 
 # TODO: Improve test harness & integration into overall system.
 
@@ -258,6 +263,11 @@ check: readable/kernel.scm
 	            < $(srcdir)/tests/neoteric-testsuite
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/sweet-test \
 	            < $(srcdir)/tests/sweet-testsuite
+	@echo "Running srfi-curly-infix, showing diffs from correct results:"
+	GUILE_LOAD_PATH="$(builddir)" guile \
+	            $(srcdir)/src/srfi-curly-infix.scm < \
+	            $(srcdir)/tests/curly-infix-testsuite2 | \
+	          diff -u - "$(srcdir)/tests/curly-infix-correct2"
 	@echo "Running unsweeten, showing differences from correct results:"
 	"$(builddir)/unsweeten" < "$(srcdir)/tests/unsweeten-testsuite" | \
 	     diff -b -u - "$(srcdir)/tests/unsweeten-correct"
@@ -280,4 +290,3 @@ pull:
 
 test:
 	make check
-

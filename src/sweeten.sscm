@@ -314,12 +314,15 @@ define sweeten-boring-list(x first? pos next-indent)
     null?(x) '(#\newline)
     first?
       ; if first, force its disply, even if that goes beyond width max.
-      let (item(unit(car(x))))
+      let
+        $ item unit(car(x))
         append item 
           sweeten-boring-list(cdr(x) #f {pos + length(item)} next-indent)
     #t ; Not first.
-      let (item(unit(car(x))))
-        let (item-sameline(append(LISTSPACE group-list LISTSPACE item)))
+      let
+        $ item unit(car(x))
+        let
+          $ item-sameline append(LISTSPACE group-list LISTSPACE item)
           if {{pos + length(item-sameline)} < maxwidth}
             append item-sameline
               sweeten-boring-list cdr(x) #f
@@ -458,7 +461,7 @@ define display-skip-last-eol(x)
       ; In this program, strings only happen from indents:
       set! column1 #f
       display-skip-last-eol(cdr(x))
-    {char?(car(x)) and null?(cdr(x)) and eq?(car(x) #\newline)}
+    {char?(car(x)) and null?(cdr(x)) and {car(x) eq? #\newline}}
       #t
     char?(car(x))
       write-char(car(x))
@@ -488,15 +491,17 @@ define consume-end-of-line()
     if memq(c end-of-line-chars)
       begin
         read-char()
-        let ( next(peek-char()) )
-          if {not(eq?(c next)) and memq(next end-of-line-chars)}
+        let
+          $ next peek-char()
+          if {not{c eq? next} and memq(next end-of-line-chars)}
             begin
               read-char()
 
 ; Copy one line from stdin to stdout, end on EOF or end-of-line.
 ; Consume the end of line.
 define copy-line(port)
-  let ((c peek-char(port)))
+  let
+    $ c peek-char(port)
     cond
       eof-object?(c)   c
       memq(c end-of-line-chars)
@@ -511,7 +516,8 @@ define copy-line(port)
 define sweeten-filter()
   if build-on-sweet
     restore-traditional-read()
-  let ((c peek-char(current-input-port())))
+  let
+    $ c peek-char(current-input-port())
     cond
       eof-object?(c)
         c
@@ -520,10 +526,10 @@ define sweeten-filter()
         newline()
         set! column1 #t
         sweeten-filter()
-      char=?(c #\;)
+      {c char=? #\;}
         copy-line current-input-port()
         sweeten-filter()
-      {char=?(c #\space) or char=?(c tab)}
+      {{c char=? #\space} or {c char=? tab}}
         ; Do not copy space or tab directly to output; instead,
         ; skip past them.  Initial indents (from space/tab)
         ; disable sweet-expression processing, which is not what we want.

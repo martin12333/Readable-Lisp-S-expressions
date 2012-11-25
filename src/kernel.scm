@@ -308,9 +308,12 @@
              (>=2 (and (not (char=? c #\0)) (not (char=? c #\1)))))
         (cond
           ((char=? char #\!)
-            ; non-nestable comment #! ... !#
-            (non-nest-comment fake-port)
-            '())
+            (if (consume-curly-infix fake-port)
+              '()  ; We saw #!curly-infix, we're done.
+              ; Otherwise, process non-nestable comment #! ... !#
+              (begin
+                (non-nest-comment fake-port)
+                '())))
           ((char=? char #\:)
             ; On Guile 1.6, #: reads characters until it finds non-symbol
             ; characters.
@@ -448,8 +451,14 @@
     (define line-separator #f)
     (define paragraph-separator #f)
 
-    ; R5RS has no hash extensions
-    (define (parse-hash . _) #f)
+    ; R5RS has no hash extensions, but handle #!curly-infix.
+    (define (parse-hash no-indent-read char fake-port)
+      (cond
+        ((eq? c #\!)
+          (if (consume-curly-infix fake-port)
+             '()  ; Found #!curly-infix, quietly accept it.
+             #f))
+        (#t #f))) ; No other hash extensions.
 
     ; Hash-pipe comment is not in R5RS, but support
     ; it as an extension, and make them nest.
@@ -560,6 +569,24 @@
                   (char-line-ending? c)))
           (my-read-char port)
           (consume-to-eol port)))))
+
+  ; Consume exactly lyst from port.
+  (define (consume-exactly port lyst)
+    (cond
+      ((null? lyst) #t)
+      ((eq? (my-peek-char port) (car lyst))
+        (my-read-char port)
+        (consume-exactly port (cdr lyst)))
+      (#t #f)))
+
+  ; Consume exactly "curly-infix" WHITESPACE, for use in #!curly-infix
+  (define (consume-curly-infix port)
+    (if (and (consume-exactly port (string->list "curly-infix"))
+             (my-char-whitespace? (my-peek-char port)))
+      (begin
+        (my-read-char port)
+        #t)
+      #f))
 
   (define (ismember? item lyst)
     ; Returns true if item is member of lyst, else false.
@@ -934,7 +961,7 @@
     (cond
       ((null? lyst) #t)
       ((not (pair? lyst)) #f)
-      ((not (eq? op (car lyst))) #f) ; fail - operators not the same
+      ((not (equal? op (car lyst))) #f) ; fail - operators not the same
       ((not (pair? (cdr lyst)))  #f) ; Wrong # of parameters or improper
       (#t   (even-and-op-prefix? op (cddr lyst))))) ; recurse.
 
@@ -946,7 +973,6 @@
       (pair? (cdr lyst))     ; Must have a second argument.
       (pair? (cddr lyst))    ; Must have a third argument (we check it
                              ; this way for performance)
-      (symbol? (cadr lyst))  ; 2nd parameter must be a symbol.
       (even-and-op-prefix? (cadr lyst) (cdr lyst)))) ; true if rest is simple
 
   ; Return alternating parameters in a list (1st, 3rd, 5th, etc.)
@@ -958,7 +984,7 @@
   ; Not a simple infix list - transform it.  Written as a separate procedure
   ; so that future experiments or SRFIs can easily replace just this piece.
   (define (transform-mixed-infix lyst)
-     (cons 'nfx lyst))
+     (cons '$nfx$ lyst))
 
   ; Given curly-infix lyst, map it to its final internal format.
   (define (process-curly lyst)
@@ -989,7 +1015,7 @@
           ; read in as infix
           (attach-sourceinfo pos
             (process-curly
-              (my-read-delimited-list no-indent-read #\} port))))
+              (my-read-delimited-list neoteric-read-real #\} port))))
         (#t
           (underlying-read no-indent-read port)))))
 
@@ -1013,7 +1039,7 @@
              (c   (my-peek-char port)))
         (cond
           ((eof-object? c) prefix)
-          ((char=? c #\( ) ; Implement f(x).
+          ((char=? c #\( ) ; Implement f(x)
             (my-read-char port)
             (neoteric-process-tail port
               (attach-sourceinfo pos
@@ -1022,18 +1048,21 @@
             (my-read-char port)
             (neoteric-process-tail port
                 (attach-sourceinfo pos
-                  (cons (attach-sourceinfo pos 'bracketaccess)
+                  (cons (attach-sourceinfo pos '$bracket-apply$)
                     (cons prefix
                       (my-read-delimited-list neoteric-read-nocomment #\] port))))))
           ((char=? c #\{ )  ; Implement f{x}
+            (read-char port)
             (neoteric-process-tail port
               (attach-sourceinfo pos
                 (let
-                  ((tail (curly-infix-read-real neoteric-read-nocomment port)))
+                  ((tail (process-curly
+                      (my-read-delimited-list neoteric-read-nocomment #\} port))))
                   (if (eqv? tail '())
                     (list prefix) ; Map f{} to (f), not (f ()).
                     (list prefix tail))))))
           (#t prefix))))
+
 
   ; This is the "real" implementation of neoteric-read.
   ; It directly implements unprefixed (), [], and {} so we retain control;
