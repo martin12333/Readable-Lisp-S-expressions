@@ -113,11 +113,14 @@ nonstandard reader extensions supported by some other readers.
 
 .SH EXAMPLES
 .PP
-You can use this tool to process files, say, via a makefile. Then you can use sweet-expressions to write your code, and have it quickly translated to s-expressions. The following portable makefile snippet translates all ".sscm" (Sweet Scheme) files into ".scm" (Scheme) files (be sure the first character is TAB on the last line):
+You can use this tool to process files, say, via a makefile. Then you can use sweet-expressions to write your code, and have it quickly translated to s-expressions. The following portable makefile snippet translates all ".sscm" (Sweet Scheme) files into ".scm" (Scheme) files; be sure the first character is TAB on the rule command with $(UNSWEETEN):
 
  UNSWEETEN = unsweeten
  \.sscm\.scm:
     $(UNSWEETEN) $< > $@
+ # You *must* set .SUFFIXES for the suffix rule to work:
+ \.SUFFIXES: \.sscm \.scm
+
 
 .PP
 You can also use the tool as a front-end for interactive uses. For example,
