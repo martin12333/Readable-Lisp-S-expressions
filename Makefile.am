@@ -27,6 +27,7 @@ UNSWEETEN = ./unsweeten
 # Here is the usual POSIX-portable inference rule for unsweetening:
 # .sscm.scm:
 #	$(UNSWEETEN) < $< > $@
+# .SUFFIXES: .sscm .scm
 # We can't use that inference rule in this makefile, because POSIX doesn't
 # allow us to portably declare a dependency in inference rules.
 # Since we're *building* unsweeten, we *do* have such a dependency.
