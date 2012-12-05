@@ -429,7 +429,8 @@ define sweeten-top-multiline(m indent indent-already)
     ! !   deeper(indent)
     ! !   sweeten-boring-list m #t posdent(indent-already indent)
     ! !                       deeper(indent)
-    ! eq?(car(m) 'defun)  ; Handle Common Lisp "defun" specially.
+    ! {eq?(car(m) 'defun) and {general-length(m) > 3}}
+    ! ! ; Handle Common Lisp "defun" specially.
     ! ! let*
     ! !    ((asline-cuddled append(line(list(car(m) cadr(m))) '(#\space)
                                    unit-force-list(caddr(m)))))
@@ -437,7 +438,7 @@ define sweeten-top-multiline(m indent indent-already)
     ! !      ; We can cuddle up on line with two parameters:
     ! !      append getdent(indent-already indent)
     ! !        asline-cuddled \\ '(#\newline)
-    ! !        sweeten-body cddr(m) mark-deeper(indent) #f
+    ! !        sweeten-body cdddr(m) mark-deeper(indent) #f
     ! !      ; Can't cuddle with 2 parameters - use normal format.
     ! !      sweeten-top-normal-indent m
     ! !        getdent(indent-already indent) \\ #f
