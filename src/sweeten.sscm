@@ -76,6 +76,16 @@ define boring-length 16              ; Lists >= this length may be boring.
 define infix-operators
   ' and or xor + - * / ^ ++ -- ** // ^^ < <= > >= = <> != ==
 
+; Defining operators may define something as multiple items in a list
+; (e.g., with an implied begin/prog), but if that happens, don't put
+; them all on one line.
+define defining-operators '(define lambda
+  define-module                  ; Guile modules
+  library export import          ; R6RS library modules
+  let-syntax letcrec-syntax define-syntax syntax-rules
+  letrec let let* let1
+  defun block)                   ; Common Lisp
+
 ; Lists with these symbols as first parameter, and aren't shown as 1 line,
 ; are be shown as a line with SYMBOL FIRST-PARAMETER, followed by
 ; child lines (where we can manage it).
@@ -83,13 +93,11 @@ define infix-operators
 ; and has a different semantic meaning from later parameters.
 ; This refinement isn't *necessary* but I think it looks better.
 define cuddle-first-parameter
-  '(define lambda
-  if when unless case
-  set! setq let let* letrec let1 do
-  define-module                  ; Guile modules
-  library export import          ; R6RS library modules
-  defun block typecase           ; Common Lisp
-  let-syntax letcrec-syntax define-syntax syntax-rules)
+  append
+    defining-operators
+    '(if when unless case
+      typecase           ; Common Lisp
+      set! setq do)
 
 ; Control what symbol is used for grouping.  This isn't likely to change
 ; now, but it was a subject of long mailing list discussion.
@@ -176,6 +184,14 @@ define general-length-inner(x count-so-far)
 define general-length(x)
   general-length-inner x 0
 
+; Return true if m begins with a "definition" (e.g., define, defun)
+; and has more than 3 parameters.  Thus (define (f x) (* 2 x)) is
+; not long, but (define (f x) x x) is "long".
+; This means that all Common Lisp "defuns" will be multi-line (okay by me).
+define long-definition?(x)
+  if {memq(car(x) defining-operators) and {general-length(x) > 3}}
+    #t
+    #f
 
 ; Return #t if x should be represented using curly-infix notation {...}.
 define represent-as-infix?(x)
@@ -280,6 +296,11 @@ define unit(x)
     ; You might be able to use these in a pinch:
     ; char?(x)     append '(#\# #\\) x ; Doesn't handle special chars
 
+; Return x as a unit, but always represent lists as (a b c):
+define unit-force-list(x)
+  if pair?(x)
+    append LISTLP unit-list(x) LISTRP
+    unit(x)
 
 ; Return x, the rest of the list, as a list of characters. See line().
 define line-tail(x)
@@ -408,6 +429,18 @@ define sweeten-top-multiline(m indent indent-already)
     ! !   deeper(indent)
     ! !   sweeten-boring-list m #t posdent(indent-already indent)
     ! !                       deeper(indent)
+    ! eq?(car(m) 'defun)  ; Handle Common Lisp "defun" specially.
+    ! ! let*
+    ! !    ((asline-cuddled append(line(list(car(m) cadr(m))) '(#\space)
+                                   unit-force-list(caddr(m)))))
+    ! !    if fits-width?(indent-already indent length(asline-cuddled))
+    ! !      ; We can cuddle up on line with two parameters:
+    ! !      append getdent(indent-already indent)
+    ! !        asline-cuddled \\ '(#\newline)
+    ! !        sweeten-body cddr(m) mark-deeper(indent) #f
+    ! !      ; Can't cuddle with 2 parameters - use normal format.
+    ! !      sweeten-top-normal-indent m
+    ! !        getdent(indent-already indent) \\ #f
     ! {memq(car(m) cuddle-first-parameter) and {length(m) >= 3}}
     ! ! ; the car is a symbol that we'd like to cuddle. Try to do so.
     ! ! let* (asline-cuddled(line(list(car(m) cadr(m)))))
@@ -438,6 +471,7 @@ define sweeten-top(m indent indent-already)
     let* (asline(line(m)) length-asline(length(asline)))
       if { {length-asline < max-unit-character-length} and
            fits-width?(indent-already indent length-asline) and
+           {not long-definition?(m)} and
            {general-length(m) < max-unit-list-length} }
         ; Yes, we can represent it as one list of space-separated parameters:
         append getdent(indent-already indent) asline '(#\newline)

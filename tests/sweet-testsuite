@@ -877,3 +877,17 @@ x #|comment|# y
 f
   x #|comment|# y
 
+
+(define (f x) x x)
+define f(x)
+  x
+  x
+
+(define (f x) x)
+define f(x) x
+
+(defun x (a b) (q a b) (n a b))
+defun x (a b)
+  q a b
+  n a b
+
