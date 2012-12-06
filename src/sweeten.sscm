@@ -73,8 +73,8 @@ define max-unit-character-length 60  ; Max character length of single unit.
 define max-unit-list-length 8        ; Max list length of single unit.
 define boring-length 16              ; Lists >= this length may be boring.
 
-define infix-operators
-  ' and or xor + - * / ^ ++ -- ** // ^^ < <= > >= = <> != ==
+define special-infix-operators
+  ' and or xor
 
 ; Defining operators may define something as multiple items in a list
 ; (e.g., with an implied begin/prog), but if that happens, don't put
@@ -114,6 +114,15 @@ define LISTLBRACE      list((integer->char 123))
 define LISTRBRACE      list((integer->char 125))
 define LISTSPACE       list( #\space )
 define LISTSP.SP       list( #\space #\. #\space )
+; This list of punctuation characters is the list of punctuation characters
+; in the POSIX/C locale as defined in the POSIX.1 2008 specification
+; XBD section 7.3.1.1, in the same order as given for "punct".
+define punct-chars     list( #\! #\" #\# #\$ #\% #\& #\'
+                             #\( #\) #\* #\+ #\, #\- #\. #\/
+                             #\: #\; #\< #\= #\> #\? #\@
+                             #\[ #\\ #\] #\^ #\_ #\` #\{
+                             #\| #\} #\~ )
+                             
 
 
 ; This program automatically handles various end-of-line situations.
@@ -129,6 +138,21 @@ define end-of-line-chars
     ; If wide chars are supported, add this:
     ; integer->char(#x2028)   ; <line separator>
 
+; Does x contain a list of ONLY punctuation characters?
+; An empty list is considered true.
+define contains-only-punctuation?(x)
+  cond
+    null?(x)                 #t
+    not(pair?(x))            #f ; Check this before evaluating car(x)!
+    memq(car(x) punct-chars) contains-only-punctuation?(cdr(x))
+    #t                       #f
+
+; Returns #t if x is a symbol that would typically be used in infix position.
+define is-infix-operator?(x)
+  cond
+    not(symbol?(x)) #f
+    memq(x special-infix-operators) #t
+    #t contains-only-punctuation?(string->list(symbol->string(x)))
 
 ; Given an indent, return the next deeper indent.
 define deeper(indent)
@@ -197,9 +221,8 @@ define long-definition?(x)
 define represent-as-infix?(x)
   and
     pair? x
-    symbol? car(x)
-    memq car(x) infix-operators
-    list? x
+    is-infix-operator? car(x)
+    list? x           ; No improper lists!
     {length(x) >= 3}
     {length(x) <= 6}
 
