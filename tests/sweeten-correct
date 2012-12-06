@@ -12,4 +12,15 @@ E F g
 
 define f(a) {2 * a}
 
+define q(x) {x -> 1}
+
+define g(c d e)
+  really-long-name c
+  really-long-name d
+  really-long-name d
+  really-long-name e
+
+defun f (a b)
+  boggle a
+  boggle b
 ; Comment at end of file.
