@@ -490,8 +490,11 @@ define sweeten-top-multiline(m indent indent-already)
     ! {eq?(car(m) 'defun) and {general-length(m) > 3}}
     ! ! ; Handle Common Lisp "defun" specially.
     ! ! let*
-    ! !    ((asline-cuddled append(line(list(car(m) cadr(m))) '(#\space)
-                                   unit-force-list(caddr(m)))))
+    ! !    $ asline-cuddled
+    ! !      append
+    ! !        line list(car(m) cadr(m))  ; "defun" name-of-function
+    ! !        '(#\space)                 ; space between name and parameters
+    ! !        unit-force-list caddr(m)   ; list of parameters.
     ! !    if fits-width?(indent-already indent length(asline-cuddled))
     ! !      ; We can cuddle up on line with two parameters:
     ! !      append getdent(indent-already indent)
