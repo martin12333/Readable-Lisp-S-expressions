@@ -208,14 +208,24 @@ define general-length-inner(x count-so-far)
 define general-length(x)
   general-length-inner x 0
 
-; Return true if m begins with a "definition" (e.g., define, defun)
-; and has more than 3 parameters.  Thus (define (f x) (* 2 x)) is
-; not long, but (define (f x) x x) is "long".
-; This means that all Common Lisp "defuns" will be multi-line (okay by me).
-define long-definition?(x)
-  if {memq(car(x) defining-operators) and {general-length(x) > 3}}
-    #t
-    #f
+; The "meta-length" is an estimate of how complicated an expression is.
+; Every list element counts as 1, and every new list also adds one
+; (because we count () as 1) recursively.
+define meta-length(x)
+  cond
+    not(pair?(x)) 1  ; Includes ().
+    #t            {meta-length(car(x)) + meta-length(cdr(x))}
+
+; Return true if m is "complicated" (and thus should split lines).
+; All Common Lisp "defuns" are considered complicated.
+define complicated?(x)
+  cond
+    eq?(car(x) 'defun) #t
+    memq(car(x) cuddle-first-parameter)
+      if pair?(cdr(x))
+        {meta-length(cddr(x)) > 7}
+        #f
+    #t #f
 
 ; Return #t if x should be represented using curly-infix notation {...}.
 define represent-as-infix?(x)
@@ -465,7 +475,7 @@ define sweeten-top-multiline(m indent indent-already)
     ! !      ; Can't cuddle with 2 parameters - use normal format.
     ! !      sweeten-top-normal-indent m
     ! !        getdent(indent-already indent) \\ #f
-    ! {memq(car(m) cuddle-first-parameter) and {length(m) >= 3}}
+    ! memq(car(m) cuddle-first-parameter)
     ! ! ; the car is a symbol that we'd like to cuddle. Try to do so.
     ! ! let* (asline-cuddled(line(list(car(m) cadr(m)))))
     ! !    if fits-width?(indent-already indent length(asline-cuddled))
@@ -495,7 +505,7 @@ define sweeten-top(m indent indent-already)
     let* (asline(line(m)) length-asline(length(asline)))
       if { {length-asline < max-unit-character-length} and
            fits-width?(indent-already indent length-asline) and
-           {not long-definition?(m)} and
+           {not complicated?(m)} and
            {general-length(m) < max-unit-list-length} }
         ; Yes, we can represent it as one list of space-separated parameters:
         append getdent(indent-already indent) asline '(#\newline)
