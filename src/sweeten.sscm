@@ -46,6 +46,7 @@
 ;   Indentation must be active at the start of the line.
 ; line(): Return a list-of-characters representation of *one* line
 ;   of space-separated neoteric-expression units.
+;   The generated result may be rejected, e.g., if it's too long.
 ;   Indentation must be active at the start of the line.
 ; unit(): Return a list-of-characters representation of some unit.
 ;   Indentation processing *may* be active, but the character sequence
