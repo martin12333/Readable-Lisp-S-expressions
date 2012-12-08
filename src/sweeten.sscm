@@ -54,6 +54,10 @@
 ; We need to explicitly *disable* the sweet-reader if it's active so that we
 ; get the "old" reader format on read; this is important for handling
 ; badly-formatted old files.   In the standard build this is unnecessary.
+;
+; For debugging, add "--debug" after the two @ GUILE @ statements at the
+; beginning of the file; this will enable very useful backtraces.
+
 define build-on-sweet #f
 if build-on-sweet
   use-modules
@@ -71,6 +75,7 @@ define marked-indent-increment '(#\! #\space)
 define min-indent-marking {length(indent-increment) * 3}
 define max-unit-character-length 60  ; Max character length of single unit.
 define max-unit-list-length 8        ; Max list length of single unit.
+define max-uncomplicated-meta-length 9 ; "Complicated" if more than this.
 define boring-length 16              ; Lists >= this length may be boring.
 
 define special-infix-operators
@@ -223,7 +228,7 @@ define complicated?(x)
     eq?(car(x) 'defun) #t
     memq(car(x) cuddle-first-parameter)
       if pair?(cdr(x))
-        {meta-length(cddr(x)) > 7}
+        {meta-length(cddr(x)) > max-uncomplicated-meta-length}
         #f
     #t #f
 
@@ -234,6 +239,15 @@ define represent-as-infix?(x)
     is-infix-operator? car(x)
     list? x           ; No improper lists!
     {length(x) >= 3}
+    {length(x) <= 6}
+
+; Return #t if x should be represented as a brace suffix
+define represent-as-brace-suffix?(x)
+  and
+    pair? x
+    is-infix-operator? car(x)
+    list? x           ; No improper lists!
+    {length(x) >= 2}
     {length(x) <= 6}
 
 ; Define an association list mapping the Lisp function names which have
@@ -278,6 +292,12 @@ define infix-tail(op x)
     #t
       append LISTSP.SP unit(x) LISTRBRACE
 
+; Return "x" as a list of characters, surrounded by {...}, for use as f{...}.
+define as-brace-suffix(x)
+  if {general-length(x) < 3}
+    append LISTLBRACE unit-list(x) LISTRBRACE
+    append LISTLBRACE unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
+
 ; Given list of characters, return the characters that would REPRESENT
 ; those characters inside a string AFTER the initial double-quote,
 ; then return the double-quote.  This translates newline to \n, etc.
@@ -319,9 +339,17 @@ define unit(x)
        long-and-boring?(x)
          append LISTLP unit-list(x) LISTRP
        symbol?(car(x))
-         if represent-as-infix?(x)
-           append LISTLBRACE unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
-           append unit(car(x)) LISTLP unit-list(cdr(x)) LISTRP
+         cond
+           represent-as-infix?(x)
+             ; Special case, use {...}:
+             append LISTLBRACE unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
+           {pair?(cdr(x)) and null?(cddr(x)) and pair?(cadr(x)) and
+             represent-as-brace-suffix?(cadr(x))}
+             ; Special case, use f{...}:
+             append unit(car(x)) as-brace-suffix(cadr(x))
+           #t
+             ; Normal case, use f(...):
+             append unit(car(x)) LISTLP unit-list(cdr(x)) LISTRP
        #t
          append LISTLP unit-list(x) LISTRP
     #t  string->list(object->string(x))

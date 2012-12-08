@@ -23,6 +23,14 @@ xyz
       1
       (* n (factorial (- n 1)))))
 
+(define (g x)
+  (q (* 2 x)))
+
+(define (h x)
+  (set! z (r (* 2 x y))))
+
+(set! q (f (- x)))
+
 (defun f (a b)
   (boggle a)
   (boggle b))
