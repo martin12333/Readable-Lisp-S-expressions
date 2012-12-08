@@ -238,17 +238,14 @@ define represent-as-infix?(x)
     pair? x
     is-infix-operator? car(x)
     list? x           ; No improper lists!
-    {length(x) >= 3}
     {length(x) <= 6}
+
+define represent-as-inline-infix?(x)
+  {represent-as-infix?(x) and {length(x) >= 3}}
 
 ; Return #t if x should be represented as a brace suffix
 define represent-as-brace-suffix?(x)
-  and
-    pair? x
-    is-infix-operator? car(x)
-    list? x           ; No improper lists!
-    {length(x) >= 2}
-    {length(x) <= 6}
+  {represent-as-infix?(x) and {length(x) >= 2}}
 
 ; Define an association list mapping the Lisp function names which have
 ; abbreviations ==> the list of characters in their abbreviation
@@ -340,7 +337,7 @@ define unit(x)
          append LISTLP unit-list(x) LISTRP
        symbol?(car(x))
          cond
-           represent-as-infix?(x)
+           represent-as-inline-infix?(x)
              ; Special case, use {...}:
              append LISTLBRACE unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
            {pair?(cdr(x)) and null?(cddr(x)) and pair?(cadr(x)) and
@@ -377,9 +374,9 @@ define line-tail(x)
 ; Indentation processing *MUST* be active.
 define line(x)
   cond
-    not(pair?(x))                 unit(x)
-    represent-as-abbreviation?(x) unit(x)
-    represent-as-infix?(x)        unit(x)
+    not(pair?(x))                  unit(x)
+    represent-as-abbreviation?(x)  unit(x)
+    represent-as-inline-infix?(x)  unit(x)
     {pair?(x) and null?(cdr(x))} ; Handle 1-datum case specially.
       if symbol?(car(x))
         append unit(car(x)) LISTLP LISTRP
