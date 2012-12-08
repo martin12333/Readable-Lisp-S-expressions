@@ -43,31 +43,32 @@
 ; Key functions include:
 ; sweeten-top(): Returns a list-of-characters representation of an
 ;   expression; it may generate multiple lines with indentation.
+;   Indentation must be active at the start of the line.
 ; line(): Return a list-of-characters representation of *one* line
 ;   of space-separated neoteric-expression units.
 ;   Indentation must be active at the start of the line.
 ; unit(): Return a list-of-characters representation of some unit.
 ;   Indentation processing *may* be active, but the character sequence
 ;   returned must not depend on that; it returns a list without newline.
-
-; Set to #t if you want to run while invoking the sweet module directly.
-; We need to explicitly *disable* the sweet-reader if it's active so that we
-; get the "old" reader format on read; this is important for handling
-; badly-formatted old files.   In the standard build this is unnecessary.
 ;
 ; For debugging, add "--debug" after the two @ GUILE @ statements at the
 ; beginning of the file; this will enable very useful backtraces.
+
+; Set build-on-top to #t if you want to run while invoking the
+; sweet module directly.
+; We need to explicitly *disable* the sweet-reader if it's active so that we
+; get the "old" reader format on read; this is important for handling
+; badly-formatted old files.   In the standard build this is unnecessary.
 
 define build-on-sweet #f
 if build-on-sweet
   use-modules
     readable kernel
 
-; These are settings that control the "look" of the formatted result.
+; Here are settings that control the "look" of the formatted result.
 ; In the future these might be controlled via option flags.
-
-; Note: The maxwidth may be violated if, at a current indent, there is a
-; long non-pair that exceeds it.  But other than long atoms, it's respected,
+; Note that maxwidth may be violated if, at a current indent, there is a
+; long non-pair that exceeds it.  Other than that, it's respected,
 ; so it's unlikely to exceed this width in practice:
 define maxwidth 78
 define indent-increment '(#\space #\space)
@@ -81,28 +82,29 @@ define boring-length 16              ; Lists >= this length may be boring.
 define special-infix-operators
   ' and or xor
 
-; Defining operators may define something as multiple items in a list
-; (e.g., with an implied begin/prog), but if that happens, don't put
-; them all on one line.
-define defining-operators '(define lambda
+; This is a list of operators that we prefer to present as "cuddled" with
+; one following parameter. In other words, if multi-line, show these as
+; "OPERATOR FIRST-PARAMETER" followed by other parameters as child lines.
+; This is different from the usual multi-line format, which is just
+; "OPERATOR" on the first line followed by child lines.
+; This format is used when in typical uses the first parameter is *special*
+; and has a different semantic meaning from later parameters,
+; such as defining operators and control flow operators.
+; This refinement isn't *necessary* but I think it looks better.
+; The "complicated?" routine, below, will recommend that lists with these
+; operators be split into multiple lines if their parameters are complex.
+; We actually cuddle TWO parameters for Common Lisp defun, but that's
+; so unusual that we handle "defun" as a separate special case.
+define cuddle-first-parameter '(
+  if when unless case
+  define lambda
   define-module                  ; Guile modules
   library export import          ; R6RS library modules
-  let-syntax letcrec-syntax define-syntax syntax-rules
   letrec let let* let1
-  defun block)                   ; Common Lisp
-
-; Lists with these symbols as first parameter, and aren't shown as 1 line,
-; are be shown as a line with SYMBOL FIRST-PARAMETER, followed by
-; child lines (where we can manage it).
-; This format is used when in typical uses the first parameter is *special*
-; and has a different semantic meaning from later parameters.
-; This refinement isn't *necessary* but I think it looks better.
-define cuddle-first-parameter
-  append
-    defining-operators
-    '(if when unless case
-      typecase           ; Common Lisp
-      set! setq do)
+  let-syntax letcrec-syntax
+  define-syntax syntax-rules
+  set! do
+  setq block typecase)           ; Common Lisp
 
 ; Control what symbol is used for grouping.  This isn't likely to change
 ; now, but it was a subject of long mailing list discussion.
@@ -128,8 +130,6 @@ define punct-chars     list( #\! #\" #\# #\$ #\% #\& #\'
                              #\: #\; #\< #\= #\> #\? #\@
                              #\[ #\\ #\] #\^ #\_ #\` #\{
                              #\| #\} #\~ )
-                             
-
 
 ; This program automatically handles various end-of-line situations.
 ; An end-of-line is a sequence of two different end-of-line chars,
@@ -222,6 +222,8 @@ define meta-length(x)
 
 ; Return true if m is "complicated" (and thus should split lines).
 ; All Common Lisp "defuns" are considered complicated.
+; If an operator is one that we prefer to cuddle, and its meta-length
+; is long, then say that's complicated too.
 define complicated?(x)
   cond
     eq?(car(x) 'defun) #t
@@ -386,7 +388,6 @@ define line(x)
     #t
       append unit(car(x)) line-tail(cdr(x))
 
-
 ; Return list "m" as a list of characters representing
 ; a long and boring split list.  We'll keep track of position inside
 ; this routine, since we can do that easily here.
@@ -490,7 +491,8 @@ define sweeten-top-multiline(m indent indent-already)
     ! !   sweeten-boring-list m #t posdent(indent-already indent)
     ! !                       deeper(indent)
     ! {eq?(car(m) 'defun) and {general-length(m) > 3}}
-    ! ! ; Handle Common Lisp "defun" specially.
+    ! ! ; Handle Common Lisp "defun" specially; try to cuddle the
+    ! ! ; first 2 parameters of the defun operator.
     ! ! let*
     ! !    $ asline-cuddled
     ! !      append
@@ -506,7 +508,8 @@ define sweeten-top-multiline(m indent indent-already)
     ! !      sweeten-top-normal-indent m
     ! !        getdent(indent-already indent) \\ #f
     ! memq(car(m) cuddle-first-parameter)
-    ! ! ; the car is a symbol that we'd like to cuddle. Try to do so.
+    ! ! ; We'd like to cuddle the first parameter of this operator,
+    ! ! ; if we can... so try to do so.
     ! ! let* (asline-cuddled(line(list(car(m) cadr(m)))))
     ! !    if fits-width?(indent-already indent length(asline-cuddled))
     ! !       ; We can cuddle up on line with one parameter:
@@ -539,7 +542,9 @@ define sweeten-top(m indent indent-already)
            {general-length(m) < max-unit-list-length} }
         ; Yes, we can represent it as one list of space-separated parameters:
         append getdent(indent-already indent) asline '(#\newline)
-        ; No, can't put entire expression on one line. Use a multiline format.
+        ; No, don't put entire expression on one line; use a multiline format.
+        ; Note that this can happen even if we COULD have put it on one line,
+        ; because we intentionally break up "complicated" expressions:
         sweeten-top-multiline(m indent indent-already)
 
 ; True if at beginning of column (line), otherwise false.
@@ -579,7 +584,6 @@ define display-sweeten-format(x)
   if not(column1)
     begin newline() set!(column1 #t)
   display-skip-last-eol sweeten-top(x string->list("") #f)
-
 
 
 ; Consume an end-of-line. This is 2 unequal end-of-line characters,
