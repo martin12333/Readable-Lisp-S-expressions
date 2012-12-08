@@ -41,6 +41,11 @@ defun
   first-param second-param
   {first-param + second-param}
 
+define
+  this-is-another-really-long-name-to-see-if-we-can-handle-define-overflow
+  first-param second-param
+  {first-param + second-param}
+
 '(a b c d e f g h i j k l m n o p q)
 
 ' \\
