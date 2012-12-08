@@ -496,11 +496,11 @@ define sweeten-top-multiline(m indent indent-already)
     ! !        '(#\space)                 ; space between name and parameters
     ! !        unit-force-list caddr(m)   ; list of parameters.
     ! !    if fits-width?(indent-already indent length(asline-cuddled))
-    ! !      ; We can cuddle up on line with two parameters:
+    ! !      ; We can cuddle up on line with name and list of parameters:
     ! !      append getdent(indent-already indent)
     ! !        asline-cuddled \\ '(#\newline)
     ! !        sweeten-body cdddr(m) mark-deeper(indent) #f
-    ! !      ; Can't cuddle with 2 parameters - use normal format.
+    ! !      ; Can't cuddle "defun funcname (params)" - use normal format.
     ! !      sweeten-top-normal-indent m
     ! !        getdent(indent-already indent) \\ #f
     ! memq(car(m) cuddle-first-parameter)
@@ -511,7 +511,7 @@ define sweeten-top-multiline(m indent indent-already)
     ! !       append getdent(indent-already indent)
     ! !         asline-cuddled \\ '(#\newline)
     ! !         sweeten-body cddr(m) mark-deeper(indent) #f
-    ! !       ; Can't cuddle - use normal format.
+    ! !       ; Can't cuddle with one parameter - use normal format.
     ! !       sweeten-top-normal-indent m
     ! !         getdent(indent-already indent) \\ #f
     ! ; Nothing special.  Use normal multi-line format:
