@@ -34,4 +34,15 @@ xyz
 (defun f (a b)
   (boggle a)
   (boggle b))
+
+(defun this-is-a-really-really-long-name-to-see-if-we-can-handle-defun-overflow (first-param second-param) (+ first-param second-param))
+
+'(a b c d e f g h i j k l m n o p q)
+
+'(a b c d e f g h i j k l m n o p q r t u v w x y z a b c d e f g h i j k l m n o p q r t u v w x y z)
+
+((a b) (c d) (e f))
+
+((f (g 0) (h 1) (qqqqq 123 456 798 123 456 789 123 456 789) (z (a b c) (dd dd dd) (ee ee ee ee))) (e z) (g y))
+
 ; Comment at end of file.
