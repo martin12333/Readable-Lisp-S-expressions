@@ -117,11 +117,12 @@ define LISTLP          list( #\( )
 define LISTRP          list( #\) )
 define LISTLBRACE      list((integer->char 123))
 define LISTRBRACE      list((integer->char 125))
-define LISTSPACE       list( #\space )
 define LISTSP.SP       list( #\space #\. #\space )
 ; This list of punctuation characters is the list of punctuation characters
 ; in the POSIX/C locale as defined in the POSIX.1 2008 specification
 ; XBD section 7.3.1.1, in the same order as given for "punct".
+; Thus, this is the set of characters for which C ispunct() is true in the
+; POSIX or C locale.
 define punct-chars     list( #\! #\" #\# #\$ #\% #\& #\'
                              #\( #\) #\* #\+ #\, #\- #\. #\/
                              #\: #\; #\< #\= #\> #\? #\@
@@ -179,7 +180,6 @@ define mark-deeper(indent)
     append indent marked-indent-increment
     append indent indent-increment
 
-
 ; An x is boring if it's not a list, or it's a list with ONLY non-pair members.
 define boring?(x)
   cond
@@ -198,7 +198,6 @@ define long-and-boring?(x)
     not(list?(x))                 #f
     {length(x) < boring-length}   #f
     #t                            boring?(x)
-
 
 ; Support general-length-inner - help count length of possibly-improper list.
 define general-length-inner(x count-so-far)
@@ -273,7 +272,7 @@ define unit-list(x)
     pair?(x)
       if null?(cdr(x))
         unit car(x)
-        append unit(car(x)) LISTSPACE unit-list(cdr(x))
+        append unit(car(x)) '(#\space) unit-list(cdr(x))
     #t  append(LISTSP.SP unit(x))
 
 ; Return tail of an infix expression, as list of chars
@@ -283,7 +282,7 @@ define infix-tail(op x)
     null?(x)
       LISTRBRACE
     pair?(x)
-      append LISTSPACE op LISTSPACE unit(car(x)) infix-tail(op cdr(x))
+      append '(#\space) op '(#\space) unit(car(x)) infix-tail(op cdr(x))
     ; The following is used if we get an improper list.  This can't
     ; happen if only proper lists are represented using curly-infix:
     #t
@@ -365,7 +364,7 @@ define line-tail(x)
   cond
     null?(x)  '()
     pair?(x)
-      append LISTSPACE unit(car(x)) line-tail(cdr(x))
+      append '(#\space) unit(car(x)) line-tail(cdr(x))
     #t
       append LISTSP.SP unit(x)
 
@@ -379,7 +378,7 @@ define line(x)
     represent-as-abbreviation?(x)
       if {not(pair?(cadr(x))) or null?(cdr(cadr(x)))}
         unit(x) ; Just show '(x) if x isn't a multi-item list.
-        append cadr(assq(car(x) abbreviations)) LISTSPACE line(cadr(x))
+        append cadr(assq(car(x) abbreviations)) '(#\space) line(cadr(x))
     {pair?(x) and null?(cdr(x))} ; Handle 1-datum case specially.
       if symbol?(car(x))
         append unit(car(x)) LISTLP LISTRP
@@ -404,7 +403,7 @@ define sweeten-boring-list(x first? pos next-indent)
       let
         $ item unit(car(x))
         let
-          $ item-sameline append(LISTSPACE group-list LISTSPACE item)
+          $ item-sameline append('(#\space) group-list '(#\space) item)
           if {{pos + length(item-sameline)} < maxwidth}
             append item-sameline
               sweeten-boring-list cdr(x) #f
@@ -454,7 +453,7 @@ define sweeten-top-normal-indent(x indent indent-already)
     ; know that the indentation has been performed.
     let*
       \\
-        prefix  append(cadr(assq(car(x) abbreviations)) LISTSPACE)
+        prefix  append(cadr(assq(car(x) abbreviations)) '(#\space))
         newdent append(getdent(indent-already indent) prefix)
       append newdent
         sweeten-top cadr(x) indent newdent
