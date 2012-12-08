@@ -43,6 +43,10 @@ xyz
 
 '(a b c d e f g h i j k l m n o p q r t u v w x y z a b c d e f g h i j k l m n o p q r t u v w x y z)
 
+'(a)
+
+'a
+
 ((a b) (c d) (e f))
 
 ((f (g 0) (h 1) (qqqqq 123 456 798 123 456 789 123 456 789) (z (a b c) (dd dd dd) (ee ee ee ee))) (e z) (g y))

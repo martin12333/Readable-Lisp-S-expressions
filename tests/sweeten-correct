@@ -46,13 +46,17 @@ define
   first-param second-param
   {first-param + second-param}
 
-'(a b c d e f g h i j k l m n o p q)
+' a b c d e f g h i j k l m n o p q
 
 ' \\
   a \\ b \\ c \\ d \\ e \\ f \\ g \\ h \\ i \\ j \\ k \\ l \\ m \\ n \\ o
   p \\ q \\ r \\ t \\ u \\ v \\ w \\ x \\ y \\ z \\ a \\ b \\ c \\ d \\ e
   f \\ g \\ h \\ i \\ j \\ k \\ l \\ m \\ n \\ o \\ p \\ q \\ r \\ t \\ u
   v \\ w \\ x \\ y \\ z
+
+'a()
+
+'a
 
 a(b) c(d) e(f)
 

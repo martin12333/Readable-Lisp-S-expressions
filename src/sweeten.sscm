@@ -375,8 +375,11 @@ define line-tail(x)
 define line(x)
   cond
     not(pair?(x))                  unit(x)
-    represent-as-abbreviation?(x)  unit(x)
     represent-as-inline-infix?(x)  unit(x)
+    represent-as-abbreviation?(x)
+      if {not(pair?(cadr(x))) or null?(cdr(cadr(x)))}
+        unit(x) ; Just show '(x) if x isn't a multi-item list.
+        append cadr(assq(car(x) abbreviations)) LISTSPACE line(cadr(x))
     {pair?(x) and null?(cdr(x))} ; Handle 1-datum case specially.
       if symbol?(car(x))
         append unit(car(x)) LISTLP LISTRP
