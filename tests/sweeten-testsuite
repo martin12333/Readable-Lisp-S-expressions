@@ -8,6 +8,9 @@ xyz
 (x y z (qq xx)) (m n o)
 (E F g)
 
+(a 1 2 3)
+(b (1 2 3))
+
   (define (f a) (* 2 a))
 
 (define (q x) (-> x 1))
