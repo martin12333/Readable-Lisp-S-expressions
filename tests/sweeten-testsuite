@@ -38,6 +38,11 @@ xyz
   (boggle a)
   (boggle b))
 
+(let ((a (cos 0)))
+  (fiddle a)
+  (faddle (+ 2 a))
+  (display (foo)))
+
 (define (read . options) (dostuff options) (morestuff 2) (anotherthing))
 
 (x . y)
