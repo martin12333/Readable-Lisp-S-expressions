@@ -39,13 +39,13 @@ defun f (a b)
   boggle a
   boggle b
 
-define read( . options)
+define read(. options)
   dostuff options
   morestuff 2
   anotherthing()
 
 a b c . d
-f a(b c  . d)
+f a(b c . d)
 
 defun
   this-is-a-really-really-long-name-to-see-if-we-can-handle-defun-overflow

@@ -120,6 +120,7 @@ define LISTLP          list( #\( )
 define LISTRP          list( #\) )
 define LISTLBRACE      list((integer->char 123))
 define LISTRBRACE      list((integer->char 125))
+define LIST.SP         list( #\. #\space )
 define LISTSP.SP       list( #\space #\. #\space )
 ; This list of punctuation characters is the list of punctuation characters
 ; in the POSIX/C locale as defined in the POSIX.1 2008 specification
@@ -284,7 +285,7 @@ define unit-list(x)
       if null?(cdr(x))
         unit car(x)
         append unit(car(x)) '(#\space) unit-list(cdr(x))
-    #t  append(LISTSP.SP unit(x))
+    #t  append(LIST.SP unit(x))
 
 ; Return tail of an infix expression, as list of chars
 ; The "op" is the infix operator represented as a list of chars.
