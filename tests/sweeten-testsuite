@@ -40,7 +40,11 @@ xyz
 
 (define (read . options) (dostuff options) (morestuff 2) (anotherthing))
 
+(x . y)
+(r s . t)
 (a b c . d)
+(g (x . y))
+(h (r s . t))
 (f (a b c . d))
 
 (defun this-is-a-really-really-long-name-to-see-if-we-can-handle-defun-overflow (first-param second-param) (+ first-param second-param))
