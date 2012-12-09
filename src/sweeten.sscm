@@ -145,6 +145,13 @@ define end-of-line-chars
     ; If wide chars are supported, add this:
     ; integer->char(#x2028)   ; <line separator>
 
+; Returns true if x has >1 element. Improper lists are #t.
+define multi-element-list?(x)
+  {pair?(x) and not(null?(cdr(x)))}
+
+define single-element-list?(x)
+  {pair?(x) and null?(cdr(x))}
+
 ; Does x contain a list of ONLY punctuation characters?
 ; An empty list is considered true.
 define contains-only-punctuation?(x)
@@ -342,7 +349,7 @@ define unit(x)
            represent-as-inline-infix?(x)
              ; Special case, use {...}:
              append LISTLBRACE unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
-           {pair?(cdr(x)) and null?(cddr(x)) and pair?(cadr(x)) and
+           {single-element-list?(cdr(x)) and pair?(cadr(x)) and
              represent-as-brace-suffix?(cadr(x))}
              ; Special case, use f{...}:
              append unit(car(x)) as-brace-suffix(cadr(x))
@@ -379,10 +386,10 @@ define line(x)
     not(pair?(x))                  unit(x)
     represent-as-inline-infix?(x)  unit(x)
     represent-as-abbreviation?(x)
-      if {not(pair?(cadr(x))) or null?(cdr(cadr(x)))}
-        unit(x) ; Just show '(x) if x isn't a multi-item list.
+      if multi-element-list?(cadr(x))
         append cadr(assq(car(x) abbreviations)) '(#\space) line(cadr(x))
-    {pair?(x) and null?(cdr(x))} ; Handle 1-datum case specially.
+        unit(x) ; Just show 'ITEM if x isn't a multi-item list.
+    single-element-list?(x)  ; Handle 1-datum case specially.
       if symbol?(car(x))
         append unit(car(x)) LISTLP LISTRP
         append LISTLP unit(car(x)) LISTRP
@@ -410,16 +417,14 @@ define sweeten-boring-list(x first? pos next-indent)
             append item-sameline
               sweeten-boring-list cdr(x) #f
                 {pos + length(item-sameline)} \\ next-indent
-            begin
-              append '(#\newline) next-indent
-                sweeten-boring-list x #t length(next-indent) next-indent
+            append '(#\newline) next-indent
+              sweeten-boring-list x #t length(next-indent) next-indent
 
 
-; Return the string to add as indentation; should be empty if indentation
-; has already occurred.
+; Return the string to add as indentation (empty if already indented).
 define getdent(indent-already indent)
   if indent-already
-    string->list("")
+    '()
     indent
 
 ; What's the number of characters consumed in the indent (and thus
@@ -543,15 +548,14 @@ define sweeten-top(m indent indent-already)
            {general-length(m) < max-unit-list-length} }
         ; Yes, we can represent it as one list of space-separated parameters:
         append getdent(indent-already indent) asline '(#\newline)
-        ; No, don't put entire expression on one line; use a multiline format.
-        ; Note that this can happen even if we COULD have put it on one line,
+        ; No, don't put entire expression on one line; use multiline.
+        ; This can happen even if we COULD have put it on one line,
         ; because we intentionally break up "complicated" expressions:
         sweeten-top-multiline(m indent indent-already)
 
 ; True if at beginning of column (line), otherwise false.
 ; This value is only used when we're looking for a datum to read() in.
 define column1 #t
-
 
 ; Display x (a list of chars and strings), but do NOT display
 ; the last end-of-line.  Because we only take generated files,
@@ -586,7 +590,6 @@ define display-sweeten-format(x)
     begin newline() set!(column1 #t)
   display-skip-last-eol sweeten-top(x string->list("") #f)
 
-
 ; Consume an end-of-line. This is 2 unequal end-of-line characters,
 ; or a single end-of-line character, whichever is longer.
 define consume-end-of-line()
@@ -597,8 +600,7 @@ define consume-end-of-line()
         let
           $ next peek-char()
           if {not{c eq? next} and memq(next end-of-line-chars)}
-            begin
-              read-char()
+            read-char()
 
 ; Copy one line from stdin to stdout, end on EOF or end-of-line.
 ; Consume the end of line.
@@ -612,7 +614,6 @@ define copy-line(port)
         newline()
         set! column1 #t
       #t write-char(read-char(port)) set!(column1 #f) copy-line(port)
-
 
 ; filter stdin to stdout, reading in traditional s-expressions and outputting
 ; sweet-expressions.  Preserve the comments outside an s-expression.
@@ -665,6 +666,4 @@ define sweeten-filter()
 ; And run:
 ;    guile sweeten.scm
 
-
 sweeten-filter()
-
