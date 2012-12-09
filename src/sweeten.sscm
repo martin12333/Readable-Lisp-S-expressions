@@ -145,10 +145,11 @@ define end-of-line-chars
     ; If wide chars are supported, add this:
     ; integer->char(#x2028)   ; <line separator>
 
-; Returns true if x has >1 element. Improper lists are #t.
+; Returns #f if x has >1 element. Improper lists are #t.
 define multi-element-list?(x)
   {pair?(x) and not(null?(cdr(x)))}
 
+; Returns #t if x is a list with exactly 1 element.  Improper lists are #f.
 define single-element-list?(x)
   {pair?(x) and null?(cdr(x))}
 
@@ -388,7 +389,7 @@ define line(x)
     represent-as-abbreviation?(x)
       if multi-element-list?(cadr(x))
         append cadr(assq(car(x) abbreviations)) '(#\space) line(cadr(x))
-        unit(x) ; Just show 'ITEM if x isn't a multi-item list.
+        unit(x) ; Show 'ITEM (etc.) if x isn't a multi-item list.
     single-element-list?(x)  ; Handle 1-datum case specially.
       if symbol?(car(x))
         append unit(car(x)) LISTLP LISTRP
