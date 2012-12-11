@@ -30,7 +30,6 @@
 <!-- Some old browsers have problem with empty names. Work around here: -->
 <h1><a name="authors">Authors</a><a name="author">&nbsp;</a></h1>
 <p><a href="http://www.dwheeler.com">David A. Wheeler</a></p>
-<p>Alan Manuel K. Gloria</p>
 
 <h1><a name="status">Status</a></h1>
 <p>This is a draft Scheme Request for Implementation (SRFI) for
@@ -58,33 +57,43 @@ and
 
 <h1><a name="related-srfis">Related SRFIs</a></h1>
 <p>
-<a href="http://srfi.schemers.org/srfi-49/">SRFI 49
+<a href="http://srfi.schemers.org/srfi-49/">SRFI-49
 (Indentation-sensitive syntax)</a>,
-<a href="http://srfi.schemers.org/srfi-105/">SRFI 105
+<a href="http://srfi.schemers.org/srfi-105/">SRFI-105
 (Curly-infix-expressions)</a>
 </p>
 
 <h1><a name="abstract">Abstract</a></h1>
 <p>
-Many software developers find Lisp s-expressions hard to read as a notation,
-and to compensate, they use indentation to show structure.
-An alternative, used by some languages such as Python, is to make
-indentation syntactically important.
+Many software developers find Lisp s-expression notation inconvient and
+unpleasant to read.
+Even those who like Lisp s-expressions typically use indentation
+to show structure, because structure is not obvious
+in raw un-indented s-expressions.
+An alternative syntax for structure, used in some languages such as Python,
+is to make indentation syntactically important.
 Indentation-sensitive syntax eliminates
 the need for many parentheses, and it also eliminates the need
 to synchronize indentation with parentheses.
-<a href="http://srfi.schemers.org/srfi-49/">SRFI 49</a> defines an
+<a href="http://srfi.schemers.org/srfi-49/">SRFI-49</a> defines an
 indentation-sensitive syntax, but in practice is somewhat awkward,
-and it lacks support for infix notation and prefix syntax
-of the form <tt>f(x)</tt> as defined in
-<a href="http://srfi.schemers.org/srfi-105/">SRFI 105</a>.
-This SRFI provides an indentation-sensitive syntax, called
-sweet-expressions (t-expressions), that has been improved based on
-experience using it to implement real programs.
+and by itself it lacks the
+<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>
+support for infix notation (e.g., <tt>{a&nbsp;+&nbsp;b}</tt>)
+and prefix formats (e.g., <tt>f(x)</tt>).
+</p>
+<p>
+This SRFI defines sweet-expressions (aka t-expressions),
+an indentation-sensitive syntax developed from
+experience in implementing real Scheme programs.
 It is derived from
-<a href="http://srfi.schemers.org/srfi-49/">SRFI 49</a>
+<a href="http://srfi.schemers.org/srfi-49/">SRFI-49</a>
 and includes (by reference)
-<a href="http://srfi.schemers.org/srfi-105/">SRFI 105</a>.
+<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
+The sweet-expression notation is
+generic (the notation does not depend on an underlying semantic),
+homoiconic (the underlying data structure is clear from the syntax), and
+backwards-compatible with well-formatted s-expressions.
 </p>
 <p>
 For example, the following sweet-expression:
@@ -125,56 +134,70 @@ LISP programmer felt alone and decided to make it a bit more homey."
 </p>
 <p>
 Since Lisp programs and data are often written using indentation anyway,
-it seems reasonable to create a
+it seems reasonable to create
 an indentation-sensitive syntax that would eliminate the need for
 many of these "superfluous" parentheses, as well as eliminating the
 need to keep the indentation and parentheses synchronized.
 </p>
 <p>
-Adding indentation-sensitive syntax
+This indentation-sensitive syntax
 is generic (the notation does not depend on an underlying semantic)
 and homoiconic (the underlying data structure is clear from the syntax).
 We believe previous efforts to improve the readability of
 Lisp s-expressions, such as McCarthy's M-expressions, failed because
-being generic and homoiconic are necessary conditions for a useful
-Lisp list notation.
-Because sweet-expressions are generic and homoiconic,
+they failed to be generic or homoiconic.
+It often difficult to easily access new capabilities
+(such as those defined by macros) in notations that are not
+generic or homoiconic.
+In contrast, because sweet-expressions <i>are</i> generic and homoiconic,
 they can be easily used with other constructs
 such as quasiquoting and macros.
+In short, if a capability can be accessed using s-expressions, then they
+can be accessed without any additional effort using sweet-expressions.
 The indentation processing is simply
 an abbreviation, in much the same way that
 <samp>&#39;x</samp> is an abbreviation for <samp>(quote&nbsp;x)</samp>.
 </p>
 <p>
-<a href="http://srfi.schemers.org/srfi-49/">SRFI 49</a> defines an
-indentation-sensitive syntax, but attempts to use it
-ran into various problems.
-As specified, the results of an expression would never be written
+<a href="http://srfi.schemers.org/srfi-49/">SRFI-49</a> defines an
+indentation-sensitive syntax, but
+it has not been widely deployed among Scheme implementations
+because of its various problems and limitations.
+For example,
+in SRFI-49, leading blank lines could produce the empty list <tt>()</tt>
+instead of being ignored,
+limiting the use of blank lines and leading to easy-to-create errors.
+As specified, a SRFI-49 expression would never complete
 until after the next expressions's first line was entered, making
 interactive use extremely unpleasant.
 Lines with just spaces and tabs would be considered different from blank
-lines, creating an opportunity for difficult-to-find errors.
-Leading blank lines could produce <tt>()</tt> instead of being ignored,
-limiting the use of blank lines and again leading to easy-to-create errors.
+lines, creating another opportunity for difficult-to-find errors.
 The symbol <tt>group</tt> is given a special meaning, which is
 inconsistent with the rest of Lisp
 (where only punctuation has special syntactic meanings).
-There were also a number of defects in the specification and implementation.
+There were also a number of defects in both its
+specification and implementation.
+Nevertheless, SRFI-49 represented an important first step in devising
+an indentation-sensitive syntax; sweet-expressions are derived from SRFI-49
+and retain most of its syntax.
 </p>
 <p>
-The notation here is intentionally designed so that, unlike Python,
-it can work exactly the same way in both interactive mode (e.g., a REPL)
+The notation defined in this sweet-expressions SRFI
+is intentionally designed so that, unlike Python,
+it works exactly the same way in both interactive mode (e.g., a REPL)
 and when processing a file.
-A difference in modes could cause cutting-and-pasting from a file to
-an interactive session to fail.
-Such a mode difference would be even more inconvenient in a
-Lisp-based system, since many users often switch between the REPL and
-storing information in files.
+A difference in modes could cause failure when
+cutting-and-pasting between a file and an interactive session.
+Since many users often switch between the REPL and files,
+such a difference was considered unacceptable.
 </p>
-<p>This proposal is an extremely <em>simple</em> and
-<em>straightforward</em> technique.
+<p>This notation is a <em>simple</em> and
+<em>straightforward</em> technique, extended by a few abbreviations
+based on real-world experience.
 
-
+<p>
+See the <a href="#design-rationale">design rationale</a> for a detailed
+discussion on how and why it is designed this way.
 
 <h1><a name="specification">Specification</a></h1>
 <p>
@@ -194,7 +217,9 @@ document are to be interpreted as described in
 </p>
 
 <p>
-<p>&#8220;<dfn>Sweet-expressions</dfn>&#8221; (aka &#8220;<dfn>t-expressions</dfn>&#8221;) deduce parenthese from indentation.  A sweet-expression reader MUST interpret its input as follows when indentation processing is active:
+<p>&#8220;<dfn>Sweet-expressions</dfn>&#8221; (aka &#8220;<dfn>t-expressions</dfn>&#8221;) deduce parentheses from indentation.
+A sweet-expression reader <em>MUST</em> interpret its input
+as follows when indentation processing is active:
 <ol>
 <li>An indented line is a parameter of its parent.</li>
 <li>Later terms on a line are parameters of the first term.</li>
@@ -202,46 +227,58 @@ document are to be interpreted as described in
 <li>An empty line ends the expression; empty lines before expressions are ignored.</li>
 <li>Indentation processing is not active (and thus does not occur) inside ( ), [ ], and { }, whether they are prefixed or not; they're just neoteric-expressions.</li>
 <li>Terms are neoteric-expressions as defined in
-<a href="http://srfi.schemers.org/srfi-105/">SRFI 105</a>.
+<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
 </ol>
 </p>
 
 <p>
 Sweet-expression rule clarifications:
 <ol>
-<li>Lines with only a ;-comment are completely ignored - even their indentation (if any) is irrelevant.</li>
-<li>You can indent using one-or-more space, tab, and/or exclamation point (!) characters.</li>
+<li>You can indent using one-or-more space, tab, and/or exclamation point (!)
+characters.</li>
+<li>Lines with only a ;-comment (preceded by 0 or more indent characters)
+are completely ignored - even their indentation (if any) is irrelevant.</li>
 <li>A line with only indentation is an empty line.</li>
-<li>An expression that starts indented enables "indented-compatibility" mode, where indentation is completely ignored (that line switches to neoteric-expressions).</li>
-<li>Scheme's #; datum comment comments out the next neoteric expression, not the next sweet expression.</li>
+<li>An expression that starts indented enables "indented-compatibility" mode,
+where indentation is completely ignored.
+Instead, a sequence of white-space separated neoteric-expressions is read
+until the first end of line or end of file.</li>
+<li>Scheme's #; datum comment comments out the next neoteric expression,
+not the next sweet expression.</li>
+<li>??? Discuss #| ... |#.</li>
 </ol>
 
 <p>
-The advanced sweet-expression capabilities MUST be implemented, which are defined as follows:
+The sweet-expression advanced features are defined as follows:
 <ol>
-<li>A \\ (aka SPLIT) MUST start a new line at the current indentation. If it's immediately after indentation (aka GROUP in that case), it represents no symbol at all (at that indentation) - this is useful for lists of lists.</li>
-<li>A $ (aka SUBLIST) in the middle of list MUST restart list processing; the right-hand-side (including its sub-blocks) is the last parameter of the left-hand side (of just that line). If there's no left-hand-side, the right-hand-side is put in a list.</li>
-<li>A leading traditional abbreviation (quote, comma, backquote, or comma-at), followed by space or tab MUST be interpreted as that operator applied to the sweet-expression starting at the same line.</li>
+<li>A \\ (aka SPLIT) <em>MUST</em> start a new line at the current indentation. If it's immediately after indentation (aka GROUP in that case), it represents no symbol at all (at that indentation) - this is useful for lists of lists.</li>
+<li>A $ (aka SUBLIST) in the middle of list <em>MUST</em> restart list processing; the right-hand-side (including its sub-blocks) is the last parameter of the left-hand side (of just that line). If there's no left-hand-side, the right-hand-side is put in a list.</li>
+<li>A leading traditional abbreviation (quote, comma, backquote, or comma-at), followed by space or tab, <em>MUST</em> be interpreted as that operator applied to the sweet-expression that follows.</li>
+<li>The markers &lt;* and *&gt; are reserved for future use.
 </ol>
 
 <p>
-The symbols for the advanced sweet-expression capabilities MUST only be
-interpreted when indentation processing is active, and MUST only be
-interpreted as above if they begin with their characters as shown
-(e.g., {$} MUST NOT be interpreted as SUBLIST).
+The markers for the advanced sweet-expression features <em>MUST</em>
+only be accepted as such when indentation processing is active,
+and <em>MUST</em> only be
+interpreted as above if they begin with their characters as shown.
+For example, <samp><tt>{$}</tt></samp>
+<em>MUST NOT</em> be interpreted as the SUBLIST marker; instead, it
+<em>MUST</em> be interpreted as the symbol <tt>$</tt>.
 </p>
 
 <p>
-Beginning an expression with indentation MUST cause that line's
+Beginning an expression with indentation <em>MUST</em> cause that line's
 indentation to be ignored, improving backwards compatibility. We recommend
 that editors highlight these lines as warnings, to reduce the risk of
 their accidental use. It might be also useful for an editor to highlight
 blank lines (as they separate expressions) and lines beginning at the
-left column.
+left column (as these start new expressions).
 </p>
 
 <p>A <dfn>sweet-expression reader</dfn> is a datum reader
-that can correctly read and map sweet-expressions.
+that can correctly read and map sweet-expressions as defined above
+(including the advanced sweet-expression features).
 An implementation of this SRFI <em>MUST</em> accept
 the marker <code>#!sweet</code> followed by a whitespace character
 in its standard datum readers (e.g., <code>read</code> and, if applicable,
@@ -249,15 +286,16 @@ the default implementation REPL).
 This marker (including the trailing whitespace character)
 <em>MUST</em> be consumed and considered whitespace.
 After reading this marker, the reader <em>MUST</em> accept
-sweet-expressions in subsequent datums
-read from the same port until some other conflicting marker
-(such as <code>#!curly-infix</code> followed by whitespace) is given.
+sweet-expressions in subsequent datums read from the same port,
+overriding any conflicting marker (such as <code>#!curly-infix</code>
+followed by whitespace)
+until some other conflicting marker is given.
 </p>
 
 <p>
 Implementations of this SRFI <em>MAY</em>
 implement curly-infix-expressions in their datum readers by default,
-even when the marker is not received.
+even when the marker is not (yet) received.
 Portable applications <em>SHOULD</em> include this marker before
 using curly-infix-expressions, typically near the top of a file.
 Portable applications <em>SHOULD NOT</em>
@@ -277,7 +315,18 @@ If provided, this procedure
 
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
 
+<h2><a name="bnf">BNF</a></h2>
+<p>
+The following BNF defines sweet-expressions.
+It is intended to capture the specification above; in case of (unintentional)
+conflict, the specification text above governs.
+</p>
 
+<p>
+???
+</p>
+
+<h2><a name="examples">Examples</a></h2>
 <p>
 Here are some examples and their mappings.
 </p>
@@ -343,6 +392,82 @@ define factorial(n)
 </pre>
 </td>
 </tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+' a b
+  c d e \\ f g h
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+'(a b
+    (c d e) (f g h))
+</pre>
+</td>
+</tr>
+<tr>
+<td align="left" valign="top">
+<pre>
+; This BEGINS with an indent
+  f(a) g(x)
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(f a)
+(g x)
+</pre>
+</td>
+</tr>
+<tr>
+<td align="left" valign="top">
+<!-- Inspired by letterfall's code:
+define screen-initialize-post-show(toplevel-window drawing-area)
+  let
+    $ style $ get-style toplevel-window
+    set! back-pen $ get-black-gc style
+    set! fore-pen $ get-white-gc style
+    let
+      \\
+        configure-handler $ make-configure-handler drawing-area
+        expose-handler $    make-expose-handler drawing-area
+      set! the-expose-handler expose-handler
+      connect drawing-area 'configure-event configure-handler
+      connect drawing-area 'expose-event expose-handler
+      configure-handler()
+rewritten to fit in 40 characters.
+-->
+<pre>
+define init(win area)
+  let
+    $ style $ get-style win
+    set! back-pen $ black style
+    set! fore-pen $ white style
+    let
+      \\
+        config $ make-c area
+        expose $ make-e area
+      set! now expose
+      dostuff config expose
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(define (init win area)
+  (let ((style (get-style win)))
+    (set! back-pen (black style))
+    (set! fore-pen (white style))
+    (let
+      ((config (make-c area))
+       (expose (make-e area)))
+      (set! now expose)
+      (dostuff config expose))))
+</pre>
+</td>
+</tr>
+
 </table>
 
 
@@ -361,22 +486,807 @@ as was previously done by SRFI-26, because it is easier to
 understand the design rationale after reading the specification.
 </p>
 
+<h2>General and homoiconic formats</h2>
+
+<p>There have been a huge number of past efforts
+to create readable formats for Lisp-based languages,
+going all the way back to the original
+M-expression syntax that Lisp's creator expected to be used when
+programming.  Generally, they've been unsuccessful, or they end up
+creating a completely different language that lacks the advantages
+of Lisp-based languages.
+</p>
+
+<p>
+After examining a huge number of them,
+David A. Wheeler noticed a pattern: Past "readable" Lisp notations
+typically failed to be <em>general</em> or <em>homoiconic</em>.
+</p>
+
+<p>
+A <em>general</em>
+format is <em>not</em> tied to some specific underlying semantic.
+Most readability efforts focused on creating special syntax for each
+language construct of an underlying language.  But since Lisp-based
+languages can trivially create new semantic constructs (via macros), and
+are often used to process fragments of <em>other</em> languages, these
+did not work well.  It was often difficult to keep updating the parser to
+match the underlying system, so the parser was always less capable than
+using s-expressions... leading to its abandonment.  Sometimes the parser
+was continuously maintained, but soon the parser led to the development
+of a completely new language that was less suitable for self-analysis
+of program fragments and similar tasks (and thus no longer a suitable
+"Lisp").
+It's easy to create a new "operator" in a Lisp, yet many
+infix systems cannot work without having its precedence predefined.
+Similarly, it's easy to create a macro in Lisp, and using it must not
+require that the parser be changed each time.
+</p>
+<p>
+A <em>homoiconic</em> format is a surface format in which the <em>human</em>
+reader can easily determine what the underlying representation is.
+It is very difficult to take advantage of Lisp capabilities, such as
+macros, without a homoiconic format. Yet many past readability efforts
+made it difficult to determine exactly what structures were being
+created by the notation.  Typical infix notations with precedence were
+especially common examples of this problem - they would quietly create
+multiple lists without obvious indications that this was happening.
+<a href="http://javascript.crockford.com/tdop/tdop.html">
+Top Down Operator Precedence by Douglas Crockford
+(2007-02-21)</a>, for example, discusses Vaughan Pratt's "Top Down
+Operator Precedence" and shows how important homoiconicity is.
+He stated that "parsing techniques are not greatly valued in the
+LISP community, which celebrates the Spartan denial of syntax.
+There
+have been many attempts since LISP's creation to give the language a
+rich ALGOL-like syntax, including Pratt's CGOL, LISP 2, MLISP, Dylan,
+Interlisp's Clisp, and McCarthy's original M-expressions. All failed
+to find acceptance. That community found the correspondence between
+programs and data to be much more valuable than expressive syntax. But
+the mainstream programming community likes its syntax, so LISP has
+never been accepted by the mainstream."
+</p>
+
+<p>
+Now that
+this pattern has been identified, new notations can be devised that are
+general and homoiconic - avoiding the problems of past efforts.</p>
+
+<p>See
+<a href="http://www.dwheeler.com/readable/readable-s-expressions.html">http://www.dwheeler.com/readable/readable-s-expressions.html</a>
+for a longer discussion on past efforts.
+</p>
+
+<h2>It is impossible to improve on the parentheses given to us by the gods!!</h2>
+
+<p>
+Some Lisp developers act as if Lisp notation descended from the gods,
+and thus is impossible to improve.
+The authors do not agree, and instead believe that Lisp
+notation <i>can</i> be improved from the form created in the 1950s.
+The following is a summary of a
+<a href="http://sourceforge.net/p/readable/wiki/Retort/">retort</a>
+to those who believe Lisp notation cannot be improved, based on the
+claims in the
+<a href="http://www.lispniks.com/faq/faq.html">Common Lisp FAQ</a> and
+<a href="http://www.dreamsongs.com/Files/Hopl2.pdf">
+"The Evolution of Lisp" by Guy Steele and Richard Gabriel</a>.
+</p>
+
+<p>
+The Common Lisp FAQ says that people <i>"wonder why Lisp can't
+use a more 'normal' syntax.
+It's not because Lispers have never thought of the idea - indeed,
+Lisp was originally intended to have a syntax much like FORTRAN..."</i>.
+But this is not a good argument.
+In other words, even Lisp's creator (John McCarthy)
+understood that directly using s-expressions for Lisp programs was undesirable.
+That is strong evidence that traditional s-expression notation has problems;
+even Lisp's creator thought its notation was poor.
+</p>
+
+<p>
+<a href="http://www.dreamsongs.com/Files/Hopl2.pdf">
+"The Evolution of Lisp" by Guy Steele and Richard Gabriel
+(HOPL2 edition)</a> says that,
+<i>"The idea of introducing Algol-like syntax into Lisp keeps popping up
+and has seldom failed to create enormous controversy between those who
+find the universal use of S-expressions a technical advantage (and don't
+mind the admitted relative clumsiness of S-expressions for numerical
+expressions) and those who are certain that algebraic syntax is more
+concise, more convenient, or even more natural...".</i>
+Note that the authors, who are advocates for s-expression notation,
+admit that for numerical expressions they are clumsy.
+</p>
+
+<p>
+It continues,
+<i>"We conjecture that Algol-style syntax has not really caught on in the
+Lisp community as a whole for two reasons. First, there are not enough
+special symbols to go around. When your domain of discourse is limited
+to numbers or characters, there are only so many operations of interest,
+and it is not difficult to assign one special character to each and
+be done with it. But Lisp has a much richer domain of discourse,
+and a Lisp programmer often approaches an application as yet another
+exercise in language design; the style typically involves designing new
+data structures and new functions to operate on them - perhaps dozens
+or hundreds—and it’s just too hard to invent that many distinct
+symbols (though the APL community certainly has tried). Ultimately
+one must always fall back on a general function-call notation; it’s
+just that Lisp programmers don’t wait until they fail."</i>
+But this is a failing argument.
+Practially all languages allow compound symbols made from multiple
+characters, such as &gt;=; there is no shortage of symbols.
+Also, nearly all programming languages have a function-call notation, but
+only Lisp-based languages choose s-expressions to notate it, so
+saying "we need function call notation" do not excuse s-expressions.
+You do not need legions of special syntactic constructs;
+sweet-expressions allow developers to express anything that can be
+expressed with s-expressions, without being tied to a particular
+semantic or requiring a massive set of special symbols.
+</p>
+
+
+<p>
+Then it sayd,
+<i>
+"Second, and
+perhaps more important, Algol-style syntax makes programs look less
+like the data structures used to represent them. In a culture where the
+ability to manipulate representations of programs is a central paradigm,
+a notation that distances the appearance of a program from the appearance
+of its representation as data is not likely to be warmly received (and
+this was, and is, one of the principal objections to the inclusion
+of loop in Common Lisp)."
+</i>
+Here Steele and Gabriel are <b>extremely</b> insightful.
+Today we would say that s-expressions are "homoiconic",
+and that is a rare trait among programming notations.
+This property is one reason
+why Lisps are still used, decades after their development.
+</p>
+<p>
+Steele and Gabriel are absolutely right; there have been many efforts
+to create readable Lisp formats, and they all failed because they
+did not create formats that accurately represented the programs as
+data structures.  The whole point of a Lisp-like language is that
+you can treat code as data, and data as code. Any notation that makes
+this difficult means that you lose some of Lisp's unique advantages.
+Homoiconicity is critical if you're going to treat a program as data. To
+do so, you must be able to easily "see" the program's format. If you can,
+you can do amazing manipulations.
+</p>
+<p>
+But what Gabriel and Steele failed to appreciate in their paper is that
+it's possible to have both.
+Now that we understand why past efforts failed, we can devise notations
+that keep these key properties (generality and homoiconicity) - and succeed!
+</p>
+
+<p>
+Many people have noted that there are tools to help deal with s-expressions,
+but this misses the point.
+If the notation is so bad that you need tools to deal with it,
+it would be better to fix the notation.
+The resulting notation could be easier to read, and you could focus your
+tools on solving problems that were not self-inflicted.
+In particular, "stopping to see the parentheses" is a sign of a
+serious problem - the placement of parentheses fundamentally affects
+interpretation, and serious bugs can hide there.
+</p>
+<p>
+Others who have used Lisp for years,
+such as <a href="http://www.paulgraham.com/arcll1.html">Paul Graham</a>,
+see s-expressions as long-winded, and advocate for the use of
+"abbreviations" that can map down to an underlying s-expression notation.
+Sweet-expressions take this approach.
+</p>
+
+<h2>Why are sweet-expressions separate from curly-infix and neoteric-expressions?</h2>
+<p>
+Some Scheme users and implementors may not want indentation-sensitive
+syntax, or may not want to accept any change that could change the
+interpretation of a legal (though poorly-formatted) s-expression.
+For those users and implementors, SRFI-105 adds
+infix support and neoteric-expressions such as <tt>f(x)</tt>.
+SRFI-105 makes it easier to describe the "leaves" of an
+s-expression tree.
+</p>
+<p>
+In contrast, sweet-expressions make it easier to describe the larger
+structure of an s-expression, by using indentation (which is usually
+present anyway) as syntactically relevant.
+However, sweet-expressions can change the interpretation of some
+poorly-formatted s-expressions.
+We believe that users of sweet-expressions will want the ability to use
+SRFI-105 capabilities as well, but do not require implementation the other way.
+</p>
+<p>
+By making sweet-expressions a separate tier,
+people can adopt curly-infix if they don't
+want meaningful indentation.
+
+<h2>Why should indentation be syntactically relevant?</h2>
+
+<p>
+Making indentation synactically meaningful eliminates many
+parentheses, thus making them more readable, by making indentation
+itself meaningful.  Real Lisp programs are already indented,
+and tools (like editors and pretty-printers) are used to try to
+keep the indentation (used by humans) and parentheses (used by
+the computers) in sync.  By making the indentation (which humans
+depend on) actually used by the computer, they are automatically
+kept in sync, and many parentheses become unnecessary.</p>
+
+<p>The
+page <a href="http://www.gregslepak.com/on-lisps-readability"
+rel="nofollow">http://www.gregslepak.com/on-lisps-readability</a> shows
+one of the many examples of endless closing parentheses and brackets to
+close an expression, and the confusion that happens when indentation does
+not match the parentheses. bhurt's response to that article is telling:
+"I'm always somewhat amazed by the claim that the parens 'just
+disappear', as if this is a good thing. Bugs live in the
+difference between the code in your head and the code on the
+screen - and having the parens in the wrong place causes bugs. And
+autoindenting isn't the answer- I don't want the indenting to follow
+the parens, I want the parens to follow the indenting. The indenting
+I can see, and can see is correct."</p>
+
+<p>An IDE can help keep the
+indentation consistent with the parentheses, but <a class="alink notfound"
+href="../http%3A//www.recursivity.com/blog/2012/10/28/ides-are-a-language-smell/%20needing%20IDEs%20is%20considered%20by%20some%20a%20language%20smell"></a><a
+href="http://www.recursivity.com/blog/2012/10/28/ides-are-a-language-smell/"
+rel="nofollow"></a><a
+href="http://www.recursivity.com/blog/2012/10/28/ides-are-a-language-smell/"
+rel="nofollow">http://www.recursivity.com/blog/2012/10/28/ides-are-a-language-smell/</a>
+needing IDEs is considered by some a language smell.  If you need special
+tools to work around problems with the notation, then the notation itself
+is a problem.</p> <p>A solution, of course, is to make the indentation
+actually matter: Now you don't need an endless march of parentheses, and
+indentation can't be confusing because it is actually used.</p> <p>"In
+praise of mandatory indentation..." notes that it can be <em>helpful</em>
+to have mandatory indentation:</p>
+<blockquote> <p>It hurts me to say
+that something so shallow as requiring a few extra spaces can have
+a bigger effect than, say, Hindley-Milner type inference. - <a class=""
+href="http://okasaki.blogspot.com/2008/02/in-praise-of-mandatory-indentation-for.html"
+rel="nofollow">Chris Okasaki</a></p> </blockquote>
+
+<p>Other languages,
+including Python, Haskell, Occam, and Icon, use indentation to indicate
+structure, so this is a proven idea.  Other recently-developed languages
+like <a href="http://cobralang.com/docs/python/" rel="nofollow">Cobra</a>
+(a variant of Python with strong compile-time typechecking) have
+decided to use indentation too, so clearly indentation-sensitive
+languages are considered useful by many.</p>
+
+<p>There's a lot of
+past work on indentation to represent s-expressions, too.  Examples
+include:</p>
+<ul>
+<li>Paul Graham (developer of Arc) is known to
+be an advocate of indentation for this purpose.  As I noted above, <a
+href="http://lists.canonical.org/pipermail/kragen-tol/2002-January/000666.html"
+rel="nofollow">Kragen Sitaker&#8217;s notes on Graham and Arc</a>
+discusses how indentation can really help (in this notation,
+functions with no parameters need to be surrounded by parentheses, to
+distinguish them from atoms - &#8220;oh well&#8221; ).  Graham's <a
+href="http://en.wikipedia.org/wiki/RTML" rel="nofollow">RTML</a> is
+implemented using Lisp, but uses indentation instead of parentheses to
+define structure.  RTML is a proprietary programming language that at
+least <em>was</em> used by Yahoo!&#8217;s Yahoo! Store and Yahoo! Site
+hosting products (though Yahoo may have transitioning away from it).
+See <a href="http://lib.store.yahoo.net/lib/paulgraham/bbnexcerpts.txt"
+rel="nofollow">Paul Graham&#8217;s comments
+about the RTML language design</a> and <a
+href="http://lib.store.yahoo.net/lib/ytimes/rtmlintro.pdf"
+rel="nofollow"> this introduction to RTML by Yahoo</a>.</li>
+<li><a
+href="http://www.accesscom.com/~darius/" rel="nofollow">Darius Bacon's
+&#8221;indent&#8221; file</a>, includes his own implementation of
+a Python/Haskell-like syntax for Scheme using indentation in place
+of parentheses, and in that file he also includes Paul D. Fernhout's
+implementation of an indentation approach.  Bacon's syntax for indenting
+uses colons in a way that is limiting (it interferes with other uses
+of the colon in various Lisp-like languages).</li>
+<li><a href="http://www.lispin.org/" rel="nofollow">Lispin</a>
+discusses a way to get S-expressions with indentation.</li>
+</ul>
+
+<h2>What is the relationship with SRFI-49 (I-expressions)?</h2>
+
+<p>The sweet-expression indentation system is based on <a class=""
+href="http://srfi.schemers.org/srfi-49/srfi-49.html" rel="nofollow">Scheme
+SRFI-49 ("surfi-49"), aka I-expressions</a>.  The basic rules of SRFI-49
+(I-expression) indentation are kept in sweet-expressions; these are:</p>
+<ul>
+<li>An indented line is a parameter of its parent.</li>
+<li>Later
+terms on a line are parameters of the first term.</li>
+<li>A line with
+exactly one term, and no child lines, is simply that term; multiple
+terms are wrapped into a list.</li>
+</ul>
+
+<p>These basic rules seem quite
+intuitive, and seem to be what most people "expect" indentation to mean.
+We're grateful to the SRFI-49 author for his work, and at first, we just
+used SRFI-49 directly.  However, SRFI-49 turned out to have problems in
+practice, so based on that experience and experimentation we made several
+changes to it.
+</p>
+
+
+<h2 id="blank-lines">Blank lines</h2>
+
+<p>In sweet-expressions, a blank line
+always terminates a datum, so once you've entered a complete expression,
+"Enter Enter" will always end it.
+In contrast, in sweet-expressions blank
+lines <em>before</em> an expression starts are ignored.
+The "blank
+lines at the beginning are ignored" rule eliminates a usability problem
+with the original SRFI-49 (I-expression) spec, in which two sequential
+blank lines before an expression surprisingly returned ().
+This was a serious usability problem, and one that was quickly fixed.
+The sample
+implementation <em>did</em> end expressions on a blank line - the problem
+was that the spec didn't clearly capture this.</p>
+
+<p>It would be possible
+to have blank lines end an expression "only in interactive use" - Python
+does this.  However, this means that you couldn't cut-and-paste files into
+the interpreter and them used.  David A. Wheeler
+believes it's important to have exactly
+the same syntax in both cases, so "Enter Enter" <em>always</em> ends an
+expression.</p>
+
+<p>Of course, people sometimes want to have something like
+a blank line in the middle of an s-expression.  Thus, comment-only lines
+are ignored and not considered blank lines; that means you can use them
+for that purpose.  The indentation of comment-only lines is ignored - that
+way, you don't have to worry about keeping them indented the same way.</p>
+
+<p>Since a line with only indentation may look exactly identical to a
+blank line, we decided to clearly state that "a line with only indentation
+is an empty line".  This eliminates some nasty usability problems that
+could arise if a "blank" line actually had some whitespace in it.</p>
+
+
+<h2 id="indentation-characters">Indentation characters (! as indent)</h2>
+<p>Some
+like to use spaces to indent; others like tabs.  Python allows either,
+and SRFI-49 allows either as well - you just have to be consistent.
+Thus, sweet-expressions are defined so that people can use what they like.
+The only rule is that they must be consistent.</p>
+
+<p>One problem horizontal
+whitespace characters is that they can get lost in many transports
+(HTML readers, etc.).  And sometimes there are indented groups that you'd
+like to highlight.  On the mailing list, users started to use characters
+(initially period+space) to show where indentation occurred so that they
+wouldn't get lost.  Eventually, the idea was hit upon that perhaps we
+needed to allow a <em>non-whitespace</em> character for indentation.
+This is highly unorthodox, but at a stroke it eliminates the complaints
+some have about syntactically-important indentation, and it provides an
+easy way to highlight certain indented groups.</p>
+
+<p>At first, we tried
+to use period, or period+space, as the indent.  But period has too many
+other traditional meanings in Lisp-like languages, including beginning
+a number (.9), beginning a symbol (.xyz), and as a special operator to
+set the cdr of a list.  Implementations needed an unread-char function,
+which is not stnadard in Scheme R5RS.  Eventually the "!" was used; it
+practically never begins a line, and if you need it, {!} will work.
+This character is also a great way to highlight indented groups.</p>
+
+<h2 id="disabling-indentation-processing-with-paired-characters">Disabling
+indentation processing with paired characters</h2>
+
+<p>Indentation
+processing is disabled inside (...), [ ... ], and { ... }.
+This was also true
+of SRFI-49, and of Python, and has wonderful side-effects:</p> <ul>
+<li>Indent parsing becomes very safe to use with existing code.
+Pre-existing code will almost certainly start each expression with
+an opening parenthesis, disabling the indentation processing it
+wasn't expecting.</li>
+<li>It makes it easy to disable indentation
+processing whenever it is inconvenient.  For example, it supports
+dealing with text that is very close to running off the right-hand
+side, or is complex to express with indentation.</li>
+<li>It is similar to what other indentation-sensitive languages do, such
+as Python.</li>
+<li>It is a very easy rule to explain.</li>
+</ul>
+
+<p>This means that infix processing by curly-infix disables indentation
+processing; in practice this doesn't seem to be a problem.</p>
+
+<h2 id="disabling-indentation-processing-with-an-initial-indent">Disabling
+indentation processing with an initial indent</h2>
+
+<p>Initial indentation also disables indentation processing,
+which also improves backward
+compatibility and makes it easy to disable indentation processing where
+convenient.</p>
+
+<p>This improves backward compatibility because a program
+that uses odd formatting with a different meaning for sweet-expressions
+is more likely to have initial indents.
+Even if this is not
+true, it's trivially easy to add an initial indent on oddly-formatted
+old files. This provides a trivial escape, making it easy to support
+old files.  Then even if you have ancient code with odd formatting,
+it would be likely to still "just work"
+if there is any initial indentation.
+We'd like this reader to be a drop-in replacement for read(), so minimizing
+incompatibilities is important.</p>
+
+<p>There is a risk that this
+indentation will be accidental (e.g., a user might enter a blank line in
+the middle of a routine and then start the next line indented).  However,
+this is less likely to happen interactively (users can typically see
+something happened immediately), and editors can easily detect and show
+where surprising indentation is occurring (e.g., through highlighting),
+so this risk appears to be minimal.</p>
+
+<p>Disabling on initial indent
+also deals with a subtle potential problem in implementation.
+In a reader implementation, if we tried to just accept some indentation
+of the first line and use it as the starting point, we create problems.
+Typically readers return a whole value once that value has been
+determined, and in many cases it's tricky to store state (such as that
+new indentation value) for an arbitrary port.  By disabling indentation
+processing, we eliminate the need to store such state, as well as giving
+users a useful tool.</p>
+
+<p>Since this latter point isn't obvious, here's
+a little more detailed explanation.  Obviously, to make indentation
+syntactically meaningful, you need to know where an expression indents,
+and where it ends. If you read in a line, and it has the same indentation
+level, that should end the previous expression. If its indentation is
+<em>less</em>, it should close out all the lines with deeper or equal
+indentation.  But we're trying to <em>minimize</em> the changes to the
+underlying language, and in particular, we don't want to change the "read"
+interface and we're not assuming arbitrary amounts of unread-char.
+Scheme R5RS, for example, doesn't have a standard unread-char
+at all.  So let's say you are trying to read the following:</p>
+<pre>
+! ! foo
+! ! ! bar
+! ! eggs
+! ! cheese
+</pre>
+<p>You might expect this to
+return three datums: (foo bar), eggs, and cheese. It won't, in a typical
+implementation; here's why:
+<ul>
+<li>
+In the first read(), it reads foo, bar, and it
+consumes the indentation of "eggs" so that it can determine that another
+is at the same level. It returns (foo bar).</li>
+<li>In the second read(), it reads
+eggs with NO indentation, because the indentation was consumed by the
+first read() so it could determine when it was finished. It then reads
+the indentation of cheese, which has an indentation more than zero. It
+returns (eggs cheese), and we've consumed it all.</li>
+</ul>
+
+<p>Some solutions:</p>
+<ul>
+<li>If you have unlimited unread-char, there is no problem, just
+unconsume characters once you've found the end. But many Lisps don't have
+that.</li>
+<li>Read could store indentation state associated with the
+port. But the user could call other routines, and a naive implementation
+would read the wrong values. You'd have to re-wrap the entire I/O system
+if you really wanted to be able to undo the indentation reliably. That
+creates a complicated implementation that is likely to be unreliable,
+and it's lousy for performance.</li>
+</ul>
+<p>So for all the reasons
+above, initial indent disables indentation processing for that line.</p>
+
+<h2 id="grouping-and-splicing">Grouping and splicing (\\)</h2>
+<p>SFRI-49
+had a mechanism for defining lists of lists, using the symbol "group".
+This was a valuable contribution, since there needs to be <em>some</em>
+way to show lists of lists.  But after use, it was determined that having
+an alphabetic symbol being used to indicate a special abbreviation was
+a mistake; all other abbreviations use punctuation, and this should too.
+This symbol is called the GROUP symbol, and happens at the start of a line
+(after indentation).</p>
+<p>A different problem is that sometimes you'd
+like to have a set of parameters, where they are at the "same level" but
+writing them as indented parameters takes up too much vertical space.
+An obvious example is keywords in various Lisps; having to write this
+is painful:
+</p>
+<pre>
+foo
+  keyword1:
+  parameter1
+  keyword2:
+  parameter2
+  ....
+</pre>
+<p>
+David A. Wheeler created an early splicing proposal. After much discussion, to solve the latter problem, the SPLIT symbol was created, so that you could do:
+</p>
+<pre>
+foo
+  keyword1: \\ parameter1
+  keyword2: \\ parameter2
+  ....
+</pre>
+
+<p>At first the symbol \ was used for SPLIT, but this
+would cause serious problem on Lisps that supported slashification.
+After long discussion, the symbol \\ was decided on for both; although
+the number of characters in the underlying symbol could vary (depending on
+whether or not slashification was used), this was irrelevant and seemed to
+work everywhere.  By using the same symbol for both GTROUP and SPLIT, we
+reduced the number of different symbols that users needed to escape.</p>
+
+<p>We dropped the SRFI-49 method for escaping the symbol by repeating
+it (group group); the {} escape mechanism is more regular, and
+makes it far more obvious that some special escape is going on.</p>
+
+<h2
+id="why-does-initial-group-mean-nothing-if-there-are-datums-afterwards-on-the-same-line">Why
+does initial \\ mean nothing if there are datums afterwards
+on the same line?</h2>
+<p>Since "let" occurs in many programs,
+it would have been possible to define \\ to allow this:</p>
+<pre>
+let
+! \\ var1 $ bar x
+! !  var2 $ quux x
+! nitz var1 var2
+</pre>
+<p>
+We discussed this, but after long discussion we decided on a defined semantic that means that "\\" is an empty symbol, making that expression exactly the same as:
+</p>
+<pre>
+let
+! var1 $ bar x
+! !  var2 $ quux x
+! nitz var1 var2
+</pre>
+
+<p>We did this
+intentionally.  It turns out that there are situations where you want a \\
+as an empty symbol, even when text follows it on the line.  An example is
+arc's if-then-else, where there are <em>logically</em> pairs of items,
+but from a <em>list</em> semantic are at the same level. E.G.:</p>
+</pre>
+if
+! condition1()
+! \\ action1()
+! condition2()
+! \\ action2()
+! \\ otherwise-action()
+</pre>
+<p>It's easy to handle let* with an extra line, but there's
+no easy way to insert a short pseudo-comment character in the front unless
+we do it this way.</p>
+<p>The multi-line nature of let* turns out to be
+not a real problem, for 2 reasons:</p>
+<ol>
+<li>It turns out that in many
+"let*s" the variable settings can be put on one line. As of 2012-08-02 the
+"sweeten.sscm" has 305 non-blank, non-comment lines
+(as determined by <tt>grep -v '^$' sweeten.sscm | grep -v '^ *;' | wc -l</tt>).
+Of those, 13 lines use let or let*, and only one of those "lets" uses \\.
+It's not worth optimizing a case that only happens approximately once in
+300 lines.</li>
+<li>
+Using the abbreviations as intended is REALLY
+clear, even though it uses an extra vertical line.
+</li>
+</ol>
+<p>So the savings for <em>let</em> aren't significant, the
+semantics as designed are clear, and are intentionally using that
+notation for another purpose where it's not as easy to use an
+alternative.</p>
+
+<h2 id="traditional-notation-abbreviations">Traditional
+notation abbreviations</h2>
+<p>As with SRFI-49, a leading traditional
+abbreviation (quote, comma, backquote, or comma-at), followed by space
+or tab, is that operator applied to the sweet-expression starting at the
+same line.  This makes it easy to quote (or whatever) complex indented
+structures.</p>
+
+<h2 id="sublist">Sublist ($)</h2>
+
+<p>Alan Manuel Gloria
+noted that certain constructs were common and annoying to express,
+e.g., first(second(third(fourth))), and based on Haskell experience,
+suggested being able to write them as first $ second $ third(fourth).
+Again, the idea is that this is an abbreviation for a common-enough
+practice.</p>
+
+<p>This is another example (like GROUP/SPLIT) of a
+construct that, when you need it, is incredibly useful.
+It's not
+all that unusual to have a few processing or cleanup functions that
+take a single argument, and for all the "real work" to be nested
+in something else.
+This would require several levels of indentation
+without sublist, but they are easily handled with sublist.
+</p>
+<p>
+An example is
+scsh, which has functions like "run" that another list.  With sublist,
+this is easily expressed.  For example, here's a sweet-expression using
+scsh:
+<pre>
+  run $ grep -i "xx.*zz" &lt;(oldfile) &gt;(newfile)
+</pre>
+
+
+<p>After discussion, sublist was accepted in July 2012.</p>
+
+<h2>Markers &lt;* and *&gt;</h2>
+<p>
+The markers &lt;* and *&gt; are reserved for future use.
+These may, at some point, have the following syntax
+as described in an
+<a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg00806.html">email posted 2012-09-02</a>:
+
+<blockquote>
+<i>
+&lt;* ... *&gt; are like ( ... ) in that they surround a list,
+but they do NOT turn 
+off indentation processing.
+A "&lt;*" resets the "indent" level to a 0-length 
+string, skips all horizontal whitespace, and then restarts reading an 
+expression with indentation processing still live.
+A blank line inside &lt;* ... 
+*&gt; ends an expression WITHIN the &lt;* ... *&gt;,
+but stays within &lt;* ... *&gt;; only 
+eof or active *&gt; can close the &lt;*.
+Once all that mapping is done, the range of 
+&lt;* ... *&gt; is replaced with the mapped result.
+</i>
+</blockquote>
+
+<p>
+Thus, the symbols <tt>&lt;*</tt> and <tt>*&gt;</tt>
+must be escaped (e.g., using {...}) if they are used in an
+indentation-processing context.
+
+
+<h2 id="alternative-q2">Comparison to Q2</h2>
+<p>An interesting
+experimental notation, "Q2", was developed by Per Bothner; see
+<a href="http://per.bothner.com/blog/2010/Q2-extensible-syntax/"
+rel="nofollow">http://per.bothner.com/blog/2010/Q2-extensible-syntax/</a>.
+</p>
+<p>Q2 has somewhat similar goals to the "readable" project, though
+with a different approach. The big difference is that David A. Wheeler
+decided it was important to have a generic notation for <em>any</em>
+s-expression. Here is a brief additional comparison:</p>
+<ul>
+<li>Sweet-expressions have infix, though not built-in precedence
+(precedence can be implemented by defining <tt>$nfx$</tt>).
+</li>
+<li>Both have "juxtaposition for function application"</li>
+<li>Q2 has
+"Naming a zero-argument function applies it" but this is awkward, indeed,
+"The exact rule for a distinguishing between a variable reference
+and a zero-argument function application isn't decided yet." In
+sweet-expressions, a zero-argument function name is called by adding
+() after it or around it, e.g., pi().</li>
+<li>"Flexible token format"
+- both require operators to be delimited.</li>
+<li>"Use indentation
+for grouping" - both use indentation for grouping</li>
+<li>"Block
+expressions yield multiple values" - In sweet-expressions, you use
+usual Scheme procedures, including value, instead of having special
+syntax.</li>
+<li>REPL: In sweet-expressions, you usually end a line
+with ENTER ENTER. Q2 doesn't, but Wheeler worries that you have to be careful
+or it'll end where it syntactically might not need to.</li>
+</ul>
+
+<h2 id="writing-out-results">Writing out results</h2>
+<p>An obvious question
+is, "how do you write them out?"  After all, with these notations there is
+more than one way to present expressions.</p>
+
+<p>But no Lisp guarantees
+that what it writes out is the same sequence of characters that was
+written.  For example, <tt>(quote&nbsp;x)</tt>
+when read might be written back
+as <tt>'x</tt>, while on others, reading
+<tt>'y</tt> might be printed as <tt>(quote&nbsp;y)</tt>.
+Similarly, if you enter <tt>(a&nbsp;.&nbsp;(b&nbsp;.&nbsp;()))</tt>,
+many Lisps will write that back as "(a&nbsp;b)".
+Nothing has fundamentally changed;
+as always, you should implement your Lisp expression writer so that
+it presents a format convenient to both human and machine readers.</p>
+
+<h2 id="backwards-compatibility">Backwards compatibility</h1>
+<p>Backwards compatibility with traditional Lisp notation is helpful.
+These notations are fully compatible with <em>well-formatted</em> Lisp
+s-expressions.
+</p>
+<p>
+Neoteric-expressions
+are compatible for what I'd call "normal" formatting.  The key issue is
+that it changes the meaning of an opening paren after a character other
+than whitespace or another opening paren.  So if you're using to saving
+whitespace that will be different.  Basically, a(b) becomes
+the single expressions "(a&nbsp;b)",
+not the two expressions "a" followed later by "(b)".
+There are millions of lines of Lisp code that would never
+see the difference.  So if you wrote "a(b)" expecting it to be "a&nbsp;(b)",
+you will need to insert the space.
+</p>
+<p>
+Sweet-expressions add
+indentation processing, but since indentation is disabled inside (...),
+and initial indentation also disables indentation processing,
+ordinary Lisp expressions immediately disable indentation processing and
+typically don't cause issues.
+In rare cicumstances they can be intepreted differently:
+</p>
+<ul>
+<li>If you have a <em>top-level</em> expression
+when more than one datum on a line <em>and</em> the line doesn't begin
+with space/tab.  Thus, at the topmost level, "(a) (b)" on one line
+is interpreted as two datums "(a)" followed by "(b)" in traditional
+Lisp, but this is a single "((a) (b))" in sweet-expressions.</li>
+<li>Sweet-expressions also count "!" at the beginning of a line as
+an indent character.  This rarely causes any issue, since once you
+use an open parenthesis to start an expression, this meaning for
+"!" is disabled.  Generally, you'd have to have a symbol whose name
+<em>starts</em> with "!" before any issue could come up.</li>
+</ul>
+<p>
+In any case, you
+can disable sweet-expression processing with a space indent, so just
+inserting a space on every line <em>ensures</em> compatibility with the
+sweet-expression indentation processing.</p>
+
+
+<h2>Past experiences</h2>
+<p>
+At least two programs have been written using sweet-expressions:
+<ul>
+<li><a href="http://readable.sourceforge.net"><i>sweeten</i></a>
+by David A. Wheeler is
+a program that reads traditionally-formatted
+s-expressions and writes sweet-expressions.
+This program performs a great deal of traditional list processing, and
+is part of the "readable" project's git repository.
+</li>
+<li><a href="https://github.com/AmkG/letterfall"><i>letterfall</i></a>
+by Alan Manuel K. Gloria is a graphical
+real-time touch typing game to improve typing skills, which uses
+GNOME libraries.
+</li>
+</ul>
+<p>
+The SRFI authors believe that the existence of these programs -
+written by two different people for different application areas -
+shows that sweet-expressions are mature enough to be standardized.
+</p>
+
 <h1><a name="reference-implementation">Reference implementation</a></h1>
 <p>
 ??? TODO
 </p>
 
 <p>The implementation below is portable, with the exception that
-Scheme provides no standard mechanism to override
-<code>{</code>...<code>}</code> in its
-built-in reader. Thus, implementations will typically have a
-modified reader that detects &#8220;<code>{</code>&#8220;, starts reading a list
-until its matching &#8220;<code>}</code>&#8221;, and then calls <var>process-curly</var>
-defined below.
-Implementations should <em>always</em> do
-this, but an implementation that complies with this SRFI must
+Scheme provides no standard mechanism to override the built-in reader.
+An implementation that complies with this SRFI must
 at least activate this behavior
-when they read the <code>#!curly-infix</code> marker
+when they read the <code>#!sweet</code> marker
 followed by whitespace.
 </p>
 <p>This reference implementation is SRFI type 2: &#8220;A
