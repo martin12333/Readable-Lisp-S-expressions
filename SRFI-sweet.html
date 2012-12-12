@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
 <head>
 <title>Draft SRFI Sweet: Sweet-expressions</title>
@@ -89,7 +89,8 @@ It is derived from
 <a href="http://srfi.schemers.org/srfi-49/">SRFI-49</a>
 and includes (by reference)
 <a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
-The sweet-expression notation is
+Unlike most past efforts to make Lisp more &#8220;readable&#8221;,
+the sweet-expression notation is
 generic (the notation does not depend on an underlying semantic),
 homoiconic (the underlying data structure is clear from the syntax), and
 backwards-compatible with well-formatted s-expressions.
@@ -104,7 +105,7 @@ define factorial(n)
     {n * factorial{n - 1}}
 </pre>
 <p>
-Maps to the following sweet-expression:
+Maps to the following s-expression:
 </p>
 <pre>
 (define (factorial n)
@@ -113,7 +114,9 @@ Maps to the following sweet-expression:
     (* n (factorial (- n 1)))))
 </pre>
 
-<p>Note that this notation is derived from the
+<p>
+A sweet-expression reader would accept <i>either</i> form.
+Note that the sweet-expression notation is derived from the
 &#8220;<a href="http://readable.sourceforge.net/">
 Readable Lisp S-expressions Project</a>&#8221;.
 </p>
@@ -121,7 +124,8 @@ Readable Lisp S-expressions Project</a>&#8221;.
 <h1><a name="rationale">Rationale</a></h1>
 <p>
 The large number of parentheses required by Lisp syntax is the butt
-of many jokes in the software development community.
+of many jokes in the software development community
+and has been widely criticized.
 The
 <a href="http://www.catb.org/jargon/html/L/LISP.html">Jargon File</a>
 says that Lisp is
@@ -130,6 +134,17 @@ says that Lisp is
 commented about some parentheses-rich C code,
 &#8220;don&#8217;t ask me about the extraneous parenthesis.  I bet some
 LISP programmer felt alone and decided to make it a bit more homey.&#8221;
+<a href="http://www.linuxjournal.com/article/2070">
+Larry Wall, the creator of Perl</a>, says that,
+&#8220;Lisp has all the visual appeal of oatmeal
+with fingernail clippings mixed in.
+(Other than that, it&#8217;s quite a nice language.)&#8221;.
+<a href="http://shriram.github.com/p4p/">Shriram Krishnamurthi</a> says,
+&#8220;Racket [(a Scheme implementation)] has an excellent language design,
+a great implementation, a superb programming environment, and terrific tools.
+Mainstream adoption will, however, always be curtailed by the syntax.
+Racket could benefit from [reducing]
+the layers of parenthetical adipose that [needlessly] engird it.&#8221;
 </p>
 <p>
 Since Lisp programs and data are often written using indentation anyway,
@@ -139,7 +154,28 @@ many of these &#8220;superfluous&#8221; parentheses, as well as eliminating the
 need to keep the indentation and parentheses synchronized.
 </p>
 <p>
-This indentation-sensitive syntax
+This is not a new observation.
+<a href="http://paulgraham.com/popular.html">Lisp advocate
+Paul Graham says</a>, regarding Lisp syntax,
+&#8220;A more serious problem [in Lisp] is the diffuseness of prefix notation...
+We can get rid of (or make optional) a lot of parentheses by making
+indentation significant. That&#8217;s how programmers read code anyway: when
+indentation says one thing and delimiters say another, we go by the
+indentation.
+Treating indentation as significant would eliminate this
+common source of bugs as well as making programs shorter.
+Sometimes infix syntax is easier to read. This is especially true for
+math expressions. I&#8217;ve used Lisp my whole programming life and I still
+don&#8217;t find prefix math expressions natural...
+I don&#8217;t think we should be religiously opposed to introducing syntax
+into Lisp, as long as it translates in a well-understood
+way into underlying s-expressions.
+There is already a good deal of syntax in Lisp.
+It&#8217;s not necessarily bad to introduce more,
+as long as no one is forced to use it.&#8221;
+</p>
+<p>
+The indentation-sensitive syntax defined in this SRFI
 is generic (the notation does not depend on an underlying semantic)
 and homoiconic (the underlying data structure is clear from the syntax).
 We believe previous efforts to improve the readability of
@@ -159,26 +195,15 @@ an abbreviation, in much the same way that
 </p>
 <p>
 <a href="http://srfi.schemers.org/srfi-49/">SRFI-49</a> defines an
-indentation-sensitive syntax, but
-it has not been widely deployed among Scheme implementations
-because of its various problems and limitations.
-For example,
-in SRFI-49, leading blank lines could produce the empty list <tt>()</tt>
-instead of being ignored,
-limiting the use of blank lines and leading to easy-to-create errors.
-As specified, a SRFI-49 expression would never complete
-until after the next expressions&#8217;s first line was entered, making
-interactive use extremely unpleasant.
-Lines with just spaces and tabs would be considered different from blank
-lines, creating another opportunity for difficult-to-find errors.
-The symbol <tt>group</tt> is given a special meaning, which is
-inconsistent with the rest of Lisp
-(where only punctuation has special syntactic meanings).
-There were also a number of defects in both its
-specification and implementation.
+indentation-sensitive syntax.
+Unfortunately, it has not been widely deployed among Scheme implementations.
+We believe this is, at least in part,
+because of various problems and limitations in it,
+<a href="#srfi-49">described in more detail below</a>.
 Nevertheless, SRFI-49 represented an important first step in devising
 an indentation-sensitive syntax; sweet-expressions are derived from SRFI-49
 and retain most of its syntax.
+
 </p>
 <p>
 The notation defined in this sweet-expressions SRFI
@@ -330,7 +355,7 @@ conflict, the specification text above governs.
 ???
 </p>
 
-<h2><a name="examples">Examples</a></h2>
+<h1><a name="examples">Examples</a></h1>
 <p>
 Here are some examples and their mappings.
 </p>
@@ -835,27 +860,128 @@ of the colon in various Lisp-like languages).</li>
 discusses a way to get S-expressions with indentation.</li>
 </ul>
 
-<h2>What is the relationship with SRFI-49 (I-expressions)?</h2>
+<h2 id="srfi-49">What is the relationship with SRFI-49 (I-expressions)?</h2>
 
-<p>The sweet-expression indentation system is based on <a class=""
-href="http://srfi.schemers.org/srfi-49/srfi-49.html" rel="nofollow">Scheme
-SRFI-49 (&#8220;surfi-49&#8221;), aka I-expressions</a>.  The basic rules of SRFI-49
+<p>The sweet-expression indentation system is based on <a
+href="http://srfi.schemers.org/srfi-49/srfi-49.html">Scheme
+SRFI-49 (&#8220;surfi-49&#8221;), aka I-expressions</a>.
+The basic rules of SRFI-49
 (I-expression) indentation are kept in sweet-expressions; these are:</p>
 <ul>
 <li>An indented line is a parameter of its parent.</li>
-<li>Later
-terms on a line are parameters of the first term.</li>
-<li>A line with
-exactly one term, and no child lines, is simply that term; multiple
-terms are wrapped into a list.</li>
+<li>Later terms on a line are parameters of the first term.</li>
+<li>A line with exactly one term, and no child lines,
+is simply that term; multiple terms are wrapped into a list.</li>
 </ul>
 
 <p>These basic rules seem quite
-intuitive, and seem to be what most people &#8220;expect&#8221; indentation to mean.
+intuitive, and seem to be what most people &#8220;expect&#8221;
+indentation to mean.
 We&#8217;re grateful to the SRFI-49 author for his work, and at first, we just
-used SRFI-49 directly.  However, SRFI-49 turned out to have problems in
-practice, so based on that experience and experimentation we made several
+used SRFI-49 directly.</p>
+
+<p>
+However, SRFI-49 turned out to have problems in practice when
+we tried to use it seriously.
+For example,
+in SRFI-49, leading blank lines could produce the empty list <tt>()</tt>
+instead of being ignored,
+limiting the use of blank lines and leading to easy-to-create errors.
+As specified, a SRFI-49 expression would never complete
+until after the next expressions&#8217;s first line was entered, making
+interactive use extremely unpleasant.
+Lines with just spaces and tabs would be considered different from blank
+lines, creating another opportunity for difficult-to-find errors.
+The symbol <tt>group</tt> is given a special meaning, which is
+inconsistent with the rest of Lisp
+(where only punctuation has special syntactic meanings).
+There were also a number of defects in both its
+specification and implementation.
+</p>
+
+<p>
+Thus, based on experience and experimentation we made several
 changes to it.
+First, we fixed the problems listed above.
+We also addressed supporting other capabilities, namely,
+infix notation and allowing formats like <tt>f(x)</tt>.
+We also found that certain constructs were somewhat ugly if indentation
+is required, so we added SUBLIST and SPLIT capabilities.
+</p>
+
+<p>
+The very existence of SRFI-49 shows that others believe
+there is value in using syntactically-significant indentation.
+We are building on the experience of others to create what we hope
+is a useful and refined notation.
+</p>
+
+<h2>How does this compare with P4P?</h2>
+
+<p>
+<a href="http://shriram.github.com/p4p/">
+P4P: A Syntax Proposal</a> by Shriram Krishnamurthi
+describes an alternative, more readable format for the Racket implementation
+of Scheme.
+There are some similarities, but many differences.
+</p>
+
+<p>
+P4P supports functional name-prefixing such as f(x),
+just as sweet-expressions do.
+However, function parameters are separated by commas
+(an extra character not typical in Lisp code, and in our experiments
+something of a pain since parameters are very common).
+P4P does not support infix notation at all, even though practically
+all non-Lisp languages support them.
+</p>
+
+<p>
+P4P has a very different view of indentation, compared to
+sweet-expressions.
+In P4P, indentation does not control semantics.
+Instead,
+&#8220;the semantics controls indentation: that is, each construct has
+indentation rules, and the parser enforces them. However, changing the
+indentation of a term either leaves the program&#8217;s meaning unchanged
+or results in a syntax error; it cannot change the meaning of the
+program.&#8221;
+</p>
+
+<p>
+This means that P4P has a large number of special-case syntactic constructs.
+For example, defvar: and deffun: specially use &#8220;=&#8221;,
+if: has intermediate keywords, and so on.
+While this looks nice when you stay within its set, it encounters
+the same problem that McCarthy had with M-expressions: There are always
+new constructs, including ones in meta-languages (not the underlying
+Scheme implementation) and macros.
+The P4P author notes that,
+&#8220;it would be easy to add new constructs such as
+provide:, test:, defconst: (to distinguish from defvar:), and so on&#8221;,
+but this misses the point; the task of defining constructs
+inhibits the use of those constructs, and may be impractical
+if there are syntactic differences at different language levels.
+For example, imagine processing lists where &#8220;deffun&#8221; has a different
+definition than the underlying language; this is trivial with
+s-expressions and sweet-expressions, but not practical using P4P.
+</p>
+
+<p>
+The P4P author notes that, &#8220;the parser can be run in a mode where
+indentation-checking is simply turned off...
+This can be beneficial when dealing with program-generated code.&#8221;
+However, now the developer must deal with enabling various modes,
+and this mode is needed not just for program-generated code, but for
+code that has mixtures of various languages.
+Rather than having multiple modes, a single mode that works everywhere
+seems more useful to the developers of the sweet-expression notation.
+</p>
+
+<p>
+However, while we prefer different design choices, P4P is additional
+evidence that people are interested in improving the readability of
+Lisp, and that indentation can help do so.
 </p>
 
 
