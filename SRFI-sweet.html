@@ -3,7 +3,7 @@
 <head>
 <title>Draft SRFI Sweet: Sweet-expressions</title>
 <meta content="text/html; charset=us-ascii" http-equiv="content-type">
-<meta name="description" content="Definition of sweet-expressions (t-expressions) for Scheme.  Uses neoteric-expressions (n-expressions) and curly-infix-expressions (c-expressions). This defines an approach to making Scheme more 'readable' by syntactically-relevant indentation, as well as supporting infix and functions whose names precede the opening parenthesis.">
+<meta name="description" content="This defines sweet-expressions (t-expressions) for Scheme, building on neoteric-expressions (n-expressions) and curly-infix-expressions (c-expressions). This defines an approach to making Scheme more 'readable' by adding syntactically-relevant indentation, as well as supporting infix and functions whose names precede the opening parenthesis.">
 <meta name="keywords" content="sweet, sweet-expression, sweet-expressions, t-expression, Scheme, Lisp, Common Lisp, neoteric-expression, n-expression, readable, notation, s-expression, s-expr, M-expression, SRFI, implementation, David Wheeler, David A. Wheeler, Alan Manuel Gloria, Alan Manuel K. Gloria">
 <meta name="generator" content="vim">
 <!-- Copy CSS style of SRFI-64; credits to Per Bothner. -->
@@ -234,8 +234,10 @@ as follows when indentation processing is active:
 <p>
 Sweet-expression rule clarifications:
 <ol>
-<li>You can indent using one-or-more space, tab, and/or exclamation point (!)
-characters.</li>
+<li>You can indent using one or more of the indent characters,
+which are space, tab, and exclamation point (!).</li>
+<li>An unescaped &#8220;;&#8221; not in a string (still) introduces comments
+that end at the end of the line or file.</li>
 <li>Lines with only a ;-comment (preceded by 0 or more indent characters)
 are completely ignored - even their indentation (if any) is irrelevant.</li>
 <li>A line with only indentation is an empty line.</li>
@@ -245,7 +247,10 @@ Instead, a sequence of white-space separated neoteric-expressions is read
 until the first end of line or end of file.</li>
 <li>Scheme&#8217;s #; datum comment comments out the next neoteric expression,
 not the next sweet expression.</li>
-<li>??? Discuss #| ... |#.</li>
+<li>Block comments (<tt>#|</tt> ... <tt>|#</tt>) are removed, but if it
+begins immediately after the indent (if any),
+the indentation at the beginning of the block comment is used.
+</li>
 </ol>
 
 <p>
@@ -407,10 +412,11 @@ define factorial(n)
 </pre>
 </td>
 </tr>
+
 <tr>
 <td align="left" valign="top">
 <pre>
-f
+f ; Demo improper lists
   a . b
 </pre>
 </td>
@@ -421,6 +427,26 @@ f
 </pre>
 </td>
 </tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+ff ; Comment nesting
+  #| qq |# t1 t2
+  t3 t4
+    t5 #| xyz |# t6
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(ff
+  (t1 t2)
+  (t3 t4
+    (t5 t6)))
+</pre>
+</td>
+</tr>
+
 <tr>
 <td align="left" valign="top">
 <pre>
@@ -488,10 +514,6 @@ define init(win area)
 
 
 <h1><a name="design-rationale">Design Rationale</a></h1>
-
-<p>
-??? TODO
-</p>
 
 <p>
 This SRFI design
