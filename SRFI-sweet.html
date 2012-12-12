@@ -65,20 +65,19 @@ and
 
 <h1><a name="abstract">Abstract</a></h1>
 <p>
-Many software developers find Lisp s-expression notation inconvient and
-unpleasant to read.
+Many software developers find Lisp s-expression notation inconvenient and
+unpleasant to read, in part because of the many parentheses required
+in typical use.
 Even those who like Lisp s-expressions typically use indentation
-to show structure, because structure is not obvious
-in raw un-indented s-expressions.
-An alternative syntax for structure, used in some languages such as Python,
-is to make indentation syntactically important.
-Indentation-sensitive syntax eliminates
-the need for many parentheses, and it also eliminates the need
-to synchronize indentation with parentheses.
+to show structure, and not just parentheses,
+because structure is not obvious in raw un-indented s-expressions.
+This SRFI defines an indentation-sensitive syntax, inspired by Python;
+indentation-senstitive syntax eliminates the need for many parentheses
+and the need to synchronize indentation with parentheses.
+The previous
 <a href="http://srfi.schemers.org/srfi-49/">SRFI-49</a> defines an
-indentation-sensitive syntax, but in practice is somewhat awkward,
-and by itself it lacks the
-<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>
+indentation-sensitive syntax, but in practice it is somewhat awkward,
+and by itself it lacks
 support for infix notation (e.g., <tt>{a&nbsp;+&nbsp;b}</tt>)
 and prefix formats (e.g., <tt>f(x)</tt>).
 </p>
@@ -114,9 +113,9 @@ Maps to the following sweet-expression:
     (* n (factorial (- n 1)))))
 </pre>
 
-<p>Note that this is derived from the
-&#8220;<a href="http://readable.sourceforge.net/">readable</a>&#8221;
-project.
+<p>Note that this notation is derived from the
+&#8220;<a href="http://readable.sourceforge.net/">
+Readable Lisp S-expressions Project</a>&#8221;.
 </p>
 
 <h1><a name="rationale">Rationale</a></h1>
@@ -336,10 +335,10 @@ conflict, the specification text above governs.
 Here are some examples and their mappings.
 </p>
 
-<table cellpadding="4" border="1" rules="cols">
+<table border="1" cellpadding="4">
 <tr>
-<th align="center">Sweet-expression</th>
-<th align="center">S-expression</th>
+<th align="center">Sweet-expressions (t-expressions)</th>
+<th align="center">s-expressions</th>
 </tr>
 <tr>
 <td align="left" valign="top">
@@ -401,21 +400,6 @@ define factorial(n)
 <tr>
 <td align="left" valign="top">
 <pre>
-' a b
-  c d e \\ f g h
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-'(a b
-    (c d e) (f g h))
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
 f ; Demo improper lists
   a . b
 </pre>
@@ -431,7 +415,22 @@ f ; Demo improper lists
 <tr>
 <td align="left" valign="top">
 <pre>
-ff ; Comment nesting
+' a b ; Demo abbreviations
+  'c d e \\ f g h
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+'(a b
+    ('c d e) (f g h))
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+ff ; Block comments
   #| qq |# t1 t2
   t3 t4
     t5 #| xyz |# t6
@@ -461,6 +460,7 @@ ff ; Comment nesting
 </pre>
 </td>
 </tr>
+
 <tr>
 <td align="left" valign="top">
 <!-- Inspired by letterfall's code:
@@ -1350,6 +1350,13 @@ The SRFI authors believe that the existence of these programs -
 written by two different people for different application areas -
 shows that sweet-expressions are mature enough to be standardized.
 </p>
+<p>
+The <a href="http://readable.sourceforge.net">Readable Lisp S-expressions Project</a> developed these notations and implementations of them.
+In particular, the project distributes the programs
+<i>unsweeten</i> (which takes sweet-expressions and transforms them
+into s-expressions) and
+<i>sweeten</i> (which takes s-expressions and transforms them into
+sweet-expressions), as well as other related tools.
 
 <h1><a name="reference-implementation">Reference implementation</a></h1>
 <p>
