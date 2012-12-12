@@ -88,7 +88,8 @@ Sweet-expression examples are shown below.
 .PP
 Only a group of semicolon comments starting from either the file's very beginning, or after a blank line, are copied to the output. Such semicolon comments will have indentation (if any) removed. Block comments and inside a datum are never copied. Semicolon comments immediately after a datum aren't copied either (the reader has to consume them to see if it's reached the end of the datum).
 .PP
-Unsweeten also has some special substitutions. If a semicolon begins a line, the next character may cause it to do something special. If line begins with ";#" or ";!", the line is copied back without the leading semicolon. If a line begins with ";_", then the line is copied back without either of those first two characters.
+Unsweeten also has some special substitutions. If it is outside of reading an expression, and a semicolon begins a line, the next character may cause it to do something special. If line begins with ";#" or ";!", the line is copied back without the leading semicolon. If a line begins with ";_", then the line is copied back without either of those first two characters.
+If the semicolon is followed by whitespace or semicolon, the whole line is copied as-is; users who intend for a semicolon in the first column to begin a real comment should follow the semicolon with whitespace or another semicolon.
 
 .PP
 For more information, see
