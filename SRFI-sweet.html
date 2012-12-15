@@ -30,6 +30,7 @@
 <!-- Some old browsers have problem with empty names. Work around here: -->
 <h1><a name="authors">Authors</a><a name="author">&nbsp;</a></h1>
 <p><a href="http://www.dwheeler.com">David A. Wheeler</a></p>
+<p>Alan Manuel K. Gloria</p>
 
 <h1><a name="status">Status</a></h1>
 <p>This is a draft Scheme Request for Implementation (SRFI) for
@@ -379,16 +380,259 @@ or semicolon if they mean for it to be a comment.
 
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
 
-<h2><a name="bnf">BNF</a></h2>
+<h2><a name="bnf">Backus–Naur Form (BNF)</a></h2>
 <p>
-The following BNF defines sweet-expressions.
+The following BNF rules define sweet-expressions.
 It is intended to capture the specification above; in case of (unintentional)
 conflict, the specification text above governs.
+Semicolons introduce a comment which ends at the end of the line.
+Each rule is a production optionally followed by an expression.
 </p>
 
 <p>
-???
+Productions are defined in the form production (non-terminal) name,
+"::=", and a sequence of terms that define the production.
+The name EOF stands for end-of-file;
+other names in all upper case represent one character.
+A term may be followed by * (0 or more times), + (1 or more times), or
+? (0 or 1 times).
+The "|" symbol separates alternative branches.
+Productions may continue on a following line by indenting them beyond
+the end of their matching "::=".
+The notation avoids using &lt; and &gt;, since these characters
+are awkward to use properly in HTML.
+If more than one production matches, precedence is as follows:
 </p>
+<ol>
+<li>Longer productions and production branches
+(as measured by matching terms) take precedence over shorter ones.
+For example, given "demo-eol ::= CR | CR LF",
+the "CR LF" will match if possible.
+<li>
+Shorter production call depths takes precedence over longer depths,
+as long as this does not interfere with the previous precedence rule.
+Thus, given "demo-i ::= abb | demo-n" and
+"demo-n ::= abb | other",
+when starting with demo-i-expr an "abb" will match
+inside "demo-i-expr" and not in "demo-n-expr".
+</li>
+</ol>
+<p>
+There are several special terminals which act as guards, that is,
+they return true/false values.
+Note that these are <i>not</i> tokens in the traditional sense,
+because they are not consumed.
+Use of these terminals in a production implies that an implementation of the
+production must hold the starting indent when the production begins
+(so that they can be computed).
+These special terminals are:
+<ol>
+<li>INDENT: True if the current line indent string (<i>current</i>)
+is longer than the indent when this production started string (<i>started</i>)
+and the two strings are equal up to length(started).
+<li>SAME: True if current is equal to started.
+<li>DEDENT: True if current is shorter than started
+and the two strings are equal up to length(current).
+Technically we don't need to test for this, but testing for it can
+detect some BNF or implementation defects.
+<li>BADDENT: True if current is not equal to started
+up to min(length(current) length(started)).
+In other words, the current indent is not INDENT, SAME, nor DEDENT.
+This terminal is used to detect indent errors.
+</ol>
+
+<p>
+The BNF productions below are intentionally written so that they can
+be easily implemented using recursive descent, but
+no particular implementation approach is required.
+Unlike the SRFI-49 BNF, this BNF makes the whitespace
+processing more explicit.
+</p>
+
+<p>Each production may be followed by
+an expression that computes the value produced by the production.
+The expression begins on the first line indented two spaces, and
+ends on a blank line or a line with a character in the first column.
+In an expression the symbols $1...$n
+are to be replaced by the 1:st ... n:th expression value returned by
+the corresponding production term.
+The symbol $last is the value of the last value
+returned by a production term that matched
+(this is only used when there is more than one term).
+The values of some productions are never used; these do not have
+corresponding expressions.
+</p>
+
+<p>
+First, here are some utility procedures for use in rules:
+</p>
+
+<pre>
+(define (map-abbreviation c)
+  (case c
+    (#\'  'quote)
+    (#\`  'quasiquote)
+    (#\,  'unquote)              ; , not followed by @
+    (#\@  'unquote-splicing)))   ; This represents ,@
+
+<p>
+Here are the actual BNF rules:
+</p>
+
+<pre>
+; ??? This is a VERY EARLY DRAFT of the BNF.  It's probably wrong,
+; but the hope is that this is a start for a good BNF.
+; This is different from previous approaches: INDENT, SAME, etc., are
+; *guards* instead of *tokens* that are consumed.
+
+; TODO: Quite a bit. E.G.:
+; - Complete definitions for GROUP, SPLIT, #|...|#, etc.
+; - Handle FORMFEED | VTAB | (IBM's) NEL
+; - Handle EOF in weird places
+; - Generate errors, e.g., illegal indents, initial "!"
+; - Define n-expr, etc. This will be done later.
+;   Alan Manuel K. Gloria has done a lot of this, we'll bring that in later.
+;   Check that work for improper lists, etc.
+
+
+ichar   ::= SPACE | TAB | EXCLAMATION-POINT ; indent char
+hspace  ::= SPACE | TAB                     ; horizontal space
+eolchar ::= CR | LF
+eol     ::= CR | LF | CR LF | LF CR
+; not-eolchar is all characters not in eolchar; it does not include EOF.
+
+; "ichars" matches indentation characters.  This is fundementally
+; ambiguous with INDENT, SAME, DEDENT, and BADDENT, but the latter are
+; special terminals so they have higher priority.
+; If you read this in, these characters will become the "latest" line indent.
+ichars ::= ichar*
+
+; The "$last" here matches the last MATCH, so ,@ will return the @ char
+; that will later be used to map ,@ correctly.
+; A ,@ will be  used where possible because longest rule matches.
+abbrev ::= ' | ` | , | , @
+  $last
+
+; Line comment, not including the ending eol or EOF
+lcomment ::= SEMICOLON not-eolchar*
+
+; Note: This will attempt to read in an indent, resetting "latest" indent!
+comment-lines ::= ichars lcomment eol comment-lines?
+
+; eol-comment-lines happen after some other constructs, so only hspace starts
+; It may, but need not, include a ;-comment.
+; Note: This may attempt to read in an indent, resetting "latest" indent!
+eol-comment-lines ::= hspace* lcomment? eol? EOF
+eol-comment-lines ::= hspace* lcomment? eol comment-lines?
+
+; The body handles the sequence of 1+ child lines.
+; Note that i-expr will consume any line comments (line comments after
+; content, as well as lines that just contain indents and comments).
+; Note also that i-expr may set the the latest indent to a different value
+; than the indent used on entry to body; the latest indent is compared by
+; the special terminals DEDENT, SAME, and BADDENT.
+
+body ::= i-expr DEDENT ; Done with body.
+  ; We're done!  We don't actually have to check DEDENT:
+  ; - We couldn't match SAME, because that's matched below.
+  ; - We couldn't match BADDENT, because that's matched below.
+  ; - We couldn't match INDENT, because i-expr consumes those.
+  ; But putting DEDENT here simplifies reasoning.  We recommend actually
+  ; checking DEDENT in an implementation, because doing so could detect
+  ; some implementation defects in the t-expression reader.
+  (list $1)
+
+body ::= i-expr SAME body ; Another body at the same indent level
+  (cons $1 $last)
+
+body-tail ::= i-expr BADDENT ; bad indent in line after a first body.
+  (read-error $2 "Incorrect indentation")
+
+
+; The "head" is the production for 1+ n-expressions on one line.
+head ::= n-expr hspace* ; Singleton.
+  ; We handle hspace* here, because we have to read any hspace
+  ; to see if there are more n-expressions on the line anyway.
+  (list $1)
+head ::= n-expr hspace+ head
+  (cons $1 $3)
+head ::= n-expr hspace+ PERIOD hspace+ n-expr ; improper list
+  (cons $1 $last)
+  ; TODO???: Detect PERIOD hspace+ n-expr hspace+ n-expr
+  ; (an improper list with junk after it)
+
+
+; "i-expr" (indented sweet expressions expressions)
+; is the main production for sweet-expressions in the usual case.
+; This can be implemented with one-character-lookahead by also
+; passing in the "current" indent ("" to start), and having it return
+; the "new current indent".  The same applies to body.
+; If the line after a "head" has the same or smaller indentation,
+; that will end this i-expr (because it won't match INDENT),
+; returning to a higher-level production.
+
+i-expr ::= head eol-comment-lines ; head with no child lines (SAME or DEDENT)
+ (if (null? (cdr $1)) ; Check if singleton but handle improper lists
+   (car $1) ; Single item, don't return a list
+   $1)
+
+; Note that eol-comment-lines may read in an indent, which INDENT compares.
+i-expr ::= head eol-comment-lines INDENT body ; child lines
+  (append $1 $last)
+
+; Error detection for incorrect indentation right after a head.
+i-expr ::= head eol-comment-lines BADDENT ; bad indent after head.
+  (read-error $3 "Incorrect indentation")
+
+; The following overrides head processing of abbreviations
+; (because it has higher precedence).  Therefore:
+; ' a b c
+; maps to '(a b c), and not to ('a b c).
+
+i-expr ::= abbrev hspace+ i-expr
+  (list (map-abbreviation $1) $last)
+i-expr ::= abbrev hspace* lcomment? eol INDENT i-expr
+  (list (map-abbreviation $1) $last)
+i-expr ::= abbrev hspace* lcomment? EOF ; Weird case, do something plausible
+  (list (map-abbreviation $1))
+
+
+; Productions for the top production, a sweet-expression (t-expr):
+
+; The following is the "usual case", drilling down to indentation processing.
+t-expr ::= i-expr
+  $1
+
+; On EOF we just return that.
+t-expr ::= EOF
+  $1
+
+; Specially handle blank lines and comments, which may be indented, before
+; any content of a t-expression.  These need to be skipped.
+; A t-expression will END with a blank line,
+; but we must CONSUME and IGNORE blank lines *before* t-expression begins:
+t-expr ::= hspace* lcomment? eol t-expr ; Recurse and try again here.
+  $last
+t-expr ::= hspace* lcomment? EOF
+  $last
+
+; Implement "initial hspace at top-level DISABLES indentation processing".
+; If multiple n-expressions are on a line, separated by hspace, then
+; this production will fire again on the next invocation.
+; Alan Manuel K. Gloria figured out this simple (and clever) BNF construction.
+t-expr ::= hspace+ n-expr
+  $last
+
+; Detect error condition - Although "!" is an indent character, we aren't
+; supposed to indent the first line of a t-expression unless we're disabling
+; indentation processing on that line, and only SPACE or TAB can do that.
+; So a "!" is an error.  Let's report this easily-detected problem.
+t-expr ::= hspace* EXCLAMATION-POINT
+  (read-error $2 "Cannot initially indent with !")
+
+; The top production is t-expr (sweet-expression).
+
+</pre>
 
 <h1><a name="examples">Examples</a></h1>
 <p>
