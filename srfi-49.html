@@ -1,0 +1,498 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" 'http://www.w3.org/TR/REC-html40/strict.dtd'>
+<html>
+ <head>
+  <meta name="keywords" content="Scheme, programming language, SRFI, indentation, python">
+  <link rev=made href="mailto:redhog@redhog.org">
+
+  <!-- Stylesheet copied from srfi 1
+
+   Should have a media=all to get, for example, printing to work.
+   == But my Netscape will completely ignore the tag if I do that.
+   -->
+
+  <style type="text/css">
+	 /* A little general layout hackery for headers & the title. */
+	 body { margin-left: +7%;
+		font-family: "Helvetica", sans-serif;
+		}
+	 /* Netscape workaround: */
+	 td, th { font-family: "Helvetica", sans-serif; }
+
+	 code, pre { font-family: "courier new", "courier"; }
+
+	 h1 { margin-left: -5%; }
+	 h1, h2 { clear: both; }
+	 h1, h2, h3, h4, h5, h6 { color: blue }
+	 div.title-text { font-size: large; font-weight: bold; }
+
+	 div.indent { margin-left: 2em; }	  /* General indentation */
+	 pre.code-example { margin-left: 2em; } /* Indent code examples. */
+
+	 /* This stuff is for definition lists of defined procedures.
+	 ** A proc-def2 is used when you want a stack of procs to go
+	 ** with one <dd> ... </dd> body. In this case, make the first
+	 ** proc a proc-def1, following ones proc-defi's, and the last one
+	 ** a proc-defn.
+	 **
+	 ** Unfortunately, Netscape has huge bugs with respect to style
+	 ** sheets and dl list rendering. We have to set truly random
+	 ** values here to get the rendering to come out. The proper values
+	 ** are in the following style sheet, for Internet Explorer.
+	 ** In the following settings, the *comments* say what the 
+	 ** setting *really* causes Netscape to do.
+	 **
+	 ** Ugh. Professional coders sacrifice their self-respect,
+	 ** that others may live.
+	 */
+	 /* m-t ignored; m-b sets top margin space. */
+	 dt.proc-def1 { margin-top: 0ex; margin-bottom: 3ex; }
+	 dt.proc-defi { margin-top: 0ex; margin-bottom: 0ex; }
+	 dt.proc-defn { margin-top: 0ex; margin-bottom: 0ex; }
+
+	 /* m-t works weird depending on whether or not the last line
+	 ** of the previous entry was a pre. Set to zero.
+	 */
+	 dt.proc-def  { margin-top: 0ex; margin-bottom: 3ex; }
+
+	 /* m-b sets space between dd & dt; m-t ignored. */
+	 dd.proc-def { margin-bottom: 0.5ex; margin-top: 0ex; } 
+
+
+	 /* Boldface the name of a procedure when it's being defined. */
+	 code.proc-def { font-weight: bold; font-size: 110%}
+
+	 /* For the index of procedures. 
+	 ** Same hackery as for dt.proc-def, above.
+	 */
+	 /* m-b sets space between dd & dt; m-t ignored. */
+	 dd.proc-index  { margin-bottom: 0ex; margin-top: 0ex; } 
+	 /* What the fuck? */
+	 pre.proc-index { margin-top: -2ex; }
+
+	 /* Pull the table of contents back flush with the margin.
+	 ** Both NS & IE screw this up in different ways.
+	 */
+	 #toc-table { margin-top: -2ex; margin-left: -5%; }
+
+	 /* R5RS proc names are in italic; extended R5RS names 
+	 ** in italic boldface.
+	 */
+	 span.r5rs-proc { font-weight: bold; }
+	 span.r5rs-procx { font-style: italic; font-weight: bold; }
+
+	 /* Spread out bibliographic lists. */
+	 /* More Netscape-specific lossage; see the following stylesheet
+	 ** for the proper values (used by IE).
+	 */
+	 dt.biblio { margin-bottom: 1ex; }
+
+	 /* Links to draft copies (e.g., not at the official SRFI site)
+	 ** are colored in red, so people will use them during the 
+	 ** development process and kill them when the document's done.
+	 */
+	 a.draft { color: red; }
+  </style>
+
+  <style type="text/css"; media=all>
+	 /* Nastiness: Here, I'm using a bug to work around a bug.
+	 ** Netscape rendering bugs mean you need bogus <dt> and <dd>
+	 ** margin settings -- settings which screw up IE's proper rendering.
+	 ** Fortunately, Netscape has *another* bug: it will ignore this
+	 ** media=all style sheet. So I am placing the (proper) IE values
+	 ** here. Perhaps, one day, when these rendering bugs are fixed,
+	 ** this gross hackery can be removed.
+	 */
+	 dt.proc-def1 { margin-top: 3ex; margin-bottom: 0ex; }
+	 dt.proc-defi { margin-top: 0ex; margin-bottom: 0ex; }
+	 dt.proc-defn { margin-top: 0ex; margin-bottom: 0.5ex; }
+	 dt.proc-def  { margin-top: 3ex; margin-bottom: 0.5ex; }
+
+	 pre { margin-top: 1ex; }
+
+	 dd.proc-def { margin-bottom: 2ex; margin-top: 0.5ex; } 
+
+	 /* For the index of procedures. 
+	 ** Same hackery as for dt.proc-def, above.
+	 */
+	 dd.proc-index { margin-top: 0ex; } 
+	 pre.proc-index { margin-top: 0ex; }
+
+	 /* Spread out bibliographic lists. */
+	 dt.biblio { margin-top: 3ex; margin-bottom: 0ex; }
+	 dd.biblio { margin-bottom: 1ex; }
+  </style>
+
+  <title>SRFI 49: Indentation-sensitive syntax</title>
+ </head>
+ <body>
+  <H1>Title</H1>
+
+  <div class="title-text">Indentation-sensitive syntax</div>
+
+  <H1>Author</H1>
+
+  Egil Möller
+
+  <address>
+   <a href="http://redhog.org/">http://redhog.org/</A> /
+   <a href="mailto:redhog@redhog.org">redhog@redhog.org</A>
+  </address>
+
+  <H1>Status</H1>
+
+  This SRFI is currently in ``final'' status.  To see an explanation of each status that a SRFI can hold, see <A HREF="http://srfi.schemers.org/srfi-process.html">here</A>.
+To comment on
+this SRFI, please send email to 
+<a href="mailto:srfi minus 49 at srfi dot schemers dot org">
+<code>srfi minus 49 at srfi dot schemers dot org</code></a>.
+See <a href="http://srfi.schemers.org/srfi-list-subscribe.html">
+instructions here</a> to subscribe to the list.  You can access
+the discussion via
+<a href="http://srfi.schemers.org/srfi-49/mail-archive/maillist.html">
+the archive of the mailing list</a>.
+You can access
+post-finalization messages via
+<a href="http://srfi.schemers.org/srfi-49/post-mail-archive/maillist.html">
+the archive of the mailing list</a>.
+</P>
+
+  <UL>
+   <LI>Received: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-49/srfi-49.txt?rev=1.1">2003/11/23</a></LI>
+   <LI>Draft: 2003/11/30-2004/01/28</LI>
+  <li>Revised: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-49/srfi-49.txt?rev=1.2">2005/05/29</a></li>
+  </UL>
+
+  <h1>Abstract</h1>
+
+  <p>This SRFI descibes a new syntax for Scheme, called I-expressions,
+  whith equal descriptive power as S-expressions. The syntax uses
+  indentation to group expressions, and has no special cases for
+  semantic constructs of the language. It can be used both for program
+  and data input.</p>
+
+  <p>It also allows mixing S-expressions and I-expressions freely,
+  giving the programmer the ability to layout the code as to maximize
+  readability.</p>
+
+  <h1>Rationale</h1>
+
+  <p>In the past, several non-S-expression syntaxes for various LISP
+  dialects has been tested and thrown away.  However, people seem not to
+  be too happy about the S-expressions, especially not beginners, who
+  regularly complain about "all those parentheses", so new syntaxes are
+  invented, and dismissed from time to time. All of those have had one
+  property in common which S-expressions did not share - they had
+  special constructs for the various _semantic_ constructs of the LISP
+  dialect they where constructed for.</p>
+
+  <p>Many languages uses parentheses, braces or backets to group
+  statements or expressions of the language, and allows exta spaces and
+  newlines to be used to arrange the expressions or stattements in a
+  visually pleasing way. This, however, often comes back to bite the
+  progammer, as an indentation leads him or her to think that the code
+  is grouped in a specific way, when in fact, its parentheses, braces or
+  brackets have been changed since the last time someone cared to
+  reindent the code.</p>
+
+  <p>Recently, using indentation as the sole grouping constuct of a
+  language has become popular with the advent of the Python programming
+  language. This solves the problem of indentation going out of sync
+  with the native grouping constuct of the language. Unfourtunately, the
+  Python syntax uses special constructs for the various semantic
+  constructs of the language, and the syntaxes of file input and
+  interactive input differs slightly. In addition, the indentation
+  syntax of Python only covers statements, not expessions and data.</p>
+
+  <h1>Specification</h1>
+
+  <p>Each line in a file is either empty (contains only whitepace and/or
+  a comment), or contains some code, preceeded by some number of space
+  and/or tab characters.</p>
+
+  <p>In the following syntax definition, this initial space, as well as
+  linebreaks, is not included in the rules. Instead, preceding any
+  matching, the leading space of each line is compared to the leading
+  space of the last non-empty line preceeding it, and then removed. If
+  the line is preceeded by more space than the last one was, the special
+  symbol INDENT is added to the beginning of the line, and if it is
+  preceeded by less space than the lastt one was, the special symbol
+  DEDENT is added to the beginning of the line. It is an error if
+  neither one of the leading space/tab seqquences are a prefix of the
+  other, nor are they equal.</p>
+
+  <p>The special non-terminal symbol sexpr expands to any valid
+  S-expression, and the special terminal symbol GROUP expands to the
+  word "group" in the input stream. The GROUP symbol is used to allow
+  lists whose first element is also a list. It is needed as the
+  indentation of an empty line is not accounted for.</p>
+
+  <p>Following each production is a rule to compute the value of an
+  expression matching the production. In those rules, the symbols $1 ...
+  $n are to be replaced by the 1:st ... n:th matched subexpression.</p>
+
+  <pre>
+  expr -> QUOTE expr
+   (list 'quote $2)
+  expr -> QUASIQUOTE expr
+   (list 'quasiquote $2)
+  expr -> UNQUOTE expr
+   (list 'unquote $2)
+
+  expr -> head INDENT body DEDENT
+   (append $1 $3)
+  expr -> GROUP head INDENT body DEDENT
+   (append $2 $4)
+  expr -> GROUP INDENT body DEDENT
+   $3
+  expr -> head
+   (if (= (length $1) 1)
+       (car $1)
+     $1)
+  expr -> GROUP head
+   (if (= (length $2) 1)
+       (car $2)
+     $2)
+
+  head-> expr head
+   (append $1 $2)
+  head-> expr
+   (list expr)
+
+  body -> expr body
+    (cons $1 $2)
+  body ->
+   '()
+  </pre>
+
+  <h1>Examples</h1>
+
+  <pre>
+  define
+   fac x
+   if
+    = x 0
+    1
+    * x
+      fac
+       - x 1
+
+  let
+   group
+    foo
+     + 1 2
+    bar
+     + 3 4
+   + foo bar
+
+  Denser equivalents using more traditional S-expressions:
+
+  define (fac x)
+   if (= x 0) 1
+    * x
+     fac (- x 1)
+
+  let
+   group
+    foo (+ 1 2)
+    bar (+ 3 4)
+   + foo bar
+  </pre>
+
+  <h1>Implementation</h1>
+
+  The following code implements I-expressions as a GNU Guile module that
+  can be loaded with <tt>(use-modules (sugar))</tt>.
+
+  <pre>
+  ----{ sugar.scm }----
+  (define-module (sugar))
+
+  (define-public group 'group)
+
+  (define-public sugar-read-save read)
+  (define-public sugar-load-save primitive-load)
+
+  (define (readquote level port qt)
+    (read-char port)
+    (let ((char (peek-char port)))
+      (if (or (eq? char #\space)
+	      (eq? char #\newline)
+	      (eq? char #\ht))
+	  (list qt)
+	  (list qt (sugar-read-save port)))))
+
+  (define (readitem level port)
+    (let ((char (peek-char port)))
+      (cond
+       ((eq? char #\`)
+	(readquote level port 'quasiquote))
+       ((eq? char #\')
+	(readquote level port 'quote))
+       ((eq? char #\,)
+	(readquote level port 'unquote))
+       (t
+	(sugar-read-save port)))))
+
+  (define (indentation>? indentation1 indentation2)
+    (let ((len1 (string-length indentation1))
+	  (len2 (string-length indentation2)))
+      (and (> len1 len2)
+	   (string=? indentation2 (substring indentation1 0 len2)))))
+
+  (define (indentationlevel port)
+    (define (indentationlevel)
+      (if (or (eq? (peek-char port) #\space)
+	      (eq? (peek-char port) #\ht))
+	  (cons 
+	   (read-char port)
+	   (indentationlevel))
+	  '()))
+    (list->string (indentationlevel)))
+
+  (define (clean line)
+    (cond
+     ((not (pair? line))
+      line)
+     ((null? line)
+      line)
+     ((eq? (car line) 'group)
+      (cdr line))
+     ((null? (car line))
+      (cdr line))
+     ((list? (car line))
+      (if (or (equal? (car line) '(quote))
+	      (equal? (car line) '(quasiquote))
+	      (equal? (car line) '(unquote)))
+	  (if (and (list? (cdr line))
+		   (= (length (cdr line)) 1))
+	      (cons
+	       (car (car line))
+	       (cdr line))
+	      (list
+	       (car (car line))
+	       (cdr line)))
+	  (cons
+	   (clean (car line))
+	   (cdr line))))
+     (#t
+      line)))
+
+  ;; Reads all subblocks of a block
+  (define (readblocks level port)
+    (let* ((read (readblock-clean level port))
+	   (next-level (car read))
+	   (block (cdr read)))
+      (if (string=? next-level level)
+	  (let* ((reads (readblocks level port))
+		 (next-next-level (car reads))
+		 (next-blocks (cdr reads)))
+	    (if (eq? block '.)
+		(if (pair? next-blocks)
+		    (cons next-next-level (car next-blocks))
+		    (cons next-next-level next-blocks))
+		(cons next-next-level (cons block next-blocks))))
+	  (cons next-level (list block)))))
+
+  ;; Read one block of input
+  (define (readblock level port)
+    (let ((char (peek-char port)))
+      (cond
+       ((eof-object? char)
+	(cons -1 char))
+       ((eq? char #\newline)
+	(read-char port)
+	(let ((next-level (indentationlevel port)))
+	  (if (indentation>? next-level level)
+	      (readblocks next-level port)
+	      (cons next-level '()))))
+       ((or (eq? char #\space)
+	    (eq? char #\ht))
+	(read-char port)
+	(readblock level port))
+       (t
+	(let* ((first (readitem level port))
+	       (rest (readblock level port))
+	       (level (car rest))
+	       (block (cdr rest)))
+	  (if (eq? first '.)
+	      (if (pair? block)
+		  (cons level (car block))
+		  rest)
+	      (cons level (cons first block))))))))
+
+  ;; reads a block and handles group, (quote), (unquote) and
+  ;; (quasiquote).
+  (define (readblock-clean level port)
+    (let* ((read (readblock level port))
+	   (next-level (car read))
+	   (block (cdr read)))
+      (if (or (not (list? block)) (> (length block) 1))
+	  (cons next-level (clean block))
+	  (if (= (length block) 1)
+	      (cons next-level (car block))
+	      (cons next-level '.)))))
+
+  (define-public (sugar-read . port)
+    (let* ((read (readblock-clean "" (if (null? port)
+					(current-input-port)
+					(car port))))
+	   (level (car read))
+	   (block (cdr read)))
+      (cond
+       ((eq? block '.)
+	'())
+       (t
+	block))))
+
+  (define-public (sugar-load filename)
+    (define (load port)
+      (let ((inp (read port)))
+	(if (eof-object? inp)
+	    #t
+	    (begin
+	      (eval inp)
+	      (load port)))))
+    (load (open-input-file filename)))
+
+  (define-public (sugar-enable)
+    (set! read sugar-read)
+    (set! primitive-load sugar-load))
+
+  (define-public (sugar-disable)
+    (set! read sugar-read-save)
+    (set! primitive-load sugar-load-save))
+
+  (sugar-enable)
+  ----{ sugar.scm }----
+  </pre>
+
+  <h1>Copyright</h1>
+  <p>Copyright (C) 2005 by Egil Möller <redhog@redhog.org>. All Rights Reserved. </p>
+
+<p>
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+</p>
+<p>
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+</p>
+<p>
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+</p>
+    <hr>
+    <address>Editor: <a href="mailto:srfi minus editors at srfi dot schemers dot org">Mike Sperber</a></address>
+
+ </body>
+</html>
