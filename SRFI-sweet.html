@@ -588,9 +588,15 @@ i-expr ::= head eol-comment-lines BADDENT ; bad indent after head.
 ; (because it has higher precedence).  Therefore:
 ; ' a b c
 ; maps to '(a b c), and not to ('a b c).
-; Note that in the implementation, an abbrev that doesn't match the patterns
-; below, such as 'a or '(a b), needs to re-invoke i-expr and insert
-; the abbreviation on the item (if not a pair) or first list item (if pair).
+
+
+; NB: because of the hspace requirement, implementing these abbreviations
+; means we must take over some of n-expr's work; if after finding QUOTE et al.
+; we DON'T match the below (e.g., by finding an hspace),
+; recurse into i-expr and add to the current head by
+; applying the abbreviation on the item (if not a pair) or to the
+; first list item (if a pair).
+; Be sure we can repair: 'a  and  '(a b)  and  ''a  properly.
 
 i-expr ::= abbrev hspace+ i-expr
   (list (map-abbreviation $1) $last)
