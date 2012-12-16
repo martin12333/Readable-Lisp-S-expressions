@@ -399,7 +399,7 @@ A term may be followed by * (0 or more times), + (1 or more times), or
 The "|" symbol separates alternative branches; parentheses group.
 Productions may continue on a following line by indenting them beyond
 the end of their matching "::=".
-A preventative production is defined using "::=!" instead of "::=";
+A preventative production is defined using "!::=" instead of "::=";
 a preventative production defines a term
 sequence that must <i>not</i> match a production of that name,
 even if it would have otherwise (see below).
@@ -576,11 +576,12 @@ head ::= n-expr hspace+ PERIOD hspace+ n-expr ; improper list
 ; we can declare these cases here and then use these markers in the i-expr
 ; production.
 ; You can implement this, if "head" is a procedure, by having the procedure
-; return two values, the "special marker" ('none if none) and list
-; of head items up to (but not including) the marker.
+; return two values, the "special marker" ('none if none) and a list
+; of any head items that were read until the special marker
+; (this is the empty list if the special marker was first).
 ; Note that these only match to the LITERAL characters; {$} doesn't match!
-head ::=! DOLLAR  terminate-n-expr
-head ::=! BACKSLASH BACKSLASH terminate-n-expr
+head !::= DOLLAR  terminate-n-expr
+head !::= BACKSLASH BACKSLASH terminate-n-expr
 
 ; "i-expr" (indented sweet expressions expressions)
 ; is the main production for sweet-expressions in the usual case.
