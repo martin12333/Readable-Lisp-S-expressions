@@ -412,13 +412,17 @@ If more than one production matches, precedence is as follows:
 (as measured by matching terms) take precedence over shorter ones.
 For example, given "demo-eol ::= CR | CR LF",
 the "CR LF" will match if possible.
+</li>
 <li>
-Shorter production call depths takes precedence over longer depths,
-as long as this does not interfere with the previous precedence rule.
-Thus, given "demo-i ::= abb | demo-n" and
+Terminals take precedence over non-terminals.
+</li>
+If a non-terminal can be selected both directly and indirectly
+(because an alternative non-terminal begins with the same terminal),
+the direct reference to the non-terminal takes precedence.
+For example, given "demo-i ::= abb | demo-n" and
 "demo-n ::= abb | other",
-when starting with demo-i-expr an "abb" will match
-inside "demo-i-expr" and not in "demo-n-expr".
+when starting with demo-i an "abb" will match
+inside "demo-i" and not in "demo-n-expr".
 </li>
 </ol>
 <p>
@@ -627,14 +631,29 @@ i-expr ::= abbrev hspace* lcomment? EOF ; Weird case, do something plausible
 i-expr ::= BACKSLASH BACKSLASH hspace+ i-expr
   $last
 
-; An initial "\\" with nothing after it; we have a list of lists.
+; An initial "\\", nothing on the line, and stuff indented: A list of lists
 i-expr ::= BACKSLASH BACKSLASH eol-comment-lines INDENT body
   $last
 
-; Error detection for incorrect indentation right after a head.
-i-expr ::= head eol-comment-lines BADDENT ; bad indent after head.
-  (read-error $3 "Incorrect indentation")
+; An initial "\\" with nothing after it; a plausible separator.
+i-expr ::= BACKSLASH BACKSLASH eol-comment-lines SAME i-expr
+  $last
 
+i-expr ::= BACKSLASH BACKSLASH eol-comment-lines (BADDENT | DEDENT)
+  (read-error $3 "Incorrect indentation for \\")
+
+; Something of form "a b \\ c d ..."
+i-expr ::= head BACKSLASH BACKSLASH hspace+
+  (if (null? (cdr $1))
+    (car $1)
+    $1)
+
+; Form "a b \\ ;stuff \n ..."
+i-expr ::= head BACKSLASH BACKSLASH eol-comment-lines
+  ; ??? TODO: Is this correct?!?
+  (if (null? (cdr $1))
+    (car $1)
+    $1)
 
 
 ; Productions for the top production, a sweet-expression (t-expr):
