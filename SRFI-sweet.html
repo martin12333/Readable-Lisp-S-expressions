@@ -296,8 +296,8 @@ The sweet-expression advanced features are defined as follows:
 <p>
 The markers for the advanced sweet-expression features <em>MUST</em>
 only be accepted as such when indentation processing is active,
-and <em>MUST</em> only be
-interpreted as above if they begin with their characters as shown.
+and character sequence <em>MUST NOT</em> be considered one of those
+markers if it does not begin with exactly the marker's first character.
 For example, <samp><tt>{$}</tt></samp>
 <em>MUST NOT</em> be interpreted as the SUBLIST marker; instead, it
 <em>MUST</em> be interpreted as the symbol <samp>$</samp>.
