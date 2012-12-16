@@ -623,8 +623,17 @@ i-expr ::= abbrev hspace* lcomment? EOF ; Weird case, do something plausible
 ; first list item (if a pair).
 ; Be sure we can repair: 'a  and  '(a b)  and  ''a  properly.
 
-; Initial "\\" - ignore it.
+; Initial "\\" in front of another head - ignore it.
 i-expr ::= BACKSLASH BACKSLASH hspace+ i-expr
+  $last
+
+; An initial "\\" with nothing after it; we have a list of lists.
+i-expr ::= BACKSLASH BACKSLASH eol-comment-lines INDENT body
+  $last
+
+; Error detection for incorrect indentation right after a head.
+i-expr ::= head eol-comment-lines BADDENT ; bad indent after head.
+  (read-error $3 "Incorrect indentation")
 
 
 
