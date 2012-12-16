@@ -396,9 +396,13 @@ The name EOF stands for end-of-file;
 other names in all upper case represent one character.
 A term may be followed by * (0 or more times), + (1 or more times), or
 ? (0 or 1 times).
-The "|" symbol separates alternative branches.
+The "|" symbol separates alternative branches; parentheses group.
 Productions may continue on a following line by indenting them beyond
 the end of their matching "::=".
+A preventative production is defined using "::=!" instead of "::=";
+a preventative production defines a term
+sequence that must <i>not</i> match a production of that name,
+even if it would have otherwise (see below).
 The notation avoids using &lt; and &gt;, since these characters
 are awkward to use properly in HTML.
 If more than one production matches, precedence is as follows:
@@ -501,6 +505,9 @@ eolchar ::= CR | LF
 eol     ::= CR | LF | CR LF | LF CR
 ; not-eolchar is all characters not in eolchar; it does not include EOF.
 
+whitespace  ::= hspace | eolchar
+terminate-n-expr ::= whitespace | SEMICOLON | EOF
+
 ; "ichars" matches indentation characters.  This is fundementally
 ; ambiguous with INDENT, SAME, DEDENT, and BADDENT, but the latter are
 ; special terminals so they have higher priority.
@@ -563,6 +570,17 @@ head ::= n-expr hspace+ PERIOD hspace+ n-expr ; improper list
   ; TODO???: Detect PERIOD hspace+ n-expr hspace+ n-expr
   ; (an improper list with junk after it)
 
+; A "head" is forbidden from including certain special markers.
+; Preventative production definitions are not a normal feature of BNF.
+; However, by specifying it this way, the BNF is much, much simpler;
+; we can declare these cases here and then use these markers in the i-expr
+; production.
+; You can implement this, if "head" is a procedure, by having the procedure
+; return two values, the "special marker" ('none if none) and list
+; of head items up to (but not including) the marker.
+; Note that these only match to the LITERAL characters; {$} doesn't match!
+head ::=! DOLLAR  terminate-n-expr
+head ::=! BACKSLASH BACKSLASH terminate-n-expr
 
 ; "i-expr" (indented sweet expressions expressions)
 ; is the main production for sweet-expressions in the usual case.
@@ -590,8 +608,12 @@ i-expr ::= head eol-comment-lines BADDENT ; bad indent after head.
 ; (because it has higher precedence).  Therefore:
 ; ' a b c
 ; maps to '(a b c), and not to ('a b c).
-
-
+i-expr ::= abbrev hspace+ i-expr
+  (list (map-abbreviation $1) $last)
+i-expr ::= abbrev hspace* lcomment? eol INDENT i-expr
+  (list (map-abbreviation $1) $last)
+i-expr ::= abbrev hspace* lcomment? EOF ; Weird case, do something plausible
+  (list (map-abbreviation $1))
 ; NB: because of the hspace requirement, implementing these abbreviations
 ; means we must take over some of n-expr's work; if after finding QUOTE et al.
 ; we DON'T match the below (e.g., by finding an hspace),
@@ -600,12 +622,9 @@ i-expr ::= head eol-comment-lines BADDENT ; bad indent after head.
 ; first list item (if a pair).
 ; Be sure we can repair: 'a  and  '(a b)  and  ''a  properly.
 
-i-expr ::= abbrev hspace+ i-expr
-  (list (map-abbreviation $1) $last)
-i-expr ::= abbrev hspace* lcomment? eol INDENT i-expr
-  (list (map-abbreviation $1) $last)
-i-expr ::= abbrev hspace* lcomment? EOF ; Weird case, do something plausible
-  (list (map-abbreviation $1))
+; Initial "\\" - ignore it.
+i-expr ::= BACKSLASH BACKSLASH hspace+ i-expr
+
 
 
 ; Productions for the top production, a sweet-expression (t-expr):
