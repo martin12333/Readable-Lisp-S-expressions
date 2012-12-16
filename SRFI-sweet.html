@@ -550,6 +550,8 @@ body-tail ::= i-expr BADDENT ; bad indent in line after a first body.
 
 
 ; The "head" is the production for 1+ n-expressions on one line.
+; It never reads beyond the current line, so it doesn't need to keep track
+; of indentation, and callers can depend on this.
 head ::= n-expr hspace* ; Singleton.
   ; We handle hspace* here, because we have to read any hspace
   ; to see if there are more n-expressions on the line anyway.
