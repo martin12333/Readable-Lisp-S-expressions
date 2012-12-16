@@ -397,6 +397,9 @@ other names in all upper case represent one character.
 A term may be followed by * (0 or more times), + (1 or more times), or
 ? (0 or 1 times).
 The "|" symbol separates alternative branches; parentheses group.
+The construct (^ ...) matches any character
+<i>except</i> the character(s) listed (this construct does <i>not</i>
+match EOF).
 Productions may continue on a following line by indenting them beyond
 the end of their matching "::=".
 A preventative production is defined using "!::=" instead of "::=";
@@ -453,8 +456,9 @@ This terminal is used to detect indent errors.
 The BNF productions below are intentionally written so that they can
 be easily implemented using recursive descent, but
 no particular implementation approach is required.
-Unlike the SRFI-49 BNF, this BNF makes the whitespace
-processing more explicit.
+Unlike the SRFI-49 BNF, this BNF makes comment and whitespace
+processing explicit, to make comment and whitespace processing requirements
+clear.
 </p>
 
 <p>Each production may be followed by
@@ -493,11 +497,13 @@ Here are the actual BNF rules:
 ; This is different from previous approaches: INDENT, SAME, etc., are
 ; *guards* instead of *tokens* that are consumed.
 
-; TODO: Quite a bit. E.G.:
+; TODO:
 ; - Complete definitions for GROUP, SPLIT, #|...|#, etc.
 ; - Handle FORMFEED | VTAB | (IBM's) NEL
 ; - Handle EOF in weird places
 ; - Generate errors, e.g., illegal indents, initial "!"
+; - Handle #! as discussed in SRFI-105 (curly-infix), including SRFI-22
+; - Handle #!sweet, #!curly-infix, #!fold-case, #!no-fold-case, etc.
 ; - Define n-expr, etc. This will be done later.
 ;   Alan Manuel K. Gloria has done a lot of this, we'll bring that in later.
 ;   Check that work for improper lists, etc.
@@ -507,7 +513,8 @@ ichar   ::= SPACE | TAB | EXCLAMATION-POINT ; indent char
 hspace  ::= SPACE | TAB                     ; horizontal space
 eolchar ::= CR | LF
 eol     ::= CR | LF | CR LF | LF CR
-; not-eolchar is all characters not in eolchar; it does not include EOF.
+
+not-eolchar ::= (^ eolchar) ; does not include EOF
 
 whitespace  ::= hspace | eolchar
 terminate-n-expr ::= whitespace | SEMICOLON | EOF
@@ -524,17 +531,37 @@ ichars ::= ichar*
 abbrev ::= ' | ` | , | , @
   $last
 
+
+; Block comments and commented datums (aka "special comments") are mostly
+; ignored like other comments, but if they begin a line (after any indent)
+; they define the indent.  Handle them carefully here.
+
+; #| ... |# block comments.  These nest.  Stop on EOF instead of hanging.
+block-comment ::= SHARP BAR
+                  ( (^ BAR | SHARP) | block-comment |
+                    SHARP+ ((^ BAR | SHARP) | EOF) |
+                    BAR+   ((^ BAR | SHARP) | EOF) )*
+                  (BAR+ SHARP | EOF)
+
+commented-datum ::= SHARP SEMICOLON n-expr
+
+special-comment  ::= commented-datum | block-comment
+special-comments ::= special-comment hspace* special-comments?
+
 ; Line comment, not including the ending eol or EOF
 lcomment ::= SEMICOLON not-eolchar*
 
 ; Note: This will attempt to read in an indent, resetting "latest" indent!
+; This doesn't process special-comment, since we may need to process that
+; specially to preserve its indent; head and i-expr handle special-comment.
 comment-lines ::= ichars lcomment eol comment-lines?
 
 ; eol-comment-lines happen after some other constructs, so only hspace starts
-; It may, but need not, include a ;-comment.
+; It may, but need not, include a line comment (;) or special comment.
+; Note that this consumes special comments that don't start a line after indent
 ; Note: This may attempt to read in an indent, resetting "latest" indent!
-eol-comment-lines ::= hspace* lcomment? eol? EOF
-eol-comment-lines ::= hspace* lcomment? eol comment-lines?
+eol-comment-lines ::= hspace* special-comments? lcomment? eol? EOF
+eol-comment-lines ::= hspace* special-comments? lcomment? eol comment-lines?
 
 ; The body handles the sequence of 1+ child lines.
 ; Note that i-expr will consume any line comments (line comments after
@@ -586,6 +613,8 @@ head ::= n-expr hspace+ PERIOD hspace+ n-expr ; improper list
 ; Note that these only match to the LITERAL characters; {$} doesn't match!
 head !::= DOLLAR  terminate-n-expr
 head !::= BACKSLASH BACKSLASH terminate-n-expr
+head !::= SHARP BAR ; #| ... |# at beginning of line (after indent) is special
+head !::= SHARP SEMICOLON ; same here.
 
 ; "i-expr" (indented sweet expressions expressions)
 ; is the main production for sweet-expressions in the usual case.
@@ -627,20 +656,30 @@ i-expr ::= abbrev hspace* lcomment? EOF ; Weird case, do something plausible
 ; first list item (if a pair).
 ; Be sure we can repair: 'a  and  '(a b)  and  ''a  properly.
 
-; Initial "\\" in front of another head - ignore it.
+; Initial "\\" or special comment in front of another head - ignore it.
 i-expr ::= BACKSLASH BACKSLASH hspace+ i-expr
+  $last
+i-expr ::= special-comments i-expr
   $last
 
 ; An initial "\\", nothing on the line, and stuff indented: A list of lists
-i-expr ::= BACKSLASH BACKSLASH eol-comment-lines INDENT body
+i-expr ::= nothing eol-comment-lines INDENT body
+  $last
+i-expr ::= special-comments eol-comment-lines INDENT body
   $last
 
 ; An initial "\\" with nothing after it; a plausible separator.
 i-expr ::= BACKSLASH BACKSLASH eol-comment-lines SAME i-expr
   $last
+; An initial "\\" with nothing after it; a plausible separator.
+i-expr ::= special-comments eol-comment-lines SAME i-expr
+  $last
 
 i-expr ::= BACKSLASH BACKSLASH eol-comment-lines (BADDENT | DEDENT)
   (read-error $3 "Incorrect indentation for \\")
+i-expr ::= special-comments eol-comment-lines (BADDENT | DEDENT) i-expr
+  (read-error $3 "Confusing special comment indentation")
+  ; ??? Too restrictive?  Is there a better approach?
 
 ; Something of form "a b \\ c d ..."
 i-expr ::= head BACKSLASH BACKSLASH hspace+
@@ -654,7 +693,6 @@ i-expr ::= head BACKSLASH BACKSLASH eol-comment-lines
   (if (null? (cdr $1))
     (car $1)
     $1)
-
 
 ; Productions for the top production, a sweet-expression (t-expr):
 
@@ -688,6 +726,34 @@ t-expr ::= hspace+ n-expr
 ; So a "!" is an error.  Let's report this easily-detected problem.
 t-expr ::= hspace* EXCLAMATION-POINT
   (read-error $2 "Cannot initially indent with !")
+
+; The following handles "#!" at the beginning of a line.  The following
+; only accepts "#!" at the beginning of a line when OUTSIDE an expression.
+
+; Support SRFI-22: #! SPACE is a comment to end of line.
+t-expr ::= SHARP EXCLAMATION-POINT SPACE not-eol-char* eol t-expr
+  $last
+t-expr ::= SHARP EXCLAMATION-POINT SPACE not-eol-char* EOF
+  $last
+t-expr ::= SHARP EXCLAMATION-POINT EOF
+  $last
+t-expr ::= SHARP EXCLAMATION-POINT eol t-expr
+  $last
+
+; Optional extension:
+; #! on first column, followed by slash or period, continues until
+; matching !#, following the convention of guile, clisp, and some others.
+; This doesn't nest. If you want nesting,
+; use the standard block comment #|...|#.
+t-expr ::= SHARP EXCLAMATION-POINT (SLASH | PERIOD)
+           ( (^ EXCLAMATION-POINT) | EXCLAMATION-POINT+ (^ SHARP))
+           EXCLAMATION-POINT+ SHARP
+
+; Support Scheme port options of form #!datum
+t-expr ::= SHARP EXCLAMATION-POINT n-expr (hspace+ | eol) t-expr
+  ; TODO: Use datum to modify port settings: fold-case, no-fold-case,
+  ; sweet, curly-infix, etc.
+  $last
 
 ; The top production is t-expr (sweet-expression).
 
