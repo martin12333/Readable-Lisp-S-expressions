@@ -297,7 +297,7 @@ The sweet-expression advanced features are defined as follows:
 The markers for the advanced sweet-expression features <em>MUST</em>
 only be accepted as such when indentation processing is active,
 and character sequence <em>MUST NOT</em> be considered one of those
-markers if it does not begin with exactly the marker's first character.
+markers if it does not begin with exactly the marker&#8217;s first character.
 For example, <samp><tt>{$}</tt></samp>
 <em>MUST NOT</em> be interpreted as the SUBLIST marker; instead, it
 <em>MUST</em> be interpreted as the symbol <samp>$</samp>.
@@ -369,9 +369,9 @@ any line beginning with semicolon followed by a whitespace,
 semicolon, or end-of-file.
 Such a tool <em>SHOULD</em>
 (when outside an expression) also
-copy lines beginning with ";#" or ";!"
+copy lines beginning with &#8220;;#&#8221; or &#8220;;!&#8221;
 without the leading semicolon,
-and copy lines beginning with ";_"
+and copy lines beginning with &#8220;;_&#8221;
 without either of those first two characters.
 Application authors <em>SHOULD</em>
 follow a semicolon in the first column with a whitespace character
@@ -380,7 +380,7 @@ or semicolon if they mean for it to be a comment.
 
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
 
-<h2><a name="bnf">Backus–Naur Form (BNF)</a></h2>
+<h2><a name="bnf">Backus&#45;Naur Form (BNF)</a></h2>
 <p>
 The following BNF rules define sweet-expressions.
 It is intended to capture the specification above; in case of (unintentional)
@@ -391,18 +391,18 @@ Each rule is a production optionally followed by an expression.
 
 <p>
 Productions are defined in the form production (non-terminal) name,
-"::=", and a sequence of terms that define the production.
+&#8220;::=&#8221;, and a sequence of terms that define the production.
 The name EOF stands for end-of-file;
 other names in all upper case represent one character.
 A term may be followed by * (0 or more times), + (1 or more times), or
 ? (0 or 1 times).
-The "|" symbol separates alternative branches; parentheses group.
+The &#8220;|&#8221; symbol separates alternative branches; parentheses group.
 The construct (^ ...) matches any character
 <i>except</i> the character(s) listed (this construct does <i>not</i>
 match EOF).
 Productions may continue on a following line by indenting them beyond
-the end of their matching "::=".
-A preventative production is defined using "!::=" instead of "::=";
+the end of their matching &#8220;::=&#8221;.
+A preventative production is defined using &#8220;!::=&#8221; instead of &#8220;::=&#8221;;
 a preventative production defines a term
 sequence that must <i>not</i> match a production of that name,
 even if it would have otherwise (see below).
@@ -413,8 +413,8 @@ If more than one production matches, precedence is as follows:
 <ol>
 <li>Longer productions and production branches
 (as measured by matching terms) take precedence over shorter ones.
-For example, given "demo-eol ::= CR | CR LF",
-the "CR LF" will match if possible.
+For example, given &#8220;demo-eol ::= CR | CR LF&#8221;,
+the &#8220;CR LF&#8221; will match if possible.
 </li>
 <li>
 Terminals take precedence over non-terminals.
@@ -422,10 +422,10 @@ Terminals take precedence over non-terminals.
 If a non-terminal can be selected both directly and indirectly
 (because an alternative non-terminal begins with the same terminal),
 the direct reference to the non-terminal takes precedence.
-For example, given "demo-i ::= abb | demo-n" and
-"demo-n ::= abb | other",
-when starting with demo-i an "abb" will match
-inside "demo-i" and not in "demo-n-expr".
+For example, given &#8220;demo-i ::= abb | demo-n&#8221; and
+&#8220;demo-n ::= abb | other&#8221;,
+when starting with demo-i an &#8220;abb&#8221; will match
+inside &#8220;demo-i&#8221; and not in &#8220;demo-n-expr&#8221;.
 </li>
 </ol>
 <p>
@@ -444,7 +444,7 @@ and the two strings are equal up to length(started).
 <li>SAME: True if current is equal to started.
 <li>DEDENT: True if current is shorter than started
 and the two strings are equal up to length(current).
-Technically we don't need to test for this, but testing for it can
+Technically we don&#8217;t need to test for this, but testing for it can
 detect some BNF or implementation defects.
 <li>BADDENT: True if current is not equal to started
 up to min(length(current) length(started)).
@@ -1947,7 +1947,7 @@ the ones about major new components -
 are likely to be included in a translation from sweet-expressions to
 s-expressions (namely, any comments that precede an expression).
 This can greatly simplify examining the generated s-expression.
-the rules about ";#", ";!", and ";_"
+the rules about &#8220;;#&#8221;, &#8220;;!&#8221;, and &#8220;;_&#8221;
 make it easier to write shell scripts and similar constructs
 with embedded sweet-expressions; these
 lines can invoke some Scheme interpreter, possibly via a shell.
@@ -1968,7 +1968,7 @@ reader must perform, and there is no standard way to return comments
 inside a datum.
 Semicolon comments immediately after a datum need not be copied or
 processed specially, because a sweet-expression reader
-has to consume them to see if it's reached the end of the datum.
+has to consume them to see if it&#8217;s reached the end of the datum.
 A Scheme implementation with unlimited unread could do more with relative ease,
 but since many Scheme implementations do not have unlimited unread, these
 limitations make implementation of such tools much simpler.
