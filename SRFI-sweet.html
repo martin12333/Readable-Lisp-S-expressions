@@ -392,8 +392,6 @@ Each rule is a production optionally followed by an expression.
 <p>
 Productions are defined in the form production (non-terminal) name,
 &#8220;::=&#8221;, and a sequence of terms that define the production.
-The name EOF stands for end-of-file;
-other names in all upper case represent one character.
 A term may be followed by * (0 or more times), + (1 or more times), or
 ? (0 or 1 times).
 The &#8220;|&#8221; symbol separates alternative branches; parentheses group.
@@ -419,6 +417,7 @@ the &#8220;CR LF&#8221; will match if possible.
 <li>
 Terminals take precedence over non-terminals.
 </li>
+<li>
 If a non-terminal can be selected both directly and indirectly
 (because an alternative non-terminal begins with the same terminal),
 the direct reference to the non-terminal takes precedence.
@@ -429,14 +428,22 @@ inside &#8220;demo-i&#8221; and not in &#8220;demo-n-expr&#8221;.
 </li>
 </ol>
 <p>
-There are several special terminals which act as guards, that is,
-they return true/false values.
-Note that these are <i>not</i> tokens in the traditional sense,
+Terms may be non-terminals (these names are in lowercase)
+or terminals (uppercase).
+Unless otherwise noted, terminals are the name of one character in uppercase;
+e.g., SHARP means "#", BAR means "|", and PERIOD means &#8220;.&#8221;.
+The name EOF stands for end-of-file.
+</p>
+<p>
+There are several special indentation-control
+terminals which act as guards, that is, they return true/false values.
+Note that these indentation-control terminals
+are <i>not</i> tokens in the traditional sense,
 because they are not consumed.
 Use of these terminals in a production implies that an implementation of the
 production must hold the starting indent when the production begins
 (so that they can be computed).
-These special terminals are:
+These special indentation-control terminals are:
 <ol>
 <li>INDENT: True if the current line indent string (<i>current</i>)
 is longer than the indent when this production started string (<i>started</i>)
@@ -561,6 +568,8 @@ comment-lines ::= ichars lcomment eol comment-lines?
 ; It may, but need not, include a line comment (;) or special comment.
 ; Note that this consumes special comments that don't start a line after indent
 ; Note: This may attempt to read in an indent, resetting "latest" indent!
+; FIRST CHARACTER: hspace ; eol-chars EOF #
+; The # is due to #|...|# or #;datum.
 eol-comment-lines ::= hspace* special-comments? lcomment? eol? EOF
 eol-comment-lines ::= hspace* special-comments? lcomment? eol comment-lines?
 
@@ -664,7 +673,7 @@ i-expr ::= special-comments i-expr
   $last
 
 ; An initial "\\", nothing on the line, and stuff indented: A list of lists
-i-expr ::= nothing eol-comment-lines INDENT body
+i-expr ::= BACKSLASH BACKSLASH eol-comment-lines INDENT body
   $last
 i-expr ::= special-comments eol-comment-lines INDENT body
   $last
