@@ -604,17 +604,17 @@ head ::= n-expr hspace+ PERIOD hspace+ n-expr ; improper list
 ; A "head" is forbidden from including certain special markers.
 ; Preventative production definitions are not a normal feature of BNF.
 ; However, by specifying it this way, the BNF is much, much simpler;
-; we can declare these cases here and then use these markers in the i-expr
-; production.
+; we can declare these here and then use markers in the i-expr production.
 ; You can implement this, if "head" is a procedure, by having the procedure
-; return two values, the "special marker" ('none if none) and a list
-; of any head items that were read until the special marker
-; (this is the empty list if the special marker was first).
+; return two values, an item representing the "special marker"
+; ('none if none) and a list of any head items that were read until the
+; special marker (this is the empty list if the special marker was first).
 ; Note that these only match to the LITERAL characters; {$} doesn't match!
 head !::= DOLLAR  terminate-n-expr
 head !::= BACKSLASH BACKSLASH terminate-n-expr
 head !::= SHARP BAR ; #| ... |# at beginning of line (after indent) is special
 head !::= SHARP SEMICOLON ; same here.
+head !::= SHARP EXCLAMATION-POINT
 
 ; "i-expr" (indented sweet expressions expressions)
 ; is the main production for sweet-expressions in the usual case.
@@ -727,6 +727,13 @@ t-expr ::= hspace+ n-expr
 t-expr ::= hspace* EXCLAMATION-POINT
   (read-error $2 "Cannot initially indent with !")
 
+; The top production is t-expr (sweet-expression).
+
+</pre>
+
+<!-- ??? BAD handling of #!.  Can't do it this way, because "#"
+     can also start an n-expr.
+
 ; The following handles "#!" at the beginning of a line.  The following
 ; only accepts "#!" at the beginning of a line when OUTSIDE an expression.
 
@@ -755,9 +762,36 @@ t-expr ::= SHARP EXCLAMATION-POINT n-expr (hspace+ | eol) t-expr
   ; sweet, curly-infix, etc.
   $last
 
-; The top production is t-expr (sweet-expression).
+; The following handles "#!" at the beginning of a line.  The following
+; only accepts "#!" at the beginning of a line when OUTSIDE an expression.
 
-</pre>
+; Support SRFI-22: #! SPACE is a comment to end of line.
+t-expr ::= SHARP EXCLAMATION-POINT SPACE not-eol-char* eol t-expr
+  $last
+t-expr ::= SHARP EXCLAMATION-POINT SPACE not-eol-char* EOF
+  $last
+t-expr ::= SHARP EXCLAMATION-POINT EOF
+  $last
+t-expr ::= SHARP EXCLAMATION-POINT eol t-expr
+  $last
+
+; Optional extension:
+; #! on first column, followed by slash or period, continues until
+; matching !#, following the convention of guile, clisp, and some others.
+; This doesn't nest. If you want nesting,
+; use the standard block comment #|...|#.
+t-expr ::= SHARP EXCLAMATION-POINT (SLASH | PERIOD)
+           ( (^ EXCLAMATION-POINT) | EXCLAMATION-POINT+ (^ SHARP))
+           EXCLAMATION-POINT+ SHARP
+
+; Support Scheme port options of form #!datum
+t-expr ::= SHARP EXCLAMATION-POINT n-expr (hspace+ | eol) t-expr
+  ; TODO: Use datum to modify port settings: fold-case, no-fold-case,
+  ; sweet, curly-infix, etc.
+  $last
+
+-->
+
 
 <h1><a name="examples">Examples</a></h1>
 <p>
