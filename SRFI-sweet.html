@@ -411,8 +411,10 @@ If more than one production matches, precedence is as follows:
 <ol>
 <li>Longer productions and production branches
 (as measured by matching terms) take precedence over shorter ones.
-For example, given &#8220;demo-eol ::= CR | CR LF&#8221;,
+For example, given &#8220;demo-eol ::= CR LF | CR&#8221;,
 the &#8220;CR LF&#8221; will match if possible.
+The BNF below lists longer productions first to simplify making
+a recursive descent implementation have the same code order as the BNF.
 </li>
 <li>
 Terminals take precedence over non-terminals.
@@ -600,16 +602,16 @@ body-tail ::= i-expr BADDENT ; bad indent in line after a first body.
 ; The "head" is the production for 1+ n-expressions on one line.
 ; It never reads beyond the current line, so it doesn't need to keep track
 ; of indentation, and callers can depend on this.
-head ::= n-expr hspace* ; Singleton.
-  ; We handle hspace* here, because we have to read any hspace
-  ; to see if there are more n-expressions on the line anyway.
-  (list $1)
 head ::= n-expr hspace+ head
   (cons $1 $3)
 head ::= n-expr hspace+ PERIOD hspace+ n-expr ; improper list
   (cons $1 $last)
   ; TODO???: Detect PERIOD hspace+ n-expr hspace+ n-expr
   ; (an improper list with junk after it)
+head ::= n-expr hspace* ; Singleton.
+  ; We handle hspace* here, because we have to read any hspace
+  ; to see if there are more n-expressions on the line anyway.
+  (list $1)
 
 ; A "head" is forbidden from including certain special markers.
 ; Preventative production definitions are not a normal feature of BNF.
@@ -635,11 +637,6 @@ head !::= SHARP EXCLAMATION-POINT
 ; that will end this i-expr (because it won't match INDENT),
 ; returning to a higher-level production.
 
-i-expr ::= head eol-comment-lines ; head with no child lines (SAME or DEDENT)
- (if (null? (cdr $1)) ; Check if singleton but handle improper lists
-   (car $1) ; Single item, don't return a list
-   $1)
-
 ; Note that eol-comment-lines may read in an indent, which INDENT compares.
 i-expr ::= head eol-comment-lines INDENT body ; child lines
   (append $1 $last)
@@ -647,6 +644,11 @@ i-expr ::= head eol-comment-lines INDENT body ; child lines
 ; Error detection for incorrect indentation right after a head.
 i-expr ::= head eol-comment-lines BADDENT ; bad indent after head.
   (read-error $3 "Incorrect indentation")
+
+i-expr ::= head eol-comment-lines ; head with no child lines (SAME or DEDENT)
+ (if (null? (cdr $1)) ; Check if singleton but handle improper lists
+   (car $1) ; Single item, don't return a list
+   $1)
 
 ; The following overrides head processing of abbreviations
 ; (because it has higher precedence).  Therefore:
@@ -665,12 +667,6 @@ i-expr ::= abbrev hspace* lcomment? EOF ; Weird case, do something plausible
 ; applying the abbreviation on the item (if not a pair) or to the
 ; first list item (if a pair).
 ; Be sure we can repair: 'a  and  '(a b)  and  ''a  properly.
-
-; Initial "\\" or special comment in front of another head - ignore it.
-i-expr ::= BACKSLASH BACKSLASH hspace+ i-expr
-  $last
-i-expr ::= special-comments i-expr
-  $last
 
 ; An initial "\\", nothing on the line, and stuff indented: A list of lists
 i-expr ::= BACKSLASH BACKSLASH eol-comment-lines INDENT body
@@ -691,18 +687,26 @@ i-expr ::= special-comments eol-comment-lines (BADDENT | DEDENT) i-expr
   (read-error $3 "Confusing special comment indentation")
   ; ??? Too restrictive?  Is there a better approach?
 
+; Initial "\\" or special comment in front of another head - ignore it.
+i-expr ::= BACKSLASH BACKSLASH hspace+ i-expr
+  $last
+i-expr ::= special-comments i-expr
+  $last
+
+; Form "a b \\ ;stuff \n ..."
+; TODO: This is ambiguous with the later rule.
+i-expr ::= head BACKSLASH BACKSLASH hspac* eol-comment-lines
+  ; ??? TODO: Is this correct?!?
+  (if (null? (cdr $1))
+    (car $1)
+    $1)
+
 ; Something of form "a b \\ c d ..."
 i-expr ::= head BACKSLASH BACKSLASH hspace+
   (if (null? (cdr $1))
     (car $1)
     $1)
 
-; Form "a b \\ ;stuff \n ..."
-i-expr ::= head BACKSLASH BACKSLASH eol-comment-lines
-  ; ??? TODO: Is this correct?!?
-  (if (null? (cdr $1))
-    (car $1)
-    $1)
 
 ; Productions for the top production, a sweet-expression (t-expr):
 
