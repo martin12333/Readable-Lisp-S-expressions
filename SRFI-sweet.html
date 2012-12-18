@@ -463,8 +463,13 @@ This terminal is used to detect indent errors.
 
 <p>
 The BNF productions below are intentionally written so that they can
-be easily implemented using recursive descent, but
-no particular implementation approach is required.
+be easily implemented using a recursive descent parser that
+corresponds to the given rules.
+In particular, the rules are given so that it would be easy to implement
+a parser that does not consume characters unless
+necessary and to not require multi-character unread-char
+(this makes it easy to reuse an underlying <var>read</var> procedure).
+However, no particular implementation approach is required.
 Unlike the SRFI-49 BNF, this BNF makes comment and whitespace
 processing explicit, to make comment and whitespace processing requirements
 clear.
