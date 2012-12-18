@@ -582,21 +582,21 @@ eol-comment-lines ::= hspace* special-comments? lcomment? eol comment-lines?
 ; than the indent used on entry to body; the latest indent is compared by
 ; the special terminals DEDENT, SAME, and BADDENT.
 
-body ::= i-expr DEDENT ; Done with body.
-  ; We're done!  We don't actually have to check DEDENT:
-  ; - We couldn't match SAME, because that's matched below.
-  ; - We couldn't match BADDENT, because that's matched below.
-  ; - We couldn't match INDENT, because i-expr consumes those.
-  ; But putting DEDENT here simplifies reasoning.  We recommend actually
-  ; checking DEDENT in an implementation, because doing so could detect
-  ; some implementation defects in the t-expression reader.
-  (list $1)
-
 body ::= i-expr SAME body ; Another body at the same indent level
   (cons $1 $last)
 
 body-tail ::= i-expr BADDENT ; bad indent in line after a first body.
   (read-error $2 "Incorrect indentation")
+
+body ::= i-expr DEDENT ; Done with body.
+  (list $1)
+  ; We're done!  We don't actually have to check DEDENT:
+  ; - We couldn't match SAME, because that's matched above.
+  ; - We couldn't match BADDENT, because that's matched above.
+  ; - We couldn't match INDENT, because i-expr consumes those.
+  ; But putting DEDENT here simplifies reasoning.  We recommend actually
+  ; checking DEDENT in an implementation, because doing so could detect
+  ; some implementation defects in the t-expression reader.
 
 
 ; The "head" is the production for 1+ n-expressions on one line.
