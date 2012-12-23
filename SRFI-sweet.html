@@ -294,6 +294,10 @@ The sweet-expression advanced features are defined as follows:
 </ol>
 
 <p>
+??? TODO: Should we also spec the markers &lt;* and *&gt; ?
+</p>
+
+<p>
 The markers for the advanced sweet-expression features <em>MUST</em>
 only be accepted as such when indentation processing is active,
 and character sequence <em>MUST NOT</em> be considered one of those
@@ -524,7 +528,7 @@ Here are the actual BNF rules:
 ;   Check that work for improper lists, etc.
 
 
-ichar   ::= SPACE | TAB | EXCLAMATION-POINT ; indent char
+ichar   ::= SPACE | TAB | BANG ; indent char
 hspace  ::= SPACE | TAB                     ; horizontal space
 eolchar ::= CR | LF
 eol     ::= CR | LF | CR LF | LF CR
@@ -631,7 +635,7 @@ head !::= DOLLAR  terminate-n-expr
 head !::= BACKSLASH BACKSLASH terminate-n-expr
 head !::= SHARP BAR ; #| ... |# at beginning of line (after indent) is special
 head !::= SHARP SEMICOLON ; same here.
-head !::= SHARP EXCLAMATION-POINT
+head !::= SHARP BANG
 
 ; "i-expr" (indented sweet expressions expressions)
 ; is the main production for sweet-expressions in the usual case.
@@ -743,7 +747,7 @@ t-expr ::= hspace+ n-expr
 ; supposed to indent the first line of a t-expression unless we're disabling
 ; indentation processing on that line, and only SPACE or TAB can do that.
 ; So a "!" is an error.  Let's report this easily-detected problem.
-t-expr ::= hspace* EXCLAMATION-POINT
+t-expr ::= hspace* BANG
   (read-error $2 "Cannot initially indent with !")
 
 ; The top production is t-expr (sweet-expression).
@@ -757,13 +761,13 @@ t-expr ::= hspace* EXCLAMATION-POINT
 ; only accepts "#!" at the beginning of a line when OUTSIDE an expression.
 
 ; Support SRFI-22: #! SPACE is a comment to end of line.
-t-expr ::= SHARP EXCLAMATION-POINT SPACE not-eol-char* eol t-expr
+t-expr ::= SHARP BANG SPACE not-eol-char* eol t-expr
   $last
-t-expr ::= SHARP EXCLAMATION-POINT SPACE not-eol-char* EOF
+t-expr ::= SHARP BANG SPACE not-eol-char* EOF
   $last
-t-expr ::= SHARP EXCLAMATION-POINT EOF
+t-expr ::= SHARP BANG EOF
   $last
-t-expr ::= SHARP EXCLAMATION-POINT eol t-expr
+t-expr ::= SHARP BANG eol t-expr
   $last
 
 ; Optional extension:
@@ -771,12 +775,12 @@ t-expr ::= SHARP EXCLAMATION-POINT eol t-expr
 ; matching !#, following the convention of guile, clisp, and some others.
 ; This doesn't nest. If you want nesting,
 ; use the standard block comment #|...|#.
-t-expr ::= SHARP EXCLAMATION-POINT (SLASH | PERIOD)
-           ( (^ EXCLAMATION-POINT) | EXCLAMATION-POINT+ (^ SHARP))
-           EXCLAMATION-POINT+ SHARP
+t-expr ::= SHARP BANG (SLASH | PERIOD)
+           ( (^ BANG) | BANG+ (^ SHARP))
+           BANG+ SHARP
 
 ; Support Scheme port options of form #!datum
-t-expr ::= SHARP EXCLAMATION-POINT n-expr (hspace+ | eol) t-expr
+t-expr ::= SHARP BANG n-expr (hspace+ | eol) t-expr
   ; TODO: Use datum to modify port settings: fold-case, no-fold-case,
   ; sweet, curly-infix, etc.
   $last
@@ -785,13 +789,13 @@ t-expr ::= SHARP EXCLAMATION-POINT n-expr (hspace+ | eol) t-expr
 ; only accepts "#!" at the beginning of a line when OUTSIDE an expression.
 
 ; Support SRFI-22: #! SPACE is a comment to end of line.
-t-expr ::= SHARP EXCLAMATION-POINT SPACE not-eol-char* eol t-expr
+t-expr ::= SHARP BANG SPACE not-eol-char* eol t-expr
   $last
-t-expr ::= SHARP EXCLAMATION-POINT SPACE not-eol-char* EOF
+t-expr ::= SHARP BANG SPACE not-eol-char* EOF
   $last
-t-expr ::= SHARP EXCLAMATION-POINT EOF
+t-expr ::= SHARP BANG EOF
   $last
-t-expr ::= SHARP EXCLAMATION-POINT eol t-expr
+t-expr ::= SHARP BANG eol t-expr
   $last
 
 ; Optional extension:
@@ -799,12 +803,12 @@ t-expr ::= SHARP EXCLAMATION-POINT eol t-expr
 ; matching !#, following the convention of guile, clisp, and some others.
 ; This doesn't nest. If you want nesting,
 ; use the standard block comment #|...|#.
-t-expr ::= SHARP EXCLAMATION-POINT (SLASH | PERIOD)
-           ( (^ EXCLAMATION-POINT) | EXCLAMATION-POINT+ (^ SHARP))
-           EXCLAMATION-POINT+ SHARP
+t-expr ::= SHARP BANG (SLASH | PERIOD)
+           ( (^ BANG) | BANG+ (^ SHARP))
+           BANG+ SHARP
 
 ; Support Scheme port options of form #!datum
-t-expr ::= SHARP EXCLAMATION-POINT n-expr (hspace+ | eol) t-expr
+t-expr ::= SHARP BANG n-expr (hspace+ | eol) t-expr
   ; TODO: Use datum to modify port settings: fold-case, no-fold-case,
   ; sweet, curly-infix, etc.
   $last
