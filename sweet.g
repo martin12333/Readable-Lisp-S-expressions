@@ -36,8 +36,13 @@ APOSH 			:	'\'' (' ' | '\t');  // Apostrophe + horizontal space
 QUASIQUOTEH 		:	'\`' (' ' | '\t');  // Quasiquote + horizontal space
 UNQUOTE_SPLICEH 	:	',' '@' (' ' | '\t');  // unquote-splicing + horizontal space
 UNQUOTEH 		:	',' (' ' | '\t');  // unquote-splicing + horizontal space
-EOL 	:	 '\r' '\n'? | '\n' '\r'? ;
 LCOMMENT : 	 ';' (' '..'~')* ; // TODO
+
+// EOL is extremely special.  After reading it, we'll need to read in any following
+// indent characters (if indent processing is active) to determine INDENT/SAME/DEDENT.
+// As part of tokenizing, we'll consume any lines that are ;-only lines.
+EOL 	:	 '\r' '\n'? | '\n' '\r'? ;
+
 
 // Simple character or two-character sequences
 SPACE 	:	' ';
@@ -56,6 +61,8 @@ QUASIQUOTE 		:	'\`';
 UNQUOTE_SPLICE 		:	',' '@';
 UNQUOTE 		:	',';
 
+
+
 // STUBS: These are bogus stubs for s-expressions, INDENT, DEDENT, etc.
 INDENT 	:	'>';
 DEDENT 	:	'<';
@@ -63,35 +70,29 @@ SAME 	:	'|';
 // The following is intentionally limited.  In particular, it doesn't include
 // the characters used for INDENT/DEDENT/SAME.
 NAME  :	('a'..'z'|'A'..'Z'|'_'|'\\') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'\\')* ;
-fragment
-EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
+fragment EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
 FLOAT
     :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
     |   '.' ('0'..'9')+ EXPONENT?
     |   ('0'..'9')+ EXPONENT
     ;
 INT 	:	 ('0'..'9')+ ;
-fragment
-HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
-fragment
-OCTAL_ESC
+fragment HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
+fragment OCTAL_ESC
     :   '\\' ('0'..'3') ('0'..'7') ('0'..'7')
     |   '\\' ('0'..'7') ('0'..'7')
     |   '\\' ('0'..'7')
     ;
-fragment
-UNICODE_ESC
+fragment UNICODE_ESC
     :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
     ;
-fragment
-ESC_SEQ
+fragment ESC_SEQ
     :   '\\' ('b'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\')
     |   UNICODE_ESC
     |   OCTAL_ESC
     ;
 
-CHAR:  '\'' ( ESC_SEQ | ~('\''|'\\') ) '\''
-    ;
+CHAR:  '\'' ( ESC_SEQ | ~('\''|'\\') ) '\'' ;
 
 atom 	:	 NAME | INT | FLOAT | CHAR;
 
@@ -115,8 +116,8 @@ n_expr_first:	 abbrev_noh* n_expr_noabbrev;
 
 abbrevh 		:	APOSH | QUASIQUOTEH | UNQUOTE_SPLICEH | UNQUOTEH;
 
-// Do not reference '\n' or '\r' elsewhere.  ANTLR will quietly create tokens for them and
-// this will interfere with EOL processing.
+// Do not reference '\n' or '\r' elsewhere.  ANTLR will quietly create lexical tokens
+// for them if you do, and this will interfere with EOL processing.  E.G., don't do:
 // eolchar : '\n' | '\r';
 
 abbrev_noh		: APOS | QUASIQUOTE | UNQUOTE_SPLICE | UNQUOTE ;
