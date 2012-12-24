@@ -11,7 +11,18 @@
 //   \\ b c
 //   >e f
 //   <
-//
+
+// TODO:
+// - Deal with #|...|# when nothing follows
+// - Handle FORMFEED | VTAB | (IBM's) NEL
+// - Handle #! as discussed in SRFI-105 (curly-infix), including SRFI-22
+// - Handle #!sweet, #!curly-infix, #!fold-case, #!no-fold-case, etc.
+// - Add actions
+// - Note/generate errors, e.g., illegal indents, initial "!"
+// - (Maybe) Define n-expr, etc.
+// - (Maybe) Handle EOF in weird places.
+// -  Check that it works for improper lists, etc.
+
 
 
 grammar sweet;
@@ -135,22 +146,27 @@ hspace  : SPACE | TAB ;        // horizontal space
 
 wspace  : hspace;  // or eolchars
 
-indent 	: ichar*; // This is by definition ambiguous with INDENT/DEDENT/SAME/BADDENT
+// indent 	: ichar*; // This is by definition ambiguous with INDENT/DEDENT/SAME/BADDENT
 
+// Read in ;comment (if exists), followed by EOL.  On a non-tokeninzing parser,
+// this may reset indent as part of EOL processing.
 eol_comment_lines : LCOMMENT? EOL;
 
 // The "head" is the production for 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.
 // It never reads beyond the current line (except within a block comment),
-// so it doesn't need to keep track of indentation, and callers can depend on this.
+// so it doesn't need to keep track of indentation and indentation will NOT change within
+// head; callers can depend on this.
 // On entry all indentation/hspace must have already been read.  On return it will have
 // consumed all hspace (spaces and tabs).
 // On a non-tokenizing recursive descent parser, have it also read and determine
-// if the n-expression is special (e.g., //) and have it return a distinct value if it is.
+// if the n-expression is special (e.g., //, $, #!...!#, abbreviation + hspace)
+// and have it return a distinct value if it is,
 
 head 	:	n_expr_first hspace* rest;
 
-// The "rest" production reads the rest of the expressions on a line, after the first expression.
+// The "rest" production reads the rest of the expressions on a line ("rest of the head"),
+// after the first expression of the line.
 // Like head, it consumes any hspace before it returns.
 // "rest" is written this way so a non-tokenizing implementation can read an expression specially. E.G.,
 // if it sees a period, read the expression directly and then see if it's just a period.
@@ -181,7 +197,11 @@ i_expr : head ( splice hspace* (i_expr | eol_comment_lines (INDENT body)?)
 
 t_expr 	: i_expr
 	| eol_comment_lines t_expr
-        | hspace+ (n_expr | eol_comment_lines t_expr); // Recurse and try again.
+        | hspace+ (n_expr /* indent processing disabled */
+                   | eol_comment_lines t_expr /* try again */
+                   | BANG /* error */)
+        | BANG /* error */
+        | EOF;
 
 // TODO???: How to handle #|...|# at top level when nothing else on line - needs to be skipped and completely ignored.
 
