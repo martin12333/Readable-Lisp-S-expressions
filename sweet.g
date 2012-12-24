@@ -32,9 +32,10 @@ UNQUOTE_SPLICEH 	:	',' '@' (' ' | '\t');  // unquote-splicing + horizontal space
 UNQUOTEH 		:	',' (' ' | '\t');  // unquote-splicing + horizontal space
 abbrevh 		:	APOSH | QUASIQUOTEH | UNQUOTE_SPLICEH | UNQUOTEH;
 
+EOL 	:	 '\r' '\n'? | '\n' '\r'? ;
+eolchar : '\n' | '\r';
+
 // Names for single characters and abbreviations.
-CR 	:	 '\r';
-LF 	:	 '\n';
 SPACE 	:	 ' ';
 TAB 	:	 '\t';
 BANG 	:	 '!';
@@ -51,8 +52,7 @@ abbrev_all		: abbrevh | abbrev_noh;
 // Whitespace & indentation names
 ichar   : SPACE | TAB | BANG ; // indent char
 hspace  : SPACE | TAB ;        // horizontal space
-eolchar : CR | LF;
-eol     : (CR LF?) | (LF CR?);
+
 
 // noteolchar : ~ (CR | LF);
 wspace  : hspace | eolchar ;
@@ -61,7 +61,7 @@ indent 	: ichar*; // This is by definition ambiguous with INDENT/DEDENT/SAME/BAD
 
 lcomment : SEMI ('a'..'z')* ; // TODO
 
-eol_comment_lines : lcomment? eol;  // TODO
+eol_comment_lines : lcomment? EOL;  // TODO
 
 // eol_comment_lines : lcomment? eol (indent lcomment eol)*;  // TODO
 
