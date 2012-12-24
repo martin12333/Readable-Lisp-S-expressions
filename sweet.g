@@ -1,8 +1,12 @@
 // Draft BNF grammar for sweet-expressions
 // (c) 2012 David A. Wheeler, released under "MIT" license.
 
-// This is a very early draft, more of an experiment to investigate using ANTLR
-// to help create a good BNF.  In input, use > for indent, < for dedent, | for same.
+// This is an early draft, in part as an experiment to investigate using ANTLR
+// to help create a good BNF.  It presumes that there's a preprocessor that
+// does indent processing, so while indent processing is on, indents are
+// marked with INDENT, dedents with DEDENT (one for each dedent), or SAME, and
+// totally-blank lines have their indentation consumed (and DEDENTs generated).
+// In input, use > for indent, < for dedent, | for same.
 // Thus, a valid input would be:
 //   \\ b c
 //   >e f
@@ -36,13 +40,18 @@ APOSH 			:	'\'' (' ' | '\t');  // Apostrophe + horizontal space
 QUASIQUOTEH 		:	'\`' (' ' | '\t');  // Quasiquote + horizontal space
 UNQUOTE_SPLICEH 	:	',' '@' (' ' | '\t');  // unquote-splicing + horizontal space
 UNQUOTEH 		:	',' (' ' | '\t');  // unquote-splicing + horizontal space
-LCOMMENT : 	 ';' (' '..'~')* ; // TODO
+LCOMMENT : 	 ';' (~ ('\n' | '\r'))* ;
 
 // EOL is extremely special.  After reading it, we'll need to read in any following
 // indent characters (if indent processing is active) to determine INDENT/SAME/DEDENT.
-// As part of tokenizing, we'll consume any lines that are ;-only lines.
-EOL 	:	 '\r' '\n'? | '\n' '\r'? ;
+// As part of tokenizing, we'll consume any following lines that are ;-only lines.
+EOL 	:	 ('\r' '\n'? | '\n' '\r'?)
+		 ((' ' | '\t')* ';' (~ ('\n' | '\r'))* ('\r' '\n'? | '\n' '\r'?))* ;
 
+// Do not reference '\n' or '\r' inside a non-lexing rule.  ANTLR will quietly create
+// lexical tokens for them if you do, and this will interfere with EOL processing.
+// E.G., don't do:
+//   eolchar : '\n' | '\r';
 
 // Simple character or two-character sequences
 SPACE 	:	' ';
@@ -64,8 +73,8 @@ UNQUOTE 		:	',';
 
 
 // STUBS: These are bogus stubs for s-expressions, INDENT, DEDENT, etc.
-INDENT 	:	'>';
-DEDENT 	:	'<';
+INDENT 	:	'>' ' '*;
+DEDENT 	:	'<' ' '*;
 SAME 	:	'|';
 // The following is intentionally limited.  In particular, it doesn't include
 // the characters used for INDENT/DEDENT/SAME.
@@ -115,11 +124,6 @@ n_expr_first:	 abbrev_noh* n_expr_noabbrev;
 
 
 abbrevh 		:	APOSH | QUASIQUOTEH | UNQUOTE_SPLICEH | UNQUOTEH;
-
-// Do not reference '\n' or '\r' elsewhere.  ANTLR will quietly create lexical tokens
-// for them if you do, and this will interfere with EOL processing.  E.G., don't do:
-// eolchar : '\n' | '\r';
-
 abbrev_noh		: APOS | QUASIQUOTE | UNQUOTE_SPLICE | UNQUOTE ;
 abbrev_all		: abbrevh | abbrev_noh;
 splice 	:	GROUP;  // Use this synonym to make its purpose clearer.
@@ -135,9 +139,6 @@ indent 	: ichar*; // This is by definition ambiguous with INDENT/DEDENT/SAME/BAD
 
 eol_comment_lines : LCOMMENT? EOL;
 
-// eol_comment_lines : LCOMMENT? EOL (indent LCOMMENT? EOL)*;  // TODO
-
-
 // The "head" is the production for 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.
 // It never reads beyond the current line (except within a block comment),
@@ -147,17 +148,17 @@ eol_comment_lines : LCOMMENT? EOL;
 // On a non-tokenizing recursive descent parser, have it also read and determine
 // if the n-expression is special (e.g., //) and have it return a distinct value if it is.
 
-head 	:	n_expr_first hspace* after;
+head 	:	n_expr_first hspace* rest;
 
-// The "after" production reads the rest of the expressions on a line, after the first one.
+// The "rest" production reads the rest of the expressions on a line, after the first expression.
 // Like head, it consumes any hspace before it returns.
-// "after" is written this way so a non-tokenizing implementation can read an expression specially. E.G.,
+// "rest" is written this way so a non-tokenizing implementation can read an expression specially. E.G.,
 // if it sees a period, read the expression directly and then see if it's just a period.
 // Note that block comments and datum comments that don't begin a line (after indent) are consumed
-after 	: PERIOD hspace+ n_expr hspace* /* improper list.  Error if n_expr at this point */
-	| BLOCK_COMMENT hspace* after
-	| DATUM_COMMENT_START hspace* n_expr hspace* after  // Ignore the next datum
-	| n_expr hspace* after
+rest 	: PERIOD hspace+ n_expr hspace* /* improper list.  Error if n_expr at this point */
+	| BLOCK_COMMENT hspace* rest
+	| DATUM_COMMENT_START hspace* n_expr hspace* rest  // Ignore the next datum
+	| n_expr hspace* rest
 	| /* empty: ; eol */;
 
 // body handles the sequence of 1+ child lines in an i_expr.
