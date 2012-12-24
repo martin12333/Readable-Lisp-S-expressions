@@ -3,6 +3,12 @@
 
 // This is a very early draft, more of an experiment to investigate using ANTLR
 // to help create a good BNF.  In input, use > for indent, < for dedent, | for same.
+// Thus, a valid input would be:
+//   \\ b c
+//   >e f
+//   <
+//
+
 
 grammar sweet;
 
@@ -13,12 +19,12 @@ options {
 
 start 	:	 t_expr;
 
+// Lexer
+
 // Here are special interpretation for certain sequences.  Define these first, to give them
 // higher lexical precedence than other definitions.
 GROUP	:	 '\\' '\\';
-splice 	:	GROUP;
 DOLLAR 	:	'$';  // A '$' by itself isn't an atom unless inside {}, (), or [].
-sublist :	DOLLAR;
 BLOCK_COMMENT   // #| ... #|
     :   '#|'
         (options {greedy=false;} : (BLOCK_COMMENT | .))*
@@ -30,59 +36,106 @@ APOSH 			:	'\'' (' ' | '\t');  // Apostrophe + horizontal space
 QUASIQUOTEH 		:	'\`' (' ' | '\t');  // Quasiquote + horizontal space
 UNQUOTE_SPLICEH 	:	',' '@' (' ' | '\t');  // unquote-splicing + horizontal space
 UNQUOTEH 		:	',' (' ' | '\t');  // unquote-splicing + horizontal space
-abbrevh 		:	APOSH | QUASIQUOTEH | UNQUOTE_SPLICEH | UNQUOTEH;
-
 EOL 	:	 '\r' '\n'? | '\n' '\r'? ;
-eolchar : '\n' | '\r';
-
-// Names for single characters and abbreviations.
-SPACE 	:	 ' ';
-TAB 	:	 '\t';
-BANG 	:	 '!';
 LCOMMENT : 	 ';' (' '..'~')* ; // TODO
-PERIOD  :	 '.';
 
+// Simple character or two-character sequences
+SPACE 	:	' ';
+TAB 	:	'\t';
+SHARP	:	'#';
+BANG 	:	'!';
+PERIOD  :	'.';
+LPAREN	:	'(';
+RPAREN	:	')';
+LBRACKET:	'[';
+RBRACKET:	']';
+LBRACE	:	'{';
+RBRACE	:	'}';
 APOS 			:	'\'';
 QUASIQUOTE 		:	'\`';
 UNQUOTE_SPLICE 		:	',' '@';
 UNQUOTE 		:	',';
 
+// STUBS: These are bogus stubs for s-expressions, INDENT, DEDENT, etc.
+INDENT 	:	'>';
+DEDENT 	:	'<';
+SAME 	:	'|';
+// The following is intentionally limited.  In particular, it doesn't include
+// the characters used for INDENT/DEDENT/SAME.
+NAME  :	('a'..'z'|'A'..'Z'|'_'|'\\') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'\\')* ;
+fragment
+EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
+FLOAT
+    :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
+    |   '.' ('0'..'9')+ EXPONENT?
+    |   ('0'..'9')+ EXPONENT
+    ;
+INT 	:	 ('0'..'9')+ ;
+fragment
+HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
+fragment
+OCTAL_ESC
+    :   '\\' ('0'..'3') ('0'..'7') ('0'..'7')
+    |   '\\' ('0'..'7') ('0'..'7')
+    |   '\\' ('0'..'7')
+    ;
+fragment
+UNICODE_ESC
+    :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+    ;
+fragment
+ESC_SEQ
+    :   '\\' ('b'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\')
+    |   UNICODE_ESC
+    |   OCTAL_ESC
+    ;
 
+CHAR:  '\'' ( ESC_SEQ | ~('\''|'\\') ) '\''
+    ;
+
+atom 	:	 NAME | INT | FLOAT | CHAR;
+
+list_contents 
+	:	 atom (wspace+ list_contents)?
+	| ; // empty
+
+n_expr_tail 
+	:	 (LPAREN list_contents RPAREN | LBRACE list_contents RBRACE |
+		  LBRACKET list_contents RBRACKET) n_expr_tail?;
+n_expr_noabbrev 
+	:	 (atom | LPAREN list_contents RPAREN
+		   | LBRACE list_contents RBRACE | LBRACKET list_contents RBRACKET)
+		 (n_expr_tail)?;
+n_expr :	 abbrev_all* n_expr_noabbrev;
+n_expr_first:	 abbrev_noh* n_expr_noabbrev;
+
+// END STUBS
+
+
+
+abbrevh 		:	APOSH | QUASIQUOTEH | UNQUOTE_SPLICEH | UNQUOTEH;
+
+// Do not reference '\n' or '\r' elsewhere.  ANTLR will quietly create tokens for them and
+// this will interfere with EOL processing.
+// eolchar : '\n' | '\r';
 
 abbrev_noh		: APOS | QUASIQUOTE | UNQUOTE_SPLICE | UNQUOTE ;
 abbrev_all		: abbrevh | abbrev_noh;
+splice 	:	GROUP;  // Use this synonym to make its purpose clearer.
+sublist :	DOLLAR; // Use this synonym to make its purpose clearer.
 
 // Whitespace & indentation names
 ichar   : SPACE | TAB | BANG ; // indent char
 hspace  : SPACE | TAB ;        // horizontal space
 
-
-// noteolchar : ~ (CR | LF);
-wspace  : hspace | eolchar ;
+wspace  : hspace;  // or eolchars
 
 indent 	: ichar*; // This is by definition ambiguous with INDENT/DEDENT/SAME/BADDENT
-
 
 eol_comment_lines : LCOMMENT? EOL;
 
 // eol_comment_lines : LCOMMENT? EOL (indent LCOMMENT? EOL)*;  // TODO
 
-
-// STUBS: These are bogus stubs for s-expressions, INDENT, DEDENT, etc.
-INDENT 	:	'>';
-DEDENT 	:	'<';
-SAME 	:	'|';
-NAME  :	('a'..'z'|'A'..'Z'|'_'|'\\') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'\\')*
-    ;
-NUMBER 	:	 ('0'..'9')+ ;
-atom 	:	 NAME | NUMBER ;
-list_contents 
-	:	 atom (wspace+ list_contents)?
-	| ; /* empty */
-n_expr :	 abbrev_all* (atom | '(' list_contents ')' );
-n_expr_first
-	:	 abbrev_noh* (atom | '(' list_contents ')' );
-// END STUBS
 
 // The "head" is the production for 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.
@@ -131,18 +184,7 @@ t_expr 	: i_expr
 // TODO???: How to handle #|...|# at top level when nothing else on line - needs to be skipped and completely ignored.
 
 
-
-/*
-INT :	'0'..'9'+
-    ;
-
-FLOAT
-    :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
-    |   '.' ('0'..'9')+ EXPONENT?
-    |   ('0'..'9')+ EXPONENT
-    ;
-*/
-
+// Other ANTLR examples:
 // COMMENT
 //    :   '//' ~('\n'|'\r')* '\r'? '\n' {$channel=HIDDEN;}
 //    |   '/*' ( options {greedy=false;} : . )* '*/' {$channel=HIDDEN;}
@@ -154,34 +196,5 @@ WS  :   ( ' '
         | '\r'
         | '\n'
         ) {$channel=HIDDEN;}
-    ;
-
-CHAR:  '\'' ( ESC_SEQ | ~('\''|'\\') ) '\''
-    ;
-
-fragment
-EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
-
-fragment
-HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
-
-fragment
-ESC_SEQ
-    :   '\\' ('b'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\')
-    |   UNICODE_ESC
-    |   OCTAL_ESC
-    ;
-
-fragment
-OCTAL_ESC
-    :   '\\' ('0'..'3') ('0'..'7') ('0'..'7')
-    |   '\\' ('0'..'7') ('0'..'7')
-    |   '\\' ('0'..'7')
-    ;
-
-fragment
-UNICODE_ESC
-    :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
-    ;
-  
+    ; 
 */
