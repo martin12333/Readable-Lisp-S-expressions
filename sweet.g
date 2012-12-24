@@ -39,13 +39,16 @@ eolchar : '\n' | '\r';
 SPACE 	:	 ' ';
 TAB 	:	 '\t';
 BANG 	:	 '!';
-SEMI    :	 ';';
+LCOMMENT : 	 ';' (' '..'~')* ; // TODO
 PERIOD  :	 '.';
 
 APOS 			:	'\'';
 QUASIQUOTE 		:	'\`';
 UNQUOTE_SPLICE 		:	',' '@';
 UNQUOTE 		:	',';
+
+
+
 abbrev_noh		: APOS | QUASIQUOTE | UNQUOTE_SPLICE | UNQUOTE ;
 abbrev_all		: abbrevh | abbrev_noh;
 
@@ -59,11 +62,10 @@ wspace  : hspace | eolchar ;
 
 indent 	: ichar*; // This is by definition ambiguous with INDENT/DEDENT/SAME/BADDENT
 
-lcomment : SEMI ('a'..'z')* ; // TODO
 
-eol_comment_lines : lcomment? EOL;  // TODO
+eol_comment_lines : LCOMMENT? EOL;
 
-// eol_comment_lines : lcomment? eol (indent lcomment eol)*;  // TODO
+// eol_comment_lines : LCOMMENT? EOL (indent LCOMMENT? EOL)*;  // TODO
 
 
 // STUBS: These are bogus stubs for s-expressions, INDENT, DEDENT, etc.
