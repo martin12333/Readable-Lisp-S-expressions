@@ -170,13 +170,16 @@ head 	:	n_expr_first (hspace+ rest?)?;
 // Like head, it consumes any hspace before it returns.
 // "rest" is written this way so a non-tokenizing implementation can read an expression specially. E.G.,
 // if it sees a period, read the expression directly and then see if it's just a period.
-// Note that block comments and datum comments that don't begin a line (after indent) are consumed
+// Note that unlike the first head expression,
+// block comments and datum comments that don't begin a line (after indent) are consumed,
+// and abbreviations followed by a space merely apply to the next n-expression (not to the entire
+// indented expression).
 rest 	: PERIOD hspace+ n_expr hspace* /* improper list.  Error if n_expr at this point */
 	| BLOCK_COMMENT hspace* rest
 	| DATUM_COMMENT_START hspace* n_expr hspace* rest  // Ignore the next datum
 	| n_expr (hspace+ rest?)?;
 
-// body handles the sequence of 1+ child lines in an i_expr.
+// body handles the sequence of 1+ child lines in an i_expr (e.g., after a "head").
 // Note that DEDENT can't happen immediately after i_expr, because i_expr would consume it.
 // Non-tokenizing implemenation notes:
 // Note that i_expr will consume any line comments (line comments after
