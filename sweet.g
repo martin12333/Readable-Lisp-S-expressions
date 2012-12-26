@@ -126,7 +126,7 @@ n_expr_tail
 n_expr_noabbrev 
 	:	 (atom | LPAREN list_contents RPAREN
 		   | LBRACE list_contents RBRACE | LBRACKET list_contents RBRACKET)
-		 (n_expr_tail)?;
+		 /* TODO: n_expr_tail? */ ;
 n_expr :	 abbrev_all* n_expr_noabbrev;
 n_expr_first:	 abbrev_noh* n_expr_noabbrev;
 
@@ -163,7 +163,7 @@ eol_comment_lines : LCOMMENT? EOL;
 // if the n-expression is special (e.g., //, $, #!...!#, abbreviation + hspace)
 // and have it return a distinct value if it is,
 
-head 	:	n_expr_first hspace* rest;
+head 	:	n_expr_first (hspace+ rest?)?;
 
 // The "rest" production reads the rest of the expressions on a line ("rest of the head"),
 // after the first expression of the line.
@@ -174,8 +174,7 @@ head 	:	n_expr_first hspace* rest;
 rest 	: PERIOD hspace+ n_expr hspace* /* improper list.  Error if n_expr at this point */
 	| BLOCK_COMMENT hspace* rest
 	| DATUM_COMMENT_START hspace* n_expr hspace* rest  // Ignore the next datum
-	| n_expr hspace* rest
-	| /* empty: ; eol */;
+	| n_expr (hspace+ rest?)?;
 
 // body handles the sequence of 1+ child lines in an i_expr.
 // Note that DEDENT can't happen immediately after i_expr, because i_expr would consume it.
