@@ -195,7 +195,8 @@ i_expr : head ( splice hspace* (i_expr | eol_comment_lines (INDENT body)?)
               | DOLLAR hspace* (i_expr | eol_comment_lines (INDENT body)?)
               | eol_comment_lines (INDENT body)?
               ) // child lines
-         | (GROUP | scomment) hspace* (i_expr | eol_comment_lines INDENT body)
+         | (GROUP | scomment) hspace* (i_expr /* skip */
+                                       | eol_comment_lines (INDENT body | SAME i_expr))
          | DOLLAR hspace* (i_expr | eol_comment_lines INDENT body)
          | abbrevh hspace* i_expr;
 
@@ -206,8 +207,6 @@ t_expr 	: i_expr
                    | BANG /* error */)
         | BANG /* error */
         | EOF;
-
-// TODO???: How to handle #|...|# at top level when nothing else on line - needs to be skipped and completely ignored.
 
 
 // Other ANTLR examples:
