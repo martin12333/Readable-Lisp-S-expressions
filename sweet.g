@@ -46,7 +46,7 @@ BLOCK_COMMENT   // #| ... #|
         '|#' {$channel=HIDDEN;}
     ;
 DATUM_COMMENT_START 	:	'#;' ;
-SHARP_BANG 		:	'#!' ;
+SHARP_BANG 		:	'#!' ; /* TODO */
 APOSH 			:	'\'' (' ' | '\t');  // Apostrophe + horizontal space
 QUASIQUOTEH 		:	'\`' (' ' | '\t');  // Quasiquote + horizontal space
 UNQUOTE_SPLICEH 	:	',' '@' (' ' | '\t');  // unquote-splicing + horizontal space
@@ -146,6 +146,9 @@ hspace  : SPACE | TAB ;        // horizontal space
 
 wspace  : hspace;  // or eolchars
 
+// Special comment - comment regions other than ";"
+scomment:	BLOCK_COMMENT | DATUM_COMMENT_START hspace* n_expr;
+
 // indent 	: ichar*; // This is by definition ambiguous with INDENT/DEDENT/SAME/BADDENT
 
 // Read in ;comment (if exists), followed by EOL.  On a non-tokeninzing parser,
@@ -175,8 +178,7 @@ head 	:	n_expr_first (hspace+ rest?)?;
 // and abbreviations followed by a space merely apply to the next n-expression (not to the entire
 // indented expression).
 rest 	: PERIOD hspace+ n_expr hspace* /* improper list.  Error if n_expr at this point */
-	| BLOCK_COMMENT hspace* rest
-	| DATUM_COMMENT_START hspace* n_expr hspace* rest  // Ignore the next datum
+	| scomment hspace* rest?
 	| n_expr (hspace+ rest?)?;
 
 // body handles the sequence of 1+ child lines in an i_expr (e.g., after a "head").
@@ -193,7 +195,7 @@ i_expr : head ( splice hspace* (i_expr | eol_comment_lines (INDENT body)?)
               | DOLLAR hspace* (i_expr | eol_comment_lines (INDENT body)?)
               | eol_comment_lines (INDENT body)?
               ) // child lines
-         | (GROUP | BLOCK_COMMENT) hspace* (i_expr | eol_comment_lines INDENT body)
+         | (GROUP | scomment) hspace* (i_expr | eol_comment_lines INDENT body)
          | DOLLAR hspace* (i_expr | eol_comment_lines INDENT body)
          | abbrevh hspace* i_expr;
 
