@@ -11,12 +11,14 @@
 //   \\ b c
 //   >e f
 //   <
+//
+//   #! hello
+//   |a
+//   >b c
+//   <
 
 // TODO:
-// - Deal with #|...|# when nothing follows
 // - Handle FORMFEED | VTAB | (IBM's) NEL
-// - Handle #! as discussed in SRFI-105 (curly-infix), including SRFI-22
-// - Handle #!sweet, #!curly-infix, #!fold-case, #!no-fold-case, etc.
 // - Add actions
 // - Note/generate errors, e.g., illegal indents, initial "!"
 // - (Maybe) Define n-expr, etc.
@@ -46,12 +48,26 @@ BLOCK_COMMENT   // #| ... #|
         '|#' {$channel=HIDDEN;}
     ;
 DATUM_COMMENT_START 	:	'#;' ;
-SHARP_BANG 		:	'#!' ; /* TODO */
 APOSH 			:	'\'' (' ' | '\t');  // Apostrophe + horizontal space
 QUASIQUOTEH 		:	'\`' (' ' | '\t');  // Quasiquote + horizontal space
 UNQUOTE_SPLICEH 	:	',' '@' (' ' | '\t');  // unquote-splicing + horizontal space
 UNQUOTEH 		:	',' (' ' | '\t');  // unquote-splicing + horizontal space
 LCOMMENT : 	 ';' (~ ('\n' | '\r'))* ;
+
+// SRFI-105 notes that "implementations could trivially support (simultaneously) markers
+// beginning with #! followed by a letter (such as the one to identify support for curly-infix-expressions),
+// the SRFI-22 #!+space marker as an ignored line, and the
+// format #!/ ... !# and #!. ... !# as a multi-line comment."
+
+SRFI_22_COMMENT		:	'#! ' (~ ('\n' | '\r'))* ;
+SHARP_BANG_SLASH	:	'#!/'
+        (options {greedy=false;} : .)*
+        '!#' {$channel=HIDDEN;} ;
+SHARP_BANG_DOT	:	'#!.'
+        (options {greedy=false;} : .)*
+        '!#' {$channel=HIDDEN;} ;
+// The following matches #!fold-case , #!no-fold-case, #!sweet, and #!curly-infix.
+SHARP_BANG_MARKER 	:	'#!' ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'-')*;
 
 // EOL is extremely special.  After reading it, we'll need to read in any following
 // indent characters (if indent processing is active) to determine INDENT/SAME/DEDENT.
@@ -147,7 +163,9 @@ hspace  : SPACE | TAB ;        // horizontal space
 wspace  : hspace;  // or eolchars
 
 // Special comment - comment regions other than ";"
-scomment:	BLOCK_COMMENT | DATUM_COMMENT_START hspace* n_expr;
+sharp_bang_comments 
+	:	SRFI_22_COMMENT	| SHARP_BANG_SLASH | SHARP_BANG_DOT | SHARP_BANG_MARKER;
+scomment:	BLOCK_COMMENT | DATUM_COMMENT_START hspace* n_expr | sharp_bang_comments;
 
 // indent 	: ichar*; // This is by definition ambiguous with INDENT/DEDENT/SAME/BADDENT
 
