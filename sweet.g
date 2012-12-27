@@ -81,8 +81,8 @@ SHARP_BANG_MARKER 	:	'#!' ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_
 // As part of tokenizing, we'll consume any following lines that are ;-only lines.
 fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'?);
 fragment BLANK_LINE 
-	:	 (' ' | '\t')* ';' NOT_EOL_CHAR* | ('\f' | '\u000b')+ ;
-EOL 	:	 ('\f' | '\u000b')* EOL_SEQUENCE
+	:	 (' ' | '\t')* ';' NOT_EOL_CHAR* | ('\f' | '\u000b') ;
+EOL 	:	 ('\f' | '\u000b')? EOL_SEQUENCE
 		 ( BLANK_LINE EOL_SEQUENCE)* ;
 
 // Do not reference '\n' or '\r' inside a non-lexing rule.  ANTLR will quietly create
