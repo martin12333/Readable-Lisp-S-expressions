@@ -42,23 +42,28 @@ start 	:	 t_expr;
 // higher lexical precedence than other definitions.
 GROUP	:	 '\\' '\\';
 DOLLAR 	:	'$';  // A '$' by itself isn't an atom unless inside {}, (), or [].
+RESERVED_TRIPLE :	 '$$$';  // Reserved for future use.
+RESTART :	'<\*';
+RESTART_END:	'\*>';
+
+APOSH 			:	'\'' (' ' | '\t');  // Apostrophe + horizontal space
+QUASIQUOTEH 		:	'\`' (' ' | '\t');  // Quasiquote + horizontal space
+UNQUOTE_SPLICEH 	:	',' '@' (' ' | '\t');  // unquote-splicing + horizontal space
+UNQUOTEH 		:	',' (' ' | '\t');  // unquote-splicing + horizontal space
+
+LCOMMENT : 	 ';' (~ ('\n' | '\r'))* ;
+
 BLOCK_COMMENT   // #| ... #|
     :   '#|'
         (options {greedy=false;} : (BLOCK_COMMENT | .))*
         '|#' {$channel=HIDDEN;}
     ;
 DATUM_COMMENT_START 	:	'#;' ;
-APOSH 			:	'\'' (' ' | '\t');  // Apostrophe + horizontal space
-QUASIQUOTEH 		:	'\`' (' ' | '\t');  // Quasiquote + horizontal space
-UNQUOTE_SPLICEH 	:	',' '@' (' ' | '\t');  // unquote-splicing + horizontal space
-UNQUOTEH 		:	',' (' ' | '\t');  // unquote-splicing + horizontal space
-LCOMMENT : 	 ';' (~ ('\n' | '\r'))* ;
 
 // SRFI-105 notes that "implementations could trivially support (simultaneously) markers
 // beginning with #! followed by a letter (such as the one to identify support for curly-infix-expressions),
 // the SRFI-22 #!+space marker as an ignored line, and the
 // format #!/ ... !# and #!. ... !# as a multi-line comment."
-
 SRFI_22_COMMENT		:	'#! ' (~ ('\n' | '\r'))* ;
 SHARP_BANG_SLASH	:	'#!/'
         (options {greedy=false;} : .)*
@@ -165,6 +170,7 @@ wspace  : hspace;  // or eolchars
 // Special comment - comment regions other than ";"
 sharp_bang_comments 
 	:	SRFI_22_COMMENT	| SHARP_BANG_SLASH | SHARP_BANG_DOT | SHARP_BANG_MARKER;
+
 scomment:	BLOCK_COMMENT | DATUM_COMMENT_START hspace* n_expr | sharp_bang_comments;
 
 // indent 	: ichar*; // This is by definition ambiguous with INDENT/DEDENT/SAME/BADDENT
