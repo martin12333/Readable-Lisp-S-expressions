@@ -3,7 +3,6 @@
 
 // Written using ANTLR version 3, single-token (k=1) lookahead. More info:
 // http://www.antlr.org/
-// http://www.cs.columbia.edu/~sedwards/classes/2003/w4115/antlrtut.pdf
 
 // This BNF presumes there's a preprocessor that
 // does indent processing, so while indent processing is on, indents are
@@ -156,11 +155,11 @@ list_contents
 
 n_expr_tail 
 	:	 (LPAREN list_contents RPAREN | LBRACE list_contents RBRACE |
-		  LBRACKET list_contents RBRACKET) n_expr_tail?;
+		  LBRACKET list_contents RBRACKET);
 n_expr_noabbrev 
 	:	 (atom | LPAREN list_contents RPAREN
 		   | LBRACE list_contents RBRACE | LBRACKET list_contents RBRACKET)
-		 /* TODO: n_expr_tail? */ ;
+		 (options {greedy=true;} : n_expr_tail)*;
 n_expr :	 abbrev_all* n_expr_noabbrev;
 n_expr_first:	 abbrev_noh* n_expr_noabbrev;
 
