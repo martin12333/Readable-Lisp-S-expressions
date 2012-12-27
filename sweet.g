@@ -207,6 +207,9 @@ rest 	: PERIOD hspace+ n_expr hspace* /* improper list.  Error if n_expr at this
 	| scomment hspace* rest?
 	| n_expr (hspace+ rest?)?;
 
+restart_list 
+	:	RESTART hspace* eol_comment_lines? (i_expr eol_comment_lines)+ hspace* RESTART_END hspace*;
+
 // body handles the sequence of 1+ child lines in an i_expr (e.g., after a "head").
 // Note that DEDENT can't happen immediately after i_expr, because i_expr would consume it.
 // Non-tokenizing implemenation notes:
@@ -219,11 +222,13 @@ body 	:	 i_expr (SAME body | DEDENT);
 
 i_expr : head ( splice hspace* (i_expr | eol_comment_lines (INDENT body)?)
               | DOLLAR hspace* (i_expr | eol_comment_lines (INDENT body)?)
+              | restart_list (i_expr | eol_comment_lines (INDENT body)?)
               | eol_comment_lines (INDENT body)?
               ) // child lines
          | (GROUP | scomment) hspace* (i_expr /* skip */
-                                       | eol_comment_lines (INDENT body | SAME i_expr))
+                                       | eol_comment_lines (INDENT body | SAME i_expr | DEDENT /* error */ ))
          | DOLLAR hspace* (i_expr | eol_comment_lines INDENT body)
+	 | restart_list (i_expr | eol_comment_lines (INDENT body)?)
          | abbrevh hspace* i_expr;
 
 t_expr 	: i_expr
