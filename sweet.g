@@ -1,8 +1,11 @@
-// Draft BNF grammar for sweet-expressions
+// BNF grammar for sweet-expressions
 // (c) 2012 David A. Wheeler, released under "MIT" license.
 
-// This is an early draft, in part as an experiment to investigate using ANTLR
-// to help create a good BNF.  It presumes that there's a preprocessor that
+// Written using ANTLR version 3, single-token (k=1) lookahead. More info:
+// http://www.antlr.org/
+// http://www.cs.columbia.edu/~sedwards/classes/2003/w4115/antlrtut.pdf
+
+// This BNF presumes there's a preprocessor that
 // does indent processing, so while indent processing is on, indents are
 // marked with INDENT, dedents with DEDENT (one for each dedent), or SAME, and
 // totally-blank lines have their indentation consumed (and DEDENTs generated).
@@ -19,7 +22,6 @@
 
 // TODO:
 // - Handle (IBM's) NEL
-// - Initial PERIOD on a line
 // - Add actions
 // - Note/generate errors, e.g., illegal indents, initial "!"
 // - (Maybe) Define n-expr, etc.
