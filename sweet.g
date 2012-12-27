@@ -52,7 +52,8 @@ QUASIQUOTEH 		:	'\`' (' ' | '\t');  // Quasiquote + horizontal space
 UNQUOTE_SPLICEH 	:	',' '@' (' ' | '\t');  // unquote-splicing + horizontal space
 UNQUOTEH 		:	',' (' ' | '\t');  // unquote-splicing + horizontal space
 
-fragment EOL_CHAR : '\n' | 'r' | '\f' | '\v';
+// \u000b is vertical tab (\v).  Take that, http://prog21.dadgum.com/76.html
+fragment EOL_CHAR : '\n' | '\r' | '\f' | '\u000b';
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
 
 LCOMMENT : 	 ';' NOT_EOL_CHAR* ;
@@ -78,8 +79,11 @@ SHARP_BANG_MARKER 	:	'#!' ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_
 // EOL is extremely special.  After reading it, we'll need to read in any following
 // indent characters (if indent processing is active) to determine INDENT/SAME/DEDENT.
 // As part of tokenizing, we'll consume any following lines that are ;-only lines.
-EOL 	:	 ('\f' | '\v')* ('\r' '\n'? | '\n' '\r'?)
-		 ((' ' | '\t')* ';' (~ ('\n' | '\r'))* ('\r' '\n'? | '\n' '\r'?))* ;
+fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'?);
+fragment BLANK_LINE 
+	:	 (' ' | '\t')* ';' NOT_EOL_CHAR* | ('\f' | '\u000b')+ ;
+EOL 	:	 ('\f' | '\u000b')* EOL_SEQUENCE
+		 ( BLANK_LINE EOL_SEQUENCE)* ;
 
 // Do not reference '\n' or '\r' inside a non-lexing rule.  ANTLR will quietly create
 // lexical tokens for them if you do, and this will interfere with EOL processing.
