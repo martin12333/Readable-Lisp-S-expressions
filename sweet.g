@@ -190,7 +190,7 @@ eol_comment_lines : LCOMMENT? EOL;
 // consumed all hspace (spaces and tabs).
 // On a non-tokenizing recursive descent parser, have it also read and determine
 // if the n-expression is special (e.g., //, $, #!...!#, abbreviation + hspace)
-// and have it return a distinct value if it is,
+// and have it return a distinct value if it is.
 
 head 	:	n_expr_first (hspace+ rest?)?;
 
@@ -225,8 +225,9 @@ i_expr : head ( splice hspace* (i_expr | eol_comment_lines (INDENT body)?)
               | restart_list (i_expr | eol_comment_lines (INDENT body)?)
               | eol_comment_lines (INDENT body)?
               ) // child lines
-         | (GROUP | scomment) hspace* (i_expr /* skip */
-                                       | eol_comment_lines (INDENT body | SAME i_expr | DEDENT /* error */ ))
+         | (GROUP | scomment) hspace*
+             (i_expr /* skip */
+              | eol_comment_lines (INDENT body | SAME i_expr | DEDENT /* error */ ))
          | DOLLAR hspace* (i_expr | eol_comment_lines INDENT body)
 	 | restart_list (i_expr | eol_comment_lines (INDENT body)?)
          | abbrevh hspace* i_expr;
