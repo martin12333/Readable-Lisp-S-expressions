@@ -19,6 +19,7 @@
 
 // TODO:
 // - Handle FORMFEED | VTAB | (IBM's) NEL
+// - Initial PERIOD on a line
 // - Add actions
 // - Note/generate errors, e.g., illegal indents, initial "!"
 // - (Maybe) Define n-expr, etc.
