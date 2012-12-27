@@ -52,7 +52,10 @@ QUASIQUOTEH 		:	'\`' (' ' | '\t');  // Quasiquote + horizontal space
 UNQUOTE_SPLICEH 	:	',' '@' (' ' | '\t');  // unquote-splicing + horizontal space
 UNQUOTEH 		:	',' (' ' | '\t');  // unquote-splicing + horizontal space
 
-LCOMMENT : 	 ';' (~ ('\n' | '\r'))* ;
+fragment EOL_CHAR : '\n' | 'r' | '\f' | '\v';
+fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
+
+LCOMMENT : 	 ';' NOT_EOL_CHAR* ;
 
 BLOCK_COMMENT   // #| ... #|
     :   '#|'
@@ -65,7 +68,7 @@ DATUM_COMMENT_START 	:	'#;' ;
 // beginning with #! followed by a letter (such as the one to identify support for curly-infix-expressions),
 // the SRFI-22 #!+space marker as an ignored line, and the
 // format #!/ ... !# and #!. ... !# as a multi-line comment."
-SRFI_22_COMMENT		:	'#! ' (~ ('\n' | '\r'))* ;
+SRFI_22_COMMENT		:	'#! ' NOT_EOL_CHAR* ;
 SHARP_BANG_SLASH	:	'#!/'
         (options {greedy=false;} : .)*
         '!#' {$channel=HIDDEN;} ;
@@ -78,7 +81,7 @@ SHARP_BANG_MARKER 	:	'#!' ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_
 // EOL is extremely special.  After reading it, we'll need to read in any following
 // indent characters (if indent processing is active) to determine INDENT/SAME/DEDENT.
 // As part of tokenizing, we'll consume any following lines that are ;-only lines.
-EOL 	:	 ('\r' '\n'? | '\n' '\r'?)
+EOL 	:	 ('\f' | '\v')? ('\r' '\n'? | '\n' '\r'?)
 		 ((' ' | '\t')* ';' (~ ('\n' | '\r'))* ('\r' '\n'? | '\n' '\r'?))* ;
 
 // Do not reference '\n' or '\r' inside a non-lexing rule.  ANTLR will quietly create
