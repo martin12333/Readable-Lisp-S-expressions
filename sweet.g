@@ -102,7 +102,7 @@ UNQUOTE 		:	',';
 // STUBS: These are bogus stubs for s-expressions, INDENT, DEDENT, etc.
 INDENT 	:	'>' ' '*;
 DEDENT 	:	'<' ' '*;
-SAME 	:	'|';
+SAME 	:	'|' ' '*;
 // The following is intentionally limited.  In particular, it doesn't include
 // the characters used for INDENT/DEDENT/SAME.
 NAME  :	('a'..'z'|'A'..'Z'|'_'|'\\') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'\\')* ;
