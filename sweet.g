@@ -18,7 +18,7 @@
 //   <
 
 // TODO:
-// - Handle FORMFEED | VTAB | (IBM's) NEL
+// - Handle (IBM's) NEL
 // - Initial PERIOD on a line
 // - Add actions
 // - Note/generate errors, e.g., illegal indents, initial "!"
