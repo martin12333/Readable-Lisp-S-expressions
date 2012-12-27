@@ -263,13 +263,15 @@ i_expr : head ( splice hspace* (i_expr | comment_eol (INDENT body)?)
 	 | restart_list (i_expr | comment_eol (INDENT body)?)
          | abbrevh hspace* i_expr;
 
-t_expr 	: i_expr
-	| comment_eol t_expr
-        | hspace+ (n_expr /* indent processing disabled */
-                   | comment_eol t_expr /* try again */
-                   | BANG /* error */)
-        | BANG /* error */
-        | EOF;
+// Top-level sweet-expression production; handle special cases, or drop to i_expr
+// in normal case.
+t_expr 	: comment_eol t_expr {t_expr} /* Initial lcomment, try again */
+        | hspace+ (n_expr {n_expr} /* indent processing disabled */
+                   | comment_eol t_expr {t_expr} /* Indented lcomment, try again */
+                   | BANG {read_error("! Not allowed at top");} )
+        | BANG {read_error("! Not allowed at top");}
+        | EOF {EOF} /* End of file */
+        | i_expr {i_expr} /* Normal case */;
 
 
 // Other ANTLR examples:
