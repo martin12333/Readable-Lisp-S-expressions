@@ -69,10 +69,7 @@ DATUM_COMMENT_START 	:	'#;' ;
 // the SRFI-22 #!+space marker as an ignored line, and the
 // format #!/ ... !# and #!. ... !# as a multi-line comment."
 SRFI_22_COMMENT		:	'#! ' NOT_EOL_CHAR* ;
-SHARP_BANG_SLASH	:	'#!/'
-        (options {greedy=false;} : .)*
-        '!#' {$channel=HIDDEN;} ;
-SHARP_BANG_DOT	:	'#!.'
+SHARP_BANG_FILE	:	'#!' ('/' | '.')
         (options {greedy=false;} : .)*
         '!#' {$channel=HIDDEN;} ;
 // The following matches #!fold-case , #!no-fold-case, #!sweet, and #!curly-infix.
@@ -81,7 +78,7 @@ SHARP_BANG_MARKER 	:	'#!' ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_
 // EOL is extremely special.  After reading it, we'll need to read in any following
 // indent characters (if indent processing is active) to determine INDENT/SAME/DEDENT.
 // As part of tokenizing, we'll consume any following lines that are ;-only lines.
-EOL 	:	 ('\f' | '\v')? ('\r' '\n'? | '\n' '\r'?)
+EOL 	:	 ('\f' | '\v')* ('\r' '\n'? | '\n' '\r'?)
 		 ((' ' | '\t')* ';' (~ ('\n' | '\r'))* ('\r' '\n'? | '\n' '\r'?))* ;
 
 // Do not reference '\n' or '\r' inside a non-lexing rule.  ANTLR will quietly create
@@ -174,7 +171,7 @@ wspace  : hspace;  // or eolchars
 
 // Special comment - comment regions other than ";"
 sharp_bang_comments 
-	:	SRFI_22_COMMENT	| SHARP_BANG_SLASH | SHARP_BANG_DOT | SHARP_BANG_MARKER;
+	:	SRFI_22_COMMENT	| SHARP_BANG_FILE | SHARP_BANG_MARKER;
 
 scomment:	BLOCK_COMMENT | DATUM_COMMENT_START hspace* n_expr | sharp_bang_comments;
 
