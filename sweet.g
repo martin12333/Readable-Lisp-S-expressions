@@ -221,6 +221,19 @@ rest 	: PERIOD hspace+ n_expr hspace* /* improper list.  Error if n_expr at this
 	| scomment hspace* rest?
 	| n_expr (hspace+ rest?)?;
 
+
+// "body" handles the sequence of 1+ child lines in an i_expr (e.g., after a "head"),
+// each of which is itself an i_expr.  Note that an i-expr will consume any line comments
+// or hspaces before it returns. 
+// Non-tokenizing implemenation notes:
+// Note that i_expr will consume any line comments (line comments after
+// content, as well as lines that just contain indents and comments).
+// Note also that i-expr may set the the current indent to a different value
+// than the indent used on entry to body; the latest indent is compared by
+// the special terminals DEDENT, SAME, and BADDENT.
+body 	:	 i_expr (SAME body | DEDENT);
+
+
 restart_contents 
 	:	 i_expr (comment_eol+ restart_contents?)? ;
 
@@ -229,15 +242,14 @@ restart_contents
 restart_list 
 	:	RESTART hspace* comment_eol* restart_contents? RESTART_END hspace*;
 
-// body handles the sequence of 1+ child lines in an i_expr (e.g., after a "head").
-// Note that DEDENT can't happen immediately after i_expr, because i_expr would consume it.
-// Non-tokenizing implemenation notes:
-// Note that i_expr will consume any line comments (line comments after
-// content, as well as lines that just contain indents and comments).
-// Note also that i-expr may set the the latest indent to a different value
-// than the indent used on entry to body; the latest indent is compared by
-// the special terminals DEDENT, SAME, and BADDENT.
-body 	:	 i_expr (SAME body | DEDENT);
+// "i-expr" (indented sweet expressions expressions)
+// is the main production for sweet-expressions in the usual case.
+// This can be implemented with one-character-lookahead by also
+// passing in the "current" indent ("" to start), and having it return
+// the "new current indent".  The same applies to body.
+// If the line after a "head" has the same or smaller indentation,
+// that will end this i-expr (because it won't match INDENT),
+// returning to a higher-level production.
 
 i_expr : head ( splice hspace* (i_expr | comment_eol (INDENT body)?)
               | DOLLAR hspace* (i_expr | comment_eol (INDENT body)?)
