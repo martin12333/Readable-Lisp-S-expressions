@@ -20,7 +20,6 @@
 //   <
 
 // TODO:
-// - Handle (IBM's) NEL
 // - Add actions
 // - Note/generate errors, e.g., illegal indents, initial "!"
 // - (Maybe) Define n-expr, etc.
@@ -55,7 +54,8 @@ UNQUOTEH 		:	',' (' ' | '\t');  // unquote-splicing + horizontal space
 
 fragment FF :	 '\f'; // Formfeed 
 fragment VT :	'\u000b';  // Vertical tab (\v).  Take that, http://prog21.dadgum.com/76.html
-fragment EOL_CHAR : '\n' | '\r' | FF | VT;
+fragment NEL:   '\u0085'; // Hi, IBM mainframes!
+fragment EOL_CHAR : '\n' | '\r' | FF | VT | NEL;
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
 
 LCOMMENT : 	 ';' NOT_EOL_CHAR* ;
@@ -86,7 +86,9 @@ SHARP_BANG_MARKER 	:	'#!' ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_
 // "Please use formfeed characters (control-L) to divide the program into pages at logical places
 // (but not within a function). It does not matter just how long the pages are, since they do not
 // have to fit on a printed page. The formfeeds should appear alone on lines by themselves."
-fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'?);
+// Thus, FF and VT are supported, but they must be at the beginning of a line and do not themselves
+// create a newline (they still have to be followed by an EOL_SEQUENCE).
+fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
 fragment BLANK_LINE 
 	:	 (' ' | '\t')* ';' NOT_EOL_CHAR* | (FF | VT)+ ;
 EOL 	:	 (FF | VT)* EOL_SEQUENCE
