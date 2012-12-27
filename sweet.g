@@ -212,8 +212,11 @@ rest 	: PERIOD hspace+ n_expr hspace* /* improper list.  Error if n_expr at this
 	| scomment hspace* rest?
 	| n_expr (hspace+ rest?)?;
 
+restart_contents 
+	:	 i_expr (comment_eol+ restart_contents?)? ;
+
 restart_list 
-	:	RESTART hspace* comment_eol? (i_expr comment_eol)+ hspace* RESTART_END hspace*;
+	:	RESTART hspace* comment_eol* restart_contents? RESTART_END hspace*;
 
 // body handles the sequence of 1+ child lines in an i_expr (e.g., after a "head").
 // Note that DEDENT can't happen immediately after i_expr, because i_expr would consume it.
