@@ -134,8 +134,9 @@ fragment ESC_SEQ
     ;
 
 STRING:  '\"' ( ESC_SEQ | ~('\"'|'\\') ) '\"' ;
+CHAR	:	'#' '\\' ('!'..'@' | '['..'`' | '{'..'~' | ('A'..'Z' | 'a'..'z')+);
 
-atom 	:	 NAME | INT | FLOAT | STRING;
+atom 	:	 NAME | INT | FLOAT | STRING | CHAR;
 
 list_contents 
 	:	 atom (wspace+ list_contents)?
