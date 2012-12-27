@@ -128,9 +128,9 @@ fragment ESC_SEQ
     |   OCTAL_ESC
     ;
 
-CHAR:  '\'' ( ESC_SEQ | ~('\''|'\\') ) '\'' ;
+STRING:  '\"' ( ESC_SEQ | ~('\"'|'\\') ) '\"' ;
 
-atom 	:	 NAME | INT | FLOAT | CHAR;
+atom 	:	 NAME | INT | FLOAT | STRING;
 
 list_contents 
 	:	 atom (wspace+ list_contents)?
