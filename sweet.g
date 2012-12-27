@@ -114,7 +114,6 @@ UNQUOTE_SPLICE 		:	',' '@';
 UNQUOTE 		:	',';
 
 
-
 // STUBS: These are bogus stubs for s-expressions, INDENT, DEDENT, etc.
 INDENT 	:	'>' ' '*;
 DEDENT 	:	'<' ' '*;
@@ -203,7 +202,8 @@ comment_eol : LCOMMENT? EOL;
 // if the n-expression is special (e.g., //, $, #!...!#, abbreviation + hspace)
 // and have it return a distinct value if it is.
 
-head 	:	n_expr_first (hspace+ rest?)?;
+head 	:	n_expr_first (hspace+ rest?)?
+	|	PERIOD (hspace+ n_expr hspace* /* error if n_expr here */)? ;
 
 // The "rest" production reads the rest of the expressions on a line ("rest of the head"),
 // after the first expression of the line.
@@ -221,6 +221,8 @@ rest 	: PERIOD hspace+ n_expr hspace* /* improper list.  Error if n_expr at this
 restart_contents 
 	:	 i_expr (comment_eol+ restart_contents?)? ;
 
+// Restarts.  In a non-tokenizing system, reading RESTART_END will set the current indent,
+// causing dedents all the way back to here.
 restart_list 
 	:	RESTART hspace* comment_eol* restart_contents? RESTART_END hspace*;
 
