@@ -22,6 +22,10 @@
 // Actions are expressed as /*= ...Scheme code... */
 
 // TODO:
+// - Fix up splice, perhaps by putting its rules in body.
+// - Ensure that at top level, "a \\ b c" produces "a" then "(b c)",
+//   not "a", "b", "c".  Thus, must read hspace* after \\.  Easy way would be
+//   to add (' ' | '\t')* to end of GROUP, to force consumption early.
 // - (Maybe) Define n-expr, etc.
 // - (Maybe) Handle EOF in weird places.
 
@@ -211,7 +215,8 @@ scomment:	BLOCK_COMMENT | DATUM_COMMENT_START hspace* n_expr | sharp_bang_commen
 comment_eol : LCOMMENT? EOL;
 
 // The "head" is the production for 1+ n-expressions on one line; it will
-// return the list of n-expressions on the line.
+// return the list of n-expressions on the line.  If there is one one, it returns
+// a list of exactly one item; this makes it easy to append to later (if appropriate).
 // It never reads beyond the current line (except within a block comment),
 // so it doesn't need to keep track of indentation and indentation will NOT change within
 // head; callers can depend on this.
@@ -287,10 +292,10 @@ restart_list
 // that will end this i-expr (because it won't match INDENT),
 // returning to a higher-level production.
 
-i_expr : head (splice hspace*
+i_expr : head (splice hspace* // TODO: splice
                 (i_expr /*= (list (monify $head) $i_expr) */
                 | comment_eol
-                  (INDENT body
+                  (INDENT body /*= (list (monify $head) $i_expr) */
                   | empty
                     /*= (monify $head) */))
               | DOLLAR hspace* (i_expr | comment_eol (INDENT body)?)
