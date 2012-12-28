@@ -52,10 +52,11 @@ RESERVED_TRIPLE :	 '$$$';  // Reserved for future use.
 RESTART :	'<\*';
 RESTART_END:	'\*>';
 
-APOSH 			:	'\'' (' ' | '\t');  // Apostrophe + horizontal space
-QUASIQUOTEH 		:	'\`' (' ' | '\t');  // Quasiquote + horizontal space
-UNQUOTE_SPLICEH 	:	',' '@' (' ' | '\t');  // unquote-splicing + horizontal space
-UNQUOTEH 		:	',' (' ' | '\t');  // unquote-splicing + horizontal space
+// Abbreviations followed by horizontal space (space or tab) are special:
+APOSH 			:	'\'' (' ' | '\t') /*= 'quote */ ;
+QUASIQUOTEH 		:	'\`' (' ' | '\t')  /*= 'quasiquote */ ;
+UNQUOTE_SPLICEH 	:	',' '@' (' ' | '\t')  /*= 'unquote-splicing */ ;
+UNQUOTEH 		:	',' (' ' | '\t') /*= 'unquote */ ;
 
 fragment FF :	 '\f'; // Formfeed 
 fragment VT :	'\u000b';  // Vertical tab (\v).  Take that, http://prog21.dadgum.com/76.html
