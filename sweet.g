@@ -21,10 +21,8 @@
 
 // TODO:
 // - Add actions
-// - Note/generate errors, e.g., illegal indents, initial "!"
 // - (Maybe) Define n-expr, etc.
 // - (Maybe) Handle EOF in weird places.
-// -  Check that it works for improper lists, etc.
 
 // Uses:
 // ; Given pair, return its car if cdr is null, else the pair.
@@ -258,14 +256,19 @@ body 	:	 i_expr (SAME body /*=> (cons $i_expr $body) */
 
 
 restart_contents 
-	:	 i_expr
-	         (comment_eol+ (restart_contents | empty)
-	         | empty) ;
+	: SAME? i_expr
+	   (comment_eol+
+	     (restart_contents /*=> (cons $i_expr restart_contents) */
+	     | empty /*=> (list $i_expr) */)
+	   | empty   /*=> (list $i_expr) */)
+	  | INDENT /*=> (read_error "Bad indent inside restart list") */ ;
 
 // Restarts.  In a non-tokenizing system, reading RESTART_END will set the current indent,
 // causing dedents all the way back to here.
 restart_list 
-	: RESTART hspace* comment_eol* (restart_contents | empty)
+	: RESTART hspace* /*=> (push_indent "") */ comment_eol*
+	  (restart_contents /*=> $restart_contents */
+	  | empty /*=> '() */ )
 	  RESTART_END hspace*;
 
 // "i-expr" (indented sweet expressions expressions)
