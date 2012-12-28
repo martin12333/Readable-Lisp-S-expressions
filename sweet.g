@@ -288,7 +288,7 @@ restart_list
 // returning to a higher-level production.
 
 i_expr : head (splice hspace*
-                (i_expr
+                (i_expr /*= (list (monify $head) $i_expr) */
                 | comment_eol
                   (INDENT body
                   | empty
@@ -297,18 +297,20 @@ i_expr : head (splice hspace*
               | restart_list (i_expr | comment_eol (INDENT body)?)
               | comment_eol // Normal case, handle child lines if any:
                 (INDENT body /*= (append $head $body) */
-                | empty      /*= (monify $head) */ ))
+                | empty      /*= (monify $head) */ /* No child lines */))
          | (GROUP | scomment) hspace*
              (i_expr /*= $i_expr */ /* stuff afterward - ignore GROUP/scomment */
              | comment_eol
                (INDENT body /*= $body */  /* Normal use for GROUP */
                | SAME i_expr /*= $i_expr */  /* Plausible separator */
                | DEDENT error /*= (read_error "Dedent not allowed after group or special comment") */ ))
-         | DOLLAR hspace*(i_expr | comment_eol INDENT body)
+         | DOLLAR hspace*(i_expr /*= (list $i_expr) */ | comment_eol INDENT body /*= (list $body) */ )
 	 | restart_list (i_expr | comment_eol (INDENT body)?)
          | abbrevh hspace*
            (i_expr /*= (list $abbrevh $i_expr) */
-           | comment_eol INDENT body)
+           | (comment_eol
+               (INDENT body /*= (list $abbrevh $i_expr) */ )
+               | (SAME | DEDENT) error))
          ;
 
 // Top-level sweet-expression production; handle special cases, or drop to i_expr
