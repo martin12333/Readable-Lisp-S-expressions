@@ -26,12 +26,18 @@
 // - (Maybe) Handle EOF in weird places.
 // -  Check that it works for improper lists, etc.
 
-
+// Uses:
+// ; Given pair, return its car if cdr is null, else the pair.
+// ; Note that if x is improper, it just returns x.
+// (define (monify x)
+//   (if (null? (cdr x))
+//     (car x)
+//     x)
 
 grammar sweet;
 
 options {
-  k = 1;
+  k = 1;  // This grammar is LL(1).
 }
 // Simple demo grammar.
 
@@ -116,8 +122,12 @@ QUASIQUOTE 		:	'\`';
 UNQUOTE_SPLICE 		:	',' '@';
 UNQUOTE 		:	',';
 
+empty 	: ;  // Use this to emphasize empty branches
+
+
 
 // STUBS: These are bogus stubs for s-expressions, INDENT, DEDENT, etc.
+// REMOVE THESE STUBS from a formal BNF for SRFI, etc.
 INDENT 	:	'>' ' '*;
 DEDENT 	:	'<' ' '*;
 SAME 	:	'|' ' '*;
@@ -153,7 +163,7 @@ atom 	:	 NAME | INT | FLOAT | STRING | CHAR;
 
 list_contents 
 	:	 atom (wspace+ list_contents)?
-	| ; // empty
+	| empty ;
 
 n_expr_tail 
 	:	 (LPAREN list_contents RPAREN | LBRACE list_contents RBRACE |
@@ -162,8 +172,6 @@ n_expr_noabbrev
 	:	 (atom | LPAREN list_contents RPAREN
 		   | LBRACE list_contents RBRACE | LBRACKET list_contents RBRACKET)
 		 (options {greedy=true;} : n_expr_tail)*;
-n_expr :	 abbrev_all* n_expr_noabbrev;
-n_expr_first:	 abbrev_noh* n_expr_noabbrev;
 
 // END STUBS
 
@@ -174,6 +182,11 @@ abbrev_noh		: APOS | QUASIQUOTE | UNQUOTE_SPLICE | UNQUOTE ;
 abbrev_all		: abbrevh | abbrev_noh;
 splice 	:	GROUP;  // Use this synonym to make its purpose clearer.
 sublist :	DOLLAR; // Use this synonym to make its purpose clearer.
+
+// n_expr is a full neoteric-expression
+n_expr :	 abbrev_all* n_expr_noabbrev;
+// n_expr_first is a neoteric-expression, but abbreviations cannot have an hspace afterwards
+n_expr_first:	 abbrev_noh* n_expr_noabbrev;
 
 // Whitespace & indentation names
 ichar   : SPACE | TAB | BANG ; // indent char
@@ -205,8 +218,11 @@ comment_eol : LCOMMENT? EOL;
 // if the n-expression is special (e.g., //, $, #!...!#, abbreviation + hspace)
 // and have it return a distinct value if it is.
 
-head 	:	n_expr_first (hspace+ rest?)?
-	|	PERIOD (hspace+ n_expr hspace* /* error if n_expr here */)? ;
+head 	:	n_expr_first
+                  ((hspace+ (rest /*=> (cons $n_expr_first rest) */
+                             | empty /*=> (list $n_expr_first) */))
+                   | empty /*=> (list $n_expr_first) */)
+	|	PERIOD (hspace+ n_expr hspace* /*=> $n_expr */ /* error if n_expr here */)? ;
 
 // The "rest" production reads the rest of the expressions on a line ("rest of the head"),
 // after the first expression of the line.
@@ -217,9 +233,15 @@ head 	:	n_expr_first (hspace+ rest?)?
 // block comments and datum comments that don't begin a line (after indent) are consumed,
 // and abbreviations followed by a space merely apply to the next n-expression (not to the entire
 // indented expression).
-rest 	: PERIOD hspace+ n_expr hspace* /* improper list.  Error if n_expr at this point */
-	| scomment hspace* rest?
-	| n_expr (hspace+ rest?)?;
+rest 	: PERIOD hspace+ n_expr hspace* /* improper list. */
+          /*=> $n_expr */
+          /*  Error if n_expr at this point */
+	| scomment hspace* (rest /*=> $rest */
+	                   | empty /*=> '() */)
+	| n_expr
+	    ((hspace+ (rest /*=> (cons $n_expr) */
+                       | empty /*=> (list $n_expr) */))
+              | empty /*=> (list $n_expr) */) ;
 
 
 // "body" handles the sequence of 1+ child lines in an i_expr (e.g., after a "head"),
@@ -231,7 +253,8 @@ rest 	: PERIOD hspace+ n_expr hspace* /* improper list.  Error if n_expr at this
 // Note also that i-expr may set the the current indent to a different value
 // than the indent used on entry to body; the latest indent is compared by
 // the special terminals DEDENT, SAME, and BADDENT.
-body 	:	 i_expr (SAME body | DEDENT);
+body 	:	 i_expr (SAME body /*=> (cons $i_expr $body) */
+                        | DEDENT   /*=> (list $1) */ );
 
 
 restart_contents 
@@ -240,7 +263,8 @@ restart_contents
 // Restarts.  In a non-tokenizing system, reading RESTART_END will set the current indent,
 // causing dedents all the way back to here.
 restart_list 
-	:	RESTART hspace* comment_eol* restart_contents? RESTART_END hspace*;
+	: RESTART hspace* comment_eol* restart_contents?
+	  RESTART_END hspace*;
 
 // "i-expr" (indented sweet expressions expressions)
 // is the main production for sweet-expressions in the usual case.
@@ -251,20 +275,28 @@ restart_list
 // that will end this i-expr (because it won't match INDENT),
 // returning to a higher-level production.
 
-i_expr : head ( splice hspace* (i_expr | comment_eol (INDENT body)?)
+i_expr : head (splice hspace*
+                (i_expr
+                | comment_eol
+                  (INDENT body
+                  | empty
+                    /*=> (monify $head) */))
               | DOLLAR hspace* (i_expr | comment_eol (INDENT body)?)
               | restart_list (i_expr | comment_eol (INDENT body)?)
               | comment_eol // Normal case, handle child lines if any:
                 (INDENT body /*=> (append $head $body) */
-                | /*empty*/
+                | empty
                   /*=> ; Check if singleton, but handle improper lists
-                  (if (null? (cdr $head)) (car $head) $head) */ ))
+                  (monify $head) */ ))
          | (GROUP | scomment) hspace*
-             (i_expr /* skip */
-              | comment_eol (INDENT body | SAME i_expr | DEDENT /* error */ ))
+             (i_expr /*=> $i_expr */ /* stuff afterward - ignore GROUP/scomment */
+             | comment_eol
+               (INDENT body /*=> $body */  /* Normal use for GROUP */
+               | SAME i_expr /*=> $i_expr */  /* Plausible separator */
+               | DEDENT /*=> (read_error "Dedent not allowed after group or special comment") */))
          | DOLLAR hspace* (i_expr | comment_eol INDENT body)
 	 | restart_list (i_expr | comment_eol (INDENT body)?)
-         | abbrevh hspace* i_expr;
+         | abbrevh hspace* i_expr /*=> (list $abbrevh $i_expr) */;
 
 // Top-level sweet-expression production; handle special cases, or drop to i_expr
 // in normal case.
