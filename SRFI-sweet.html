@@ -268,19 +268,31 @@ Sweet-expression rule clarifications:
 <li>You can indent using one or more of the indent characters,
 which are space, tab, and exclamation point (!).</li>
 <li>An unescaped &#8220;;&#8221; not in a string (still) introduces comments
-that end at the end of the line or file.</li>
+that end at the end of the line.</li>
 <li>Lines with only a ;-comment (preceded by 0 or more indent characters)
 are completely ignored - even their indentation (if any) is irrelevant.</li>
 <li>A line with only indentation is an empty line.</li>
 <li>An expression that starts indented enables &#8220;indented-compatibility&#8221; mode,
 where indentation is completely ignored.
 Instead, a sequence of white-space separated neoteric-expressions is read
-until the first end of line or end of file.</li>
+until the first end of line.</li>
 <li>Scheme&#8217;s #; datum comment comments out the next neoteric expression,
 not the next sweet expression.</li>
 <li>Block comments (<samp>#|</samp>...<samp>|#</samp>) are removed, but if it
 begins immediately after the indent (if any),
 the indentation at the beginning of the block comment is used.
+</li>
+<li>
+Sweet-expression readers MUST permit end-of-line sequences
+newline (optionally followed by carriage return) as well as
+carriage return (optionally followed by newline).
+They <i>SHOULD</i> support NEL as an end-of-line sequence, and
+<i>SHOULD</i> support lines with only formfeed and vertical tabs as
+empty lines.
+</li>
+<li>
+Non-empty files <i>MUST</i> end with an unescaped end-of-line sequence
+(before the end-of-file marker).
 </li>
 </ol>
 
@@ -369,8 +381,7 @@ when they are not currently reading an expression (e.g., no expression has
 been read, or the last expression read has been completed with a blank line).
 Such a tool <em>SHOULD</em>
 (when outside an expression) copy exactly
-any line beginning with semicolon followed by a whitespace,
-semicolon, or end-of-file.
+any line beginning with semicolon followed by a whitespace or semicolon.
 Such a tool <em>SHOULD</em>
 (when outside an expression) also
 copy lines beginning with &#8220;;#&#8221; or &#8220;;!&#8221;
@@ -1861,6 +1872,30 @@ For example, here&#8217;s a sweet-expression using scsh:
 
 
 <p>After discussion, sublist was accepted in July 2012.</p>
+
+<h2 id="eof">End-of-file (EOF) handling</h2>
+<p>
+Non-empty files must end with an end-of-line sequence, before any
+end-of-file (EOF) marker, to be valid sweet-expression files.
+This limitation greatly simplifies the
+specification and implementation of a sweet-expression reader,
+without limiting the data that sweet-expressions can represent.
+In practice, text editors normally create such files anyway, so
+the complications of handling files where EOF occurs before an
+end-of-line sequence are not worth handling.
+</p>
+<p>
+This requirement is not unique to sweet-expressions.
+For example, several versions of the C language standard say
+"A source file that is not empty shall end in a new-line character,
+which shall not be immediately preceded by a backslash character"
+(section 2.1.1.2 of the ANSI C 1989 standard and
+section 5.1.1.2 of the ISO C 1999 standard).
+</p>
+<p>
+Sweet-expression reader implementations are free to warn about files
+that fail to meet this requirement.
+</p>
 
 <h2 id="reserved">Reserved markers</h2>
 <p>
