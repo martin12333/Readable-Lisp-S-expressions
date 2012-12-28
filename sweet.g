@@ -303,10 +303,13 @@ i_expr : head (splice hspace*
              | comment_eol
                (INDENT body /*= $body */  /* Normal use for GROUP */
                | SAME i_expr /*= $i_expr */  /* Plausible separator */
-               | DEDENT error /*= (read_error "Dedent not allowed after group or special comment") */))
-         | DOLLAR hspace* (i_expr | comment_eol INDENT body)
+               | DEDENT error /*= (read_error "Dedent not allowed after group or special comment") */ ))
+         | DOLLAR hspace*(i_expr | comment_eol INDENT body)
 	 | restart_list (i_expr | comment_eol (INDENT body)?)
-         | abbrevh hspace* i_expr /*= (list $abbrevh $i_expr) */;
+         | abbrevh hspace*
+           (i_expr /*= (list $abbrevh $i_expr) */
+           | comment_eol INDENT body)
+         ;
 
 // Top-level sweet-expression production; handle special cases, or drop to i_expr
 // in normal case.
