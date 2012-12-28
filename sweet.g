@@ -294,9 +294,7 @@ i_expr : head (splice hspace*
               | restart_list (i_expr | comment_eol (INDENT body)?)
               | comment_eol // Normal case, handle child lines if any:
                 (INDENT body /*= (append $head $body) */
-                | empty
-                  /*= ; Check if singleton, but handle improper lists
-                  (monify $head) */ ))
+                | empty      /*= (monify $head) */ ))
          | (GROUP | scomment) hspace*
              (i_expr /*= $i_expr */ /* stuff afterward - ignore GROUP/scomment */
              | comment_eol
