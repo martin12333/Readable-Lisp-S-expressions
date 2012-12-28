@@ -258,12 +258,14 @@ body 	:	 i_expr (SAME body /*=> (cons $i_expr $body) */
 
 
 restart_contents 
-	:	 i_expr (comment_eol+ restart_contents?)? ;
+	:	 i_expr
+	         (comment_eol+ (restart_contents | empty)
+	         | empty) ;
 
 // Restarts.  In a non-tokenizing system, reading RESTART_END will set the current indent,
 // causing dedents all the way back to here.
 restart_list 
-	: RESTART hspace* comment_eol* restart_contents?
+	: RESTART hspace* comment_eol* (restart_contents | empty)
 	  RESTART_END hspace*;
 
 // "i-expr" (indented sweet expressions expressions)
