@@ -254,8 +254,11 @@ restart_list
 i_expr : head ( splice hspace* (i_expr | comment_eol (INDENT body)?)
               | DOLLAR hspace* (i_expr | comment_eol (INDENT body)?)
               | restart_list (i_expr | comment_eol (INDENT body)?)
-              | comment_eol (INDENT body)?
-              ) // child lines
+              | comment_eol // Normal case, handle child lines if any:
+                (INDENT body /*=> (append $head $body) */
+                | /*empty*/
+                  /*=> ; Check if singleton, but handle improper lists
+                  (if (null? (cdr $head)) (car $head) $head) */ ))
          | (GROUP | scomment) hspace*
              (i_expr /* skip */
               | comment_eol (INDENT body | SAME i_expr | DEDENT /* error */ ))
@@ -265,13 +268,13 @@ i_expr : head ( splice hspace* (i_expr | comment_eol (INDENT body)?)
 
 // Top-level sweet-expression production; handle special cases, or drop to i_expr
 // in normal case.
-t_expr 	: comment_eol t_expr {t_expr} /* Initial lcomment, try again */
-        | hspace+ (n_expr {n_expr} /* indent processing disabled */
-                   | comment_eol t_expr {t_expr} /* Indented lcomment, try again */
-                   | BANG {read_error("! Not allowed at top");} )
-        | BANG {read_error("! Not allowed at top");}
-        | EOF {EOF} /* End of file */
-        | i_expr {i_expr} /* Normal case */;
+t_expr 	: comment_eol t_expr /*=> $t_expr */ /* Initial lcomment, try again */
+        | hspace+ (n_expr /*=> $n_expr */ /* indent processing disabled */
+                   | comment_eol t_expr /*=> $t_expr */ /* Indented lcomment, try again */
+                   | BANG /*=> (read_error "! Not allowed at top") */ )
+        | BANG /*=> (read_error "! Not allowed at top") */
+        | EOF /*=> EOF */ /* End of file */
+        | i_expr /*=> $i_expr */ /* Normal case */;
 
 
 // Other ANTLR examples:
