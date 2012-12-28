@@ -301,7 +301,9 @@ i_expr : head (splice hspace* // TODO: splice
                   | empty ))
               | DOLLAR hspace*
                 (i_expr /*= (list (monify $head) $i_expr) */
-                | comment_eol (INDENT body | empty))
+                | comment_eol
+                  (INDENT body /*= (list $body) */
+                  | (SAME | DEDENT) error))
               | restart_list (i_expr | comment_eol (INDENT body)?)
               | comment_eol // Normal case, handle child lines if any:
                 (INDENT body /*= (append $head $body) */
