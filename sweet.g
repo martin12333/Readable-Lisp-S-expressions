@@ -121,6 +121,7 @@ UNQUOTE_SPLICE 		:	',' '@';
 UNQUOTE 		:	',';
 
 empty 	: ;  // Use this to emphasize empty branches
+error   : ;  // Use this to identify error branches, to quickly id them
 
 
 
@@ -216,11 +217,13 @@ comment_eol : LCOMMENT? EOL;
 // if the n-expression is special (e.g., //, $, #!...!#, abbreviation + hspace)
 // and have it return a distinct value if it is.
 
-head 	:	n_expr_first
-                  ((hspace+ (rest /*=> (cons $n_expr_first rest) */
-                             | empty /*=> (list $n_expr_first) */))
-                   | empty /*=> (list $n_expr_first) */)
-	|	PERIOD (hspace+ n_expr hspace* /*=> $n_expr */ /* error if n_expr here */)? ;
+head 	: n_expr_first
+           ((hspace+ (rest /*=> (cons $n_expr_first rest) */
+                     | empty /*=> (list $n_expr_first) */))
+            | empty /*=> (list $n_expr_first) */)
+	| PERIOD
+	   (hspace+ n_expr hspace* /*=> $n_expr */ (n_expr error)?
+	   | empty /*=> '. */) ;
 
 // The "rest" production reads the rest of the expressions on a line ("rest of the head"),
 // after the first expression of the line.
@@ -233,7 +236,7 @@ head 	:	n_expr_first
 // indented expression).
 rest 	: PERIOD hspace+ n_expr hspace* /* improper list. */
           /*=> $n_expr */
-          /*  Error if n_expr at this point */
+          (n_expr error)? /* Shouldn't have another n_expr! */
 	| scomment hspace* (rest /*=> $rest */
 	                   | empty /*=> '() */)
 	| n_expr
@@ -261,7 +264,7 @@ restart_contents
 	     (restart_contents /*=> (cons $i_expr restart_contents) */
 	     | empty /*=> (list $i_expr) */)
 	   | empty   /*=> (list $i_expr) */)
-	  | INDENT /*=> (read_error "Bad indent inside restart list") */ ;
+	  | INDENT error /*=> (read_error "Bad indent inside restart list") */ ;
 
 // Restarts.  In a non-tokenizing system, reading RESTART_END will set the current indent,
 // causing dedents all the way back to here.
@@ -298,7 +301,7 @@ i_expr : head (splice hspace*
              | comment_eol
                (INDENT body /*=> $body */  /* Normal use for GROUP */
                | SAME i_expr /*=> $i_expr */  /* Plausible separator */
-               | DEDENT /*=> (read_error "Dedent not allowed after group or special comment") */))
+               | DEDENT error /*=> (read_error "Dedent not allowed after group or special comment") */))
          | DOLLAR hspace* (i_expr | comment_eol INDENT body)
 	 | restart_list (i_expr | comment_eol (INDENT body)?)
          | abbrevh hspace* i_expr /*=> (list $abbrevh $i_expr) */;
@@ -308,8 +311,8 @@ i_expr : head (splice hspace*
 t_expr 	: comment_eol t_expr /*=> $t_expr */ /* Initial lcomment, try again */
         | hspace+ (n_expr /*=> $n_expr */ /* indent processing disabled */
                    | comment_eol t_expr /*=> $t_expr */ /* Indented lcomment, try again */
-                   | BANG /*=> (read_error "! Not allowed at top") */ )
-        | BANG /*=> (read_error "! Not allowed at top") */
+                   | BANG error /*=> (read_error "! Not allowed at top") */ )
+        | BANG error /*=> (read_error "! Not allowed at top") */
         | EOF /*=> EOF */ /* End of file */
         | i_expr /*=> $i_expr */ /* Normal case */;
 
