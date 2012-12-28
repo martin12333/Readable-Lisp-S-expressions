@@ -22,7 +22,9 @@
 // Actions are expressed as /*= ...Scheme code... */
 
 // TODO:
-// - Fix up splice, perhaps by putting its rules in body.
+// - Fix up splice, perhaps by putting its rules in body like spec-almkglor.txt.
+//   Syntactically it works below, but it's more challenging to create
+//   its actions as written below.
 // - Ensure that at top level, "a \\ b c" produces "a" then "(b c)",
 //   not "a", "b", "c".  Thus, must read hspace* after \\.  Easy way would be
 //   to add (' ' | '\t')* to end of GROUP, to force consumption early.
@@ -293,12 +295,13 @@ restart_list
 // returning to a higher-level production.
 
 i_expr : head (splice hspace* // TODO: splice
-                (i_expr /*= (list (monify $head) $i_expr) */
+                (i_expr
                 | comment_eol
-                  (INDENT body /*= (list (monify $head) $i_expr) */
-                  | empty
-                    /*= (monify $head) */))
-              | DOLLAR hspace* (i_expr | comment_eol (INDENT body)?)
+                  (INDENT body
+                  | empty ))
+              | DOLLAR hspace*
+                (i_expr /*= (list (monify $head) $i_expr) */
+                | comment_eol (INDENT body | empty))
               | restart_list (i_expr | comment_eol (INDENT body)?)
               | comment_eol // Normal case, handle child lines if any:
                 (INDENT body /*= (append $head $body) */
