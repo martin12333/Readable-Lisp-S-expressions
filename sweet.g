@@ -19,8 +19,9 @@
 //   >b c
 //   <
 
+// Actions are expressed as /*= ...Scheme code... */
+
 // TODO:
-// - Add actions
 // - (Maybe) Define n-expr, etc.
 // - (Maybe) Handle EOF in weird places.
 
@@ -218,12 +219,12 @@ comment_eol : LCOMMENT? EOL;
 // and have it return a distinct value if it is.
 
 head 	: n_expr_first
-           ((hspace+ (rest /*=> (cons $n_expr_first rest) */
-                     | empty /*=> (list $n_expr_first) */))
-            | empty /*=> (list $n_expr_first) */)
+           ((hspace+ (rest /*= (cons $n_expr_first rest) */
+                     | empty /*= (list $n_expr_first) */))
+            | empty /*= (list $n_expr_first) */)
 	| PERIOD
-	   (hspace+ n_expr hspace* /*=> $n_expr */ (n_expr error)?
-	   | empty /*=> '. */) ;
+	   (hspace+ n_expr hspace* /*= $n_expr */ (n_expr error)?
+	   | empty /*= '. */ ) ;
 
 // The "rest" production reads the rest of the expressions on a line ("rest of the head"),
 // after the first expression of the line.
@@ -235,14 +236,14 @@ head 	: n_expr_first
 // and abbreviations followed by a space merely apply to the next n-expression (not to the entire
 // indented expression).
 rest 	: PERIOD hspace+ n_expr hspace* /* improper list. */
-          /*=> $n_expr */
+          /*= $n_expr */
           (n_expr error)? /* Shouldn't have another n_expr! */
-	| scomment hspace* (rest /*=> $rest */
-	                   | empty /*=> '() */)
+	| scomment hspace* (rest /*= $rest */
+	                   | empty /*= '() */)
 	| n_expr
-	    ((hspace+ (rest /*=> (cons $n_expr) */
-                       | empty /*=> (list $n_expr) */))
-              | empty /*=> (list $n_expr) */) ;
+	    ((hspace+ (rest /*= (cons $n_expr) */
+                       | empty /*= (list $n_expr) */))
+              | empty /*= (list $n_expr) */) ;
 
 
 // "body" handles the sequence of 1+ child lines in an i_expr (e.g., after a "head"),
@@ -254,24 +255,24 @@ rest 	: PERIOD hspace+ n_expr hspace* /* improper list. */
 // Note also that i-expr may set the the current indent to a different value
 // than the indent used on entry to body; the latest indent is compared by
 // the special terminals DEDENT, SAME, and BADDENT.
-body 	:	 i_expr (SAME body /*=> (cons $i_expr $body) */
-                        | DEDENT   /*=> (list $1) */ );
+body 	:	 i_expr (SAME body /*= (cons $i_expr $body) */
+                        | DEDENT   /*= (list $1) */ );
 
 
 restart_contents 
 	: SAME? i_expr
 	   (comment_eol+
-	     (restart_contents /*=> (cons $i_expr restart_contents) */
-	     | empty /*=> (list $i_expr) */)
-	   | empty   /*=> (list $i_expr) */)
-	  | INDENT error /*=> (read_error "Bad indent inside restart list") */ ;
+	     (restart_contents /*= (cons $i_expr restart_contents) */
+	     | empty /*= (list $i_expr) */)
+	   | empty   /*= (list $i_expr) */)
+	  | INDENT error /*= (read_error "Bad indent inside restart list") */ ;
 
 // Restarts.  In a non-tokenizing system, reading RESTART_END will set the current indent,
 // causing dedents all the way back to here.
 restart_list 
-	: RESTART hspace* /*=> (push_indent "") */ comment_eol*
-	  (restart_contents /*=> $restart_contents */
-	  | empty /*=> '() */ )
+	: RESTART hspace* /*= (push_indent "") */ comment_eol*
+	  (restart_contents /*= $restart_contents */
+	  | empty /*= '() */ )
 	  RESTART_END hspace*;
 
 // "i-expr" (indented sweet expressions expressions)
@@ -288,33 +289,33 @@ i_expr : head (splice hspace*
                 | comment_eol
                   (INDENT body
                   | empty
-                    /*=> (monify $head) */))
+                    /*= (monify $head) */))
               | DOLLAR hspace* (i_expr | comment_eol (INDENT body)?)
               | restart_list (i_expr | comment_eol (INDENT body)?)
               | comment_eol // Normal case, handle child lines if any:
-                (INDENT body /*=> (append $head $body) */
+                (INDENT body /*= (append $head $body) */
                 | empty
-                  /*=> ; Check if singleton, but handle improper lists
+                  /*= ; Check if singleton, but handle improper lists
                   (monify $head) */ ))
          | (GROUP | scomment) hspace*
-             (i_expr /*=> $i_expr */ /* stuff afterward - ignore GROUP/scomment */
+             (i_expr /*= $i_expr */ /* stuff afterward - ignore GROUP/scomment */
              | comment_eol
-               (INDENT body /*=> $body */  /* Normal use for GROUP */
-               | SAME i_expr /*=> $i_expr */  /* Plausible separator */
-               | DEDENT error /*=> (read_error "Dedent not allowed after group or special comment") */))
+               (INDENT body /*= $body */  /* Normal use for GROUP */
+               | SAME i_expr /*= $i_expr */  /* Plausible separator */
+               | DEDENT error /*= (read_error "Dedent not allowed after group or special comment") */))
          | DOLLAR hspace* (i_expr | comment_eol INDENT body)
 	 | restart_list (i_expr | comment_eol (INDENT body)?)
-         | abbrevh hspace* i_expr /*=> (list $abbrevh $i_expr) */;
+         | abbrevh hspace* i_expr /*= (list $abbrevh $i_expr) */;
 
 // Top-level sweet-expression production; handle special cases, or drop to i_expr
 // in normal case.
-t_expr 	: comment_eol t_expr /*=> $t_expr */ /* Initial lcomment, try again */
-        | hspace+ (n_expr /*=> $n_expr */ /* indent processing disabled */
-                   | comment_eol t_expr /*=> $t_expr */ /* Indented lcomment, try again */
-                   | BANG error /*=> (read_error "! Not allowed at top") */ )
-        | BANG error /*=> (read_error "! Not allowed at top") */
-        | EOF /*=> EOF */ /* End of file */
-        | i_expr /*=> $i_expr */ /* Normal case */;
+t_expr 	: comment_eol t_expr /*= $t_expr */ /* Initial lcomment, try again */
+        | hspace+ (n_expr /*= $n_expr */ /* indent processing disabled */
+                   | comment_eol t_expr /*= $t_expr */ /* Indented lcomment, try again */
+                   | BANG error /*= (read_error "! Not allowed at top") */ )
+        | BANG error /*= (read_error "! Not allowed at top") */
+        | EOF /*= EOF */ /* End of file */
+        | i_expr /*= $i_expr */ /* Normal case */;
 
 
 // Other ANTLR examples:
