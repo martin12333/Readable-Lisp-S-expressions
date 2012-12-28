@@ -53,18 +53,19 @@ RESTART :	'<\*';
 RESTART_END:	'\*>';
 
 // Abbreviations followed by horizontal space (space or tab) are special:
-APOSH 			:	'\'' (' ' | '\t') /*= 'quote */ ;
-QUASIQUOTEH 		:	'\`' (' ' | '\t')  /*= 'quasiquote */ ;
-UNQUOTE_SPLICEH 	:	',' '@' (' ' | '\t')  /*= 'unquote-splicing */ ;
-UNQUOTEH 		:	',' (' ' | '\t') /*= 'unquote */ ;
+APOSH           : '\'' (' ' | '\t') ;
+QUASIQUOTEH     : '\`' (' ' | '\t') ;
+UNQUOTE_SPLICEH : ',' '@' (' ' | '\t') ;
+UNQUOTEH        : ',' (' ' | '\t') ;
 
+// End-of-line and comment handling:
 fragment FF :	 '\f'; // Formfeed 
 fragment VT :	'\u000b';  // Vertical tab (\v).  Take that, http://prog21.dadgum.com/76.html
 fragment NEL:   '\u0085'; // Hi, IBM mainframes!
 fragment EOL_CHAR : '\n' | '\r' | FF | VT | NEL;
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
 
-LCOMMENT : 	 ';' NOT_EOL_CHAR* ;
+LCOMMENT : 	 ';' NOT_EOL_CHAR* ; // "Line comment"
 
 BLOCK_COMMENT   // #| ... #|
     :   '#|'
@@ -176,9 +177,10 @@ n_expr_noabbrev
 
 // END STUBS
 
-
-
-abbrevh 		:	APOSH | QUASIQUOTEH | UNQUOTE_SPLICEH | UNQUOTEH;
+abbrevh : APOSH /*= 'quote */
+        | QUASIQUOTEH /*= 'quasiquote */
+        | UNQUOTE_SPLICEH /*= 'unquote-splicing */
+        | UNQUOTEH /*= 'unquote */;
 abbrev_noh		: APOS | QUASIQUOTE | UNQUOTE_SPLICE | UNQUOTE ;
 abbrev_all		: abbrevh | abbrev_noh;
 splice 	:	GROUP;  // Use this synonym to make its purpose clearer.
