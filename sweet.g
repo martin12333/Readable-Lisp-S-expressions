@@ -6,7 +6,7 @@
 
 // This BNF presumes there's a preprocessor that
 // does indent processing, so while indent processing is on, indents are
-// marked with INDENT, dedents with DEDENT (one for each dedent), or SAME, and
+// marked with INDENT, dedents with DEDENT (one for each dedent), and
 // totally-blank lines have their indentation consumed (and DEDENTs generated).
 // In input, use > for indent, < for dedent, | for same.
 // Thus, a valid input would be:
@@ -92,7 +92,7 @@ SHARP_BANG_FILE	:	'#!' ('/' | '.')
 SHARP_BANG_MARKER 	:	'#!' ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'-')*;
 
 // EOL is extremely special.  After reading it, we'll need to read in any following
-// indent characters (if indent processing is active) to determine INDENT/SAME/DEDENT.
+// indent characters (if indent processing is active) to determine INDENT/DEDENT.
 // As part of tokenizing, we'll consume any following lines that are ;-only lines.
 
 // Support GNU Coding Standards (http://www.gnu.org/prep/standards/standards.html):
@@ -131,6 +131,7 @@ UNQUOTE 		:	',';
 
 empty 	: ;  // Use this to emphasize empty branches
 error   : ;  // Use this to identify error branches, to quickly id them
+same 	: ;  // Use this to emphasize neither indent nor dedent.
 
 
 
@@ -138,9 +139,9 @@ error   : ;  // Use this to identify error branches, to quickly id them
 // REMOVE THESE STUBS from a formal BNF for SRFI, etc.
 INDENT 	:	'>' ' '*;
 DEDENT 	:	'<' ' '*;
-SAME 	:	'|' ' '*;
+
 // The following is intentionally limited.  In particular, it doesn't include
-// the characters used for INDENT/DEDENT/SAME.
+// the characters used for INDENT/DEDENT.
 NAME  :	('a'..'z'|'A'..'Z'|'_'|'\\') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'\\')* ;
 fragment EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
 FLOAT
@@ -209,7 +210,7 @@ sharp_bang_comments
 
 scomment:	BLOCK_COMMENT | DATUM_COMMENT_START hspace* n_expr | sharp_bang_comments;
 
-// indent 	: ichar*; // This is by definition ambiguous with INDENT/DEDENT/SAME/BADDENT
+// indent 	: ichar*; // This is by definition ambiguous with INDENT/DEDENT/BADDENT
 
 // Read in ;comment (if exists), followed by EOL.  EOL consumes
 // additional comment-only lines (if any).  On a non-tokenizing parser,
@@ -264,13 +265,13 @@ rest 	: PERIOD hspace+ n_expr hspace* /* improper list. */
 // content, as well as lines that just contain indents and comments).
 // Note also that i-expr may set the the current indent to a different value
 // than the indent used on entry to body; the latest indent is compared by
-// the special terminals DEDENT, SAME, and BADDENT.
-body 	:	 i_expr (SAME body /*= (cons $i_expr $body) */
+// the special terminals DEDENT and BADDENT.
+body 	:	 i_expr (same body /*= (cons $i_expr $body) */
                         | DEDENT   /*= (list $1) */ );
 
 
 restart_contents 
-	: SAME? i_expr
+	: i_expr
 	   (comment_eol+
 	     (restart_contents /*= (cons $i_expr restart_contents) */
 	     | empty /*= (list $i_expr) */)
@@ -303,7 +304,7 @@ i_expr : head (splice hspace* // TODO: splice
                 (i_expr /*= (list (monify $head) $i_expr) */
                 | comment_eol
                   (INDENT body /*= (list $body) */
-                  | (SAME | DEDENT) error))
+                  | DEDENT error))
               | restart_list
                 (i_expr
                 | comment_eol
@@ -316,7 +317,7 @@ i_expr : head (splice hspace* // TODO: splice
              (i_expr /*= $i_expr */ /* stuff afterward - ignore GROUP/scomment */
              | comment_eol
                (INDENT body /*= $body */  /* Normal use for GROUP */
-               | SAME i_expr /*= $i_expr */  /* Plausible separator */
+               | same i_expr /*= $i_expr */  /* Plausible separator */
                | DEDENT error /*= (read_error "Dedent not allowed after group or special comment") */ ))
          | DOLLAR hspace*(i_expr /*= (list $i_expr) */ | comment_eol INDENT body /*= (list $body) */ )
 	 | restart_list (i_expr | comment_eol (INDENT body)?)
@@ -324,7 +325,7 @@ i_expr : head (splice hspace* // TODO: splice
            (i_expr /*= (list $abbrevh $i_expr) */
            | (comment_eol
                (INDENT body /*= (list $abbrevh $i_expr) */ )
-               | (SAME | DEDENT) error))
+               | DEDENT error))
          ;
 
 // Top-level sweet-expression production; handle special cases, or drop to i_expr
