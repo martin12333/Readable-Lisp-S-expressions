@@ -184,6 +184,9 @@ n_expr_noabbrev
 		   | LBRACE list_contents RBRACE | LBRACKET list_contents RBRACKET)
 		 (options {greedy=true;} : n_expr_tail)*;
 
+indent 	: INDENT;
+dedent  : DEDENT;
+
 // END STUBS
 
 abbrevh : APOSH /*= 'quote */
@@ -269,7 +272,7 @@ rest 	: PERIOD hspace+ n_expr hspace* /* improper list. */
 // than the indent used on entry to body; the latest indent is compared by
 // the special terminals DEDENT and BADDENT.
 body 	:	 i_expr (same body /*= (cons $i_expr $body) */
-                        | DEDENT   /*= (list $1) */ );
+                        | dedent   /*= (list $1) */ );
 
 
 restart_contents 
@@ -278,7 +281,7 @@ restart_contents
 	     (restart_contents /*= (cons $i_expr restart_contents) */
 	     | empty /*= (list $i_expr) */)
 	   | empty   /*= (list $i_expr) */)
-	  | INDENT error /*= (read_error "Bad indent inside restart list") */ ;
+	  | indent error /*= (read_error "Bad indent inside restart list") */ ;
 
 // Restarts.  In a non-tokenizing system, reading RESTART_END will set the current indent,
 // causing dedents all the way back to here.
@@ -304,29 +307,29 @@ i_expr : head (splice hspace*
               | DOLLAR hspace*
                 (i_expr /*= (list (monify $head) $i_expr) */
                 | comment_eol
-                  (INDENT body /*= (list $body) */
-                  | DEDENT error))
+                  (indent body /*= (list $body) */
+                  | dedent error))
               | restart_list
                 (i_expr
                 | comment_eol
-                  (INDENT body
+                  (indent body
                   | empty))
               | comment_eol // Normal case, handle child lines if any:
-                (INDENT body /*= (append $head $body) */
+                (indent body /*= (append $head $body) */
                 | empty      /*= (monify $head) */ /* No child lines */))
          | (GROUP | scomment) hspace*
              (i_expr /*= $i_expr */ /* stuff afterward - ignore GROUP/scomment */
              | comment_eol
-               (INDENT body /*= $body */  /* Normal use for GROUP */
+               (indent body /*= $body */  /* Normal use for GROUP */
                | same i_expr /*= $i_expr */  /* Plausible separator */
-               | DEDENT error /*= (read_error "Dedent not allowed after group or special comment") */ ))
-         | DOLLAR hspace*(i_expr /*= (list $i_expr) */ | comment_eol INDENT body /*= (list $body) */ )
-	 | restart_list (i_expr | comment_eol (INDENT body)?)
+               | dedent error /*= (read_error "Dedent not allowed after group or special comment") */ ))
+         | DOLLAR hspace*(i_expr /*= (list $i_expr) */ | comment_eol indent body /*= (list $body) */ )
+	 | restart_list (i_expr | comment_eol (indent body)?)
          | abbrevh hspace*
            (i_expr /*= (list $abbrevh $i_expr) */
            | (comment_eol
-               (INDENT body /*= (list $abbrevh $i_expr) */ )
-               | DEDENT error))
+               (indent body /*= (list $abbrevh $i_expr) */ )
+               | dedent error))
          ;
 
 // Top-level sweet-expression production; handle special cases, or drop to i_expr
