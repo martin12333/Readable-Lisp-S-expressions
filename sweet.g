@@ -52,10 +52,11 @@ start   :        t_expr;
 
 // Lexer
 
-// Here are special interpretation for certain sequences.  Define these first, to give them
-// higher lexical precedence than other definitions.
-GROUP   :        '\\' '\\';
-DOLLAR  :       '$';  // A '$' by itself isn't an atom unless inside {}, (), or [].
+// Here are special interpretation for certain sequences.
+// Define these first, to give them higher lexical precedence
+// than other definitions.
+GROUP   :        '\\' '\\';      // GROUP and splice symbol.
+DOLLAR  :       '$';             // Not an atom unless inside {}, (), or [].
 RESERVED_TRIPLE_DOLLAR : '$$$';  // Reserved for future use.
 RESTART :       '<\*';
 RESTART_END:    '\*>';
@@ -66,81 +67,92 @@ QUASIQUOTEH     : '\`' (' ' | '\t') ;
 UNQUOTE_SPLICEH : ',' '@' (' ' | '\t') ;
 UNQUOTEH        : ',' (' ' | '\t') ;
 
-// End-of-line and comment handling:
+// Special end-of-line character definitions.
+// Specially handle formfeed (\f) and vertical tab (\v), even though
+// some argue against vertical tabs (http://prog21.dadgum.com/76.html):
 fragment FF :    '\f'; // Formfeed 
-fragment VT :   '\u000b';  // Vertical tab (\v).  Take that, http://prog21.dadgum.com/76.html
+fragment VT :   '\u000b';  // Vertical tab (\v).
 fragment NEL:   '\u0085'; // Hi, IBM mainframes!
-fragment EOL_CHAR : '\n' | '\r' | FF | VT | NEL;
+fragment EOL_CHAR : '\n' | '\r' | FF | VT | NEL; // These start EOL
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
 
+// Various forms of comments - line comments and special comments:
 LCOMMENT :       ';' NOT_EOL_CHAR* ; // "Line comment"
-
-BLOCK_COMMENT   // #| ... #|
-    :   '#|'
-        (options {greedy=false;} : (BLOCK_COMMENT | .))*
-        '|#' {$channel=HIDDEN;}
+BLOCK_COMMENT   // This is #| ... #|
+    : '#|'
+      (options {greedy=false;} : (BLOCK_COMMENT | .))*
+      '|#' {$channel=HIDDEN;}
     ;
-DATUM_COMMENT_START     :       '#;' ;
+DATUM_COMMENT_START : '#;' ;
 
-// SRFI-105 notes that "implementations could trivially support (simultaneously) markers
-// beginning with #! followed by a letter (such as the one to identify support for curly-infix-expressions),
+// SRFI-105 notes that "implementations could trivially support
+// (simultaneously) markers beginning with #! followed by a letter
+// (such as the one to identify support for curly-infix-expressions),
 // the SRFI-22 #!+space marker as an ignored line, and the
 // format #!/ ... !# and #!. ... !# as a multi-line comment."
+// We'll implement that approach for maximum flexibility.
 SRFI_22_COMMENT         :       '#! ' NOT_EOL_CHAR* ;
 SHARP_BANG_FILE :       '#!' ('/' | '.')
         (options {greedy=false;} : .)*
         '!#' {$channel=HIDDEN;} ;
-// The following matches #!fold-case , #!no-fold-case, #!sweet, and #!curly-infix.
-SHARP_BANG_MARKER       :       '#!' ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'-')*;
+// These match #!fold-case, #!no-fold-case, #!sweet, and #!curly-infix.
+SHARP_BANG_MARKER : '#!' ('a'..'z'|'A'..'Z'|'_')
+                         ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')*;
 
-// EOL is extremely special.  After reading it, we'll need to read in any following
-// indent characters (if indent processing is active) to determine INDENT/DEDENT.
-// As part of tokenizing, we'll consume any following lines that are ;-only lines.
 
-// Support GNU Coding Standards (http://www.gnu.org/prep/standards/standards.html):
-// "Please use formfeed characters (control-L) to divide the program into pages at logical places
-// (but not within a function). It does not matter just how long the pages are, since they do not
-// have to fit on a printed page. The formfeeds should appear alone on lines by themselves."
-// Thus, FF and VT are supported, but they must be at the beginning of a line and do not themselves
-// create a newline (they still have to be followed by an EOL_SEQUENCE).
+// End-of-line (EOL) is extremely special in sweet-expressions.
+// After reading it, we'll need to read in any following indent characters
+// (if indent processing is active) to determine if have an INDENT or DEDENTs.
+// As part of tokenizing, we'll consume any following lines that
+// are ;-only lines, and treat indent-only lines equivalent to blank lines.
+// We support lone formfeeds on a line to support the GNU Coding Standards
+// (http://www.gnu.org/prep/standards/standards.html), which says:
+// "Please use formfeed characters (control-L) to divide the program
+// into pages at logical places (but not within a function).
+// It does not matter just how long the pages are, since they do not
+// have to fit on a printed page. The formfeeds should appear alone on
+// lines by themselves."
+// Thus, FF and VT are supported, but they must be at the beginning
+// of a line and do not themselves create a newline (they still have
+// to be followed by an EOL_SEQUENCE).
 fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
 fragment BLANK_LINE 
         :        (' ' | '\t')* ';' NOT_EOL_CHAR* | (FF | VT)+ ;
 EOL     :        (FF | VT)* EOL_SEQUENCE
                  ( BLANK_LINE EOL_SEQUENCE)* ;
 
-// Do not reference '\n' or '\r' inside a non-lexing rule.  ANTLR will quietly create
-// lexical tokens for them if you do, and this will interfere with EOL processing.
-// E.G., don't do:
+// Do not reference '\n' or '\r' inside a non-lexing rule.
+// If you do, ANTLR will quietly create new lexical tokens for them, and
+// those new tokens will interfere with EOL processing. E.G., do NOT do this:
 //   eolchar : '\n' | '\r';
 
-// Simple character or two-character sequences
-SPACE   :       ' ';
-TAB     :       '\t';
-SHARP   :       '#';
-BANG    :       '!';
-PERIOD  :       '.';
-LPAREN  :       '(';
-RPAREN  :       ')';
-LBRACKET:       '[';
-RBRACKET:       ']';
-LBRACE  :       '{';
-RBRACE  :       '}';
-APOS                    :       '\'';
-QUASIQUOTE              :       '\`';
-UNQUOTE_SPLICE          :       ',' '@';
-UNQUOTE                 :       ',';
+// Simple character or two-character sequences:
+SPACE    : ' ';
+TAB      : '\t';
+SHARP    : '#';
+BANG     : '!';
+PERIOD   : '.';
+LPAREN   : '(';
+RPAREN   : ')';
+LBRACKET : '[';
+RBRACKET : ']';
+LBRACE   : '{';
+RBRACE   : '}';
+APOS           : '\'';
+QUASIQUOTE     : '\`';
+UNQUOTE_SPLICE : ',' '@';
+UNQUOTE        : ',';
 
-empty   : ;  // Use this to emphasize empty branches
-error   : ;  // Use this to identify error branches, to quickly id them
-same    : ;  // Use this to emphasize neither indent nor dedent.
+empty : ;  // Use this to emphasize empty production branches
+error : ;  // Use this to identify error branches, to quickly id them
+same  : ;  // Use this to emphasize neither indent nor dedent.
 
 
 
 // STUBS: These are bogus stubs for s-expressions, INDENT, DEDENT, etc.
 // REMOVE THESE STUBS from a formal BNF for SRFI, etc.
-INDENT  :       '>' ' '*;
-DEDENT  :       '<' ' '*;
+INDENT : '>' ' '*;
+DEDENT : '<' ' '*;
 
 // The following is intentionally limited.  In particular, it doesn't include
 // the characters used for INDENT/DEDENT.
@@ -167,26 +179,31 @@ fragment ESC_SEQ
     |   OCTAL_ESC
     ;
 
-STRING:  '\"' ( ESC_SEQ | ~('\"'|'\\') ) '\"' ;
-CHAR    :       '#' '\\' ('!'..'@' | '['..'`' | '{'..'~' | ('A'..'Z' | 'a'..'z')+);
+STRING : '\"' ( ESC_SEQ | ~('\"'|'\\') ) '\"' ;
+CHAR   : '#\\' ('!'..'@' | '['..'`' | '{'..'~' | ('A'..'Z' | 'a'..'z')+);
 
-atom    :        NAME | INT | FLOAT | STRING | CHAR;
+atom   : NAME | INT | FLOAT | STRING | CHAR;
 
 list_contents 
-        :        atom (wspace+ list_contents)?
-        | empty ;
+    : atom (wspace+ list_contents)? | empty ;
 
 n_expr_tail 
-        :        (LPAREN list_contents RPAREN | LBRACE list_contents RBRACE |
-                  LBRACKET list_contents RBRACKET);
+    : LPAREN   list_contents RPAREN
+    | LBRACE   list_contents RBRACE
+    | LBRACKET list_contents RBRACKET;
+
 n_expr_noabbrev 
-        :        (atom | LPAREN list_contents RPAREN
-                   | LBRACE list_contents RBRACE | LBRACKET list_contents RBRACKET)
-                 (options {greedy=true;} : n_expr_tail)*;
+    : (atom
+       | LPAREN list_contents RPAREN
+       | LBRACE list_contents RBRACE
+       | LBRACKET list_contents RBRACKET )
+      (options {greedy=true;} : n_expr_tail)*;
+
 // END STUBS
 
 
-// To simplify ANTLRWorks debugger parse tree use, redefine indent/dedent as nonterminals
+// Here we'll redefine indent/dedent as nonterminals, to make nicer results
+// in the ANTLRWorks debugger parse tree
 indent  : INDENT;
 dedent  : DEDENT;
 
@@ -194,64 +211,77 @@ abbrevh : APOSH /*= 'quote */
         | QUASIQUOTEH /*= 'quasiquote */
         | UNQUOTE_SPLICEH /*= 'unquote-splicing */
         | UNQUOTEH /*= 'unquote */;
-abbrev_noh              : APOS | QUASIQUOTE | UNQUOTE_SPLICE | UNQUOTE ;
-abbrev_all              : abbrevh | abbrev_noh;
-splice  :       GROUP;  // Use this synonym to make its purpose clearer.
-sublist :       DOLLAR; // Use this synonym to make its purpose clearer.
+abbrev_noh : APOS | QUASIQUOTE | UNQUOTE_SPLICE | UNQUOTE ;
+abbrev_all : abbrevh | abbrev_noh;
+splice     : GROUP;  // Use this synonym to make its purpose clearer.
+sublist    : DOLLAR; // Use this synonym to make its purpose clearer.
+
 
 // n_expr is a full neoteric-expression
 n_expr :         abbrev_all* n_expr_noabbrev;
-// n_expr_first is a neoteric-expression, but abbreviations cannot have an hspace afterwards
+// n_expr_first is a neoteric-expression, but abbreviations
+// cannot have an hspace afterwards:
 n_expr_first:    abbrev_noh* n_expr_noabbrev;
 
 // Whitespace & indentation names
-ichar   : SPACE | TAB | BANG ; // indent char
+ichar   : SPACE | TAB | BANG ; // indent char - creates INDENT/DEDENTs
 hspace  : SPACE | TAB ;        // horizontal space
 
 wspace  : hspace;  // or eolchars
 
 // Special comment - comment regions other than ";"
-sharp_bang_comments 
-        :       SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER;
+sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER;
 
-scomment:       BLOCK_COMMENT | DATUM_COMMENT_START hspace* n_expr | sharp_bang_comments;
-
-// indent       : ichar*; // This is by definition ambiguous with INDENT/DEDENT/BADDENT
+scomment : BLOCK_COMMENT
+         | DATUM_COMMENT_START hspace* n_expr
+         | sharp_bang_comments;
 
 // Read in ;comment (if exists), followed by EOL.  EOL consumes
 // additional comment-only lines (if any).  On a non-tokenizing parser,
 // this may reset indent as part of EOL processing.
+
 comment_eol : LCOMMENT? EOL;
 
-// The "head" is the production for 1+ n-expressions on one line; it will
-// return the list of n-expressions on the line.  If there is one one, it returns
-// a list of exactly one item; this makes it easy to append to later (if appropriate).
-// It never reads beyond the current line (except within a block comment),
-// so it doesn't need to keep track of indentation and indentation will NOT change within
-// head; callers can depend on this.
-// On entry all indentation/hspace must have already been read.  On return it will have
-// consumed all hspace (spaces and tabs).
-// On a non-tokenizing recursive descent parser, have it also read and determine
-// if the n-expression is special (e.g., //, $, #!...!#, abbreviation + hspace)
-// and have it return a distinct value if it is.
 
-head    : n_expr_first
-           ((hspace+ (rest /*= (cons $n_expr_first rest) */
-                     | empty /*= (list $n_expr_first) */))
-            | empty /*= (list $n_expr_first) */)
+
+
+// The "head" is the production for 1+ n-expressions on one line; it will
+// return the list of n-expressions on the line.  If there is one n-expression
+// on the line, it returns a list of exactly one item; this makes it
+// easy to append to later (if appropriate).  In some cases, we want to
+// have single items as themselves (not a list); function monify does this.
+// The "head" production never reads beyond the current line
+// (except within a block comment), so it doesn't need to keep track
+// of indentation, and indentation will NOT change within head.
+// Callers can depend on "head" and "after" *not* changing indentation.
+// On entry, all indentation/hspace must have already been read.
+// On return, it will have consumed all hspace (spaces and tabs).
+// On a non-tokenizing recursive descent parser, the "head" and its callees
+// have to also read and determine if the n-expression is special
+// (e.g., //, $, #!...!#, abbreviation + hspace), and have it return a
+// distinct value if it is; head and friends operate a lot like a tokenizer
+// in that case.
+
+head    : n_expr_first (
+           (hspace+
+             (rest   /*= (cons $n_expr_first rest) */
+              |empty /*= (list $n_expr_first) */ ))
+            | empty  /*= (list $n_expr_first) */  )
         | PERIOD
            (hspace+ n_expr hspace* /*= $n_expr */ (n_expr error)?
-           | empty /*= '. */ ) ;
+           | empty /*= '. */ ) ;  // TODO: Handle PERIOD hspace+ non-expr
 
-// The "rest" production reads the rest of the expressions on a line ("rest of the head"),
-// after the first expression of the line.
+// The "rest" production reads the rest of the expressions on a line
+// (the "rest of the head"), after the first expression of the line.
 // Like head, it consumes any hspace before it returns.
-// "rest" is written this way so a non-tokenizing implementation can read an expression specially. E.G.,
-// if it sees a period, read the expression directly and then see if it's just a period.
-// Note that unlike the first head expression,
-// block comments and datum comments that don't begin a line (after indent) are consumed,
-// and abbreviations followed by a space merely apply to the next n-expression (not to the entire
-// indented expression).
+// The "rest" production is written this way so a non-tokenizing
+// implementation can read an expression specially. E.G., if it sees a period,
+// read the expression directly and then see if it's just a period.
+// Note that unlike the first head expression, block comments and
+// datum comments that don't begin a line (after indent) are consumed,
+// and abbreviations followed by a space merely apply to the
+// next n-expression (not to the entire indented expression).
+
 rest    : PERIOD hspace+ n_expr hspace* /* improper list. */
           /*= $n_expr */
           (n_expr error)? /* Shouldn't have another n_expr! */
@@ -263,15 +293,17 @@ rest    : PERIOD hspace+ n_expr hspace* /* improper list. */
               | empty /*= (list $n_expr) */) ;
 
 
-// "body" handles the sequence of 1+ child lines in an i_expr (e.g., after a "head"),
-// each of which is itself an i_expr.  Note that an i-expr will consume any line comments
-// or hspaces before it returns. 
+// "body" handles the sequence of 1+ child lines in an i_expr
+// (e.g., after a "head"), each of which is itself an i_expr.
+// Note that an i-expr will consume any line comments or hspaces
+// before it returns. 
 // Non-tokenizing implemenation notes:
 // Note that i_expr will consume any line comments (line comments after
 // content, as well as lines that just contain indents and comments).
 // Note also that i-expr may set the the current indent to a different value
 // than the indent used on entry to body; the latest indent is compared by
 // the special terminals DEDENT and BADDENT.
+
 body    :        i_expr (same body /*= (cons $i_expr $body) */
                         | dedent   /*= (list $1) */ );
 
@@ -284,8 +316,9 @@ restart_contents
            | empty   /*= (list $i_expr) */)
           | indent error /*= (read_error "Bad indent inside restart list") */ ;
 
-// Restarts.  In a non-tokenizing system, reading RESTART_END will set the current indent,
-// causing dedents all the way back to here.
+// Restarts, that is, <* ... *>.
+// In a non-tokenizing system, reading RESTART_END will set the
+// current indent, causing dedents all the way back to here.
 restart_list 
         : RESTART hspace* /*= (push_indent "") */ comment_eol*
           (restart_contents /*= $restart_contents */
@@ -303,44 +336,49 @@ restart_list
 
 i_expr : head (splice hspace*
                 (options {greedy=true;} :
-                 // TODO: Extension, allow \\ EOL to continue line.
+                 // TODO: This is an extension, allow \\ EOL to continue line.
                  // Should this be an error instead?
+                 // John Cowan recommends (Sat, 29 Dec 2012 13:18:18 -0500)
+                 // that we *not* do this, because it'd be confusing:
                  comment_eol same i_expr /*= (append $head $i_expr) */
                  // Normal case: splice ends i_expr immediately.
                  | empty /*= $head */ )
               | DOLLAR hspace*
                 (i_expr /*= (list (monify $head) $i_expr) */
-                | comment_eol
+                 | comment_eol
                   (indent body /*= (list $body) */
                   | dedent error))
               | restart_list
                 (i_expr
-                | comment_eol
+                 | comment_eol
                   (indent body
-                  | empty))
+                   | empty))
               | comment_eol // Normal case, handle child lines if any:
                 (indent body /*= (append $head $body) */
-                | empty      /*= (monify $head) */ /* No child lines */ ))
+                 | empty     /*= (monify $head) */ /* No child lines */ ))
          | (GROUP | scomment) hspace*
-             (i_expr /*= $i_expr */ /* stuff afterward - ignore GROUP/scomment */
+             (i_expr /*= $i_expr */ /* ignore the GROUP/scomment */
              | comment_eol
                (indent body /*= $body */  /* Normal use for GROUP */
-               | same i_expr /*= $i_expr */  /* Plausible separator */
-               | dedent error /*= (read_error "Dedent not allowed after group or special comment") */ ))
-         | DOLLAR hspace*(i_expr /*= (list $i_expr) */ | comment_eol indent body /*= (list $body) */ )
-         | restart_list (i_expr | comment_eol (indent body)?)
+                | same i_expr /*= $i_expr */  /* Plausible separator */
+                | dedent error ))
+         | DOLLAR hspace* (i_expr                    /*= (list $i_expr) */
+                           | comment_eol indent body /*= (list $body) */ )
+         | restart_list (i_expr | comment_eol (indent body)?) // TODO action
          | abbrevh hspace*
            (i_expr /*= (list $abbrevh $i_expr) */
            | (comment_eol
                (indent body /*= (list $abbrevh $i_expr) */ )
-               | dedent error))
+               | dedent error))  // TODO - check parens here
          ;
 
-// Top-level sweet-expression production; handle special cases, or drop to i_expr
-// in normal case.
+// Top-level sweet-expression production, t_expr.
+// This production handles special cases, then in the normal case
+// drops to the i_expr production.
+
 t_expr  : comment_eol t_expr /*= $t_expr */ /* Initial lcomment, try again */
         | hspace+ (n_expr /*= $n_expr */ /* indent processing disabled */
-                   | comment_eol t_expr /*= $t_expr */ /* Indented lcomment, try again */
+                   | comment_eol t_expr /*= $t_expr */ /* Indented lcomment */
                    | BANG error /*= (read_error "! Not allowed at top") */ )
         | BANG error /*= (read_error "! Not allowed at top") */
         | EOF /*= EOF */ /* End of file */
@@ -360,4 +398,3 @@ WS  :   ( ' '
         | '\n'
         ) {$channel=HIDDEN;}
     ; 
-*/
