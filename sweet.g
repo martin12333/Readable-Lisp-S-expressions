@@ -8,21 +8,23 @@
 // does indent processing, so while indent processing is on, indents are
 // marked with INDENT, dedents with DEDENT (one for each dedent), and
 // totally-blank lines have their indentation consumed (and DEDENTs generated).
-// In input, use > for indent, < for dedent, | for same.
+// If you use this BNF directly, for input, use > for indent, < for dedent.
+// There is no "SAME" token (originally there was, with "|"); some rules use
+// an empty "same" nonterminal to emphasize the lack of INDENT/DEDENT.
 // Thus, a valid input would be:
-//   \\ b c
-//   >e f
+//   a b
+//   >c
+//   d e
 //   <
+// to represent:
+// a b
+//   c
+//   d e
 //
-//   #! hello
-//   |a
-//   >b c
-//   <
 
 // Actions are expressed as /*= ...Scheme code... */
 
 // TODO:
-// - Fix up splice, perhaps by putting its rules in body like spec-almkglor.txt.
 //   Syntactically it works below, but it's more challenging to create
 //   its actions as written below.
 // - Ensure that at top level, "a \\ b c" produces "a" then "(b c)",
@@ -295,11 +297,10 @@ restart_list
 // that will end this i-expr (because it won't match INDENT),
 // returning to a higher-level production.
 
-i_expr : head (splice hspace* // TODO: splice
-                (i_expr
-                | comment_eol
-                  (INDENT body
-                  | empty ))
+i_expr : head (splice hspace*
+                (options {greedy=true;} :
+                 comment_eol error /* TODO: Allow? */
+                 | empty /*= $head */ )
               | DOLLAR hspace*
                 (i_expr /*= (list (monify $head) $i_expr) */
                 | comment_eol
