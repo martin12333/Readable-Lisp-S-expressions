@@ -302,7 +302,10 @@ restart_list
 
 i_expr : head (splice hspace*
                 (options {greedy=true;} :
-                 comment_eol error /* TODO: Allow? */
+                 // TODO: Extension, allow \\ EOL to continue line.
+                 // Should this be an error instead?
+                 comment_eol i_expr /*= (append $head $i_expr) */
+                 // Normal case: splice ends i_expr immediately.
                  | empty /*= $head */ )
               | DOLLAR hspace*
                 (i_expr /*= (list (monify $head) $i_expr) */
@@ -316,7 +319,7 @@ i_expr : head (splice hspace*
                   | empty))
               | comment_eol // Normal case, handle child lines if any:
                 (indent body /*= (append $head $body) */
-                | empty      /*= (monify $head) */ /* No child lines */))
+                | empty      /*= (monify $head) */ /* No child lines */ ))
          | (GROUP | scomment) hspace*
              (i_expr /*= $i_expr */ /* stuff afterward - ignore GROUP/scomment */
              | comment_eol
