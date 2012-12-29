@@ -304,7 +304,11 @@ i_expr : head (splice hspace* // TODO: splice
                 | comment_eol
                   (INDENT body /*= (list $body) */
                   | (SAME | DEDENT) error))
-              | restart_list (i_expr | comment_eol (INDENT body)?)
+              | restart_list
+                (i_expr
+                | comment_eol
+                  (INDENT body
+                  | empty))
               | comment_eol // Normal case, handle child lines if any:
                 (INDENT body /*= (append $head $body) */
                 | empty      /*= (monify $head) */ /* No child lines */))
