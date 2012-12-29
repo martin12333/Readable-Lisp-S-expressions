@@ -48,17 +48,17 @@ options {
 }
 // Simple demo grammar.
 
-start 	:	 t_expr;
+start   :        t_expr;
 
 // Lexer
 
 // Here are special interpretation for certain sequences.  Define these first, to give them
 // higher lexical precedence than other definitions.
-GROUP	:	 '\\' '\\';
-DOLLAR 	:	'$';  // A '$' by itself isn't an atom unless inside {}, (), or [].
+GROUP   :        '\\' '\\';
+DOLLAR  :       '$';  // A '$' by itself isn't an atom unless inside {}, (), or [].
 RESERVED_TRIPLE_DOLLAR : '$$$';  // Reserved for future use.
-RESTART :	'<\*';
-RESTART_END:	'\*>';
+RESTART :       '<\*';
+RESTART_END:    '\*>';
 
 // Abbreviations followed by horizontal space (space or tab) are special:
 APOSH           : '\'' (' ' | '\t') ;
@@ -67,31 +67,31 @@ UNQUOTE_SPLICEH : ',' '@' (' ' | '\t') ;
 UNQUOTEH        : ',' (' ' | '\t') ;
 
 // End-of-line and comment handling:
-fragment FF :	 '\f'; // Formfeed 
-fragment VT :	'\u000b';  // Vertical tab (\v).  Take that, http://prog21.dadgum.com/76.html
+fragment FF :    '\f'; // Formfeed 
+fragment VT :   '\u000b';  // Vertical tab (\v).  Take that, http://prog21.dadgum.com/76.html
 fragment NEL:   '\u0085'; // Hi, IBM mainframes!
 fragment EOL_CHAR : '\n' | '\r' | FF | VT | NEL;
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
 
-LCOMMENT : 	 ';' NOT_EOL_CHAR* ; // "Line comment"
+LCOMMENT :       ';' NOT_EOL_CHAR* ; // "Line comment"
 
 BLOCK_COMMENT   // #| ... #|
     :   '#|'
         (options {greedy=false;} : (BLOCK_COMMENT | .))*
         '|#' {$channel=HIDDEN;}
     ;
-DATUM_COMMENT_START 	:	'#;' ;
+DATUM_COMMENT_START     :       '#;' ;
 
 // SRFI-105 notes that "implementations could trivially support (simultaneously) markers
 // beginning with #! followed by a letter (such as the one to identify support for curly-infix-expressions),
 // the SRFI-22 #!+space marker as an ignored line, and the
 // format #!/ ... !# and #!. ... !# as a multi-line comment."
-SRFI_22_COMMENT		:	'#! ' NOT_EOL_CHAR* ;
-SHARP_BANG_FILE	:	'#!' ('/' | '.')
+SRFI_22_COMMENT         :       '#! ' NOT_EOL_CHAR* ;
+SHARP_BANG_FILE :       '#!' ('/' | '.')
         (options {greedy=false;} : .)*
         '!#' {$channel=HIDDEN;} ;
 // The following matches #!fold-case , #!no-fold-case, #!sweet, and #!curly-infix.
-SHARP_BANG_MARKER 	:	'#!' ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'-')*;
+SHARP_BANG_MARKER       :       '#!' ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'-')*;
 
 // EOL is extremely special.  After reading it, we'll need to read in any following
 // indent characters (if indent processing is active) to determine INDENT/DEDENT.
@@ -105,9 +105,9 @@ SHARP_BANG_MARKER 	:	'#!' ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_
 // create a newline (they still have to be followed by an EOL_SEQUENCE).
 fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
 fragment BLANK_LINE 
-	:	 (' ' | '\t')* ';' NOT_EOL_CHAR* | (FF | VT)+ ;
-EOL 	:	 (FF | VT)* EOL_SEQUENCE
-		 ( BLANK_LINE EOL_SEQUENCE)* ;
+        :        (' ' | '\t')* ';' NOT_EOL_CHAR* | (FF | VT)+ ;
+EOL     :        (FF | VT)* EOL_SEQUENCE
+                 ( BLANK_LINE EOL_SEQUENCE)* ;
 
 // Do not reference '\n' or '\r' inside a non-lexing rule.  ANTLR will quietly create
 // lexical tokens for them if you do, and this will interfere with EOL processing.
@@ -115,43 +115,43 @@ EOL 	:	 (FF | VT)* EOL_SEQUENCE
 //   eolchar : '\n' | '\r';
 
 // Simple character or two-character sequences
-SPACE 	:	' ';
-TAB 	:	'\t';
-SHARP	:	'#';
-BANG 	:	'!';
-PERIOD  :	'.';
-LPAREN	:	'(';
-RPAREN	:	')';
-LBRACKET:	'[';
-RBRACKET:	']';
-LBRACE	:	'{';
-RBRACE	:	'}';
-APOS 			:	'\'';
-QUASIQUOTE 		:	'\`';
-UNQUOTE_SPLICE 		:	',' '@';
-UNQUOTE 		:	',';
+SPACE   :       ' ';
+TAB     :       '\t';
+SHARP   :       '#';
+BANG    :       '!';
+PERIOD  :       '.';
+LPAREN  :       '(';
+RPAREN  :       ')';
+LBRACKET:       '[';
+RBRACKET:       ']';
+LBRACE  :       '{';
+RBRACE  :       '}';
+APOS                    :       '\'';
+QUASIQUOTE              :       '\`';
+UNQUOTE_SPLICE          :       ',' '@';
+UNQUOTE                 :       ',';
 
-empty 	: ;  // Use this to emphasize empty branches
+empty   : ;  // Use this to emphasize empty branches
 error   : ;  // Use this to identify error branches, to quickly id them
-same 	: ;  // Use this to emphasize neither indent nor dedent.
+same    : ;  // Use this to emphasize neither indent nor dedent.
 
 
 
 // STUBS: These are bogus stubs for s-expressions, INDENT, DEDENT, etc.
 // REMOVE THESE STUBS from a formal BNF for SRFI, etc.
-INDENT 	:	'>' ' '*;
-DEDENT 	:	'<' ' '*;
+INDENT  :       '>' ' '*;
+DEDENT  :       '<' ' '*;
 
 // The following is intentionally limited.  In particular, it doesn't include
 // the characters used for INDENT/DEDENT.
-NAME  :	('a'..'z'|'A'..'Z'|'_'|'\\') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'\\')* ;
+NAME  : ('a'..'z'|'A'..'Z'|'_'|'\\') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'\\')* ;
 fragment EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
 FLOAT
     :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
     |   '.' ('0'..'9')+ EXPONENT?
     |   ('0'..'9')+ EXPONENT
     ;
-INT 	:	 ('0'..'9')+ ;
+INT     :        ('0'..'9')+ ;
 fragment HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
 fragment OCTAL_ESC
     :   '\\' ('0'..'3') ('0'..'7') ('0'..'7')
@@ -168,41 +168,41 @@ fragment ESC_SEQ
     ;
 
 STRING:  '\"' ( ESC_SEQ | ~('\"'|'\\') ) '\"' ;
-CHAR	:	'#' '\\' ('!'..'@' | '['..'`' | '{'..'~' | ('A'..'Z' | 'a'..'z')+);
+CHAR    :       '#' '\\' ('!'..'@' | '['..'`' | '{'..'~' | ('A'..'Z' | 'a'..'z')+);
 
-atom 	:	 NAME | INT | FLOAT | STRING | CHAR;
+atom    :        NAME | INT | FLOAT | STRING | CHAR;
 
 list_contents 
-	:	 atom (wspace+ list_contents)?
-	| empty ;
+        :        atom (wspace+ list_contents)?
+        | empty ;
 
 n_expr_tail 
-	:	 (LPAREN list_contents RPAREN | LBRACE list_contents RBRACE |
-		  LBRACKET list_contents RBRACKET);
+        :        (LPAREN list_contents RPAREN | LBRACE list_contents RBRACE |
+                  LBRACKET list_contents RBRACKET);
 n_expr_noabbrev 
-	:	 (atom | LPAREN list_contents RPAREN
-		   | LBRACE list_contents RBRACE | LBRACKET list_contents RBRACKET)
-		 (options {greedy=true;} : n_expr_tail)*;
+        :        (atom | LPAREN list_contents RPAREN
+                   | LBRACE list_contents RBRACE | LBRACKET list_contents RBRACKET)
+                 (options {greedy=true;} : n_expr_tail)*;
 // END STUBS
 
 
 // To simplify ANTLRWorks debugger parse tree use, redefine indent/dedent as nonterminals
-indent 	: INDENT;
+indent  : INDENT;
 dedent  : DEDENT;
 
 abbrevh : APOSH /*= 'quote */
         | QUASIQUOTEH /*= 'quasiquote */
         | UNQUOTE_SPLICEH /*= 'unquote-splicing */
         | UNQUOTEH /*= 'unquote */;
-abbrev_noh		: APOS | QUASIQUOTE | UNQUOTE_SPLICE | UNQUOTE ;
-abbrev_all		: abbrevh | abbrev_noh;
-splice 	:	GROUP;  // Use this synonym to make its purpose clearer.
-sublist :	DOLLAR; // Use this synonym to make its purpose clearer.
+abbrev_noh              : APOS | QUASIQUOTE | UNQUOTE_SPLICE | UNQUOTE ;
+abbrev_all              : abbrevh | abbrev_noh;
+splice  :       GROUP;  // Use this synonym to make its purpose clearer.
+sublist :       DOLLAR; // Use this synonym to make its purpose clearer.
 
 // n_expr is a full neoteric-expression
-n_expr :	 abbrev_all* n_expr_noabbrev;
+n_expr :         abbrev_all* n_expr_noabbrev;
 // n_expr_first is a neoteric-expression, but abbreviations cannot have an hspace afterwards
-n_expr_first:	 abbrev_noh* n_expr_noabbrev;
+n_expr_first:    abbrev_noh* n_expr_noabbrev;
 
 // Whitespace & indentation names
 ichar   : SPACE | TAB | BANG ; // indent char
@@ -212,11 +212,11 @@ wspace  : hspace;  // or eolchars
 
 // Special comment - comment regions other than ";"
 sharp_bang_comments 
-	:	SRFI_22_COMMENT	| SHARP_BANG_FILE | SHARP_BANG_MARKER;
+        :       SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER;
 
-scomment:	BLOCK_COMMENT | DATUM_COMMENT_START hspace* n_expr | sharp_bang_comments;
+scomment:       BLOCK_COMMENT | DATUM_COMMENT_START hspace* n_expr | sharp_bang_comments;
 
-// indent 	: ichar*; // This is by definition ambiguous with INDENT/DEDENT/BADDENT
+// indent       : ichar*; // This is by definition ambiguous with INDENT/DEDENT/BADDENT
 
 // Read in ;comment (if exists), followed by EOL.  EOL consumes
 // additional comment-only lines (if any).  On a non-tokenizing parser,
@@ -235,13 +235,13 @@ comment_eol : LCOMMENT? EOL;
 // if the n-expression is special (e.g., //, $, #!...!#, abbreviation + hspace)
 // and have it return a distinct value if it is.
 
-head 	: n_expr_first
+head    : n_expr_first
            ((hspace+ (rest /*= (cons $n_expr_first rest) */
                      | empty /*= (list $n_expr_first) */))
             | empty /*= (list $n_expr_first) */)
-	| PERIOD
-	   (hspace+ n_expr hspace* /*= $n_expr */ (n_expr error)?
-	   | empty /*= '. */ ) ;
+        | PERIOD
+           (hspace+ n_expr hspace* /*= $n_expr */ (n_expr error)?
+           | empty /*= '. */ ) ;
 
 // The "rest" production reads the rest of the expressions on a line ("rest of the head"),
 // after the first expression of the line.
@@ -252,13 +252,13 @@ head 	: n_expr_first
 // block comments and datum comments that don't begin a line (after indent) are consumed,
 // and abbreviations followed by a space merely apply to the next n-expression (not to the entire
 // indented expression).
-rest 	: PERIOD hspace+ n_expr hspace* /* improper list. */
+rest    : PERIOD hspace+ n_expr hspace* /* improper list. */
           /*= $n_expr */
           (n_expr error)? /* Shouldn't have another n_expr! */
-	| scomment hspace* (rest /*= $rest */
-	                   | empty /*= '() */)
-	| n_expr
-	    ((hspace+ (rest /*= (cons $n_expr) */
+        | scomment hspace* (rest /*= $rest */
+                           | empty /*= '() */)
+        | n_expr
+            ((hspace+ (rest /*= (cons $n_expr) */
                        | empty /*= (list $n_expr) */))
               | empty /*= (list $n_expr) */) ;
 
@@ -272,25 +272,25 @@ rest 	: PERIOD hspace+ n_expr hspace* /* improper list. */
 // Note also that i-expr may set the the current indent to a different value
 // than the indent used on entry to body; the latest indent is compared by
 // the special terminals DEDENT and BADDENT.
-body 	:	 i_expr (same body /*= (cons $i_expr $body) */
+body    :        i_expr (same body /*= (cons $i_expr $body) */
                         | dedent   /*= (list $1) */ );
 
 
 restart_contents 
-	: i_expr
-	   (comment_eol+
-	     (restart_contents /*= (cons $i_expr restart_contents) */
-	     | empty /*= (list $i_expr) */)
-	   | empty   /*= (list $i_expr) */)
-	  | indent error /*= (read_error "Bad indent inside restart list") */ ;
+        : i_expr
+           (comment_eol+
+             (restart_contents /*= (cons $i_expr restart_contents) */
+             | empty /*= (list $i_expr) */)
+           | empty   /*= (list $i_expr) */)
+          | indent error /*= (read_error "Bad indent inside restart list") */ ;
 
 // Restarts.  In a non-tokenizing system, reading RESTART_END will set the current indent,
 // causing dedents all the way back to here.
 restart_list 
-	: RESTART hspace* /*= (push_indent "") */ comment_eol*
-	  (restart_contents /*= $restart_contents */
-	  | empty /*= '() */ )
-	  RESTART_END hspace*;
+        : RESTART hspace* /*= (push_indent "") */ comment_eol*
+          (restart_contents /*= $restart_contents */
+          | empty /*= '() */ )
+          RESTART_END hspace*;
 
 // "i-expr" (indented sweet expressions expressions)
 // is the main production for sweet-expressions in the usual case.
@@ -328,7 +328,7 @@ i_expr : head (splice hspace*
                | same i_expr /*= $i_expr */  /* Plausible separator */
                | dedent error /*= (read_error "Dedent not allowed after group or special comment") */ ))
          | DOLLAR hspace*(i_expr /*= (list $i_expr) */ | comment_eol indent body /*= (list $body) */ )
-	 | restart_list (i_expr | comment_eol (indent body)?)
+         | restart_list (i_expr | comment_eol (indent body)?)
          | abbrevh hspace*
            (i_expr /*= (list $abbrevh $i_expr) */
            | (comment_eol
@@ -338,7 +338,7 @@ i_expr : head (splice hspace*
 
 // Top-level sweet-expression production; handle special cases, or drop to i_expr
 // in normal case.
-t_expr 	: comment_eol t_expr /*= $t_expr */ /* Initial lcomment, try again */
+t_expr  : comment_eol t_expr /*= $t_expr */ /* Initial lcomment, try again */
         | hspace+ (n_expr /*= $n_expr */ /* indent processing disabled */
                    | comment_eol t_expr /*= $t_expr */ /* Indented lcomment, try again */
                    | BANG error /*= (read_error "! Not allowed at top") */ )
