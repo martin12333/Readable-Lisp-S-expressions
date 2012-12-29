@@ -56,7 +56,7 @@ start 	:	 t_expr;
 // higher lexical precedence than other definitions.
 GROUP	:	 '\\' '\\';
 DOLLAR 	:	'$';  // A '$' by itself isn't an atom unless inside {}, (), or [].
-RESERVED_TRIPLE :	 '$$$';  // Reserved for future use.
+RESERVED_TRIPLE_DOLLAR : '$$$';  // Reserved for future use.
 RESTART :	'<\*';
 RESTART_END:	'\*>';
 
@@ -183,11 +183,12 @@ n_expr_noabbrev
 	:	 (atom | LPAREN list_contents RPAREN
 		   | LBRACE list_contents RBRACE | LBRACKET list_contents RBRACKET)
 		 (options {greedy=true;} : n_expr_tail)*;
+// END STUBS
 
+
+// To simplify ANTLRWorks debugger parse tree use, redefine indent/dedent as nonterminals
 indent 	: INDENT;
 dedent  : DEDENT;
-
-// END STUBS
 
 abbrevh : APOSH /*= 'quote */
         | QUASIQUOTEH /*= 'quasiquote */
