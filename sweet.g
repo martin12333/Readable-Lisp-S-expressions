@@ -304,7 +304,7 @@ i_expr : head (splice hspace*
                 (options {greedy=true;} :
                  // TODO: Extension, allow \\ EOL to continue line.
                  // Should this be an error instead?
-                 comment_eol i_expr /*= (append $head $i_expr) */
+                 comment_eol same i_expr /*= (append $head $i_expr) */
                  // Normal case: splice ends i_expr immediately.
                  | empty /*= $head */ )
               | DOLLAR hspace*
