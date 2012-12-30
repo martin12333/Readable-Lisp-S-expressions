@@ -279,9 +279,12 @@ restart_contents
 // Restarts. In a non-tokenizing system, reading RESTART_END will set the
 // current indent, causing dedents all the way back to here.
 restart_list 
-        : RESTART hspace* /*= (push_indent "") */ comment_eol*
-          (restart_contents /*= $restart_contents */
-          | empty /*= '() */ )
+        : RESTART hspace*
+          (head /*= (list (monify $head)) */
+           /*= (push_indent "") */
+           | comment_eol+
+             (restart_contents /*= $restart_contents */
+              | empty /*= '() */ ))
           RESTART_END hspace* ;
 
 
