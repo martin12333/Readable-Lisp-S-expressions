@@ -250,6 +250,23 @@ scomment : BLOCK_COMMENT
 comment_eol : LCOMMENT? EOL;
 
 
+// This BNF uses the following slightly complicated pattern in many places:
+//   from_n_expr ((hspace+ (stuff /*= val1 */ | empty /*= val2 */ ))
+//                | empty                             /*= val2 */ )
+// Without the actions, this is an expanded form of this BNF pattern:
+//   from_n_expr (hspace+ stuff?)?
+// Note that this pattern quietly handles horizontal spaces correctly at the
+// end of the line correctly; that's important because you can't see them.
+// If from_n_expr (etc.) is as greedy as possible (it needs to be),
+// we *could* instead accept this simpler BNF pattern:
+//   from_n_expr hspace* stuff?
+// but while that simpler BNF pattern would correctly accept *good* input,
+// it would also accept *incorrect* input like this:
+//   a(1)q
+// In particular, the simpler BNF pattern would accept n-expressions followed
+// immediately by other n-expressions, without any intervening whitespace.
+// We want to detect such situations as errors, so we'll use the
+// more complex (and more persnickety) BNF pattern instead.
 
 
 // The "head" is the production for 1+ n-expressions on one line; it will
