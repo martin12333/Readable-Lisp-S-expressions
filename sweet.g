@@ -280,12 +280,14 @@ restart_contents
 // current indent, causing dedents all the way back to here.
 restart_list 
         : RESTART hspace*
-          (head /*= (list (monify $head)) */
-           /*= (push_indent "") */
-           | comment_eol+
+          (head | empty)
+          ( RESTART_END
+            /*= (list (monify $head)) */
+           | /*= (push_indent "") */
+             comment_eol+
              (restart_contents /*= $restart_contents */
               | empty /*= '() */ ))
-          RESTART_END hspace* ;
+          RESTART_END /*= (restore_indent) */ hspace* ;
 
 
 // The "head" is the production for 1+ n-expressions on one line; it will
