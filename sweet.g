@@ -267,14 +267,17 @@ comment_eol : LCOMMENT? EOL;
 // distinct value if it is; head and friends operate a lot like a tokenizer
 // in that case.
 
-head    : n_expr_first (
+head :  PERIOD
            (hspace+
-             (rest   /*= (cons $n_expr_first rest) */
-              |empty /*= (list $n_expr_first) */ ))
-            | empty  /*= (list $n_expr_first) */  )
-        | PERIOD
-           (hspace+ n_expr hspace* /*= $n_expr */ (n_expr error)?
-           | empty /*= '. */ ) ;  // TODO: Handle PERIOD hspace+ non-expr
+              ((n_expr hspace* /*= (list $n_expr) */ (n_expr error)?)
+               | empty  /*= (list '.) */ )
+            | empty     /*= (list '.) */ )
+        |  n_expr_first (
+           (hspace+
+             (rest    /*= (cons $n_expr_first rest) */
+              | empty /*= (list $n_expr_first) */ ))
+            | empty   /*= (list $n_expr_first) */  )  
+            ;
 
 // The "rest" production reads the rest of the expressions on a line
 // (the "rest of the head"), after the first expression of the line.
