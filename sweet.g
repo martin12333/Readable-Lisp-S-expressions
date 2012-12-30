@@ -1,41 +1,23 @@
 // BNF grammar for sweet-expressions
 // (c) 2012 David A. Wheeler, released under "MIT" license.
 
-// Written using ANTLR version 3, single-token (k=1) lookahead. More info:
+// This is an LL(1) grammar, written using ANTLR version 3. More info:
 // http://www.antlr.org/
-
-// This BNF presumes there's a preprocessor that
-// does indent processing, so while indent processing is on, indents are
-// marked with INDENT, dedents with DEDENT (one for each dedent), and
-// totally-blank lines have their indentation consumed (and DEDENTs generated).
-// If you use this BNF directly, for input, use > for indent, < for dedent.
-// There is no "SAME" token (originally there was, with "|"); some rules use
-// an empty "same" nonterminal to emphasize the lack of INDENT/DEDENT.
-// Thus, a valid input would be:
-//   a b
-//   >c
-//   d e
-//   <
-// to represent:
-// a b
-//   c
-//   d e
-//
-
 // Actions are expressed as /*= ...Scheme code... */
 
+// This BNF presumes there's a preprocessor that does
+// indent processing. While indent processing is enabled, indents are
+// marked with INDENT, dedents with DEDENT (one for each dedent).
+// Lines with ONLY indent characters are considered blank lines.
+// There is no "SAME" token to show "same indent level"; some rules include
+// an empty "same" nonterminal to emphasize their lack of INDENT/DEDENT.
+
 // TODO:
-//   Syntactically it works below, but it's more challenging to create
-//   its actions as written below.
-// - Ensure that at top level, "a \\ b c" produces "a" then "(b c)",
-//   not "a", "b", "c".  Thus, must read hspace* after \\.  Easy way would be
-//   to add (' ' | '\t')* to end of GROUP, to force consumption early.
+// - See specific TODOs below.
 // - (Maybe) Define n-expr, etc.
 // - (Maybe) Handle EOF in weird places.
 
-// Uses:
-// ; Given pair, return its car if cdr is null, else the pair.
-// ; Note that if x is improper, it just returns x.
+// ; Utility function:
 // (define (monify x)
 //   (if (null? (cdr x))
 //     (car x)
@@ -44,13 +26,12 @@
 grammar sweet;
 
 options {
-  k = 1;  // This grammar is LL(1).
+  k = 1;  // Force grammar to be LL(1).
 }
-// Simple demo grammar.
 
-start   :        t_expr;
+start : t_expr;  // This grammar defines a sweet-expression.
 
-// Lexer
+// Lexer. Lexical token (terminal) names are in all upper case
 
 // Here are special interpretation for certain sequences.
 // Define these first, to give them higher lexical precedence
@@ -118,10 +99,10 @@ SHARP_BANG_MARKER : '#!' ('a'..'z'|'A'..'Z'|'_')
 fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
 fragment BLANK_LINE 
         :        (' ' | '\t')* ';' NOT_EOL_CHAR* | (FF | VT)+ ;
-EOL     :        (FF | VT)* EOL_SEQUENCE
-                 ( BLANK_LINE EOL_SEQUENCE)* ;
+EOL     : (FF | VT)* EOL_SEQUENCE
+          (BLANK_LINE EOL_SEQUENCE)* ;
 
-// Do not reference '\n' or '\r' inside a non-lexing rule.
+// Do not reference '\n' or '\r' inside a non-lexing rule in ANTLR.
 // If you do, ANTLR will quietly create new lexical tokens for them, and
 // those new tokens will interfere with EOL processing. E.G., do NOT do this:
 //   eolchar : '\n' | '\r';
@@ -143,16 +124,31 @@ QUASIQUOTE     : '\`';
 UNQUOTE_SPLICE : ',' '@';
 UNQUOTE        : ',';
 
-empty : ;  // Use this to emphasize empty production branches
-error : ;  // Use this to identify error branches, to quickly id them
-same  : ;  // Use this to emphasize neither indent nor dedent.
+// Special non-terminals that act essentially as comments to help
+// clarify the meaning of the grammar:
+empty : ;  // This identifies an empty branch
+error : ;  // This specifically identifies an error branch
+same  : ;  // This emphasizes where neither indent nor dedent has occurred
 
 
 
-// STUBS: These are bogus stubs for s-expressions, INDENT, DEDENT, etc.
-// REMOVE THESE STUBS from a formal BNF for SRFI, etc.
-INDENT : '>' ' '*;
-DEDENT : '<' ' '*;
+// STUB BEGIN - remove this stub section for the SRFI, etc.; it's
+// here for debugging and testing the grammar.
+
+// If you use this BNF directly, use \> for indent, \< for dedent:
+INDENT : '\\>' ' '*;
+DEDENT : '\\<' ' '*;
+
+// For example, a valid input would be:
+//   a b
+//   \>c
+//   d e
+//   \<
+// to represent:
+// a b
+//   c
+//   d e
+//
 
 // The following is intentionally limited.  In particular, it doesn't include
 // the characters used for INDENT/DEDENT.
@@ -199,7 +195,7 @@ n_expr_noabbrev
        | LBRACKET list_contents RBRACKET )
       (options {greedy=true;} : n_expr_tail)*;
 
-// END STUBS
+// STUB END
 
 
 // Here we'll redefine indent/dedent as nonterminals, to make nicer results
