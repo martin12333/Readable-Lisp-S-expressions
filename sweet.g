@@ -272,11 +272,9 @@ comment_eol : LCOMMENT? EOL;
 
 restart_contents 
         : i_expr
-           (comment_eol+
+           (comment_eol*
              (restart_contents /*= (cons $i_expr restart_contents) */
-             | empty /*= (list $i_expr) */)
-           | empty   /*= (list $i_expr) */)
-          | indent error ;
+             | empty /*= (list $i_expr) */));
 
 // Restarts. In a non-tokenizing system, reading RESTART_END will set the
 // current indent, causing dedents all the way back to here.
