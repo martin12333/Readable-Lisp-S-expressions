@@ -219,7 +219,7 @@ n_expr :         abbrev_all* n_expr_noabbrev;
 // cannot have an hspace afterwards:
 n_expr_first:    abbrev_noh* n_expr_noabbrev;
 
-// Whitespace & indentation names
+// Whitespace and indentation names
 ichar   : SPACE | TAB | BANG ; // indent char - creates INDENT/DEDENTs
 hspace  : SPACE | TAB ;        // horizontal space
 
@@ -312,8 +312,7 @@ restart_contents
            | empty   /*= (list $i_expr) */)
           | indent error /*= (read_error "Bad indent inside restart list") */ ;
 
-// Restarts, that is, <* ... *>.
-// In a non-tokenizing system, reading RESTART_END will set the
+// Restarts. In a non-tokenizing system, reading RESTART_END will set the
 // current indent, causing dedents all the way back to here.
 restart_list 
         : RESTART hspace* /*= (push_indent "") */ comment_eol*
