@@ -78,7 +78,7 @@ SHARP_BANG_FILE :       '#!' ('/' | '.')
         '!#' {$channel=HIDDEN;} ;
 // These match #!fold-case, #!no-fold-case, #!sweet, and #!curly-infix.
 SHARP_BANG_MARKER : '#!' ('a'..'z'|'A'..'Z'|'_')
-                         ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')*;
+                         ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')* ;
 
 
 // End-of-line (EOL) is extremely special in sweet-expressions.
@@ -119,17 +119,25 @@ LBRACKET : '[';
 RBRACKET : ']';
 LBRACE   : '{';
 RBRACE   : '}';
+
 APOS           : '\'';
 QUASIQUOTE     : '\`';
 UNQUOTE_SPLICE : ',' '@';
 UNQUOTE        : ',';
 
-// Special non-terminals that act essentially as comments to help
-// clarify the meaning of the grammar:
-empty : ;  // This identifies an empty branch
-error : ;  // This specifically identifies an error branch
-same  : ;  // This emphasizes where neither indent nor dedent has occurred
 
+// Special non-terminals that act essentially as comments.
+// They are used clarify the grammar meaning, as follows:
+empty : ;  // Identifies an empty branch
+same  : ;  // Emphasizes where neither indent nor dedent has occurred
+error : ;  // Specifically identifies an error branch.
+
+// Note that errors can occur elsewhere, and an implementation
+// may include an extension where an error is noted in this grammar.
+// However, the error non-terminal makes it clear where an action is
+// not defined, indicates where a parser might specifically check for
+// errors, and also acts as a check on the grammar itself (to ensure that
+// there isn't some valid interpretation for that sequence at that point).
 
 
 // STUB BEGIN - remove this stub section for the SRFI, etc.; it's
@@ -176,9 +184,9 @@ fragment ESC_SEQ
     ;
 
 STRING : '\"' ( ESC_SEQ | ~('\"'|'\\') ) '\"' ;
-CHAR   : '#\\' ('!'..'@' | '['..'`' | '{'..'~' | ('A'..'Z' | 'a'..'z')+);
+CHAR   : '#\\' ('!'..'@' | '['..'`' | '{'..'~' | ('A'..'Z' | 'a'..'z')+) ;
 
-atom   : NAME | INT | FLOAT | STRING | CHAR;
+atom   : NAME | INT | FLOAT | STRING | CHAR ;
 
 list_contents 
     : atom (wspace+ list_contents)? | empty ;
@@ -186,14 +194,14 @@ list_contents
 n_expr_tail 
     : LPAREN   list_contents RPAREN
     | LBRACE   list_contents RBRACE
-    | LBRACKET list_contents RBRACKET;
+    | LBRACKET list_contents RBRACKET ;
 
 n_expr_noabbrev 
     : (atom
        | LPAREN list_contents RPAREN
        | LBRACE list_contents RBRACE
        | LBRACKET list_contents RBRACKET )
-      (options {greedy=true;} : n_expr_tail)*;
+      (options {greedy=true;} : n_expr_tail)* ;
 
 // STUB END
 
@@ -206,17 +214,19 @@ dedent  : DEDENT;
 abbrevh : APOSH /*= 'quote */
         | QUASIQUOTEH /*= 'quasiquote */
         | UNQUOTE_SPLICEH /*= 'unquote-splicing */
-        | UNQUOTEH /*= 'unquote */;
+        | UNQUOTEH /*= 'unquote */
+        ;
 abbrev_noh : APOS | QUASIQUOTE | UNQUOTE_SPLICE | UNQUOTE ;
 abbrev_all : abbrevh | abbrev_noh;
 splice     : GROUP;  // Use this synonym to make its purpose clearer.
 sublist    : DOLLAR; // Use this synonym to make its purpose clearer.
 
 
-// n_expr is a full neoteric-expression
+// n_expr is a full neoteric-expression:
 n_expr :         abbrev_all* n_expr_noabbrev;
+
 // n_expr_first is a neoteric-expression, but abbreviations
-// cannot have an hspace afterwards:
+// cannot have an hspace afterwards (used by "head"):
 n_expr_first:    abbrev_noh* n_expr_noabbrev;
 
 // Whitespace and indentation names
@@ -225,12 +235,11 @@ hspace  : SPACE | TAB ;        // horizontal space
 
 wspace  : hspace;  // or eolchars
 
-// Special comment - comment regions other than ";"
-sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER;
-
+// Handle comment regions other than ";":
+sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER ;
 scomment : BLOCK_COMMENT
          | DATUM_COMMENT_START hspace* n_expr
-         | sharp_bang_comments;
+         | sharp_bang_comments ;
 
 // Read in ;comment (if exists), followed by EOL.  EOL consumes
 // additional comment-only lines (if any).  On a non-tokenizing parser,
@@ -244,8 +253,8 @@ comment_eol : LCOMMENT? EOL;
 // The "head" is the production for 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
 // on the line, it returns a list of exactly one item; this makes it
-// easy to append to later (if appropriate).  In some cases, we want to
-// have single items as themselves (not a list); function monify does this.
+// easy to append to later (if appropriate).  In some cases, we want
+// single items to be themselves, not in a list; function monify does this.
 // The "head" production never reads beyond the current line
 // (except within a block comment), so it doesn't need to keep track
 // of indentation, and indentation will NOT change within head.
@@ -310,7 +319,7 @@ restart_contents
              (restart_contents /*= (cons $i_expr restart_contents) */
              | empty /*= (list $i_expr) */)
            | empty   /*= (list $i_expr) */)
-          | indent error /*= (read_error "Bad indent inside restart list") */ ;
+          | indent error ;
 
 // Restarts. In a non-tokenizing system, reading RESTART_END will set the
 // current indent, causing dedents all the way back to here.
@@ -318,7 +327,7 @@ restart_list
         : RESTART hspace* /*= (push_indent "") */ comment_eol*
           (restart_contents /*= $restart_contents */
           | empty /*= '() */ )
-          RESTART_END hspace*;
+          RESTART_END hspace* ;
 
 // "i-expr" (indented sweet expressions expressions)
 // is the main production for sweet-expressions in the usual case.
@@ -374,8 +383,8 @@ i_expr : head (splice hspace*
 t_expr  : comment_eol t_expr /*= $t_expr */ /* Initial lcomment, try again */
         | hspace+ (n_expr /*= $n_expr */ /* indent processing disabled */
                    | comment_eol t_expr /*= $t_expr */ /* Indented lcomment */
-                   | BANG error /*= (read_error "! Not allowed at top") */ )
-        | BANG error /*= (read_error "! Not allowed at top") */
+                   | BANG error )
+        | BANG error
         | EOF /*= EOF */ /* End of file */
         | i_expr /*= $i_expr */ /* Normal case */;
 
