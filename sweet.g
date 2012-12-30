@@ -360,6 +360,11 @@ body    :        i_expr (same body /*= (cons $i_expr $body) */
 // that will end this i-expr (because it won't match INDENT),
 // returning to a higher-level production.
 
+// restart_list is here, and not in the head production, because in
+// a non-tokenizing implementation it will return by manipulating the
+// "current indent".  The head and after productions are not aware of
+// indentation, and thus have nothing to manipulate.
+
 i_expr : head (splice hspace*
                 (options {greedy=true;} :
                  // TODO: This is an extension, allow \\ EOL to continue line.
