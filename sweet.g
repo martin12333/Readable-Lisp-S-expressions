@@ -355,7 +355,7 @@ i_expr : head (splice hspace*
                  | comment_eol
                   (indent body /*= (list $body) */
                   | dedent error))
-              | restart_list
+              | restart_list  // TODO
                 (i_expr
                  | comment_eol
                   (indent body
@@ -374,9 +374,9 @@ i_expr : head (splice hspace*
          | restart_list (i_expr | comment_eol (indent body)?) // TODO action
          | abbrevh hspace*
            (i_expr /*= (list $abbrevh $i_expr) */
-           | (comment_eol
-               (indent body /*= (list $abbrevh $i_expr) */ )
-               | dedent error))  // TODO - check parens here
+            | (comment_eol
+                (indent body /*= (list $abbrevh $i_expr) */  )
+                | dedent error ))
          ;
 
 // Top-level sweet-expression production, t_expr.
