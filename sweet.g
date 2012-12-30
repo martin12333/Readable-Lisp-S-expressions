@@ -39,8 +39,8 @@ start : t_expr;  // This grammar defines a sweet-expression.
 GROUP   :        '\\' '\\';      // GROUP and splice symbol.
 DOLLAR  :       '$';             // Not an atom unless inside {}, (), or [].
 RESERVED_TRIPLE_DOLLAR : '$$$';  // Reserved for future use.
-RESTART :       '<\*';
-RESTART_END:    '\*>';
+RESTART :       '<' '*';
+RESTART_END:    '*' '>';
 
 // Abbreviations followed by horizontal space (space or tab) are special:
 APOSH           : '\'' (' ' | '\t') ;
@@ -371,9 +371,7 @@ i_expr : head (splice hspace*
                  | empty /*= $head */ )
               | DOLLAR hspace*
                 (i_expr /*= (list (monify $head) $i_expr) */
-                 | comment_eol
-                  (indent body /*= (list $body) */
-                  | dedent error))
+                 | comment_eol indent body /*= (list $body) */ )
               | restart_list  // TODO
                 (i_expr
                  | comment_eol
@@ -393,9 +391,7 @@ i_expr : head (splice hspace*
          | restart_list (i_expr | comment_eol (indent body)?) // TODO action
          | abbrevh hspace*
            (i_expr /*= (list $abbrevh $i_expr) */
-            | (comment_eol
-                (indent body /*= (list $abbrevh $i_expr) */  )
-                | dedent error ))
+            | (comment_eol indent body /*= (list $abbrevh $i_expr) */ ))
          ;
 
 // Top-level sweet-expression production, t_expr.
