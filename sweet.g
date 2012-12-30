@@ -269,6 +269,24 @@ comment_eol : LCOMMENT? EOL;
 // more complex (and more persnickety) BNF pattern instead.
 
 
+
+restart_contents 
+        : i_expr
+           (comment_eol+
+             (restart_contents /*= (cons $i_expr restart_contents) */
+             | empty /*= (list $i_expr) */)
+           | empty   /*= (list $i_expr) */)
+          | indent error ;
+
+// Restarts. In a non-tokenizing system, reading RESTART_END will set the
+// current indent, causing dedents all the way back to here.
+restart_list 
+        : RESTART hspace* /*= (push_indent "") */ comment_eol*
+          (restart_contents /*= $restart_contents */
+          | empty /*= '() */ )
+          RESTART_END hspace* ;
+
+
 // The "head" is the production for 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
 // on the line, it returns a list of exactly one item; this makes it
@@ -332,23 +350,6 @@ rest    : PERIOD hspace+ n_expr hspace* /* improper list. */
 
 body    :        i_expr (same body /*= (cons $i_expr $body) */
                         | dedent   /*= (list $body) */ );
-
-
-restart_contents 
-        : i_expr
-           (comment_eol+
-             (restart_contents /*= (cons $i_expr restart_contents) */
-             | empty /*= (list $i_expr) */)
-           | empty   /*= (list $i_expr) */)
-          | indent error ;
-
-// Restarts. In a non-tokenizing system, reading RESTART_END will set the
-// current indent, causing dedents all the way back to here.
-restart_list 
-        : RESTART hspace* /*= (push_indent "") */ comment_eol*
-          (restart_contents /*= $restart_contents */
-          | empty /*= '() */ )
-          RESTART_END hspace* ;
 
 // "i-expr" (indented sweet expressions expressions)
 // is the main production for sweet-expressions in the usual case.
