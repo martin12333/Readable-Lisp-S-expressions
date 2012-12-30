@@ -313,7 +313,7 @@ rest    : PERIOD hspace+ n_expr hspace* /* improper list. */
 // the special terminals DEDENT and BADDENT.
 
 body    :        i_expr (same body /*= (cons $i_expr $body) */
-                        | dedent   /*= (list $1) */ );
+                        | dedent   /*= (list $body) */ );
 
 
 restart_contents 
