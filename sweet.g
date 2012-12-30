@@ -222,7 +222,9 @@ splice     : GROUP;  // Use this synonym to make its purpose clearer.
 sublist    : DOLLAR; // Use this synonym to make its purpose clearer.
 
 
-// n_expr is a full neoteric-expression:
+// n_expr is a full neoteric-expression.  Note that n_expr does *not*
+// consume following horizontal space; this is important for correctly
+// handling initially-indented lines with more than one n-expression.
 n_expr :         abbrev_all* n_expr_noabbrev;
 
 // n_expr_first is a neoteric-expression, but abbreviations
@@ -293,11 +295,10 @@ head :  PERIOD
 rest    : PERIOD hspace+ n_expr hspace* /* improper list. */
           /*= $n_expr */
           (n_expr error)? /* Shouldn't have another n_expr! */
-        | scomment hspace* (rest /*= $rest */
-                           | empty /*= '() */)
+        | scomment hspace* (rest /*= $rest */ | empty /*= '() */ )
         | n_expr
             ((hspace+ (rest /*= (cons $n_expr) */
-                       | empty /*= (list $n_expr) */))
+                       | empty /*= (list $n_expr) */ ))
               | empty /*= (list $n_expr) */) ;
 
 
