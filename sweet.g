@@ -273,10 +273,10 @@ head_or_empty:	head /*= $head */ | empty /*= '() */ ;
 
 restart_contents: i_expr comment_eol*
           (restart_contents /*= (cons $i_expr restart_contents) */
-           | empty /*= (list $i_expr) */ );
+           | empty /*= (list $i_expr) */ /* We hit RESTART_END */);
 
-// Restarts. In a non-tokenizing system, reading RESTART_END will set the
-// current indent, causing dedents all the way back to here.
+// Restarts. In a non-tokenizing system, reading RESTART_END inside i_expr
+// will set the current indent, causing dedents all the way back to here.
 restart_list : RESTART hspace* head_or_empty
           ( RESTART_END
             /*= (if (null? head_or_empty) '() (list (monify $head_or_empty))) */
