@@ -268,9 +268,18 @@ comment_eol : LCOMMENT? EOL;
 // We want to detect such situations as errors, so we'll use the
 // more complex (and more persnickety) BNF pattern instead.
 
+// Here we handle restarts, which are a special case.
 
-head_or_empty: head /*= $head */
-               | (GROUP | scomment) hspace* head_or_empty /*= $head_or_empty */
+// Handle the first line of a restart.  This is very similar to the normal "head";
+// it reads in a line, and returns a list of its neoteric-expressions.
+// We have to handle the restart_head differently from head, because
+// i_expr is designed to support child lines, but in this case we CANNOT have
+// child lines - yet we still want the functionality we CAN support.
+// Thus, we call on "head" to do many things, but we specially handle leading
+// GROUP and scomment, and we permit empty contents (unlike "head").
+// TODO: Handle "$" from head.
+restart_head: head /*= $head */
+               | (GROUP | scomment) hspace* restart_head /*= $restart_head */
                | empty /*= '() */ ;
 
 restart_contents: i_expr comment_eol*
@@ -279,16 +288,16 @@ restart_contents: i_expr comment_eol*
 
 // Restarts. In a non-tokenizing system, reading RESTART_END inside i_expr
 // will set the current indent, causing dedents all the way back to here.
-restart_list : RESTART hspace* head_or_empty
+restart_list : RESTART hspace* restart_head
           ( RESTART_END
-            /*= (if (null? head_or_empty) '() (list (monify $head_or_empty))) */
+            /*= (if (null? $restart_head) '() (list (monify $restart_head))) */
            | /*= (push_indent "") */
              comment_eol+
              (restart_contents
-                /*= (if (null? head_or_empty)
+                /*= (if (null? $restart_head)
                       $restart_contents
-                      (cons $head_or_empty $restart_contents)) */
-              | empty /*= $head_or_empty */ ))
+                      (cons $restart_head $restart_contents)) */
+              | empty /*= $restart_head */ ))
           RESTART_END /*= (restore_indent) */ hspace* ;
 
 
@@ -364,6 +373,10 @@ body    :        i_expr (same body /*= (cons $i_expr $body) */
 // If the line after a "head" has the same or smaller indentation,
 // that will end this i-expr (because it won't match INDENT),
 // returning to a higher-level production.
+
+// DOLLAR is handled in i_expr, not in "head", because if there
+// are child lines, those child lines are parameters of the right-hand-side,
+// not of the whole production.
 
 // restart_list is here, and not in the head production, because in
 // a non-tokenizing implementation it will return by manipulating the
