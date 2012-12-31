@@ -128,8 +128,10 @@ error : ;  // Specifically identifies an error branch.
 // errors, and also acts as a check on the grammar itself (to ensure that
 // there isn't some valid interpretation for that sequence at that point).
 
+
 // STUB BEGIN - remove this stub section for the SRFI, etc.; it's
-// here for debugging and testing the grammar.
+// here for debugging and testing the grammar.  It's not an especially
+// accurate representation of n-expressions, because it doesn't need to be.
 
 // If you use this BNF directly, use \> for indent, \< for dedent:
 INDENT : '\\>' ' '*;
@@ -235,10 +237,12 @@ comment_eol : LCOMMENT? EOL;
 // This BNF uses the following slightly complicated pattern in many places:
 //   from_n_expr ((hspace+ (stuff /*= val1 */ | empty /*= val2 */ ))
 //                | empty                             /*= val2 */ )
-// Without the actions, this is an expanded form of this BNF pattern:
+// This is an expanded form of this BNF pattern (sans actions):
 //   from_n_expr (hspace+ stuff?)?
-// Note that this pattern quietly handles horizontal spaces correctly at the
-// end of the line correctly; that's important because you can't see them.
+// Note that this pattern quietly removes horizontal spaces at the
+// end of the line correctly; that's important because you can't see them,
+// so quietly handling them eliminates a source of hard-to-find and
+// unnecessary errors.
 // If from_n_expr (etc.) is as greedy as possible (it needs to be),
 // we *could* instead accept this simpler BNF pattern:
 //   from_n_expr hspace* stuff?
