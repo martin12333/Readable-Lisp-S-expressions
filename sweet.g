@@ -270,7 +270,7 @@ comment_eol : LCOMMENT? EOL;
 
 
 head_or_empty: head /*= $head */
-               | scomment head_or_empty /*= $head_or_empty */
+               | (GROUP | scomment) hspace* head_or_empty /*= $head_or_empty */
                | empty /*= '() */ ;
 
 restart_contents: i_expr comment_eol*
