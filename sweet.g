@@ -268,8 +268,11 @@ restart_contents: i_expr comment_eol*
 
 // Restarts. In a non-tokenizing system, reading RESTART_END inside i_expr
 // will set the current indent, causing dedents all the way back to here.
+// We'll consume hspace* at the end of this production; the RESTART_END
+// token wouldn't be recognized unless it was delimited anyway, so there's
+// no need for the more complex BNF construct "(hspace+ (x | empty) | empty").
 restart_list : RESTART hspace* restart_head
-          ( RESTART_END
+          ( RESTART_END hspace*
             /*= (if (null? $restart_head) '() (list (monify $restart_head))) */
            | /*= (push_indent "") */
              comment_eol+
@@ -277,8 +280,8 @@ restart_list : RESTART hspace* restart_head
                 /*= (if (null? $restart_head)
                       $restart_contents
                       (cons $restart_head $restart_contents)) */
-              | empty /*= $restart_head */ ))
-          RESTART_END /*= (restore_indent) */ hspace* ;
+              | empty /*= $restart_head */ )
+             RESTART_END /*= (restore_indent) */ hspace* );
 
 
 // The "head" is the production for 1+ n-expressions on one line; it will
@@ -303,9 +306,12 @@ head :  PERIOD
               ((n_expr hspace* /*= (list $n_expr) */ (n_expr error)?)
                | empty  /*= (list '.) */ )
             | empty     /*= (list '.) */ )
-        |  n_expr_first (
+        | restart_list
+          (rest /*= (cons (list (monify $restart_list)) $rest) */
+           | empty /*= (list (monify $restart_list)) */ )
+        | n_expr_first (
            (hspace+
-             (rest    /*= (cons $n_expr_first rest) */
+             (rest    /*= (cons $n_expr_first $rest) */
               | empty /*= (list $n_expr_first) */ ))
             | empty   /*= (list $n_expr_first) */  ) ;
 
@@ -324,8 +330,11 @@ rest    : PERIOD hspace+ n_expr hspace* /* improper list. */
           /*= $n_expr */  // TODO: Handle period "." end-of-line?
           (n_expr error)? /* Shouldn't have another n_expr! */
         | scomment hspace* (rest /*= $rest */ | empty /*= '() */ )
+        | restart_list
+            (rest /*= (cons (list (monify $restart_list)) $rest) */
+             | empty /*= list (monify $restart_list)) */ )
         | n_expr
-            ((hspace+ (rest /*= (cons $n_expr) */
+            ((hspace+ (rest /*= (cons $n_expr $rest) */
                        | empty /*= (list $n_expr) */ ))
               | empty /*= (list $n_expr) */) ;
 
@@ -357,10 +366,10 @@ body    :        i_expr (same body /*= (cons $i_expr $body) */
 // are child lines, those child lines are parameters of the right-hand-side,
 // not of the whole production.
 
-// restart_list is here, and not in the head production, because in
-// a non-tokenizing implementation it will return by manipulating the
-// "current indent".  The head and after productions are not aware of
-// indentation, and thus have nothing to manipulate.
+// Note: In a non-tokenizing implementation, a RESTART_END may be
+// returned by head, which ends a list of i_expr inside a restart.  i_expr
+// should then set the current_indent to RESTART_END, and return, to signal
+// the reception of RESTART_END.
 
 i_expr : head (splice hspace*
                 (options {greedy=true;} :
@@ -369,16 +378,11 @@ i_expr : head (splice hspace*
                  // John Cowan recommends (Sat, 29 Dec 2012 13:18:18 -0500)
                  // that we *not* do this, because it'd be confusing:
                  comment_eol same i_expr /*= (append $head $i_expr) */
-                 // Normal case: splice ends i_expr immediately.
+                 // Normal case: splice ends i_expr immediately:
                  | empty /*= $head */ )
               | DOLLAR hspace*
                 (i_expr /*= (list (monify $head) $i_expr) */
                  | comment_eol indent body /*= (list $body) */ )
-              | restart_list  // TODO - these are probably wrong:
-                (i_expr /* TODO - should we even permit this? */
-                 | comment_eol
-                  (indent body /*= (append (append $head $restart_list) $body) */
-                   | empty /*= (monify (append $head $restart_list)) */ ))
               | comment_eol // Normal case, handle child lines if any:
                 (indent body /*= (append $head $body) */
                  | empty     /*= (monify $head) */ /* No child lines */ ))
@@ -390,11 +394,9 @@ i_expr : head (splice hspace*
                 | dedent error ))
          | DOLLAR hspace* (i_expr                    /*= (list $i_expr) */
                            | comment_eol indent body /*= (list $body) */ )
-         | restart_list (i_expr | comment_eol (indent body)?) // TODO action
          | abbrevh hspace*
            (i_expr /*= (list $abbrevh $i_expr) */
-            | (comment_eol indent body /*= (list $abbrevh $i_expr) */ ))
-         ;
+            | (comment_eol indent body /*= (list $abbrevh $i_expr) */ ))  ;
 
 // Top-level sweet-expression production, t_expr.
 // This production handles special cases, then in the normal case
