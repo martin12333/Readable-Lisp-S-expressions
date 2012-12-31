@@ -25,9 +25,7 @@
 
 grammar sweet;
 
-options {
-  k = 1;  // Force grammar to be LL(1).
-}
+options { k = 1; } // Force grammar to be LL(1).
 
 start : t_expr;  // This grammar defines a sweet-expression.
 
@@ -59,13 +57,10 @@ fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
 
 // Various forms of comments - line comments and special comments:
 LCOMMENT :       ';' NOT_EOL_CHAR* ; // "Line comment"
-BLOCK_COMMENT   // This is #| ... #|
-    : '#|'
+BLOCK_COMMENT : '#|' // This is #| ... #|
       (options {greedy=false;} : (BLOCK_COMMENT | .))*
-      '|#' {$channel=HIDDEN;}
-    ;
+      '|#' {$channel=HIDDEN;} ;
 DATUM_COMMENT_START : '#;' ;
-
 // SRFI-105 notes that "implementations could trivially support
 // (simultaneously) markers beginning with #! followed by a letter
 // (such as the one to identify support for curly-infix-expressions),
@@ -80,7 +75,6 @@ SHARP_BANG_FILE :       '#!' ('/' | '.')
 SHARP_BANG_MARKER : '#!' ('a'..'z'|'A'..'Z'|'_')
                          ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')* ;
 
-
 // End-of-line (EOL) is extremely special in sweet-expressions.
 // After reading it, we'll need to read in any following indent characters
 // (if indent processing is active) to determine if have an INDENT or DEDENTs.
@@ -89,16 +83,13 @@ SHARP_BANG_MARKER : '#!' ('a'..'z'|'A'..'Z'|'_')
 // We support lone formfeeds on a line to support the GNU Coding Standards
 // (http://www.gnu.org/prep/standards/standards.html), which says:
 // "Please use formfeed characters (control-L) to divide the program
-// into pages at logical places (but not within a function).
-// It does not matter just how long the pages are, since they do not
-// have to fit on a printed page. The formfeeds should appear alone on
-// lines by themselves."
+// into pages at logical places (but not within a function)...
+// The formfeeds should appear alone on lines by themselves."
 // Thus, FF and VT are supported, but they must be at the beginning
 // of a line and do not themselves create a newline (they still have
 // to be followed by an EOL_SEQUENCE).
 fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
-fragment BLANK_LINE 
-        :        (' ' | '\t')* ';' NOT_EOL_CHAR* | (FF | VT)+ ;
+fragment BLANK_LINE   : (' ' | '\t')* ';' NOT_EOL_CHAR* | (FF | VT)+ ;
 EOL     : (FF | VT)* EOL_SEQUENCE
           (BLANK_LINE EOL_SEQUENCE)* ;
 
@@ -119,12 +110,10 @@ LBRACKET : '[';
 RBRACKET : ']';
 LBRACE   : '{';
 RBRACE   : '}';
-
 APOS           : '\'';
 QUASIQUOTE     : '\`';
 UNQUOTE_SPLICE : ',' '@';
 UNQUOTE        : ',';
-
 
 // Special non-terminals that act essentially as comments.
 // They are used clarify the grammar meaning, as follows:
@@ -138,7 +127,6 @@ error : ;  // Specifically identifies an error branch.
 // not defined, indicates where a parser might specifically check for
 // errors, and also acts as a check on the grammar itself (to ensure that
 // there isn't some valid interpretation for that sequence at that point).
-
 
 // STUB BEGIN - remove this stub section for the SRFI, etc.; it's
 // here for debugging and testing the grammar.
@@ -165,23 +153,19 @@ fragment EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
 FLOAT
     :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
     |   '.' ('0'..'9')+ EXPONENT?
-    |   ('0'..'9')+ EXPONENT
-    ;
+    |   ('0'..'9')+ EXPONENT ;
 INT     :        ('0'..'9')+ ;
 fragment HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
 fragment OCTAL_ESC
     :   '\\' ('0'..'3') ('0'..'7') ('0'..'7')
     |   '\\' ('0'..'7') ('0'..'7')
-    |   '\\' ('0'..'7')
-    ;
+    |   '\\' ('0'..'7') ;
 fragment UNICODE_ESC
-    :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
-    ;
+    :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT ;
 fragment ESC_SEQ
     :   '\\' ('b'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\')
     |   UNICODE_ESC
-    |   OCTAL_ESC
-    ;
+    |   OCTAL_ESC ;
 
 STRING : '\"' ( ESC_SEQ | ~('\"'|'\\') ) '\"' ;
 CHAR   : '#\\' ('!'..'@' | '['..'`' | '{'..'~' | ('A'..'Z' | 'a'..'z')+) ;
@@ -214,10 +198,9 @@ dedent  : DEDENT;
 abbrevh : APOSH /*= 'quote */
         | QUASIQUOTEH /*= 'quasiquote */
         | UNQUOTE_SPLICEH /*= 'unquote-splicing */
-        | UNQUOTEH /*= 'unquote */
-        ;
+        | UNQUOTEH /*= 'unquote */ ;
 abbrev_noh : APOS | QUASIQUOTE | UNQUOTE_SPLICE | UNQUOTE ;
-abbrev_all : abbrevh | abbrev_noh;
+abbrev_all : abbrevh | abbrev_noh ;
 splice     : GROUP;  // Use this synonym to make its purpose clearer.
 sublist    : DOLLAR; // Use this synonym to make its purpose clearer.
 
@@ -225,11 +208,11 @@ sublist    : DOLLAR; // Use this synonym to make its purpose clearer.
 // n_expr is a full neoteric-expression.  Note that n_expr does *not*
 // consume following horizontal space; this is important for correctly
 // handling initially-indented lines with more than one n-expression.
-n_expr :         abbrev_all* n_expr_noabbrev;
+n_expr :         abbrev_all* n_expr_noabbrev ;
 
 // n_expr_first is a neoteric-expression, but abbreviations
 // cannot have an hspace afterwards (used by "head"):
-n_expr_first:    abbrev_noh* n_expr_noabbrev;
+n_expr_first:    abbrev_noh* n_expr_noabbrev ;
 
 // Whitespace and indentation names
 ichar   : SPACE | TAB | BANG ; // indent char - creates INDENT/DEDENTs
@@ -237,7 +220,7 @@ hspace  : SPACE | TAB ;        // horizontal space
 
 wspace  : hspace;  // or eolchars
 
-// Handle comment regions other than ";":
+// "Special comments" (scomments) are comments other than ";" (line comments):
 sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER ;
 scomment : BLOCK_COMMENT
          | DATUM_COMMENT_START hspace* n_expr
@@ -248,7 +231,6 @@ scomment : BLOCK_COMMENT
 // this may reset indent as part of EOL processing.
 
 comment_eol : LCOMMENT? EOL;
-
 
 // This BNF uses the following slightly complicated pattern in many places:
 //   from_n_expr ((hspace+ (stuff /*= val1 */ | empty /*= val2 */ ))
@@ -261,16 +243,14 @@ comment_eol : LCOMMENT? EOL;
 // we *could* instead accept this simpler BNF pattern:
 //   from_n_expr hspace* stuff?
 // but while that simpler BNF pattern would correctly accept *good* input,
-// it would also accept *incorrect* input like this:
-//   a(1)q
-// In particular, the simpler BNF pattern would accept n-expressions followed
-// immediately by other n-expressions, without any intervening whitespace.
+// it would also accept *incorrect* input like "a(1)q" or other n-expressions
+// followed immediately by other n-expressions without intervening whitespace.
 // We want to detect such situations as errors, so we'll use the
 // more complex (and more persnickety) BNF pattern instead.
 
 // Here we handle restarts, which are a special case.
 
-// Handle the first line of a restart.  This is very similar to the normal "head";
+// Handle the first line of a restart.  This is very similar to "head";
 // it reads in a line, and returns a list of its neoteric-expressions.
 // We have to handle the restart_head differently from head, because
 // i_expr is designed to support child lines, but in this case we CANNOT have
@@ -279,12 +259,12 @@ comment_eol : LCOMMENT? EOL;
 // GROUP and scomment, and we permit empty contents (unlike "head").
 // TODO: Handle "$" from head.
 restart_head: head /*= $head */
-               | (GROUP | scomment) hspace* restart_head /*= $restart_head */
-               | empty /*= '() */ ;
+              | (GROUP | scomment) hspace* restart_head /*= $restart_head */
+              | empty /*= '() */ ;
 
 restart_contents: i_expr comment_eol*
           (restart_contents /*= (cons $i_expr restart_contents) */
-           | empty /*= (list $i_expr) */ /* We hit RESTART_END */);
+           | empty /*= (list $i_expr) */ /* We hit RESTART_END */) ;
 
 // Restarts. In a non-tokenizing system, reading RESTART_END inside i_expr
 // will set the current indent, causing dedents all the way back to here.
@@ -327,8 +307,7 @@ head :  PERIOD
            (hspace+
              (rest    /*= (cons $n_expr_first rest) */
               | empty /*= (list $n_expr_first) */ ))
-            | empty   /*= (list $n_expr_first) */  )  
-            ;
+            | empty   /*= (list $n_expr_first) */  ) ;
 
 // The "rest" production reads the rest of the expressions on a line
 // (the "rest of the head"), after the first expression of the line.
@@ -363,7 +342,7 @@ rest    : PERIOD hspace+ n_expr hspace* /* improper list. */
 // the special terminals DEDENT and BADDENT.
 
 body    :        i_expr (same body /*= (cons $i_expr $body) */
-                        | dedent   /*= (list $i_expr) */ );
+                        | dedent   /*= (list $i_expr) */ ) ;
 
 // "i-expr" (indented sweet expressions expressions)
 // is the main production for sweet-expressions in the usual case.
@@ -399,7 +378,7 @@ i_expr : head (splice hspace*
                 (i_expr /* TODO - should we even permit this? */
                  | comment_eol
                   (indent body /*= (append (append $head $restart_list) $body) */
-                   | empty /*= (monify (append $head $restart_list)) */ /* No child lines */ ))
+                   | empty /*= (monify (append $head $restart_list)) */ ))
               | comment_eol // Normal case, handle child lines if any:
                 (indent body /*= (append $head $body) */
                  | empty     /*= (monify $head) */ /* No child lines */ ))
@@ -424,30 +403,17 @@ i_expr : head (splice hspace*
 // The rule for "indent processing disabled on initial top-level hspace"
 // is a very simple (and clever) BNF construction by Alan Manuel K. Gloria.
 // If there is an indent it simply reads a single n-expression and returns.
-// If there is more than one on an initially-indented line, the later horizontal
-// space will not have have been read, so this production will
+// If there is more than one on an initially-indented line, the later
+// horizontal space will not have have been read, so this production will
 // fire again on the next invocation.
 
 t_expr  : comment_eol t_expr /*= $t_expr */ /* Initial lcomment, try again */
         | hspace+
           (n_expr /*= $n_expr */ /* indent processing disabled. */
-             (n_expr error)? /* Should have SOME separator after n-expression! */
+             (n_expr error)? /* Have SOME separator after n-expression! */
            | comment_eol t_expr /*= $t_expr */ /* Indented lcomment */
            | BANG error )
-        | BANG error
+        | BANG error /* Illegal to use "!" for initial indent */
         | EOF /*= EOF */ /* End of file */
         | i_expr /*= $i_expr */ /* Normal case */ ;
 
-// Other ANTLR examples:
-// COMMENT
-//    :   '//' ~('\n'|'\r')* '\r'? '\n' {$channel=HIDDEN;}
-//    |   '/*' ( options {greedy=false;} : . )* '*/' {$channel=HIDDEN;}
-//    ;
-
-/*
-WS  :   ( ' '
-        | '\t'
-        | '\r'
-        | '\n'
-        ) {$channel=HIDDEN;}
-    ; 
