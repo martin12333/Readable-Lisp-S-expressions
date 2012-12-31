@@ -266,6 +266,7 @@ comment_eol : LCOMMENT? EOL;
 // Thus, we call on "head" to do many things, but we specially handle leading
 // GROUP and scomment, and we permit empty contents (unlike "head").
 restart_head: head (DOLLAR hspace* restart_head /*= (list $head $restart_head) */
+                    | splice hspace* error /* TODO */
                     | empty /*= $head */ )
               | (GROUP | scomment) hspace* restart_head /*= $restart_head */
               | DOLLAR hspace* restart_head /*= (list $restart_head) */
