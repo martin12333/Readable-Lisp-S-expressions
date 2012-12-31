@@ -248,6 +248,7 @@ comment_eol : LCOMMENT? EOL;
 // We want to detect such situations as errors, so we'll use the
 // more complex (and more persnickety) BNF pattern instead.
 
+
 // Here we handle restarts, which are a special case.
 
 // Handle the first line of a restart.  This is very similar to "head";
@@ -258,17 +259,17 @@ comment_eol : LCOMMENT? EOL;
 // child lines.  This creates a "head-like" with functionality we CAN support.
 // Thus, we call on "head" to do many things, but we specially handle leading
 // GROUP and scomment, and we permit empty contents (unlike "head").
-// TODO: Handle "$" from head.
-restart_head: head /*= $head */
+restart_head: head (DOLLAR restart_head /*= (list $head $restart_head) */
+                    | empty /*= $head */ )
               | (GROUP | scomment) hspace* restart_head /*= $restart_head */
-              | DOLLAR restart_head /*= (list $head $restart_head) */
+              | DOLLAR restart_head /*= (list $restart_head) */
               | empty /*= '() */ ;
 
 restart_contents: i_expr comment_eol*
           (restart_contents /*= (cons $i_expr restart_contents) */
            | empty /*= (list $i_expr) */ /* We hit RESTART_END */) ;
 
-// Restarts. In a non-tokenizing system, reading RESTART_END inside i_expr
+// In a non-tokenizing system, reading RESTART_END inside i_expr
 // will set the current indent, causing dedents all the way back to here.
 // We'll consume hspace* at the end of this production; the RESTART_END
 // token wouldn't be recognized unless it was delimited anyway, so there's
