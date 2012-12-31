@@ -18,10 +18,12 @@
 // - (Maybe) Handle EOF in weird places.
 
 // ; Utility function:
+// ; If x is a 1-element list, return (car x), else return x
 // (define (monify x)
-//   (if (null? (cdr x))
-//     (car x)
-//     x)
+//   (cond
+//     ((not (pair? x)) x)
+//     ((null? (cdr x)) (car x))
+//     (#t x)))
 
 grammar sweet;
 
