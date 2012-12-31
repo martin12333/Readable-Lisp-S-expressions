@@ -395,11 +395,11 @@ i_expr : head (splice hspace*
               | DOLLAR hspace*
                 (i_expr /*= (list (monify $head) $i_expr) */
                  | comment_eol indent body /*= (list $body) */ )
-              | restart_list  // TODO
-                (i_expr
+              | restart_list  // TODO - these are probably wrong:
+                (i_expr /* TODO - should we even permit this? */
                  | comment_eol
-                  (indent body
-                   | empty))
+                  (indent body /*= (append (append $head $restart_list) $body) */
+                   | empty /*= (monify (append $head $restart_list)) */ /* No child lines */ ))
               | comment_eol // Normal case, handle child lines if any:
                 (indent body /*= (append $head $body) */
                  | empty     /*= (monify $head) */ /* No child lines */ ))
