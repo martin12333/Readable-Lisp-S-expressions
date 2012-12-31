@@ -408,14 +408,22 @@ i_expr : head (splice hspace*
 // This production handles special cases, then in the normal case
 // drops to the i_expr production.
 
+// The rule for "indent processing disabled on initial top-level hspace"
+// is a very simple (and clever) BNF construction by Alan Manuel K. Gloria.
+// If there is an indent it simply reads a single n-expression and returns.
+// If there is more than one on an initially-indented line, the later horizontal
+// space will not have have been read, so this production will
+// fire again on the next invocation.
+
 t_expr  : comment_eol t_expr /*= $t_expr */ /* Initial lcomment, try again */
-        | hspace+ (n_expr /*= $n_expr */ /* indent processing disabled */
-                   | comment_eol t_expr /*= $t_expr */ /* Indented lcomment */
-                   | BANG error )
+        | hspace+
+          (n_expr /*= $n_expr */ /* indent processing disabled. */
+           (n_expr error)? /* Should have SOME separator after n-expression! */
+           | comment_eol t_expr /*= $t_expr */ /* Indented lcomment */
+           | BANG error )
         | BANG error
         | EOF /*= EOF */ /* End of file */
-        | i_expr /*= $i_expr */ /* Normal case */;
-
+        | i_expr /*= $i_expr */ /* Normal case */ ;
 
 // Other ANTLR examples:
 // COMMENT
