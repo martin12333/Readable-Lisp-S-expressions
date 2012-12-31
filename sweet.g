@@ -56,7 +56,7 @@ fragment EOL_CHAR : '\n' | '\r' | FF | VT | NEL; // These start EOL
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
 
 // Various forms of comments - line comments and special comments:
-LCOMMENT :       ';' NOT_EOL_CHAR* ; // "Line comment"
+LCOMMENT :       ';' NOT_EOL_CHAR* ; // Line comment - doesn't include EOL
 BLOCK_COMMENT : '#|' // This is #| ... #|
       (options {greedy=false;} : (BLOCK_COMMENT | .))*
       '|#' {$channel=HIDDEN;} ;
@@ -356,7 +356,7 @@ rest    : PERIOD hspace+ n_expr hspace* /* improper list. */
 body    :        i_expr (same body /*= (cons $i_expr $body) */
                         | dedent   /*= (list $i_expr) */ ) ;
 
-// "i-expr" (indented sweet expressions expressions)
+// "i-expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
 // This can be implemented with one-character-lookahead by also
 // passing in the "current" indent ("" to start), and having it return
@@ -412,13 +412,18 @@ i_expr : head (splice hspace*
 // horizontal space will not have have been read, so this production will
 // fire again on the next invocation.
 
+// Although "!" is an indent character, it's an error to use it at the
+// topmost level.  The only reason to indent at the top is to disable
+// indent processing, for backwards compatibility.  Detecting this as
+// an error should detect some mistakes.
+
 t_expr  : comment_eol t_expr /*= $t_expr */ /* Initial lcomment, try again */
         | hspace+
           (n_expr /*= $n_expr */ /* indent processing disabled. */
              (n_expr error)? /* Have SOME separator after n-expression! */
            | comment_eol t_expr /*= $t_expr */ /* Indented lcomment */
            | BANG error )
-        | BANG error /* Illegal to use "!" for initial indent */
+        | BANG error
         | EOF /*= EOF */ /* End of file */
         | i_expr /*= $i_expr */ /* Normal case */ ;
 
