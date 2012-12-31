@@ -376,11 +376,12 @@ body    :        i_expr (same body /*= (cons $i_expr $body) */
 
 i_expr : head (splice hspace*
                 (options {greedy=true;} :
-                 // TODO: This is an extension, allow \\ EOL to continue line.
-                 // Should this be an error instead?
+                 comment_eol error
+                 // Could instead do:
+                 //    comment_eol same i_expr /*= (append $head $i_expr) */
+                 // to allow \\ EOL as line-continuation.
                  // John Cowan recommends (Sat, 29 Dec 2012 13:18:18 -0500)
-                 // that we *not* do this, because it'd be confusing:
-                 comment_eol same i_expr /*= (append $head $i_expr) */
+                 // that we *not* do this, because it'd be confusing.
                  // Normal case: splice ends i_expr immediately:
                  | empty /*= $head */ )
               | DOLLAR hspace*
