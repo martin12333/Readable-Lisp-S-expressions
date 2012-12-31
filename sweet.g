@@ -265,10 +265,10 @@ comment_eol : LCOMMENT? EOL;
 // child lines.  This creates a "head-like" with functionality we CAN support.
 // Thus, we call on "head" to do many things, but we specially handle leading
 // GROUP and scomment, and we permit empty contents (unlike "head").
-restart_head: head (DOLLAR restart_head /*= (list $head $restart_head) */
+restart_head: head (DOLLAR hspace* restart_head /*= (list $head $restart_head) */
                     | empty /*= $head */ )
               | (GROUP | scomment) hspace* restart_head /*= $restart_head */
-              | DOLLAR restart_head /*= (list $restart_head) */
+              | DOLLAR hspace* restart_head /*= (list $restart_head) */
               | empty /*= '() */ ;
 
 restart_contents: i_expr comment_eol*
