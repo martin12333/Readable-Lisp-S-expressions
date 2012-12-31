@@ -355,7 +355,7 @@ rest    : PERIOD hspace+ n_expr hspace* /* improper list. */
 // "body" handles the sequence of 1+ child lines in an i_expr
 // (e.g., after a "head"), each of which is itself an i_expr.
 // Note that an i-expr will consume any line comments or hspaces
-// before it returns. 
+// before it returns back to the "body" production.
 // Non-tokenizing implemenation notes:
 // Note that i_expr will consume any line comments (line comments after
 // content, as well as lines that just contain indents and comments).
