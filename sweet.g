@@ -275,11 +275,15 @@ restart_contents: i_expr comment_eol*
           (restart_contents /*= (cons $i_expr restart_contents) */
            | empty /*= (list $i_expr) */ /* We hit RESTART_END */) ;
 
-// In a non-tokenizing system, reading RESTART_END inside i_expr
-// will set the current indent, causing dedents all the way back to here.
+// A restart_list starts with an optional restart_head (one line),
+// followed by optional restart_contents (0 or more i_expr's).
+// We start with a head-like production, not an i_expr, to simplify the BNF.
 // We'll consume hspace* at the end of this production; the RESTART_END
-// token wouldn't be recognized unless it was delimited anyway, so there's
-// no need for the more complex BNF construct "(hspace+ (x | empty) | empty").
+// token wouldn't be recognized unless it was delimited anyway, and
+// consuming hspace* after it means we can avoid using the
+// complex BNF construct "(hspace+ (x | empty) | empty)".
+// In a non-tokenizing implementation, reading RESTART_END inside i_expr
+// will set the current indent, causing dedents all the way back to here.
 restart_list : RESTART hspace* restart_head
           ( RESTART_END hspace*
             /*= (if (null? $restart_head) '() (list (monify $restart_head))) */
