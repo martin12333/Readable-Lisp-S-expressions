@@ -363,7 +363,7 @@ rest    : PERIOD hspace+ n_expr hspace* /* improper list. */
 // the special terminals DEDENT and BADDENT.
 
 body    :        i_expr (same body /*= (cons $i_expr $body) */
-                        | dedent   /*= (list $body) */ );
+                        | dedent   /*= (list $i_expr) */ );
 
 // "i-expr" (indented sweet expressions expressions)
 // is the main production for sweet-expressions in the usual case.
