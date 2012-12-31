@@ -269,7 +269,9 @@ comment_eol : LCOMMENT? EOL;
 // more complex (and more persnickety) BNF pattern instead.
 
 
-head_or_empty:	head /*= $head */ | empty /*= '() */ ;
+head_or_empty: head /*= $head */
+               | scomment head_or_empty /*= $head_or_empty */
+               | empty /*= '() */ ;
 
 restart_contents: i_expr comment_eol*
           (restart_contents /*= (cons $i_expr restart_contents) */
