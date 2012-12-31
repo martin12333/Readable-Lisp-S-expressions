@@ -272,9 +272,9 @@ restart_head: head (DOLLAR hspace* restart_head /*= (list $head $restart_head) *
               | DOLLAR hspace* restart_head /*= (list $restart_head) */
               | empty /*= '() */ ;
 
-restart_contents: i_expr comment_eol*
-          (restart_contents /*= (cons $i_expr restart_contents) */
-           | empty /*= (list $i_expr) */ /* We hit RESTART_END */) ;
+restart_contents: i_expr comment_eol* restart_contents
+               /*= (cons $i_expr $restart_contents) */
+              | empty /*= '() */ ; /* Hit RESTART_END */
 
 // A restart_list starts with an optional restart_head (one line),
 // followed by optional restart_contents (0 or more i_expr's).
@@ -290,11 +290,10 @@ restart_list : RESTART hspace* restart_head
             /*= (if (null? $restart_head) '() (list (monify $restart_head))) */
            | /*= (push_indent "") */
              comment_eol+
-             (restart_contents
+             restart_contents
                 /*= (if (null? $restart_head)
                       $restart_contents
                       (cons $restart_head $restart_contents)) */
-              | empty /*= $restart_head */ )
              RESTART_END /*= (restore_indent) */ hspace* );
 
 
