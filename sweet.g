@@ -251,15 +251,17 @@ comment_eol : LCOMMENT? EOL;
 // Here we handle restarts, which are a special case.
 
 // Handle the first line of a restart.  This is very similar to "head";
-// it reads in a line, and returns a list of its neoteric-expressions.
-// We have to handle the restart_head differently from head, because
-// i_expr is designed to support child lines, but in this case we CANNOT have
-// child lines - yet we still want the functionality we CAN support.
+// it reads in a line, and returns a list of its neoteric-expressions;
+// it consumes all trailing hspace.
+// We have to handle restart_head differently from head, because
+// i_expr is designed to support child lines, but the first line can't have
+// child lines.  This creates a "head-like" with functionality we CAN support.
 // Thus, we call on "head" to do many things, but we specially handle leading
 // GROUP and scomment, and we permit empty contents (unlike "head").
 // TODO: Handle "$" from head.
 restart_head: head /*= $head */
               | (GROUP | scomment) hspace* restart_head /*= $restart_head */
+              | DOLLAR restart_head /*= (list $head $restart_head) */
               | empty /*= '() */ ;
 
 restart_contents: i_expr comment_eol*
