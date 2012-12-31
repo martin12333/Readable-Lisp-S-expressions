@@ -331,7 +331,7 @@ head :  PERIOD
 // next n-expression (not to the entire indented expression).
 
 rest    : PERIOD hspace+ n_expr hspace* /* improper list. */
-          /*= $n_expr */
+          /*= $n_expr */  // TODO: Handle period "." end-of-line?
           (n_expr error)? /* Shouldn't have another n_expr! */
         | scomment hspace* (rest /*= $rest */ | empty /*= '() */ )
         | n_expr
