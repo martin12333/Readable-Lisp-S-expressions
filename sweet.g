@@ -269,24 +269,24 @@ comment_eol : LCOMMENT? EOL;
 // more complex (and more persnickety) BNF pattern instead.
 
 
+head_or_empty:	head /*= $head */ | empty /*= '() */ ;
 
-restart_contents 
-        : i_expr
-           (comment_eol*
-             (restart_contents /*= (cons $i_expr restart_contents) */
-             | empty /*= (list $i_expr) */));
+restart_contents: i_expr comment_eol*
+          (restart_contents /*= (cons $i_expr restart_contents) */
+           | empty /*= (list $i_expr) */ );
 
 // Restarts. In a non-tokenizing system, reading RESTART_END will set the
 // current indent, causing dedents all the way back to here.
-restart_list 
-        : RESTART hspace*
-          (head | empty)
+restart_list : RESTART hspace* head_or_empty
           ( RESTART_END
-            /*= (list (monify $head)) */
+            /*= (if (null? head_or_empty) '() (list (monify $head_or_empty))) */
            | /*= (push_indent "") */
              comment_eol+
-             (restart_contents /*= $restart_contents */
-              | empty /*= '() */ ))
+             (restart_contents
+                /*= (if (null? head_or_empty)
+                      $restart_contents
+                      (cons $head_or_empty $restart_contents)) */
+              | empty /*= $head_or_empty */ ))
           RESTART_END /*= (restore_indent) */ hspace* ;
 
 
