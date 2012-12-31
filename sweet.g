@@ -421,7 +421,6 @@ i_expr : head (splice hspace*
 t_expr  : comment_eol t_expr /*= $t_expr */ /* Initial lcomment, try again */
         | hspace+
           (n_expr /*= $n_expr */ /* indent processing disabled. */
-             (n_expr error)? /* Have SOME separator after n-expression! */
            | comment_eol t_expr /*= $t_expr */ /* Indented lcomment */
            | BANG error )
         | BANG error
