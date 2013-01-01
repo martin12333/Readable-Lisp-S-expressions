@@ -340,12 +340,12 @@ head returns [Object v]:  PERIOD
                | empty  /*= (list '.) */ )
             | empty     /*= (list '.) */ )
         | restart_list
-          (rest /*= (cons (list (monify $restart_list)) $rest) */
+          (rest1=rest /*= (cons (list (monify $restart_list)) $rest) */
            | empty /*= (list (monify $restart_list)) */ )
         | n_expr_first (
            (hspace+
-             (rest    /*= (cons $n_expr_first $rest) */
-              | empty /*= (list $n_expr_first) */ ))
+             (rest2=rest    {$v = cons($n_expr_first.v, $rest2.v);} /*= (cons $n_expr_first $rest) */
+              | empty {$v = list($n_expr_first.v);} /*= (list $n_expr_first) */ ))
             | empty   {$v = list($n_expr_first.v);} /*= (list $n_expr_first) */  ) ;
 
 // The "rest" production reads the rest of the expressions on a line
@@ -362,14 +362,14 @@ head returns [Object v]:  PERIOD
 rest returns [Object v]   : PERIOD hspace+ n_expr hspace* /* improper list. */
           /*= $n_expr */  // TODO: Handle period "." end-of-line?
           (n_expr error)? /* Shouldn't have another n_expr! */
-        | scomment hspace* (rest /*= $rest */ | empty /*= '() */ )
+        | scomment hspace* (rest1=rest /*= $rest */ | empty /*= '() */ )
         | restart_list
-            (rest /*= (cons (list (monify $restart_list)) $rest) */
+            (rest2=rest /*= (cons (list (monify $restart_list)) $rest) */
              | empty /*= list (monify $restart_list)) */ )
         | n_expr
-            ((hspace+ (rest /*= (cons $n_expr $rest) */
-                       | empty /*= (list $n_expr) */ ))
-              | empty /*= (list $n_expr) */) ;
+            ((hspace+ (rest3=rest {$v = cons($n_expr.v, $rest3.v);} /*= (cons $n_expr $rest) */
+                       | empty {$v = list($n_expr.v);} /*= (list $n_expr) */ ))
+              | empty {$v = list($n_expr.v);} /*= (list $n_expr) */) ;
 
 
 // "body" handles the sequence of 1+ child lines in an i_expr
@@ -383,8 +383,8 @@ rest returns [Object v]   : PERIOD hspace+ n_expr hspace* /* improper list. */
 // than the indent used on entry to body; the latest indent is compared by
 // the special terminals DEDENT and BADDENT.
 
-body  returns [Object v]  :        i_expr (same body /*= (cons $i_expr $body) */
-                        | dedent   /*= (list $i_expr) */ ) ;
+body  returns [Object v]  :        i_expr (same body1=body {$v = cons($i_expr.v, $body1.v);} /*= (cons $i_expr $body) */
+                        | dedent   {$v = list($i_expr.v);} /*= (list $i_expr) */ ) ;
 
 // "i-expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
@@ -416,9 +416,9 @@ i_expr returns [Object v] : head (splice hspace*
                  | empty {$v = $head.v;} /*= $head */ )
               | DOLLAR hspace*
                 (i_expr /*{$v = list(monify($head.v), $i_expr.v);}*/ /*= (list (monify $head) $i_expr) */
-                 | comment_eol indent body /*= (list $body) */ )
+                 | comment_eol indent body1=body /*= (list $body) */ )
               | comment_eol // Normal case, handle child lines if any:
-                (indent body /*= (append $head $body) */
+                (indent body2=body {$v = append($head.v, $body2.v);} /*= (append $head $body) */
                  | empty     {$v = monify($head.v);} /*= (monify $head) */ /* No child lines */ ))
          | (GROUP | scomment) hspace*
              (i_expr /*= $i_expr */ /* ignore the GROUP/scomment */

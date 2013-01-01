@@ -42,7 +42,9 @@ public class Pair extends Object {
     return cons(x, list(y));
   }
 
-  public static Pair append(Object x, Pair y) {
+  // "y" really needs to be a pair, but that makes it harder to
+  // to work with ANTLR
+  public static Object append(Object x, Object y) {
     if (x == null) {
       return y;
     } else if (x instanceof Pair) {
