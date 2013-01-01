@@ -34,6 +34,23 @@ public class Pair extends Object {
     return x instanceof Pair;
   }
 
+  // This does not check for cycles
+  private static Boolean ends_in_null(Pair x) {
+    if (nullp(cdr(x))) {
+      return true;
+    } else if (! pairp(cdr(x))) {
+      return false;
+    } else {
+      return ends_in_null( (Pair) cdr(x));
+    }
+  }
+
+  public static Boolean listp(Object x) { // Scheme "list?"
+    if (nullp(x)) return false;
+    else if (! pairp(x)) return false;
+    else return ends_in_null( (Pair) x);
+  }
+
   public static Pair list(Object x) {
     return cons(x, null);
   }
@@ -89,6 +106,22 @@ public class Pair extends Object {
       return car( (Pair) x);
     } else {return x;}
   }
+
+// (define (mklist x)
+//   (cond
+//     ((not (pair? x)) (list x))
+//     ((not (list? x)) (list x))
+//     (#t x)))
+
+  public static Object mklist(Object x) {
+    if (! pairp(x)) {
+      return list(x);
+    } else if (! listp(x)) {
+      return list(x);
+    } else {return x;}
+  }
+
+  
 
 }
 

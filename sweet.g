@@ -205,10 +205,10 @@ n_expr_noabbrev returns [Object v]
 indent  : INDENT;
 dedent  : DEDENT;
 
-abbrevh : APOSH /*= 'quote */
-        | QUASIQUOTEH /*= 'quasiquote */
-        | UNQUOTE_SPLICEH /*= 'unquote-splicing */
-        | UNQUOTEH /*= 'unquote */ ;
+abbrevh returns [Object v] : APOSH {$v = "quote";} /*= 'quote */
+        | QUASIQUOTEH {$v = "quasiquote";} /*= 'quasiquote */
+        | UNQUOTE_SPLICEH {$v = "unquote-splicing";} /*= 'unquote-splicing */
+        | UNQUOTEH {$v = "unquote";} /*= 'unquote */ ;
 abbrev_noh : APOS | QUASIQUOTE | UNQUOTE_SPLICE | UNQUOTE ;
 abbrev_all : abbrevh | abbrev_noh ;
 splice     : GROUP;  // Use this synonym to make its purpose clearer.
@@ -430,8 +430,8 @@ i_expr returns [Object v] :
          | DOLLAR hspace* (i_expr4=i_expr  {$v=list($i_expr4.v);}  /*= (list $i_expr) */
                            | comment_eol indent body4=body {$v=list($body4.v);} /*= (list $body) */ )
          | abbrevh hspace*
-           (i_expr5=i_expr /*= (list $abbrevh $i_expr) */
-            | (comment_eol indent body5=body /*= (list $abbrevh $i_expr) */ ))  ;
+           (i_expr5=i_expr {$v=list($abbrevh.v, $i_expr5.v);} /*= (list $abbrevh $i_expr) */
+            | (comment_eol indent body5=body {$v=list($abbrevh.v, append(mklist($i_expr5.v), $body5.v));} /*= (list $abbrevh $i_expr) */ ))  ;
 
 // Top-level sweet-expression production, t_expr.
 // This production handles special cases, then in the normal case
