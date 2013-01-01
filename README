@@ -106,6 +106,9 @@ proper CLASSPATH setting to use it.
 
 Make sure the CLASSPATH includes (1) the jar file ANTLR or ANTLRWorks and
 (2) the "output" subdirectory.
+In ANTLRWorks, you may want to select File/Preferences, "Compiler" tab,
+and create a custom Classpath that includes these absolute directory names
+(separated by ";" in Windows or ":" everywhere else).
 
 
 Key files
