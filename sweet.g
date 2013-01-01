@@ -156,6 +156,22 @@ DEDENT : '\\<' ' '* '\r'? '\n'?;
 //   d e
 //
 
+// This file could be modified to directly support indent/dedent.
+// See "The Definitive ANTLR Reference" page 95 for a code outline;
+// basically, must detect when to generate INDENT and DEDENT.
+// Multiple DEDENT tokens may be generated, which is possible in v3
+// but you need to override the lexer as described.
+// In our case, we probably should generate 2 different indent tokens,
+// INDENT_WITH_BANG and INDENT_WITHOUT_BANG; both would be an "indent",
+// but at the top level they would be different so that indent-with-bang
+// could be detected as an error.
+// Indents should only be accepted when outside (...), [...], {...},
+// so each of those characters should increment/decrement a
+// "containment" integer (which is initially 0); indents/dedents
+// should only recognized when containment==0.
+// See also:
+// http://grepcode.com/file/repo1.maven.org/maven2/org.python/jython/2.5.3/org/python/antlr/PythonTokenSource.java
+
 // The following is intentionally limited.  In particular, it doesn't include
 // the characters used for INDENT/DEDENT.
 NAME  : ('a'..'z'|'A'..'Z'|'_'|'\\') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'\\')* ;
