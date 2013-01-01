@@ -336,9 +336,9 @@ restart_list returns [Object v]: RESTART hspace* restart_head
 
 head returns [Object v]:  PERIOD
            (hspace+
-              ((n_expr hspace* /*= (list $n_expr) */ (n_expr error)?)
-               | empty  /*= (list '.) */ )
-            | empty     /*= (list '.) */ )
+              ((n_expr1=n_expr hspace* {$v = list($n_expr1.v);} /*= (list $n_expr) */ (n_expr2=n_expr error)?)
+               | empty  {$v = list(".");} /*= (list '.) */ )
+            | empty     {$v = list(".");} /*= (list '.) */ )
         | restart_list
           (rest1=rest /*= (cons (list (monify $restart_list)) $rest) */
            | empty /*= (list (monify $restart_list)) */ )
@@ -359,17 +359,17 @@ head returns [Object v]:  PERIOD
 // and abbreviations followed by a space merely apply to the
 // next n-expression (not to the entire indented expression).
 
-rest returns [Object v]   : PERIOD hspace+ n_expr hspace* /* improper list. */
-          /*= $n_expr */  // TODO: Handle period "." end-of-line?
-          (n_expr error)? /* Shouldn't have another n_expr! */
-        | scomment hspace* (rest1=rest /*= $rest */ | empty /*= '() */ )
+rest returns [Object v]   : PERIOD hspace+ n_expr1=n_expr hspace* /* improper list. */
+          {$v = $n_expr1.v;} /*= $n_expr */  // TODO: Handle period "." end-of-line?
+          (n_expr2=n_expr error)? /* Shouldn't have another n_expr! */
+        | scomment hspace* (rest1=rest {$v = $rest1.v;} /*= $rest */ | empty {$v = null;} /*= '() */ )
         | restart_list
             (rest2=rest /*= (cons (list (monify $restart_list)) $rest) */
              | empty /*= list (monify $restart_list)) */ )
-        | n_expr
-            ((hspace+ (rest3=rest {$v = cons($n_expr.v, $rest3.v);} /*= (cons $n_expr $rest) */
-                       | empty {$v = list($n_expr.v);} /*= (list $n_expr) */ ))
-              | empty {$v = list($n_expr.v);} /*= (list $n_expr) */) ;
+        | n_expr3=n_expr
+            ((hspace+ (rest3=rest {$v = cons($n_expr3.v, $rest3.v);} /*= (cons $n_expr $rest) */
+                       | empty {$v = list($n_expr3.v);} /*= (list $n_expr) */ ))
+              | empty {$v = list($n_expr3.v);} /*= (list $n_expr) */) ;
 
 
 // "body" handles the sequence of 1+ child lines in an i_expr
