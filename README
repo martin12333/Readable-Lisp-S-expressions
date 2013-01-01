@@ -96,6 +96,17 @@ But it's often more convenient to install.  Do this with:
 The usual conventions all work (DESTDIR, VPATH builds, etc.).
 
 
+ANTLR-based grammar
+===================
+
+The "sweet.g" file contains a BNF for sweet-expressions in ANTLR v3 format.
+You can use the ANTLRWorks IDE to manipulate it.
+It is designed to generate Java, so you need a Java compiler and a
+proper CLASSPATH setting to use it.
+
+Make sure the CLASSPATH includes (1) the jar file ANTLR or ANTLRWorks and
+(2) the "output" subdirectory.
+
 
 Key files
 =========

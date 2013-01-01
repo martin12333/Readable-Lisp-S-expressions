@@ -29,6 +29,11 @@ grammar sweet;
 
 options { k = 1; } // Force grammar to be LL(1).
 
+@header {
+import scheme.*;
+import static scheme.Pair.*;
+}
+
 start : t_expr;  // This grammar defines a sweet-expression.
 
 // Lexer. Lexical token (terminal) names are in all upper case
