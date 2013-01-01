@@ -404,7 +404,8 @@ body  returns [Object v]  :        i_expr (same body1=body {$v = cons($i_expr.v,
 // should then set the current_indent to RESTART_END, and return, to signal
 // the reception of RESTART_END.
 
-i_expr returns [Object v] : head (splice hspace*
+i_expr returns [Object v] :
+         head (splice hspace*
                 (options {greedy=true;} :
                  comment_eol error
                  // Could instead do:
@@ -415,22 +416,22 @@ i_expr returns [Object v] : head (splice hspace*
                  // Normal case: splice ends i_expr immediately:
                  | empty {$v = $head.v;} /*= $head */ )
               | DOLLAR hspace*
-                (i_expr /*{$v = list(monify($head.v), $i_expr.v);}*/ /*= (list (monify $head) $i_expr) */
-                 | comment_eol indent body1=body /*= (list $body) */ )
+                (i_expr1=i_expr {$v=list(monify($head.v), $i_expr1.v);} /*{$v = list(monify($head.v), $i_expr.v);}*/ /*= (list (monify $head) $i_expr) */
+                 | comment_eol indent body1=body {$v=list($body1.v);} /*= (list $body) */ )
               | comment_eol // Normal case, handle child lines if any:
                 (indent body2=body {$v = append($head.v, $body2.v);} /*= (append $head $body) */
                  | empty     {$v = monify($head.v);} /*= (monify $head) */ /* No child lines */ ))
          | (GROUP | scomment) hspace*
-             (i_expr /*= $i_expr */ /* ignore the GROUP/scomment */
+             (i_expr2=i_expr {$v = $i_expr2.v;} /*= $i_expr */ /* ignore the GROUP/scomment */
              | comment_eol
-               (indent body /*= $body */  /* Normal use for GROUP */
-                | same i_expr /*= $i_expr */  /* Plausible separator */
+               (indent body3=body {$v = $body3.v;} /*= $body */  /* Normal use for GROUP */
+                | same i_expr3=i_expr {$v = $i_expr3.v;} /*= $i_expr */  /* Plausible separator */
                 | dedent error ))
-         | DOLLAR hspace* (i_expr                    /*= (list $i_expr) */
-                           | comment_eol indent body /*= (list $body) */ )
+         | DOLLAR hspace* (i_expr4=i_expr  {$v=list($i_expr4.v);}  /*= (list $i_expr) */
+                           | comment_eol indent body4=body {$v=list($body4.v);} /*= (list $body) */ )
          | abbrevh hspace*
-           (i_expr /*= (list $abbrevh $i_expr) */
-            | (comment_eol indent body /*= (list $abbrevh $i_expr) */ ))  ;
+           (i_expr5=i_expr /*= (list $abbrevh $i_expr) */
+            | (comment_eol indent body5=body /*= (list $abbrevh $i_expr) */ ))  ;
 
 // Top-level sweet-expression production, t_expr.
 // This production handles special cases, then in the normal case
