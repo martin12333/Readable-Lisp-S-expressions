@@ -225,7 +225,7 @@ n_expr returns [Object v]: abbrev_all* n_expr_noabbrev
 // n_expr_first is a neoteric-expression, but abbreviations
 // cannot have an hspace afterwards (used by "head"):
 n_expr_first returns [Object v]:    abbrev_noh* n_expr_noabbrev
-                                    { System.out.print("DEBUG: n_expr_first produced " + $n_expr_noabbrev.v + "\n");
+                                    { /* System.out.print("DEBUG: n_expr_first produced " + $n_expr_noabbrev.v + "\n"); */
                                     $v = $n_expr_noabbrev.v;};
 
 // Whitespace and indentation names
@@ -451,15 +451,15 @@ i_expr returns [Object v] :
 // an error should detect some mistakes.
 
 t_expr  returns [Object v]
-  : comment_eol t_expr /*= $t_expr */ /* Initial lcomment, try again */
+  : comment_eol t_expr1=t_expr {$v=$t_expr1.v;} /*= $t_expr */ /* Initial lcomment, try again */
         | hspace+
           (n_expr { $v = $n_expr.v; } /* indent processing disabled. */
-           | comment_eol t_expr /*= $t_expr */ /* Indented lcomment */
+           | comment_eol {$v=$t_expr1.v;} t_expr /*= $t_expr */ /* Indented lcomment */
            | BANG error )
         | BANG error
-        | EOF /*= EOF */ /* End of file */
+        | EOF { System.exit(0); }/*= EOF */ /* End of file */
         | i_expr {$v = $i_expr.v;} /*= $i_expr */ /* Normal case */ ;
 
 print_t_expr
-	:	t_expr {System.out.print(string_datum($t_expr.v)); } ;
+	:	t_expr {System.out.print(string_datum($t_expr.v) + "\n"); } ;
 
