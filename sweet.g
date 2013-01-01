@@ -265,16 +265,23 @@ comment_eol : LCOMMENT? EOL;
 // child lines.  This creates a "head-like" with functionality we CAN support.
 // Thus, we call on "head" to do many things, but we specially handle leading
 // GROUP and scomment, and we permit empty contents (unlike "head").
-restart_head: head (DOLLAR hspace* restart_head /*= (list $head $restart_head) */
-                    | splice hspace* error /* TODO */
+// Be greedy, because "GROUP" and "splice" are actually the same symbol;
+// we need to prefer GROUP where it makes sense.
+restart_head_branch:
+              head (DOLLAR hspace* restart_head_branch /*= (list $head $restart_head) */
                     | empty /*= $head */ )
-              | (GROUP | scomment) hspace* restart_head /*= $restart_head */
-              | DOLLAR hspace* restart_head /*= (list $restart_head) */
-              | empty /*= '() */ ;
+              | scomment hspace* restart_head_branch /*= $restart_head */
+              | DOLLAR hspace* restart_head_branch /*= (list $restart_head) */
+              | empty /*= '() */
+              );
+
+restart_head: restart_head_branch
+              (splice hspace* restart_head_branch)* ;
 
 restart_contents: i_expr comment_eol* restart_contents
                /*= (cons $i_expr $restart_contents) */
-              | empty /*= '() */ ; /* Hit RESTART_END */
+              | empty /*= '() */ /* Hit RESTART_END */
+              ;
 
 // A restart_list starts with an optional restart_head (one line),
 // followed by optional restart_contents (0 or more i_expr's).
