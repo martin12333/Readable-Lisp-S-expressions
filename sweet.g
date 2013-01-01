@@ -34,7 +34,8 @@ import scheme.*;
 import static scheme.Pair.*;
 }
 
-start : t_expr;  // This grammar defines a sweet-expression.
+start : print_t_expr;
+// start : t_expr;  // This grammar defines a sweet-expression.
 
 // Lexer. Lexical token (terminal) names are in all upper case
 
@@ -189,11 +190,11 @@ n_expr_tail
     | LBRACE   list_contents RBRACE
     | LBRACKET list_contents RBRACKET ;
 
-n_expr_noabbrev 
-    : (atom
-       | LPAREN list_contents RPAREN
-       | LBRACE list_contents RBRACE
-       | LBRACKET list_contents RBRACKET )
+n_expr_noabbrev returns [Object v]
+    : (atom {$v = $atom.text;}
+       | LPAREN norm=list_contents RPAREN {$v = "(" + $norm.text + ")";}
+       | LBRACE braced=list_contents RBRACE
+       | LBRACKET bracketed=list_contents RBRACKET )
       (options {greedy=true;} : n_expr_tail)* ;
 
 // STUB END
@@ -217,11 +218,14 @@ sublist    : DOLLAR; // Use this synonym to make its purpose clearer.
 // n_expr is a full neoteric-expression.  Note that n_expr does *not*
 // consume following horizontal space; this is important for correctly
 // handling initially-indented lines with more than one n-expression.
-n_expr :         abbrev_all* n_expr_noabbrev ;
+n_expr returns [Object v]: abbrev_all* n_expr_noabbrev
+                              {$v = $n_expr_noabbrev.v;};
 
 // n_expr_first is a neoteric-expression, but abbreviations
 // cannot have an hspace afterwards (used by "head"):
-n_expr_first:    abbrev_noh* n_expr_noabbrev ;
+n_expr_first returns [Object v]:    abbrev_noh* n_expr_noabbrev
+                                    { System.out.print("DEBUG: n_expr_first produced " + $n_expr_noabbrev.v + "\n");
+                                    $v = $n_expr_noabbrev.v;};
 
 // Whitespace and indentation names
 ichar   : SPACE | TAB | BANG ; // indent char - creates INDENT/DEDENTs
@@ -272,7 +276,7 @@ comment_eol : LCOMMENT? EOL;
 // GROUP and scomment, and we permit empty contents (unlike "head").
 // Be greedy, because "GROUP" and "splice" are actually the same symbol;
 // we need to prefer GROUP where it makes sense.
-restart_head_branch:
+restart_head_branch returns [Object v]:
               head (DOLLAR hspace* restart_head_branch /*= (list $head $restart_head) */
                     | empty /*= $head */ )
               | scomment hspace* restart_head_branch /*= $restart_head */
@@ -280,14 +284,14 @@ restart_head_branch:
               | empty /*= '() */
               ;
 
-restart_head_tail: splice hspace* restart_head_branch restart_head_tail
+restart_head_tail returns [Object v]: splice hspace* restart_head_branch restart_head_tail
              /*= (cons $restart_head_branch $restart_head_tail) */
              | empty /*= '() */ ;
 
-restart_head: restart_head_branch restart_head_tail
+restart_head returns [Object v]: restart_head_branch restart_head_tail
              /*= (cons $restart_head_branch $restart_head_tail) */ ;
 
-restart_contents: i_expr comment_eol* restart_contents
+restart_contents returns [Object v]: i_expr comment_eol* restart_contents
                /*= (cons $i_expr $restart_contents) */
               | empty /*= '() */ /* Hit RESTART_END */
               ;
@@ -301,7 +305,7 @@ restart_contents: i_expr comment_eol* restart_contents
 // complex BNF construct "(hspace+ (x | empty) | empty)".
 // In a non-tokenizing implementation, reading RESTART_END inside i_expr
 // will set the current indent, causing dedents all the way back to here.
-restart_list : RESTART hspace* restart_head
+restart_list returns [Object v]: RESTART hspace* restart_head
           ( RESTART_END hspace*
             /*= (if (null? $restart_head) '() (list (monify $restart_head))) */
            | /*= (push_indent "") */
@@ -330,7 +334,7 @@ restart_list : RESTART hspace* restart_head
 // distinct value if it is; head and friends operate a lot like a tokenizer
 // in that case.
 
-head :  PERIOD
+head returns [Object v]:  PERIOD
            (hspace+
               ((n_expr hspace* /*= (list $n_expr) */ (n_expr error)?)
                | empty  /*= (list '.) */ )
@@ -342,7 +346,7 @@ head :  PERIOD
            (hspace+
              (rest    /*= (cons $n_expr_first $rest) */
               | empty /*= (list $n_expr_first) */ ))
-            | empty   /*= (list $n_expr_first) */  ) ;
+            | empty   {$v = list($n_expr_first.v);} /*= (list $n_expr_first) */  ) ;
 
 // The "rest" production reads the rest of the expressions on a line
 // (the "rest of the head"), after the first expression of the line.
@@ -355,7 +359,7 @@ head :  PERIOD
 // and abbreviations followed by a space merely apply to the
 // next n-expression (not to the entire indented expression).
 
-rest    : PERIOD hspace+ n_expr hspace* /* improper list. */
+rest returns [Object v]   : PERIOD hspace+ n_expr hspace* /* improper list. */
           /*= $n_expr */  // TODO: Handle period "." end-of-line?
           (n_expr error)? /* Shouldn't have another n_expr! */
         | scomment hspace* (rest /*= $rest */ | empty /*= '() */ )
@@ -379,7 +383,7 @@ rest    : PERIOD hspace+ n_expr hspace* /* improper list. */
 // than the indent used on entry to body; the latest indent is compared by
 // the special terminals DEDENT and BADDENT.
 
-body    :        i_expr (same body /*= (cons $i_expr $body) */
+body  returns [Object v]  :        i_expr (same body /*= (cons $i_expr $body) */
                         | dedent   /*= (list $i_expr) */ ) ;
 
 // "i-expr" (indented sweet-expressions)
@@ -400,7 +404,7 @@ body    :        i_expr (same body /*= (cons $i_expr $body) */
 // should then set the current_indent to RESTART_END, and return, to signal
 // the reception of RESTART_END.
 
-i_expr : head (splice hspace*
+i_expr returns [Object v] : head (splice hspace*
                 (options {greedy=true;} :
                  comment_eol error
                  // Could instead do:
@@ -409,13 +413,13 @@ i_expr : head (splice hspace*
                  // John Cowan recommends (Sat, 29 Dec 2012 13:18:18 -0500)
                  // that we *not* do this, because it'd be confusing.
                  // Normal case: splice ends i_expr immediately:
-                 | empty /*= $head */ )
+                 | empty {$v = $head.v;} /*= $head */ )
               | DOLLAR hspace*
-                (i_expr /*= (list (monify $head) $i_expr) */
+                (i_expr /*{$v = list(monify($head.v), $i_expr.v);}*/ /*= (list (monify $head) $i_expr) */
                  | comment_eol indent body /*= (list $body) */ )
               | comment_eol // Normal case, handle child lines if any:
                 (indent body /*= (append $head $body) */
-                 | empty     /*= (monify $head) */ /* No child lines */ ))
+                 | empty     {$v = monify($head.v);} /*= (monify $head) */ /* No child lines */ ))
          | (GROUP | scomment) hspace*
              (i_expr /*= $i_expr */ /* ignore the GROUP/scomment */
              | comment_eol
@@ -444,12 +448,16 @@ i_expr : head (splice hspace*
 // indent processing, for backwards compatibility.  Detecting this as
 // an error should detect some mistakes.
 
-t_expr  : comment_eol t_expr /*= $t_expr */ /* Initial lcomment, try again */
+t_expr  returns [Object v]
+  : comment_eol t_expr /*= $t_expr */ /* Initial lcomment, try again */
         | hspace+
-          (n_expr /*= $n_expr */ /* indent processing disabled. */
+          (n_expr { $v = $n_expr.v; } /* indent processing disabled. */
            | comment_eol t_expr /*= $t_expr */ /* Indented lcomment */
            | BANG error )
         | BANG error
         | EOF /*= EOF */ /* End of file */
-        | i_expr /*= $i_expr */ /* Normal case */ ;
+        | i_expr {$v = $i_expr.v;} /*= $i_expr */ /* Normal case */ ;
+
+print_t_expr
+	:	t_expr {System.out.print(string_datum($t_expr.v)); } ;
 

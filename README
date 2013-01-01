@@ -110,6 +110,10 @@ In ANTLRWorks, you may want to select File/Preferences, "Compiler" tab,
 and create a custom Classpath that includes these absolute directory names
 (separated by ";" in Windows or ":" everywhere else).
 
+You can generate Java class files from ANTLRWorks using
+"Generate/Generate files".  Then go to the "output" subdirectory.
+You need to compile and then run ("go.bat" does this for Windows).
+
 
 Key files
 =========

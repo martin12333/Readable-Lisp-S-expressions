@@ -26,11 +26,11 @@ public class Pair extends Object {
     return x.cdr_value;
   }
 
-  public static Object nullp(Object x) { // Scheme "null?"
+  public static Boolean nullp(Object x) { // Scheme "null?"
     return x == null;
   }
 
-  public static Object pairp(Object x) { // Scheme "pair?"
+  public static Boolean pairp(Object x) { // Scheme "pair?"
     return x instanceof Pair;
   }
 
@@ -72,6 +72,20 @@ public class Pair extends Object {
     } else {
       return x.toString();
     }
+  }
+
+// (define (monify x)
+//   (cond
+//     ((not (pair? x)) x)
+//     ((null? (cdr x)) (car x))
+//     (#t x)))
+
+  public static Object monify(Object x) {
+    if (! pairp(x)) {
+      return x;
+    } else if (nullp(cdr( (Pair) x))) {
+      return car( (Pair) x);
+    } else {return x;}
   }
 
 }
