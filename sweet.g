@@ -142,8 +142,8 @@ error : ;  // Specifically identifies an error branch.
 // accurate representation of n-expressions, because it doesn't need to be.
 
 // If you use this BNF directly, use \> for indent, \< for dedent:
-INDENT : '\\>' ' '*;
-DEDENT : '\\<' ' '*;
+INDENT : '\\>' ' '* '\r'? '\n'?;
+DEDENT : '\\<' ' '* '\r'? '\n'?;
 
 // For example, a valid input would be:
 //   a b
