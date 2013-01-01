@@ -273,10 +273,14 @@ restart_head_branch:
               | scomment hspace* restart_head_branch /*= $restart_head */
               | DOLLAR hspace* restart_head_branch /*= (list $restart_head) */
               | empty /*= '() */
-              );
+              ;
 
-restart_head: restart_head_branch
-              (splice hspace* restart_head_branch)* ;
+restart_head_tail: splice hspace* restart_head_branch restart_head_tail
+             /*= (cons $restart_head_branch $restart_head_tail) */
+             | empty /*= '() */ ;
+
+restart_head: restart_head_branch restart_head_tail
+             /*= (cons $restart_head_branch $restart_head_tail) */ ;
 
 restart_contents: i_expr comment_eol* restart_contents
                /*= (cons $i_expr $restart_contents) */
