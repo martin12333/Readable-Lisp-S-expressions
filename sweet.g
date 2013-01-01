@@ -190,11 +190,12 @@ n_expr_tail
     | LBRACE   list_contents RBRACE
     | LBRACKET list_contents RBRACKET ;
 
+// TODO: Improve action here to fully capture information.
 n_expr_noabbrev returns [Object v]
     : (atom {$v = $atom.text;}
        | LPAREN norm=list_contents RPAREN {$v = "(" + $norm.text + ")";}
-       | LBRACE braced=list_contents RBRACE
-       | LBRACKET bracketed=list_contents RBRACKET )
+       | LBRACE braced=list_contents RBRACE {$v = "[" + $norm.text + "]";}
+       | LBRACKET bracketed=list_contents RBRACKET {$v = "{" + $norm.text + "}";}  )
       (options {greedy=true;} : n_expr_tail)* ;
 
 // STUB END
@@ -214,7 +215,7 @@ abbrev_all : abbrevh | abbrev_noh ;
 splice     : GROUP;  // Use this synonym to make its purpose clearer.
 sublist    : DOLLAR; // Use this synonym to make its purpose clearer.
 
-
+// TODO: n_expr and n_expr_first need actions for abbreviations.
 // n_expr is a full neoteric-expression.  Note that n_expr does *not*
 // consume following horizontal space; this is important for correctly
 // handling initially-indented lines with more than one n-expression.
