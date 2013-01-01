@@ -26,6 +26,14 @@ public class Pair extends Object {
     return x.cdr_value;
   }
 
+  public static Object nullp(Object x) { // Scheme "null?"
+    return x == null;
+  }
+
+  public static Object pairp(Object x) { // Scheme "pair?"
+    return x instanceof Pair;
+  }
+
   public static Pair list(Object x) {
     return cons(x, null);
   }
@@ -45,7 +53,7 @@ public class Pair extends Object {
     }
   }
 
-  public static String string_datum_tail(Object x) {
+  private static String string_datum_tail(Object x) {
     if (x == null) {
       return ")";
     } else if (x instanceof Pair) {
