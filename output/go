@@ -1,0 +1,22 @@
+#!/bin/sh
+
+antlrworks_jar=../antlrworks-1.4.3.jar
+output_dir=.
+
+if [ -x /usr/bin/cygpath ] ; then
+  antlrworks_jar="$(cygpath -wa $antlrworks_jar)"
+  output_dir="$(cygpath -wa $output_dir)"
+fi
+
+CLASSPATH="$CLASSPATH;$antlrworks_jar;$output_dir"
+
+javac scheme/*.java [A-Z]*.java &&
+  java Test < input.txt | tee output.txt
+
+echo
+echo "Differences from correct:"
+if diff -u correct.txt output.txt
+then
+ echo
+ echo "ALL TESTS PASS!"
+fi
