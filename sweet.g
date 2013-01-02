@@ -226,7 +226,7 @@ abbrevh returns [Object v] : APOSH {$v = "quote";} /*= 'quote */
         | QUASIQUOTEH {$v = "quasiquote";} /*= 'quasiquote */
         | UNQUOTE_SPLICEH {$v = "unquote-splicing";} /*= 'unquote-splicing */
         | UNQUOTEH {$v = "unquote";} /*= 'unquote */ ;
-abbrev_noh : APOS | QUASIQUOTE | UNQUOTE_SPLICE | UNQUOTE ;
+abbrev_noh returns [Object v]: APOS {$v = "quote";} | QUASIQUOTE {$v = "quasiquote";} | UNQUOTE_SPLICE {$v = "unquote-splicing";} | UNQUOTE {$v = "unquote";};
 abbrev_all : abbrevh | abbrev_noh ;
 splice     : GROUP;  // Use this synonym to make its purpose clearer.
 sublist    : DOLLAR; // Use this synonym to make its purpose clearer.
@@ -240,9 +240,12 @@ n_expr returns [Object v]: abbrev_all* n_expr_noabbrev
 
 // n_expr_first is a neoteric-expression, but abbreviations
 // cannot have an hspace afterwards (used by "head"):
-n_expr_first returns [Object v]:    abbrev_noh* n_expr_noabbrev
-                                    { /* System.out.print("DEBUG: n_expr_first produced " + $n_expr_noabbrev.v + "\n"); */
-                                    $v = $n_expr_noabbrev.v;};
+n_expr_first returns [Object v]:
+  abbrev_noh n1=n_expr_first {$v = list($abbrev_noh.v, $n1.v);}
+  | n_expr_noabbrev { /* System.out.print("DEBUG: n_expr_first produced " + $n_expr_noabbrev.v + "\n"); */
+         $v = $n_expr_noabbrev.v;} ;
+
+                                    
 
 // Whitespace and indentation names
 ichar   : SPACE | TAB | BANG ; // indent char - creates INDENT/DEDENTs
