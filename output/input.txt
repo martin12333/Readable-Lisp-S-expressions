@@ -53,6 +53,28 @@ $ a
 \> b c
 \<
 
+$ a z
+\> o p
+\<
+
+; "$" is different from \\; initial "$" always makes another list. Since:
+; \\
+;   d
+; would create (d), a "$" inserts another (...) level vs \\, making ((d)):
+$
+\> d
+\<
+
+; This is (((d e))) :
+$
+\> d e
+\<
+
+$
+\> d e f
+\<
+
+
 fee $ fie
 \> foe fum
 \<
