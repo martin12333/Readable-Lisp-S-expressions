@@ -11,6 +11,11 @@
 // Lines with ONLY indent characters are considered blank lines.
 // There is no "SAME" token to show "same indent level"; some rules include
 // an empty "same" nonterminal to emphasize their lack of INDENT/DEDENT.
+// Bad indentation emits BADDENT, which is never accepted.
+// If there's an indent when there is NO current indent level, it emits
+// INITIAL_INDENT_NO_BANG (if no "!") or INITIAL_INDENT_WITH_BANG (if "!" is there),
+// and does *NOT* change the indent level, so that initial indents
+// will disable indentation processing but only on that line.
 
 // TODO:
 // - See specific TODOs below.
@@ -37,6 +42,16 @@ tokens {
 import scheme.*;
 import static scheme.Pair.*;
 }
+
+// ANTLR v3 does not allow the parser to communicate to the lexer
+// (the lexer runs completely before the parser begins).  However,
+// the lexer can store and use state, which we have to do anyway to
+// do indentation processing.  Thus, the lexer also tracks the
+// parentheses enclosure level, so that \n is just a delimiter inside (...)
+// but is handled specially in indentation processing, while symbols
+// like "$" are just ordinary atoms inside (...).
+// The lexer must also specially note "<*" and "*>" and specially modify
+// the indentation levels when those are received.
 
 // Use @parser::members for parser members.
 @lexer::members {
@@ -156,11 +171,6 @@ error : ;  // Specifically identifies an error branch.
 
 // If you use this BNF directly, use \> for indent, \< for dedent.
 // These are stubs for the "real" indent preprocessor, which generates these.
-// Normally it will generate an INDENT for a new indent level, and one or more
-// DEDENTs on an outdent.  It'll also detect bad indentation and generate BADDENT.
-// If there's an indent when there is NO current indent level, it emits
-// INITIAL_INDENT_NO_BANG (if no "!") or INITIAL_INDENT_WITH_BANG (if "!" is there),
-// and does *NOT* change the indent level.
 INITIAL_INDENT_NO_BANG : '\\N>' ' '* '\r'? '\n'?;
 INITIAL_INDENT_WITH_BANG : '\\B>' ' '* '\r'? '\n'?;
 INDENT : '\\>' ' '* '\r'? '\n'?;
