@@ -128,6 +128,21 @@ let <* var1 value1 *>
 \> fact var1
 \<
 
+; NOT WORKING YET - restart after head:
+;  define-library (example grid)
+;  \>  export make rows cols ref each rename(put! set!)
+;  import (scheme base)
+;  <* begin
+;  
+;  define make(n m)
+;    do-make()
+;  
+;  define rows(grid)
+;    vector-length(grid)
+;  
+;  *>
+;  \<
+
 ; NOT WORKING YET - indented:
 
 ;   indent-disabled
