@@ -142,6 +142,8 @@ let <* var1 value1 *>
 
 xyz
 
+($ x)
+
 
 ; NOT WORKING YET - restart after head:
 ;  define-library (example grid)

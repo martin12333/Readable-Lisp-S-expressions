@@ -24,4 +24,8 @@ if diff -u correct.txt output.txt
 then
  echo
  echo "ALL TESTS PASS!"
+else
+ echo
+ echo "Differences found.  If this is correct, run:"
+ echo "  cp output.txt correct.txt"
 fi

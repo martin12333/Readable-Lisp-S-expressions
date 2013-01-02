@@ -56,3 +56,4 @@ indent-disabled1
 indent-disabled2
 indent-disabled3
 xyz
+($ x)
