@@ -309,11 +309,12 @@ restart_head_tail returns [Object v]: splice hspace* restart_head_branch restart
              | empty /*= '() */ ;
 
 restart_head returns [Object v]: restart_head_branch restart_head_tail
+              {$v = cons($restart_head_branch.v, $restart_head_tail.v);}
              /*= (cons $restart_head_branch $restart_head_tail) */ ;
 
-restart_contents returns [Object v]: i_expr comment_eol* restart_contents
-               /*= (cons $i_expr $restart_contents) */
-              | empty /*= '() */ /* Hit RESTART_END */
+restart_contents returns [Object v]: i_expr comment_eol* again=restart_contents
+               {$v = cons($i_expr.v, $again.v);} /*= (cons $i_expr $restart_contents) */
+              | empty {$v = null;} /*= '() */ /* Hit RESTART_END */
               ;
 
 // A restart_list starts with an optional restart_head (one line),
