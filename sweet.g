@@ -444,7 +444,7 @@ i_expr returns [Object v] :
          | (GROUP | scomment) hspace*
              (i_expr2=i_expr {$v = $i_expr2.v;} /*= $i_expr */ /* ignore the GROUP/scomment */
              | comment_eol
-               (indent body3=body {$v = $body3.v;} /*= $body */  /* Normal use for GROUP */
+               (indent body3=body {$v = monify($body3.v);} /*= $body */  /* Normal use for GROUP */
                 | same i_expr3=i_expr {$v = $i_expr3.v;} /*= $i_expr */  /* Plausible separator */
                 | dedent error ))
          | DOLLAR hspace* (i_expr4=i_expr  {$v=list($i_expr4.v);}  /*= (list $i_expr) */

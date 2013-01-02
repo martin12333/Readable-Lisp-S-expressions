@@ -9,3 +9,10 @@ a
 ((quote a) b c)
 (a (quote c) e)
 (m n (quote o))
+q1
+(q1 q2)
+(q1 q2 q3)
+a
+(a b)
+(a (b c))
+(x y z (aa bb) (cc dd) (ee ff))
