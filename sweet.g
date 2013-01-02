@@ -473,7 +473,7 @@ t_expr  returns [Object v]
   : comment_eol t_expr1=t_expr {$v=$t_expr1.v;} /*= $t_expr */ /* Initial lcomment, try again */
         | hspace+
           (n_expr { $v = $n_expr.v; } /* indent processing disabled. */
-           | comment_eol {$v=$t_expr1.v;} t_expr /*= $t_expr */ /* Indented lcomment */
+           | comment_eol t_expr2=t_expr {$v=$t_expr2.v;}
            | BANG error )
         | BANG error
         | EOF { System.exit(0); }/*= EOF */ /* End of file */
