@@ -227,7 +227,7 @@ abbrevh returns [Object v] : APOSH {$v = "quote";} /*= 'quote */
         | UNQUOTE_SPLICEH {$v = "unquote-splicing";} /*= 'unquote-splicing */
         | UNQUOTEH {$v = "unquote";} /*= 'unquote */ ;
 abbrev_noh returns [Object v]: APOS {$v = "quote";} | QUASIQUOTE {$v = "quasiquote";} | UNQUOTE_SPLICE {$v = "unquote-splicing";} | UNQUOTE {$v = "unquote";};
-abbrev_all : abbrevh | abbrev_noh ;
+abbrev_all returns [Object v]: abbrevh {$v = $abbrevh.v;} | abbrev_noh {$v = $abbrev_noh.v;};
 splice     : GROUP;  // Use this synonym to make its purpose clearer.
 sublist    : DOLLAR; // Use this synonym to make its purpose clearer.
 
@@ -235,8 +235,8 @@ sublist    : DOLLAR; // Use this synonym to make its purpose clearer.
 // n_expr is a full neoteric-expression.  Note that n_expr does *not*
 // consume following horizontal space; this is important for correctly
 // handling initially-indented lines with more than one n-expression.
-n_expr returns [Object v]: abbrev_all* n_expr_noabbrev
-                              {$v = $n_expr_noabbrev.v;};
+n_expr returns [Object v]: abbrev_all n1=n_expr {$v = list($abbrev_all.v, $n1.v);}
+   | n_expr_noabbrev {$v = $n_expr_noabbrev.v;};
 
 // n_expr_first is a neoteric-expression, but abbreviations
 // cannot have an hspace afterwards (used by "head"):
