@@ -109,8 +109,10 @@ SHARP_BANG_MARKER : '#!' ('a'..'z'|'A'..'Z'|'_')
 // to be followed by an EOL_SEQUENCE).
 fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
 fragment SPECIAL_BLANK_LINE   : (' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* | (FF | VT)+ ;
-EOL     : (FF | VT)* EOL_SEQUENCE
+EOL     :  {enclosure==0}? => (FF | VT)* EOL_SEQUENCE
           (SPECIAL_BLANK_LINE EOL_SEQUENCE)* ;
+ 
+BARE_OTHER_WS : {enclosure > 0}? => EOL_CHAR;
 
 // Do not reference '\n' or '\r' inside a non-lexing rule in ANTLR.
 // If you do, ANTLR will quietly create new lexical tokens for them, and
@@ -270,7 +272,7 @@ n_expr_first returns [Object v]:
 ichar   : SPACE | TAB | BANG ; // indent char - creates INDENT/DEDENTs
 hspace  : SPACE | TAB ;        // horizontal space
 
-wspace  : hspace;  // or eolchars
+wspace  : hspace | BARE_OTHER_WS; // Separators inside (...) etc.
 
 // "Special comments" (scomments) are comments other than ";" (line comments):
 sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER ;
