@@ -97,7 +97,7 @@ SHARP_BANG_MARKER : '#!' ('a'..'z'|'A'..'Z'|'_')
 // of a line and do not themselves create a newline (they still have
 // to be followed by an EOL_SEQUENCE).
 fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
-fragment BLANK_LINE   : (' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* | (FF | VT)+ | /* empty */ ;
+fragment BLANK_LINE   : (' ' | '\t' | '!' )* (';' NOT_EOL_CHAR*)? | (FF | VT)+ ;
 EOL     : (FF | VT)* EOL_SEQUENCE
           (BLANK_LINE EOL_SEQUENCE)* ;
 
@@ -174,7 +174,7 @@ DEDENT : '\\<' ' '* '\r'? '\n'?;
 
 // The following is intentionally limited.  In particular, it doesn't include
 // the characters used for INDENT/DEDENT.
-NAME  : ('a'..'z'|'A'..'Z'|'_'|'\\') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'\\')* ;
+NAME  : ('a'..'z'|'A'..'Z'|'_'|'\\') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'-'|'\\')* ;
 fragment EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
 FLOAT
     :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
