@@ -451,7 +451,7 @@ i_expr returns [Object v] :
                            | comment_eol indent body4=body {$v=list($body4.v);} /*= (list $body) */ )
          | abbrevh hspace*
            (i_expr5=i_expr {$v=list($abbrevh.v, $i_expr5.v);} /*= (list $abbrevh $i_expr) */
-            | (comment_eol indent body5=body {$v=list($abbrevh.v, append(mklist($i_expr5.v), $body5.v));} /*= (list $abbrevh $i_expr) */ ))  ;
+            | (comment_eol error /* Too easy to mess up - forbid it. */ ) )  ;
 
 // Top-level sweet-expression production, t_expr.
 // This production handles special cases, then in the normal case
