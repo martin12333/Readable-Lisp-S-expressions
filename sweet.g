@@ -97,7 +97,7 @@ SHARP_BANG_MARKER : '#!' ('a'..'z'|'A'..'Z'|'_')
 // of a line and do not themselves create a newline (they still have
 // to be followed by an EOL_SEQUENCE).
 fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
-fragment BLANK_LINE   : (' ' | '\t')* ';' NOT_EOL_CHAR* | (FF | VT)+ ;
+fragment BLANK_LINE   : (' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* | (FF | VT)+ | /* empty */ ;
 EOL     : (FF | VT)* EOL_SEQUENCE
           (BLANK_LINE EOL_SEQUENCE)* ;
 
