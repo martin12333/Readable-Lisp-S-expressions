@@ -10,7 +10,9 @@ fi
 
 CLASSPATH="$CLASSPATH;$antlrworks_jar;$output_dir"
 
+echo "About to compile"
 javac scheme/*.java [A-Z]*.java &&
+  echo "Compilation complete, now running tests." &&
   java Test < input.txt | tee output.txt
 
 echo
