@@ -53,14 +53,14 @@ start : print_t_expr;
 GROUP   :       {enclosure==0}? => '\\' '\\'; // GROUP and splice symbol.
 DOLLAR  :       {enclosure==0}? =>'$';
 RESERVED_TRIPLE_DOLLAR : {enclosure==0}? => '$$$';  // Reserved.
-RESTART :       {enclosure==0}? => '<' '*';
-RESTART_END:    {enclosure==0}? => '*' '>';
+RESTART :       {enclosure==0}? => '<' '*' {/* TODO: Restart indent level */};
+RESTART_END:    {enclosure==0}? => '*' '>' {/* TODO: Restore indent level */};
 
 // Abbreviations followed by horizontal space (space or tab) are special:
-APOSH           : '\'' (' ' | '\t') ;
-QUASIQUOTEH     : '\`' (' ' | '\t') ;
-UNQUOTE_SPLICEH : ',' '@' (' ' | '\t') ;
-UNQUOTEH        : ',' (' ' | '\t') ;
+APOSH           : {enclosure==0}? => '\'' (' ' | '\t') ;
+QUASIQUOTEH     : {enclosure==0}? => '\`' (' ' | '\t') ;
+UNQUOTE_SPLICEH : {enclosure==0}? => ',' '@' (' ' | '\t') ;
+UNQUOTEH        : {enclosure==0}? => ',' (' ' | '\t') ;
 
 // Special end-of-line character definitions.
 // Specially handle formfeed (\f) and vertical tab (\v), even though
@@ -333,20 +333,20 @@ restart_contents returns [Object v]: i_expr comment_eol* again=restart_contents
 // token wouldn't be recognized unless it was delimited anyway, and
 // consuming hspace* after it means we can avoid using the
 // complex BNF construct "(hspace+ (x | empty) | empty)".
+// RESTART and RESTART_END set/restore indent
 // In a non-tokenizing implementation, reading RESTART_END inside i_expr
 // will set the current indent, causing dedents all the way back to here.
 restart_list returns [Object v]: RESTART hspace* restart_head
           ( RESTART_END hspace*
             {$v = nullp($restart_head.v) ? null : list(monify($restart_head.v));}
             /*= (if (null? $restart_head) '() (list (monify $restart_head))) */
-           | /*= (push_indent "") */
-             comment_eol+
+           | comment_eol+
              restart_contents
              {$v = nullp($restart_head.v) ? $restart_contents.v : cons($restart_head.v, $restart_contents.v);}
                 /*= (if (null? $restart_head)
                       $restart_contents
                       (cons $restart_head $restart_contents)) */
-             RESTART_END /*= (restore_indent) */ hspace* );
+             RESTART_END hspace* );
 
 
 // The "head" is the production for 1+ n-expressions on one line; it will
