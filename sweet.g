@@ -304,9 +304,10 @@ restart_head_branch returns [Object v]:
               | empty /*= '() */
               ;
 
-restart_head_tail returns [Object v]: splice hspace* restart_head_branch restart_head_tail
-             /*= (cons $restart_head_branch $restart_head_tail) */
-             | empty /*= '() */ ;
+restart_head_tail returns [Object v]: splice hspace* restart_head_branch again=restart_head_tail
+               /*= (cons $restart_head_branch $restart_head_tail) */
+               {$v = cons($restart_head_branch.v, $again.v);}
+             | empty {$v = null;} /*= '() */ ;
 
 restart_head returns [Object v]: restart_head_branch restart_head_tail
               {$v = cons($restart_head_branch.v, $restart_head_tail.v);}
