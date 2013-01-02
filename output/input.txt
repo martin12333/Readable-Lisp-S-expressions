@@ -120,6 +120,14 @@ n a b \\ sing sang sung
 
 use-dash
 
+let <* hello *>
+let <* var1 value1 *>
+let <* var1 value1 \\ var2 value2 *>
+
+let <* var1 value1 *>
+\> fact var1
+\<
+
 ; NOT WORKING YET - indented:
 
 ;   indent-disabled
