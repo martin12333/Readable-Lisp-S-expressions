@@ -2,6 +2,8 @@
 
 antlrworks_jar=../antlrworks-1.4.3.jar
 output_dir=.
+# Note: Remove GNU extension --strip-trailing-cr if you don't have it
+diff_options="-u --strip-trailing-cr"
 
 if [ -x /usr/bin/cygpath ] ; then
   antlrworks_jar="$(cygpath -wa $antlrworks_jar)"
@@ -20,7 +22,7 @@ javac scheme/*.java [A-Z]*.java &&
 
 echo
 echo "Differences from correct:"
-if diff -u correct.txt output.txt
+if diff $diff_options correct.txt output.txt
 then
  echo
  echo "ALL TESTS PASS!"
