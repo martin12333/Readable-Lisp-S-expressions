@@ -327,10 +327,12 @@ restart_contents returns [Object v]: i_expr comment_eol* restart_contents
 // will set the current indent, causing dedents all the way back to here.
 restart_list returns [Object v]: RESTART hspace* restart_head
           ( RESTART_END hspace*
+            {$v = nullp($restart_head.v) ? null : list(monify($restart_head.v));}
             /*= (if (null? $restart_head) '() (list (monify $restart_head))) */
            | /*= (push_indent "") */
              comment_eol+
              restart_contents
+             {$v = nullp($restart_head.v) ? $restart_contents.v : cons($restart_head.v, $restart_contents.v);}
                 /*= (if (null? $restart_head)
                       $restart_contents
                       (cons $restart_head $restart_contents)) */
