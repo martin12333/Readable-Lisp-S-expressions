@@ -10,6 +10,9 @@ fi
 
 CLASSPATH="$CLASSPATH;$antlrworks_jar;$output_dir"
 
+# Clear out old version
+rm -f output.txt
+
 echo "About to compile"
 javac scheme/*.java [A-Z]*.java &&
   echo "Compilation complete, now running tests." &&
