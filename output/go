@@ -11,6 +11,8 @@ if [ -x /usr/bin/cygpath ] ; then
 fi
 
 CLASSPATH="$CLASSPATH;$antlrworks_jar;$output_dir"
+echo "CLASSPATH=\"$CLASSPATH\""
+echo
 
 # Clear out old version
 rm -f output.txt
