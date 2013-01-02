@@ -48,5 +48,5 @@ use-dash
 (let (var1 value1))
 (let ((var1 value1) (var2 value2)))
 (let (var1 value1) (fact var1))
-(define-library (example grid) (export make rows cols ref each rename) (import (scheme base)) (((begin)) () o-make () ector-length))
+(a b $ c d)
 xyz

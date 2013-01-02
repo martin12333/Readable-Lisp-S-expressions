@@ -128,6 +128,8 @@ let <* var1 value1 *>
 \> fact var1
 \<
 
+(a b $ c d)
+
 ; NOT WORKING YET - restart after head:
 ;  define-library (example grid)
 ;  \>  export make rows cols ref each rename(put! set!)

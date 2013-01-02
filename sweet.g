@@ -34,6 +34,13 @@ import scheme.*;
 import static scheme.Pair.*;
 }
 
+@lexer::members {
+  // Track enclosure level. "(" etc. adds 1, ")" etc. subtracts.
+  long enclosure = 0;
+}
+
+// Use @parser::members for parser members.
+
 start : print_t_expr;
 // start : t_expr;  // This grammar defines a sweet-expression.
 
@@ -41,12 +48,13 @@ start : print_t_expr;
 
 // Here are special interpretation for certain sequences.
 // Define these first, to give them higher lexical precedence
-// than other definitions.
-GROUP   :        '\\' '\\';      // GROUP and splice symbol.
-DOLLAR  :       '$';             // Not an atom unless inside {}, (), or [].
-RESERVED_TRIPLE_DOLLAR : '$$$';  // Reserved for future use.
-RESTART :       '<' '*';
-RESTART_END:    '*' '>';
+// than other definitions.  Note that these only have special meaning
+// outside (), [], and {}; otherwise they're just atoms.
+GROUP   :       {enclosure==0}? => '\\' '\\'; // GROUP and splice symbol.
+DOLLAR  :       {enclosure==0}? =>'$';
+RESERVED_TRIPLE_DOLLAR : {enclosure==0}? => '$$$';  // Reserved.
+RESTART :       {enclosure==0}? => '<' '*';
+RESTART_END:    {enclosure==0}? => '*' '>';
 
 // Abbreviations followed by horizontal space (space or tab) are special:
 APOSH           : '\'' (' ' | '\t') ;
@@ -112,12 +120,12 @@ TAB      : '\t';
 SHARP    : '#';
 BANG     : '!';
 PERIOD   : '.';
-LPAREN   : '(';
-RPAREN   : ')';
-LBRACKET : '[';
-RBRACKET : ']';
-LBRACE   : '{';
-RBRACE   : '}';
+LPAREN   : '(' {enclosure++;} ;
+RPAREN   : ')' {if (enclosure>0) {enclosure--;};};
+LBRACKET : '[' {enclosure++;};
+RBRACKET : ']' {if (enclosure>0) {enclosure--;};};
+LBRACE   : '{' {enclosure++;};
+RBRACE   : '}' {if (enclosure>0) {enclosure--;};};
 APOS           : '\'';
 QUASIQUOTE     : '\`';
 UNQUOTE_SPLICE : ',' '@';
@@ -174,7 +182,7 @@ DEDENT : '\\<' ' '* '\r'? '\n'?;
 
 // The following is intentionally limited.  In particular, it doesn't include
 // the characters used for INDENT/DEDENT.
-NAME  : ('a'..'z'|'A'..'Z'|'_'|'\\') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'-'|'\\')* ;
+NAME  : ('a'..'z'|'A'..'Z'|'_'|'\\' | '$') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'-'|'\\' | '$')* ;
 fragment EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
 FLOAT
     :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
