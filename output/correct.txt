@@ -48,4 +48,5 @@ use-dash
 (let (var1 value1))
 (let ((var1 value1) (var2 value2)))
 (let (var1 value1) (fact var1))
+(a b $ c d)
 xyz
