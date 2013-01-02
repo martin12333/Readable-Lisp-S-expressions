@@ -1,0 +1,27 @@
+a b
+\> c
+d e
+\<
+
+a
+\> ' c d e
+\> g h i
+\<
+\<
+
+cos 0
+
+a b c $ d e f
+$ q
+a
+
+'x y z
+\> c d
+\<
+
+'a b c
+
+a 'c e
+
+m n 'o
+

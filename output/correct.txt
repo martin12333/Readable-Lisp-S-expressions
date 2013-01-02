@@ -1,0 +1,11 @@
+About to parse:
+(a b c (d e))
+(a (quote (c d e (g h i))))
+(cos 0)
+((a b c) (d e f))
+(q)
+a
+((quote x) y z (c d))
+((quote a) b c)
+(a (quote c) e)
+(m n (quote o))
