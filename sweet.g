@@ -492,15 +492,17 @@ i_expr returns [Object v] :
 // indent processing, for backwards compatibility.  Detecting this as
 // an error should detect some mistakes.
 
+//  
+// 
+
 t_expr  returns [Object v]
-  : comment_eol t_expr1=t_expr {$v=$t_expr1.v;} /*= $t_expr */ /* Initial lcomment, try again */
-        | hspace+
-          (n_expr { $v = $n_expr.v; } /* indent processing disabled. */
-           | comment_eol t_expr2=t_expr {$v=$t_expr2.v;}
-           | BANG error )
-        | BANG error
-        | EOF { System.exit(0); }/*= EOF */ /* End of file */
-        | i_expr {$v = $i_expr.v;} /*= $i_expr */ /* Normal case */ ;
+  : comment_eol t_expr1=t_expr {$v=$t_expr1.v;} /* Initial lcomment, try again */
+    | (INITIAL_INDENT_NO_BANG | hspace+ )
+      (n_expr { $v = $n_expr.v; } /* indent processing disabled. */
+       | comment_eol t_expr2=t_expr {$v=$t_expr2.v;} )
+    | INITIAL_INDENT_WITH_BANG error
+    | EOF { System.exit(0); } /*= EOF */ /* End of file */
+    | i_expr {$v = $i_expr.v;} /* Normal case */ ;
 
 print_t_expr
 	:	t_expr {System.out.print(string_datum($t_expr.v) + "\n"); } ;

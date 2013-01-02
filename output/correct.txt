@@ -49,4 +49,10 @@ use-dash
 (let ((var1 value1) (var2 value2)))
 (let (var1 value1) (fact var1))
 (a b $ c d)
+indent-disabled
+indent-disabled1
+indent-disabled2
+indent-disabled1
+indent-disabled2
+indent-disabled3
 xyz

@@ -128,7 +128,20 @@ let <* var1 value1 *>
 \> fact var1
 \<
 
+; "$" inside parens is just another atom.
+
 (a b $ c d)
+
+; Initial indents:
+
+\N> indent-disabled
+
+\N> indent-disabled1 indent-disabled2
+
+\N> indent-disabled1 indent-disabled2 indent-disabled3
+
+xyz
+
 
 ; NOT WORKING YET - restart after head:
 ;  define-library (example grid)
@@ -144,16 +157,6 @@ let <* var1 value1 *>
 ;  
 ;  *>
 ;  \<
-
-; NOT WORKING YET - indented:
-
-;   indent-disabled
-
-;  indent-disabled1 indent-disabled2
-
-;  indent-disabled1 indent-disabled2
-
-xyz
 
 
 
