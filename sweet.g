@@ -360,8 +360,8 @@ head returns [Object v]:  PERIOD
                | empty  {$v = list(".");} /*= (list '.) */ )
             | empty     {$v = list(".");} /*= (list '.) */ )
         | restart_list
-          (rest1=rest /*= (cons (list (monify $restart_list)) $rest) */
-           | empty /*= (list (monify $restart_list)) */ )
+          (rest1=rest {$v = cons(list(monify($restart_list.v)), $rest1.v) ; }
+           | empty    {$v = list(monify($restart_list.v)); } )
         | n_expr_first (
            (hspace+
              (rest2=rest    {$v = cons($n_expr_first.v, $rest2.v);} /*= (cons $n_expr_first $rest) */
