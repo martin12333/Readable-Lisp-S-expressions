@@ -5,7 +5,17 @@ About to parse:
 ((a b c) (d e f))
 (q)
 a
+(quote (a b (c d)))
+(m (quote n) o (p q))
 ((quote x) y z (c d))
 ((quote a) b c)
 (a (quote c) e)
 (m n (quote o))
+q1
+(q1 q2)
+(q1 q2 q3)
+a
+(a b)
+(a (b c))
+(x y z (aa bb) (cc dd) (ee ff))
+(a b c d (e f) (g h) (i j k) (l m n) (o p q))

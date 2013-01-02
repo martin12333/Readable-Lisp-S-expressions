@@ -434,7 +434,7 @@ i_expr returns [Object v] :
                  // John Cowan recommends (Sat, 29 Dec 2012 13:18:18 -0500)
                  // that we *not* do this, because it'd be confusing.
                  // Normal case: splice ends i_expr immediately:
-                 | empty {$v = $head.v;} /*= $head */ )
+                 | empty {$v = monify($head.v);} /*= $head */ )
               | DOLLAR hspace*
                 (i_expr1=i_expr {$v=list(monify($head.v), $i_expr1.v);} /*{$v = list(monify($head.v), $i_expr.v);}*/ /*= (list (monify $head) $i_expr) */
                  | comment_eol indent body1=body {$v=list($body1.v);} /*= (list $body) */ )
