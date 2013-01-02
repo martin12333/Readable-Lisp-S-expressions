@@ -492,8 +492,6 @@ i_expr returns [Object v] :
 // indent processing, for backwards compatibility.  Detecting this as
 // an error should detect some mistakes.
 
-//  
-// 
 
 t_expr  returns [Object v]
   : comment_eol t_expr1=t_expr {$v=$t_expr1.v;} /* Initial lcomment, try again */
