@@ -297,11 +297,11 @@ comment_eol : LCOMMENT? EOL;
 // Be greedy, because "GROUP" and "splice" are actually the same symbol;
 // we need to prefer GROUP where it makes sense.
 restart_head_branch returns [Object v]:
-              head (DOLLAR hspace* restart_head_branch /*= (list $head $restart_head) */
-                    | empty /*= $head */ )
-              | scomment hspace* restart_head_branch /*= $restart_head */
-              | DOLLAR hspace* restart_head_branch /*= (list $restart_head) */
-              | empty /*= '() */
+              head (DOLLAR hspace* rb1=restart_head_branch {$v = list($head.v, $rb1.v);} /*= (list $head $restart_head) */
+                    | empty {$v = $head.v;} /*= $head */ )
+              | scomment hspace* rb2=restart_head_branch {$v = $rb2.v;} /*= $restart_head */
+              | DOLLAR hspace* rb3=restart_head_branch {$v = list($rb3.v);} /*= (list $restart_head) */
+              | empty {$v = null;} /*= '() */
               ;
 
 restart_head_tail returns [Object v]: splice hspace* restart_head_branch again=restart_head_tail
