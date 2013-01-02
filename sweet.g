@@ -97,9 +97,9 @@ SHARP_BANG_MARKER : '#!' ('a'..'z'|'A'..'Z'|'_')
 // of a line and do not themselves create a newline (they still have
 // to be followed by an EOL_SEQUENCE).
 fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
-fragment BLANK_LINE   : (' ' | '\t' | '!' )* (';' NOT_EOL_CHAR*)? | (FF | VT)+ ;
+fragment SPECIAL_BLANK_LINE   : (' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* | (FF | VT)+ ;
 EOL     : (FF | VT)* EOL_SEQUENCE
-          (BLANK_LINE EOL_SEQUENCE)* ;
+          (SPECIAL_BLANK_LINE EOL_SEQUENCE)* ;
 
 // Do not reference '\n' or '\r' inside a non-lexing rule in ANTLR.
 // If you do, ANTLR will quietly create new lexical tokens for them, and
