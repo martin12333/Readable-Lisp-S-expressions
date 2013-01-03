@@ -2150,6 +2150,71 @@ in improving the readability of Lisp,
 and that indentation can help do so.
 </p>
 
+<h2 id="z">Comparison to Z</h2>
+
+<!-- Ben Booth reported this 2012-01-02 to readable-discuss -->
+
+<p>
+The
+<a href="http://chrisdone.com/z/">
+"Z" language by Chris Done (not related to the Z specification language)</a>
+has been
+<a href="http://www.reddit.com/r/programming/comments/15r6tb/z_a_tiny_strict_impure_dynamically_typed_curried/">
+discussed on Reddit</a>.
+It's an indentation-based lisp-like language, although the
+indentation rules differ somewhat from sweet-expressions.
+</p>
+<p>
+In Z, a whitespace-separated sequence of terms applies to the next, so:
+</p>
+<pre>
+  foo bar mu zot
+</pre>
+<p>
+would parse (in s-expression form) as <tt>(foo (bar (mu zot)))</tt>.
+As its documentation states,
+"To pass additional arguments to a function, the arguments are
+put on the next line and indented to the column of the first argument"
+</p>
+<p>
+This is an interesting approach, but David A. Wheeler
+agrees with 1337hephaestus_sc2 on Reddit:
+"The main idea seems clever, but also too clever."
+</p>
+<p>
+Here are a few issues with Z syntax compared to sweet-expressions:
+</p>
+<ol>
+<li>When you have multi-parameter functions, this syntax quickly forces
+you to grow vertically.  This is exactly the opposite of the actual
+real estate available.  Screens are wide and short, and even if you use
+traditional paper sizes it's wider than tall (typically 80 characters
+across, ~66 lines down).</li>
+<li>
+Edits in one line could quietly change the meaning of other lines,
+in non-obvious ways.  If you edit a line with children, you have to make
+sure that the lines that follow are moved as well.  An IDE can do this,
+but it's concerning if an IDE is a practical necessity to edit files.
+Here is an example of this meaning change; if you started with:
+<pre>
+   fee fie foe fum
+               foo bar
+</pre>
+this would be <tt>(fee (fie (foe fun (foo bar))))</tt>, but merely
+changing "fie" to "faction" would produce
+<pre>
+   fee faction foe fum
+               foo bar
+</pre>
+which would be interpreted as <tt>(fee (faction (foe fum) (foo bar)))</tt>.
+</li>
+<li>I suspect is that it's <i>especially</i> easy to make a mistake with this
+notation in a lisp.  Writing "cons a b" would seem reasonable enough,
+but would be interpreted as (cons (a b)).
+</li>
+</ol>
+
+
 <h2 id="writing-out-results">Writing out results</h2>
 <p>An obvious question
 is, &#8220;how do you write them out?&#8221;  After all, with these notations there is

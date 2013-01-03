@@ -20,7 +20,7 @@ public class Test {
     // System.out.print("DEBUG 2:\n");
     sweetLexer lexer = new sweetLexer(input);
     // System.out.print("DEBUG 3:\n");
-    CommonTokenStream tokens = new CommonTokenStream(lexer);
+    MyTokenStream tokens = new MyTokenStream(lexer);
     // System.out.print("DEBUG 4:\n");
     sweetParser parser = new sweetParser(tokens);
     System.out.print("About to parse:\n");
