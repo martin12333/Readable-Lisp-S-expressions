@@ -36,6 +36,7 @@ one
 q1
 (q1 q2)
 (q1 q2 q3)
+((a1 a2) (b1 b2) (c1 c2))
 a
 (a b)
 (a (b c))
@@ -53,11 +54,6 @@ use-dash
 (let ((var1 value1) (var2 value2)))
 (let (var1 value1) (fact var1))
 (a b $ c d)
-indent-disabled
-indent-disabled1
-indent-disabled2
-indent-disabled1
-indent-disabled2
-indent-disabled3
 xyz
 ($ x)
+fin

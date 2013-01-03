@@ -5,30 +5,24 @@ one two
 one two three
 
 one two three
-\> four
-\<
+  four
 
 one two three
-\> four
-five
-\<
+  four
+  five
 
 one two three
-\> four
-five
-six
-\<
+  four
+  five
+  six
 
 a b
-\> c
-d e
-\<
+  c
+  d e
 
 a
-\> ' c d e
-\> g h i
-\<
-\<
+   ' c d e
+      g h i
 
 cos 0
 
@@ -46,50 +40,40 @@ x y z $ a b
 x y z $ a b c
 
 $ a
-\> b
-\<
+  b
 
 $ a
-\> b c
-\<
+  b c
 
 $ a z
-\> o p
-\<
+  o p
 
 ; "$" is different from \\; initial "$" always makes another list. Since:
 ; \\
 ;   d
 ; would create (d), a "$" inserts another (...) level vs \\, making ((d)):
 $
-\> d
-\<
+  d
 
 ; This is (((d e))) :
 $
-\> d e
-\<
+  d e
 
 $
-\> d e f
-\<
+  d e f
 
 
 fee $ fie
-\> foe fum
-\<
+  foe fum
 
 ' a b
-\>  c d
-\<
+  c d
 
 m ' n o
-\>  p q
-\<
+  p q
 
 'x y z
-\> c d
-\<
+  c d
 
 'a b c
 
@@ -98,47 +82,44 @@ a 'c e
 m n 'o
 
 \\
-\>  q1
-\<
+  q1
 
 \\
-\> q1 q2
-\<
+  q1 q2
 
 \\
-\> q1 q2 q3
-\<
+  q1 q2 q3
+
+\\
+  a1 a2
+  b1 b2
+  c1 c2
 
 \\ a
 
 \\ a
-\>   b
-\<
+  b
 
 \\ a
-\>  b c
-\<
+  b c
 
 
 \\ x y z
-\>  aa bb
-cc dd
-ee ff
-\<
+  aa bb
+  cc dd
+  ee ff
 
 a b
-\> c \\ d
-e f \\ g h
-i j k \\ l m n \\ o p q
-\<
+  c \\ d
+  e f \\ g h
+  i j k \\ l m n \\ o p q
 
 p \\ q
 
 n a b \\ sing sang sung
 
 n a b \\ sing sang sung
-\> d e f
-\<
+  d e f
 
 use-dash
 
@@ -147,8 +128,7 @@ let <* var1 value1 *>
 let <* var1 value1 \\ var2 value2 *>
 
 let <* var1 value1 *>
-\> fact var1
-\<
+  fact var1
 
 ; "$" inside parens is just another atom.
 
@@ -156,11 +136,11 @@ let <* var1 value1 *>
 
 ; Initial indents:
 
-\N> indent-disabled
-
-\N> indent-disabled1 indent-disabled2
-
-\N> indent-disabled1 indent-disabled2 indent-disabled3
+; \N> indent-disabled
+; 
+; \N> indent-disabled1 indent-disabled2
+; 
+; \N> indent-disabled1 indent-disabled2 indent-disabled3
 
 xyz
 
@@ -182,5 +162,7 @@ xyz
 ;  *>
 ;  \<
 
+
+fin
 
 
