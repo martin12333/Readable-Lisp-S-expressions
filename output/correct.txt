@@ -70,4 +70,15 @@ first
 second
 third
 (back to (working correctly))
+indent-disabled
+indent-disabled1
+indent-disabled2
+indent-disabled1
+indent-disabled2
+indent-disabled3
+initial-indents
+$
+disable
+\\
+processing
 fin

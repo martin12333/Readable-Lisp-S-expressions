@@ -60,8 +60,13 @@ tokens {
 }
   
 @lexer::members {
-  // Track enclosure level. "(" etc. adds 1, ")" etc. subtracts.
+  // Track enclosure level. "(" etc. adds 1, ")" etc. subtracts:
   long enclosure = 0;
+  Boolean initial_indent = false;
+  // Are we doing indent processing?:
+  private Boolean indent_processing() {
+    return (enclosure == 0) && !initial_indent;
+  }
 
   // Permit sending multiple tokens per rule, per ANTLR FAQ.
   // This is necessary to support DEDENT.
@@ -136,17 +141,17 @@ fragment  DEDENT: ' ';
 // Define these first, to give them higher lexical precedence
 // than other definitions.  Note that these only have special meaning
 // outside (), [], and {}; otherwise they're just atoms.
-GROUP   :       {enclosure==0}? => '\\' '\\'; // GROUP and splice symbol.
-DOLLAR  :       {enclosure==0}? =>'$';
-RESERVED_TRIPLE_DOLLAR : {enclosure==0}? => '$$$';  // Reserved.
-RESTART :       {enclosure==0}? => '<' '*' {/* TODO: Restart indent level */};
-RESTART_END:    {enclosure==0}? => '*' '>' {/* TODO: Restore indent level */};
+GROUP   :       {indent_processing()}? => '\\' '\\'; // GROUP and splice symbol.
+DOLLAR  :       {indent_processing()}? =>'$';
+RESERVED_TRIPLE_DOLLAR : {indent_processing()}? => '$$$';  // Reserved.
+RESTART :       {indent_processing()}? => '<' '*' {/* TODO: Restart indent level */};
+RESTART_END:    {indent_processing()}? => '*' '>' {/* TODO: Restore indent level */};
 
 // Abbreviations followed by horizontal space (space or tab) are special:
-APOSH           : {enclosure==0}? => '\'' (' ' | '\t') ;
-QUASIQUOTEH     : {enclosure==0}? => '\`' (' ' | '\t') ;
-UNQUOTE_SPLICEH : {enclosure==0}? => ',' '@' (' ' | '\t') ;
-UNQUOTEH        : {enclosure==0}? => ',' (' ' | '\t') ;
+APOSH           : {indent_processing()}? => '\'' (' ' | '\t') ;
+QUASIQUOTEH     : {indent_processing()}? => '\`' (' ' | '\t') ;
+UNQUOTE_SPLICEH : {indent_processing()}? => ',' '@' (' ' | '\t') ;
+UNQUOTEH        : {indent_processing()}? => ',' (' ' | '\t') ;
 
 // Special end-of-line character definitions.
 // Specially handle formfeed (\f) and vertical tab (\v), even though
@@ -206,10 +211,13 @@ EOL     :  {enclosure==0}? => e=EOL_SEQUENCE
           {
             $e.setType(EOL);
             emit($e);  // Emit the EOL token
+            // TODO: Handle sequences of initial-indent.
+            initial_indent = false;
             if ($extra != null || ($i.text).equals("<EOF>")) {
               process_indent("", $i);
-            } else if (! ($i.text).equals("<EOF>"))
+            } else {
               process_indent($i.text, $i);
+            }
           }
         ;
 
@@ -224,6 +232,7 @@ INITIAL_INDENT
   	      $i.setType(INITIAL_INDENT_NO_BANG);
   	    }
             emit($i);
+            initial_indent = true;
   	  }
   	;
 

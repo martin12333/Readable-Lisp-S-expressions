@@ -162,7 +162,6 @@ h
 back to
   working correctly
 
-
 ; NOT WORKING YET - restart after head:
 ;  define-library (example grid)
 ;  \>  export make rows cols ref each rename(put! set!)
@@ -180,12 +179,17 @@ back to
 
 ; Initial indents:
 
-; \N> indent-disabled
-; 
-; \N> indent-disabled1 indent-disabled2
-; 
-; \N> indent-disabled1 indent-disabled2 indent-disabled3
+  indent-disabled
 
+  indent-disabled1 indent-disabled2
+
+  indent-disabled1   indent-disabled2     indent-disabled3
+
+  initial-indents $ disable \\ processing
+
+; NOT WORKING YET - sequence:
+;    indent-disabled
+;    indent-disabled-another
 
 fin
 
