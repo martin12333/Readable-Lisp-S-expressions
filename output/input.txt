@@ -158,6 +158,11 @@ h
   ; ignore me, too.
   i
 
+  first second third
+back to
+  working correctly
+
+
 ; NOT WORKING YET - restart after head:
 ;  define-library (example grid)
 ;  \>  export make rows cols ref each rename(put! set!)

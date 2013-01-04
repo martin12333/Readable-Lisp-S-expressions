@@ -193,7 +193,10 @@ fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
 // TODO
 fragment SPECIAL_BLANK_LINE  : (' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* EOL_SEQUENCE | (FF | VT)+ EOL_SEQUENCE;
 // TODO: FF/VT
-fragment INDENT_CHARS : (' ' | '\t' | '!')*;
+fragment INDENT_CHAR : (' ' | '\t' | '!');
+fragment INDENT_CHARS : INDENT_CHAR*;
+fragment INDENT_CHARS_PLUS : INDENT_CHAR+;
+
 EOL     :  {enclosure==0}? => e=EOL_SEQUENCE
           SPECIAL_BLANK_LINE*
           i=INDENT_CHARS  // This is the indent for the next line
@@ -207,6 +210,20 @@ EOL     :  {enclosure==0}? => e=EOL_SEQUENCE
               process_indent($i.text, $i);
           }
         ;
+
+// Generate special initial indents
+INITIAL_INDENT
+  	: {(enclosure == 0) && (getCharPositionInLine() == 0) }?
+  	  => i=INDENT_CHARS_PLUS
+  	  {
+  	    if ($i.text.contains("!")) {
+  	      $i.setType(INITIAL_INDENT_WITH_BANG);
+  	    } else {
+  	      $i.setType(INITIAL_INDENT_NO_BANG);
+  	    }
+            emit($i);
+  	  }
+  	;
 
 BARE_OTHER_WS : {enclosure > 0}? => EOL_CHAR;
 
