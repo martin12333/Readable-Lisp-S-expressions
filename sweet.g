@@ -67,7 +67,8 @@ tokens {
   // Track enclosure level. "(" etc. adds 1, ")" etc. subtracts.
   long enclosure = 0;
 
-  // Permit sending multiple DEDENT tokens at once, per ANTLR FAQ.
+  // Permit sending multiple tokens per rule, per ANTLR FAQ.
+  // This is necessary to support DEDENT.
   Deque<Token> tokens = new java.util.ArrayDeque<Token>();     
   @Override
   public void emit(Token token) {
@@ -82,39 +83,40 @@ tokens {
       return tokens.removeFirst();
   }
 
-
-// Python's rule:
-// http://docs.python.org/2/reference/lexical_analysis.html#indentation
-// Before the first line of the file is read, a single zero is pushed on the stack;
-// this will never be popped off again. The numbers pushed on the stack will always be
-// strictly increasing from bottom to top. At the beginning of each logical line,
-// the line’s indentation level is compared to the top of the stack. If it is equal,
-// nothing happens. If it is larger, it is pushed on the stack, and one INDENT token is generated.
-// If it is smaller, it must be one of the numbers occurring on the stack; all numbers on
-// the stack that are larger are popped off, and for each number popped off a DEDENT token is generated.
-// At the end of the file, a DEDENT token is generated for each number remaining on the stack that is larger than zero.
-  
-  // Record string indents; use push, pop, peek.
+  // The following implements INDENT/DEDENT tokens, semi-similar to Python's.
+  // See: http://docs.python.org/2/reference/lexical_analysis.html#indentation
   // TODO: INITIAL_INDENT...
-  // TODO: Do proper string subset comparison - currently presumes only spaces.
+
+  // This stack records the string indents; use push, pop, peek.
   Deque<String> indents = new java.util.ArrayDeque<String>();
+
+  private Boolean indentation_greater_than(String indent1, String indent2) {
+    int len1 = indent1.length();
+    int len2 = indent2.length();
+    return (len1 > len2) && indent2.equals(indent1.substring(0, len2));
+  }
+
   private void process_indent(String indent_text, Token t) {
     if (indents.isEmpty()) indents.push("");
     if (indents.peek().equals(indent_text)) { // no-op
-    } else if (indent_text.length() > indents.peek().length()) {
+    } else if (indentation_greater_than(indent_text, indents.peek())) {
       // System.out.print("Generate INDENT\n");
       t.setType(INDENT);
       emit(t);
       indents.push(indent_text);
-    } else if (indent_text.length() < indents.peek().length()) {
+    } else if (indentation_greater_than(indents.peek(), indent_text)) {
       String old_indent = "";
-      while (!indents.isEmpty() && (indents.peek().length() > indent_text.length())) {
+      while (!indents.isEmpty() && indentation_greater_than(indents.peek(), indent_text)) {
         indents.removeFirst(); // drop
         // System.out.print("Generate DEDENT(s)\n");
         t.setType(DEDENT);
         emit(t);
       }
+      if (!indents.peek().equals(indent_text)) { 
        // TODO: Generate System.out.print("Generate BADDENT(s)\n");
+        t.setType(BADDENT);
+        emit(t);
+      }
     } else {
       // System.out.print("Generate BADDENT\n");
       t.setType(BADDENT);
