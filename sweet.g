@@ -191,16 +191,19 @@ SHARP_BANG_MARKER : '#!' ('a'..'z'|'A'..'Z'|'_')
 // to be followed by an EOL_SEQUENCE).
 fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
 // TODO
-// fragment SPECIAL_BLANK_LINES  : ((' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* EOL_SEQUENCE | (FF | VT)+ EOL_SEQUENCE)+;
+fragment SPECIAL_BLANK_LINE  : (' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* EOL_SEQUENCE | (FF | VT)+ EOL_SEQUENCE;
 // TODO: FF/VT
 fragment INDENT_CHARS : (' ' | '\t' | '!')*;
 EOL     :  {enclosure==0}? => e=EOL_SEQUENCE
+          SPECIAL_BLANK_LINE*
           i=INDENT_CHARS  // This is the indent for the next line
+          extra=EOL_SEQUENCE? // If this exists, the indents are useless.
           {
             $e.setType(EOL);
             emit($e);  // Emit the EOL token
-            // System.out.print("EOL hit, indent text is: >" + $i.text + "<\n");
-            if (! ($i.text).equals("<EOF>"))
+            if ($extra != null || ($i.text).equals("<EOF>")) {
+              process_indent("", $i);
+            } else if (! ($i.text).equals("<EOF>"))
               process_indent($i.text, $i);
           }
         ;

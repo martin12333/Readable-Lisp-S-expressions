@@ -150,6 +150,13 @@ f
 	a
 	b
 
+g
+! h
+
+h
+; ignore me.
+  ; ignore me, too.
+  i
 
 ; NOT WORKING YET - restart after head:
 ;  define-library (example grid)
