@@ -124,7 +124,18 @@ tokens {
       emit(t);
     }
   }
+
+  private void process_initial_indent(String indent_text, Token t) {
+    if (indent_text.contains("!")) {
+      t.setType(INITIAL_INDENT_WITH_BANG);
+    } else {
+      t.setType(INITIAL_INDENT_NO_BANG);
+    }
+    emit(t);
+    initial_indent = true;
+  }
 }
+
 
 start : print_t_expr;
 
@@ -207,15 +218,19 @@ fragment INDENT_CHARS_PLUS : INDENT_CHAR+;
 EOL     :  {enclosure==0}? => e=EOL_SEQUENCE
           SPECIAL_BLANK_LINE*
           i=INDENT_CHARS  // This is the indent for the next line
-          extra=EOL_SEQUENCE? // If this exists, the indents are useless.
+          extra=EOL_SEQUENCE* // If this exists, the indents are useless.
           {
             $e.setType(EOL);
             emit($e);  // Emit the EOL token
             // TODO: Handle sequences of initial-indent.
             initial_indent = false;
-            if ($extra != null || ($i.text).equals("<EOF>")) {
-              process_indent("", $i);
+            if ($e.pos == 0 && $i != null && (!(($i.text).equals("<EOF>")))) {
+              // Blank line, followed by initial indent:
+              process_initial_indent($i.text, $i);
+            } else if ($extra != null || ($i.text).equals("<EOF>")) {
+              process_indent("", $i); // Indented EOL = EOL
             } else {
+              // Normal case: EOL, possibly followed by indent; process it.
               process_indent($i.text, $i);
             }
           }
@@ -226,15 +241,8 @@ INITIAL_INDENT
   	: {(enclosure == 0) && (getCharPositionInLine() == 0) }?
   	  => i=INDENT_CHARS_PLUS
   	  {
-  	    if ($i.text.contains("!")) {
-  	      $i.setType(INITIAL_INDENT_WITH_BANG);
-  	    } else {
-  	      $i.setType(INITIAL_INDENT_NO_BANG);
-  	    }
-            emit($i);
-            initial_indent = true;
-  	  }
-  	;
+            process_initial_indent($i.text, $i);
+  	  } ;
 
 BARE_OTHER_WS : {enclosure > 0}? => EOL_CHAR;
 
