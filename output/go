@@ -1,6 +1,6 @@
 #!/bin/sh
 
-antlrworks_jar=../antlrworks-1.4.3.jar
+antlrworks_jar=../antlrworks-*.jar
 output_dir=.
 # Note: Remove GNU extension --strip-trailing-cr if you don't have it
 diff_options="-u --strip-trailing-cr"
