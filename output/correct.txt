@@ -81,4 +81,9 @@ $
 disable
 \\
 processing
+indent-disabled
+indent-disabled-another
+(g 1 2)
+(h 3 4)
+(f 1 2 (a 3 4 (b 5 6 (c 7 8) (d 9 9))))
 fin
