@@ -1,3 +1,3 @@
 
-javac scheme/*.java [A-Z]*.java && java Test < input.txt
+javac scheme/*.java [A-Z]*.java && java Unsweeten_ANTLR < input.txt
 

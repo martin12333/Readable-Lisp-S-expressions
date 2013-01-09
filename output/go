@@ -20,7 +20,7 @@ rm -f output.txt
 echo "About to compile"
 javac scheme/*.java [A-Z]*.java &&
   echo "Compilation complete, now running tests." &&
-  java Test < input.txt | tee output.txt
+  java Unsweeten_ANTLR < input.txt | tee output.txt
 
 echo
 echo "Differences from correct:"

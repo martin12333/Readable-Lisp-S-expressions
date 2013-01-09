@@ -6,7 +6,7 @@ import static scheme.Pair.*;
 // ANTLR tokenizes all at once, so don't use interactively;
 // redirect a file to it.
 
-public class Test {
+public class Unsweeten_ANTLR {
   public static void main(String[] args) throws Exception {
     // System.out.print("Starting\n");
     Object x = cons(1, cons(2, null));
