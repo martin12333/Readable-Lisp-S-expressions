@@ -563,6 +563,7 @@ rest returns [Object v]   : PERIOD hspace+ n_expr1=n_expr hspace* /* improper li
 
 // "body" handles the sequence of 1+ child lines in an i_expr
 // (e.g., after a "head"), each of which is itself an i_expr.
+// It returns the list of expressions in the body.
 // Note that an i-expr will consume any line comments or hspaces
 // before it returns back to the "body" production.
 // Non-tokenizing implemenation notes:
