@@ -33,9 +33,9 @@ one
 ((quote a) b c)
 (a (quote c) e)
 (m n (quote o))
-q1
-(q1 q2)
-(q1 q2 q3)
+(q1)
+((q1 q2))
+((q1 q2 q3))
 ((a1 a2) (b1 b2) (c1 c2))
 a
 (a b)
