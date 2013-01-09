@@ -136,6 +136,11 @@ tokens {
   }
 }
 
+@parser::members {
+  private void generate_eof() {
+    System.exit(0); 
+  }
+}
 
 start : print_t_expr;
 
@@ -646,7 +651,7 @@ t_expr  returns [Object v]
       (n_expr { $v = $n_expr.v; } /* indent processing disabled. */
        | comment_eol t_expr2=t_expr {$v=$t_expr2.v;} )
     | INITIAL_INDENT_WITH_BANG error
-    | EOF { System.exit(0); } /*= EOF */ /* End of file */
+    | EOF { generate_eof(); } /*= EOF */ /* End of file */
     | i_expr {$v = $i_expr.v;} /* Normal case */ ;
 
 print_t_expr
