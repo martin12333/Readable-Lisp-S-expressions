@@ -174,6 +174,8 @@ fragment EOL_CHAR : '\n' | '\r' | FF | VT | NEL; // These start EOL
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
 
 // Various forms of comments - line comments and special comments:
+LCOMMENT_LINE :  {(getCharPositionInLine() == 0)}? =>
+     ';' NOT_EOL_CHAR* EOL_SEQUENCE {skip();};
 LCOMMENT :       ';' NOT_EOL_CHAR* ; // Line comment - doesn't include EOL
 BLOCK_COMMENT : '#|' // This is #| ... #|
       (options {greedy=false;} : (BLOCK_COMMENT | .))*
@@ -215,19 +217,16 @@ fragment INDENT_CHAR : (' ' | '\t' | '!');
 fragment INDENT_CHARS : INDENT_CHAR*;
 fragment INDENT_CHARS_PLUS : INDENT_CHAR+;
 
-EOL     :  {enclosure==0}? => e=EOL_SEQUENCE
+// EOL after contents - may have an indented/dedented line.
+EOL     :  {enclosure==0 && ((getCharPositionInLine() != 0) && !initial_indent)}? =>
+          e=EOL_SEQUENCE
           SPECIAL_BLANK_LINE*
           i=INDENT_CHARS  // This is the indent for the next line
           extra=EOL_SEQUENCE* // If this exists, the indents are useless.
           {
             $e.setType(EOL);
             emit($e);  // Emit the EOL token
-            // TODO: Handle sequences of initial-indent.
-            initial_indent = false;
-            if ($e.pos == 0 && $i != null && (!(($i.text).equals("<EOF>")))) {
-              // Blank line, followed by initial indent:
-              process_initial_indent($i.text, $i);
-            } else if ($extra != null || ($i.text).equals("<EOF>")) {
+            if ($extra != null || ($i.text).equals("<EOF>")) {
               process_indent("", $i); // Indented EOL = EOL
             } else {
               // Normal case: EOL, possibly followed by indent; process it.
@@ -236,7 +235,26 @@ EOL     :  {enclosure==0}? => e=EOL_SEQUENCE
           }
         ;
 
-// Generate special initial indents
+INITIAL_INDENT_EOL :  {enclosure==0 && initial_indent}? =>
+          e=EOL_SEQUENCE
+          {
+            $e.setType(EOL);
+            emit($e);
+            initial_indent = false;
+          }
+          ;
+
+BLANK_EOL :  {enclosure==0 && (getCharPositionInLine() == 0)}? =>
+          e=EOL_SEQUENCE
+          {
+            $e.setType(EOL);
+            emit($e);
+            process_indent("", $e);
+          }
+          ;
+
+// Generate special initial indents for initial indents
+// not preceded by lines with contents
 INITIAL_INDENT
   	: {(enclosure == 0) && (getCharPositionInLine() == 0) }?
   	  => i=INDENT_CHARS_PLUS
