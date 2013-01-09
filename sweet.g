@@ -217,7 +217,7 @@ fragment INDENT_CHAR : (' ' | '\t' | '!');
 fragment INDENT_CHARS : INDENT_CHAR*;
 fragment INDENT_CHARS_PLUS : INDENT_CHAR+;
 
-// EOL after contents - may have an indented/dedented line.
+// EOL after contents - may have a following indented/dedented line.
 EOL     :  {enclosure==0 && ((getCharPositionInLine() != 0) && !initial_indent)}? =>
           e=EOL_SEQUENCE
           SPECIAL_BLANK_LINE*
