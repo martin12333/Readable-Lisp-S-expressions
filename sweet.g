@@ -157,6 +157,99 @@ tokens {
       return car( (Pair) x);
     } else {return x;}
   }
+
+
+  // ; --------------------------------------------------------
+  // ; Curly-infix support procedures - converted from SRFI-105
+  // ; --------------------------------------------------------
+
+  // ; Return true if lyst has an even # of parameters, and the (alternating)
+  // ; first parameters are "op".  Used to determine if a longer lyst is infix.
+  // ; If passed empty list, returns true (so recursion works correctly).
+  // (define (even-and-op-prefix? op lyst)
+  //   (cond
+  //     ((null? lyst) #t)
+  //     ((not (pair? lyst)) #f)
+  //     ((not (equal? op (car lyst))) #f) ; fail - operators not the same
+  //     ((not (pair? (cdr lyst)))  #f) ; Wrong # of parameters or improper
+  //     (#t   (even-and-op-prefix? op (cddr lyst))))) ; recurse.
+  public static Boolean even_and_op_prefixp(Object op, Object lyst) {
+    if (! nullp(lyst)) {
+      return true;
+    } else if (! pairp(lyst)) {
+      return false;
+    } else if (! equalp(op, car( (Pair) lyst))) {
+      return false;
+    } else if (! pairp( cdr( (Pair) lyst))) {
+      return false;
+    } else {
+      return even_and_op_prefixp(op, cddr( (Pair) lyst));
+    }
+  }
+
+  // ; Return true if the lyst is in simple infix format
+  // ; (and thus should be reordered at read time).
+  // (define (simple-infix-list? lyst)
+  //   (and
+  //     (pair? lyst)           ; Must have list;  '() doesn't count.
+  //     (pair? (cdr lyst))     ; Must have a second argument.
+  //     (pair? (cddr lyst))    ; Must have a third argument (we check it
+  //                            ; this way for performance)
+  //     (even-and-op-prefix? (cadr lyst) (cdr lyst)))) ; true if rest simple
+  public static Boolean simple_infix_listp(Object lyst) {
+    return pairp(lyst)
+           && pairp(cdr((Pair) lyst))
+           && pairp(cddr((Pair) lyst))
+           && even_and_op_prefixp(cadr((Pair) lyst), cdr((Pair) lyst));
+  }
+
+  // ; Return alternating parameters in a lyst (1st, 3rd, 5th, etc.)
+  // (define (alternating-parameters lyst)
+  //   (if (or (null? lyst) (null? (cdr lyst)))
+  //     lyst
+  //     (cons (car lyst) (alternating-parameters (cddr lyst)))))
+  public static Pair alternating_parameters(Pair lyst) {
+    if (nullp(lyst) || nullp(cdr(lyst))) {
+      return lyst;
+    } else {
+      return cons(car(lyst), alternating_parameters((Pair) cddr(lyst)));
+    }
+  }
+
+  // ; Not a simple infix list - transform it.  Written as a separate procedure
+  // ; so that future experiments or SRFIs can easily replace just this piece.
+  // Handle dollar sign specially for ANTLR.
+  public static Pair transform_mixed_infix(Pair lyst) {
+    return cons("$" + "nfx" + "$", lyst);
+  }
+
+  // ; Given curly-infix lyst, map it to its final internal format.
+  // (define (process-curly lyst)
+  //   (cond
+  //    ((not (pair? lyst)) lyst) ; E.G., map {} to ().
+  //    ((null? (cdr lyst)) ; Map {a} to a.
+  //      (car lyst))
+  //    ((and (pair? (cdr lyst)) (null? (cddr lyst))) ; Map {a b} to (a b).
+  //      lyst)
+  //    ((simple-infix-list? lyst) ; Map {a OP b [OP c...]} to (OP a b [c...])
+  //      (cons (cadr lyst) (alternating-parameters lyst)))
+  //    (#t  (transform-mixed-infix lyst))))
+  public static Object process_curly(Object lyst) {
+    if (! pairp(lyst)) {
+      return lyst;
+    } else {
+      Pair plyst = (Pair) lyst;
+      if (nullp(cdr(plyst))) {
+        return car(plyst); // Map {a} to a.
+      } else if (pairp(cdr(plyst)) && nullp(cddr(plyst))) {
+        return plyst; // Map {a b} to (a b).
+      } else if (simple_infix_listp(plyst)) {
+        return cons(cadr(plyst), alternating_parameters(plyst));
+      } else {
+        return transform_mixed_infix(plyst);
+      }
+    }
+  }
 }
 
 
