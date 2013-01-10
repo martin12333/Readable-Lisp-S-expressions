@@ -594,14 +594,18 @@ body returns [Object v] : i_expr
 // should then set the current_indent to RESTART_END, and return, to signal
 // the reception of RESTART_END.
 
+// TODO: Make "(head|empty) DOLLAR comment_eol" be an error; use instead:
+// $ \\    ; Use DOLLAR GROUP, not just DOLLAR, if you want children.
+//   1 2
+//   3 4
+
 i_expr returns [Object v]
   : head
     (GROUP_SPLICE hspace* /* Not initial; interpret as splice */
       (options {greedy=true;} :
         comment_eol error
-          // Could instead do:
-          //    comment_eol same i_expr /*= (append $head $i_expr) */
-          // to allow \\ EOL as line-continuation.
+          // To allow \\ EOL as line-continuation, could instead do:
+          //    comment_eol same i9=i_expr {append($head.v, $i9.v);}
           // John Cowan recommends (Sat, 29 Dec 2012 13:18:18 -0500)
           // that we *not* do this, because it'd be confusing.
           // Normal case: splice ends i_expr immediately:
@@ -613,7 +617,7 @@ i_expr returns [Object v]
        (indent body2=body {$v = append($head.v, $body2.v);}
         | empty     {$v = monify($head.v);} /* No child lines */ ))
   | (GROUP_SPLICE | scomment) hspace* /* Initial; Interpet as group */
-      (i_expr2=i_expr {$v = $i_expr2.v;} /* ignore the GROUP_SPLICE/scomment */
+      (i_expr2=i_expr {$v = $i_expr2.v;} /* Ignore GROUP/scomment if initial */
        | comment_eol
          (indent body3=body {$v = $body3.v;} /* Normal use for GROUP */
           | same i_expr3=i_expr {$v = $i_expr3.v;} /* Plausible separator */
@@ -623,7 +627,7 @@ i_expr returns [Object v]
      | comment_eol indent body4=body {$v=list($body4.v);} )
   | abbrevh hspace*
       (i_expr5=i_expr {$v=list($abbrevh.v, $i_expr5.v);}
-       | (comment_eol error /* Too easy to mess up - forbid it. */ )) ;
+       | (comment_eol error /* Too easy to use incorrectly; forbid it. */ )) ;
 
 // Top-level sweet-expression production, t_expr.
 // This production handles special cases, then in the normal case
