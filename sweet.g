@@ -241,48 +241,47 @@ fragment INDENT_CHARS : INDENT_CHAR*;
 fragment INDENT_CHARS_PLUS : INDENT_CHAR+;
 
 // EOL after contents - may have a following indented/dedented line.
-EOL     :  {enclosure==0 && ((getCharPositionInLine() != 0) && !initial_indent)}? =>
-          e=EOL_SEQUENCE
-          SPECIAL_BLANK_LINE*
-          i=INDENT_CHARS  // This is the indent for the next line
-          extra=EOL_SEQUENCE* // If this exists, the indents are useless.
-          {
-            $e.setType(EOL);
-            emit($e);  // Emit the EOL token
-            if ($extra != null || ($i.text).equals("<EOF>")) {
-              process_indent("", $i); // Indented EOL = EOL
-            } else {
-              // Normal case: EOL, possibly followed by indent; process it.
-              process_indent($i.text, $i);
-            }
-          }
-        ;
+EOL: {enclosure==0 &&
+      ((getCharPositionInLine() != 0) && !initial_indent)}? =>
+  e=EOL_SEQUENCE
+  SPECIAL_BLANK_LINE*
+  i=INDENT_CHARS  // This is the indent for the next line
+  extra=EOL_SEQUENCE* // If this exists, the indents are useless.
+  {
+    $e.setType(EOL);
+    emit($e);  // Emit the EOL token
+    if ($extra != null || ($i.text).equals("<EOF>")) {
+      process_indent("", $i); // Indented EOL = EOL
+    } else {
+      // Normal case: EOL, possibly followed by indent; process it.
+      process_indent($i.text, $i);
+    }
+  } ;
 
-BLANK_EOL :  {enclosure==0 && (getCharPositionInLine() == 0)}? =>
-          e=EOL_SEQUENCE
-          {
-            $e.setType(EOL);
-            emit($e);
-            process_indent("", $e);
-          } ;
+BLANK_EOL : {enclosure==0 && (getCharPositionInLine() == 0)}? =>
+  e=EOL_SEQUENCE
+  {
+    $e.setType(EOL);
+    emit($e);
+    process_indent("", $e);
+  } ;
 
 
 INITIAL_INDENT_EOL :  {enclosure==0 && initial_indent}? =>
-          e=EOL_SEQUENCE
-          {
-            $e.setType(EOL);
-            emit($e);
-            initial_indent = false;
-          } ;
+  e=EOL_SEQUENCE
+  {
+    $e.setType(EOL);
+    emit($e);
+    initial_indent = false;
+  } ;
 
 // Generate special initial indents for initial indents
 // not preceded by lines with contents
-INITIAL_INDENT
-  	: {(enclosure == 0) && (getCharPositionInLine() == 0) }?
-  	  => i=INDENT_CHARS_PLUS
-  	  {
-            process_initial_indent($i.text, $i);
-  	  } ;
+INITIAL_INDENT : {(enclosure == 0) && (getCharPositionInLine() == 0) }? =>
+  i=INDENT_CHARS_PLUS
+  {
+    process_initial_indent($i.text, $i);
+  } ;
 
 BARE_OTHER_WS : {enclosure > 0}? => EOL_CHAR;
 
@@ -389,7 +388,6 @@ abbrev_noh returns [Object v]
 abbrev_all returns [Object v]
   : abbrevh {$v = $abbrevh.v;}
   | abbrev_noh {$v = $abbrev_noh.v;} ;
-sublist    : DOLLAR; // Use this synonym to make its purpose clearer.
 
 // TODO: n_expr and n_expr_first need actions for abbreviations.
 // n_expr is a full neoteric-expression.  Note that n_expr does *not*
@@ -455,8 +453,9 @@ comment_eol : LCOMMENT? EOL;
 // GROUP_SPLICE and scomment, and we permit empty contents (unlike "head").
 
 restart_head_branch returns [Object v]
-  : head (DOLLAR hspace* rb1=restart_head_branch {$v = list($head.v, $rb1.v);}
-          | empty {$v = $head.v;} )
+  : head
+    (DOLLAR hspace* rb1=restart_head_branch {$v = list($head.v, $rb1.v);}
+     | empty {$v = $head.v;} )
   | scomment hspace* rb2=restart_head_branch {$v = $rb2.v;}
   | DOLLAR hspace* rb3=restart_head_branch {$v = list($rb3.v);}
   | empty {$v = null;} /*= '() */  ;
@@ -610,7 +609,7 @@ i_expr returns [Object v]
          (indent body3=body {$v = $body3.v;} /* Normal use for GROUP */
           | same i_expr3=i_expr {$v = $i_expr3.v;} /* Plausible separator */
           | dedent error ))
-  | DOLLAR hspace*
+  | DOLLAR hspace* /* "$" as first expression on line */
     (i_expr4=i_expr  {$v=list($i_expr4.v);}
      | comment_eol indent body4=body {$v=list($body4.v);} )
   | abbrevh hspace*
