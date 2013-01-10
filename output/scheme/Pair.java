@@ -26,12 +26,40 @@ public class Pair extends Object {
     return x.cdr_value;
   }
 
+  public static Object cadr(Pair x) {
+    return car( (Pair) cdr(x));
+  }
+
+  public static Object cddr(Pair x) {
+    return cdr( (Pair) cdr(x));
+  }
+
   public static Boolean nullp(Object x) { // Scheme "null?"
     return x == null;
   }
 
   public static Boolean pairp(Object x) { // Scheme "pair?"
     return x instanceof Pair;
+  }
+
+  public static Boolean equalp(Object x, Object y) { // Scheme "equal?"
+    if ((x == null) && (y == null)) {
+      return true;
+    } else if ((x == null) || (y == null)) {
+      return false ;
+    } else if (pairp(x) && pairp(y)) {
+      Pair px = (Pair) x;
+      Pair py = (Pair) y;
+      return equalp(car(px), car(py)) && equalp(cdr(px), cdr(py));
+    } else if (pairp(x) || pairp(y)) {
+      return false;
+    } else {
+      return x.equals(y);
+    }
+  }
+
+  public static Object eqp(Object x, Object y) { // Scheme "eq?"
+    return x == y;
   }
 
   // This does not check for cycles
@@ -59,7 +87,7 @@ public class Pair extends Object {
     return cons(x, list(y));
   }
 
-  // "y" really needs to be a pair, but that makes it harder to
+  // "y" really needs to be a Pair, but that makes it harder to
   // to work with ANTLR
   public static Object append(Object x, Object y) {
     if (x == null) {
@@ -106,8 +134,6 @@ public class Pair extends Object {
       return list(x);
     } else {return x;}
   }
-
-  
 
 }
 
