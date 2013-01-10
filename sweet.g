@@ -9,13 +9,14 @@
 // indent processing. While indent processing is enabled, indents are
 // marked with INDENT, dedents with DEDENT (one for each dedent).
 // Lines with ONLY indent characters are considered blank lines.
-// There is no "SAME" token to show "same indent level"; some rules include
-// an empty "same" nonterminal to emphasize their lack of INDENT/DEDENT.
+// There is no "SAME" token to show "same indent level", but some rules
+// use an empty "same" nonterminal to emphasize their lack of INDENT/DEDENT.
 // Bad indentation emits BADDENT, which is never accepted.
-// If there's an indent when there is NO current indent level, it emits
-// INITIAL_INDENT_NO_BANG (if no "!") or INITIAL_INDENT_WITH_BANG (if "!" is there),
-// and does *NOT* change the indent level, so that initial indents
-// will disable indentation processing but only on that line.
+// If there's an indent when there is NO preceding un-indented line, the
+// preprocessor emits INITIAL_INDENT_NO_BANG (if no "!") or
+// INITIAL_INDENT_WITH_BANG (if "!" is in the indentation); this
+// does *NOT* change the indent level (this is so initial indents
+// will disable indentation processing, but only on that line).
 
 // TODO:
 // - See specific TODOs below.
@@ -47,12 +48,14 @@ tokens {
 // ANTLR v3 does not allow the parser to communicate to the lexer
 // (the lexer runs completely before the parser begins).  However,
 // the lexer can store and use state, which we have to do anyway to
-// do indentation processing.  Thus, the lexer also tracks the
+// do indentation processing.  Thus, the lexer tracks the
 // parentheses enclosure level, so that \n is just a delimiter inside (...)
 // but is handled specially in indentation processing, while symbols
 // like "$" are just ordinary atoms inside (...).
 // The lexer must also specially note "<*" and "*>" and specially modify
 // the indentation levels when those are received.
+// The ANTLR lexer does indentation processing, so it generates
+// INDENT, DEDENT, and so on as appropriate.
 
 
 @lexer::header {
@@ -69,7 +72,8 @@ tokens {
   }
 
   // Permit sending multiple tokens per rule, per ANTLR FAQ.
-  // This is necessary to support DEDENT.
+  // This is necessary to support DEDENT, as a single token may cause
+  // the generation of multiple DEDENTs.
   Deque<Token> tokens = new java.util.ArrayDeque<Token>();     
   @Override
   public void emit(Token token) {
@@ -83,10 +87,6 @@ tokens {
           return Token.EOF_TOKEN;
       return tokens.removeFirst();
   }
-
-  // The following implements INDENT/DEDENT tokens, semi-similar to Python's.
-  // See: http://docs.python.org/2/reference/lexical_analysis.html#indentation
-  // TODO: INITIAL_INDENT...
 
   // This stack records the string indents; use push, pop, peek.
   Deque<String> indents = new java.util.ArrayDeque<String>();
@@ -146,10 +146,10 @@ start : print_t_expr;
 
 // These are reported as fragments, not tokens, to silence
 // spurious warnings:
-fragment  INITIAL_INDENT_NO_BANG: ' ';
+fragment INITIAL_INDENT_NO_BANG: ' ';
 fragment INITIAL_INDENT_WITH_BANG: ' ';
-fragment  INDENT: ' ';
-fragment  DEDENT: ' ';
+fragment INDENT: ' ';
+fragment DEDENT: ' ';
 
 // Lexer. Lexical token (terminal) names are in all upper case
 
@@ -157,11 +157,11 @@ fragment  DEDENT: ' ';
 // Define these first, to give them higher lexical precedence
 // than other definitions.  Note that these only have special meaning
 // outside (), [], and {}; otherwise they're just atoms.
-GROUP   :       {indent_processing()}? => '\\' '\\'; // GROUP and splice symbol.
-DOLLAR  :       {indent_processing()}? =>'$';
+GROUP   : {indent_processing()}? => '\\' '\\'; // GROUP and splice symbol.
+DOLLAR  : {indent_processing()}? =>'$';
 RESERVED_TRIPLE_DOLLAR : {indent_processing()}? => '$$$';  // Reserved.
-RESTART :       {indent_processing()}? => '<' '*' {/* TODO: Restart indent level */};
-RESTART_END:    {indent_processing()}? => '*' '>' {/* TODO: Restore indent level */};
+RESTART : {indent_processing()}? => '<' '*' {/* TODO: Restart indent level */};
+RESTART_END: {indent_processing()}? => '*' '>' {/* TODO: Restore indent level */};
 
 // Abbreviations followed by horizontal space (space or tab) are special:
 APOSH           : {indent_processing()}? => '\'' (' ' | '\t') ;
@@ -200,6 +200,12 @@ SHARP_BANG_FILE :       '#!' ('/' | '.')
 SHARP_BANG_MARKER : '#!' ('a'..'z'|'A'..'Z'|'_')
                          ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')* ;
 
+// The following implements INDENT/DEDENT tokens, semi-similar to Python in
+// http://docs.python.org/2/reference/lexical_analysis.html#indentation
+// Page 95 of "The Definitive ANTLR Reference" has a code outline for
+// generating INDENT and DEDENT, but it is fundamentally wrong for us.
+// That only acts when there is 1+ indent characters on a line, so it
+// cannot implement all the DEDENTs necessary when it encounters a blank line.
 
 // End-of-line (EOL) is extremely special in sweet-expressions.
 // After reading it, we'll need to read in any following indent characters
@@ -308,40 +314,6 @@ error : ;  // Specifically identifies an error branch.
 // here for debugging and testing the grammar.  It's not an especially
 // accurate representation of n-expressions, because it doesn't need to be.
 
-// If you use this BNF directly, use \> for indent, \< for dedent.
-// These are stubs for the "real" indent preprocessor, which generates these.
-// INITIAL_INDENT_NO_BANG : '\\N>' ' '* '\r'? '\n'?;
-// INITIAL_INDENT_WITH_BANG : '\\B>' ' '* '\r'? '\n'?;
-// INDENT : '\\>' ' '* '\r'? '\n'?;
-// DEDENT : '\\<' ' '* '\r'? '\n'?;
-
-// For example, a valid input would be:
-//   a b
-//   \>c
-//   d e
-//   \<
-// to represent:
-// a b
-//   c
-//   d e
-//
-
-// This file could be modified to directly support indent/dedent.
-// See "The Definitive ANTLR Reference" page 95 for a code outline;
-// basically, must detect when to generate INDENT and DEDENT.
-// Multiple DEDENT tokens may be generated, which is possible in v3
-// but you need to override the lexer as described.
-// In our case, we probably should generate 2 different indent tokens,
-// INDENT_WITH_BANG and INDENT_WITHOUT_BANG; both would be an "indent",
-// but at the top level they would be different so that indent-with-bang
-// could be detected as an error.
-// Indents should only be accepted when outside (...), [...], {...},
-// so each of those characters should increment/decrement a
-// "containment" integer (which is initially 0); indents/dedents
-// should only recognized when containment==0.
-// See also:
-// http://grepcode.com/file/repo1.maven.org/maven2/org.python/jython/2.5.3/org/python/antlr/PythonTokenSource.java
-
 // The following is intentionally limited.  In particular, it doesn't include
 // the characters used for INDENT/DEDENT.
 NAME  : ('a'..'z'|'A'..'Z'|'_'|'\\' | '$') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'-'|'\\' | '$')* ;
@@ -392,12 +364,19 @@ n_expr_noabbrev returns [Object v]
 indent  : INDENT;
 dedent  : DEDENT;
 
-abbrevh returns [Object v] : APOSH {$v = "quote";} /*= 'quote */
-        | QUASIQUOTEH {$v = "quasiquote";} /*= 'quasiquote */
-        | UNQUOTE_SPLICEH {$v = "unquote-splicing";} /*= 'unquote-splicing */
-        | UNQUOTEH {$v = "unquote";} /*= 'unquote */ ;
-abbrev_noh returns [Object v]: APOS {$v = "quote";} | QUASIQUOTE {$v = "quasiquote";} | UNQUOTE_SPLICE {$v = "unquote-splicing";} | UNQUOTE {$v = "unquote";};
-abbrev_all returns [Object v]: abbrevh {$v = $abbrevh.v;} | abbrev_noh {$v = $abbrev_noh.v;};
+abbrevh returns [Object v]
+  : APOSH           {$v = "quote";} /*= 'quote */
+  | QUASIQUOTEH     {$v = "quasiquote";} /*= 'quasiquote */
+  | UNQUOTE_SPLICEH {$v = "unquote-splicing";} /*= 'unquote-splicing */
+  | UNQUOTEH        {$v = "unquote";} /*= 'unquote */ ;
+abbrev_noh returns [Object v]
+  : APOS             {$v = "quote";}
+  | QUASIQUOTE     {$v = "quasiquote";}
+  | UNQUOTE_SPLICE {$v = "unquote-splicing";}
+  | UNQUOTE        {$v = "unquote";};
+abbrev_all returns [Object v]
+  : abbrevh {$v = $abbrevh.v;}
+  | abbrev_noh {$v = $abbrev_noh.v;} ;
 splice     : GROUP;  // Use this synonym to make its purpose clearer.
 sublist    : DOLLAR; // Use this synonym to make its purpose clearer.
 
@@ -405,16 +384,15 @@ sublist    : DOLLAR; // Use this synonym to make its purpose clearer.
 // n_expr is a full neoteric-expression.  Note that n_expr does *not*
 // consume following horizontal space; this is important for correctly
 // handling initially-indented lines with more than one n-expression.
-n_expr returns [Object v]: abbrev_all n1=n_expr {$v = list($abbrev_all.v, $n1.v);}
-   | n_expr_noabbrev {$v = $n_expr_noabbrev.v;};
+n_expr returns [Object v]
+ : abbrev_all n1=n_expr {$v = list($abbrev_all.v, $n1.v);}
+ | n_expr_noabbrev      {$v = $n_expr_noabbrev.v;} ;
 
 // n_expr_first is a neoteric-expression, but abbreviations
 // cannot have an hspace afterwards (used by "head"):
-n_expr_first returns [Object v]:
-  abbrev_noh n1=n_expr_first {$v = list($abbrev_noh.v, $n1.v);}
-  | n_expr_noabbrev { /* System.out.print("DEBUG: n_expr_first produced " + $n_expr_noabbrev.v + "\n"); */
-         $v = $n_expr_noabbrev.v;} ;
-
+n_expr_first returns [Object v]
+  : abbrev_noh n1=n_expr_first {$v = list($abbrev_noh.v, $n1.v);}
+  | n_expr_noabbrev            {$v = $n_expr_noabbrev.v;} ;
                                     
 
 // Whitespace and indentation names
