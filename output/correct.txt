@@ -89,4 +89,7 @@ indent-disabled-another
 (a 1 2 (b 2 3) (c 4 5 (d 6 7) (e 8 9 (f 10 11))) (g again))
 ((1 2))
 ((4 5))
+((1 2) (3 4))
+((4 5) (a b))
+((6 7) (8 9))
 fin
