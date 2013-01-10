@@ -104,6 +104,9 @@ You can use the ANTLRWorks IDE to manipulate it.
 It is designed to generate Java, so you need a Java compiler and a
 proper CLASSPATH setting to use it.
 
+The "easy" way to use it is to download ANTLRWorks as a ".jar" file, and
+store it in this directory.
+
 Make sure the CLASSPATH includes (1) the jar file ANTLR or ANTLRWorks and
 (2) the "output" subdirectory.
 In ANTLRWorks, you may want to select File/Preferences, "Compiler" tab,
@@ -112,8 +115,17 @@ and create a custom Classpath that includes these absolute directory names
 
 You can generate Java class files from ANTLRWorks using
 "Generate/Generate files".  Then go to the "output" subdirectory.
-You need to compile and then run ("go.bat" does this for Windows).
+You need to compile and then run ("go.bat" does this for Windows;
+"go" runs on Linux/Unix/Cygwin, and also does a test run).
 
+A typical use process is:
+1. Run "ANTLRWorks", e.g., "java antlrworks-*.jar"
+2. Edit (and save) as you wish.
+   - Run Grammar/Check Grammar to do quick checks.
+   - You can use Run/Debug to debug; this can generate helpful parse trees.
+3. To create an executable, select "Generate/Generate code".
+   Then on command line, "cd output" and "./go"
+   which will also run some tests.
 
 Key files
 =========
