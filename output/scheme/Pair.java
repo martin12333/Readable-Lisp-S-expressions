@@ -93,20 +93,6 @@ public class Pair extends Object {
     }
   }
 
-// (define (monify x)
-//   (cond
-//     ((not (pair? x)) x)
-//     ((null? (cdr x)) (car x))
-//     (#t x)))
-
-  public static Object monify(Object x) {
-    if (! pairp(x)) {
-      return x;
-    } else if (nullp(cdr( (Pair) x))) {
-      return car( (Pair) x);
-    } else {return x;}
-  }
-
 // (define (mklist x)
 //   (cond
 //     ((not (pair? x)) (list x))
