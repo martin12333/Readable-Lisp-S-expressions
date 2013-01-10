@@ -4,8 +4,9 @@
 // This BNF is an LL(1) grammar, written using ANTLR version 3. More info:
 // http://www.antlr.org/
 // The actions are written in Java syntax that invoke Scheme procedures
-// with the obvious names and meanings (cons, car, cdr, etc.).
-// In actions, strings represent atoms, and "null" represents '().
+// with the obvious Scheme names and meanings (cons, car, cdr, etc.).
+// In procedure names, "?" becomes "p", so "nullp" means "null?".
+// In actions, Java strings represent atoms, and null represents '().
 // Scheme code is described as /*= ...Scheme code... */.
 // It is written to be easy to translate to a recursive-descent parser,
 // even one that doesn't do full tokenizing.
@@ -389,13 +390,13 @@ abbrevh returns [Object v]
   | UNQUOTE_SPLICEH {$v = "unquote-splicing";} /*= 'unquote-splicing */
   | UNQUOTEH        {$v = "unquote";} /*= 'unquote */ ;
 abbrev_noh returns [Object v]
-  : APOS             {$v = "quote";}
-  | QUASIQUOTE     {$v = "quasiquote";}
-  | UNQUOTE_SPLICE {$v = "unquote-splicing";}
-  | UNQUOTE        {$v = "unquote";};
+  : APOS            {$v = "quote";}
+  | QUASIQUOTE      {$v = "quasiquote";}
+  | UNQUOTE_SPLICE  {$v = "unquote-splicing";}
+  | UNQUOTE         {$v = "unquote";};
 abbrev_all returns [Object v]
-  : abbrevh {$v = $abbrevh.v;}
-  | abbrev_noh {$v = $abbrev_noh.v;} ;
+  : abbrevh         {$v = $abbrevh.v;}
+  | abbrev_noh      {$v = $abbrev_noh.v;} ;
 
 // TODO: n_expr and n_expr_first need actions for abbreviations.
 // n_expr is a full neoteric-expression.  Note that n_expr does *not*
