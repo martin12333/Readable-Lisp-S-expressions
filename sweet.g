@@ -506,7 +506,8 @@ restart_list returns [Object v]: RESTART hspace* restart_head
 // distinct value if it is; head and friends operate a lot like a tokenizer
 // in that case.
 
-head returns [Object v]:  PERIOD
+head returns [Object v]
+ :  PERIOD
            (hspace+
               ((n_expr1=n_expr hspace* {$v = list($n_expr1.v);} /*= (list $n_expr) */ (n_expr2=n_expr error)?)
                | empty  {$v = list(".");} /*= (list '.) */ )
@@ -531,17 +532,18 @@ head returns [Object v]:  PERIOD
 // and abbreviations followed by a space merely apply to the
 // next n-expression (not to the entire indented expression).
 
-rest returns [Object v]   : PERIOD hspace+ n_expr1=n_expr hspace* /* improper list. */
-          {$v = $n_expr1.v;} /*= $n_expr */  // TODO: Handle period "." end-of-line?
-          (n_expr2=n_expr error)? /* Shouldn't have another n_expr! */
-        | scomment hspace* (rest1=rest {$v = $rest1.v;} | empty {$v = null;} )
-        | restart_list
-            (rest2=rest {$v = cons(list(monify($restart_list.v)), $rest2.v); }
-             | empty {$v = list(monify($restart_list.v)); } )
-        | n_expr3=n_expr
-            ((hspace+ (rest3=rest {$v = cons($n_expr3.v, $rest3.v);}
-                       | empty {$v = list($n_expr3.v);} ))
-              | empty {$v = list($n_expr3.v);} ) ;
+rest returns [Object v]
+  : PERIOD hspace+ n_expr1=n_expr hspace* /* improper list. */
+    {$v = $n_expr1.v;} /*= $n_expr */  // TODO: Handle period "." end-of-line?
+    (n_expr2=n_expr error)? /* Shouldn't have another n_expr! */
+  | scomment hspace* (rest1=rest {$v = $rest1.v;} | empty {$v = null;} )
+  | restart_list
+    (rest2=rest {$v = cons(list(monify($restart_list.v)), $rest2.v); }
+     | empty {$v = list(monify($restart_list.v)); } )
+  | n_expr3=n_expr
+      ((hspace+ (rest3=rest {$v = cons($n_expr3.v, $rest3.v);}
+                 | empty {$v = list($n_expr3.v);} ))
+       | empty           {$v = list($n_expr3.v);} ) ;
 
 
 // "body" handles the sequence of 1+ child lines in an i_expr
@@ -549,15 +551,17 @@ rest returns [Object v]   : PERIOD hspace+ n_expr1=n_expr hspace* /* improper li
 // It returns the list of expressions in the body.
 // Note that an i-expr will consume any line comments or hspaces
 // before it returns back to the "body" production.
-// Non-tokenizing implemenation notes:
+// Non-tokenizing implementation notes:
 // Note that i_expr will consume any line comments (line comments after
 // content, as well as lines that just contain indents and comments).
 // Note also that i-expr may set the the current indent to a different value
 // than the indent used on entry to body; the latest indent is compared by
 // the special terminals DEDENT and BADDENT.
 
-body  returns [Object v]  :        i_expr (same body1=body {$v = cons($i_expr.v, $body1.v);}
-                        | dedent   {$v = list($i_expr.v);} ) ;
+body returns [Object v] : i_expr
+  (same body1=body {$v = cons($i_expr.v, $body1.v);}
+   | dedent        {$v = list($i_expr.v);} ) ;
+
 
 // "i-expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
@@ -577,34 +581,36 @@ body  returns [Object v]  :        i_expr (same body1=body {$v = cons($i_expr.v,
 // should then set the current_indent to RESTART_END, and return, to signal
 // the reception of RESTART_END.
 
-i_expr returns [Object v] :
-         head (splice hspace*
-                (options {greedy=true;} :
-                 comment_eol error
-                 // Could instead do:
-                 //    comment_eol same i_expr /*= (append $head $i_expr) */
-                 // to allow \\ EOL as line-continuation.
-                 // John Cowan recommends (Sat, 29 Dec 2012 13:18:18 -0500)
-                 // that we *not* do this, because it'd be confusing.
-                 // Normal case: splice ends i_expr immediately:
-                 | empty {$v = monify($head.v);} )
-              | DOLLAR hspace*
-                (i_expr1=i_expr {$v=list(monify($head.v), $i_expr1.v);}
-                 | comment_eol indent body1=body {$v=list($body1.v);} )
-              | comment_eol // Normal case, handle child lines if any:
-                (indent body2=body {$v = append($head.v, $body2.v);}
-                 | empty     {$v = monify($head.v);} /* No child lines */ ))
-         | (GROUP | scomment) hspace*
-             (i_expr2=i_expr {$v = $i_expr2.v;} /* ignore the GROUP/scomment */
-             | comment_eol
-               (indent body3=body {$v = $body3.v;} /* Normal use for GROUP */
-                | same i_expr3=i_expr {$v = $i_expr3.v;} /* Plausible separator */
-                | dedent error ))
-         | DOLLAR hspace* (i_expr4=i_expr  {$v=list($i_expr4.v);}
-                           | comment_eol indent body4=body {$v=list($body4.v);} )
-         | abbrevh hspace*
-           (i_expr5=i_expr {$v=list($abbrevh.v, $i_expr5.v);}
-            | (comment_eol error /* Too easy to mess up - forbid it. */ ) )  ;
+i_expr returns [Object v]
+  : head
+    (splice hspace*
+      (options {greedy=true;} :
+        comment_eol error
+          // Could instead do:
+          //    comment_eol same i_expr /*= (append $head $i_expr) */
+          // to allow \\ EOL as line-continuation.
+          // John Cowan recommends (Sat, 29 Dec 2012 13:18:18 -0500)
+          // that we *not* do this, because it'd be confusing.
+          // Normal case: splice ends i_expr immediately:
+        | empty {$v = monify($head.v);} )
+     | DOLLAR hspace*
+       (i_expr1=i_expr {$v=list(monify($head.v), $i_expr1.v);}
+        | comment_eol indent body1=body {$v=list($body1.v);} )
+     | comment_eol // Normal case, handle child lines if any:
+       (indent body2=body {$v = append($head.v, $body2.v);}
+        | empty     {$v = monify($head.v);} /* No child lines */ ))
+  | (GROUP | scomment) hspace*
+      (i_expr2=i_expr {$v = $i_expr2.v;} /* ignore the GROUP/scomment */
+       | comment_eol
+         (indent body3=body {$v = $body3.v;} /* Normal use for GROUP */
+          | same i_expr3=i_expr {$v = $i_expr3.v;} /* Plausible separator */
+          | dedent error ))
+  | DOLLAR hspace*
+    (i_expr4=i_expr  {$v=list($i_expr4.v);}
+     | comment_eol indent body4=body {$v=list($body4.v);} )
+  | abbrevh hspace*
+      (i_expr5=i_expr {$v=list($abbrevh.v, $i_expr5.v);}
+       | (comment_eol error /* Too easy to mess up - forbid it. */ )) ;
 
 // Top-level sweet-expression production, t_expr.
 // This production handles special cases, then in the normal case
@@ -615,22 +621,21 @@ i_expr returns [Object v] :
 // If there is an indent it simply reads a single n-expression and returns.
 // If there is more than one on an initially-indented line, the later
 // horizontal space will not have have been read, so this production will
-// fire again on the next invocation.
+// fire again on the next invocation, doing the right thing.
 
 // Although "!" is an indent character, it's an error to use it at the
 // topmost level.  The only reason to indent at the top is to disable
 // indent processing, for backwards compatibility.  Detecting this as
 // an error should detect some mistakes.
 
-
-t_expr  returns [Object v]
-  : comment_eol t_expr1=t_expr {$v=$t_expr1.v;} /* Initial lcomment, try again */
-    | (INITIAL_INDENT_NO_BANG | hspace+ )
-      (n_expr { $v = $n_expr.v; } /* indent processing disabled. */
-       | comment_eol t_expr2=t_expr {$v=$t_expr2.v;} )
-    | INITIAL_INDENT_WITH_BANG error
-    | EOF { generate_eof(); } /*= EOF */ /* End of file */
-    | i_expr {$v = $i_expr.v;} /* Normal case */ ;
+t_expr returns [Object v]
+  : comment_eol t_expr1=t_expr {$v=$t_expr1.v;} /* Initial lcomment, retry */
+  | (INITIAL_INDENT_NO_BANG | hspace+ )
+    (n_expr {$v = $n_expr.v;} /* indent processing disabled */
+     | comment_eol t_expr2=t_expr {$v=$t_expr2.v;} )
+  | INITIAL_INDENT_WITH_BANG error
+  | EOF {generate_eof();} /* End of file */
+  | i_expr {$v = $i_expr.v;} /* Normal case */ ;
 
 print_t_expr
 	:	t_expr {System.out.print(string_datum($t_expr.v) + "\n"); } ;
