@@ -184,7 +184,7 @@ LCOMMENT_LINE :  {(getCharPositionInLine() == 0)}? =>
 LCOMMENT :       ';' NOT_EOL_CHAR* ; // Line comment - doesn't include EOL
 BLOCK_COMMENT : '#|' // This is #| ... #|
       (options {greedy=false;} : (BLOCK_COMMENT | .))*
-      '|#' {$channel=HIDDEN;} ;
+      '|#' ;
 DATUM_COMMENT_START : '#;' ;
 // SRFI-105 notes that "implementations could trivially support
 // (simultaneously) markers beginning with #! followed by a letter
@@ -195,7 +195,7 @@ DATUM_COMMENT_START : '#;' ;
 SRFI_22_COMMENT         :       '#! ' NOT_EOL_CHAR* ;
 SHARP_BANG_FILE :       '#!' ('/' | '.')
         (options {greedy=false;} : .)*
-        '!#' {$channel=HIDDEN;} ;
+        '!#' ;
 // These match #!fold-case, #!no-fold-case, #!sweet, and #!curly-infix.
 SHARP_BANG_MARKER : '#!' ('a'..'z'|'A'..'Z'|'_')
                          ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')* ;

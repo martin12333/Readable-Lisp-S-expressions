@@ -217,6 +217,18 @@ a 1 2
 \\ #| Ignore this |#
   4 5
 
+\\
+  1 2
+  3 4
+
+\\ #| Ignore this |#
+  4 5
+  a b
+
+#| Ignore this |#
+  6 7
+  8 9
+
 fin
 
 
