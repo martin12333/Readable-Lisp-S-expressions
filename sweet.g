@@ -169,7 +169,7 @@ fragment DEDENT: ' ';
 // Define these first, to give them higher lexical precedence
 // than other definitions.  Note that these only have special meaning
 // outside (), [], and {}; otherwise they're just atoms.
-GROUP   : {indent_processing()}? => '\\' '\\'; // GROUP and splice symbol.
+GROUP_SPLICE : {indent_processing()}? => '\\' '\\'; // GROUP/splice symbol.
 DOLLAR  : {indent_processing()}? =>'$';
 RESERVED_TRIPLE_DOLLAR : {indent_processing()}? => '$$$';  // Reserved.
 RESTART : {indent_processing()}? => '<' '*' {/* TODO: Restart indent level */};
@@ -389,7 +389,6 @@ abbrev_noh returns [Object v]
 abbrev_all returns [Object v]
   : abbrevh {$v = $abbrevh.v;}
   | abbrev_noh {$v = $abbrev_noh.v;} ;
-splice     : GROUP;  // Use this synonym to make its purpose clearer.
 sublist    : DOLLAR; // Use this synonym to make its purpose clearer.
 
 // TODO: n_expr and n_expr_first need actions for abbreviations.
@@ -453,9 +452,7 @@ comment_eol : LCOMMENT? EOL;
 // i_expr is designed to support child lines, but the first line can't have
 // child lines.  This creates a "head-like" with functionality we CAN support.
 // Thus, we call on "head" to do many things, but we specially handle leading
-// GROUP and scomment, and we permit empty contents (unlike "head").
-// Be greedy, because "GROUP" and "splice" are actually the same symbol;
-// we need to prefer GROUP where it makes sense.
+// GROUP_SPLICE and scomment, and we permit empty contents (unlike "head").
 
 restart_head_branch returns [Object v]
   : head (DOLLAR hspace* rb1=restart_head_branch {$v = list($head.v, $rb1.v);}
@@ -465,8 +462,8 @@ restart_head_branch returns [Object v]
   | empty {$v = null;} /*= '() */  ;
 
 restart_head_tail returns [Object v]
-  : splice hspace* restart_head_branch again=restart_head_tail
-    {$v = cons($restart_head_branch.v, $again.v);}
+  : GROUP_SPLICE hspace* restart_head_branch again=restart_head_tail
+    {$v = cons($restart_head_branch.v, $again.v); /* Interpret as splice */}
   | empty {$v = null;} ;
 
 restart_head returns [Object v]: restart_head_branch restart_head_tail
@@ -591,7 +588,7 @@ body returns [Object v] : i_expr
 
 i_expr returns [Object v]
   : head
-    (splice hspace*
+    (GROUP_SPLICE hspace* /* Not initial; interpret as splice */
       (options {greedy=true;} :
         comment_eol error
           // Could instead do:
@@ -607,8 +604,8 @@ i_expr returns [Object v]
      | comment_eol // Normal case, handle child lines if any:
        (indent body2=body {$v = append($head.v, $body2.v);}
         | empty     {$v = monify($head.v);} /* No child lines */ ))
-  | (GROUP | scomment) hspace*
-      (i_expr2=i_expr {$v = $i_expr2.v;} /* ignore the GROUP/scomment */
+  | (GROUP_SPLICE | scomment) hspace* /* Initial; Interpet as group */
+      (i_expr2=i_expr {$v = $i_expr2.v;} /* ignore the GROUP_SPLICE/scomment */
        | comment_eol
          (indent body3=body {$v = $body3.v;} /* Normal use for GROUP */
           | same i_expr3=i_expr {$v = $i_expr3.v;} /* Plausible separator */
