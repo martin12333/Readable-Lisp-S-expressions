@@ -444,27 +444,27 @@ comment_eol : LCOMMENT? EOL;
 // GROUP and scomment, and we permit empty contents (unlike "head").
 // Be greedy, because "GROUP" and "splice" are actually the same symbol;
 // we need to prefer GROUP where it makes sense.
-restart_head_branch returns [Object v]:
-              head (DOLLAR hspace* rb1=restart_head_branch {$v = list($head.v, $rb1.v);} /*= (list $head $restart_head) */
-                    | empty {$v = $head.v;} /*= $head */ )
-              | scomment hspace* rb2=restart_head_branch {$v = $rb2.v;} /*= $restart_head */
-              | DOLLAR hspace* rb3=restart_head_branch {$v = list($rb3.v);} /*= (list $restart_head) */
-              | empty {$v = null;} /*= '() */
-              ;
 
-restart_head_tail returns [Object v]: splice hspace* restart_head_branch again=restart_head_tail
-               /*= (cons $restart_head_branch $restart_head_tail) */
-               {$v = cons($restart_head_branch.v, $again.v);}
-             | empty {$v = null;} /*= '() */ ;
+restart_head_branch returns [Object v]
+  : head (DOLLAR hspace* rb1=restart_head_branch {$v = list($head.v, $rb1.v);}
+          | empty {$v = $head.v;} )
+  | scomment hspace* rb2=restart_head_branch {$v = $rb2.v;}
+  | DOLLAR hspace* rb3=restart_head_branch {$v = list($rb3.v);}
+  | empty {$v = null;} /*= '() */  ;
+
+restart_head_tail returns [Object v]
+  : splice hspace* restart_head_branch again=restart_head_tail
+    {$v = cons($restart_head_branch.v, $again.v);}
+  | empty {$v = null;} ;
 
 restart_head returns [Object v]: restart_head_branch restart_head_tail
               {$v = cons($restart_head_branch.v, $restart_head_tail.v);}
              /*= (cons $restart_head_branch $restart_head_tail) */ ;
 
-restart_contents returns [Object v]: i_expr comment_eol* again=restart_contents
-               {$v = cons($i_expr.v, $again.v);} /*= (cons $i_expr $restart_contents) */
-              | empty {$v = null;} /*= '() */ /* Hit RESTART_END */
-              ;
+restart_contents returns [Object v]
+  : i_expr comment_eol* again=restart_contents
+      {$v = cons($i_expr.v, $again.v);}
+  | empty {$v = null;} /* We hit RESTART_END */  ;
 
 // A restart_list starts with an optional restart_head (one line),
 // followed by optional restart_contents (0 or more i_expr's).
@@ -477,16 +477,12 @@ restart_contents returns [Object v]: i_expr comment_eol* again=restart_contents
 // In a non-tokenizing implementation, reading RESTART_END inside i_expr
 // will set the current indent, causing dedents all the way back to here.
 restart_list returns [Object v]: RESTART hspace* restart_head
-          ( RESTART_END hspace*
-            {$v = nullp($restart_head.v) ? null : list(monify($restart_head.v));}
-            /*= (if (null? $restart_head) '() (list (monify $restart_head))) */
-           | comment_eol+
-             restart_contents
-             {$v = nullp($restart_head.v) ? $restart_contents.v : cons($restart_head.v, $restart_contents.v);}
-                /*= (if (null? $restart_head)
-                      $restart_contents
-                      (cons $restart_head $restart_contents)) */
-             RESTART_END hspace* );
+  (RESTART_END hspace*
+      {$v = nullp($restart_head.v) ? null : list(monify($restart_head.v));}
+   | comment_eol+ restart_contents
+         {$v = nullp($restart_head.v) ? $restart_contents.v
+                       : cons($restart_head.v, $restart_contents.v);}
+     RESTART_END hspace* );
 
 
 // The "head" is the production for 1+ n-expressions on one line; it will
