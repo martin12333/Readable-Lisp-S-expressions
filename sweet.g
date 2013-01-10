@@ -508,18 +508,18 @@ restart_list returns [Object v]: RESTART hspace* restart_head
 
 head returns [Object v]
  :  PERIOD
-           (hspace+
-              ((n_expr1=n_expr hspace* {$v = list($n_expr1.v);} /*= (list $n_expr) */ (n_expr2=n_expr error)?)
-               | empty  {$v = list(".");} /*= (list '.) */ )
-            | empty     {$v = list(".");} /*= (list '.) */ )
-        | restart_list
-          (rest1=rest {$v = cons(list(monify($restart_list.v)), $rest1.v) ; }
-           | empty    {$v = list(monify($restart_list.v)); } )
-        | n_expr_first (
-           (hspace+
-             (rest2=rest    {$v = cons($n_expr_first.v, $rest2.v);} /*= (cons $n_expr_first $rest) */
-              | empty {$v = list($n_expr_first.v);} /*= (list $n_expr_first) */ ))
-            | empty   {$v = list($n_expr_first.v);} /*= (list $n_expr_first) */  ) ;
+    (hspace+
+      (n_expr1=n_expr hspace* {$v = list($n_expr1.v);} (n_expr2=n_expr error)?
+       | empty  {$v = list(".");} /*= (list '.) */ )
+     | empty    {$v = list(".");} /*= (list '.) */ )
+ | restart_list
+     (rest1=rest {$v = cons(list(monify($restart_list.v)), $rest1.v) ; }
+      | empty    {$v = list(monify($restart_list.v)); } )
+ | n_expr_first (
+     (hspace+
+       (rest2=rest  {$v = cons($n_expr_first.v, $rest2.v);}
+        | empty {$v = list($n_expr_first.v);} ))
+      | empty   {$v = list($n_expr_first.v);} ) ;
 
 // The "rest" production reads the rest of the expressions on a line
 // (the "rest of the head"), after the first expression of the line.
