@@ -258,6 +258,18 @@ x y . z
 
 {a + b + c +}
 
+(  x  y  z  )
+(  x  y  )
+(  x  )
+(  )
+
+(  . a  )
+(  a . b  )
+(  a  b  .  c  )
+
+(  .  )
+(  quote  .  )
+
 fin
 
 

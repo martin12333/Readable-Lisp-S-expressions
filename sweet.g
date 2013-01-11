@@ -462,12 +462,26 @@ CHAR   : '#\\' ('!'..'@' | '['..'`' | '{'..'~' | ('A'..'Z' | 'a'..'z')+) ;
 
 atom   : NAME | INT | FLOAT | STRING | CHAR ;
 
-// TODO: Ignore wspace* at the end of list_contents when it has something
+// This more-complicated BNF is written so leading
+// and trailing whitespace in a list is correctly ignored.
+list_contents_real returns [Object v]
+  : n1=n_expr
+      (wspace+
+        (lc=list_contents_real {$v = cons($n1.v, $lc.v);}
+         | empty  {$v = list($n1.v);})
+       | empty    {$v = list($n1.v);})
+    | PERIOD
+       (wspace+
+         (n2=n_expr wspace* {$v = $n2.v;}
+             (n3=n_expr error)?
+          | empty {$v = list(".");})
+       | empty {$v = list(".");})
+    ;
+
 list_contents returns [Object v]
-    : wspace*
-      (PERIOD wspace+ n1=n_expr wspace* {$v = $n1.v;}
-       | n2=n_expr lc=list_contents {$v = cons($n2.v, $lc.v);}
-       | empty {$v = null;} /* '() */  ) ;
+  : wspace*
+   (list_contents_real {$v=$list_contents_real.v;}
+    | empty {$v = null;} ) ;
 
 n_expr_tail 
     : LPAREN   list_contents RPAREN

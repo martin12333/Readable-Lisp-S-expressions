@@ -103,4 +103,13 @@ solo
 (eq a b)
 (+ a b c)
 ($nfx$ a + b + c +)
+(x y z)
+(x y)
+(x)
+()
+a
+(a . b)
+(a b . c)
+(.)
+(quote .)
 fin
