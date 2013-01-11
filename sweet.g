@@ -643,9 +643,13 @@ head returns [Object v]
 // next n-expression (not to the entire indented expression).
 
 rest returns [Object v]
-  : PERIOD hspace+ n_expr1=n_expr hspace* /* improper list. */
-    {$v = $n_expr1.v;} /*= $n_expr */  // TODO: Handle period "." end-of-line?
-    (n_expr2=n_expr error)? /* Shouldn't have another n_expr! */
+  : PERIOD
+      (hspace+
+        (n_expr1=n_expr hspace* /* improper list. */
+           {$v = $n_expr1.v;}
+           (n_expr2=n_expr error)?
+         | empty {$v = list(".");})
+       | empty   {$v = list(".");})
   | scomment hspace* (rest1=rest {$v = $rest1.v;} | empty {$v = null;} )
   | restart_list
     (rest2=rest {$v = cons(list(monify($restart_list.v)), $rest2.v); }
