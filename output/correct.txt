@@ -95,4 +95,12 @@ indent-disabled-another
 ((1 2) (3 4))
 (((1 2) (3 4)))
 (f a b)
+(x . y)
+(x y . z)
+()
+solo
+(+ x)
+(eq a b)
+(+ a b c)
+($nfx$ a + b + c +)
 fin

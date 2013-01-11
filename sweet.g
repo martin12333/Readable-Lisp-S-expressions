@@ -1,19 +1,28 @@
 // BNF grammar for sweet-expressions
 // (c) 2012 David A. Wheeler, released under "MIT" license.
 
-// This BNF is an LL(1) grammar, written using ANTLR version 3. More info:
-// http://www.antlr.org/
-// The actions are written in Java syntax that invoke Scheme procedures
-// with the obvious Scheme names and meanings (cons, car, cdr, etc.).
-// In procedure names, "?" becomes "p", so "nullp" means "null?".
-// In actions, Java strings represent atoms, and null represents '().
-// Scheme code is described as /*= ...Scheme code... */.
+// This BNF is an LL(1) grammar, written using ANTLR version 3.
+// More info on ANTLR is at "http://www.antlr.org/".
 // It is written to be easy to translate to a recursive-descent parser,
 // even one that doesn't do full tokenizing.
 
-// The BNF presumes there's a preprocessor that does
-// indent processing. While indent processing is enabled, indents are
-// marked with INDENT, dedents with DEDENT (one for each dedent).
+// The actions are written inside {...} using Java syntax, but invoke
+// normal Scheme procedures (e.g., "car" and "cons") as follows:
+// +------------------|------------|------------------------------------------+
+// | Action Construct | Scheme     | Discussion                               |
+// |------------------|------------|------------------------------------------|
+// | cons(x, y)       | (cons x y) | Java syntax used for procedure calls     |
+// | nullp(x)         | (null? x)  | "?" in Scheme procedure name becomes "p" |
+// | null             | '()        | Java null represents the empty list      |
+// | "somename"       | 'somename  | Java strings represent atoms             |
+// +------------------|------------|------------------------------------------+
+// Scheme code is described directly as /*= ...Scheme code... */.
+
+// This BNF specifically shows how non-indent whitespace is handled
+// (SRFI-49's BNF is simpler but isn't specific about this, making it
+// harder to interpret). Note that this BNF presumes there's a preprocessor
+// that does indent processing. While indent processing is enabled, indents
+// are marked with INDENT and dedents with DEDENT (one for each dedent).
 // Lines with ONLY indent characters are considered blank lines.
 // There is no "SAME" token to show "same indent level", but some rules
 // use an empty "same" nonterminal to emphasize their lack of INDENT/DEDENT.
@@ -453,6 +462,7 @@ CHAR   : '#\\' ('!'..'@' | '['..'`' | '{'..'~' | ('A'..'Z' | 'a'..'z')+) ;
 
 atom   : NAME | INT | FLOAT | STRING | CHAR ;
 
+// TODO: Ignore wspace* at the end of list_contents when it has something
 list_contents returns [Object v]
     : wspace*
       (PERIOD wspace+ n1=n_expr wspace* {$v = $n1.v;}
@@ -461,16 +471,15 @@ list_contents returns [Object v]
 
 n_expr_tail 
     : LPAREN   list_contents RPAREN
-    | LBRACE   list_contents RBRACE
-    | LBRACKET list_contents RBRACKET ;
+    | LBRACKET   list_contents RBRACKET
+    | LBRACE list_contents RBRACE ;
 
 // TODO: Improve action here to fully capture information.
-// TODO: Fix curly-brace processing.
 n_expr_noabbrev returns [Object v]
     : (atom {$v = $atom.text;}
        | LPAREN norm=list_contents RPAREN {$v = $norm.v;}
-       | LBRACE braced=list_contents RBRACE {$v = $braced.v;}
-       | LBRACKET bracketed=list_contents RBRACKET {$v = process_curly($bracketed.v); /* "{" + $norm.text + "}";*/ }  )
+       | LBRACKET bracketed=list_contents RBRACKET {$v = $bracketed.v;}
+       | LBRACE braced=list_contents RBRACE {$v = process_curly($braced.v); /* "{" + $norm.text + "}";*/ }  )
       (options {greedy=true;} : n_expr_tail)* ;
 
 // STUB END

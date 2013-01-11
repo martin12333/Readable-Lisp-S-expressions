@@ -246,6 +246,18 @@ x . y
 
 x y . z
 
+{}
+
+{solo}
+
+{+ x}
+
+{a eq b}
+
+{a + b + c}
+
+{a + b + c +}
+
 fin
 
 
