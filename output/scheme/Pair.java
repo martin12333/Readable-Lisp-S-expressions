@@ -58,6 +58,7 @@ public class Pair extends Object {
     }
   }
 
+  // TODO: Handle String, Int, etc. correctly.
   public static Object eqp(Object x, Object y) { // Scheme "eq?"
     return x == y;
   }
