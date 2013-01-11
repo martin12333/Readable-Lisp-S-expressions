@@ -174,7 +174,7 @@ tokens {
   //     ((not (pair? (cdr lyst)))  #f) ; Wrong # of parameters or improper
   //     (#t   (even-and-op-prefix? op (cddr lyst))))) ; recurse.
   public static Boolean even_and_op_prefixp(Object op, Object lyst) {
-    if (! nullp(lyst)) {
+    if (nullp(lyst)) {
       return true;
     } else if (! pairp(lyst)) {
       return false;
