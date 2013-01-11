@@ -489,11 +489,15 @@ n_expr_tail
     | LBRACE list_contents RBRACE ;
 
 // TODO: Improve action here to fully capture information.
+n_expr_prefix returns [Object v]
+  : atom {$v = $atom.text;}
+  | LPAREN norm=list_contents RPAREN {$v = $norm.v;}
+  | LBRACKET bracketed=list_contents RBRACKET {$v = $bracketed.v;}
+  | LBRACE braced=list_contents RBRACE {$v = process_curly($braced.v);}
+  ;
+  
 n_expr_noabbrev returns [Object v]
-    : (atom {$v = $atom.text;}
-       | LPAREN norm=list_contents RPAREN {$v = $norm.v;}
-       | LBRACKET bracketed=list_contents RBRACKET {$v = $bracketed.v;}
-       | LBRACE braced=list_contents RBRACE {$v = process_curly($braced.v); /* "{" + $norm.text + "}";*/ }  )
+    : n_expr_prefix {$v = $n_expr_prefix.v;}
       (options {greedy=true;} : n_expr_tail)* ;
 
 // STUB END
