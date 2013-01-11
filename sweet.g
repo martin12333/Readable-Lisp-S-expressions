@@ -429,7 +429,7 @@ error : ;  // Specifically identifies an error branch.
 
 // The following is intentionally limited.  In particular, it doesn't include
 // the characters used for INDENT/DEDENT.
-NAME  : ('a'..'z'|'A'..'Z'|'_'|'\\' | '$') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'-'|'\\' | '$')* ;
+NAME  : ('a'..'z'|'A'..'Z'|'_'|'\\' | '$' | '+') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'-'|'\\' | '$')* ;
 fragment EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
 FLOAT
     :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
@@ -453,8 +453,11 @@ CHAR   : '#\\' ('!'..'@' | '['..'`' | '{'..'~' | ('A'..'Z' | 'a'..'z')+) ;
 
 atom   : NAME | INT | FLOAT | STRING | CHAR ;
 
-list_contents 
-    : atom (wspace+ list_contents)? | empty ;
+list_contents returns [Object v]
+    : wspace*
+      (PERIOD wspace+ n1=n_expr wspace* {$v = $n1.v;}
+       | n2=n_expr lc=list_contents {$v = cons($n2.v, $lc.v);}
+       | empty {$v = null;} /* '() */  ) ;
 
 n_expr_tail 
     : LPAREN   list_contents RPAREN
@@ -462,11 +465,12 @@ n_expr_tail
     | LBRACKET list_contents RBRACKET ;
 
 // TODO: Improve action here to fully capture information.
+// TODO: Fix curly-brace processing.
 n_expr_noabbrev returns [Object v]
     : (atom {$v = $atom.text;}
-       | LPAREN norm=list_contents RPAREN {$v = "(" + $norm.text + ")";}
-       | LBRACE braced=list_contents RBRACE {$v = "[" + $norm.text + "]";}
-       | LBRACKET bracketed=list_contents RBRACKET {$v = "{" + $norm.text + "}";}  )
+       | LPAREN norm=list_contents RPAREN {$v = $norm.v;}
+       | LBRACE braced=list_contents RBRACE {$v = $braced.v;}
+       | LBRACKET bracketed=list_contents RBRACKET {$v = process_curly($bracketed.v); /* "{" + $norm.text + "}";*/ }  )
       (options {greedy=true;} : n_expr_tail)* ;
 
 // STUB END
