@@ -116,4 +116,11 @@ a
 (f x)
 (f a b)
 (f a b c)
+($bracket-apply$ f)
+($bracket-apply$ f x)
+(f)
+(f x)
+(f (+ x))
+(f (+ x 1))
+((x a) b)
 fin

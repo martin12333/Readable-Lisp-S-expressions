@@ -405,7 +405,7 @@ BARE_OTHER_WS : {enclosure > 0}? => EOL_CHAR;
 SPACE    : ' ';
 TAB      : '\t';
 SHARP    : '#';
-BANG     : '!';
+fragment BANG     : '!';
 PERIOD   : '.';
 LPAREN   : '(' {enclosure++;} ;
 RPAREN   : ')' {if (enclosure>0) {enclosure--;};};
@@ -436,31 +436,68 @@ error : ;  // Specifically identifies an error branch.
 // here for debugging and testing the grammar.  It's not an especially
 // accurate representation of n-expressions, because it doesn't need to be.
 
-// The following is intentionally limited.  In particular, it doesn't include
-// the characters used for INDENT/DEDENT.
-NAME  : ('a'..'z'|'A'..'Z'|'_'|'\\' | '$' | '+') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'-'|'\\' | '$')* ;
+
+IDENTIFIER  :
+  INITIAL SUBSEQUENT* |
+  | '|' SYMBOL_ELEMENT* '|'
+  | PECULIAR_IDENTIFIER ;
+
+fragment INITIAL : LETTER | SPECIAL_INITIAL | INLINE_HEX_ESCAPE ;
+fragment LETTER : 'a'..'z' | 'A'..'Z' ;
+fragment SPECIAL_INITIAL : '!' | '$' | '%' | '&' | '*' | '/' | ':'
+                           | '<' | '=' | '>' | '?' | '^' | '_' | '~';
+fragment SUBSEQUENT : INITIAL | DIGIT | SPECIAL_SUBSEQUENT ;
+fragment DIGIT : '0' .. '9' ;
+fragment HEX_DIGIT : DIGIT |'a'..'f' ;
+fragment EXPLICIT_SIGN : '+' | '-' ;
+fragment SPECIAL_SUBSEQUENT : EXPLICIT_SIGN | '.' | '@' ;
+fragment INLINE_HEX_ESCAPE : '\\' 'x' HEX_SCALAR_VALUE ';' ;
+fragment HEX_SCALAR_VALUE : HEX_DIGIT+ ;
+fragment PECULIAR_IDENTIFIER : EXPLICIT_SIGN
+  ( /* empty */
+    | SIGN_SUBSEQUENT SUBSEQUENT*
+    | '.' DOT_SUBSEQUENT SUBSEQUENT* )
+  | '.' DOT_SUBSEQUENT SUBSEQUENT*
+  // Note: This is a bogus extension for testing purposes, to make sure that
+  // a \\ is not interpreted in an initial indent:
+  | '\\' '\\' ;
+fragment DOT_SUBSEQUENT : SIGN_SUBSEQUENT | '.' ;
+fragment SIGN_SUBSEQUENT : INITIAL | EXPLICIT_SIGN | '@' ;
+
+// Annoyingly, SYMBOL_ELEMENT overlaps with STRING_ELEMENT
+fragment SYMBOL_ELEMENT :
+  (options {greedy=true;} :
+    (~('|' | '\\'))
+     | STRING_ELEMENT
+     // TODO: Should double-quote be here?!?!
+     | '\\|' ) ; 
+
+// boolean, character, character_name
+STRING : '\"' STRING_ELEMENT* '\"' ;
+fragment STRING_ELEMENT :
+  ~( '"' | '\\' )
+  | '\\' ('a' | 'b' | 't' | 'n' | 'r' | '"' | '\\')
+  // TODO: Intraline whitespace
+  | INLINE_HEX_ESCAPE ;
+
+// TODO: The following doesn't really follow Scheme spec.
+
 fragment EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
 FLOAT
     :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
     |   '.' ('0'..'9')+ EXPONENT?
     |   ('0'..'9')+ EXPONENT ;
 INT     :        ('0'..'9')+ ;
-fragment HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
 fragment OCTAL_ESC
     :   '\\' ('0'..'3') ('0'..'7') ('0'..'7')
     |   '\\' ('0'..'7') ('0'..'7')
     |   '\\' ('0'..'7') ;
 fragment UNICODE_ESC
     :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT ;
-fragment ESC_SEQ
-    :   '\\' ('b'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\')
-    |   UNICODE_ESC
-    |   OCTAL_ESC ;
 
-STRING : '\"' ( ESC_SEQ | ~('\"'|'\\') ) '\"' ;
 CHAR   : '#\\' ('!'..'@' | '['..'`' | '{'..'~' | ('A'..'Z' | 'a'..'z')+) ;
 
-atom   : NAME | INT | FLOAT | STRING | CHAR ;
+simple_datum   : IDENTIFIER | INT | FLOAT | STRING | CHAR ;
 
 // This more-complicated BNF is written so leading
 // and trailing whitespace in a list is correctly ignored.
@@ -496,7 +533,7 @@ n_expr_tail[Object prefix] returns [Object v]
 
 // TODO: Improve action here to fully capture information.
 n_expr_prefix returns [Object v]
-  : atom {$v = $atom.text;}
+  : simple_datum {$v = $simple_datum.text;}
   | LPAREN norm=list_contents RPAREN {$v = $norm.v;}
   | LBRACKET bracketed=list_contents RBRACKET {$v = $bracketed.v;}
   | LBRACE braced=list_contents RBRACE {$v = process_curly($braced.v);}
