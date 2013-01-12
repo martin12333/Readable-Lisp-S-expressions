@@ -270,6 +270,11 @@ x y . z
 (  .  )
 (  quote  .  )
 
+f()
+f(x)
+f(a b)
+f(a b c)
+
 fin
 
 

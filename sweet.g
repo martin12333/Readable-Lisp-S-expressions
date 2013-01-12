@@ -483,10 +483,13 @@ list_contents returns [Object v]
    (list_contents_real {$v=$list_contents_real.v;}
     | empty {$v = null;} ) ;
 
-n_expr_tail 
-    : LPAREN   list_contents RPAREN
-    | LBRACKET   list_contents RBRACKET
-    | LBRACE list_contents RBRACE ;
+n_expr_tail[Object prefix] returns [Object v]
+    : (options {greedy=true;}
+    : LPAREN   c1=list_contents RPAREN r1=n_expr_tail[cons(prefix, $c1.v)] {$v = $r1.v;}
+    | LBRACKET c2=list_contents RBRACKET {$v = prefix;}
+    | LBRACE   c3=list_contents RBRACE {$v = prefix;}
+    | empty {$v = prefix;}
+    ) ;
 
 // TODO: Improve action here to fully capture information.
 n_expr_prefix returns [Object v]
@@ -497,8 +500,8 @@ n_expr_prefix returns [Object v]
   ;
   
 n_expr_noabbrev returns [Object v]
-    : n_expr_prefix {$v = $n_expr_prefix.v;}
-      (options {greedy=true;} : n_expr_tail)* ;
+    : n_expr_prefix
+      n_expr_tail[$n_expr_prefix.v] {$v = $n_expr_tail.v;} ;
 
 // STUB END
 

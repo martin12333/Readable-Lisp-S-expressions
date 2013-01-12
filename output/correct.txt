@@ -112,4 +112,8 @@ a
 (a b . c)
 (.)
 (quote .)
+(f)
+(f x)
+(f a b)
+(f a b c)
 fin
