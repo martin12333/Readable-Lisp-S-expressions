@@ -466,19 +466,21 @@ fragment SIGN_SUBSEQUENT : INITIAL | EXPLICIT_SIGN | '@' ;
 
 // Annoyingly, SYMBOL_ELEMENT overlaps with STRING_ELEMENT
 fragment SYMBOL_ELEMENT :
-  (options {greedy=true;} :
     (~('|' | '\\'))
-     | STRING_ELEMENT
-     // TODO: Should double-quote be here?!?!
-     | '\\|' ) ; 
+     | SPECIAL_STRING_ELEMENT
+     // NOTE: Double-quote should NOT be here, already matched above.
+     | '\\|' ; 
 
 // boolean, character, character_name
 BOOLEAN : '#t' | '#f' | '#true' | '#false' ;
 
 STRING : '\"' STRING_ELEMENT* '\"' ;
+
 fragment STRING_ELEMENT :
-  ~( '"' | '\\' )
-  | '\\' ('a' | 'b' | 't' | 'n' | 'r' | '"' | '\\')
+  ~( '"' | '\\' ) | SPECIAL_STRING_ELEMENT ;
+
+fragment SPECIAL_STRING_ELEMENT :
+  '\\' ('a' | 'b' | 't' | 'n' | 'r' | '"' | '\\')
   // TODO: Intraline whitespace
   | INLINE_HEX_ESCAPE ;
 
