@@ -288,6 +288,7 @@ x(a)(b)
 #t
 #f
 
+#\Q 1 #\( 2 #\a 3 #\newline 4
 
 fin
 

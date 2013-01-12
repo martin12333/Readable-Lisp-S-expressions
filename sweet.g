@@ -436,6 +436,10 @@ error : ;  // Specifically identifies an error branch.
 // here for debugging and testing the grammar.  It's not an especially
 // accurate representation of n-expressions, because it doesn't need to be.
 
+// Note: The following maps most stuff into strings, because we don't
+// need to do more than that for a translation.  The action rules can
+// be changed to generate real values, not just string representations.
+
 
 IDENTIFIER  :
   INITIAL SUBSEQUENT* |
@@ -475,6 +479,11 @@ fragment SYMBOL_ELEMENT :
 // boolean, character, character_name
 BOOLEAN : '#t' | '#f' | '#true' | '#false' ;
 
+CHARACTER : '#\\'
+ ((~ ('a'..'z'))
+  | ('a'..'w' | 'y' | 'z') ('a'..'z')*
+  | 'x' HEX_SCALAR_VALUE ) ;
+ 
 STRING : '\"' STRING_ELEMENT* '\"' ;
 
 fragment STRING_ELEMENT :
@@ -500,9 +509,7 @@ fragment OCTAL_ESC
 fragment UNICODE_ESC
     :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT ;
 
-CHAR   : '#\\' ('!'..'@' | '['..'`' | '{'..'~' | ('A'..'Z' | 'a'..'z')+) ;
-
-simple_datum   : BOOLEAN | symbol | INT | FLOAT | STRING | CHAR ;
+simple_datum   : BOOLEAN | symbol | INT | FLOAT | STRING | CHARACTER ;
 symbol : IDENTIFIER ;
 
 // This more-complicated BNF is written so leading
