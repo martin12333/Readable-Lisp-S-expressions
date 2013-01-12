@@ -126,4 +126,7 @@ a
 #t
 #f
 (#\Q 1 #\( 2 #\a 3 #\newline 4)
+(vector 1 2 3)
+#u8(5 6 7)
+(* n (factorial (- n 1)))
 fin
