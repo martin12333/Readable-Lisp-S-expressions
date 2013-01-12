@@ -464,7 +464,8 @@ fragment PECULIAR_IDENTIFIER : EXPLICIT_SIGN
 fragment DOT_SUBSEQUENT : SIGN_SUBSEQUENT | '.' ;
 fragment SIGN_SUBSEQUENT : INITIAL | EXPLICIT_SIGN | '@' ;
 
-// Annoyingly, SYMBOL_ELEMENT overlaps with STRING_ELEMENT
+// Annoyingly, SYMBOL_ELEMENT overlaps with STRING_ELEMENT in
+// the R7RS Scheme draft 8 fix; this (below) fixes that:
 fragment SYMBOL_ELEMENT :
     (~('|' | '\\'))
      | SPECIAL_STRING_ELEMENT
