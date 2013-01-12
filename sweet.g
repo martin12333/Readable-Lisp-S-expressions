@@ -494,8 +494,8 @@ fragment SPECIAL_STRING_ELEMENT :
   // TODO: Intraline whitespace
   | INLINE_HEX_ESCAPE ;
 
-// TODO: The following doesn't really follow Scheme spec.
 
+// TODO: The following doesn't really follow the Scheme spec.
 fragment EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
 FLOAT
     :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
@@ -508,9 +508,10 @@ fragment OCTAL_ESC
     |   '\\' ('0'..'7') ;
 fragment UNICODE_ESC
     :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT ;
+number : INT | FLOAT ;
 
-simple_datum   : BOOLEAN | symbol | INT | FLOAT | STRING | CHARACTER ;
-symbol : IDENTIFIER ;
+
+
 
 // This more-complicated BNF is written so leading
 // and trailing whitespace in a list is correctly ignored.
@@ -544,14 +545,28 @@ n_expr_tail[Object prefix] returns [Object v]
     | empty {$v = prefix;}
     ) ;
 
-// TODO: Improve action here to fully capture information.
-n_expr_prefix returns [Object v]
-  : simple_datum {$v = $simple_datum.text;}
-  | LPAREN norm=list_contents RPAREN {$v = $norm.v;}
+vector returns [Object v]
+  : '#(' list_contents ')' {$v = cons("vector", $list_contents.v); } ;
+
+// Currently return value ignored because simple_datum ignores it.
+bytevector returns [Object v]
+  : '#u8(' list_contents ')' { $v = cons("bytevector", $list_contents.v); } ;
+
+simple_datum   : BOOLEAN | number | CHARACTER | STRING | symbol | bytevector;
+symbol : IDENTIFIER ;
+
+compound_datum returns [Object v]
+  : LPAREN norm=list_contents RPAREN {$v = $norm.v;}
   | LBRACKET bracketed=list_contents RBRACKET {$v = $bracketed.v;}
   | LBRACE braced=list_contents RBRACE {$v = process_curly($braced.v);}
+  | vector {$v = $vector.v;}
   ;
   
+n_expr_prefix returns [Object v]
+  : simple_datum {$v = $simple_datum.text;}
+  | compound_datum {$v = $compound_datum.v;}
+  ;
+
 n_expr_noabbrev returns [Object v]
     : n_expr_prefix
       n_expr_tail[$n_expr_prefix.v] {$v = $n_expr_tail.v;} ;
