@@ -275,6 +275,17 @@ f(x)
 f(a b)
 f(a b c)
 
+f[]
+f[x]
+
+f{}
+f{x}
+f{+ x}
+f{x + 1}
+
+x(a)(b)
+
+
 fin
 
 
