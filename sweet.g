@@ -473,6 +473,8 @@ fragment SYMBOL_ELEMENT :
      | '\\|' ) ; 
 
 // boolean, character, character_name
+BOOLEAN : '#t' | '#f' | '#true' | '#false' ;
+
 STRING : '\"' STRING_ELEMENT* '\"' ;
 fragment STRING_ELEMENT :
   ~( '"' | '\\' )
@@ -497,7 +499,8 @@ fragment UNICODE_ESC
 
 CHAR   : '#\\' ('!'..'@' | '['..'`' | '{'..'~' | ('A'..'Z' | 'a'..'z')+) ;
 
-simple_datum   : IDENTIFIER | INT | FLOAT | STRING | CHAR ;
+simple_datum   : BOOLEAN | symbol | INT | FLOAT | STRING | CHAR ;
+symbol : IDENTIFIER ;
 
 // This more-complicated BNF is written so leading
 // and trailing whitespace in a list is correctly ignored.
