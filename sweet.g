@@ -418,11 +418,14 @@ QUASIQUOTE     : '\`';
 UNQUOTE_SPLICE : ',' '@';
 UNQUOTE        : ',';
 
+// Define ERROR this way so we don't get a spurious ANTLR warning.
+fragment ERROR: ' ' ;
+
 // Special non-terminals that act essentially as comments.
 // They are used clarify the grammar meaning, as follows:
 empty : ;  // Identifies an empty branch
 same  : ;  // Emphasizes where neither indent nor dedent has occurred
-error : ;  // Specifically identifies an error branch.
+error : ERROR;  // Specifically identifies an error branch.
 
 // Note that errors can occur elsewhere, and an implementation
 // may include an extension where an error is noted in this grammar.
