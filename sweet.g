@@ -534,15 +534,31 @@ list_contents returns [Object v]
    (list_contents_real {$v=$list_contents_real.v;}
     | empty {$v = null;} ) ;
 
+
+// The "greedy=true" option here forces n_expr_tail to look at the
+// next character and forceably consume in *this* production if it's
+// an opening paren, bracket, or brace.  Without this,
+// ANTLR notices ambiguities and complains with reports like:
+//  Decision can match input such as "LPAREN" using multiple alternatives: 1, 4
+// This is because there are constructs such as:
+//    #;a#|hi|#(x)
+// which technically are ambiguous; do we mean "#;a" or "#;a(x)"?
+// The option breaks the ambiguity.
+
 n_expr_tail[Object prefix] returns [Object v]
     : (options {greedy=true;}
-    : LPAREN   c1=list_contents RPAREN r1=n_expr_tail[cons(prefix, $c1.v)] {$v = $r1.v;}
+    : LPAREN c1=list_contents RPAREN r1=n_expr_tail[cons(prefix, $c1.v)]
+      {$v = $r1.v;}
     | LBRACKET c2=list_contents RBRACKET
-      r2=n_expr_tail[cons("$" + "bracket-apply" + "$", cons(prefix, $c2.v))] {$v = $r2.v;}
+      r2=n_expr_tail[cons("$" + "bracket-apply" + "$", cons(prefix, $c2.v))]
+      {$v = $r2.v;}
     | LBRACE   c3=list_contents RBRACE
       // Map f{} to (f), not (f ()). f{x} maps to (f x).
-      r3=n_expr_tail[nullp($c3.v) ? list(prefix) : list(prefix, process_curly($c3.v))] {$v = $r3.v;}
-    | empty {$v = prefix;}
+      r3=n_expr_tail[nullp($c3.v) ? list(prefix)
+                                  : list(prefix, process_curly($c3.v))]
+      {$v = $r3.v;}
+    | empty
+      {$v = prefix;}
     ) ;
 
 vector returns [Object v]
