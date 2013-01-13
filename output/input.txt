@@ -297,6 +297,8 @@ x(a)(b)
 
 {n * factorial{n - 1}}
 
+#;a#|hi|#(x) z
+
 fin
 
 
