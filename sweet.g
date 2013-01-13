@@ -735,8 +735,8 @@ head returns [Object v]
        | empty  {$v = list(".");} /*= (list '.) */ )
      | empty    {$v = list(".");} /*= (list '.) */ )
  | restart_list
-     (rest1=rest {$v = cons(list(monify($restart_list.v)), $rest1.v) ; }
-      | empty    {$v = list(monify($restart_list.v)); } )
+     (rest1=rest {$v = cons($restart_list.v, $rest1.v) ; }
+      | empty    {$v = $restart_list.v; } )
  | n_expr_first (
      (hspace+
        (rest2=rest  {$v = cons($n_expr_first.v, $rest2.v);}
