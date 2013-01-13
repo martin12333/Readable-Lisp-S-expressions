@@ -1,5 +1,5 @@
 // BNF grammar for sweet-expressions
-// (c) 2012 David A. Wheeler, released under "MIT" license.
+// (c) 2012-2013 David A. Wheeler, released under "MIT" license.
 
 // This BNF is an LL(1) grammar, written using ANTLR version 3.
 // More info on ANTLR is at "http://www.antlr.org/".
