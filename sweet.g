@@ -682,7 +682,9 @@ restart_head_tail returns [Object v]
   | empty {$v = null;} ;
 
 restart_head returns [Object v]: restart_head_branch restart_head_tail
-              {$v = cons($restart_head_branch.v, $restart_head_tail.v);}
+              {$v = nullp($restart_head_branch.v) ?
+                $restart_head_tail.v :
+                cons($restart_head_branch.v, $restart_head_tail.v);}
              /*= (cons $restart_head_branch $restart_head_tail) */ ;
 
 restart_contents returns [Object v]
@@ -705,7 +707,7 @@ restart_list returns [Object v]: RESTART hspace* restart_head
       {$v = nullp($restart_head.v) ? null : list(monify($restart_head.v));}
    | comment_eol+ restart_contents
          {$v = nullp($restart_head.v) ? $restart_contents.v
-                       : cons($restart_head.v, $restart_contents.v);}
+                       : append(monify($restart_head.v), $restart_contents.v); }
      RESTART_END hspace* );
 
 
