@@ -404,7 +404,7 @@ BARE_OTHER_WS : {enclosure > 0}? => EOL_CHAR;
 // Simple character or two-character sequences:
 SPACE    : ' ';
 TAB      : '\t';
-fragment BANG     : '!';
+fragment BANG : '!';
 PERIOD   : '.';
 LPAREN   : '(' {enclosure++;} ;
 RPAREN   : ')' {if (enclosure>0) {enclosure--;};};
@@ -504,12 +504,6 @@ FLOAT
     |   '.' ('0'..'9')+ EXPONENT?
     |   ('0'..'9')+ EXPONENT ;
 INT     :        ('0'..'9')+ ;
-fragment OCTAL_ESC
-    :   '\\' ('0'..'3') ('0'..'7') ('0'..'7')
-    |   '\\' ('0'..'7') ('0'..'7')
-    |   '\\' ('0'..'7') ;
-fragment UNICODE_ESC
-    :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT ;
 number : INT | FLOAT ;
 
 
