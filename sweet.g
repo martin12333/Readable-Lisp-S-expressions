@@ -404,7 +404,6 @@ BARE_OTHER_WS : {enclosure > 0}? => EOL_CHAR;
 // Simple character or two-character sequences:
 SPACE    : ' ';
 TAB      : '\t';
-SHARP    : '#';
 fragment BANG     : '!';
 PERIOD   : '.';
 LPAREN   : '(' {enclosure++;} ;
