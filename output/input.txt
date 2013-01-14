@@ -52,14 +52,14 @@ $ a z
 ; \\
 ;   d
 ; would create (d), a "$" inserts another (...) level vs \\, making ((d)):
-$
+$ \\
   d
 
 ; This is (((d e))) :
-$
+$ \\
   d e
 
-$
+$ \\
   d e f
 
 

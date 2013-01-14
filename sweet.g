@@ -753,6 +753,9 @@ head returns [Object v]
 // datum comments that don't begin a line (after indent) are consumed,
 // and abbreviations followed by a space merely apply to the
 // next n-expression (not to the entire indented expression).
+// Note that "rest" is very similar to "head" - a recursive descent parser
+// might implement "head" and "rest" as a single function with a parameter
+// that says if it's the first one (head) or not.
 
 rest returns [Object v]
   : PERIOD
@@ -823,9 +826,8 @@ i_expr returns [Object v]
           // that we *not* do this, because it'd be confusing.
           // Normal case: splice ends i_expr immediately:
         | empty {$v = monify($head.v);} )
-     | SUBLIST hspace*
-       (i_expr1=i_expr {$v=list(monify($head.v), $i_expr1.v);}
-        | comment_eol indent body1=body {$v=list($body1.v);} )
+     | SUBLIST hspace* i_expr1=i_expr
+       {$v=list(monify($head.v), $i_expr1.v);}
      | comment_eol // Normal case, handle child lines if any:
        (indent body2=body {$v = append($head.v, $body2.v);}
         | empty     {$v = monify($head.v);} /* No child lines */ ))
@@ -835,12 +837,11 @@ i_expr returns [Object v]
          (indent body3=body {$v = $body3.v;} /* Normal use for GROUP */
           | same i_expr3=i_expr {$v = $i_expr3.v;} /* Plausible separator */
           | dedent error ))
-  | SUBLIST hspace* /* "$" as first expression on line */
-    (i_expr4=i_expr  {$v=list($i_expr4.v);}
-     | comment_eol indent body4=body {$v=list($body4.v);} )
-  | abbrevh hspace*
-      (i_expr5=i_expr {$v=list($abbrevh.v, $i_expr5.v);}
-       | (comment_eol error /* Too easy to use incorrectly; forbid it. */ )) ;
+  | SUBLIST hspace* i_expr4=i_expr /* "$" as first expression on line */
+      {$v=list($i_expr4.v);}
+  | abbrevh hspace* i_expr5=i_expr
+      {$v=list($abbrevh.v, $i_expr5.v);}
+  ;
 
 // Top-level sweet-expression production, t_expr.
 // This production handles special cases, then in the normal case
