@@ -814,12 +814,9 @@ i_expr returns [Object v]
   : head
     (GROUP_SPLICE hspace* /* Not initial; interpret as splice */
       (options {greedy=true;} :
+        // To allow \\ EOL as line-continuation, instead do:
+        //   comment_eol same i9=i_expr {append($head.v, $i9.v);}
         comment_eol error
-          // To allow \\ EOL as line-continuation, could instead do:
-          //    comment_eol same i9=i_expr {append($head.v, $i9.v);}
-          // John Cowan recommends (Sat, 29 Dec 2012 13:18:18 -0500)
-          // that we *not* do this, because it'd be confusing.
-          // Normal case: splice ends i_expr immediately:
         | empty {$v = monify($head.v);} )
      | SUBLIST hspace* i_expr1=i_expr
        {$v=list(monify($head.v), $i_expr1.v);}
