@@ -784,10 +784,10 @@ rest returns [Object v]
 // than the indent used on entry to body; the latest indent is compared by
 // the special terminals DEDENT and BADDENT.
 
-body returns [Object v] : i_expr
-  (same body1=body {$v = cons($i_expr.v, $body1.v);}
-   | dedent        {$v = list($i_expr.v);} ) ;
-
+body returns [Object v] :
+  i_expr
+    (same body1=body {$v = cons($i_expr.v, $body1.v);}
+     | dedent        {$v = list($i_expr.v);} ) ;
 
 // "i-expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
