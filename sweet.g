@@ -810,11 +810,6 @@ body returns [Object v] :
 // should then set the current_indent to RESTART_END, and return, to signal
 // the reception of RESTART_END.
 
-// TODO: Make "(head|empty) SUBLIST comment_eol" be an error; use instead:
-// $ \\    ; Use SUBLIST GROUP, not just SUBLIST, if you want children.
-//   1 2
-//   3 4
-
 i_expr returns [Object v]
   : head
     (GROUP_SPLICE hspace* /* Not initial; interpret as splice */
