@@ -166,27 +166,26 @@ back to
 ;  define-library (example grid)
 ;  \>  export make rows cols ref each rename(put! set!)
 
-import (scheme short) <* *>
+; import (scheme short) <* *>
 
-import (scheme base) <* begin
+; import (scheme base) <* begin
 
-define make(n m)
-  do-make()
+; define make(n m)
+;   do-make()
+; 
+; define rows(grid)
+;   vector-length(grid)
+; *>
+; 
+; import (scheme base) <* begin stuff
+; 
+; define make(n m)
+;   do-make()
+; 
+; define rows(grid)
+;   vector-length(grid)
+; *>
 
-define rows(grid)
-  vector-length(grid)
-*>
-
-import (scheme base) <* begin stuff
-
-define make(n m)
-  do-make()
-
-define rows(grid)
-  vector-length(grid)
-*>
-
-;  \<
 
 ; Initial indents:
 

@@ -281,7 +281,7 @@ fragment DEDENT: ' ';
 // than other definitions.  Note that these only have special meaning
 // outside (), [], and {}; otherwise they're just atoms.
 GROUP_SPLICE : {indent_processing()}? => '\\' '\\'; // GROUP/splice symbol.
-DOLLAR  : {indent_processing()}? =>'$';
+SUBLIST : {indent_processing()}? =>'$';
 RESERVED_TRIPLE_DOLLAR : {indent_processing()}? => '$$$';  // Reserved.
 RESTART : {indent_processing()}? => '<' '*' {/* TODO: Restart indent level */};
 RESTART_END: {indent_processing()}? => '*' '>' {/* TODO: Restore indent level */};
@@ -670,10 +670,10 @@ comment_eol : LCOMMENT? EOL;
 
 restart_head_branch returns [Object v]
   : head
-    (DOLLAR hspace* rb1=restart_head_branch {$v = list($head.v, $rb1.v);}
+    (SUBLIST hspace* rb1=restart_head_branch {$v = list($head.v, $rb1.v);}
      | empty {$v = $head.v;} )
   | scomment hspace* rb2=restart_head_branch {$v = $rb2.v;}
-  | DOLLAR hspace* rb3=restart_head_branch {$v = list($rb3.v);}
+  | SUBLIST hspace* rb3=restart_head_branch {$v = list($rb3.v);}
   | empty {$v = null;} /*= '() */  ;
 
 restart_head_tail returns [Object v]
@@ -798,7 +798,7 @@ body returns [Object v] :
 // that will end this i-expr (because it won't match INDENT),
 // returning to a higher-level production.
 
-// DOLLAR is handled in i_expr, not in "head", because if there
+// SUBLIST is handled in i_expr, not in "head", because if there
 // are child lines, those child lines are parameters of the right-hand-side,
 // not of the whole production.
 
@@ -807,8 +807,8 @@ body returns [Object v] :
 // should then set the current_indent to RESTART_END, and return, to signal
 // the reception of RESTART_END.
 
-// TODO: Make "(head|empty) DOLLAR comment_eol" be an error; use instead:
-// $ \\    ; Use DOLLAR GROUP, not just DOLLAR, if you want children.
+// TODO: Make "(head|empty) SUBLIST comment_eol" be an error; use instead:
+// $ \\    ; Use SUBLIST GROUP, not just SUBLIST, if you want children.
 //   1 2
 //   3 4
 
@@ -823,7 +823,7 @@ i_expr returns [Object v]
           // that we *not* do this, because it'd be confusing.
           // Normal case: splice ends i_expr immediately:
         | empty {$v = monify($head.v);} )
-     | DOLLAR hspace*
+     | SUBLIST hspace*
        (i_expr1=i_expr {$v=list(monify($head.v), $i_expr1.v);}
         | comment_eol indent body1=body {$v=list($body1.v);} )
      | comment_eol // Normal case, handle child lines if any:
@@ -835,7 +835,7 @@ i_expr returns [Object v]
          (indent body3=body {$v = $body3.v;} /* Normal use for GROUP */
           | same i_expr3=i_expr {$v = $i_expr3.v;} /* Plausible separator */
           | dedent error ))
-  | DOLLAR hspace* /* "$" as first expression on line */
+  | SUBLIST hspace* /* "$" as first expression on line */
     (i_expr4=i_expr  {$v=list($i_expr4.v);}
      | comment_eol indent body4=body {$v=list($body4.v);} )
   | abbrevh hspace*
