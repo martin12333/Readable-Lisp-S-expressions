@@ -1897,8 +1897,198 @@ Sweet-expression reader implementations are free to warn about files
 that fail to meet this requirement.
 </p>
 
+<h2 id="reserved">Restart lists (&lt;* ... *&gt;)</h2>
+<p>
+Sweet-expressions without restart lists (&lt;* ... *&gt;)
+work well in a vast number of circumstances.
+However, they can be somewhat awkward for two typical use cases:
+</p>
+<ol>
+<li>A long sequence of definitions contained within an initial statement.
+This situation occurs in many library definition structures such as
+Scheme R7RS <tt>define-library</tt> and in some larger data structures.</li>
+<li>A let-style statement with one or two variables
+with short initial values.</li>
+</ol>
+<p>
+Let's begin with the first use case.
+When there is a long sequence of definitions contained within an
+initial statement, and no special notation like restart lists,
+all the definitions in the long sequence must be
+indented and none can be separated by a blank line
+(since that would end the entire sequence, not just a definition).
+Indenting almost an entire file is annoying, and needing no blank lines
+for that long invites mistakes.
+</p>
+
+<p>
+For example, here's an example from the R7RS Scheme specification
+for define-library:
+</p
+<pre>
+(define-library
+  (example grid)
+  (export make rows cols ref each (rename put! set!))
+  (import (scheme base))
+  (begin
+    (define (make n m)
+      (let ((grid (make-vector n)))
+        (do ((i 0 (+ i 1)))
+            ((= i n) grid)
+          (let ((v (make-vector m #f alse)))
+            (vector-set! grid i v)))))
+    (define (rows grid) (vector-length grid))
+    (define (cols grid)
+      (vector-length (vector-ref grid 0)))
+    (define (ref grid n m)
+      (and (< -1 n (rows grid))
+           (< -1 m (cols grid))
+           (vector-ref (vector-ref grid n) m)))
+    (define (put! grid n m v)
+      (vector-set! (vector-ref grid n) m v))))
+</pre>
+<p>
+This is easily reformatted into this sweet-expression:
+</p>
+<pre>
+define-library
+  example grid
+  export make rows cols ref each rename(put! set!)
+  import scheme(base)
+  begin
+    define make(n m)
+      let (grid(make-vector(n)))
+        do (i(0 {i + 1}))
+        ! {i = n} grid
+        ! let (v(make-vector(m #f alse))) vector-set!(grid i v)
+    define rows(grid) vector-length(grid)
+    define cols(grid) vector-length(vector-ref(grid 0))
+    define ref(grid n m)
+      and
+        {-1 < n < rows(grid)}
+        {-1 < m < cols(grid)}
+        vector-ref vector-ref(grid n) m
+    define put!(grid n m v) vector-set!(vector-ref(grid n) m v)
+</pre>
+
+<p>
+But there are reasons that sweet-expressions are defined the way they are.
+It is fundamental that a child line is indented from its parent, since
+that is the point of indentation.
+Opening a parentheses intentionally disables indentation processing;
+this is what developers typically expect (note that both Python and
+SRFI-49 do this), and it also makes sweet-expressions very
+backwards-compatible with traditional s-expressions.
+Ending a definition at a blank line is very convenient for interactive use,
+and interactive and file notation should be identical
+(since people often switch between them).
+Changing all of sweet-expressions, just to handle this particular case,
+does not seem warranted.
+</p>
+
+<p>
+Now let's look at the second use case.
+The sweet-expression notation cleanly handles cases where let-expression
+variables have complex values (e.g., using \\), but for simple cases
+(1-2 variables having short initial values)
+it can take up more vertical space than traditional formatting.
+Using a leading "$" takes up somewhat less vertical space, but it still
+takes up an additional line for a trivial case, it does not work
+the same way for let expressions with 2 variables,
+and David A. Wheeler thinks it is a rather unclear construction.
+You can also use parenthetical notation directly, but this is
+relatively ugly and it is annoying to need to do this for a common case.
+A similar argument applies to do-expressions, and these are
+not at all unusual in Scheme code:
+</p>
+<pre>
+let  ; Using \\ takes up a lot of vertical space in simple cases
+  \\
+    x 5
+  {x + x}
+
+let
+  \\
+    x 5
+    y 7
+  {x + x}
+
+let  ; Less vertical space, but 1 variable only
+  $ x 5
+  {x + 5}
+
+; Note "$ x 5 $ y 7" isn't right; that maps to ((x 5 (y 7))).
+
+; The two-variable format can be surprising and does not let the
+; programmer emphasize the special nature of the variable assignments
+; (compared to the later expressions in a let statement).
+let
+  x(5) y(7)
+  {x + 5}
+
+let (x(5)) ; Use parentheses
+  {x + x}
+let (x(5) y(7))
+  {x + x}
+</pre>
+
+<p>
+A <i>restart list</i> is surrounded by the markers &lt;* and *&gt;.
+The &lt;* and *&gt; represent opening and closing
+parentheses, but restart indentation processing
+at the left edge instead of disabling indentation processing.
+The purpose of restart lists is to make it easy to clearly
+express these and similar use cases.
+</p>
+
+<p>
+In a restart list, the rest of the text after the initial &lt;*
+is treated specially.
+That's because this initial line will be far more indented than
+text in future lines (if any) of the restart list, and it would confusing
+if the first line of an expression is more indented than its children.
+It also makes it possible to have special semantics especially tuned
+to work cleanly on common cases.
+</p>
+
+<p>
+Here are examples of the same constructs, using restart lists:
+</p>
+<pre>
+define-library
+  example grid
+  export make rows cols ref each rename(put! set!)
+  import scheme(base)
+  begin &lt;*
+
+define make(n m)
+  let (grid(make-vector(n)))
+...
+*&gt;
+
+let &lt;* x 5 *&gt;
+  {x + x}
+
+let &lt;* x 5 \\ y 7 *&gt;
+  {x + x}
+</pre>
+
+<p>
+The restart list symbols are carefully chosen.
+The characters &lt; and &gt; are natural character pairs that are
+available in ASCII.
+What is more, they are not delimiters, so any underlying
+Scheme reader will not immediately stop on reading them
+(making it easier to reuse).
+The "*" is more arbitrary, but the restart markers need to be multiple
+characters to distinguish them from the less-than and greater-than procedures,
+and this seemed to be a fairly distinctive token that is rarely used
+in existing code.
+</p>
+
 <h2 id="reserved">Reserved markers</h2>
 <p>
+???
 The markers &lt;* and *&gt; are reserved for future use.
 These may, at some point, have the following syntax
 as described in an
