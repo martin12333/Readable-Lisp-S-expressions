@@ -787,6 +787,8 @@ rest returns [Object v]
 // Note also that i-expr may set the the current indent to a different value
 // than the indent used on entry to body; the latest indent is compared by
 // the special terminals DEDENT and BADDENT.
+// Since (list x) is simply (cons x '()), this production always does a
+// cons of the first i_expr and another body [if it exists] or '() [if not].
 
 body returns [Object v] :
   i_expr
