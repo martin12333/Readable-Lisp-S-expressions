@@ -319,6 +319,26 @@ x(a)(b)
 <* this *> is a test
 <* define(x 5) define(y 7) *> is a test
 
+<*
+library \\ amkg animals $ 1 0
+export
+  cat
+  rename $ rover dog
+import
+  only
+    amkg pets $ 1 0
+    rover
+
+define cat 'meow
+
+*>
+
+let ((x cos(f(c))))
+! dostuff x
+
+let <* x $ cos $ f c *>
+! dostuff x
+
 fin
 
 
