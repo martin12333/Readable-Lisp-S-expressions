@@ -659,58 +659,64 @@ comment_eol : LCOMMENT? EOL;
 
 // Here we handle restarts, which are a special case.
 
-// Handle the first line of a restart.  This is very similar to "head";
-// it reads in a line, and returns a list of its neoteric-expressions;
-// it consumes all trailing hspace.
-// We have to handle restart_head differently from head, because
-// i_expr is designed to support child lines, but the first line can't have
-// child lines.  This creates a "head-like" with functionality we CAN support.
-// Thus, we call on "head" to do many things, but we specially handle leading
-// GROUP_SPLICE and scomment, and we permit empty contents (unlike "head").
+//    // Handle the first line of a restart.  This is very similar to "head";
+//    // it reads in a line, and returns a list of its neoteric-expressions;
+//    // it consumes all trailing hspace.
+//    // We have to handle restart_head differently from head, because
+//    // i_expr is designed to support child lines, but the first line can't have
+//    // child lines.  This creates a "head-like" with functionality we CAN support.
+//    // Thus, we call on "head" to do many things, but we specially handle leading
+//    // GROUP_SPLICE and scomment, and we permit empty contents (unlike "head").
+//    
+//    restart_head_branch returns [Object v]
+//      : head
+//        (SUBLIST hspace* rb1=restart_head_branch {$v = list($head.v, $rb1.v);}
+//         | empty {$v = $head.v;} )
+//      | scomment hspace* rb2=restart_head_branch {$v = $rb2.v;}
+//      | SUBLIST hspace* rb3=restart_head_branch {$v = list($rb3.v);}
+//      | empty {$v = null;} /*= '() */  ;
+//    
+//    restart_head_tail returns [Object v]
+//      : GROUP_SPLICE hspace* restart_head_branch again=restart_head_tail
+//        {$v = cons($restart_head_branch.v, $again.v); /* Interpret as splice */}
+//      | empty {$v = null;} ;
+//    
+//    restart_head returns [Object v]: restart_head_branch restart_head_tail
+//                  {$v = nullp($restart_head_branch.v) ?
+//                    $restart_head_tail.v :
+//                    cons($restart_head_branch.v, $restart_head_tail.v);}
+//                 /*= (cons $restart_head_branch $restart_head_tail) */ ;
+//    
+//    restart_contents returns [Object v]
+//      : i_expr comment_eol* again=restart_contents
+//          {$v = cons($i_expr.v, $again.v);}
+//      | empty {$v = null;} /* We hit RESTART_END */  ;
+//    
+//    // A restart_list starts with an optional restart_head (one line),
+//    // followed by optional restart_contents (0 or more i_expr's).
+//    // We start with a head-like production, not an i_expr, to simplify the BNF.
+//    // We'll consume hspace* at the end of this production; the RESTART_END
+//    // token wouldn't be recognized unless it was delimited anyway, and
+//    // consuming hspace* after it means we can avoid using the
+//    // complex BNF construct "(hspace+ (x | empty) | empty)".
+//    // RESTART and RESTART_END set/restore the indent level
+//    // In a non-tokenizing implementation, reading RESTART_END inside i_expr
+//    // will set the current indent, causing dedents all the way back to here.
+//    restart_list returns [Object v]: RESTART hspace* restart_head
+//      (RESTART_END hspace*
+//          {$v = nullp($restart_head.v) ? null : list(monify($restart_head.v));}
+//       | comment_eol+ restart_contents
+//             {$v = nullp($restart_head.v) ? $restart_contents.v
+//                           : "TODO_restart_list"
+//              /* append(monify($restart_head.v), $restart_contents.v) */ ; }
+//         RESTART_END hspace* );
 
-restart_head_branch returns [Object v]
-  : head
-    (SUBLIST hspace* rb1=restart_head_branch {$v = list($head.v, $rb1.v);}
-     | empty {$v = $head.v;} )
-  | scomment hspace* rb2=restart_head_branch {$v = $rb2.v;}
-  | SUBLIST hspace* rb3=restart_head_branch {$v = list($rb3.v);}
-  | empty {$v = null;} /*= '() */  ;
+restart_tail returns [Object v]:
+  i_expr rt1=restart_tail {$v = cons($i_expr.v, $rt1.v);}
+  | RESTART_END {$v = null;} ;
 
-restart_head_tail returns [Object v]
-  : GROUP_SPLICE hspace* restart_head_branch again=restart_head_tail
-    {$v = cons($restart_head_branch.v, $again.v); /* Interpret as splice */}
-  | empty {$v = null;} ;
-
-restart_head returns [Object v]: restart_head_branch restart_head_tail
-              {$v = nullp($restart_head_branch.v) ?
-                $restart_head_tail.v :
-                cons($restart_head_branch.v, $restart_head_tail.v);}
-             /*= (cons $restart_head_branch $restart_head_tail) */ ;
-
-restart_contents returns [Object v]
-  : i_expr comment_eol* again=restart_contents
-      {$v = cons($i_expr.v, $again.v);}
-  | empty {$v = null;} /* We hit RESTART_END */  ;
-
-// A restart_list starts with an optional restart_head (one line),
-// followed by optional restart_contents (0 or more i_expr's).
-// We start with a head-like production, not an i_expr, to simplify the BNF.
-// We'll consume hspace* at the end of this production; the RESTART_END
-// token wouldn't be recognized unless it was delimited anyway, and
-// consuming hspace* after it means we can avoid using the
-// complex BNF construct "(hspace+ (x | empty) | empty)".
-// RESTART and RESTART_END set/restore the indent level
-// In a non-tokenizing implementation, reading RESTART_END inside i_expr
-// will set the current indent, causing dedents all the way back to here.
-restart_list returns [Object v]: RESTART hspace* restart_head
-  (RESTART_END hspace*
-      {$v = nullp($restart_head.v) ? null : list(monify($restart_head.v));}
-   | comment_eol+ restart_contents
-         {$v = nullp($restart_head.v) ? $restart_contents.v
-                       : "TODO_restart_list"
-          /* append(monify($restart_head.v), $restart_contents.v) */ ; }
-     RESTART_END hspace* );
-
+restart_list returns [Object v]:
+  RESTART hspace* comment_eol* restart_tail {$v = $restart_tail.v;} ;
 
 // The "head" is the production for 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
@@ -735,7 +741,7 @@ head returns [Object v]
       (n_expr1=n_expr hspace* {$v = list($n_expr1.v);} (n_expr2=n_expr error)?
        | empty  {$v = list(".");} /*= (list '.) */ )
      | empty    {$v = list(".");} /*= (list '.) */ )
- | restart_list
+ | restart_list hspace*
      (rest1=rest {$v = cons($restart_list.v, $rest1.v) ; }
       | empty    {$v = $restart_list.v; } )
  | n_expr_first (
@@ -767,9 +773,9 @@ rest returns [Object v]
          | empty {$v = list(".");})
        | empty   {$v = list(".");})
   | scomment hspace* (rest1=rest {$v = $rest1.v;} | empty {$v = null;} )
-  | restart_list
-    (rest2=rest {$v = "TODO7"; /*cons(list(monify($restart_list.v)), $rest2.v); */ }
-     | empty {$v = list(monify($restart_list.v)); } )
+  | restart_list hspace*
+    (rest2=rest {$v = cons($restart_list.v, $rest2.v);}
+     | empty {$v = list($restart_list.v);} )
   | n_expr3=n_expr
       ((hspace+ (rest3=rest {$v = cons($n_expr3.v, $rest3.v);}
                  | empty {$v = list($n_expr3.v);} ))
@@ -813,9 +819,22 @@ body returns [Object v] :
 // should then set the current_indent to RESTART_END, and return, to signal
 // the reception of RESTART_END.
 
+// Note: The "head empty" sequence exists so that an i_expr can be
+// followed immediately by RESTART_END without an intervening comment_eol.
+// Unfortunately, this causes ANTLR to issue a pile of warnings;
+// without this sequence, i_expr always ends with comment_eol,
+// and there are no ambiguities that need to be prioritized.
+// However, this sequence is necessary to
+// support one-line restart lists like let <* y 5 *>.
+// I don't believe this is a real ambiguity; if you disambiguate by giving
+// all preceding or non-empty sequences i_expr's "head..." sequence
+// a higher priority, it would only be used on a RESTART_END in a properly-
+// formatted file (e.g., presuming that EOF is always preceded by newline).
+
 i_expr returns [Object v]
   : head
-    (GROUP_SPLICE hspace* /* Not initial; interpret as splice */
+    (options {greedy=true;} : (
+     GROUP_SPLICE hspace* /* Not initial; interpret as splice */
       (options {greedy=true;} :
         // To allow \\ EOL as line-continuation, instead do:
         //   comment_eol same i9=i_expr {append($head.v, $i9.v);}
@@ -825,7 +844,8 @@ i_expr returns [Object v]
        {$v=list(monify($head.v), $i_expr1.v);}
      | comment_eol // Normal case, handle child lines if any:
        (indent body2=body {$v = append($head.v, $body2.v);}
-        | empty     {$v = monify($head.v);} /* No child lines */ ))
+        | empty     {$v = monify($head.v);} /* No child lines */ )
+     | empty {$v = monify($head.v);} /* "head empty" - RESTART_END next */ ))
   | (GROUP_SPLICE | scomment) hspace* /* Initial; Interpet as group */
       (i_expr2=i_expr {$v = $i_expr2.v;} /* Ignore GROUP/scomment if initial */
        | comment_eol

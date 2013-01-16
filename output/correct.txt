@@ -71,6 +71,7 @@ first
 second
 third
 (back to (working correctly))
+(import (scheme base) (begin (define (make n m) (do-make)) (define (rows grid) (vector-length grid))))
 indent-disabled
 indent-disabled1
 indent-disabled2
