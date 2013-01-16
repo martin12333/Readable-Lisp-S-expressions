@@ -310,6 +310,15 @@ x(a)(b)
 
 #;a#|hi|#(x) z
 
+<* *>
+<* hi *>
+<* a b *>
+<* a b c *>
+<* (x) (y) (z) *>
+
+<* this *> is a test
+<* define(x 5) define(y 7) *> is a test
+
 fin
 
 

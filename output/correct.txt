@@ -132,4 +132,11 @@ a
 #u8(5 6 7)
 (* n (factorial (- n 1)))
 ((x) z)
+()
+(hi)
+((a b))
+((a b c))
+(((x) (y) (z)))
+((this) is a test)
+((((define x 5) (define y 7))) is a test)
 fin
