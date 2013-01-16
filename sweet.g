@@ -707,7 +707,8 @@ restart_list returns [Object v]: RESTART hspace* restart_head
       {$v = nullp($restart_head.v) ? null : list(monify($restart_head.v));}
    | comment_eol+ restart_contents
          {$v = nullp($restart_head.v) ? $restart_contents.v
-                       : append(monify($restart_head.v), $restart_contents.v); }
+                       : "TODO_restart_list"
+          /* append(monify($restart_head.v), $restart_contents.v) */ ; }
      RESTART_END hspace* );
 
 

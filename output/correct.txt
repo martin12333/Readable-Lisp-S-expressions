@@ -49,10 +49,11 @@ q
 (n a b)
 (sing sang sung (d e f))
 use-dash
+(let ())
 (let (hello))
-(let (var1 value1))
+(let ((var1 value1)))
 (let ((var1 value1) (var2 value2)))
-(let (var1 value1) (fact var1))
+(let ((var1 value1)) (fact var1))
 (a b $ c d)
 xyz
 ($ x)

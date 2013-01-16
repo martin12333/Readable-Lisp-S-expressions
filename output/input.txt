@@ -123,6 +123,7 @@ n a b \\ sing sang sung
 
 use-dash
 
+let <* *>
 let <* hello *>
 let <* var1 value1 *>
 let <* var1 value1 \\ var2 value2 *>
