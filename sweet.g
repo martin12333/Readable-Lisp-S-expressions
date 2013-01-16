@@ -768,7 +768,7 @@ rest returns [Object v]
        | empty   {$v = list(".");})
   | scomment hspace* (rest1=rest {$v = $rest1.v;} | empty {$v = null;} )
   | restart_list
-    (rest2=rest {$v = cons(list(monify($restart_list.v)), $rest2.v); }
+    (rest2=rest {$v = "TODO7"; /*cons(list(monify($restart_list.v)), $rest2.v); */ }
      | empty {$v = list(monify($restart_list.v)); } )
   | n_expr3=n_expr
       ((hspace+ (rest3=rest {$v = cons($n_expr3.v, $rest3.v);}
