@@ -786,7 +786,7 @@ i_expr returns [Object v]
         comment_eol error
         | empty {$v = monify($head.v);} )
      | SUBLIST hspace* i_expr1=i_expr
-       {$v=list(monify($head.v), $i_expr1.v);}
+       {$v=append($head.v, list(monify($i_expr1.v)));}
      | comment_eol // Normal case, handle child lines if any:
        (indent body2=body {$v = append($head.v, $body2.v);}
         | empty     {$v = monify($head.v);} /* No child lines */ )
