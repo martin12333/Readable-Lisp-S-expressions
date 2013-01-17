@@ -659,7 +659,7 @@ comment_eol : LCOMMENT? EOL;
 // Return the contents of a restart, as a list:
 
 restart_tail returns [Object v]:
-  i_expr rt1=restart_tail {$v = cons($i_expr.v, $rt1.v);}
+  i_expr rt=restart_tail {$v = cons($i_expr.v, $rt.v);}
   | RESTART_END {$v = null;} ;
 
 // The "head" is the production to read 1+ n-expressions on one line; it will
@@ -719,7 +719,7 @@ rest returns [Object v]
   | RESTART hspace* comment_eol* restart_tail hspace*
     (rr=rest     {$v = cons($restart_tail.v, $rr.v);}
      | empty     {$v = list($restart_tail.v);} )
-  | scomment hspace* (rest1=rest {$v = $rest1.v;} | empty {$v = null;} )
+  | scomment hspace* (sr=rest {$v = $sr.v;} | empty {$v = null;} )
   | basic=n_expr
       ((hspace+ (br=rest {$v = cons($basic.v, $br.v);}
                  | empty    {$v = list($basic.v);} ))
@@ -742,8 +742,8 @@ rest returns [Object v]
 
 body returns [Object v] :
   i_expr
-    (same body1=body {$v = cons($i_expr.v, $body1.v);}
-     | dedent        {$v = list($i_expr.v);} ) ;
+    (same next_body=body  {$v = cons($i_expr.v, $next_body.v);}
+     | dedent             {$v = list($i_expr.v);} ) ;
 
 // "i-expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
@@ -784,23 +784,23 @@ i_expr returns [Object v]
         //   comment_eol same i9=i_expr {append($head.v, $i9.v);}
         comment_eol error
         | empty {$v = monify($head.v);} )
-     | SUBLIST hspace* i_expr1=i_expr /* head SUBLIST i_expr case */
-       {$v=append($head.v, list(monify($i_expr1.v)));}
+     | SUBLIST hspace* sub_i=i_expr /* head SUBLIST i_expr case */
+       {$v=append($head.v, list(monify($sub_i.v)));}
      | comment_eol // Normal case, handle child lines if any:
-       (indent body2=body {$v = append($head.v, $body2.v);}
-        | empty     {$v = monify($head.v);} /* No child lines */ )
-     | empty {$v = monify($head.v);} /* "head empty" - RESTART_END next */
+       (indent children=body {$v = append($head.v, $children.v);}
+        | empty              {$v = monify($head.v);} /* No child lines */ )
+     | empty {$v = monify($head.v);} /* "head empty"; RESTART_END next */
      ))
   | (GROUP_SPLICE | scomment) hspace* /* Initial; Interpet as group */
-      (i_expr2=i_expr {$v = $i_expr2.v;} /* Ignore GROUP/scomment if initial */
+      (group_i=i_expr {$v = $group_i.v;} /* Ignore initial GROUP/scomment */
        | comment_eol
-         (indent body3=body {$v = $body3.v;} /* Normal use for GROUP */
-          | same i_expr3=i_expr {$v = $i_expr3.v;} /* Plausible separator */
+         (indent g_body=body {$v = $g_body.v;} /* Normal GROUP use */
+          | same g_i=i_expr {$v = $g_i.v;} /* Plausible separator */
           | dedent error ))
-  | SUBLIST hspace* i_expr4=i_expr /* "$" as first expression on line */
-      {$v=list($i_expr4.v);}
-  | abbrevh hspace* i_expr5=i_expr
-      {$v=list($abbrevh.v, $i_expr5.v);}
+  | SUBLIST hspace* is_i=i_expr /* "$" as first expression on line */
+      {$v=list($is_i.v);}
+  | abbrevh hspace* abbrev_i_expr=i_expr
+      {$v=list($abbrevh.v, $abbrev_i_expr.v);}
   ;
 
 // Top-level sweet-expression production, t_expr.
