@@ -2405,6 +2405,56 @@ but would be interpreted as (cons (a b)).
 </ol>
 
 
+<h2>Comparison to Genyris</h2>
+<p>
+<a href="http://code.google.com/p/genyris/">Genyris</a> is another
+indentation-based Lisp.
+"All Genyris expressions are parsed and stored as linked-lists. A single
+line is converted into a single list. Sub-expressions are denoted in two
+ways, either within parentheses on a single line, or by an indented line.
+For example the following line contains two sub-expressions:
+</p>
+<pre>
+Alpha (Beta Charlie) (Delta)
+</pre>
+<p>
+"Sub-expressions made using parentheses must remain within a single line,
+they are not permitted to wrap. Indented lines are deemed to be
+sub-expressions of the superior, less indented, lines above. The above
+expression can be written in indented form as follows:"
+</p>
+<pre>
+Alpha
+Beta Charlie
+Delta
+</pre>
+<p>
+Thus, it is similar to the main rule of t-expressions, except that
+<a href="http://code.google.com/p/genyris/">Genyris</a> wraps
+"ALL sublines in lists, even if they consist of a single element."
+As
+Beni Cherniavsky-Paskin notes,
+"It can get away with that simpler rule because all data objects are
+callable and eval to themself...
+In fact it's much cleverer, though that's irrelevant for us.
+All objects are actually macros ("lazy functions" in the manual's
+terminology). What objects do if called with arguments - e.g. ("foo" arg1
+arg2) - is evaluate those arguments in a dynamic-binding env enriched by
+the object's methods, and return the last value.
+Dynamic scope only affects names starting with a dot, other names use
+lexical scoping.
+All this forms a clever implementation of method calling:
+</p>
+<pre>
+"ball" (.replace "l" "na")
+"banana"
+</pre>
+<p>
+While interesting, this notation is less useful for general-purpose
+s-expressions, in particular, it makes it more
+difficult to notate simple atoms.
+</p>
+
 <h2 id="writing-out-results">Writing out results</h2>
 <p>An obvious question
 is, &#8220;how do you write them out?&#8221;  After all, with these notations there is
