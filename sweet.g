@@ -765,7 +765,7 @@ body returns [Object v] :
 
 // Note: The "head empty" sequence exists so that an i_expr can be
 // followed immediately by RESTART_END without an intervening comment_eol.
-// This supports constructs sucy as "let <* y 5 *>".
+// This supports constructs such as "let <* y 5 *>".
 // Unfortunately, this branch causes ANTLR to issue a pile of warnings due to
 // grammar ambiguities, which are similar to the ambiguities cause by
 // a 'dangling else'.   Simply resolve these ambiguities by always
