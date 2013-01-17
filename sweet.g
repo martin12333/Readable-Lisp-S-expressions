@@ -520,7 +520,6 @@ list_contents_real returns [Object v]
     | PERIOD
        (wspace+
          (n2=n_expr wspace* {$v = $n2.v;}
-             (n3=n_expr error)?
           | empty {$v = list(".");})
        | empty {$v = list(".");})
     ;
@@ -686,7 +685,7 @@ restart_tail returns [Object v]:
 head returns [Object v]
   : PERIOD /* Leading ".": escape following datum like an n-expression. */
       (hspace+
-        (pn=n_expr hspace* (excess=n_expr error)? {$v = list($pn.v);}
+        (pn=n_expr hspace* {$v = list($pn.v);}
          | empty  {$v = list(".");} /*= (list '.) */ )
        | empty    {$v = list(".");} /*= (list '.) */ )
   | RESTART hspace* comment_eol* restart_tail hspace*
@@ -714,7 +713,7 @@ head returns [Object v]
 rest returns [Object v]
   : PERIOD /* Improper list */
       (hspace+
-        (pn=n_expr hspace* (excess=n_expr error)? {$v = $pn.v;}
+        (pn=n_expr hspace* {$v = $pn.v;}
          | empty {$v = list(".");})
        | empty   {$v = list(".");})
   | RESTART hspace* comment_eol* restart_tail hspace*
@@ -790,7 +789,8 @@ i_expr returns [Object v]
      | comment_eol // Normal case, handle child lines if any:
        (indent body2=body {$v = append($head.v, $body2.v);}
         | empty     {$v = monify($head.v);} /* No child lines */ )
-     | empty {$v = monify($head.v);} /* "head empty" - RESTART_END next */ ))
+     | empty {$v = monify($head.v);} /* "head empty" - RESTART_END next */
+     ))
   | (GROUP_SPLICE | scomment) hspace* /* Initial; Interpet as group */
       (i_expr2=i_expr {$v = $i_expr2.v;} /* Ignore GROUP/scomment if initial */
        | comment_eol
