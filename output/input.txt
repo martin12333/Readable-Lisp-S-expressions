@@ -345,6 +345,12 @@ test <* x 1 *> <* y 2 *>
 <* t 1 *>
   <* u 2 *>
 
+library \\ amkg animals $ 1 0
+
+another
+
+amkg animals $ 1 0
+
 fin
 
 
