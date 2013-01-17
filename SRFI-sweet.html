@@ -1508,14 +1508,22 @@ But this would be hideous to use in a REPL, because it would mean
 that the results of an expression would only be evaluated after the
 first (and possibly only) line of the next expression was entered.
 (Early Pascal I/O implementations had similar problems.)
+</p>
+<p>
 One solution is to have a special text marker that means &#8220;done&#8221;
 (e.g., &#8220;.&#8221; on a line by itself), but this makes interactive use
 much less pleasant, since users then have to repeatedly
 type the special &#8220;end-of-expression&#8221; marker.
-Sweet-expressions do allow quick execution of one-line commands by
-typing an indent character first, but users will often not know exactly
-how long an expression will be until it is done, so this does not
-help enough.
+As Beni Cherniavsky-Paskin observed on the readable-discuss mailing list
+(2013-01-16),
+"I absolutely hate SQL prompts that don't execute until I add a ;".
+Another solution, alread in sweet-expressions, is
+quickly executing one-line commands by
+typing an indent character first.
+But users will often not know exactly how long an expression
+will be until it is done, so this does not help enough.
+</p>
+<p>
 In contrast, pressing Enter twice is quite easy (since the user&#8217;s
 finger is already on Enter to press it the first time).
 Thus, the blank line rule is intentionally chosen to help interactive users,
@@ -1541,13 +1549,13 @@ this inconsistency is avoided.</p>
 
 <p>Of course, people sometimes want to have something like
 a blank line in the middle of an s-expression.
-The solution is that comment-only lines
-are completely ignored and not even considered blank lines.
+The solution is that comment-only lines using ";"
+(indented or not) are completely ignored and not even considered blank lines.
 That means you can use comment-only lines for the purpose
 of separating sections in a single datum.
-The indentation of comment-only lines is ignored;
+The indentation of comment-only lines is intentionally ignored;
 that way, you don&#8217;t have to worry about
-keeping them indented the same way.
+making sure that comment indentation matches its surroundings.
 We&#8217;ve found that in practice this works very well.
 </p>
 
@@ -1555,8 +1563,8 @@ We&#8217;ve found that in practice this works very well.
 blank line, we decided to clearly state that
 &#8220;a line with only indentation is an empty line&#8221;.
 This eliminates some nasty usability problems that
-could arise if a &#8220;blank&#8221; line
-actually had some whitespace in it;
+could arise if a &#8220;blank&#8221; line was interpreted differently
+if it had some whitespace in it;
 a silent error like this could be hard to debug.</p>
 
 <h2 id="indentation-characters">Indentation characters (! as indent)</h2>
