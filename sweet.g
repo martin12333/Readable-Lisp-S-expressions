@@ -765,15 +765,12 @@ body returns [Object v] :
 
 // Note: The "head empty" sequence exists so that an i_expr can be
 // followed immediately by RESTART_END without an intervening comment_eol.
-// Unfortunately, this causes ANTLR to issue a pile of warnings;
-// without this sequence, i_expr always ends with comment_eol,
-// and there are no ambiguities that need to be prioritized.
-// However, this sequence is necessary to
-// support one-line restart lists like let <* y 5 *>.
-// I don't believe this is a real ambiguity; if you disambiguate by giving
-// all preceding or non-empty sequences i_expr's "head..." sequence
-// a higher priority, it would only be used on a RESTART_END in a properly-
-// formatted file (e.g., presuming that EOF is always preceded by newline).
+// This supports constructs sucy as "let <* y 5 *>".
+// Unfortunately, this branch causes ANTLR to issue a pile of warnings due to
+// grammar ambiguities, which are similar to the ambiguities cause by
+// a 'dangling else'.   Simply resolve these ambiguities by always
+// accepting the first (or longer) sequence first.
+// Without this sequence, i_expr would always ends with comment_eol.
 
 i_expr returns [Object v]
   : head
