@@ -1982,8 +1982,6 @@ backwards-compatible with traditional s-expressions.
 Ending a definition at a blank line is very convenient for interactive use,
 and interactive and file notation should be identical
 (since people often switch between them).
-Changing all of sweet-expressions, just to handle this particular case,
-does not seem warranted.
 </p>
 
 <p>
@@ -1996,6 +1994,9 @@ Using a leading "$" takes up somewhat less vertical space, but it still
 takes up an additional line for a trivial case, it does not work
 the same way for let expressions with 2 variables,
 and David A. Wheeler thinks it is a rather unclear construction.
+In particular, you cannot use
+"$ x 5 $ y 7" for a two-variable let statement; that would
+map to ((x 5 (y 7))), not ((x 5) (y 7)).
 You can also use parenthetical notation directly, but this is
 relatively ugly and it is annoying to need to do this for a common case.
 A similar argument applies to do-expressions, and these are
@@ -2016,8 +2017,6 @@ let
 let  ; Less vertical space, but 1 variable only
   $ x 5
   {x + 5}
-
-; Note "$ x 5 $ y 7" isn't right; that maps to ((x 5 (y 7))).
 
 ; The two-variable format can be surprising and does not let the
 ; programmer emphasize the special nature of the variable assignments
