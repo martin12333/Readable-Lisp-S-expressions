@@ -142,4 +142,6 @@ a
 (library ((amkg animals) (1 0)) (export cat (rename (rover dog))) (import (only ((amkg pets) (1 0)) rover)) (define cat (quote meow)))
 (let ((x (cos (f c)))) (dostuff x))
 (let ((x (cos (f c)))) (dostuff x))
+(test ((x 1)) ((y 2)) (((a 3)) ((b 4))))
+(((t 1)) ((u 2)))
 fin
