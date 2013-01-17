@@ -785,7 +785,7 @@ i_expr returns [Object v]
         //   comment_eol same i9=i_expr {append($head.v, $i9.v);}
         comment_eol error
         | empty {$v = monify($head.v);} )
-     | SUBLIST hspace* i_expr1=i_expr
+     | SUBLIST hspace* i_expr1=i_expr /* head SUBLIST i_expr case */
        {$v=append($head.v, list(monify($i_expr1.v)));}
      | comment_eol // Normal case, handle child lines if any:
        (indent body2=body {$v = append($head.v, $body2.v);}
