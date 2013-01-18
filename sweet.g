@@ -326,10 +326,12 @@ DATUM_COMMENT_START : '#;' ;
 SRFI_22_COMMENT         :       '#! ' NOT_EOL_CHAR* ;
 SHARP_BANG_FILE :       '#!' ('/' | '.')
         (options {greedy=false;} : .)*
-        '!#' ;
-// These match #!fold-case, #!no-fold-case, #!sweet, and #!curly-infix.
-SHARP_BANG_MARKER : '#!' ('a'..'z'|'A'..'Z'|'_')
-                         ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')* ;
+        '!#' (SPACE|TAB)* ;
+// These match #!fold-case, #!no-fold-case, #!sweet, and #!curly-infix;
+// it also matches a lone "#!".  The "#!"+space case is handled above,
+// in SRFI_22_COMMENT, overriding this one:
+SHARP_BANG_MARKER : '#!' (('a'..'z'|'A'..'Z'|'_')
+                          ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')*)? (SPACE|TAB)* ;
 
 // The following implements INDENT/DEDENT tokens, semi-similar to Python in
 // http://docs.python.org/2/reference/lexical_analysis.html#indentation

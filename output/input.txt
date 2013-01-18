@@ -33,6 +33,16 @@ cos 0
 #b#e1001
 #e42
 
+#! SRFI-22
+one
+#!/bin/sh
+  weird script should be ignored
+!#
+two
+#!sweet
+three
+#!
+four
 
 $ a
 $ a b
