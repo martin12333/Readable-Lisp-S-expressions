@@ -24,7 +24,7 @@ public class Unsweeten_ANTLR {
 
     // System.out.print("DEBUG 4:\n");
     sweetParser parser = new sweetParser(tokens);
-    System.out.print("About to parse:\n");
+    // System.out.print("About to parse:\n");
     // parser.t_expr();
     while (true) {
       parser.print_t_expr();
