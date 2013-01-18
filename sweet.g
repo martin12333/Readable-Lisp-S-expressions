@@ -497,15 +497,117 @@ fragment SPECIAL_STRING_ELEMENT :
   | INLINE_HEX_ESCAPE ;
 
 
-// TODO: The following doesn't really follow the Scheme spec.
-fragment EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
-FLOAT
-    :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
-    |   '.' ('0'..'9')+ EXPONENT?
-    |   ('0'..'9')+ EXPONENT ;
-INT     :        ('0'..'9')+ ;
-number : INT | FLOAT ;
+// Anybody who says "Scheme doesn't have syntax" has never tried
+// to parse Scheme numbers or identifiers.
 
+// The following doesn't really follow the Scheme spec.
+//   fragment EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
+//   FLOAT
+//       :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
+//       |   '.' ('0'..'9')+ EXPONENT?
+//       |   ('0'..'9')+ EXPONENT ;
+//   INT     :        ('0'..'9')+ ;
+//   number : INT | FLOAT ;
+
+
+// TODO: The following has ambiguities, fix.
+
+NUMBER : NUM_2 | NUM_8 | NUM_10 | NUM_16 ;
+
+fragment I : 'i' | 'I' ;
+
+// These aren't used directly, they are templates.
+// Note that UREAL_R is special for base 10 (supports decimal)
+// The PREFIX_R has to handled specially because EXACTNESS can be empty,
+// as can RADIX_10.
+//
+//  fragment NUM_R : PREFIX_R | COMPLEX_R ;
+//  fragment COMPLEX_R : REAL_R
+//    ('@' REAL_R
+//     | ('+' | '-') UREAL_R? I
+//     | INFNAN I )?
+//    | ('+' | '-') UREAL_R I
+//    | INFNAN I
+//    | ('+' | '-') I ;
+//  fragment REAL_R : SIGN UREAL_R | INFNAN ;
+//  fragment UREAL_R : UINTEGER_R ('/' UINTEGER_R)?
+//    | DECIMAL_R;
+//  fragment UINTEGER_R : DIGIT_R+ ;
+//  fragment PREFIX_R : RADIX_R EXACTNESS | EXACTNESS RADIX_R ;
+
+fragment NUM_2 : PREFIX_2 | COMPLEX_2 ;
+fragment COMPLEX_2 : REAL_2
+  ('@' REAL_2
+   | ('+' | '-') UREAL_2? I
+   | INFNAN I )?
+  | ('+' | '-') UREAL_2 I
+  | INFNAN I
+  | ('+' | '-') I ;
+fragment REAL_2 : SIGN UREAL_2 | INFNAN ;
+fragment UREAL_2 : UINTEGER_2 ('/' UINTEGER_2)? ;
+fragment UINTEGER_2 : DIGIT_2+ ;
+fragment PREFIX_2 : RADIX_2 EXACTNESS? | EXACTNESS? RADIX_2 ;
+
+fragment NUM_8 : PREFIX_8 | COMPLEX_8 ;
+fragment COMPLEX_8 : REAL_8
+  ('@' REAL_8
+   | ('+' | '-') UREAL_8? I
+   | INFNAN I )?
+  | ('+' | '-') UREAL_8 I
+  | INFNAN I
+  | ('+' | '-') I ;
+fragment REAL_8 : SIGN UREAL_8 | INFNAN ;
+fragment UREAL_8 : UINTEGER_8 ('/' UINTEGER_8)? ;
+fragment UINTEGER_8 : DIGIT_8+ ;
+fragment PREFIX_8 : RADIX_8 EXACTNESS? | EXACTNESS? RADIX_8 ;
+
+fragment NUM_10 : PREFIX_10 | COMPLEX_10 ;
+fragment COMPLEX_10 : REAL_10
+  ('@' REAL_10
+   | ('+' | '-') UREAL_10? I
+   | INFNAN I )?
+  | ('+' | '-') UREAL_10 I
+  | INFNAN I
+  | ('+' | '-') I ;
+fragment REAL_10 : SIGN UREAL_10 | INFNAN ;
+fragment UREAL_10 : UINTEGER_10 ('/' UINTEGER_10)? | DECIMAL_10;
+fragment UINTEGER_10 : DIGIT_10+ ;
+fragment PREFIX_10 : RADIX_10? EXACTNESS? | EXACTNESS RADIX_10 ;
+
+fragment NUM_16 : PREFIX_16 | COMPLEX_16 ;
+fragment COMPLEX_16 : REAL_16
+  ('@' REAL_16
+   | ('+' | '-') UREAL_16? I
+   | INFNAN I )?
+  | ('+' | '-') UREAL_16 I
+  | INFNAN I
+  | ('+' | '-') I ;
+fragment REAL_16 : SIGN UREAL_16 | INFNAN ;
+fragment UREAL_16 : UINTEGER_16 ('/' UINTEGER_16)? ;
+fragment UINTEGER_16 : DIGIT_16+ ;
+fragment PREFIX_16 : RADIX_16 EXACTNESS? | EXACTNESS? RADIX_16 ;
+
+fragment INFNAN : ('+' | '-') ('inf.0' | 'nan.0') ;
+fragment DECIMAL_10 : UINTEGER_10 SUFFIX
+  | PERIOD DIGIT_10+ SUFFIX
+  | DIGIT_10+ PERIOD DIGIT_10* SUFFIX ;
+
+fragment SUFFIX : /*empty*/ | EXPONENT_MARKER SIGN DIGIT_10+ ;
+fragment EXPONENT_MARKER : 'e' | 's' | 'f' | 'd' | 'l' |
+                           'E' | 'S' | 'F' | 'D' | 'L' ;
+fragment SIGN : /*empty*/ | '+' | '-' ;
+// NOTE: This *requires* non-empty.
+fragment EXACTNESS : '#i' | '#I' | '#e' | '#E' ;
+
+fragment RADIX_2 : '#b' | '#B' ;
+fragment RADIX_8 : '#o' | '#O' ;
+// NOTE: This *requires* non-empty.
+fragment RADIX_10 : '#d' | '#D';
+fragment RADIX_16 : '#x' | '#X';
+fragment DIGIT_2 : '0' | '1' ;
+fragment DIGIT_8 : '0'..'7' ;
+fragment DIGIT_10 : DIGIT ;
+fragment DIGIT_16 : DIGIT_10 | 'a'..'f' | 'A'..'F';
 
 
 
@@ -563,7 +665,7 @@ vector returns [Object v]
 bytevector returns [Object v]
   : '#u8(' list_contents ')' { $v = cons("bytevector", $list_contents.v); } ;
 
-simple_datum   : BOOLEAN | number | CHARACTER | STRING | symbol | bytevector;
+simple_datum   : BOOLEAN | NUMBER | CHARACTER | STRING | symbol | bytevector;
 symbol : IDENTIFIER ;
 
 compound_datum returns [Object v]
