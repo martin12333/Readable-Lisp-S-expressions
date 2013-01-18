@@ -94,6 +94,10 @@ tokens {
   // This stack records the string indents; use push, pop, peek.
   Deque<String> indents = new java.util.ArrayDeque<String>();
 
+  private Boolean outside_t_expr() {
+    return indent_processing() &&
+           (indents.isEmpty() || indents.peek().equals(""));
+  }
   private Boolean indentation_greater_than(String indent1, String indent2) {
     int len1 = indent1.length();
     int len2 = indent2.length();
@@ -300,10 +304,15 @@ fragment VT :   '\u000b';  // Vertical tab (\v).
 fragment NEL:   '\u0085'; // Hi, IBM mainframes!
 fragment EOL_CHAR : '\n' | '\r' | FF | VT | NEL; // These start EOL
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
+fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
 
 // Various forms of comments - line comments and special comments:
 LCOMMENT_LINE :  {(getCharPositionInLine() == 0)}? =>
-     ';' NOT_EOL_CHAR* EOL_SEQUENCE {skip();};
+     ';' contents=NOT_EOL_CHARS EOL_SEQUENCE
+     {
+       // if (outside_t_expr()) System.out.println(";" + $contents.text);
+       skip();
+     };
 LCOMMENT :       ';' NOT_EOL_CHAR* ; // Line comment - doesn't include EOL
 BLOCK_COMMENT : '#|' // This is #| ... #|
       (options {greedy=false;} : (BLOCK_COMMENT | .))*
