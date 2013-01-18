@@ -7,6 +7,12 @@ one
 (a b c (d e))
 (a (quote (c d e (g h i))))
 (cos 0)
+42
+7.0
+#xffff
+#i#b1001
+#b#e1001
+#e42
 (a)
 ((a b))
 ((a b c))

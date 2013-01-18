@@ -35,7 +35,6 @@
 
 // TODO:
 // - See specific TODOs below.
-// - (Maybe) Define n-expr, etc.
 // - (Maybe) Handle EOF in weird places.
 
 grammar sweet;
@@ -122,7 +121,7 @@ tokens {
         emit(t);
       }
       if (!indents.peek().equals(indent_text)) { 
-       // TODO: Generate System.out.print("Generate BADDENT(s)\n");
+       // System.out.print("Generate BADDENT(s)\n");
         t.setType(BADDENT);
         emit(t);
       }
@@ -353,9 +352,8 @@ SHARP_BANG_MARKER : '#!' ('a'..'z'|'A'..'Z'|'_')
 // of a line and do not themselves create a newline (they still have
 // to be followed by an EOL_SEQUENCE).
 fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
-// TODO
-fragment SPECIAL_BLANK_LINE  : (' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* EOL_SEQUENCE | (FF | VT)+ EOL_SEQUENCE;
 // TODO: FF/VT
+fragment SPECIAL_BLANK_LINE  : (' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* EOL_SEQUENCE | (FF | VT)+ EOL_SEQUENCE;
 fragment INDENT_CHAR : (' ' | '\t' | '!');
 fragment INDENT_CHARS : INDENT_CHAR*;
 fragment INDENT_CHARS_PLUS : INDENT_CHAR+;
@@ -443,9 +441,33 @@ error : ERROR;  // Specifically identifies an error branch.
 // there isn't some valid interpretation for that sequence at that point).
 
 
-// STUB BEGIN - remove this stub section for the SRFI, etc.; it's
-// here for debugging and testing the grammar.  It's not an especially
-// accurate representation of n-expressions, because it doesn't need to be.
+// Here we give lexical definitions for the so-called simple datums,
+// such as symbols and numbers... what many people would call "atoms".
+
+// Anybody who says "Scheme doesn't have syntax" has never tried
+// to parse Scheme identifiers or numbers.  Scheme's syntax for
+// identifiers and numbers is extremely complicated; the number of
+// productions needed are vast, even if (in our case) we're only trying
+// to match a string instead something more complex.
+
+// To prove the point, the following shows a typical lexical definition
+// for identifiers and numbers in many languages:
+//   fragment ID_INITIAL: ('A'..'Z' | 'a'..'z' | '_')
+//   IDENTIFIER: ID_INITIAL (ID_INITIAL | '0'..'9')* ;
+//   fragment EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
+//   FLOAT : ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
+//         | '.' ('0'..'9')+ EXPONENT?
+//         | ('0'..'9')+ EXPONENT ;
+//   INT : ('0'..'9')+ ;
+//   number : INT | FLOAT ;
+// Languages might have 1-3 more productions for various bases.
+//
+// In contrast, the productions below show how to parse Scheme identifiers
+// and numbers, which are FULL of complications, and thus are chock-full
+// of complicated productions.  Numbers, in particular, are frighteningly
+// hard to get right.  In fact, the Scheme number spec (R7RS draft 8) has
+// a number of problems that I had to correct (I have sent my comments
+// to the spec authors).
 
 // Note: The following maps most stuff into strings, because we don't
 // need to do more than that for a translation.  The action rules can
@@ -506,25 +528,26 @@ fragment SPECIAL_STRING_ELEMENT :
   | INLINE_HEX_ESCAPE ;
 
 
-// Anybody who says "Scheme doesn't have syntax" has never tried
-// to parse Scheme numbers or identifiers.
 
-// The following doesn't really follow the Scheme spec.
-//   fragment EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
-//   FLOAT
-//       :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
-//       |   '.' ('0'..'9')+ EXPONENT?
-//       |   ('0'..'9')+ EXPONENT ;
-//   INT     :        ('0'..'9')+ ;
-//   number : INT | FLOAT ;
+// The following is structured so that exactness (if stated)
+// can precede *OR* follow the radix (base) declaration, while
+// (1) forbidding two exactness statements (only 1/number),
+// (2) allowing exactness and radix declarations to both be optional without
+//     creating a useless ambiguity.
+// Instead of calling a "NUM_2", we explicitly make statements about
+// exactness.
 
-
-// TODO: The following has ambiguities, fix.
-
-NUMBER : (EXACTNESS (NUM_2 | NUM_8 | NUM_10 | NUM_16))
-          | (NUM_2 | NUM_8 | NUM_10 | NUM_16)
-          | UNPREFIXED_NUM_10 ;
-fragment UNPREFIXED_NUM_10 : COMPLEX_10 ;
+NUMBER : (EXACTNESS
+            (RADIX_2 COMPLEX_2
+             | RADIX_8 COMPLEX_8
+             | RADIX_10 COMPLEX_10
+             | RADIX_16 COMPLEX_16
+             | COMPLEX_10))
+          | RADIX_2 EXACTNESS? COMPLEX_2
+          | RADIX_8 EXACTNESS? COMPLEX_8
+          | RADIX_10 EXACTNESS? COMPLEX_10
+          | RADIX_16 EXACTNESS? COMPLEX_16
+          | COMPLEX_10 ;
 
 fragment I : 'i' | 'I' ;
 
@@ -547,7 +570,7 @@ fragment I : 'i' | 'I' ;
 //  fragment UINTEGER_R : DIGIT_R+ ;
 //  fragment PREFIX_R : RADIX_R EXACTNESS | EXACTNESS RADIX_R ;
 
-fragment NUM_2 : PREFIX_2 COMPLEX_2 ;
+// fragment NUM_2 : PREFIX_2 COMPLEX_2 ;
 fragment COMPLEX_2 : REAL_2
   ('@' REAL_2
    | ('+' | '-') UREAL_2? I
@@ -558,9 +581,9 @@ fragment COMPLEX_2 : REAL_2
 fragment REAL_2 : SIGN UREAL_2 | INFNAN ;
 fragment UREAL_2 : UINTEGER_2 ('/' UINTEGER_2)? ;
 fragment UINTEGER_2 : DIGIT_2+ ;
-fragment PREFIX_2 : RADIX_2 EXACTNESS? ;
+// fragment PREFIX_2 : RADIX_2 EXACTNESS? ;
 
-fragment NUM_8 : PREFIX_8 COMPLEX_8 ;
+// fragment NUM_8 : PREFIX_8 COMPLEX_8 ;
 fragment COMPLEX_8 : REAL_8
   ('@' REAL_8
    | ('+' | '-') UREAL_8? I
@@ -571,9 +594,9 @@ fragment COMPLEX_8 : REAL_8
 fragment REAL_8 : SIGN UREAL_8 | INFNAN ;
 fragment UREAL_8 : UINTEGER_8 ('/' UINTEGER_8)? ;
 fragment UINTEGER_8 : DIGIT_8+ ;
-fragment PREFIX_8 : RADIX_8 EXACTNESS? ;
+// fragment PREFIX_8 : RADIX_8 EXACTNESS? ;
 
-fragment NUM_10 : PREFIX_10 COMPLEX_10 ;
+// fragment NUM_10 : PREFIX_10 COMPLEX_10 ;
 fragment COMPLEX_10 : REAL_10
   ('@' REAL_10
    | ('+' | '-') UREAL_10? I
@@ -595,9 +618,9 @@ fragment UREAL_10 :
   | PERIOD DIGIT_10+ SUFFIX ;
 
 fragment UINTEGER_10 : DIGIT_10+ ;
-fragment PREFIX_10 : RADIX_10 EXACTNESS? ;
+// fragment PREFIX_10 : RADIX_10 EXACTNESS? ;
 
-fragment NUM_16 : PREFIX_16 COMPLEX_16 ;
+// fragment NUM_16 : PREFIX_16 COMPLEX_16 ;
 fragment COMPLEX_16 : REAL_16
   ('@' REAL_16
    | ('+' | '-') UREAL_16? I
@@ -608,7 +631,7 @@ fragment COMPLEX_16 : REAL_16
 fragment REAL_16 : SIGN UREAL_16 | INFNAN ;
 fragment UREAL_16 : UINTEGER_16 ('/' UINTEGER_16)? ;
 fragment UINTEGER_16 : DIGIT_16+ ;
-fragment PREFIX_16 : RADIX_16 EXACTNESS? ;
+// fragment PREFIX_16 : RADIX_16 EXACTNESS? ;
 
 fragment INFNAN : ('+' | '-') ('inf.0' | 'nan.0') ;
 
@@ -704,9 +727,6 @@ n_expr_noabbrev returns [Object v]
     : n_expr_prefix
       n_expr_tail[$n_expr_prefix.v] {$v = $n_expr_tail.v;} ;
 
-// STUB END
-
-
 // Here we'll redefine indent/dedent as nonterminals, to make nicer results
 // in the ANTLRWorks debugger parse tree
 indent  : INDENT;
@@ -726,16 +746,15 @@ abbrev_all returns [Object v]
   : abbrevh         {$v = $abbrevh.v;}
   | abbrev_noh      {$v = $abbrev_noh.v;} ;
 
-// TODO: n_expr and n_expr_first need actions for abbreviations.
 // n_expr is a full neoteric-expression.  Note that n_expr does *not*
-// consume following horizontal space; this is important for correctly
-// handling initially-indented lines with more than one n-expression.
+// consume any horizontal space that follows it; this is important for
+// correctly handling initially-indented lines with multiple n-expressions.
 n_expr returns [Object v]
  : abbrev_all n1=n_expr {$v = list($abbrev_all.v, $n1.v);}
  | n_expr_noabbrev      {$v = $n_expr_noabbrev.v;} ;
 
 // n_expr_first is a neoteric-expression, but abbreviations
-// cannot have an hspace afterwards (used by "head"):
+// cannot have an hspace afterwards (this production is used by "head"):
 n_expr_first returns [Object v]
   : abbrev_noh n1=n_expr_first {$v = list($abbrev_noh.v, $n1.v);}
   | n_expr_noabbrev            {$v = $n_expr_noabbrev.v;} ;

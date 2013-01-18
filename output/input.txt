@@ -26,6 +26,14 @@ a
 
 cos 0
 
+42
+7.0
+#xffff
+#i#b1001
+#b#e1001
+#e42
+
+
 $ a
 $ a b
 $ a b c
@@ -361,6 +369,10 @@ define cuddle-first-parameter '(
   define-syntax syntax-rules
   set! do
   setq block typecase)           ; Common Lisp
+
+; define f(a) {2 * a}
+; 
+;    (define (f a) (* 2 a)) (define x 4)
 
 fin
 
