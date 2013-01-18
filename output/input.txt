@@ -351,6 +351,17 @@ another
 
 amkg animals $ 1 0
 
+define cuddle-first-parameter '(
+  if when unless case
+  define lambda
+  define-module                  ; Guile modules
+  library export import          ; R6RS library modules
+  letrec let let* let1
+  let-syntax letcrec-syntax
+  define-syntax syntax-rules
+  set! do
+  setq block typecase)           ; Common Lisp
+
 fin
 
 

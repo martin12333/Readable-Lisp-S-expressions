@@ -623,7 +623,7 @@ n_expr_first returns [Object v]
 ichar   : SPACE | TAB | BANG ; // indent char - creates INDENT/DEDENTs
 hspace  : SPACE | TAB ;        // horizontal space
 
-wspace  : hspace | BARE_OTHER_WS; // Separators inside (...) etc.
+wspace  : hspace | BARE_OTHER_WS | LCOMMENT ; // Separators inside (...) etc.
 
 // "Special comments" (scomments) are comments other than ";" (line comments):
 sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER ;
