@@ -521,7 +521,7 @@ fragment I : 'i' | 'I' ;
 // The PREFIX_R has to handled specially because EXACTNESS can be empty,
 // as can RADIX_10.
 //
-//  fragment NUM_R : PREFIX_R | COMPLEX_R ;
+//  fragment NUM_R : PREFIX_R COMPLEX_R ;
 //  fragment COMPLEX_R : REAL_R
 //    ('@' REAL_R
 //     | ('+' | '-') UREAL_R? I
@@ -535,7 +535,7 @@ fragment I : 'i' | 'I' ;
 //  fragment UINTEGER_R : DIGIT_R+ ;
 //  fragment PREFIX_R : RADIX_R EXACTNESS | EXACTNESS RADIX_R ;
 
-fragment NUM_2 : PREFIX_2 | COMPLEX_2 ;
+fragment NUM_2 : PREFIX_2 COMPLEX_2 ;
 fragment COMPLEX_2 : REAL_2
   ('@' REAL_2
    | ('+' | '-') UREAL_2? I
@@ -548,7 +548,7 @@ fragment UREAL_2 : UINTEGER_2 ('/' UINTEGER_2)? ;
 fragment UINTEGER_2 : DIGIT_2+ ;
 fragment PREFIX_2 : RADIX_2 EXACTNESS? | EXACTNESS? RADIX_2 ;
 
-fragment NUM_8 : PREFIX_8 | COMPLEX_8 ;
+fragment NUM_8 : PREFIX_8 COMPLEX_8 ;
 fragment COMPLEX_8 : REAL_8
   ('@' REAL_8
    | ('+' | '-') UREAL_8? I
@@ -561,7 +561,7 @@ fragment UREAL_8 : UINTEGER_8 ('/' UINTEGER_8)? ;
 fragment UINTEGER_8 : DIGIT_8+ ;
 fragment PREFIX_8 : RADIX_8 EXACTNESS? | EXACTNESS? RADIX_8 ;
 
-fragment NUM_10 : PREFIX_10 | COMPLEX_10 ;
+fragment NUM_10 : PREFIX_10 COMPLEX_10 ;
 fragment COMPLEX_10 : REAL_10
   ('@' REAL_10
    | ('+' | '-') UREAL_10? I
@@ -574,7 +574,7 @@ fragment UREAL_10 : UINTEGER_10 ('/' UINTEGER_10)? | DECIMAL_10;
 fragment UINTEGER_10 : DIGIT_10+ ;
 fragment PREFIX_10 : RADIX_10? EXACTNESS? | EXACTNESS RADIX_10 ;
 
-fragment NUM_16 : PREFIX_16 | COMPLEX_16 ;
+fragment NUM_16 : PREFIX_16 COMPLEX_16 ;
 fragment COMPLEX_16 : REAL_16
   ('@' REAL_16
    | ('+' | '-') UREAL_16? I
