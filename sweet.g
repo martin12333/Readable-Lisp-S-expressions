@@ -852,7 +852,7 @@ head returns [Object v]
         (pn=n_expr hspace* {$v = list($pn.v);}
          | empty  {$v = list(".");} /*= (list '.) */ )
        | empty    {$v = list(".");} /*= (list '.) */ )
-  | RESTART hspace* /* comment_eol* */ restart_tail hspace*
+  | RESTART hspace* restart_tail hspace*
       (rr=rest    {$v = cons($restart_tail.v, $rr.v); }
        | empty    {$v = list($restart_tail.v); } )
   | basic=n_expr_first /* Only match n_expr_first */
@@ -880,7 +880,7 @@ rest returns [Object v]
         (pn=n_expr hspace* {$v = $pn.v;}
          | empty {$v = list(".");})
        | empty   {$v = list(".");})
-  | RESTART hspace* /* comment_eol* */ restart_tail hspace*
+  | RESTART hspace* restart_tail hspace*
     (rr=rest     {$v = cons($restart_tail.v, $rr.v);}
      | empty     {$v = list($restart_tail.v);} )
   | scomment hspace* (sr=rest {$v = $sr.v;} | empty {$v = null;} )
