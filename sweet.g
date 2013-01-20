@@ -287,7 +287,25 @@ GROUP_SPLICE : {indent_processing()}? => '\\' '\\'; // GROUP/splice symbol.
 SUBLIST : {indent_processing()}? =>'$';
 RESERVED_TRIPLE_DOLLAR : {indent_processing()}? => '$$$';  // Reserved.
 RESTART : {indent_processing()}? => '<' '*' {/* TODO: Restart indent level */};
-RESTART_END: {indent_processing()}? => '*' '>' {/* TODO: Restore indent level */};
+
+RESTART_END
+  : {indent_processing()}? => t='*>'
+  {
+    // "*>" generates EOL + RESTART_END
+    // Must create independent EOL token for ANTLR.
+    CommonToken extra = new CommonToken(input, Token.INVALID_TOKEN_TYPE,
+                Token.DEFAULT_CHANNEL, getCharIndex(), getCharIndex()-1);
+    t.setLine(getLine());
+    t.setCharPositionInLine(getCharPositionInLine());
+    extra.setType(EOL);
+    emit(extra);
+
+    $t.setType(RESTART_END);
+    emit($t);
+
+    /* TODO: Restore indent level */
+    // RESTART_END: END OF USER CODE
+    };
 
 // Abbreviations followed by horizontal space (space or tab) are special:
 APOSH           : {indent_processing()}? => '\'' (' ' | '\t') ;
@@ -704,11 +722,11 @@ n_expr_tail[Object prefix] returns [Object v]
     ) ;
 
 vector returns [Object v]
-  : '#(' list_contents ')' {$v = cons("vector", $list_contents.v); } ;
+  : '#(' list_contents RPAREN {$v = cons("vector", $list_contents.v); } ;
 
 // Currently return value ignored because simple_datum ignores it.
 bytevector returns [Object v]
-  : '#u8(' list_contents ')' { $v = cons("bytevector", $list_contents.v); } ;
+  : '#u8(' list_contents RPAREN { $v = cons("bytevector", $list_contents.v); } ;
 
 simple_datum   : BOOLEAN | NUMBER | CHARACTER | STRING | symbol | bytevector;
 symbol : IDENTIFIER ;
@@ -801,9 +819,12 @@ comment_eol : LCOMMENT? EOL;
 
 // Return the contents of a restart, as a list:
 
+restart_end_nt :  RESTART_END;
+
 restart_tail returns [Object v]:
   i_expr rt=restart_tail {$v = cons($i_expr.v, $rt.v);}
-  | RESTART_END {$v = null;} ;
+  | comment_eol retry=restart_tail {$v = $retry.v;}
+  | restart_end_nt {$v = null;} ;
 
 // The "head" is the production to read 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
@@ -831,7 +852,7 @@ head returns [Object v]
         (pn=n_expr hspace* {$v = list($pn.v);}
          | empty  {$v = list(".");} /*= (list '.) */ )
        | empty    {$v = list(".");} /*= (list '.) */ )
-  | RESTART hspace* comment_eol* restart_tail hspace*
+  | RESTART hspace* /* comment_eol* */ restart_tail hspace*
       (rr=rest    {$v = cons($restart_tail.v, $rr.v); }
        | empty    {$v = list($restart_tail.v); } )
   | basic=n_expr_first /* Only match n_expr_first */
@@ -859,7 +880,7 @@ rest returns [Object v]
         (pn=n_expr hspace* {$v = $pn.v;}
          | empty {$v = list(".");})
        | empty   {$v = list(".");})
-  | RESTART hspace* comment_eol* restart_tail hspace*
+  | RESTART hspace* /* comment_eol* */ restart_tail hspace*
     (rr=rest     {$v = cons($restart_tail.v, $rr.v);}
      | empty     {$v = list($restart_tail.v);} )
   | scomment hspace* (sr=rest {$v = $sr.v;} | empty {$v = null;} )
@@ -906,14 +927,13 @@ body returns [Object v] :
 // should then set the current_indent to RESTART_END, and return, to signal
 // the reception of RESTART_END.
 
-// Note: The "head empty" sequence exists so that an i_expr can be
-// followed immediately by RESTART_END without an intervening comment_eol.
-// This supports constructs such as "let <* y 5 *>".
-// Unfortunately, this branch causes ANTLR to issue a pile of warnings due to
-// grammar ambiguities, which are similar to the ambiguities cause by
-// a 'dangling else'.   Simply resolve these ambiguities by always
-// accepting the first (or longer) sequence first.
-// Without this sequence, i_expr would always ends with comment_eol.
+// Note: This BNF presumes that "*>" generates 2 tokens, "EOL RESTART_END".
+// You can change the BNF below to allow "head empty", then "*>" only
+// needs to generate RESTART_END, but this creates a bunch of ambiguities
+// like a 'dangling else', which must all be disambiguated by accepting
+// the first or the longer sequence first.  Either approach is needed to
+// support "*>" as the non-first element so that the "head" will end
+// without EOL, e.g., "let <* y 5 *>".
 
 i_expr returns [Object v]
   : head
@@ -929,7 +949,8 @@ i_expr returns [Object v]
      | comment_eol // Normal case, handle child lines if any:
        (indent children=body {$v = append($head.v, $children.v);}
         | empty              {$v = monify($head.v);} /* No child lines */ )
-     | empty {$v = monify($head.v);} /* "head empty"; RESTART_END next */
+    // If RESTART_END doesn't generate 2 tokens "EOL RESTART_END", add:
+    // | (RESTART_END) => empty                 {$v = monify($head.v);}
      ))
   | (GROUP_SPLICE | scomment) hspace* /* Initial; Interpet as group */
       (group_i=i_expr {$v = $group_i.v;} /* Ignore initial GROUP/scomment */
