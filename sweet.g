@@ -839,8 +839,8 @@ comment_eol : LCOMMENT? EOL;
 
 // Return the contents of a restart, as a list:
 
-restart_tail returns [Object v]:
-  it_expr rt=restart_tail {$v = cons($it_expr.v, $rt.v);}
+restart_tail returns [Object v]
+  : it_expr rt=restart_tail {$v = cons($it_expr.v, $rt.v);}
   | comment_eol retry=restart_tail {$v = $retry.v;}
   | restart_end {$v = null;} ;
 
@@ -907,7 +907,6 @@ rest returns [Object v]
                  | empty    {$v = list($basic.v);} ))
        | empty              {$v = list($basic.v);} ) ;
 
-
 // "body" handles the sequence of 1+ child lines in an it_expr
 // (e.g., after a "head"), each of which is itself an it_expr.
 // It returns the list of expressions in the body.
@@ -922,8 +921,8 @@ rest returns [Object v]
 // Since (list x) is simply (cons x '()), this production always does a
 // cons of the first it_expr and another body [if it exists] or '() [if not].
 
-body returns [Object v] :
-  it_expr
+body returns [Object v]
+  : it_expr
     (same next_body=body  {$v = cons($it_expr.v, $next_body.v);}
      | dedent             {$v = list($it_expr.v);} ) ;
 
@@ -979,8 +978,7 @@ it_expr returns [Object v]
   | SUBLIST hspace* is_i=it_expr /* "$" as first expression on line */
       {$v=list($is_i.v);}
   | abbrevh hspace* abbrev_i_expr=it_expr
-      {$v=list($abbrevh.v, $abbrev_i_expr.v);}
-  ;
+      {$v=list($abbrevh.v, $abbrev_i_expr.v);} ;
 
 // Top-level sweet-expression production, t_expr.
 // This production handles special cases, then in the normal case
