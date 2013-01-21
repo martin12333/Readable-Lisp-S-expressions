@@ -386,6 +386,8 @@ fred
 
 normal
 
+#!sweet
+
+  hello world
+
 fin
-
-

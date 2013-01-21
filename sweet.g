@@ -974,7 +974,9 @@ it_expr returns [Object v]
       (group_i=it_expr {$v = $group_i.v;} /* Ignore initial GROUP/scomment */
        | comment_eol
          (indent g_body=body {$v = $g_body.v;} /* Normal GROUP use */
-          | same (comment_eol same)* g_i=it_expr {$v = $g_i.v;} /* Plausible separator */
+          | same ( g_i=it_expr {$v = $g_i.v;} /* Plausible separator */
+                   /* Handle #!sweet EOL EOL t_expr */
+                   | comment_eol restart=t_expr {$v = $restart.v;} )
           | dedent error ))
   | SUBLIST hspace* is_i=it_expr /* "$" as first expression on line */
       {$v=list($is_i.v);}
