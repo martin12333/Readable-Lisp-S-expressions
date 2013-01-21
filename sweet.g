@@ -835,6 +835,8 @@ comment_eol : LCOMMENT? EOL;
 // more complex (and more persnickety) BNF pattern instead.
 
 
+// KEY BNF PRODUCTIONS for sweet-expressions:
+
 // Return the contents of a restart, as a list:
 
 restart_tail returns [Object v]:
@@ -1004,6 +1006,7 @@ t_expr returns [Object v]
   | initial_indent_with_bang error
   | EOF {generate_eof();} /* End of file */
   | i_expr {$v = $i_expr.v;} /* Normal case */ ;
+
 
 print_t_expr:
   t_expr {System.out.print(string_datum($t_expr.v) + "\n"); } ;
