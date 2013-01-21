@@ -158,5 +158,7 @@ library
 another
 (amkg animals (1 0))
 (define cuddle-first-parameter (quote (if when unless case define lambda define-module library export import letrec let let* let1 let-syntax letcrec-syntax define-syntax syntax-rules set! do setq block typecase)))
+fred
 (define (f a) (* 2 a))
+(define x 4)
 fin
