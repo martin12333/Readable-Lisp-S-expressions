@@ -265,10 +265,6 @@ tokens {
 }
 
 
-// Define start symbol for parser (rest of parser is later).
-start : print_t_expr;
-
-
 // LEXER SECTION.
 // Lexical token (terminal) names are in all upper case
 
@@ -447,21 +443,8 @@ UNQUOTE_SPLICE : ',' '@';
 UNQUOTE        : ',';
 
 // Define ERROR this way so we don't get a spurious ANTLR warning.
+// This is used by the later "error" non-terminal.
 fragment ERROR: ' ' ;
-
-// Special non-terminals that act essentially as comments.
-// They are used clarify the grammar meaning, as follows:
-empty : ;  // Identifies an empty branch
-same  : ;  // Emphasizes where neither indent nor dedent has occurred
-error : ERROR;  // Specifically identifies an error branch.
-
-// Note that errors can occur elsewhere, and an implementation
-// may include an extension where an error is noted in this grammar.
-// However, the error non-terminal makes it clear where an action is
-// not defined, indicates where a parser might specifically check for
-// errors, and also acts as a check on the grammar itself (to ensure that
-// there isn't some valid interpretation for that sequence at that point).
-
 
 // Here we give lexical definitions for the so-called simple datums,
 // such as symbols and numbers... what many people would call "atoms".
@@ -470,7 +453,8 @@ error : ERROR;  // Specifically identifies an error branch.
 // to parse Scheme identifiers or numbers.  Scheme's syntax for
 // identifiers and numbers is extremely complicated; the number of
 // productions needed are vast, even if (in our case) we're only trying
-// to match a string instead something more complex.
+// to match a string instead something more complex. They're not even
+// all that easy to implement when you're trying to directly follow the spec.
 
 // To prove the point, the following shows a typical lexical definition
 // for identifiers and numbers in many languages:
@@ -482,7 +466,7 @@ error : ERROR;  // Specifically identifies an error branch.
 //         | ('0'..'9')+ EXPONENT ;
 //   INT : ('0'..'9')+ ;
 //   number : INT | FLOAT ;
-// Languages might have 1-3 more productions for various bases.
+// Languages might have 1-3 more productions for various bases (2,8,16).
 //
 // In contrast, the productions below show how to parse Scheme identifiers
 // and numbers, which are FULL of complications, and thus are chock-full
@@ -493,8 +477,10 @@ error : ERROR;  // Specifically identifies an error branch.
 
 // Note: The following maps most stuff into strings, because we don't
 // need to do more than that for a translation.  The action rules can
-// be changed to generate real values, not just string representations.
-
+// be changed to generate real values, not just string representations,
+// but for our purposes that would add needless complications.
+// Note: The spec requires that in numbers case is not relevant,
+// so many of the productions show upper/lowercase.
 
 IDENTIFIER  :
   INITIAL SUBSEQUENT* |
@@ -548,7 +534,6 @@ fragment SPECIAL_STRING_ELEMENT :
   '\\' ('a' | 'b' | 't' | 'n' | 'r' | '"' | '\\')
   // TODO: Intraline whitespace
   | INLINE_HEX_ESCAPE ;
-
 
 
 // The following is structured so that exactness (if stated)
@@ -675,6 +660,34 @@ fragment DIGIT_10 : DIGIT ;
 fragment DIGIT_16 : DIGIT_10 | 'a'..'f' | 'A'..'F';
 
 
+
+
+// PARSER SECTION
+
+// Define start symbol for parser (rest of parser is later).
+start : print_t_expr;
+
+// Special non-terminals that act essentially as comments.
+// They are used clarify the grammar meaning, as follows:
+empty : ;  // Identifies an empty branch
+same  : ;  // Emphasizes where neither indent nor dedent has occurred
+error : ERROR;  // Specifically identifies an error branch.
+
+// Note that errors can occur elsewhere, and an implementation
+// may include an extension where an error is noted in this grammar.
+// However, the error non-terminal makes it clear where an action is
+// not defined, indicates where a parser might specifically check for
+// errors, and also acts as a check on the grammar itself (to ensure that
+// there isn't some valid interpretation for that sequence at that point).
+
+// Here we create non-terminals with the same names as terminals,
+// just lowercase instead of uppercase.
+// These renames are completely unnecessasry, but they are helpful
+// when using the ANTLR debugger.
+
+restart_end :  RESTART_END;
+initial_indent_no_bang : INITIAL_INDENT_NO_BANG;
+initial_indent_with_bang : INITIAL_INDENT_WITH_BANG;
 
 // This more-complicated BNF is written so leading
 // and trailing whitespace in a list is correctly ignored.
@@ -823,12 +836,10 @@ comment_eol : LCOMMENT? EOL;
 
 // Return the contents of a restart, as a list:
 
-restart_end_nt :  RESTART_END;
-
 restart_tail returns [Object v]:
   i_expr rt=restart_tail {$v = cons($i_expr.v, $rt.v);}
   | comment_eol retry=restart_tail {$v = $retry.v;}
-  | restart_end_nt {$v = null;} ;
+  | restart_end {$v = null;} ;
 
 // The "head" is the production to read 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
@@ -986,10 +997,10 @@ i_expr returns [Object v]
 
 t_expr returns [Object v]
   : comment_eol t_expr1=t_expr {$v=$t_expr1.v;} /* Initial lcomment, retry */
-  | (INITIAL_INDENT_NO_BANG | hspace+ )
+  | (initial_indent_no_bang | hspace+ )
     (n_expr {$v = $n_expr.v;} /* indent processing disabled */
      | comment_eol t_expr2=t_expr {$v=$t_expr2.v;} )
-  | INITIAL_INDENT_WITH_BANG error
+  | initial_indent_with_bang error
   | EOF {generate_eof();} /* End of file */
   | i_expr {$v = $i_expr.v;} /* Normal case */ ;
 
