@@ -384,6 +384,8 @@ fred
  
     (define (f a) (* 2 a)) (define x 4)
 
+normal
+
 fin
 
 
