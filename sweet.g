@@ -265,6 +265,10 @@ tokens {
 }
 
 
+// Define start symbol for parser (rest of parser is later).
+start : print_t_expr;
+
+
 // LEXER SECTION.
 // Lexical token (terminal) names are in all upper case
 
@@ -663,9 +667,6 @@ fragment DIGIT_16 : DIGIT_10 | 'a'..'f' | 'A'..'F';
 
 
 // PARSER SECTION
-
-// Define start symbol for parser (rest of parser is later).
-start : print_t_expr;
 
 // Special non-terminals that act essentially as comments.
 // They are used clarify the grammar meaning, as follows:
