@@ -15,7 +15,7 @@ define f(a) {2 * a}
 
    (define (f a) (* 2 a)) (define x 4)
 
-#! This is a multiline comment
+#!/bin/sh This is a multiline comment
 !#
 #| This is a another hash comment. |#
 #| This is a another multiline
