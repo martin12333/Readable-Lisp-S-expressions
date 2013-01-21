@@ -840,7 +840,7 @@ comment_eol : LCOMMENT? EOL;
 // Return the contents of a restart, as a list:
 
 restart_tail returns [Object v]:
-  i_expr rt=restart_tail {$v = cons($i_expr.v, $rt.v);}
+  it_expr rt=restart_tail {$v = cons($it_expr.v, $rt.v);}
   | comment_eol retry=restart_tail {$v = $retry.v;}
   | restart_end {$v = null;} ;
 
@@ -908,40 +908,40 @@ rest returns [Object v]
        | empty              {$v = list($basic.v);} ) ;
 
 
-// "body" handles the sequence of 1+ child lines in an i_expr
-// (e.g., after a "head"), each of which is itself an i_expr.
+// "body" handles the sequence of 1+ child lines in an it_expr
+// (e.g., after a "head"), each of which is itself an it_expr.
 // It returns the list of expressions in the body.
-// Note that an i-expr will consume any line comments or hspaces
+// Note that an it-expr will consume any line comments or hspaces
 // before it returns back to the "body" production.
 // Non-tokenizing implementation notes:
-// Note that i_expr will consume any line comments (line comments after
+// Note that it_expr will consume any line comments (line comments after
 // content, as well as lines that just contain indents and comments).
-// Note also that i-expr may set the the current indent to a different value
+// Note also that it-expr may set the the current indent to a different value
 // than the indent used on entry to body; the latest indent is compared by
 // the special terminals DEDENT and BADDENT.
 // Since (list x) is simply (cons x '()), this production always does a
-// cons of the first i_expr and another body [if it exists] or '() [if not].
+// cons of the first it_expr and another body [if it exists] or '() [if not].
 
 body returns [Object v] :
-  i_expr
-    (same next_body=body  {$v = cons($i_expr.v, $next_body.v);}
-     | dedent             {$v = list($i_expr.v);} ) ;
+  it_expr
+    (same next_body=body  {$v = cons($it_expr.v, $next_body.v);}
+     | dedent             {$v = list($it_expr.v);} ) ;
 
-// "i-expr" (indented sweet-expressions)
+// "it-expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
 // This can be implemented with one-character-lookahead by also
 // passing in the "current" indent ("" to start), and having it return
 // the "new current indent".  The same applies to body.
 // If the line after a "head" has the same or smaller indentation,
-// that will end this i-expr (because it won't match INDENT),
+// that will end this it-expr (because it won't match INDENT),
 // returning to a higher-level production.
 
-// SUBLIST is handled in i_expr, not in "head", because if there
+// SUBLIST is handled in it_expr, not in "head", because if there
 // are child lines, those child lines are parameters of the right-hand-side,
 // not of the whole production.
 
 // Note: In a non-tokenizing implementation, a RESTART_END may be
-// returned by head, which ends a list of i_expr inside a restart.  i_expr
+// returned by head, which ends a list of it_expr inside a restart.  it_expr
 // should then set the current_indent to RESTART_END, and return, to signal
 // the reception of RESTART_END.
 
@@ -953,38 +953,38 @@ body returns [Object v] :
 // support "*>" as the non-first element so that the "head" will end
 // without EOL, e.g., "let <* y 5 *>".
 
-i_expr returns [Object v]
+it_expr returns [Object v]
   : head
     (options {greedy=true;} : (
      GROUP_SPLICE hspace* /* Not initial; interpret as splice */
       (options {greedy=true;} :
         // To allow \\ EOL as line-continuation, instead do:
-        //   comment_eol same i9=i_expr {append($head.v, $i9.v);}
+        //   comment_eol same i9=it_expr {append($head.v, $i9.v);}
         comment_eol error
         | empty {$v = monify($head.v);} )
-     | SUBLIST hspace* sub_i=i_expr /* head SUBLIST i_expr case */
+     | SUBLIST hspace* sub_i=it_expr /* head SUBLIST it_expr case */
        {$v=append($head.v, list(monify($sub_i.v)));}
      | comment_eol // Normal case, handle child lines if any:
        (indent children=body {$v = append($head.v, $children.v);}
         | empty              {$v = monify($head.v);} /* No child lines */ )
     // If RESTART_END doesn't generate 2 tokens "EOL RESTART_END", add:
-    // | (RESTART_END) => empty                 {$v = monify($head.v);}
+    // | empty                 {$v = monify($head.v);}
      ))
   | (GROUP_SPLICE | scomment) hspace* /* Initial; Interpet as group */
-      (group_i=i_expr {$v = $group_i.v;} /* Ignore initial GROUP/scomment */
+      (group_i=it_expr {$v = $group_i.v;} /* Ignore initial GROUP/scomment */
        | comment_eol
          (indent g_body=body {$v = $g_body.v;} /* Normal GROUP use */
-          | same g_i=i_expr {$v = $g_i.v;} /* Plausible separator */
+          | same g_i=it_expr {$v = $g_i.v;} /* Plausible separator */
           | dedent error ))
-  | SUBLIST hspace* is_i=i_expr /* "$" as first expression on line */
+  | SUBLIST hspace* is_i=it_expr /* "$" as first expression on line */
       {$v=list($is_i.v);}
-  | abbrevh hspace* abbrev_i_expr=i_expr
+  | abbrevh hspace* abbrev_i_expr=it_expr
       {$v=list($abbrevh.v, $abbrev_i_expr.v);}
   ;
 
 // Top-level sweet-expression production, t_expr.
 // This production handles special cases, then in the normal case
-// drops to the i_expr production.
+// drops to the it_expr production.
 
 // The rule for "indent processing disabled on initial top-level hspace"
 // is a very simple (and clever) BNF construction by Alan Manuel K. Gloria.
@@ -1005,7 +1005,7 @@ t_expr returns [Object v]
      | comment_eol t_expr2=t_expr {$v=$t_expr2.v;} )
   | initial_indent_with_bang error
   | EOF {generate_eof();} /* End of file */
-  | i_expr {$v = $i_expr.v;} /* Normal case */ ;
+  | it_expr {$v = $it_expr.v;} /* Normal case */ ;
 
 
 print_t_expr:
