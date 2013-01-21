@@ -390,6 +390,7 @@ EOL: {enclosure==0 &&
     emit($e);  // Emit the EOL token
     if ($extra != null || ($i.text).equals("<EOF>")) {
       process_indent("", $i); // Indented EOL = EOL
+      emit($e);  // Emit the extra EOL token
     } else {
       // Normal case: EOL, possibly followed by indent; process it.
       process_indent($i.text, $i);

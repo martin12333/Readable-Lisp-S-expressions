@@ -322,7 +322,7 @@ x(a)(b)
 #(1 2 3)
 #u8(5 6 7)
 
-#!sweet
+; #!sweet
 
 {n * factorial{n - 1}}
 
@@ -380,9 +380,9 @@ define cuddle-first-parameter '(
   set! do
   setq block typecase)           ; Common Lisp
 
-define f(a) {2 * a}
-; 
-;    (define (f a) (* 2 a)) (define x 4)
+fred
+ 
+    (define (f a) (* 2 a)) (define x 4)
 
 fin
 
