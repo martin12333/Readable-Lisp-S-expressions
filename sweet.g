@@ -373,7 +373,7 @@ SHARP_BANG_MARKER : '#!' (('a'..'z'|'A'..'Z'|'_')
 // to be followed by an EOL_SEQUENCE).
 fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
 // TODO: FF/VT
-fragment SPECIAL_BLANK_LINE  : (' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* EOL_SEQUENCE | (FF | VT)+ EOL_SEQUENCE;
+fragment SPECIAL_IGNORED_LINE  : (' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* EOL_SEQUENCE | (FF | VT)+ EOL_SEQUENCE;
 fragment INDENT_CHAR : (' ' | '\t' | '!');
 fragment INDENT_CHARS : INDENT_CHAR*;
 fragment INDENT_CHARS_PLUS : INDENT_CHAR+;
@@ -382,7 +382,7 @@ fragment INDENT_CHARS_PLUS : INDENT_CHAR+;
 EOL: {enclosure==0 &&
       ((getCharPositionInLine() != 0) && !initial_indent)}? =>
   e=EOL_SEQUENCE
-  SPECIAL_BLANK_LINE*
+  SPECIAL_IGNORED_LINE*
   i=INDENT_CHARS  // This is the indent for the next line
   extra=EOL_SEQUENCE* // If this exists, the indents are useless.
   {
