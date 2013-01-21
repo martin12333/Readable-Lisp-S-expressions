@@ -434,6 +434,8 @@ TAB      : '\t';
 fragment BANG : '!';
 PERIOD   : '.';
 LPAREN   : '(' {enclosure++;} ;
+VECTOR_START     : '#('   {enclosure++;};
+BYTEVECTOR_START : '#u8(' {enclosure++;};
 RPAREN   : ')' {if (enclosure>0) {enclosure--;};};
 LBRACKET : '[' {enclosure++;};
 RBRACKET : ']' {if (enclosure>0) {enclosure--;};};
@@ -722,11 +724,13 @@ n_expr_tail[Object prefix] returns [Object v]
     ) ;
 
 vector returns [Object v]
-  : '#(' list_contents RPAREN {$v = cons("vector", $list_contents.v); } ;
+  : VECTOR_START list_contents RPAREN
+    {$v = cons("vector", $list_contents.v); } ;
 
 // Currently return value ignored because simple_datum ignores it.
 bytevector returns [Object v]
-  : '#u8(' list_contents RPAREN { $v = cons("bytevector", $list_contents.v); } ;
+  : BYTEVECTOR_START list_contents RPAREN
+    { $v = cons("bytevector", $list_contents.v); } ;
 
 simple_datum   : BOOLEAN | NUMBER | CHARACTER | STRING | symbol | bytevector;
 symbol : IDENTIFIER ;
