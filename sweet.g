@@ -544,9 +544,11 @@ STRING : '\"' STRING_ELEMENT* '\"' ;
 fragment STRING_ELEMENT :
   ~( '"' | '\\' ) | SPECIAL_STRING_ELEMENT ;
 
+fragment INTRALINE_WHITESPACE :
+  (' ' | '\t')* EOL_SEQUENCE (' ' | '\t')* ;
+
 fragment SPECIAL_STRING_ELEMENT :
-  '\\' ('a' | 'b' | 't' | 'n' | 'r' | '"' | '\\')
-  // TODO: Intraline whitespace
+  '\\' ('a' | 'b' | 't' | 'n' | 'r' | '"' | '\\' | INTRALINE_WHITESPACE )
   | INLINE_HEX_ESCAPE ;
 
 
