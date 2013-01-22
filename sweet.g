@@ -389,7 +389,9 @@ SHARP_BANG_MARKER : '#!' (('a'..'z'|'A'..'Z'|'_')
 // of a line and do not themselves create a newline (they still have
 // to be followed by an EOL_SEQUENCE).
 fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
-fragment SPECIAL_IGNORED_LINE  : (' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* EOL_SEQUENCE | (FF | VT)+ EOL_SEQUENCE;
+fragment SPECIAL_IGNORED_LINE
+   : (' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* EOL_SEQUENCE
+   | (FF | VT)+ EOL_SEQUENCE ;
 fragment INDENT_CHAR : (' ' | '\t' | '!');
 fragment INDENT_CHARS : INDENT_CHAR*;
 fragment INDENT_CHARS_PLUS : INDENT_CHAR+;
@@ -530,9 +532,9 @@ fragment SIGN_SUBSEQUENT : INITIAL | EXPLICIT_SIGN | '@' ;
 // the R7RS Scheme draft 8 fix; this (below) fixes that:
 fragment SYMBOL_ELEMENT :
     (~('|' | '\\'))
-     | SPECIAL_STRING_ELEMENT
-     // NOTE: Double-quote should NOT be here, already matched above.
-     | '\\|' ; 
+    | SPECIAL_STRING_ELEMENT
+    // NOTE: Double-quote should NOT be here, already matched above.
+    | '\\|' ; 
 
 // boolean, character, character_name
 BOOLEAN : '#t' | '#f' | '#true' | '#false' ;
