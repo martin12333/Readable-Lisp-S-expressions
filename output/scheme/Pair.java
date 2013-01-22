@@ -122,19 +122,5 @@ public class Pair extends Object {
     }
   }
 
-// (define (mklist x)
-//   (cond
-//     ((not (pair? x)) (list x))
-//     ((not (list? x)) (list x))
-//     (#t x)))
-
-  public static Object mklist(Object x) {
-    if (! pairp(x)) {
-      return list(x);
-    } else if (! listp(x)) {
-      return list(x);
-    } else {return x;}
-  }
-
 }
 
