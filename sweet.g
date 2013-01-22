@@ -34,7 +34,6 @@
 // will disable indentation processing, but only on that line).
 
 // TODO:
-// - See specific TODOs below.
 // - (Maybe) Handle EOF in weird places.
 
 grammar sweet;
