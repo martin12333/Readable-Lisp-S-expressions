@@ -112,7 +112,6 @@ tokens {
       emit(t);
       indents.push(indent_text);
     } else if (indentation_greater_than(indents.peek(), indent_text)) {
-      String old_indent = "";
       while (!indents.isEmpty() &&
              indentation_greater_than(indents.peek(), indent_text)) {
         indents.removeFirst(); // drop
