@@ -27,7 +27,7 @@ public class Unsweeten_ANTLR {
     // System.out.print("About to parse:\n");
     // parser.t_expr();
     while (true) {
-      parser.print_t_expr();
+      parser.start();
     }
     // System.out.print("\n");
     // System.out.print("DEBUG 5\n");

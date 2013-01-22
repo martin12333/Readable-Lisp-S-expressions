@@ -264,18 +264,11 @@ tokens {
 
 
 // Define start symbol for parser (rest of parser is later).
-start : print_t_expr;
-
+start : t_expr
+        {System.out.print(string_datum($t_expr.v) + "\n"); } ;
 
 // LEXER SECTION.
 // Lexical token (terminal) names are in all upper case
-
-// These are reported as fragments, not tokens, to silence
-// spurious warnings:
-fragment INITIAL_INDENT_NO_BANG: ' ';
-fragment INITIAL_INDENT_WITH_BANG: ' ';
-fragment INDENT: ' ';
-fragment DEDENT: ' ';
 
 // Here are special interpretation for certain sequences.
 // Define these first, to give them higher lexical precedence
@@ -284,6 +277,7 @@ fragment DEDENT: ' ';
 GROUP_SPLICE : {indent_processing()}? => '\\' '\\'; // GROUP/splice symbol.
 SUBLIST : {indent_processing()}? =>'$';
 RESERVED_TRIPLE_DOLLAR : {indent_processing()}? => '$$$';  // Reserved.
+
 RESTART : {indent_processing()}? => '<' '*' {
   /* Restart indent level */
   if (indents.isEmpty()) indents.push(""); // Initialize if needed
@@ -320,6 +314,16 @@ APOSH           : {indent_processing()}? => '\'' (' ' | '\t') ;
 QUASIQUOTEH     : {indent_processing()}? => '\`' (' ' | '\t') ;
 UNQUOTE_SPLICEH : {indent_processing()}? => ',' '@' (' ' | '\t') ;
 UNQUOTEH        : {indent_processing()}? => ',' (' ' | '\t') ;
+
+// These are reported as fragments, not tokens, to silence
+// spurious warnings:
+fragment INITIAL_INDENT_NO_BANG: ' ';
+fragment INITIAL_INDENT_WITH_BANG: ' ';
+fragment INDENT: ' ';
+fragment DEDENT: ' ';
+// Define ERROR this way so we don't get a spurious ANTLR warning.
+// This is used by the later "error" non-terminal.
+fragment ERROR: ' ' ;
 
 // Special end-of-line character definitions.
 // Specially handle formfeed (\f) and vertical tab (\v), even though
@@ -458,10 +462,6 @@ APOS           : '\'';
 QUASIQUOTE     : '\`';
 UNQUOTE_SPLICE : ',' '@';
 UNQUOTE        : ',';
-
-// Define ERROR this way so we don't get a spurious ANTLR warning.
-// This is used by the later "error" non-terminal.
-fragment ERROR: ' ' ;
 
 // Here we give lexical definitions for the so-called simple datums,
 // such as symbols and numbers... what many people would call "atoms".
@@ -696,7 +696,7 @@ error : ERROR;  // Specifically identifies an error branch.
 // errors, and also acts as a check on the grammar itself (to ensure that
 // there isn't some valid interpretation for that sequence at that point).
 
-// Here we create non-terminals with the same names as terminals,
+// Here we create some non-terminals with the same names as terminals,
 // just lowercase instead of uppercase.
 // These renames are completely unnecessasry, but they are helpful
 // when using the ANTLR debugger.
@@ -704,9 +704,27 @@ error : ERROR;  // Specifically identifies an error branch.
 restart_end :  RESTART_END;
 initial_indent_no_bang : INITIAL_INDENT_NO_BANG;
 initial_indent_with_bang : INITIAL_INDENT_WITH_BANG;
+indent  : INDENT;
+dedent  : DEDENT;
 
-// This more-complicated BNF is written so leading
-// and trailing whitespace in a list is correctly ignored.
+// This BNF uses the following slightly complicated pattern in some places:
+//   from_n_expr ((hspace+ (stuff /*= val1 */ | empty /*= val2 */ ))
+//                | empty                             /*= val2 */ )
+// This is an expanded form of this BNF pattern (sans actions):
+//   from_n_expr (hspace+ stuff?)?
+// Note that this pattern quietly removes horizontal spaces at the
+// end of the line correctly; that's important because you can't see them,
+// so quietly handling them eliminates a source of hard-to-find and
+// unnecessary errors.
+// If from_n_expr (etc.) is as greedy as possible (it needs to be),
+// we *could* instead accept this simpler BNF pattern:
+//   from_n_expr hspace* stuff?
+// but while that simpler BNF pattern would correctly accept *good* input,
+// it would also accept *incorrect* input like "(x)q" or other n-expressions
+// followed immediately by other n-expressions without intervening whitespace.
+// We want to detect such situations as errors, so we'll use the
+// more complex (and more persnickety) BNF pattern instead.
+
 list_contents_real returns [Object v]
   : n1=n_expr
       (wspace+
@@ -724,7 +742,6 @@ list_contents returns [Object v]
   : wspace*
    (list_contents_real {$v=$list_contents_real.v;}
     | empty {$v = null;} ) ;
-
 
 // The "greedy=true" option here forces n_expr_tail to look at the
 // next character and forceably consume in *this* production if it's
@@ -768,22 +785,17 @@ compound_datum returns [Object v]
   : LPAREN norm=list_contents RPAREN {$v = $norm.v;}
   | LBRACKET bracketed=list_contents RBRACKET {$v = $bracketed.v;}
   | LBRACE braced=list_contents RBRACE {$v = process_curly($braced.v);}
-  | vector {$v = $vector.v;}
-  ;
+  | vector {$v = $vector.v;} ;
+
+// Important supporting parser definitions for the BNF
   
 n_expr_prefix returns [Object v]
   : simple_datum {$v = $simple_datum.text;}
-  | compound_datum {$v = $compound_datum.v;}
-  ;
+  | compound_datum {$v = $compound_datum.v;} ;
 
 n_expr_noabbrev returns [Object v]
     : n_expr_prefix
       n_expr_tail[$n_expr_prefix.v] {$v = $n_expr_tail.v;} ;
-
-// Here we'll redefine indent/dedent as nonterminals, to make nicer results
-// in the ANTLRWorks debugger parse tree
-indent  : INDENT;
-dedent  : DEDENT;
 
 abbrevh returns [Object v]
   : APOSH           {$v = "quote";} /*= 'quote */
@@ -816,7 +828,6 @@ n_expr_first returns [Object v]
 // Whitespace and indentation names
 ichar   : SPACE | TAB | BANG ; // indent char - creates INDENT/DEDENTs
 hspace  : SPACE | TAB ;        // horizontal space
-
 wspace  : hspace | BARE_OTHER_WS | LCOMMENT ; // Separators inside (...) etc.
 
 // "Special comments" (scomments) are comments other than ";" (line comments):
@@ -830,24 +841,6 @@ scomment : BLOCK_COMMENT
 // this may reset indent as part of EOL processing.
 
 comment_eol : LCOMMENT? EOL;
-
-// This BNF uses the following slightly complicated pattern in some places:
-//   from_n_expr ((hspace+ (stuff /*= val1 */ | empty /*= val2 */ ))
-//                | empty                             /*= val2 */ )
-// This is an expanded form of this BNF pattern (sans actions):
-//   from_n_expr (hspace+ stuff?)?
-// Note that this pattern quietly removes horizontal spaces at the
-// end of the line correctly; that's important because you can't see them,
-// so quietly handling them eliminates a source of hard-to-find and
-// unnecessary errors.
-// If from_n_expr (etc.) is as greedy as possible (it needs to be),
-// we *could* instead accept this simpler BNF pattern:
-//   from_n_expr hspace* stuff?
-// but while that simpler BNF pattern would correctly accept *good* input,
-// it would also accept *incorrect* input like "a(1)q" or other n-expressions
-// followed immediately by other n-expressions without intervening whitespace.
-// We want to detect such situations as errors, so we'll use the
-// more complex (and more persnickety) BNF pattern instead.
 
 
 // KEY BNF PRODUCTIONS for sweet-expressions:
@@ -1021,8 +1014,4 @@ t_expr returns [Object v]
   | initial_indent_with_bang error
   | EOF {generate_eof();} /* End of file */
   | it_expr {$v = $it_expr.v;} /* Normal case */ ;
-
-
-print_t_expr:
-  t_expr {System.out.print(string_datum($t_expr.v) + "\n"); } ;
 
