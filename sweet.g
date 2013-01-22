@@ -332,10 +332,15 @@ fragment EOL_CHAR : '\n' | '\r' | FF | VT | NEL; // These start EOL
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
 fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
 
-// Various forms of comments - line comments and special comments:
+// Various forms of comments - line comments and special comments.
+// We'll specifically ignore lines that begin with ";" or are FF/VT-only.
 LCOMMENT_LINE :  {(getCharPositionInLine() == 0)}? =>
-     ';' contents=NOT_EOL_CHARS EOL_SEQUENCE
+     ((';' contents=NOT_EOL_CHARS ) | (FF | VT)+) EOL_SEQUENCE
      {
+       // We can't directly use the ANTLR Lexer to generate ";" comments,
+       // because the lexer doesn't run synchronously with the parser.
+       // That's no problem, because the spec is designed to allow that
+       // to be handled separately and not here.
        // if (outside_t_expr()) System.out.println(";" + $contents.text);
        skip();
      };
@@ -381,7 +386,6 @@ SHARP_BANG_MARKER : '#!' (('a'..'z'|'A'..'Z'|'_')
 // of a line and do not themselves create a newline (they still have
 // to be followed by an EOL_SEQUENCE).
 fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
-// TODO: FF/VT
 fragment SPECIAL_IGNORED_LINE  : (' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* EOL_SEQUENCE | (FF | VT)+ EOL_SEQUENCE;
 fragment INDENT_CHAR : (' ' | '\t' | '!');
 fragment INDENT_CHARS : INDENT_CHAR*;
