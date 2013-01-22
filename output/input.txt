@@ -390,4 +390,17 @@ normal
 
   hello world
 
+all-okay
+
+; (define f before (let (begin (define x 1) (define y 2)) q) after)
+define f
+  before
+  let <* begin
+define x 1
+define y 2
+*> q
+  after
+
+after-okay
+
 fin

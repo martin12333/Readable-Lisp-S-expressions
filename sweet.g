@@ -285,25 +285,35 @@ fragment DEDENT: ' ';
 GROUP_SPLICE : {indent_processing()}? => '\\' '\\'; // GROUP/splice symbol.
 SUBLIST : {indent_processing()}? =>'$';
 RESERVED_TRIPLE_DOLLAR : {indent_processing()}? => '$$$';  // Reserved.
-RESTART : {indent_processing()}? => '<' '*' {/* TODO: Restart indent level */};
+RESTART : {indent_processing()}? => '<' '*' {
+  /* Restart indent level */
+  if (indents.isEmpty()) indents.push(""); // Initialize if needed
+  indents.push("");  // Let's start over!
+  } ;
 
 RESTART_END
   : {indent_processing()}? => t='*>'
   {
-    // "*>" generates EOL + RESTART_END
+    // "*>" generates EOL + (DEDENTs if any) + RESTART_END
+
     // Must create independent EOL token for ANTLR.
     CommonToken extra = new CommonToken(input, Token.INVALID_TOKEN_TYPE,
                 Token.DEFAULT_CHANNEL, getCharIndex(), getCharIndex()-1);
-    t.setLine(getLine());
-    t.setCharPositionInLine(getCharPositionInLine());
+    extra.setLine(getLine());
+    extra.setCharPositionInLine(getCharPositionInLine());
     extra.setType(EOL);
     emit(extra);
 
+    /* Dedent (if needed) and restore indent level */
+    CommonToken dedent_it = new CommonToken(input, Token.INVALID_TOKEN_TYPE,
+                Token.DEFAULT_CHANNEL, getCharIndex(), getCharIndex()-1);
+    dedent_it.setLine(getLine());
+    dedent_it.setCharPositionInLine(getCharPositionInLine());
+    process_indent("", dedent_it);  // Send any dedents needed.
+    indents.removeFirst(); // Restore original indent stack.
+
     $t.setType(RESTART_END);
     emit($t);
-
-    /* TODO: Restore indent level */
-    // RESTART_END: END OF USER CODE
     };
 
 // Abbreviations followed by horizontal space (space or tab) are special:
