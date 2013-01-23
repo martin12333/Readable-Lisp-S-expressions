@@ -178,4 +178,13 @@ datums
 ((hello) (f x))
 ((bye) a b (f x))
 ((one) (two) (three) ((four) (five)) (f x))
+(n expr)
+(foo foo)
+(foo a b)
+a
+b
+a
+b
+(foo c d)
+(foo c d)
 fin

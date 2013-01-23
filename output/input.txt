@@ -432,4 +432,33 @@ last
   <* four *> <* five *>
   f x
 
+. n(expr)
+
+foo
+  \\ ; comment_eol
+  ; same followed by comment_eol
+  foo
+
+foo
+  a
+  \\
+  b
+
+a \\ b
+
+a
+\\
+b
+
+foo
+! c \\ d
+
+foo
+! c
+! \\
+! d
+
+
+
+
 fin
