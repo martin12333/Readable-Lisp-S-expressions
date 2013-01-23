@@ -852,7 +852,8 @@ comment_eol : LCOMMENT? EOL;
 
 restart_tail returns [Object v]
   : it_expr more=restart_tail {$v = cons($it_expr.v, $more.v);}
-  | comment_eol    retry1=restart_tail {$v = $retry1.v;}
+  | (initial_indent_no_bang | initial_indent_with_bang)?
+    comment_eol    retry1=restart_tail {$v = $retry1.v;}
   | (FF | VT)+ EOL retry2=restart_tail {$v = $retry2.v;}
   | restart_end {$v = null;} ;
 
