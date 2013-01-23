@@ -403,4 +403,20 @@ define y 2
 
 after-okay
 
+f 1
+
+  b c
+
+before
+; 
+after
+
+  separate datums
+
+let <*
+first
+
+last
+*>
+
 fin

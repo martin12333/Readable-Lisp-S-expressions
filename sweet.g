@@ -326,19 +326,28 @@ fragment DEDENT: ' ';
 fragment ERROR: ' ' ;
 
 // Special end-of-line character definitions.
+
 // Specially handle formfeed (\f) and vertical tab (\v), even though
-// some argue against vertical tabs (http://prog21.dadgum.com/76.html):
-fragment FF :    '\f'; // Formfeed 
-fragment VT :   '\u000b';  // Vertical tab (\v).
-fragment NEL:   '\u0085'; // Hi, IBM mainframes!
-fragment EOL_CHAR : '\n' | '\r' | FF | VT | NEL; // These start EOL
+// some argue against vertical tabs (http://prog21.dadgum.com/76.html).
+// We support lone formfeeds on a line to support the GNU Coding Standards
+// (http://www.gnu.org/prep/standards/standards.html), which says:
+// "Please use formfeed characters (control-L) to divide the program
+// into pages at logical places (but not within a function)...
+// The formfeeds should appear alone on lines by themselves."
+// Any FF and VT must be at the beginning of a line, must be followed by
+// EOL_SEQUENCE, and they terminate a t-expression.
+FF : '\f'     {if (enclosure==0) initial_indent = true;} ; // Formfeed, \u000c
+VT : '\u000b' {if (enclosure==0) initial_indent = true;} ; // Vertical tab, \v
+
+fragment NEL: '\u0085';  // Hi, IBM mainframes!
+fragment EOL_CHAR : '\n' | '\r' | NEL;
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
 fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
 
 // Various forms of comments - line comments and special comments.
-// We'll specifically ignore lines that begin with ";" or are FF/VT-only.
+// We'll specifically ignore lines that begin with ";"
 LCOMMENT_LINE :  {(getCharPositionInLine() == 0)}? =>
-     ((';' contents=NOT_EOL_CHARS ) | (FF | VT)+) EOL_SEQUENCE
+     ';' contents=NOT_EOL_CHARS EOL_SEQUENCE
      {
        // We can't directly use the ANTLR Lexer to generate ";" comments,
        // because the lexer doesn't run synchronously with the parser.
@@ -380,18 +389,9 @@ SHARP_BANG_MARKER : '#!' (('a'..'z'|'A'..'Z'|'_')
 // (if indent processing is active) to determine if have an INDENT or DEDENTs.
 // As part of tokenizing, we'll consume any following lines that
 // are ;-only lines, and treat indent-only lines equivalent to blank lines.
-// We support lone formfeeds on a line to support the GNU Coding Standards
-// (http://www.gnu.org/prep/standards/standards.html), which says:
-// "Please use formfeed characters (control-L) to divide the program
-// into pages at logical places (but not within a function)...
-// The formfeeds should appear alone on lines by themselves."
-// Thus, FF and VT are supported, but they must be at the beginning
-// of a line and do not themselves create a newline (they still have
-// to be followed by an EOL_SEQUENCE).
 fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
 fragment SPECIAL_IGNORED_LINE
-   : (' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* EOL_SEQUENCE
-   | (FF | VT)+ EOL_SEQUENCE ;
+   : (' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* EOL_SEQUENCE ;
 fragment INDENT_CHAR : (' ' | '\t' | '!');
 fragment INDENT_CHARS : INDENT_CHAR*;
 fragment INDENT_CHARS_PLUS : INDENT_CHAR+;
@@ -440,7 +440,7 @@ INITIAL_INDENT : {(enclosure == 0) && (getCharPositionInLine() == 0) }? =>
     process_initial_indent($i.text, $i);
   } ;
 
-BARE_OTHER_WS : {enclosure > 0}? => EOL_CHAR;
+ENCLOSED_EOL_CHAR: {enclosure > 0}? => EOL_CHAR;
 
 // Do not reference '\n' or '\r' inside a non-lexing rule in ANTLR.
 // If you do, ANTLR will quietly create new lexical tokens for them, and
@@ -830,7 +830,8 @@ n_expr_first returns [Object v]
 // Whitespace and indentation names
 ichar   : SPACE | TAB | BANG ; // indent char - creates INDENT/DEDENTs
 hspace  : SPACE | TAB ;        // horizontal space
-wspace  : hspace | BARE_OTHER_WS | LCOMMENT ; // Separators inside (...) etc.
+wspace  : hspace | ENCLOSED_EOL_CHAR | FF | VT
+          | LCOMMENT ; // Separators inside (...) etc.
 
 // "Special comments" (scomments) are comments other than ";" (line comments):
 sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER ;
@@ -850,8 +851,9 @@ comment_eol : LCOMMENT? EOL;
 // Return the contents of a restart, as a list:
 
 restart_tail returns [Object v]
-  : it_expr rt=restart_tail {$v = cons($it_expr.v, $rt.v);}
-  | comment_eol retry=restart_tail {$v = $retry.v;}
+  : it_expr more=restart_tail {$v = cons($it_expr.v, $more.v);}
+  | comment_eol    retry1=restart_tail {$v = $retry1.v;}
+  | (FF | VT)+ EOL retry2=restart_tail {$v = $retry2.v;}
   | restart_end {$v = null;} ;
 
 // The "head" is the production to read 1+ n-expressions on one line; it will
@@ -968,7 +970,7 @@ it_expr returns [Object v]
      GROUP_SPLICE hspace* /* Not initial; interpret as splice */
       (options {greedy=true;} :
         // To allow \\ EOL as line-continuation, instead do:
-        //   comment_eol same i9=it_expr {append($head.v, $i9.v);}
+        //   comment_eol same more=it_expr {$v = append($head.v, $more.v);}
         comment_eol error
         | empty {$v = monify($head.v);} )
      | SUBLIST hspace* sub_i=it_expr /* head SUBLIST it_expr case */
@@ -987,8 +989,7 @@ it_expr returns [Object v]
                    /* Handle #!sweet EOL EOL t_expr */
                    | comment_eol restart=t_expr {$v = $restart.v;} )
           | dedent error ))
-  | SUBLIST hspace* is_i=it_expr /* "$" as first expression on line */
-      {$v=list($is_i.v);}
+  | SUBLIST hspace* is_i=it_expr {$v=list($is_i.v);} /* "$" first on line */
   | abbrevh hspace* abbrev_i_expr=it_expr
       {$v=list($abbrevh.v, $abbrev_i_expr.v);} ;
 
@@ -1005,14 +1006,15 @@ it_expr returns [Object v]
 
 // Although "!" is an indent character, it's an error to use it at the
 // topmost level.  The only reason to indent at the top is to disable
-// indent processing, for backwards compatibility.  Detecting this as
+// indent processing, e.g., for backwards compatibility.  Detecting this as
 // an error should detect some mistakes.
 
 t_expr returns [Object v]
-  : comment_eol t_expr1=t_expr {$v=$t_expr1.v;} /* Initial lcomment, retry */
+  : comment_eol    retry1=t_expr {$v=$retry1.v;}
+  | (FF | VT)+ EOL retry2=t_expr {$v=$retry2.v;}
   | (initial_indent_no_bang | hspace+ )
     (n_expr {$v = $n_expr.v;} /* indent processing disabled */
-     | comment_eol t_expr2=t_expr {$v=$t_expr2.v;} )
+     | comment_eol retry3=t_expr {$v=$retry3.v;} )
   | initial_indent_with_bang error
   | EOF {generate_eof();} /* End of file */
   | it_expr {$v = $it_expr.v;} /* Normal case */ ;
