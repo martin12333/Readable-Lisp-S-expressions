@@ -175,4 +175,7 @@ after
 separate
 datums
 (let (first last))
+((hello) (f x))
+((bye) a b (f x))
+((one) (two) (three) ((four) (five)) (f x))
 fin
