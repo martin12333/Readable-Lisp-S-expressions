@@ -1,0 +1,39 @@
+#!/usr/bin/perl
+
+# schemify - filter stdin and translate its action rules into Scheme
+# Intended for use on sweet.g, so that we can write in Java (for ANTLR)
+# but show Scheme syntax (for everyone else)
+
+$translate = 0;
+
+while (<>) {
+  if (/PARSER SECTION/) {
+    $translate = 1;
+  }
+  if ($translate) {
+    s/list\(/(list /g;
+    s/cons\(/(cons /g;
+    s/append\(/(append /g;
+    s/monify\(/(monify /g;
+    s/generate_eof\(/(generate_eof/g;  # No parameters, so no space at end
+    s/{ ?\$v ?= ?/{/g;
+    s/ ?;}/}/g;
+    s/\.v\b//g;
+    s/\bnull\b/'()/g;
+
+    s/"vector"/'vector/;
+    s/"bytevector"/'bytevector/;
+    s/"quote"/'quote/;
+    s/"quasiquote"/'quasiquote/;
+    s/"unquote-splicing"/'unquote-splicing/;
+    s/"unquote"/'unquote/;
+
+    # Serious hack to remove commas as parameter separators:
+    s/, / /g if /[{}]/;
+
+    # Special case.
+    s/\(list "."\)/(list '.)/g;
+  }
+  print;
+}
+
