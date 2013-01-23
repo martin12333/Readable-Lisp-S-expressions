@@ -848,7 +848,9 @@ comment_eol : LCOMMENT? EOL;
 
 // KEY BNF PRODUCTIONS for sweet-expressions:
 
-// Return the contents of a restart, as a list:
+// "restart_tail" returns the contents of a restart, as a list.
+// Precondition: At beginning of line.
+// Postcondition: Consumed the matching restart_end.
 
 restart_tail returns [Object v]
   : it_expr more=restart_tail {$v = cons($it_expr.v, $more.v);}
@@ -877,6 +879,9 @@ restart_tail returns [Object v]
 // distinct value if it is; head and friends operate a lot like a tokenizer
 // in that case.
 
+// Precondition: At beginning of line+indent
+// Postcondition: At unconsumed EOL
+
 head returns [Object v]
   : PERIOD /* Leading ".": escape following datum like an n-expression. */
       (hspace+
@@ -904,6 +909,10 @@ head returns [Object v]
 // Note that "rest" is very similar to "head" - a recursive descent parser
 // might implement "head" and "rest" as a single function with a parameter
 // that says if it's the first one (head) or not.
+
+// Precondition: At beginning of expression AFTER first one on line
+//               (we MUST have skipped any hspace)
+// Postcondition: At unconsumed EOL
 
 rest returns [Object v]
   : PERIOD /* Improper list */
@@ -947,6 +956,9 @@ body returns [Object v]
 // If the line after a "head" has the same or smaller indentation,
 // that will end this it-expr (because it won't match INDENT),
 // returning to a higher-level production.
+
+// Precondition: At beginning of line+indent
+// Postcondition: it-expr ended by consuming EOL + examining indent
 
 // SUBLIST is handled in it_expr, not in "head", because if there
 // are child lines, those child lines are parameters of the right-hand-side,
@@ -997,6 +1009,9 @@ it_expr returns [Object v]
 // Top-level sweet-expression production, t_expr.
 // This production handles special cases, then in the normal case
 // drops to the it_expr production.
+
+// Precondition: At beginning of line
+// Postcondition: At beginning of line
 
 // The rule for "indent processing disabled on initial top-level hspace"
 // is a very simple (and clever) BNF construction by Alan Manuel K. Gloria.
