@@ -880,7 +880,7 @@ restart_tail returns [Object v]
 head returns [Object v]
   : PERIOD /* Leading ".": escape following datum like an n-expression. */
       (hspace+
-        (pn=n_expr hspace* {$v = list($pn.v);}
+        (pn=n_expr hspace* (n_expr error)? {$v = list($pn.v);}
          | empty  {$v = list(".");} /*= (list '.) */ )
        | empty    {$v = list(".");} /*= (list '.) */ )
   | RESTART hspace* restart_tail hspace*
@@ -908,7 +908,7 @@ head returns [Object v]
 rest returns [Object v]
   : PERIOD /* Improper list */
       (hspace+
-        (pn=n_expr hspace* {$v = $pn.v;}
+        (pn=n_expr hspace* (n_expr error)? {$v = $pn.v;}
          | empty {$v = list(".");})
        | empty   {$v = list(".");})
   | RESTART hspace* restart_tail hspace*
