@@ -1,4 +1,4 @@
-// BNF grammar for sweet-expressions
+// BNF grammar for sweet-expressions, an easy-to-read S-expression notation.
 // (c) 2012-2013 David A. Wheeler, released under "MIT" license.
 
 // This BNF is an LL(1) grammar, written using ANTLR version 3.
@@ -6,8 +6,8 @@
 // It is written to be easy to translate to a recursive-descent parser,
 // even one that doesn't do full tokenizing.
 
-// The actions are written inside {...} using Java syntax, but invoke
-// normal Scheme procedures (e.g., "car" and "cons") as follows:
+// The actions in "sweet.g" are written inside {...} using Java syntax,
+// but invoke normal Scheme procedures (e.g., "car" and "cons") as follows:
 // +------------------|------------|------------------------------------------+
 // | Action Construct | Scheme     | Discussion                               |
 // |------------------|------------|------------------------------------------|
@@ -16,7 +16,8 @@
 // | null             | '()        | Java null represents the empty list      |
 // | "somename"       | 'somename  | Java strings represent atoms             |
 // +------------------|------------|------------------------------------------+
-// Scheme code is described directly as /*= ...Scheme code... */.
+// The program "schemify" translates these actions into Scheme, assuming
+// they meet certain formatting rules.
 
 // This BNF specifically shows how non-indent whitespace is handled
 // (SRFI-49's BNF is simpler but isn't specific about this, making it
@@ -139,6 +140,35 @@ tokens {
     emit(t);
     initial_indent = true;
   }
+
+  private void restart_indent_level() {
+    if (indents.isEmpty()) indents.push(""); // Initialize if needed
+    indents.push("");  // Let's start over!
+  }
+
+  private void process_restart_end(Token t) {
+    // Must create independent EOL token for ANTLR.
+    CommonToken extra = new CommonToken(input, Token.INVALID_TOKEN_TYPE,
+                Token.DEFAULT_CHANNEL, getCharIndex(), getCharIndex()-1);
+    extra.setLine(getLine());
+    extra.setCharPositionInLine(getCharPositionInLine());
+    extra.setType(EOL);
+    emit(extra);
+
+    /* Dedent (if needed) */
+    CommonToken dedent_it = new CommonToken(input, Token.INVALID_TOKEN_TYPE,
+                Token.DEFAULT_CHANNEL, getCharIndex(), getCharIndex()-1);
+    dedent_it.setLine(getLine());
+    dedent_it.setCharPositionInLine(getCharPositionInLine());
+    process_indent("", dedent_it);  // Emit any dedents needed.
+
+    t.setType(RESTART_END);
+    emit(t);
+
+    // Restore original indent stack.
+    indents.removeFirst();
+  }
+
 }
 
 
@@ -270,79 +300,73 @@ start : t_expr
 // LEXER SECTION.
 // Lexical token (terminal) names are in all upper case
 
-// Here are special interpretation for certain sequences.
-// Define these first, to give them higher lexical precedence
-// than other definitions.  Note that these only have special meaning
-// outside (), [], and {}; otherwise they're just atoms.
+// INCLUDE IN SRFI
+
+SPACE    : ' ';
+TAB      : '\t';
+PERIOD   : '.';
+
+// Special markers, which only have meaning outside (), [], {}.
 GROUP_SPLICE : {indent_processing()}? => '\\' '\\'; // GROUP/splice symbol.
-SUBLIST : {indent_processing()}? =>'$';
+SUBLIST      : {indent_processing()}? =>'$';
+RESTART      : {indent_processing()}? => '<*' { restart_indent_level(); } ;
+// This generates EOL + (DEDENTs if any) + RESTART_END, and restores indents:
+RESTART_END  : {indent_processing()}? => t='*>' { process_restart_end($t); } ;
 RESERVED_TRIPLE_DOLLAR : {indent_processing()}? => '$$$';  // Reserved.
 
-RESTART : {indent_processing()}? => '<' '*' {
-  /* Restart indent level */
-  if (indents.isEmpty()) indents.push(""); // Initialize if needed
-  indents.push("");  // Let's start over!
-  } ;
+// Abbreviations followed by horizontal space are special:
+APOSH           : {indent_processing()}? => '\'' (SPACE | TAB) ;
+QUASIQUOTEH     : {indent_processing()}? => '\`' (SPACE | TAB) ;
+UNQUOTE_SPLICEH : {indent_processing()}? => ',@' (SPACE | TAB) ;
+UNQUOTEH        : {indent_processing()}? => ','  (SPACE | TAB) ;
 
-RESTART_END
-  : {indent_processing()}? => t='*>'
-  {
-    // "*>" generates EOL + (DEDENTs if any) + RESTART_END
-
-    // Must create independent EOL token for ANTLR.
-    CommonToken extra = new CommonToken(input, Token.INVALID_TOKEN_TYPE,
-                Token.DEFAULT_CHANNEL, getCharIndex(), getCharIndex()-1);
-    extra.setLine(getLine());
-    extra.setCharPositionInLine(getCharPositionInLine());
-    extra.setType(EOL);
-    emit(extra);
-
-    /* Dedent (if needed) and restore indent level */
-    CommonToken dedent_it = new CommonToken(input, Token.INVALID_TOKEN_TYPE,
-                Token.DEFAULT_CHANNEL, getCharIndex(), getCharIndex()-1);
-    dedent_it.setLine(getLine());
-    dedent_it.setCharPositionInLine(getCharPositionInLine());
-    process_indent("", dedent_it);  // Send any dedents needed.
-    indents.removeFirst(); // Restore original indent stack.
-
-    $t.setType(RESTART_END);
-    emit($t);
-    };
-
-// Abbreviations followed by horizontal space (space or tab) are special:
-APOSH           : {indent_processing()}? => '\'' (' ' | '\t') ;
-QUASIQUOTEH     : {indent_processing()}? => '\`' (' ' | '\t') ;
-UNQUOTE_SPLICEH : {indent_processing()}? => ',' '@' (' ' | '\t') ;
-UNQUOTEH        : {indent_processing()}? => ',' (' ' | '\t') ;
-
-// These are reported as fragments, not tokens, to silence
-// spurious warnings:
-fragment INITIAL_INDENT_NO_BANG: ' ';
-fragment INITIAL_INDENT_WITH_BANG: ' ';
-fragment INDENT: ' ';
-fragment DEDENT: ' ';
-// Define ERROR this way so we don't get a spurious ANTLR warning.
-// This is used by the later "error" non-terminal.
-fragment ERROR: ' ' ;
+// Abbreviations not followed by horizontal space are ordinary:
+APOS           : '\'';
+QUASIQUOTE     : '\`';
+UNQUOTE_SPLICE : ',@';
+UNQUOTE        : ',';
 
 // Special end-of-line character definitions.
+fragment NEL: '\u0085';  // Hi, IBM mainframes!
+fragment EOL_CHAR : '\n' | '\r' | NEL;
+fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
+fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
+fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
 
-// Specially handle formfeed (\f) and vertical tab (\v), even though
-// some argue against vertical tabs (http://prog21.dadgum.com/76.html).
+// Comments. LCOMMENT=line comment, scomment=special comment.
+LCOMMENT :       ';' NOT_EOL_CHARS ; // Line comment - doesn't include EOL
+BLOCK_COMMENT : '#|' // This is #| ... #|
+      (options {greedy=false;} : (BLOCK_COMMENT | .))* '|#' ;
+DATUM_COMMENT_START : '#;' ;
+// SRFI-105 notes that "implementations could trivially support
+// (simultaneously) markers beginning with #! followed by a letter
+// (such as the one to identify support for curly-infix-expressions),
+// the SRFI-22 #!+space marker as an ignored line, and the
+// format #!/ ... !# and #!. ... !# as a multi-line comment."
+// We'll implement that approach for maximum flexibility.
+SRFI_22_COMMENT : '#! ' NOT_EOL_CHARS ;
+SHARP_BANG_FILE : '#!' ('/' | '.') (options {greedy=false;} : .)*
+                  '!#' (SPACE|TAB)* ;
+// These match #!fold-case, #!no-fold-case, #!sweet, and #!curly-infix;
+// it also matches a lone "#!".  The "#!"+space case is handled above,
+// in SRFI_22_COMMENT, overriding this one:
+SHARP_BANG_MARKER : '#!' (('a'..'z'|'A'..'Z'|'_')
+                    ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')*)? (SPACE|TAB)* ;
+
+// Specially handle formfeed (\f) and vertical tab (\v).
 // We support lone formfeeds on a line to support the GNU Coding Standards
 // (http://www.gnu.org/prep/standards/standards.html), which says:
 // "Please use formfeed characters (control-L) to divide the program
 // into pages at logical places (but not within a function)...
 // The formfeeds should appear alone on lines by themselves."
+// Some argue against vertical tabs (http://prog21.dadgum.com/76.html).
 // Any FF and VT must be at the beginning of a line, must be followed by
 // EOL_SEQUENCE, and they terminate a t-expression.
 FF : '\f'     {if (enclosure==0) initial_indent = true;} ; // Formfeed, \u000c
 VT : '\u000b' {if (enclosure==0) initial_indent = true;} ; // Vertical tab, \v
 
-fragment NEL: '\u0085';  // Hi, IBM mainframes!
-fragment EOL_CHAR : '\n' | '\r' | NEL;
-fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
-fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
+
+// STOP INCLUDING IN SRFI
 
 // Various forms of comments - line comments and special comments.
 // We'll specifically ignore lines that begin with ";"
@@ -356,26 +380,6 @@ LCOMMENT_LINE :  {(getCharPositionInLine() == 0)}? =>
        // if (outside_t_expr()) System.out.println(";" + $contents.text);
        skip();
      };
-LCOMMENT :       ';' NOT_EOL_CHAR* ; // Line comment - doesn't include EOL
-BLOCK_COMMENT : '#|' // This is #| ... #|
-      (options {greedy=false;} : (BLOCK_COMMENT | .))*
-      '|#' ;
-DATUM_COMMENT_START : '#;' ;
-// SRFI-105 notes that "implementations could trivially support
-// (simultaneously) markers beginning with #! followed by a letter
-// (such as the one to identify support for curly-infix-expressions),
-// the SRFI-22 #!+space marker as an ignored line, and the
-// format #!/ ... !# and #!. ... !# as a multi-line comment."
-// We'll implement that approach for maximum flexibility.
-SRFI_22_COMMENT         :       '#! ' NOT_EOL_CHAR* ;
-SHARP_BANG_FILE :       '#!' ('/' | '.')
-        (options {greedy=false;} : .)*
-        '!#' (SPACE|TAB)* ;
-// These match #!fold-case, #!no-fold-case, #!sweet, and #!curly-infix;
-// it also matches a lone "#!".  The "#!"+space case is handled above,
-// in SRFI_22_COMMENT, overriding this one:
-SHARP_BANG_MARKER : '#!' (('a'..'z'|'A'..'Z'|'_')
-                          ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')*)? (SPACE|TAB)* ;
 
 // The following implements INDENT/DEDENT tokens, semi-similar to Python in
 // http://docs.python.org/2/reference/lexical_analysis.html#indentation
@@ -389,12 +393,18 @@ SHARP_BANG_MARKER : '#!' (('a'..'z'|'A'..'Z'|'_')
 // (if indent processing is active) to determine if have an INDENT or DEDENTs.
 // As part of tokenizing, we'll consume any following lines that
 // are ;-only lines, and treat indent-only lines equivalent to blank lines.
-fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
 fragment SPECIAL_IGNORED_LINE
-   : (' ' | '\t' | '!' )* ';' NOT_EOL_CHAR* EOL_SEQUENCE ;
+   : (' ' | '\t' | '!' )* ';' NOT_EOL_CHARS EOL_SEQUENCE ;
 fragment INDENT_CHAR : (' ' | '\t' | '!');
 fragment INDENT_CHARS : INDENT_CHAR*;
 fragment INDENT_CHARS_PLUS : INDENT_CHAR+;
+
+// These are reported as fragments, not tokens, to silence
+// spurious warnings:
+fragment INITIAL_INDENT_NO_BANG: ' ';
+fragment INITIAL_INDENT_WITH_BANG: ' ';
+fragment INDENT: ' ';
+fragment DEDENT: ' ';
 
 // EOL after contents - may have a following indented/dedented line.
 EOL: {enclosure==0 &&
@@ -447,11 +457,7 @@ ENCLOSED_EOL_CHAR: {enclosure > 0}? => EOL_CHAR;
 // those new tokens will interfere with EOL processing. E.G., do NOT do this:
 //   eolchar : '\n' | '\r';
 
-// Simple character or two-character sequences:
-SPACE    : ' ';
-TAB      : '\t';
-fragment BANG : '!';
-PERIOD   : '.';
+// Other simple character or two-character sequences:
 LPAREN   : '(' {enclosure++;} ;
 VECTOR_START     : '#('   {enclosure++;};
 BYTEVECTOR_START : '#u8(' {enclosure++;};
@@ -460,10 +466,8 @@ LBRACKET : '[' {enclosure++;};
 RBRACKET : ']' {if (enclosure>0) {enclosure--;};};
 LBRACE   : '{' {enclosure++;};
 RBRACE   : '}' {if (enclosure>0) {enclosure--;};};
-APOS           : '\'';
-QUASIQUOTE     : '\`';
-UNQUOTE_SPLICE : ',' '@';
-UNQUOTE        : ',';
+
+fragment BANG : '!';
 
 // Here we give lexical definitions for the so-called simple datums,
 // such as symbols and numbers... what many people would call "atoms".
@@ -501,7 +505,7 @@ UNQUOTE        : ',';
 // Note: The spec requires that in numbers case is not relevant,
 // so many of the productions show upper/lowercase.
 
-IDENTIFIER  :
+IDENTIFIER :
   INITIAL SUBSEQUENT* |
   | '|' SYMBOL_ELEMENT* '|'
   | PECULIAR_IDENTIFIER ;
@@ -682,6 +686,10 @@ fragment DIGIT_16 : DIGIT_10 | 'a'..'f' | 'A'..'F';
 
 
 
+// Define ERROR this way so we don't get a spurious ANTLR warning.
+// This is used by the later "error" non-terminal.
+fragment ERROR: ' ' ;
+
 
 // PARSER SECTION
 
@@ -710,8 +718,8 @@ indent  : INDENT;
 dedent  : DEDENT;
 
 // This BNF uses the following slightly complicated pattern in some places:
-//   from_n_expr ((hspace+ (stuff /*= val1 */ | empty /*= val2 */ ))
-//                | empty                             /*= val2 */ )
+//   from_n_expr ((hspace+ (stuff {action1} | empty {action2} ))
+//                | empty                           {action2} )
 // This is an expanded form of this BNF pattern (sans actions):
 //   from_n_expr (hspace+ stuff?)?
 // Note that this pattern quietly removes horizontal spaces at the
@@ -726,6 +734,9 @@ dedent  : DEDENT;
 // followed immediately by other n-expressions without intervening whitespace.
 // We want to detect such situations as errors, so we'll use the
 // more complex (and more persnickety) BNF pattern instead.
+
+wspace  : hspace | ENCLOSED_EOL_CHAR | FF | VT
+          | LCOMMENT ; // Separators inside (...) etc.
 
 list_contents_real returns [Object v]
   : n1=n_expr
@@ -763,7 +774,7 @@ n_expr_tail[Object prefix] returns [Object v]
       r2=n_expr_tail[cons("$" + "bracket-apply" + "$", cons(prefix, $c2.v))]
       {$v = $r2.v;}
     | LBRACE   c3=list_contents RBRACE
-      // Map f{} to (f), not (f ()). f{x} maps to (f x).
+      // Map f{} to (f) and not (f ()). Note that f{x} maps to (f x).
       r3=n_expr_tail[nullp($c3.v) ? list(prefix)
                                   : list(prefix, process_curly($c3.v))]
       {$v = $r3.v;}
@@ -789,66 +800,74 @@ compound_datum returns [Object v]
   | LBRACE braced=list_contents RBRACE {$v = process_curly($braced.v);}
   | vector {$v = $vector.v;} ;
 
-// Important supporting parser definitions for the BNF
-  
+
+// Production "n_expr_prefix" is an n-expression prefixes per SRFI-105:
 n_expr_prefix returns [Object v]
   : simple_datum {$v = $simple_datum.text;}
   | compound_datum {$v = $compound_datum.v;} ;
 
+// Production "n_expr_noabbrev" is an n-expression as defined in SRFI-105,
+// but has no leading abbreviations (see below):
 n_expr_noabbrev returns [Object v]
     : n_expr_prefix
       n_expr_tail[$n_expr_prefix.v] {$v = $n_expr_tail.v;} ;
 
+
+// INCLUDE IN SRFI
+// IMPORTANT SUPPORTING PARSER DEFINITIONS for the BNF
+
+hspace  : SPACE | TAB ;        // horizontal space
+
+// Production "abbrevh" is an abbreviation with a following hspace:
 abbrevh returns [Object v]
-  : APOSH           {$v = "quote";} /*= 'quote */
-  | QUASIQUOTEH     {$v = "quasiquote";} /*= 'quasiquote */
-  | UNQUOTE_SPLICEH {$v = "unquote-splicing";} /*= 'unquote-splicing */
-  | UNQUOTEH        {$v = "unquote";} /*= 'unquote */ ;
+  : APOSH           {$v = "quote";}
+  | QUASIQUOTEH     {$v = "quasiquote";}
+  | UNQUOTE_SPLICEH {$v = "unquote-splicing";}
+  | UNQUOTEH        {$v = "unquote";} ;
+
+// Production "abbrev_noh" is an abbreviation without a following hspace:
 abbrev_noh returns [Object v]
   : APOS            {$v = "quote";}
   | QUASIQUOTE      {$v = "quasiquote";}
   | UNQUOTE_SPLICE  {$v = "unquote-splicing";}
   | UNQUOTE         {$v = "unquote";};
+
 abbrev_all returns [Object v]
   : abbrevh         {$v = $abbrevh.v;}
   | abbrev_noh      {$v = $abbrev_noh.v;} ;
 
-// n_expr is a full neoteric-expression.  Note that n_expr does *not*
-// consume any horizontal space that follows it; this is important for
+// Production "n_expr" is a full neoteric-expression as defined in SRFI-105.
+// Note that n_expr does *not* consume any horizontal space that
+// follows it; this is important for
 // correctly handling initially-indented lines with multiple n-expressions.
+// Uses "n_expr_noabbrev", an n-expression with no leading abbreviations:
 n_expr returns [Object v]
  : abbrev_all n1=n_expr {$v = list($abbrev_all.v, $n1.v);}
  | n_expr_noabbrev      {$v = $n_expr_noabbrev.v;} ;
 
-// n_expr_first is a neoteric-expression, but abbreviations
-// cannot have an hspace afterwards (this production is used by "head"):
+// Production "n_expr_first" is a neoteric-expression, but leading
+// abbreviations cannot have an hspace afterwards (this is used by "head"):
 n_expr_first returns [Object v]
   : abbrev_noh n1=n_expr_first {$v = list($abbrev_noh.v, $n1.v);}
   | n_expr_noabbrev            {$v = $n_expr_noabbrev.v;} ;
-                                    
 
-// Whitespace and indentation names
-ichar   : SPACE | TAB | BANG ; // indent char - creates INDENT/DEDENTs
-hspace  : SPACE | TAB ;        // horizontal space
-wspace  : hspace | ENCLOSED_EOL_CHAR | FF | VT
-          | LCOMMENT ; // Separators inside (...) etc.
-
-// "Special comments" (scomments) are comments other than ";" (line comments):
+// Production "scomment" (special comment) defines comments other than ";":
 sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER ;
 scomment : BLOCK_COMMENT
          | DATUM_COMMENT_START hspace* n_expr
          | sharp_bang_comments ;
 
-// Read in ;comment (if exists), followed by EOL.  EOL consumes
-// additional comment-only lines (if any).  On a non-tokenizing parser,
-// this may reset indent as part of EOL processing.
+// Production "comment_eol" reads an optional ;-comment (if it exists),
+// and the reads the EOL.  EOL processing consumes additional comment-only
+// lines (if any) which may be indented.  On a non-tokenizing parser,
+// this production may provide a new indent as part of the EOL processing.
 
 comment_eol : LCOMMENT? EOL;
 
 
 // KEY BNF PRODUCTIONS for sweet-expressions:
 
-// "restart_tail" returns the contents of a restart, as a list.
+// Production "restart_tail" returns the contents of a restart, as a list.
 // Precondition: At beginning of line.
 // Postcondition: Consumed the matching restart_end.
 
@@ -859,7 +878,7 @@ restart_tail returns [Object v]
   | (FF | VT)+ EOL retry2=restart_tail {$v = $retry2.v;}
   | restart_end {$v = null;} ;
 
-// The "head" is the production to read 1+ n-expressions on one line; it will
+// Production "head" reads 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
 // on the line, it returns a list of exactly one item; this makes it
 // easy to append to later (if appropriate).  In some cases, we want
@@ -886,17 +905,17 @@ head returns [Object v]
   : PERIOD /* Leading ".": escape following datum like an n-expression. */
       (hspace+
         (pn=n_expr hspace* (n_expr error)? {$v = list($pn.v);}
-         | empty  {$v = list(".");} /*= (list '.) */ )
-       | empty    {$v = list(".");} /*= (list '.) */ )
+         | empty  {$v = list(".");} )
+       | empty    {$v = list(".");} )
   | RESTART hspace* restart_tail hspace*
-      (rr=rest    {$v = cons($restart_tail.v, $rr.v); }
-       | empty    {$v = list($restart_tail.v); } )
+      (rr=rest            {$v = cons($restart_tail.v, $rr.v); }
+       | empty            {$v = list($restart_tail.v); } )
   | basic=n_expr_first /* Only match n_expr_first */
       ((hspace+ (br=rest  {$v = cons($basic.v, $br.v);}
-                 | empty     {$v = list($basic.v);} ))
-       | empty               {$v = list($basic.v);} ) ;
+                 | empty  {$v = list($basic.v);} ))
+       | empty            {$v = list($basic.v);} ) ;
 
-// The "rest" production reads the rest of the expressions on a line
+// Production "rest" production reads the rest of the expressions on a line
 // (the "rest of the head"), after the first expression of the line.
 // Like head, it consumes any hspace before it returns.
 // The "rest" production is written this way so a non-tokenizing
@@ -920,16 +939,16 @@ rest returns [Object v]
         (pn=n_expr hspace* (n_expr error)? {$v = $pn.v;}
          | empty {$v = list(".");})
        | empty   {$v = list(".");})
-  | RESTART hspace* restart_tail hspace*
-    (rr=rest     {$v = cons($restart_tail.v, $rr.v);}
-     | empty     {$v = list($restart_tail.v);} )
   | scomment hspace* (sr=rest {$v = $sr.v;} | empty {$v = null;} )
+  | RESTART hspace* restart_tail hspace*
+    (rr=rest             {$v = cons($restart_tail.v, $rr.v);}
+     | empty             {$v = list($restart_tail.v);} )
   | basic=n_expr
       ((hspace+ (br=rest {$v = cons($basic.v, $br.v);}
-                 | empty    {$v = list($basic.v);} ))
-       | empty              {$v = list($basic.v);} ) ;
+                 | empty {$v = list($basic.v);} ))
+       | empty           {$v = list($basic.v);} ) ;
 
-// "body" handles the sequence of 1+ child lines in an it_expr
+// Production "body" handles the sequence of 1+ child lines in an it_expr
 // (e.g., after a "head"), each of which is itself an it_expr.
 // It returns the list of expressions in the body.
 // Note that an it-expr will consume any line comments or hspaces
@@ -948,7 +967,7 @@ body returns [Object v]
     (same next_body=body  {$v = cons($it_expr.v, $next_body.v);}
      | dedent             {$v = list($it_expr.v);} ) ;
 
-// "it-expr" (indented sweet-expressions)
+// Production "it-expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
 // This can be implemented with one-character-lookahead by also
 // passing in the "current" indent ("" to start), and having it return
@@ -969,13 +988,15 @@ body returns [Object v]
 // should then set the current_indent to RESTART_END, and return, to signal
 // the reception of RESTART_END.
 
-// Note: This BNF presumes that "*>" generates 2 tokens, "EOL RESTART_END".
-// You can change the BNF below to allow "head empty", then "*>" only
-// needs to generate RESTART_END, but this creates a bunch of ambiguities
+// Note: This BNF presumes that "*>" generates multiple tokens,
+// "EOL DEDENT* RESTART_END", and resets the indentation list.
+// You can change the BNF below to allow "head empty", and handle dedents
+// by directly comparing values; then "*>" only needs to generate
+// RESTART_END. But this creates a bunch of ambiguities
 // like a 'dangling else', which must all be disambiguated by accepting
 // the first or the longer sequence first.  Either approach is needed to
-// support "*>" as the non-first element so that the "head" will end
-// without EOL, e.g., "let <* y 5 *>".
+// support "*>" as the non-first element so that the "head" can end
+// without a literal EOL, e.g., as in "let <* y 5 *>".
 
 it_expr returns [Object v]
   : head
@@ -992,7 +1013,7 @@ it_expr returns [Object v]
        (indent children=body {$v = append($head.v, $children.v);}
         | empty              {$v = monify($head.v);} /* No child lines */ )
     // If RESTART_END doesn't generate 2 tokens "EOL RESTART_END", add:
-    // | empty                 {$v = monify($head.v);}
+    // | empty               {$v = monify($head.v);}
      ))
   | (GROUP_SPLICE | scomment) hspace* /* Initial; Interpet as group */
       (group_i=it_expr {$v = $group_i.v;} /* Ignore initial GROUP/scomment */
@@ -1006,7 +1027,7 @@ it_expr returns [Object v]
   | abbrevh hspace* abbrev_i_expr=it_expr
       {$v=list($abbrevh.v, $abbrev_i_expr.v);} ;
 
-// Top-level sweet-expression production, t_expr.
+// Production "t_expr" is the top-level production for sweet-expressions.
 // This production handles special cases, then in the normal case
 // drops to the it_expr production.
 
