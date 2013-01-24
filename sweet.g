@@ -951,9 +951,10 @@ scomment : BLOCK_COMMENT
          | sharp_bang_comments ;
 
 // Production "comment_eol" reads an optional ;-comment (if it exists),
-// and the reads the EOL.  EOL processing consumes additional comment-only
-// lines (if any) which may be indented.  On a non-tokenizing parser,
-// this production may provide a new indent as part of the EOL processing.
+// and the reads the end-of-line (EOL).  EOL processing consumes
+// additional comment-only lines (if any) which may be indented.
+// On a non-tokenizing parser, this production may return the new indent
+// as found in EOL processing.
 
 comment_eol : LCOMMENT? EOL;
 
@@ -1060,7 +1061,7 @@ body returns [Object v]
     (same next_body=body  {$v = cons($it_expr.v, $next_body.v);}
      | dedent             {$v = list($it_expr.v);} ) ;
 
-// Production "it-expr" (indented sweet-expressions)
+// Production "it_expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
 // This can be implemented with one-character-lookahead by also
 // passing in the "current" indent ("" to start), and having it return
