@@ -2,22 +2,41 @@
 
 # schemify - filter stdin and translate its action rules into Scheme
 # Intended for use on sweet.g, so that we can write in Java (for ANTLR)
-# but show Scheme syntax (for everyone else)
+# and show Scheme syntax to everyone else.
+
+# This is a very simplistic textual translation.
+# This approach does not work in general, but since the input is
+# simple, stylized, and controlled by us, it works just fine in this case.
+# This presumes that lines with action rules have a "{" or "}" on the line.
+
 
 $translate = 0;
+$include_in_srfi = 0;
 
 while (<>) {
   if (/PARSER SECTION/) {
     $translate = 1;
   }
-  if ($translate) {
+  if (/INCLUDE IN SRFI/) {
+    $include_in_srfi = 1;
+  }
+  if (/STOP INCLUDING IN SRFI/) {
+    $include_in_srfi = 0;
+  }
+  if ($translate && /[{}]/) {
     s/list\(/(list /g;
     s/cons\(/(cons /g;
     s/append\(/(append /g;
+
     s/monify\(/(monify /g;
-    s/generate_eof\(/(generate_eof/g;  # No parameters, so no space at end
+    s/process_curly\(/(process_curly /g;
+
+    # No parameters, so no space at end
+    s/generate_eof\(\)/(generate_eof/g;
+    s/indent_processing\(\)/(indent_processing)/g;
+
     s/{ ?\$v ?= ?/{/g;
-    s/ ?;}/}/g;
+    s/ ?; ?}/}/g;
     s/\.v\b//g;
     s/\bnull\b/'()/g;
 
@@ -28,12 +47,15 @@ while (<>) {
     s/"unquote-splicing"/'unquote-splicing/;
     s/"unquote"/'unquote/;
 
-    # Serious hack to remove commas as parameter separators:
-    s/, / /g if /[{}]/;
+    # Serious hack to remove commas as parameter separators; only do this
+    # if it appears commas are being used as separators.
+    s/, / /g  if ( /\(.*,.*\)/ ) ;
 
     # Special case.
     s/\(list "."\)/(list '.)/g;
   }
-  print;
+  if ($include_in_srfi && (! /INCLUDE IN SRFI/)) {
+    print;
+  }
 }
 
