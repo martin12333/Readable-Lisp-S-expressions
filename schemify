@@ -10,7 +10,7 @@
 # This presumes that lines with action rules have a "{" or "}" on the line.
 
 
-$translate = 0;
+$translate = 1;
 $include_in_srfi = 0;
 
 while (<>) {
@@ -53,6 +53,7 @@ while (<>) {
 
     # Special case.
     s/\(list "."\)/(list '.)/g;
+    s/{greedy=false}/{greedy=false;}/g;
   }
   if ($include_in_srfi && (! /INCLUDE IN SRFI/)) {
     print;

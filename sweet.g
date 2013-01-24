@@ -446,6 +446,8 @@ SHARP_BANG_FILE : '#!' ('/' | '.') (options {greedy=false;} : .)*
 SHARP_BANG_MARKER : '#!' (('a'..'z'|'A'..'Z'|'_')
                     ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')*)? (SPACE|TAB)* ;
 
+// STOP INCLUDING IN SRFI
+
 // Specially handle formfeed (\f) and vertical tab (\v).
 // We support lone formfeeds on a line to support the GNU Coding Standards
 // (http://www.gnu.org/prep/standards/standards.html), which says:
@@ -457,9 +459,6 @@ SHARP_BANG_MARKER : '#!' (('a'..'z'|'A'..'Z'|'_')
 // EOL_SEQUENCE, and they terminate a t-expression.
 FF : '\f'     {if (enclosure==0) initial_indent = true;} ; // Formfeed, \u000c
 VT : '\u000b' {if (enclosure==0) initial_indent = true;} ; // Vertical tab, \v
-
-
-// STOP INCLUDING IN SRFI
 
 // Various forms of comments - line comments and special comments.
 // We'll specifically ignore lines that begin with ";"
@@ -964,6 +963,7 @@ comment_eol : LCOMMENT? EOL;
 // Production "restart_tail" returns the contents of a restart, as a list.
 // Precondition: At beginning of line.
 // Postcondition: Consumed the matching restart_end.
+// FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
 
 restart_tail returns [Object v]
   : it_expr more=restart_tail {$v = cons($it_expr.v, $more.v);}
