@@ -187,4 +187,8 @@ a
 b
 (foo c d)
 (foo c d)
+(f a b c)
+a
+b
+c
 fin
