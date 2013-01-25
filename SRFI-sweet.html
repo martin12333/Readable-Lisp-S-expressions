@@ -56,12 +56,17 @@ and
 
 <h1><a name="related-srfis">Related SRFIs</a></h1>
 <p>
-<a href="http://srfi.schemers.org/srfi-22/">SRFI-22
-(Running Scheme Scripts on Unix)</a>,
 <a href="http://srfi.schemers.org/srfi-49/">SRFI-49
-(Indentation-sensitive syntax)</a>, and
+(Indentation-sensitive syntax)</a> (superceded by this SRFI),
 <a href="http://srfi.schemers.org/srfi-105/">SRFI-105
-(Curly-infix-expressions)</a>
+(Curly-infix-expressions)</a> (incorporated by this),
+<a href="http://srfi.schemers.org/srfi-22/">SRFI-22
+(Running Scheme Scripts on Unix)</a> (some interactions),
+<a href="http://srfi.schemers.org/srfi-30/">SRFI-30
+(Nested Multi-line comments)</a> (some interactions),
+and
+<a href="http://srfi.schemers.org/srfi-62/">SRFI-62
+(S-expression comments)</a> (some interactions)
 </p>
 
 <h1><a name="abstract">Abstract</a></h1>
@@ -333,9 +338,20 @@ until some other conflicting marker is given.
 </p>
 
 <p>
+A sweet-expression reader <i>SHOULD</i> support
+<a href="http://srfi.schemers.org/srfi-22/">SRFI-22
+(Running Scheme Scripts on Unix)</a>
+<a href="http://srfi.schemers.org/srfi-30/">SRFI-30
+(Nested Multi-line comments)</a>,
+and
+<a href="http://srfi.schemers.org/srfi-62/">SRFI-62
+(S-expression comments)</a>.
+</p>
+
+<p>
 Implementations of this SRFI <em>MAY</em>
 implement sweet-expressions in their datum readers by default,
-even when the marker is not (yet) received.
+even when the <code>!#sweet</code> marker is not (yet) received.
 Portable applications <em>SHOULD</em> include the <code>#!sweet</code>
 marker before using sweet-expressions, typically near the top of a file.
 Portable applications <em>SHOULD NOT</em>
@@ -1841,8 +1857,87 @@ For example, here&#8217;s a sweet-expression using scsh:
   run $ grep -i "xx.*zz" &lt;(oldfile) &gt;(newfile)
 </pre>
 
+<p>SUBLIST also makes certain idioms possible.
+For instance,
+some functions need to change their behavior
+based on the type of the inputs.
+Here's an example,
+an implementation of SRFI-105's <var>$bracket-apply$</var>:
+</p>
+
+<pre>
+define c[i]
+  cond
+    vector?(c)
+      vector-ref c i
+    string?(c)
+      string-ref c i
+    pair?(c)
+      list-ref c i
+    else
+      error "Not a collection"
+</pre>
+
+<p>
+This function shows a common occurrence
+in Scheme programming:
+A function that immediately begins with <code>cond</code>.
+The formatting of <code>cond</code> above, however,
+has several lines that consist of a single n-expression item
+(e.g. "<code>cond</code>", "<code>else</code>",
+"<code>string?(c)</code>", etc.).
+</p>
+
+<p>
+Vertical space is precious.
+Using SUBLIST,
+we can compress the code to:
+</p>
+
+<pre>
+define c[i] $ cond
+  vector?(c) $ vector-ref c i
+  string?(c) $ string-ref c i
+  pair?(c)   $ list-ref c i
+  else       $ error "Not a collection"
+</pre>
+
+<p>
+Arguably,
+this can be done by putting the <code>cond</code> branches
+in explicit parentheses.
+Howver, the idiom supported by SUBLIST is more general
+than explicit parentheses can be,
+because SUBLIST does not disable indentation processing.
+In particular,
+this idiomatic formatting of <code>cond</code> using SUBLIST
+makes possible the following code:
+</p>
+
+<pre>
+define merge(< as bs) $ cond
+  null?(as)           $ bs
+  null?(bs)           $ as
+  {car(as) < car(bs)} $ cons
+                         car as
+                         merge < (cdr as) bs
+  else                $ cons
+                         car bs
+                         merge < as (cdr bs)
+</pre>
+
+<p>
+Without SUBLIST, the more complex branches of the <code>cond</code>
+would have to be formatted differently from the simpler branches
+(unless you are willing to waste a line to write just "<code>as</code>"),
+or would be expressed in deeply-nested parentheses,
+defeating the purpose of using sweet-expressions.
+</p>
+
+<!-- to be inserted before this line: -->
 
 <p>After discussion, sublist was accepted in July 2012.</p>
+
 
 <h2 id="eof">End-of-file (EOF) handling</h2>
 <p>
