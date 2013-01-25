@@ -1,6 +1,8 @@
 #!/usr/bin/perl
 
-# schemify - filter stdin and translate its action rules into Scheme
+# to-srfi - make a Java ".g" file ready for insertion into a Scheme SRFI.
+# It filters stdin to translate its action rules into Scheme and
+# escape HTML-special names.
 # Intended for use on sweet.g, so that we can write in Java (for ANTLR)
 # and show Scheme syntax to everyone else.
 
@@ -55,6 +57,11 @@ while (<>) {
     s/\(list "."\)/(list '.)/g;
     s/{greedy=false}/{greedy=false;}/g;
   }
+
+  s/\&/&amp;/g;
+  s/</&lt;/g;
+  s/>/&gt;/g;
+
   if ($include_in_srfi && (! /INCLUDE IN SRFI/)) {
     print;
   }
