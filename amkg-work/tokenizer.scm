@@ -32,6 +32,83 @@
         ; method of generating an EOF.
         (end-of-file #f))
 
+    (define (eol? c)
+      (or
+        (char=? c #\newline)
+        (char=? c (integer->char 13))))
+    (define (eat-line)
+      (let ((c (peek-char port)))
+        (if (eol? c)
+            '()
+            (begin
+              (read-char port)
+              (eat-line)))))
+
+    (define (hspace? c)
+      (or
+        (char=? c #\space)
+        (char=? c (integer->char 9))))
+    (define (get-while predicate?)
+      (let loop ((cs '()))
+        (let ((c (peek-char port)))
+          (if (predicate? c)
+            (loop (cons (read-char port) cs))
+            (list->string (reverse cs))))))
+    (define (get-hspace*)
+      (get-while hspace?))
+    (define (get-indentation)
+      (get-while
+        (lambda (c)
+          (or
+            (hspace? c)
+            (char=? c #\!)))))
+
+    (define (compatible-indent? i1 i2)
+      (if (< (string-length i1) (string-length i2))
+          (compatible-indent? i2 i1)
+          (string=?
+            (substring i1 0 (string-length i2))
+            i2)))
+
+    (define (process-indentation current-indent)
+      (let* ((top-indent (car indent-stack))
+             (l-current-indent (string-length current-indent))
+             (l-top-indent (string-length top-indent)))
+        (cond
+          ((not (compatible-indent? current-indent top-indent))
+            'BADDENT)
+          ((< l-top-indent l-current-indent)
+            ; Greater indent; push on indent stack.
+            (set! indent-stack (cons current-indent indent-stack))
+            'INDENT)
+          ((= l-top-indent l-current-indent)
+            'SAME)
+          (else ; (> l-top-indent l-current-indent)
+            ; pop-off one
+            (set! indent-stack (cdr indent-stack))
+            ; start popping off
+            (let loop ((pop-offs 1))
+              (let* ((top-indent (car indent-stack))
+                     (l-top-indent (string-length top-indent)))
+                (cond
+                  ((< l-top-indent l-current-indent)
+                    ; This case:
+                    ;|foo
+                    ;|    bar
+                    ;| quux
+                    'BADDENT)
+                  ((= l-top-indent l-current-indent)
+                    ; stop popping off indentation levels.
+                    ; we'll be returning a DEDENT ourselves, so
+                    ; pending dedents is one minus the number of
+                    ; indentations popped off.
+                    (set! pending-dedents (- pop-offs 1))
+                    'DEDENT)
+                  (else
+                    ; still need to pop off an indent level
+                    (set! indent-stack (cdr indent-stack))
+                    (loop (+ 1 pop-offs))))))))))
+
     (define (get-token)
       (cond
         ((> pending-dedents 0)
@@ -51,6 +128,8 @@
                 (set! end-of-file c)
                 ; Now act as if we found an indentation
                 ; at column 0.
+                ; *technically* this is wrong if eof is
+                ; not on a line by itself.
                 (process-indentation ""))
               ; at start of line, and we have consumed
               ; at least one line.  Always get indent
