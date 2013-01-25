@@ -243,6 +243,7 @@ document are to be interpreted as described in
 <p>&#8220;<dfn>Sweet-expressions</dfn>&#8221; (aka &#8220;<dfn>t-expressions</dfn>&#8221;) deduce parentheses from indentation.
 A sweet-expression reader <em>MUST</em> interpret its input
 as follows when indentation processing is active:
+</p>
 <ol>
 <li>An indented line is a parameter of its parent.</li>
 <li>Later terms on a line are parameters of the first term.</li>
@@ -258,7 +259,6 @@ maps to <samp>(f&nbsp;{...})</samp>.</li>
 (inside they&#8217;re a sequence of
 whitespace-separated neoteric-expressions).</li>
 </ol>
-</p>
 
 <p>
 Sweet-expression rule clarifications:
@@ -1159,10 +1159,12 @@ s-expression notation, and our replies.
 </p>
 
 <blockquote>
+<p>
 The Common Lisp FAQ says that people <i>&#8220;wonder why Lisp can&#8217;t
 use a more &#8216;normal&#8217; syntax.
 It&#8217;s not because Lispers have never thought of the idea - indeed,
 Lisp was originally intended to have a syntax much like FORTRAN...&#8221;</i>.
+</p>
 </blockquote>
 <p>
 This is an argument for our position, not for theirs.
@@ -1174,6 +1176,7 @@ even Lisp&#8217;s creator thought its notation was poor.
 </p>
 
 <blockquote>
+<p>
 <a href="http://www.dreamsongs.com/Files/Hopl2.pdf">
 &#8220;The Evolution of Lisp&#8221; by Guy Steele and Richard Gabriel
 (HOPL2 edition)</a> says that,
@@ -1183,6 +1186,7 @@ find the universal use of S-expressions a technical advantage (and don&#8217;t
 mind the admitted relative clumsiness of S-expressions for numerical
 expressions) and those who are certain that algebraic syntax is more
 concise, more convenient, or even more natural...&#8221;.</i>
+</p>
 </blockquote>
 <p>
 Note that even these authors, who are advocates for s-expression notation,
@@ -1193,6 +1197,7 @@ and not tied to a particular semantic at all.
 </p>
 
 <blockquote>
+<p>
 That paper continues,
 <i>&#8220;We conjecture that Algol-style syntax has not really caught on in the
 Lisp community as a whole for two reasons. First, there are not enough
@@ -1207,6 +1212,7 @@ or hundreds&#8221; and it&#8217;s just too hard to invent that many distinct
 symbols (though the APL community certainly has tried). Ultimately
 one must always fall back on a general function-call notation; it&#8217;s
 just that Lisp programmers don&#8217;t wait until they fail.&#8221;</i>
+</p>
 </blockquote>
 <p>
 But this is a failing argument.
@@ -1223,6 +1229,7 @@ semantic or requiring a massive set of special symbols.
 </p>
 
 <blockquote>
+<p>
 Then it said,
 <i>
 &#8220;Second, and
@@ -1234,6 +1241,7 @@ of its representation as data is not likely to be warmly received (and
 this was, and is, one of the principal objections to the inclusion
 of loop in Common Lisp).&#8221;
 </i>
+</p>
 </blockquote>
 <p>
 Here Steele and Gabriel are <b>extremely</b> insightful.
@@ -1963,7 +1971,7 @@ Sweet-expression reader implementations are free to warn about files
 that fail to meet this requirement.
 </p>
 
-<h2 id="reserved">Restart lists (&lt;* ... *&gt;)</h2>
+<h2 id="restart-lists">Restart lists (&lt;* ... *&gt;)</h2>
 <p>
 Sweet-expressions without restart lists (&lt;* ... *&gt;)
 work well in a vast number of circumstances.
@@ -2160,6 +2168,7 @@ as described in an
 <a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg00806.html">email posted 2012-09-02</a>:
 
 <blockquote>
+<p>
 <i>
 &lt;* ... *&gt; are like ( ... ) in that they surround a list,
 but they do NOT turn 
@@ -2174,6 +2183,7 @@ eof or active *&gt; can close the &lt;*.
 Once all that mapping is done, the range of 
 &lt;* ... *&gt; is replaced with the mapped result.
 </i>
+</p>
 </blockquote>
 
 <p>
@@ -2537,7 +2547,7 @@ Nothing has fundamentally changed;
 as always, you should implement your Lisp expression writer so that
 it presents a format convenient to both human and machine readers.</p>
 
-<h2 id="backwards-compatibility">Backwards compatibility</h1>
+<h2 id="backwards-compatibility">Backwards compatibility</h2>
 
 <p>Backwards compatibility with traditional Lisp notation is helpful.
 A reader that can also read traditional s-expressions, formatted
@@ -2670,7 +2680,7 @@ self-contained.&#8221;</p>
 ; Implementation of the sweet-expressions project by readable mailinglist.
 ;
 ; Copyright (C) 2005-2012 by David A. Wheeler, Alan Manuel K. Gloria,
-;                         and Egil Möller.
+;                         and Egil Moller.
 ;
 ; This software is released as open source software under the "MIT" license:
 ;
@@ -2692,7 +2702,7 @@ self-contained.&#8221;</p>
 ; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ; OTHER DEALINGS IN THE SOFTWARE.
 
-; This file includes code from SRFI-49 (by Egil Möller),
+; This file includes code from SRFI-49 (by Egil Moller),
 ; but significantly modified.
 
 ; -----------------------------------------------------------------------------
