@@ -20,8 +20,6 @@
 </head>
 <body>
 
-<!-- Note: "class" isn't in HTML 3.2, but SRFI-64 set a precedent
-     for allowing this: -->
 <div class="title">
 <h1><a name="title">Title</a></h1>
 <p>Sweet-expressions (t-expressions)</p>
@@ -58,78 +56,73 @@ and
 
 <h1><a name="related-srfis">Related SRFIs</a></h1>
 <p>
+<a href="http://srfi.schemers.org/srfi-22/">SRFI-22
+(Running Scheme Scripts on Unix)</a>,
 <a href="http://srfi.schemers.org/srfi-49/">SRFI-49
-(Indentation-sensitive syntax)</a>,
+(Indentation-sensitive syntax)</a>, and
 <a href="http://srfi.schemers.org/srfi-105/">SRFI-105
 (Curly-infix-expressions)</a>
 </p>
 
 <h1><a name="abstract">Abstract</a></h1>
 <p>
-Many software developers find Lisp s-expression notation inconvenient and
-unpleasant to read, in part because of the many parentheses required
-in typical use.
-Even those who like Lisp s-expression syntax typically use indentation
-to show structure, and not just parentheses,
-because structure is not obvious in raw un-indented s-expressions.
-This SRFI defines an indentation-sensitive syntax, inspired by Python;
-indentation-sensitive syntax eliminates the need for many parentheses
-and the need to synchronize indentation with parentheses.
-The previous
-<a href="http://srfi.schemers.org/srfi-49/">SRFI-49</a> defines an
-indentation-sensitive syntax, but in practice it is somewhat awkward,
-and by itself it lacks
-support for infix notation (e.g., <samp>{a&nbsp;+&nbsp;b}</samp>)
-and prefix formats (e.g., <samp>f(x)</samp>).
-</p>
-<p>
-This SRFI defines sweet-expressions (aka t-expressions),
-an indentation-sensitive syntax developed from
-experience in implementing real Scheme programs.
-It is derived from
-<a href="http://srfi.schemers.org/srfi-49/">SRFI-49</a>
-and includes (by reference)
+This SRFI describes a new extended syntax for Scheme, called sweet-expressions
+(t-expressions), that has equal descriptive power as s-expressions
+but is designed to be easier for humans to read.
+The sweet-expression syntax enables the use of syntactically-meaningful
+indentation to group expressions (similar to Python),
+and it builds on the infix and traditional function notation defined in
 <a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
-Unlike most past efforts to make Lisp more &#8220;readable&#8221;,
-the sweet-expression notation is
-generic (the notation does not depend on an underlying semantic),
-homoiconic (the underlying data structure is clear from the syntax), and
-backwards-compatible with well-formatted s-expressions.
+Unlike nearly all past efforts to improve s-expression readability,
+sweet-expressions are
+general (the notation does not depend on an underlying semantic)
+and homoiconic (the underlying data structure is clear from the syntax).
+Sweet-expressions can be used both for program and data input.
+Here is an example:
 </p>
-<p>
-For example, the following sweet-expression:
-</p>
+
+<table border="1" cellpadding="4">
+<tr><th>sweet-expression</th><th>s-expression</th></tr>
+<tr>
+<td>
 <pre>
 define factorial(n)
   if {n <= 1}
     1
     {n * factorial{n - 1}}
 </pre>
-<p>
-Maps to the following s-expression:
-</p>
+</td>
+<td>
 <pre>
 (define (factorial n)
   (if (<= n 1)
     1
     (* n (factorial (- n 1)))))
 </pre>
+</td>
+</tr>
+</table>
 
 <p>
-A sweet-expression reader would accept <i>either</i> form.
-Note that the sweet-expression notation was developed by the
+Sweet-expressions and traditionally formatted s-expressions
+can be freely mixed, allowing the developer
+to easily transition and maximize readability when laying out code.
+(For example, a sweet-expression reader would accept either format above.)
+The sweet-expression notation was developed by the
 &#8220;<a href="http://readable.sourceforge.net/">Readable Lisp S-expressions Project</a>&#8221;.
 </p>
 
+
 <h1><a name="rationale">Rationale</a></h1>
 <p>
-The large number of parentheses required by Lisp syntax is the butt
-of many jokes in the software development community
-and has been widely criticized.
-The
-<a href="http://www.catb.org/jargon/html/L/LISP.html">Jargon File</a>
-says that Lisp is
-&#8220;mythically from &#8216;Lots of Irritating Superfluous Parentheses&#8217;&#8221;.
+Many software developers find Lisp s-expression notation inconvenient and
+unpleasant to read.
+In fact, the large number of parentheses required by traditional
+Lisp s-expression syntax is the butt
+of many jokes in the software development community.
+The <a href="http://www.catb.org/jargon/html/L/LISP.html">Jargon File</a>
+says that Lisp is &#8220;mythically from
+&#8216;Lots of Irritating Superfluous Parentheses&#8217;&#8221;.
 <a href="http://fortunes.cat-v.org/kernelnewbies/">Linus Torvalds</a>
 commented about some parentheses-rich C code,
 &#8220;don&#8217;t ask me about the extraneous parenthesis.  I bet some
@@ -146,16 +139,9 @@ Mainstream adoption will, however, always be curtailed by the syntax.
 Racket could benefit from [reducing]
 the layers of parenthetical adipose that [needlessly] engird it.&#8221;
 </p>
+
 <p>
-Since Lisp programs and data are often written using indentation anyway,
-it seems reasonable to create
-an indentation-sensitive syntax that would eliminate the need for
-many of these &#8220;superfluous&#8221; parentheses, as well as eliminating the
-need to keep the indentation and parentheses synchronized.
-</p>
-<p>
-This is not a new observation.
-<a href="http://paulgraham.com/popular.html">Lisp advocate
+Even <a href="http://paulgraham.com/popular.html">Lisp advocate
 Paul Graham says</a>, regarding Lisp syntax,
 &#8220;A more serious problem [in Lisp] is the diffuseness of prefix notation...
 We can get rid of (or make optional) a lot of parentheses by making
@@ -174,55 +160,62 @@ There is already a good deal of syntax in Lisp.
 It&#8217;s not necessarily bad to introduce more,
 as long as no one is forced to use it.&#8221;
 </p>
-<p>
-The indentation-sensitive syntax defined in this SRFI
-is generic (the notation does not depend on an underlying semantic)
-and homoiconic (the underlying data structure is clear from the syntax).
-We believe previous efforts to improve the readability of
-Lisp s-expressions, such as McCarthy&#8217;s M-expressions, failed because
-they failed to be generic or homoiconic.
-It often difficult to easily access new capabilities
-(such as those defined by macros) in notations that are not
-generic or homoiconic.
-In contrast, because sweet-expressions <i>are</i> generic and homoiconic,
-they can be easily used with other constructs
-such as quasiquoting and macros.
-In short, if a capability can be accessed using s-expressions, then they
-can be accessed without any additional effort using sweet-expressions.
-The indentation processing is simply
-an abbreviation, in much the same way that
-<samp>&#39;x</samp> is an abbreviation for <samp>(quote&nbsp;x)</samp>.
-</p>
-<p>
-<a href="http://srfi.schemers.org/srfi-49/">SRFI-49</a> defines an
-indentation-sensitive syntax.
-Unfortunately, it has not been widely deployed among Scheme implementations.
-We believe this is, at least in part,
-because of various problems and limitations in it,
-<a href="#srfi-49">described in more detail below</a>.
-Nevertheless, SRFI-49 represented an important first step in devising
-an indentation-sensitive syntax; sweet-expressions are derived from SRFI-49
-and retain most of its syntax.
 
-</p>
 <p>
-The notation defined in this sweet-expressions SRFI
-is intentionally designed so that, unlike Python,
-it works exactly the same way in both interactive mode (e.g., a REPL)
-and when processing a file.
-A difference in modes could cause failure when
-cutting-and-pasting between a file and an interactive session.
-Since many users often switch between the REPL and files,
-such a difference was considered unacceptable.
-</p>
-<p>This notation is <em>simple</em> and <em>straightforward</em>.
-It basically defines a few additional abbreviations
-for s-expressions based on real-world experience.
+Many new syntaxes have been invented for various Lisp dialects,
+including McCarthy&#8217;s original M-expression notation for Lisp.
+However, nearly all of these past notations are not
+general (i.e., the notation does not depend on an underlying semantic) or
+homoiconic (i.e., the underlying data structure is clear from the syntax).
+We believe a Lisp-based notation <i>needs</i> to be general and homoiconic.
+For example, Lisp-based languages can trivially create new semantic constructs
+(e.g., with macros) or be used to process other constructs;
+a Lisp notation that is not general will always lag behind and lack
+the "full" power of s-expressions.
 </p>
 
 <p>
+Recently, using indentation as the sole grouping constuct of a
+language has become popular (in particular
+with the advent of the Python programming language).
+This approach solves the problem of indentation going out of sync
+with the native grouping constuct of the language, and exploits
+the fact that most programmers indent larger programs and expect
+reasonable indentation by others.
+Unfortunately, the Python syntax uses special constructs
+for the various semantic
+constructs of the language, and the syntaxes of file input and
+interactive input differ slightly.
+</p>
+
+<p>
+<a href="http://srfi.schemers.org/srfi-49/">SRFI-49</a>
+defined a promising indentation-sensitive syntax for Scheme.
+Unfortunately,
+<a href="#srfi-49">SRFI-49 had some awkward usage issues</a>,
+and by itself it lacks
+support for infix notation (e.g., <samp>{a&nbsp;+&nbsp;b}</samp>)
+and prefix formats (e.g., <samp>f(x)</samp>).
+Sweet-expressions build on and refine SRFI-49 by addressing these issues.
+Real programs by different authors have been written using sweet-expressions,
+demonstrating that sweet-expressions are a practical notation.
 See the <a href="#design-rationale">design rationale</a> for a detailed
 discussion on how and why it is designed this way.
+</p>
+
+<p>
+Sweet-expressions <i>are</i> general and homoiconic,
+and thus can be easily used with other constructs
+such as quasiquoting and macros.
+In short, if a capability can be accessed using s-expressions, then they
+can be accessed using sweet-expressions.
+Unlike Python, the notation is exactly the same in a REPL and a file,
+so people can switch between a REPL and files without issues.
+Fundamentally, sweet-expressions define a few additional abbreviations
+for s-expressions, in much the same way that
+<samp>&#39;x</samp> is an abbreviation for <samp>(quote&nbsp;x)</samp>.
+</p>
+
 
 <h1><a name="specification">Specification</a></h1>
 <p>
@@ -1279,7 +1272,7 @@ If you can, you can do amazing manipulations.
 But what Gabriel and Steele failed to appreciate in their paper is that
 it&#8217;s possible to have both.
 Now that we understand why past efforts failed, we can devise notations
-that keep these key properties (generality and homoiconicity) - and succeed!
+that are general and homoiconic - and succeed!
 </p>
 
 <p>
@@ -2241,7 +2234,7 @@ rel="nofollow">http://per.bothner.com/blog/2010/Q2-extensible-syntax/</a>.
 </p>
 <p>Q2 has somewhat similar goals to the &#8220;readable&#8221; project, though
 with a different approach. The big difference is that David A. Wheeler
-decided it was important to have a generic notation for <em>any</em>
+decided it was important to have a general notation for <em>any</em>
 s-expression. Here is a brief additional comparison:</p>
 <ul>
 <li>Sweet-expressions have infix, though not built-in precedence
@@ -2330,10 +2323,10 @@ seems more useful to the developers of the sweet-expression notation.
 </p>
 
 <p>
-In short, P4P fails to be generic; it is tied to specific semantics.
+In short, P4P fails to be general; it is tied to specific semantics.
 Previous readability efforts, such as M-expressions, failed,
 and we believe that one reason was that those notations
-failed to be generic.
+failed to be general.
 We applaud the admirable goals of P4P, but do not think it represents
 the best way forward.
 </p>
