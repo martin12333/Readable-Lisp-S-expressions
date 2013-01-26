@@ -1106,6 +1106,8 @@
 ; Sweet Expressions
 ; -----------------------------------------------------------------------------
 
+; --- Old implementation ---
+
   ; NOTE split et al. should not begin in #, as # causes
   ; the top-level parser to guard against multiline comments.
   (define split (string->symbol "\\\\"))
@@ -1473,6 +1475,17 @@
                  (#t
                     (attach-sourceinfo pos block))))))))))
 
+; --- New implementation ---
+ (define (t_expr port)
+   "STUB for t_expr")
+
+ ; TEMPORARY: Select between them.
+
+ (define (sweet-expr-start-something port)
+   if (getenv "SWEET-NEW")
+     (t_expr port)
+     (sugar-start-expr port))
+
 ; -----------------------------------------------------------------------------
 ; Comparison procedures
 ; -----------------------------------------------------------------------------
@@ -1485,7 +1498,7 @@
 
   (define curly-infix-read (make-read curly-infix-read-nocomment))
   (define neoteric-read (make-read neoteric-read-nocomment))
-  (define sweet-read (make-read sugar-start-expr))
+  (define sweet-read (make-read sweet-expr-start-something))
 
   )
 
