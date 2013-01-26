@@ -467,5 +467,9 @@ f
 \\ b
 \\ c
 
+foo
+! bar batz
+; comment
+! nitz koo
 
 fin
