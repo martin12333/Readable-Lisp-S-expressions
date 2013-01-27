@@ -1106,6 +1106,8 @@
 ; Sweet Expressions
 ; -----------------------------------------------------------------------------
 
+; --- Old implementation ---
+
   ; NOTE split et al. should not begin in #, as # causes
   ; the top-level parser to guard against multiline comments.
   (define split (string->symbol "\\\\"))
@@ -1473,6 +1475,147 @@
                  (#t
                     (attach-sourceinfo pos block))))))))))
 
+; --- New implementation ---
+
+  ; Warning: For portability use eqv?/memv, not eq?/memq, to compare chars
+  ; A "case" is okay since it uses "eqv?".
+
+  (define initial_comment_eol '(#\; #\newline carriage-return))
+
+  ; Consume 0+ spaces or tab
+  (define (hspaces port)
+    (cond
+      ((char-horiz-whitespace? (my-peek-char port))
+        (my-read-char port)
+        (hspaces port))))
+
+  (define (n_expr_first port)
+    ; TODO - handle special cases
+    (list 'normal (neoteric-read-nocomment port)))
+
+  (define (n_expr port)
+    ; TODO - handle special cases
+    (n_expr_first port)
+  )
+
+  ; Consume ;-comment (if there), consume EOL, and return new indent.
+  ; Skip ;-comment-only lines; a following indent-only line is empty.
+  (define (comment_eol_read_indent port)
+    (consume-to-eol port)
+    (consume-end-of-line port)
+    (let* ((indentation (list->string (accumulate-hspace port)))
+           (c (my-peek-char port)))
+      (cond
+        ((eqv? c #\;)  ; A ;-only line, consume and try again.
+          (consume-to-eol port)
+          (consume-end-of-line port)
+          (comment_eol_read_indent port))
+        ((memv (my-peek-char port) initial_comment_eol) ; Indent-only line
+          "")
+        (#t indentation))))
+
+  ; Utility function:
+  ; If x is a 1-element list, return (car x), else return x
+  (define (monify x)
+    (cond
+      ((not (pair? x)) x)
+      ((null? (cdr x)) (car x))
+      (#t x)))
+
+  ; Returns (stopper computed_value); stopper may be 'normal, 'sublist, etc.
+  (define (head port)
+    (let* ((basic_full_results (n_expr_first port))
+           (basic_special      (car basic_full_results))
+           (basic_value        (cadr basic_full_results)))
+      ; TODO: PERIOD and RESTART
+      ; TODO: Assume no QUOTEH, scomment, etc... just normal.
+      (cond
+        ((char-horiz-whitespace? (my-peek-char port))
+          (hspaces port)
+          (if (not (memv (my-peek-char port) initial_comment_eol))
+            (let* ((br_full_results (rest port))
+                   (br_new_indent   (car br_full_results))
+                   (br_value        (cadr br_full_results)))
+              (list 'normal (cons basic_value br_value)))
+            (list 'normal (list basic_value))))
+        (#t 
+          (list 'normal (list basic_value))))))
+
+  ; Returns (stopper computed_value); stopper may be 'normal, 'sublist, etc.
+  (define (rest port)
+    (let* ((basic_full_results (n_expr port))
+           (basic_special      (car basic_full_results))
+           (basic_value        (cadr basic_full_results)))
+      ; TODO: PERIOD and RESTART and scomment
+      ; TODO: Assume no QUOTEH, scomment, etc... just normal.
+      (cond
+        ((char-horiz-whitespace? (my-peek-char port))
+          (hspaces port)
+          (if (not (memv (my-peek-char port) initial_comment_eol))
+            (let* ((br_full_results (rest port))
+                   (br_new_indent   (car br_full_results))
+                   (br_value        (cadr br_full_results)))
+              (list 'normal (cons basic_value br_value)))
+            (list 'normal (list basic_value))))
+        (#t (list 'normal (list basic_value))))))
+
+  ; Returns (new_indent computed_value)
+  (define (body port starting_indent)
+    ; (display "DEBUG: Entering body")
+    (let* ((it_full_results (it_expr port starting_indent))
+           (it_new_indent   (car it_full_results))
+           (it_value        (cadr it_full_results)))
+      (if (string=? starting_indent it_new_indent)
+        (let* ((body_full_results (body port it_new_indent))
+               (body_new_indent   (car body_full_results))
+               (body_value        (cadr body_full_results)))
+          (list body_new_indent (cons it_value body_value)))
+        (list it_new_indent (list it_value)))))
+
+  ; Returns (new_indent computed_value)
+  (define (it_expr port starting_indent)
+    (let* ((head_full_results (head port))
+           (head_stopper      (car head_full_results))
+           (head_value        (cadr head_full_results)))
+      (if (eq? head_stopper 'normal) ; non-empty head?
+        (cond
+          ((eq? head_stopper 'group_splice) "TODO2")
+          ((eq? head_stopper 'sublist) "TODO3")
+          ((eq? head_stopper 'restart-end) "TODO4")
+          ((memv (my-peek-char port) initial_comment_eol)
+            (let ((new_indent (comment_eol_read_indent port)))
+              (if (indentation>? new_indent starting_indent)
+                (let* ((body_full_results (body port new_indent))
+                       (body_new_indent (car body_full_results))
+                       (body_value      (cadr body_full_results)))
+                  (list body_new_indent (append head_value body_value)))
+                (list new_indent (monify head_value)))))
+          (#t
+            (read-error "Must end line with newline")))
+        ; Head begins with something special like GROUP_SPLICE
+        "TODO5"
+    )))
+
+  (define (t_expr port)
+    (let* ((c (my-peek-char port)))
+      (if (eof-object? c)
+        c
+        (cond
+          ((memv c initial_comment_eol)
+            ((consume-to-eol port)
+             (consume-end-of-line port)
+             (t_expr port)))
+          ; TODO: FF/VT
+          ; TODO: Initial_indent
+          (#t (cadr (it_expr port "")))))))
+
+ ; TEMPORARY: Select between them.
+
+ (define (sweet-expr-start-something port)
+   (if (getenv "SWEETNEW")
+     (t_expr port)
+     (sugar-start-expr port)))
+
 ; -----------------------------------------------------------------------------
 ; Comparison procedures
 ; -----------------------------------------------------------------------------
@@ -1485,7 +1628,7 @@
 
   (define curly-infix-read (make-read curly-infix-read-nocomment))
   (define neoteric-read (make-read neoteric-read-nocomment))
-  (define sweet-read (make-read sugar-start-expr))
+  (define sweet-read (make-read sweet-expr-start-something))
 
   )
 
