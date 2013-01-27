@@ -1491,7 +1491,9 @@
         (my-read-char port)
         (hspaces port))))
 
-  ; Read an n-expression.  Markers only have special meaning if their
+  ; Read an n-expression.  Returns ('normal n_expr) in most cases;
+  ; if it's a special marker, the car is the marker name instead of 'normal.
+  ; Markers only have special meaning if their
   ; first character is the "normal" character, e.g., {$} is not a sublist.
   (define (n_expr port)
     ; TODO - handle special cases
@@ -1505,10 +1507,37 @@
         (#t
           (list 'normal expr)))))
 
+  ; Check if we have abbrev+hspace.  If the current peeked character
+  ; is hspace, return 'abbrev as the marker and abbrev_procedure
+  ; as the value (the cadr). Otherwise, return ('normal n_expr).
+  ; Note that this calls the neoteric-read procedure directly, because
+  ; quoted markers are no longer markers. E.G., '$ is just (quote $).
+  (define (maybe-initial-abbrev port abbrev_procedure)
+    (if (char-horiz-whitespace? (my-peek-char port))
+      (begin
+        (my-read-char port)
+        (list 'abbrevh abbrev_procedure))
+      (list 'normal (list abbrev_procedure (neoteric-read-nocomment port)))))
+
+  ; Read the first n_expr on a line; handle abbrev+hspace specially.
+  ; Returns ('normal VALUE) in most cases.
   (define (n_expr_first port)
-    ; TODO - handle abbrev+hspace.  Note: If there's an abbreviation,
-    ; call neoteric-read directly because those aren't markers!
-    (n_expr port))
+    (case (my-peek-char port)
+      ((#\') 
+        (my-read-char port)
+        (maybe-initial-abbrev port 'quote))
+      ((#\`) 
+        (my-read-char port)
+        (maybe-initial-abbrev port 'quasiquote))
+      ((#\,) 
+        (my-read-char port)
+        (if (eqv? (my-peek-char port) #\@)
+          (begin
+            (my-read-char port)
+            (maybe-initial-abbrev port 'unquote-splicing))
+          (maybe-initial-abbrev port 'unquote)))
+      (else
+        (n_expr port))))
 
   ; Consume ;-comment (if there), consume EOL, and return new indent.
   ; Skip ;-comment-only lines; a following indent-only line is empty.
@@ -1542,7 +1571,7 @@
       ; TODO: PERIOD and RESTART
       ; TODO: Assume no QUOTEH, scomment, etc... just normal.
       (cond
-        ((not (eq? basic_special 'normal)) (list basic_special '())) 
+        ((not (eq? basic_special 'normal)) (list basic_special basic_value))
         ((char-horiz-whitespace? (my-peek-char port))
           (hspaces port)
           (if (not (memv (my-peek-char port) initial_comment_eol))
@@ -1591,7 +1620,8 @@
     (let* ((head_full_results (debug-show "head results = " (head port)))
            (head_stopper      (car head_full_results))
            (head_value        (cadr head_full_results)))
-      (if (not (null? head_value)) ; Non-empty head?
+      (if (and (not (null? head_value)) (not (eq? head_stopper 'abbrevh)))
+        ; The head... branches:
         (cond
           ((eq? head_stopper 'group_splice)
             (hspaces port)
@@ -1627,6 +1657,13 @@
                    (is_i_value        (cadr is_i_full_results)))
               (list is_i_new_indent
                 (list is_i_value))))
+          ((eq? head_stopper 'abbrevh)
+            (hspaces port)
+            (let* ((abbrev_i_expr_full_results (it_expr port starting_indent))
+                   (abbrev_i_expr_new_indent (car abbrev_i_expr_full_results))
+                   (abbrev_i_expr_value    (cadr abbrev_i_expr_full_results)))
+              (list abbrev_i_expr_new_indent
+                (list head_value abbrev_i_expr_value))))
           (#t 
             (read-error "Initial head error")))
     )))
