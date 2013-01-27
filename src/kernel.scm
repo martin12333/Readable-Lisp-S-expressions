@@ -1106,8 +1106,6 @@
 ; Sweet Expressions
 ; -----------------------------------------------------------------------------
 
-; --- Old implementation ---
-
   ; NOTE split et al. should not begin in #, as # causes
   ; the top-level parser to guard against multiline comments.
   (define split (string->symbol "\\\\"))
@@ -1115,6 +1113,8 @@
   (define non-whitespace-indent #\!) ; Non-whitespace-indent char.
   (define sublist (string->symbol "$"))
   (define sublist-char #\$) ; First character of sublist symbol.
+
+; --- Old implementation ---
 
   ; This is a special unique object that is used to
   ; represent the existence of the split symbol
@@ -1482,6 +1482,8 @@
 
   (define initial_comment_eol '(#\; #\newline carriage-return))
 
+  (define group_splice split)
+
   ; Consume 0+ spaces or tab
   (define (hspaces port)
     (cond
@@ -1489,12 +1491,21 @@
         (my-read-char port)
         (hspaces port))))
 
+  ; Read an n-expression.  Markers only have special meaning if their
+  ; first character is the "normal" character, e.g., {$} is not a sublist.
   (define (n_expr port)
     ; TODO - handle special cases
-    (list 'normal (neoteric-read-nocomment port)))
+    (let* ((c (my-peek-char port))
+           (expr (neoteric-read-nocomment port)))
+      (cond
+        ((and (eq? expr sublist) (eqv? c sublist-char))
+          (list 'sublist '()))
+        (#t
+          (list 'normal expr)))))
 
   (define (n_expr_first port)
-    ; TODO - handle special cases
+    ; TODO - handle abbrev+hspace.  Note: If there's an abbreviation,
+    ; call neoteric-read directly because those aren't markers!
     (n_expr port))
 
   ; Consume ;-comment (if there), consume EOL, and return new indent.
@@ -1523,19 +1534,20 @@
 
   ; Returns (stopper computed_value); stopper may be 'normal, 'sublist, etc.
   (define (head port)
-    (let* ((basic_full_results (n_expr_first port))
+    (let* ((basic_full_results (debug-show "head's first=" (n_expr_first port)))
            (basic_special      (car basic_full_results))
            (basic_value        (cadr basic_full_results)))
       ; TODO: PERIOD and RESTART
       ; TODO: Assume no QUOTEH, scomment, etc... just normal.
       (cond
+        ((not (eq? basic_special 'normal)) (list basic_special '())) 
         ((char-horiz-whitespace? (my-peek-char port))
           (hspaces port)
           (if (not (memv (my-peek-char port) initial_comment_eol))
             (let* ((br_full_results (rest port))
-                   (br_new_indent   (car br_full_results))
+                   (br_stopper      (car br_full_results))
                    (br_value        (cadr br_full_results)))
-              (list 'normal (cons basic_value br_value)))
+              (list br_stopper (cons basic_value br_value)))
             (list 'normal (list basic_value))))
         (#t 
           (list 'normal (list basic_value))))))
@@ -1548,13 +1560,14 @@
       ; TODO: PERIOD and RESTART and scomment
       ; TODO: Assume no QUOTEH, scomment, etc... just normal.
       (cond
+        ((not (eq? basic_special 'normal)) (list basic_special '())) 
         ((char-horiz-whitespace? (my-peek-char port))
           (hspaces port)
           (if (not (memv (my-peek-char port) initial_comment_eol))
             (let* ((br_full_results (rest port))
-                   (br_new_indent   (car br_full_results))
+                   (br_stopper      (car br_full_results))
                    (br_value        (cadr br_full_results)))
-              (list 'normal (cons basic_value br_value)))
+              (list br_stopper (cons basic_value br_value)))
             (list 'normal (list basic_value))))
         (#t (list 'normal (list basic_value))))))
 
@@ -1573,13 +1586,19 @@
 
   ; Returns (new_indent computed_value)
   (define (it_expr port starting_indent)
-    (let* ((head_full_results (head port))
+    (let* ((head_full_results (debug-show "head results = " (head port)))
            (head_stopper      (car head_full_results))
            (head_value        (cadr head_full_results)))
-      (if (eq? head_stopper 'normal) ; non-empty head?
+      (if (not (null? head_value)) ; Non-empty head?
         (cond
           ((eq? head_stopper 'group_splice) "TODO2")
-          ((eq? head_stopper 'sublist) "TODO3")
+          ((eq? head_stopper 'sublist)
+            (hspaces port)
+            (let* ((sub_i_full_results (it_expr port starting_indent))
+                   (sub_i_new_indent   (car sub_i_full_results))
+                   (sub_i_value        (cadr sub_i_full_results)))
+              (list sub_i_new_indent
+                (append head_value (list (monify sub_i_value))))))
           ((eq? head_stopper 'restart-end) "TODO4")
           ((memv (my-peek-char port) initial_comment_eol)
             (let ((new_indent (comment_eol_read_indent port)))
