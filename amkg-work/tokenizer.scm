@@ -14,35 +14,52 @@
 ; The function is given the function get-token, which
 ; returns the next token.
 (define (tokenize port neoteric-read function)
+
+  ; queue operations
+  (define (q-new) (cons '() '()))
+  (define (q-empty? q) (null? (car q)))
+  (define (q-push q i)
+    (if (q-empty? q)
+      (begin
+        (set-car! q (list i))
+        (set-cdr! q (car q)))
+      (begin
+        (set-cdr! (cdr q) (list i))
+        (set-cdr! q (cdr q)))))
+  (define (q-pop q)
+    (let ((rv (car (car q))))
+      (set-car! q (cdr (car q)))
+      rv))
+
   ; variables
-  (let (; Flag, #t/#f, set if we are at the start of a line
+  (let (; Flag, #t/#f, set if we are in initial indent state
+        (initial-indent #t)
+        ; Flag, #t/#f, set if we are at the start of a line
         (start-line #t)
         ; Stack of cons cells, '() if at beginning of expression.
         ; Each item in the stack is a string of the initial
         ; indent, with stack bottom always the empty string "".
         (indent-stack '())
-        ; A number representing the number of pending DEDENT
-        ; tokens to emit.
-        (pending-dedents 0)
-        ; Set to the eof object if end-of-file has been
-        ; reached.  Note that pending-dedents is higher
-        ; priority, since we need to emit dedents before
-        ; we emit the actual eof.
-        ; Store the actual eof here because R5RS has no
-        ; method of generating an EOF.
-        (end-of-file #f))
+        ; A queue of tokens still to be emitted.
+        (pending-q (q-new)))
 
     (define (eol? c)
       (or
         (char=? c #\newline)
         (char=? c (integer->char 13))))
     (define (eat-line)
-      (let ((c (peek-char port)))
+      (let ((c (read-char port)))
         (if (eol? c)
-            '()
-            (begin
-              (read-char port)
-              (eat-line)))))
+            ; check for Windows line-end terminator.
+            (if (char=? c (integer->char 13))
+              (let ((c (peek-char port)))
+                (if (char=? c (integer->char 10))
+                  (begin
+                    (read-char port)
+                    '())
+                  '()))
+              '())
+            (eat-line))))
 
     (define (hspace? c)
       (or
@@ -70,163 +87,224 @@
             (substring i1 0 (string-length i2))
             i2)))
 
-    (define (process-indentation current-indent)
-      (let* ((top-indent (car indent-stack))
-             (l-current-indent (string-length current-indent))
-             (l-top-indent (string-length top-indent)))
-        (cond
-          ((not (compatible-indent? current-indent top-indent))
-            'BADDENT)
-          ((< l-top-indent l-current-indent)
-            ; Greater indent; push on indent stack.
-            (set! indent-stack (cons current-indent indent-stack))
-            'INDENT)
-          ((= l-top-indent l-current-indent)
-            'SAME)
-          (else ; (> l-top-indent l-current-indent)
-            ; pop-off one
-            (set! indent-stack (cdr indent-stack))
-            ; start popping off
-            (let loop ((pop-offs 1))
-              (let* ((top-indent (car indent-stack))
-                     (l-top-indent (string-length top-indent)))
-                (cond
-                  ((< l-top-indent l-current-indent)
-                    ; This case:
-                    ;|foo
-                    ;|    bar
-                    ;| quux
-                    'BADDENT)
-                  ((= l-top-indent l-current-indent)
-                    ; stop popping off indentation levels.
-                    ; we'll be returning a DEDENT ourselves, so
-                    ; pending dedents is one minus the number of
-                    ; indentations popped off.
-                    (set! pending-dedents (- pop-offs 1))
-                    'DEDENT)
-                  (else
-                    ; still need to pop off an indent level
-                    (set! indent-stack (cdr indent-stack))
-                    (loop (+ 1 pop-offs))))))))))
+    (define (process-abbreviation token sym)
+      (let ((c (peek-char port)))
+        (if (hspace? c)
+            token
+            (let loop ((x (neoteric-read port)))
+              (if (null? x)
+                  (loop (neoteric-read port))
+                  (cons sym x))))))
 
     (define (get-token)
-      (cond
-        ((> pending-dedents 0)
-          (set! pending-dedents (- pending-dedents 1))
-          'DEDENT)
-        (end-of-file
-          end-of-file)
-        (else
-          (let ((c (peek-char port)))
-            (cond
-              ((eof-object? c)
-                ; On Guile, peeking an eof-object will
-                ; actually consume it.  So set a flag
-                ; that will prevent us from trying to
-                ; peek a char again, as it will be
-                ; somewhat confusing to terminal users.
-                (set! end-of-file c)
-                ; Now act as if we found an indentation
-                ; at column 0.
-                ; *technically* this is wrong if eof is
-                ; not on a line by itself.
-                (process-indentation ""))
-              ; at start of line, and we have consumed
-              ; at least one line.  Always get indent
-              ; in such a case.
-              ((and line-start
-                    (not (null? indent-stack)))
-                (let* ((current-indent (get-indentation))
-                       (c (peek-char port)))
-                  (set! line-start #f)
-                  (cond
-                    ; Is the line completely a comment line?
-                    ((char=? c #\;)
-                      ; eat the line and retry (effectively,
-                      ; skips the entire line completely.)
-                      (eat-line)
-                      (set! line-start #t)
-                      (get-token))
-                    ; Is the line actually empty?
-                    ((eol? c)
-                      (eat-line)
-                      (set! line-start #t)
-                      ; act as if we got an empty
-                      ; indentation first so that we can
-                      ; set up dedents.
-                      (let ((indent-code (process-indentation "")))
-                        ; now that dedents have been set up, clear
-                        ; the stack completely, since we are now in
-                        ; the state "waiting for new top-level
-                        ; expression".
-                        (set! indent-stack '())
-                        indent-code ))
-                    (else
-                      ; process the indentation
-                      (process-indentation current-indent)))))
-              (line-start
-                ; in this state, we are waiting for a new top-level
-                ; expression.  Check for initial indents as well as
-                ; the possible errors.
-                (let* ((current-indent (get-hspace*))
-                      ((c (peek-char port))))
-                  (cond
-                    ((or (eol? c) (char=? c #\;))
-                      ; line is completely comment or empty.  Ignore.
-                      (eat-line)
-                      (get-token))
-                    ((char=? c #\!)
-                      ; oh no, ! in initial indent.
-                      ; we expect this to be an error.
-                      'INITIAL_INDENT_WITH_BANG)
-                    ((string=? current-indent "")
-                      ; what we expect: no indent.  Set up state,
-                      ; and begin processing for real.
-                      (set! line-start #f)
-                      (set! indent-stack (list ""))
-                      (get-token))
-                    (else
-                      ; Indented s-expression.  We expect the
-                      ; caller to stop calling get-token.
-                      'INITIAL_INDENT_NO_BANG))))
-              ; skip hspace
-              ((hspace? c)
-                (get-hspace*)
-                (get-token))
-              ((char=? c (integer->char 11)
-                (read-char port)
-                'VT))
-              ((char=? c (integer->char 12)
-                (read-char port)
-                'FF))
-              ; comment_eol
-              ((or (char=? c #\;) (eol? c))
-                (eat-line)
-                (set! line-start #t)
-                'EOL)
-              ; escapes { \\ } [ . \\ ] ( . \\ )
-              ((initial-delimiter? c)
-                ; can't possibly be a comment.
-                `(n-expr ,@(neoteric-read port)))
-              (else
-                (let ((datum (neoteric-read port)))
-                  (cond
-                    ((null? datum)
-                      'SCOMMENT)
-                    ((equal? datum '(\\))
-                      'GROUP_SPLICE)
-                    ((equal? datum '($))
-                      'SUBLIST)
-                    ; TODO: RESTART_BEGIN and RESTART_END
-                    ; (they need more complex state to
-                    ; handle, possibly a stack of indent
-                    ; stacks or indent-stack-stack)
-                    (else
-                      `(n-expr ,@datum))))))))))
+      (if (not (q-empty? pending-q))
+        (q-pop pending-q)
+        (let retry ((c (peek-char port)))
+          (cond
+            ((and (eof-object? c) initial-indent)
+              ; act as if we successfully entered
+              ; indent processing state.
+              ; this is needed to properly process
+              ; pending RESTART_END's.
+              (set! start-line #f)
+              (set! indent-stack (cons "" indent-stack))
+              (set! initial-indent #f)
+              (retry c))
+            ((and (eof-object? c) (not initial-indent))
+              (let stack-emptiness-check ()
+                (if (null? indent-stack)
+                  (begin
+                    (q-push pending-q c)
+                    (get-token))
+                  (let stack-same-check ()
+                    (if (string=? "" (car indent-stack))
+                      (begin
+                        (set! indent-stack (cdr indent-stack))
+                        (q-push pending-q 'SAME)
+                        (if (null? indent-stack)
+                          (stack-emptiness-check)
+                          (begin
+                            (q-push pending-q 'RESTART_END)
+                            (stack-same-check))))
+                      (let stack-dedent-loop ()
+                        (if (string=? "" (car indent-stack))
+                          (begin
+                            (set! indent-stack (cdr indent-stack))
+                            (if (null? indent-stack)
+                              (stack-emptiness-check)
+                              (begin
+                                (q-push pending-q 'RESTART_END)
+                                (stack-same-check))))
+                          (begin
+                            (q-push pending-q 'DEDENT)
+                            (set! indent-stack (cdr indent-stack))
+                            (stack-dedent-loop)))))))))
+            (initial-indent
+              (let* ((indent (get-hspace*))
+                     (c (peek-char port)))
+                (cond
+                  ((or (char=? c #\;) (eol? c))
+                    ; skip comments and empty lines
+                    (eat-line)
+                    (get-token))
+                  ((string=? indent "")
+                    ; no indent.  Set up state
+                    (set! start-line #f)
+                    (set! indent-stack (cons "" indent-stack))
+                    (set! initial-indent #f)
+                    (get-token))
+                  ((char=? c #\!)
+                    ; note! we expect that this will cause an
+                    ; error in the caller, and we will exit
+                    ; the state.
+                    'INITIAL_INDENT_WITH_BANG)
+                  (else
+                    ; read the next item as a plain
+                    ; s-expression.  Put it in pending
+                    ; queue and return INITIAL_INDENT_NO_BANG.
+                    (let ((next (read port)))
+                      (q-push pending-q `(DATUM ,next))
+                      'INITIAL_INDENT_NO_BANG)))))
+            (start-line
+              (let* ((current-indent (get-indentation))
+                     (c (peek-char port)))
+                (set! start-line #f)
+                (cond
+                  ((char=? c #\;)
+                    ; skip comments
+                    (eat-line)
+                    (set! start-line #t)
+                    (get-token))
+                  ((eol? c)
+                    ; completely empty line.  Need to
+                    ; emit multiple DEDENT or a SAME,
+                    ; pop off the indent-stack, and
+                    ; enter initial-indent mode.
+                    (if (string=? "" (car indent-stack))
+                      ; already at minimum indent.  Emit
+                      ; SAME terminator.
+                      (q-push pending-q 'SAME)
+                      ; need to emit DEDENT's to match
+                      ; INDENT's.
+                      (let loop ()
+                        (if (not (string=? "" (car indent-stack)))
+                          (begin
+                            (q-push pending-q 'DEDENT)
+                            (set! indent-stack (cdr indent-stack))
+                            (loop)))))
+                    (set! indent-stack (cdr indent-stack))
+                    (set! initial-indent #t)
+                    (get-token))
+                  ((not (compatible-indent? current-indent (car indent-stack)))
+                    'BADDENT)
+                  ((> (string-length current-indent) (string-length (car indent-stack)))
+                    ; indent.  Push on indent-stack and emit INDENT
+                    (set! indent-stack (cons current-indent indent-stack))
+                    'INDENT)
+                  ((= (string-length current-indent) (string-length (car indent-stack)))
+                    ; same indentation.
+                    'SAME)
+                  (else
+                    ; dedent.  Push as many dedents as needed to match
+                    ; the number of indents.
+                    (let loop ()
+                      (cond
+                        ((= (string-length current-indent) (string-length (car indent-stack)))
+                          ; stable state.
+                          (get-token))
+                        ((> (string-length current-indent) (string-length (car indent-stack)))
+                          ; went past the indent.
+                          'BADDENT)
+                        (else
+                          ; keep popping.
+                          (q-push pending-q 'DEDENT)
+                          (set! indent-stack (cdr indent-stack))
+                          (loop))))))))
+            ; -- At this point, we are not at the start of the line.
+            ; check for abbrevations.  for
+            ; now check only ' ` , ,@
+            ; We'll check for the syntax
+            ; abbreviations in a later
+            ; revision, when we move
+            ; some hash-processing code
+            ; to here.
+            ((char=? c #\')
+              (read-char port)
+              (process-abbreviation 'QUOTE_SPACE 'quote))
+            ((char=? c #\`)
+              (read-char port)
+              (process-abbreviation 'QUASIQUOTE_SPACE 'quasiquote))
+            ((char=? c #\,)
+              (read-char port)
+              (let ((c (peek-char port)))
+                (if (char=? c #\@)
+                  (begin
+                    (read-char port)
+                    (process-abbreviation 'UNQUOTE_SPLICING_SPACE 'unquote-splicing))
+                  (process-abbreviation 'UNQUOTE_SPACE 'unquote))))
+            ((char=? c (integer->char 12))
+              'FF)
+            ((char=? c (integer->char 11))
+              'VT)
+            ((or (char=? c #\;) (eol? c))
+              ; got a line end!  Go to start-line state
+              (eat-line)
+              (set! start-line #t)
+              (get-token))
+            ((hspace? c)
+              ; eat horizontal whitespace
+              ; when not at start line -
+              ; whitespace in the middle
+              ; of a line that is not part
+              ; of a neoteric-expression
+              ; is not significant
+              (get-hspace*)
+              ; SPEC TODO: We can emit
+              ; HSPACE instead.
+              (get-token))
+            ((member c '(#\{ #\( #\[ ))
+              (let ((rv (neoteric-read port)))
+                (if (null? rv)
+                  'SCOMMENT
+                  `(DATUM ,@rv))))
+            (else
+              (let ((rv (neoteric-read port)))
+                (cond
+                  ((equal? rv '())
+                    'SCOMMENT)
+                  ((equal? rv '( \\ ))
+                    (get-hspace*)
+                    'GROUP_SPLICE)
+                  ((equal? rv '($))
+                    (get-hspace*)
+                    'SUBLIST)
+                  ((eq? (car rv) '.)
+                    (get-hspace*)
+                    'PERIOD)
+                  ((equal? rv '(<*))
+                    (get-hspace*)
+                    (set! initial-indent #t)
+                    'RESTART_BEGIN)
+                  ((equal? rv '(*>))
+                    (if (string=? (car indent-stack) "")
+                      (begin
+                        (set! indent-stack (cdr indent-stack))
+                        (q-push pending-q 'SAME))
+                      (let loop ()
+                        (if (string=? (car indent-stack) "")
+                          (set! indent-stack (cdr indent-stack))
+                          (begin
+                            (set! indent-stack (cdr indent-stack))
+                            (q-push pending-q 'DEDENT)
+                            (loop)))))
+                    (q-push pending-q 'RESTART_END)
+                    (get-token))
+                  (else
+                    `(DATUM ,@rv)))))))))
 
     (function get-token)))
 
-(define (test-tokenize)
+(define (test-tokenize . _)
   (tokenize
     (current-input-port)
     (lambda (port) (list (read port)))
