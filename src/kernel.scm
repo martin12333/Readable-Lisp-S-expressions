@@ -1500,6 +1500,8 @@
       (cond
         ((and (eq? expr sublist) (eqv? c sublist-char))
           (list 'sublist '()))
+        ((and (eq? expr group_splice) (eqv? c split-char))
+          (list 'group_splice '()))
         (#t
           (list 'normal expr)))))
 
@@ -1591,7 +1593,12 @@
            (head_value        (cadr head_full_results)))
       (if (not (null? head_value)) ; Non-empty head?
         (cond
-          ((eq? head_stopper 'group_splice) "TODO2")
+          ((eq? head_stopper 'group_splice)
+            (hspaces port)
+            (if (memv (my-peek-char port) initial_comment_eol)
+              (list starting_indent
+                (read-error "Cannot follow splice with newline"))
+              (list starting_indent (monify head_value))))
           ((eq? head_stopper 'sublist)
             (hspaces port)
             (let* ((sub_i_full_results (it_expr port starting_indent))
