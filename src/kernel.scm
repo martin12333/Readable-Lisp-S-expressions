@@ -1569,7 +1569,7 @@
            (basic_special      (car basic_full_results))
            (basic_value        (cadr basic_full_results)))
       ; TODO: PERIOD and RESTART
-      ; TODO: Assume no QUOTEH, scomment, etc... just normal.
+      ; TODO: scomment, etc.
       (cond
         ((not (eq? basic_special 'normal)) (list basic_special basic_value))
         ((char-horiz-whitespace? (my-peek-char port))
@@ -1589,7 +1589,6 @@
            (basic_special      (car basic_full_results))
            (basic_value        (cadr basic_full_results)))
       ; TODO: PERIOD and RESTART and scomment
-      ; TODO: Assume no QUOTEH, scomment, etc... just normal.
       (cond
         ((not (eq? basic_special 'normal)) (list basic_special '())) 
         ((char-horiz-whitespace? (my-peek-char port))
