@@ -1617,8 +1617,18 @@
                 (list new_indent (monify head_value)))))
           (#t
             (read-error "Must end line with newline")))
-        ; Head begins with something special like GROUP_SPLICE
-        "TODO5"
+        ; Here, head begins with something special like GROUP_SPLICE:
+        (cond
+          ; TODO: Handle GROUP_SPLICE, abbrevh.
+          ((eq? head_stopper 'sublist)
+            (hspaces port)
+            (let* ((is_i_full_results (it_expr port starting_indent))
+                   (is_i_new_indent   (car is_i_full_results))
+                   (is_i_value        (cadr is_i_full_results)))
+              (list is_i_new_indent
+                (list is_i_value))))
+          (#t 
+            (read-error "Initial head error")))
     )))
 
   (define (t_expr port)
