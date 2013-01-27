@@ -1489,14 +1489,13 @@
         (my-read-char port)
         (hspaces port))))
 
-  (define (n_expr_first port)
+  (define (n_expr port)
     ; TODO - handle special cases
     (list 'normal (neoteric-read-nocomment port)))
 
-  (define (n_expr port)
+  (define (n_expr_first port)
     ; TODO - handle special cases
-    (n_expr_first port)
-  )
+    (n_expr port))
 
   ; Consume ;-comment (if there), consume EOL, and return new indent.
   ; Skip ;-comment-only lines; a following indent-only line is empty.
