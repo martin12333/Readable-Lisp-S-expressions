@@ -1,0 +1,125 @@
+
+File contents are wrapped in square
+brackets.
+
+The expected tokenizer stream follows,
+terminated by the symbol EOF
+
+[foo bar nitz]
+
+(DATUM foo)
+(DATUM bar)
+(DATUM nitz)
+SAME
+EOF
+
+[
+foo bar nitz
+]
+(DATUM foo)
+(DATUM bar)
+(DATUM nitz)
+SAME
+EOF
+
+[<* restart
+]
+RESTART_BEGIN
+(DATUM restart)
+SAME
+RESTART_END
+SAME ; expected, because we enter head processing at initial RESTART_BEGIN
+EOF
+
+[
+define foo 1
+define bar 2
+]
+(DATUM define)
+(DATUM foo)
+(DATUM 1)
+SAME
+(DATUM define)
+(DATUM bar)
+(DATUM 2)
+SAME
+EOF
+
+[
+define foo 1
+
+
+ ; indented comment
+
+; notice EOF without EOL
+define bar 2]
+(DATUM define)
+(DATUM foo)
+(DATUM 1)
+SAME
+(DATUM define)
+(DATUM bar)
+(DATUM 2)
+SAME
+EOF
+
+[
+define foo
+  probe $ compute $ cons
+    1
+    2
+  \\
+  meow
+]
+(DATUM define)
+(DATUM foo)
+INDENT
+(DATUM probe)
+SUBLIST
+(DATUM compute)
+SUBLIST
+(DATUM cons)
+INDENT
+(DATUM 1)
+SAME
+(DATUM 2)
+DEDENT
+GROUP_SPLICE
+SAME
+(DATUM meow)
+DEDENT
+EOF
+
+[
+
+
+
+;comment
+
+
+;nothing!
+]
+EOF
+
+[
+library (meow meow)
+  exports whatever
+  <* begin
+
+define foo 1
+]
+(DATUM library)
+(DATUM (meow meow))
+INDENT
+(DATUM exports)
+(DATUM whatever)
+SAME
+RESTART_BEGIN
+(DATUM begin)
+SAME
+(DATUM define)
+(DATUM foo)
+(DATUM 1)
+SAME
+RESTART_END
+DEDENT

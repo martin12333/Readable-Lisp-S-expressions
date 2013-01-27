@@ -1,4 +1,7 @@
 
+; to run the test, do:
+; guile -e test-tokenize -s tokenizer.scm
+
 ; port - an ordinary R5RS port with read-char and peek-char
 ; neoteric-read - a read function for neoteric, with the
 ;   following return protocol:
@@ -13,7 +16,7 @@
 ;     ... (get-token) ... )
 ; The function is given the function get-token, which
 ; returns the next token.
-(define (tokenize port neoteric-read function)
+(define (tokenize port peek-char read-char eof-object? neoteric-read function)
 
   ; queue operations
   (define (q-new) (cons '() '()))
@@ -25,7 +28,7 @@
         (set-cdr! q (car q)))
       (begin
         (set-cdr! (cdr q) (list i))
-        (set-cdr! q (cdr q)))))
+        (set-cdr! q (cdr (cdr q))))))
   (define (q-pop q)
     (let ((rv (car (car q))))
       (set-car! q (cdr (car q)))
@@ -96,6 +99,36 @@
                   (loop (neoteric-read port))
                   (cons sym x))))))
 
+    (define (process-eof c)
+      (let stack-emptiness-check ()
+         (if (null? indent-stack)
+           (begin
+             (q-push pending-q c)
+             (get-token))
+           (let stack-same-check ()
+             (if (string=? "" (car indent-stack))
+               (begin
+                 (set! indent-stack (cdr indent-stack))
+                 (q-push pending-q 'SAME)
+                 (if (null? indent-stack)
+                   (stack-emptiness-check)
+                   (begin
+                     (q-push pending-q 'RESTART_END)
+                     (stack-same-check))))
+               (let stack-dedent-loop ()
+                 (if (string=? "" (car indent-stack))
+                   (begin
+                     (set! indent-stack (cdr indent-stack))
+                     (if (null? indent-stack)
+                       (stack-emptiness-check)
+                       (begin
+                         (q-push pending-q 'RESTART_END)
+                         (stack-same-check))))
+                   (begin
+                     (q-push pending-q 'DEDENT)
+                     (set! indent-stack (cdr indent-stack))
+                     (stack-dedent-loop)))))))))
+
     (define (get-token)
       (if (not (q-empty? pending-q))
         (q-pop pending-q)
@@ -106,39 +139,13 @@
               ; indent processing state.
               ; this is needed to properly process
               ; pending RESTART_END's.
-              (set! start-line #f)
-              (set! indent-stack (cons "" indent-stack))
-              (set! initial-indent #f)
-              (retry c))
+              ;(set! start-line #f)
+              ;(set! indent-stack (cons "" indent-stack))
+              ;(set! initial-indent #f)
+              ;(retry c)
+              (process-eof c))
             ((and (eof-object? c) (not initial-indent))
-              (let stack-emptiness-check ()
-                (if (null? indent-stack)
-                  (begin
-                    (q-push pending-q c)
-                    (get-token))
-                  (let stack-same-check ()
-                    (if (string=? "" (car indent-stack))
-                      (begin
-                        (set! indent-stack (cdr indent-stack))
-                        (q-push pending-q 'SAME)
-                        (if (null? indent-stack)
-                          (stack-emptiness-check)
-                          (begin
-                            (q-push pending-q 'RESTART_END)
-                            (stack-same-check))))
-                      (let stack-dedent-loop ()
-                        (if (string=? "" (car indent-stack))
-                          (begin
-                            (set! indent-stack (cdr indent-stack))
-                            (if (null? indent-stack)
-                              (stack-emptiness-check)
-                              (begin
-                                (q-push pending-q 'RESTART_END)
-                                (stack-same-check))))
-                          (begin
-                            (q-push pending-q 'DEDENT)
-                            (set! indent-stack (cdr indent-stack))
-                            (stack-dedent-loop)))))))))
+              (process-eof c))
             (initial-indent
               (let* ((indent (get-hspace*))
                      (c (peek-char port)))
@@ -270,6 +277,8 @@
             (else
               (let ((rv (neoteric-read port)))
                 (cond
+                  ((eof-object? rv)
+                    (process-eof rv))
                   ((equal? rv '())
                     'SCOMMENT)
                   ((equal? rv '( \\ ))
@@ -305,16 +314,70 @@
     (function get-token)))
 
 (define (test-tokenize . _)
-  (tokenize
-    (current-input-port)
-    (lambda (port) (list (read port)))
-    (lambda (get-token)
-      (let loop ()
-        (let ((token (get-token)))
-          (if (eof-object? token)
-              '()
-              (begin
-                (write token)
-                (newline)
-                (loop))))))))
+  (let ((port (open-input-file "tokenizer.test")))
+    (let test-loop ()
+      ; search for opening bracket
+      (let init-bracket-loop ()
+        (let ((c (read-char port)))
+          (cond
+            ((eof-object? c)
+              (display "\nall tests passed!\n")
+              (close-input-port port))
+            ((not (char=? c #\[))
+              (init-bracket-loop))
+            (else
+              ; start tokenizing, with eof-object being
+              ; the closing bracket character
+              (let ((tokens '()))
+                (tokenize
+                  port
+                  peek-char
+                  read-char
+                  ; fake eof
+                  (lambda (c)
+                    (and (char? c) (char=? c #\])))
+                  ; fake neoteric reader
+                  (lambda (port)
+                    (let ((c (peek-char port)))
+                      (if (char=? c #\])
+                        #\]
+                        (begin
+                          (list (read port))))))
+                  (lambda (get-token)
+                    (let loop ()
+                      (let ((token (get-token)))
+                        (if (and (char? token) (char=? token #\]))
+                          (set! tokens (reverse tokens))
+                          (begin
+                            (set! tokens (cons token tokens))
+                            (loop)))))))
+                ; consume the closing bracket if it's still there
+                (let loop-close-bracket ()
+                  (let ((c (peek-char port)))
+                    (if (char=? c #\])
+                      (begin
+                        (read-char port)
+                        (loop-close-bracket)))))
+                ; now read the reference data.
+                (let ((references '()))
+                  (let read-reference ()
+                    (let ((ref (read port)))
+                      (cond
+                        ((or (eq? ref 'EOF) (eof-object? ref))
+                          (set! references (reverse references)))
+                        (else
+                          (set! references (cons ref references))
+                          (read-reference)))))
+                  ; check the data
+                  (if (equal? references tokens)
+                    (begin
+                      (display "passed..\n")
+                      (test-loop))
+                    (begin
+                      (display "failed!\nexpected: ")
+                      (write references)
+                      (display "\nactual: ")
+                      (write tokens)
+                      (display "\n")
+                      (close-input-port port) )))))))))))
 
