@@ -1495,6 +1495,22 @@
         (my-read-char port)
         (hspaces port))))
 
+  ; Return #t if char is space or tab.
+  (define (char-hspace? char)
+    (or (eqv? char #\space)
+        (eqv? char tab)))
+
+  ; Return #t if char is space, tab, or !
+  (define (char-ichar? char)
+    (or (eqv? char #\space)
+        (eqv? char tab)
+        (eqv? char non-whitespace-indent)))
+
+  (define (accumulate-ichar port)
+    (if (char-ichar? (my-peek-char port))
+        (cons (read-char port) (accumulate-ichar port))
+        '()))
+
   ; Read an n-expression.  Returns ('normal n_expr) in most cases;
   ; if it's a special marker, the car is the marker name instead of 'normal.
   ; Markers only have special meaning if their
@@ -1517,7 +1533,7 @@
   ; Note that this calls the neoteric-read procedure directly, because
   ; quoted markers are no longer markers. E.G., '$ is just (quote $).
   (define (maybe-initial-abbrev port abbrev_procedure)
-    (if (char-horiz-whitespace? (my-peek-char port))
+    (if (char-hspace? (my-peek-char port))
       (begin
         (my-read-char port)
         (list 'abbrevh abbrev_procedure))
@@ -1548,7 +1564,7 @@
   (define (comment_eol_read_indent port)
     (consume-to-eol port)
     (consume-end-of-line port)
-    (let* ((indentation (list->string (accumulate-hspace port)))
+    (let* ((indentation (list->string (accumulate-ichar port)))
            (c (my-peek-char port)))
       (cond
         ((eqv? c #\;)  ; A ;-only line, consume and try again.
@@ -1577,7 +1593,7 @@
       (cond
         ((not (eq? basic_special 'normal)) (list basic_special basic_value))
         ((eq? basic_value period_symbol)
-          (if (char-horiz-whitespace? (my-peek-char port))
+          (if (char-hspace? (my-peek-char port))
             (begin
               (hspaces port)
               (if (not (memv (my-peek-char port) initial_comment_eol))
@@ -1589,7 +1605,7 @@
                   (list pn_stopper pn_value))
                 (list 'normal (list period_symbol))))
             (list 'normal (list period_symbol))))
-        ((char-horiz-whitespace? (my-peek-char port))
+        ((char-hspace? (my-peek-char port))
           (hspaces port)
           (if (not (memv (my-peek-char port) initial_comment_eol))
             (let* ((br_full_results (rest port))
@@ -1609,7 +1625,7 @@
       (cond
         ((not (eq? basic_special 'normal)) (list basic_special '())) 
         ((eq? basic_value period_symbol)
-          (if (char-horiz-whitespace? (my-peek-char port))
+          (if (char-hspace? (my-peek-char port))
             (begin
               (hspaces port)
               (if (not (memv (my-peek-char port) initial_comment_eol))
@@ -1621,7 +1637,7 @@
                   (list pn_stopper pn_value))
                 (list 'normal (list period_symbol))))
             (list 'normal (list period_symbol))))
-        ((char-horiz-whitespace? (my-peek-char port))
+        ((char-hspace? (my-peek-char port))
           (hspaces port)
           (if (not (memv (my-peek-char port) initial_comment_eol))
             (let* ((br_full_results (rest port))
@@ -1719,8 +1735,8 @@
              (consume-end-of-line port)
              (t_expr port)))
           ; TODO: FF/VT
-          ((memv c (list #\space tab #\!))
-            (let ((indentation-list (accumulate-hspace port)))
+          ((char-ichar? c)
+            (let ((indentation-list (accumulate-ichar port)))
               (if (memv #\! indentation-list)
                 (read-error "Initial ident must not use '!'")
                 (if (not (memv (my-peek-char port) initial_comment_eol))
