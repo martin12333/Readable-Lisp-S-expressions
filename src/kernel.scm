@@ -592,11 +592,11 @@
     ; Returns true if item is member of lyst, else false.
     (pair? (member item lyst)))
 
-  (define debugger-ouput #t)
+  (define debugger-output #t)
   ; Quick utility for debugging.  Display marker, show data, return data.
   (define (debug-show marker data)
     (cond
-      (debugger-ouput
+      (debugger-output
         (display "DEBUG: ")
         (display marker)
         (display " = ")
