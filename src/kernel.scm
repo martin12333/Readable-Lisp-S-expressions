@@ -1480,7 +1480,9 @@
   ; Warning: For portability use eqv?/memv, not eq?/memq, to compare chars
   ; A "case" is okay since it uses "eqv?".
 
-  (define initial_comment_eol '(#\; #\newline carriage-return))
+  ; TODO: Fix up error handling (read-error) return values, etc.
+
+  (define initial_comment_eol (list #\; #\newline carriage-return))
 
   (define group_splice split)
 
@@ -1603,7 +1605,6 @@
 
   ; Returns (new_indent computed_value)
   (define (body port starting_indent)
-    ; (display "DEBUG: Entering body")
     (let* ((it_full_results (it_expr port starting_indent))
            (it_new_indent   (car it_full_results))
            (it_value        (cadr it_full_results)))
@@ -1648,7 +1649,20 @@
             (read-error "Must end line with newline")))
         ; Here, head begins with something special like GROUP_SPLICE:
         (cond
-          ; TODO: Handle GROUP_SPLICE, abbrevh.
+          ((or (eq? head_stopper 'group_splice) (eq? head_stopper 'scomment))
+            (hspaces port)
+            (if (not (memv (my-peek-char port) initial_comment_eol))
+              (it_expr port starting_indent) ; Skip and try again.
+              (let ((new_indent (comment_eol_read_indent port)))
+                (cond
+                  ((indentation>? new_indent starting_indent)
+                    (body port new_indent))
+                  ((string=? starting_indent new_indent)
+                    (if (not (memv (my-peek-char port) initial_comment_eol))
+                      (it_expr port new_indent)
+                      (list new_indent (t_expr port)))) ; Restart, no indent.
+                  (#t
+                    (read-error "GROUP_SPLICE EOL DEDENT illegal"))))))
           ((eq? head_stopper 'sublist)
             (hspaces port)
             (let* ((is_i_full_results (it_expr port starting_indent))
