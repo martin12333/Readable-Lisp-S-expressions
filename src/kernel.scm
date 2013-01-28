@@ -1719,7 +1719,13 @@
              (consume-end-of-line port)
              (t_expr port)))
           ; TODO: FF/VT
-          ; TODO: Initial_indent
+          ((memv c (list #\space tab #\!))
+            (let ((indentation-list (accumulate-hspace port)))
+              (if (memv #\! indentation-list)
+                (read-error "Initial ident must not use '!'")
+                (if (not (memv (my-peek-char port) initial_comment_eol))
+                  (cadr (n_expr port)) ; indent processing disabled
+                  (t_expr port)))))
           (#t (cadr (it_expr port "")))))))
 
  ; TEMPORARY: Select between them.
