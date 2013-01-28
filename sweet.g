@@ -1145,6 +1145,7 @@ t_expr returns [Object v]
   | (FF | VT)+ EOL retry2=t_expr {$v=$retry2.v;}
   | (initial_indent_no_bang | hspace+ )
     (n_expr {$v = $n_expr.v;} /* indent processing disabled */
+     | scomment hspace* sretry=t_expr {$v=$sretry.v;}
      | comment_eol retry3=t_expr {$v=$retry3.v;} )
   | initial_indent_with_bang error
   | EOF {generate_eof();} /* End of file */
