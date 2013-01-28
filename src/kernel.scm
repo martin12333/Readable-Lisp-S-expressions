@@ -1513,19 +1513,26 @@
 
   ; Read an n-expression.  Returns ('normal n_expr) in most cases;
   ; if it's a special marker, the car is the marker name instead of 'normal.
-  ; Markers only have special meaning if their
-  ; first character is the "normal" character, e.g., {$} is not a sublist.
+  ; Markers only have special meaning if their first character is
+  ; the "normal" character, e.g., {$} is not a sublist.
+  ; Call "process-sharp" if first char is "#".
+  ; TODO: Change process-sharp, etc., calling conventions to simplify.
   (define (n_expr port)
-    ; TODO - handle special cases
-    (let* ((c (my-peek-char port))
-           (expr (neoteric-read-nocomment port)))
-      (cond
-        ((and (eq? expr sublist) (eqv? c sublist-char))
-          (list 'sublist '()))
-        ((and (eq? expr group_splice) (eqv? c split-char))
-          (list 'group_splice '()))
-        (#t
-          (list 'normal expr)))))
+    (let ((c (my-peek-char port)))
+      (if (eqv? c #\#)
+        (let* ((consumed-sharp (my-read-char port))
+               (result (process-sharp neoteric-read-nocomment port)))
+          (if (null? result)
+            (list 'scomment '())
+            (list 'normal (car result))))
+        (let* ((expr (neoteric-read-nocomment port)))
+          (cond
+            ((and (eq? expr sublist) (eqv? c sublist-char))
+              (list 'sublist '()))
+            ((and (eq? expr group_splice) (eqv? c split-char))
+              (list 'group_splice '()))
+            (#t
+              (list 'normal expr)))))))
 
   ; Check if we have abbrev+hspace.  If the current peeked character
   ; is hspace, return 'abbrev as the marker and abbrev_procedure
@@ -1589,7 +1596,6 @@
            (basic_special      (car basic_full_results))
            (basic_value        (cadr basic_full_results)))
       ; TODO: RESTART
-      ; TODO: scomment, etc.
       (cond
         ((not (eq? basic_special 'normal)) (list basic_special basic_value))
         ((eq? basic_value period_symbol)
@@ -1621,8 +1627,13 @@
     (let* ((basic_full_results (n_expr port))
            (basic_special      (car basic_full_results))
            (basic_value        (cadr basic_full_results)))
-      ; TODO: RESTART and scomment
+      ; TODO: RESTART
       (cond
+        ((eq? basic_special 'scomment)
+          (hspaces port)
+          (if (not (memv (my-peek-char port) initial_comment_eol))
+            (rest port)
+            (list 'normal '())))
         ((not (eq? basic_special 'normal)) (list basic_special '())) 
         ((eq? basic_value period_symbol)
           (if (char-hspace? (my-peek-char port))
