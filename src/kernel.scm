@@ -1576,6 +1576,19 @@
       ; TODO: scomment, etc.
       (cond
         ((not (eq? basic_special 'normal)) (list basic_special basic_value))
+        ((eq? basic_value period_symbol)
+          (if (char-horiz-whitespace? (my-peek-char port))
+            (begin
+              (hspaces port)
+              (if (not (memv (my-peek-char port) initial_comment_eol))
+                (let* ((pn_full_results (n_expr port))
+                       (pn_stopper      (car pn_full_results))
+                       (pn_value        (cadr pn_full_results)))
+                  (hspaces port)
+                  ; TODO: Check for n_expr error
+                  (list pn_stopper pn_value))
+                (list 'normal (list period_symbol))))
+            (list 'normal (list period_symbol))))
         ((char-horiz-whitespace? (my-peek-char port))
           (hspaces port)
           (if (not (memv (my-peek-char port) initial_comment_eol))
