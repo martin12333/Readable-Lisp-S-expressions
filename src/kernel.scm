@@ -1516,13 +1516,17 @@
 
   ; Read an n-expression.  Returns ('scomment '()) if it's an scomment,
   ; else returns ('normal n_expr).
+  ; Note: If a *value* begins with #, process any potential neoteric tail,
+  ; so constructs like #f() work.
   (define (n_expr_or_scomment port)
     (if (eqv? (my-peek-char port) #\#)
       (let* ((consumed-sharp (my-read-char port))
              (result (process-sharp neoteric-read-nocomment port)))
         (if (null? result)
           (list 'scomment '())
-          (list 'normal (car result))))
+          (list 'normal
+            (neoteric-process-tail port
+              (car result)))))
       (list 'normal (neoteric-read-nocomment port))))
 
   ; Read an n-expression.  Returns ('normal n_expr) in most cases;
