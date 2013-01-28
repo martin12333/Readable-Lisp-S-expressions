@@ -409,11 +409,13 @@ abc
 bar
 ! x y
 
-(foo (a b) . c)
-foo
-  a b
-  .
-  c
+; Disable for now; it's not clear this should be supported.
+; Re-enable if this is (re)instated.
+; (foo (a b) . c)
+; foo
+;   a b
+;   .
+;   c
 
 (foo nnn)
 foo
@@ -657,19 +659,19 @@ foo6
 ; It should produce '(aaa).  So, if there's no \\, it makes sense
 ; to interpret it like this:
 
-'(aaa bbb)
-'
-  (aaa bbb)
+; '(aaa bbb)
+; '
+;   (aaa bbb)
 
 
-'(aa bb)
-'
-  aa bb
+; '(aa bb)
+; '
+;   aa bb
 
 ; quote followed by space + newline should be same as just followed by newline:
-'(e f)
-' 
-  e f
+; '(e f)
+; ' 
+;  e f
 
 
 ; Test comments.
@@ -746,7 +748,7 @@ qq(   a(b c)
 f(a)(c d)
 
 ((g h) ((f a) c d))
-g(h)f(a)(c d)
+g(h) f(a)(c d)
 
 ((((hello))))
 ((((hello))))
