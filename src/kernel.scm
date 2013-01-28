@@ -1745,16 +1745,16 @@
         c
         (cond
           ((memv c initial_comment_eol)
-            ((consume-to-eol port)
-             (consume-end-of-line port)
-             (t_expr port)))
+            (consume-to-eol port)
+            (consume-end-of-line port)
+            (t_expr port))
           ; TODO: FF/VT
           ((char-ichar? c)
             (let ((indentation-list (accumulate-ichar port)))
               (if (memv #\! indentation-list)
                 (read-error "Initial ident must not use '!'")
                 (if (not (memv (my-peek-char port) initial_comment_eol))
-                  (cadr (n_expr port)) ; Indent processing disabled
+                  (neoteric-read-nocomment port) ; Indent processing disabled
                   (begin ; Indented comment_eol, consume and try again.
                     (consume-to-eol port)
                     (consume-end-of-line port)
