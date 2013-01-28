@@ -1572,7 +1572,7 @@
     (let* ((basic_full_results (debug-show "head's first=" (n_expr_first port)))
            (basic_special      (car basic_full_results))
            (basic_value        (cadr basic_full_results)))
-      ; TODO: PERIOD and RESTART
+      ; TODO: RESTART
       ; TODO: scomment, etc.
       (cond
         ((not (eq? basic_special 'normal)) (list basic_special basic_value))
