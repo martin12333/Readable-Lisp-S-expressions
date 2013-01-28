@@ -1486,6 +1486,8 @@
 
   (define group_splice split)
 
+  (define period_symbol '.)
+
   ; Consume 0+ spaces or tab
   (define (hspaces port)
     (cond
@@ -1590,9 +1592,22 @@
     (let* ((basic_full_results (n_expr port))
            (basic_special      (car basic_full_results))
            (basic_value        (cadr basic_full_results)))
-      ; TODO: PERIOD and RESTART and scomment
+      ; TODO: RESTART and scomment
       (cond
         ((not (eq? basic_special 'normal)) (list basic_special '())) 
+        ((eq? basic_value period_symbol)
+          (if (char-horiz-whitespace? (my-peek-char port))
+            (begin
+              (hspaces port)
+              (if (not (memv (my-peek-char port) initial_comment_eol))
+                (let* ((pn_full_results (n_expr port))
+                       (pn_stopper      (car pn_full_results))
+                       (pn_value        (cadr pn_full_results)))
+                  (hspaces port)
+                  ; TODO: Check for n_expr error
+                  (list pn_stopper pn_value))
+                (list 'normal (list period_symbol))))
+            (list 'normal (list period_symbol))))
         ((char-horiz-whitespace? (my-peek-char port))
           (hspaces port)
           (if (not (memv (my-peek-char port) initial_comment_eol))
