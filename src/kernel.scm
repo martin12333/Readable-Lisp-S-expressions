@@ -1484,6 +1484,20 @@
   ; A "case" is okay since it uses "eqv?".
 
   ; TODO: Fix up error handling (read-error) return values, etc.
+  ; TODO: Add positioning information
+  ; TODO: Change end-of-line: to (LF | CR LF?)
+  ; TODO: Regularize naming: "splice" or "split"?
+  ; TODO: Should we support abbreviation-only lines, e.g.:
+  ;       '
+  ;       ! x
+  ;  ==> (quote x)
+  ; TODO: Should we support "."-only lines, e.g.:
+  ;       foo
+  ;       ! a
+  ;       ! b
+  ;       ! .
+  ;       ! c
+  ;  ==> (foo a b c)
 
   (define initial_comment_eol (list #\; #\newline carriage-return))
 
