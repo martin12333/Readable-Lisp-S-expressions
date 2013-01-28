@@ -592,7 +592,7 @@
     ; Returns true if item is member of lyst, else false.
     (pair? (member item lyst)))
 
-  (define debugger-output #t)
+  (define debugger-output #f)
   ; Quick utility for debugging.  Display marker, show data, return data.
   (define (debug-show marker data)
     (cond
@@ -1514,6 +1514,17 @@
         (cons (read-char port) (accumulate-ichar port))
         '()))
 
+  ; Read an n-expression.  Returns ('scomment '()) if it's an scomment,
+  ; else returns ('normal n_expr).
+  (define (n_expr_or_scomment port)
+    (if (eqv? (my-peek-char port) #\#)
+      (let* ((consumed-sharp (my-read-char port))
+             (result (process-sharp neoteric-read-nocomment port)))
+        (if (null? result)
+          (list 'scomment '())
+          (list 'normal (car result))))
+      (list 'normal (neoteric-read-nocomment port))))
+
   ; Read an n-expression.  Returns ('normal n_expr) in most cases;
   ; if it's a special marker, the car is the marker name instead of 'normal.
   ; Markers only have special meaning if their first character is
@@ -1521,21 +1532,19 @@
   ; Call "process-sharp" if first char is "#".
   ; TODO: Change process-sharp, etc., calling conventions to simplify.
   (define (n_expr port)
-    (let ((c (my-peek-char port)))
-      (if (eqv? c #\#)
-        (let* ((consumed-sharp (my-read-char port))
-               (result (process-sharp neoteric-read-nocomment port)))
-          (if (null? result)
-            (list 'scomment '())
-            (list 'normal (car result))))
-        (let* ((expr (neoteric-read-nocomment port)))
-          (cond
-            ((and (eq? expr sublist) (eqv? c sublist-char))
-              (list 'sublist '()))
-            ((and (eq? expr group_splice) (eqv? c split-char))
-              (list 'group_splice '()))
-            (#t
-              (list 'normal expr)))))))
+    (let* ((c (my-peek-char port))
+           (results (n_expr_or_scomment port))
+           (type (car results))
+           (expr (cadr results)))
+      (if (eq? (car results) 'scomment)
+        results
+        (cond
+          ((and (eq? expr sublist) (eqv? c sublist-char))
+            (list 'sublist '()))
+          ((and (eq? expr group_splice) (eqv? c split-char))
+            (list 'group_splice '()))
+          (#t
+            results)))))
 
   ; Check if we have abbrev+hspace.  If the current peeked character
   ; is hspace, return 'abbrev as the marker and abbrev_procedure
@@ -1578,8 +1587,6 @@
            (c (my-peek-char port)))
       (cond
         ((eqv? c #\;)  ; A ;-only line, consume and try again.
-          (consume-to-eol port)
-          (consume-end-of-line port)
           (comment_eol_read_indent port))
         ((memv (my-peek-char port) initial_comment_eol) ; Indent-only line
           "")
@@ -1754,7 +1761,12 @@
               (if (memv #\! indentation-list)
                 (read-error "Initial ident must not use '!'")
                 (if (not (memv (my-peek-char port) initial_comment_eol))
-                  (neoteric-read-nocomment port) ; Indent processing disabled
+                  (let ((results (n_expr_or_scomment port)))
+                    (if (eq? (car results) 'scomment)
+                      (begin
+                        (hspaces port)
+                        (t_expr port)) ; Consume scomment, try again.
+                      (cadr results))) ; Return one value.
                   (begin ; Indented comment_eol, consume and try again.
                     (consume-to-eol port)
                     (consume-end-of-line port)
