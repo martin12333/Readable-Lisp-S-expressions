@@ -1754,8 +1754,11 @@
               (if (memv #\! indentation-list)
                 (read-error "Initial ident must not use '!'")
                 (if (not (memv (my-peek-char port) initial_comment_eol))
-                  (cadr (n_expr port)) ; indent processing disabled
-                  (t_expr port)))))
+                  (cadr (n_expr port)) ; Indent processing disabled
+                  (begin ; Indented comment_eol, consume and try again.
+                    (consume-to-eol port)
+                    (consume-end-of-line port)
+                    (t_expr port))))))
           (#t (cadr (it_expr port "")))))))
 
  ; TEMPORARY: Select between them.
