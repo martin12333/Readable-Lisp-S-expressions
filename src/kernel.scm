@@ -1718,7 +1718,7 @@
                    (sub_i_new_indent   (car sub_i_full_results))
                    (sub_i_value        (cadr sub_i_full_results)))
               (list sub_i_new_indent
-                (append head_value (list (monify sub_i_value))))))
+                (append head_value (list sub_i_value)))))
           ((eq? head_stopper 'restart-end) "TODO4")
           ((memv (my-peek-char port) initial_comment_eol)
             (let ((new_indent (comment_eol_read_indent port)))

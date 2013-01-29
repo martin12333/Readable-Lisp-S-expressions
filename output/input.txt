@@ -472,4 +472,6 @@ foo
 ; comment
 ! nitz koo
 
+car $ gettimeofday()
+
 fin

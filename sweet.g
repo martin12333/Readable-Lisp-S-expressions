@@ -1102,7 +1102,7 @@ it_expr returns [Object v]
         comment_eol error
         | empty {$v = monify($head.v);} )
      | SUBLIST hspace* sub_i=it_expr /* head SUBLIST it_expr case */
-       {$v=append($head.v, list(monify($sub_i.v)));}
+       {$v=append($head.v, list($sub_i.v));}
      | comment_eol // Normal case, handle child lines if any:
        (indent children=body {$v = append($head.v, $children.v);}
         | empty              {$v = monify($head.v);} /* No child lines */ )

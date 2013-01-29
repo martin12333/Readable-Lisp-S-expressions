@@ -893,3 +893,6 @@ defun x (a b)
   q a b
   n a b
 
+(car (gettimeofday))
+car $ gettimeofday()
+

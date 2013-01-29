@@ -756,7 +756,7 @@ it_expr returns [Object v]
         comment_eol error
         | empty {(monify $head)} )
      | SUBLIST hspace* sub_i=it_expr /* head SUBLIST it_expr case */
-       {(append $head (list (monify $sub_i)))}
+       {(append $head (list $sub_i))}
      | comment_eol // Normal case, handle child lines if any:
        (indent children=body {(append $head $children)}
         | empty              {(monify $head)} /* No child lines */ )
