@@ -1486,7 +1486,6 @@
   ; TODO: Fix up error handling (read-error) return values, etc.
   ; TODO: Add positioning information
   ; TODO: Change end-of-line: to (LF | CR LF?)
-  ; TODO: Regularize naming: "splice" or "split"?
   ; TODO: Should we support abbreviation-only lines, e.g.:
   ;       '
   ;       ! x
@@ -1501,7 +1500,7 @@
 
   (define initial_comment_eol (list #\; #\newline carriage-return))
 
-  (define group_splice split)
+  (define group_split split)
 
   (define period_symbol '.)
 
@@ -1559,8 +1558,8 @@
         (cond
           ((and (eq? expr sublist) (eqv? c sublist-char))
             (list 'sublist '()))
-          ((and (eq? expr group_splice) (eqv? c split-char))
-            (list 'group_splice '()))
+          ((and (eq? expr group_split) (eqv? c split-char))
+            (list 'group_split '()))
           (#t
             results)))))
 
@@ -1706,11 +1705,11 @@
       (if (and (not (null? head_value)) (not (eq? head_stopper 'abbrevh)))
         ; The head... branches:
         (cond
-          ((eq? head_stopper 'group_splice)
+          ((eq? head_stopper 'group_split)
             (hspaces port)
             (if (memv (my-peek-char port) initial_comment_eol)
               (list starting_indent
-                (read-error "Cannot follow splice with newline"))
+                (read-error "Cannot follow split with newline"))
               (list starting_indent (monify head_value))))
           ((eq? head_stopper 'sublist)
             (hspaces port)
@@ -1730,9 +1729,9 @@
                 (list new_indent (monify head_value)))))
           (#t
             (read-error "Must end line with newline")))
-        ; Here, head begins with something special like GROUP_SPLICE:
+        ; Here, head begins with something special like GROUP_SPLIT:
         (cond
-          ((or (eq? head_stopper 'group_splice) (eq? head_stopper 'scomment))
+          ((or (eq? head_stopper 'group_split) (eq? head_stopper 'scomment))
             (hspaces port)
             (if (not (memv (my-peek-char port) initial_comment_eol))
               (it_expr port starting_indent) ; Skip and try again.
@@ -1745,7 +1744,7 @@
                       (it_expr port new_indent)
                       (list new_indent (t_expr port)))) ; Restart, no indent.
                   (#t
-                    (read-error "GROUP_SPLICE EOL DEDENT illegal"))))))
+                    (read-error "GROUP_SPLIT EOL DEDENT illegal"))))))
           ((eq? head_stopper 'sublist)
             (hspaces port)
             (let* ((is_i_full_results (it_expr port starting_indent))
