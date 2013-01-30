@@ -410,7 +410,7 @@ TAB      : '\t';
 PERIOD   : '.';
 
 // Special markers, which only have meaning outside (), [], {}.
-GROUP_SPLICE : {indent_processing()}? => '\\' '\\'; // GROUP/splice symbol.
+GROUP_SPLIT  : {indent_processing()}? => '\\' '\\'; // GROUP/split symbol.
 SUBLIST      : {indent_processing()}? =>'$';
 RESTART      : {indent_processing()}? => '<*' { restart_indent_level(); } ;
 // This generates EOL + (DEDENTs if any) + RESTART_END, and restores indents:
@@ -1105,7 +1105,7 @@ body returns [Object v]
 it_expr returns [Object v]
   : head
     (options {greedy=true;} : (
-     GROUP_SPLICE hspace* /* Not initial; interpret as splice */
+     GROUP_SPLIT hspace* /* Not initial; interpret as split */
       (options {greedy=true;} :
         // To allow \\ EOL as line-continuation, instead do:
         //   comment_eol same more=it_expr {$v = append($head.v, $more.v);}
@@ -1119,7 +1119,7 @@ it_expr returns [Object v]
     // If RESTART_END doesn't generate 2 tokens "EOL RESTART_END", add:
     // | empty               {$v = monify($head.v);}
      ))
-  | (GROUP_SPLICE | scomment) hspace* /* Initial; Interpet as group */
+  | (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
       (group_i=it_expr {$v = $group_i.v;} /* Ignore initial GROUP/scomment */
        | comment_eol
          (indent g_body=body {$v = $g_body.v;} /* Normal GROUP use */
