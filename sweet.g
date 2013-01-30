@@ -178,6 +178,16 @@ tokens {
 }
 
 @parser::members {
+
+  // This is a bogus variable to work around an ANTLR bug.  ANTLR by default
+  // is greedy, but warns on ambiguities unless "greedy=true", e.g.:
+  //   part1 (options {greedy = true;} : hspace)* part2
+  // But there's no greedy variable defined for the parser, so you can't use
+  // the feature properly.  Here we create a settable variable, so you can
+  // selectively disable unnecessary warnings.  If a later ANTLR also
+  // defines this variable, then remove it:
+  public Boolean greedy = true;
+
   private void generate_eof() {
     System.exit(0); 
   }
@@ -946,7 +956,7 @@ n_expr_first returns [Object v]
 // Production "scomment" (special comment) defines comments other than ";":
 sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER ;
 scomment : BLOCK_COMMENT
-         | DATUM_COMMENT_START hspace* n_expr
+         | DATUM_COMMENT_START (options : {greedy=true;} hspace)* n_expr
          | sharp_bang_comments ;
 
 // Production "comment_eol" reads an optional ;-comment (if it exists),
@@ -1145,7 +1155,8 @@ t_expr returns [Object v]
   | (FF | VT)+ EOL retry2=t_expr {$v=$retry2.v;}
   | (initial_indent_no_bang | hspace+ )
     (n_expr {$v = $n_expr.v;} /* indent processing disabled */
-     | scomment hspace* sretry=t_expr {$v=$sretry.v;}
+     | ((scomment (options {greedy=true;} : hspace)*
+       sretry=t_expr {$v=$sretry.v;}))
      | comment_eol retry3=t_expr {$v=$retry3.v;} )
   | initial_indent_with_bang error
   | EOF {generate_eof();} /* End of file */
