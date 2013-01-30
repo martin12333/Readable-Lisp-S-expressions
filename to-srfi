@@ -62,6 +62,8 @@ while (<>) {
   s/</&lt;/g;
   s/>/&gt;/g;
 
+  s/\r//g;
+
   if ($include_in_srfi && (! /INCLUDE IN SRFI/)) {
     print;
   }
