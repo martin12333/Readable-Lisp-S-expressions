@@ -508,13 +508,14 @@ The BNF depends on this utility function:
 Here is the actual BNF:
 </p>
 
+<!-- Between start and end pre, insert the results of ./to-srfi < sweet.g -->
 <pre>
 SPACE    : ' ';
 TAB      : '\t';
 PERIOD   : '.';
 
 // Special markers, which only have meaning outside (), [], {}.
-GROUP_SPLICE : {(indent_processing)}? =&gt; '\\' '\\'; // GROUP/splice symbol.
+GROUP_SPLIT  : {(indent_processing)}? =&gt; '\\' '\\'; // GROUP/split symbol.
 SUBLIST      : {(indent_processing)}? =&gt;'$';
 RESTART      : {(indent_processing)}? =&gt; '&lt;*' { restart_indent_level()} ;
 // This generates EOL + (DEDENTs if any) + RESTART_END, and restores indents:
@@ -600,7 +601,7 @@ n_expr_first returns [Object v]
 // Production "scomment" (special comment) defines comments other than ";":
 sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER ;
 scomment : BLOCK_COMMENT
-         | DATUM_COMMENT_START hspace* n_expr
+         | DATUM_COMMENT_START (options : {greedy=true} hspace)* n_expr
          | sharp_bang_comments ;
 
 // Production "comment_eol" reads an optional ;-comment (if it exists),
@@ -749,7 +750,7 @@ body returns [Object v]
 it_expr returns [Object v]
   : head
     (options {greedy=true} : (
-     GROUP_SPLICE hspace* /* Not initial; interpret as splice */
+     GROUP_SPLIT hspace* /* Not initial; interpret as split */
       (options {greedy=true} :
         // To allow \\ EOL as line-continuation, instead do:
         //   comment_eol same more=it_expr {(append $head $more)}
@@ -763,7 +764,7 @@ it_expr returns [Object v]
     // If RESTART_END doesn't generate 2 tokens "EOL RESTART_END", add:
     // | empty               {(monify $head)}
      ))
-  | (GROUP_SPLICE | scomment) hspace* /* Initial; Interpet as group */
+  | (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
       (group_i=it_expr {$group_i} /* Ignore initial GROUP/scomment */
        | comment_eol
          (indent g_body=body {$g_body} /* Normal GROUP use */
@@ -799,6 +800,8 @@ t_expr returns [Object v]
   | (FF | VT)+ EOL retry2=t_expr {$retry2}
   | (initial_indent_no_bang | hspace+ )
     (n_expr {$n_expr} /* indent processing disabled */
+     | ((scomment (options {greedy=true} : hspace)*
+       sretry=t_expr {$sretry}))
      | comment_eol retry3=t_expr {$retry3} )
   | initial_indent_with_bang error
   | EOF {(generate_eof} /* End of file */
