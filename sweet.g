@@ -146,14 +146,18 @@ tokens {
     indents.push("");  // Let's start over!
   }
 
-  private void process_collecting_end(Token t) {
-    // Must create independent EOL token for ANTLR.
+  private void emit_type(int token_type) {
     CommonToken extra = new CommonToken(input, Token.INVALID_TOKEN_TYPE,
                 Token.DEFAULT_CHANNEL, getCharIndex(), getCharIndex()-1);
     extra.setLine(getLine());
     extra.setCharPositionInLine(getCharPositionInLine());
-    extra.setType(EOL);
+    extra.setType(token_type);
     emit(extra);
+  }
+
+  private void process_collecting_end(Token t) {
+    // Must send independent EOL token for ANTLR.
+    emit_type(EOL);
 
     /* Dedent (if needed) */
     CommonToken dedent_it = new CommonToken(input, Token.INVALID_TOKEN_TYPE,
@@ -417,11 +421,29 @@ COLLECTING     : {indent_processing()}? => '<*' { restart_indent_level(); } ;
 COLLECTING_END : {indent_processing()}? => t='*>' {process_collecting_end($t);};
 RESERVED_TRIPLE_DOLLAR : {indent_processing()}? => '$$$';  // Reserved.
 
-// Abbreviations followed by horizontal space are special:
-APOSH           : {indent_processing()}? => '\'' (SPACE | TAB) ;
-QUASIQUOTEH     : {indent_processing()}? => '\`' (SPACE | TAB) ;
-UNQUOTE_SPLICEH : {indent_processing()}? => ',@' (SPACE | TAB) ;
-UNQUOTEH        : {indent_processing()}? => ','  (SPACE | TAB) ;
+// Abbreviations followed by certain whitespace are special:
+APOSW           : {indent_processing()}? => '\'' (SPACE | TAB) ;
+QUASIQUOTEW     : {indent_processing()}? => '\`' (SPACE | TAB) ;
+UNQUOTE_SPLICEW : {indent_processing()}? => ',@' (SPACE | TAB) ;
+UNQUOTEW        : {indent_processing()}? => ','  (SPACE | TAB) ;
+
+// Abbreviations followed by EOL also generate abbrevW:
+APOS_EOL        : {indent_processing()}? => '\'' EOL_SEQUENCE
+                  SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
+                  {emit_type(APOSW); emit_type(EOL);
+                   process_indent($i.text, $i);};
+QUASIQUOTE_EOL  : {indent_processing()}? => '\`' EOL_SEQUENCE
+                  SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
+                  {emit_type(QUASIQUOTEW); emit_type(EOL);
+                   process_indent($i.text, $i);};
+UNQUOTE_SPLICE_EOL: {indent_processing()}? => ',@' EOL_SEQUENCE
+                  SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
+                  {emit_type(UNQUOTE_SPLICEW); emit_type(EOL);
+                   process_indent($i.text, $i);};
+UNQUOTE_EOL     : {indent_processing()}? => ',' EOL_SEQUENCE
+                  SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
+                  {emit_type(UNQUOTEW); emit_type(EOL);
+                   process_indent($i.text, $i);};
 
 // Abbreviations not followed by horizontal space are ordinary:
 APOS           : '\'';
@@ -920,23 +942,23 @@ n_expr_noabbrev returns [Object v]
 
 hspace  : SPACE | TAB ;        // horizontal space
 
-// Production "abbrevh" is an abbreviation with a following hspace:
-abbrevh returns [Object v]
-  : APOSH           {$v = "quote";}
-  | QUASIQUOTEH     {$v = "quasiquote";}
-  | UNQUOTE_SPLICEH {$v = "unquote-splicing";}
-  | UNQUOTEH        {$v = "unquote";} ;
+// Production "abbrevw" is an abbreviation with a following whitespace:
+abbrevw returns [Object v]
+  : APOSW           {$v = "quote";}
+  | QUASIQUOTEW     {$v = "quasiquote";}
+  | UNQUOTE_SPLICEW {$v = "unquote-splicing";}
+  | UNQUOTEW        {$v = "unquote";} ;
 
-// Production "abbrev_noh" is an abbreviation without a following hspace:
-abbrev_noh returns [Object v]
+// Production "abbrev_no_w" is an abbreviation without a following whitespace:
+abbrev_no_w returns [Object v]
   : APOS            {$v = "quote";}
   | QUASIQUOTE      {$v = "quasiquote";}
   | UNQUOTE_SPLICE  {$v = "unquote-splicing";}
   | UNQUOTE         {$v = "unquote";};
 
 abbrev_all returns [Object v]
-  : abbrevh         {$v = $abbrevh.v;}
-  | abbrev_noh      {$v = $abbrev_noh.v;} ;
+  : abbrevw         {$v = $abbrevw.v;}
+  | abbrev_no_w     {$v = $abbrev_no_w.v;} ;
 
 // Production "n_expr" is a full neoteric-expression as defined in SRFI-105.
 // Note that n_expr does *not* consume any horizontal space that
@@ -948,9 +970,9 @@ n_expr returns [Object v]
  | n_expr_noabbrev      {$v = $n_expr_noabbrev.v;} ;
 
 // Production "n_expr_first" is a neoteric-expression, but leading
-// abbreviations cannot have an hspace afterwards (this is used by "head"):
+// abbreviations cannot have an whitespace afterwards (used by "head"):
 n_expr_first returns [Object v]
-  : abbrev_noh n1=n_expr_first {$v = list($abbrev_noh.v, $n1.v);}
+  : abbrev_no_w n1=n_expr_first {$v = list($abbrev_no_w.v, $n1.v);}
   | n_expr_noabbrev            {$v = $n_expr_noabbrev.v;} ;
 
 // Production "scomment" (special comment) defines comments other than ";":
@@ -1129,8 +1151,11 @@ it_expr returns [Object v]
                    | comment_eol restart=t_expr {$v = $restart.v;} )
           | dedent error ))
   | SUBLIST hspace* is_i=it_expr {$v=list($is_i.v);} /* "$" first on line */
-  | abbrevh hspace* abbrev_i_expr=it_expr
-      {$v=list($abbrevh.v, $abbrev_i_expr.v);} ;
+  | abbrevw hspace*
+      (comment_eol indent sub_abbrev=body
+         {$v = append(list($abbrevw.v), $sub_abbrev.v);}
+       | abbrev_i_expr=it_expr
+         {$v=list($abbrevw.v, $abbrev_i_expr.v);} ) ;
 
 // Production "t_expr" is the top-level production for sweet-expressions.
 // This production handles special cases, then in the normal case

@@ -193,4 +193,18 @@ b
 c
 (foo (bar batz) (nitz koo))
 (car (gettimeofday))
+(quote hi)
+(quote hi)
+(quote (one two))
+(quote (one two))
+(quote (f))
+(quote (f))
+(quote ((f) (g)))
+(quote ((f) (g)))
+(quote ((f)))
+(quote ((f)))
+(quote ((f 1) (g 1)))
+(quote (f 1) (g 1))
+(quote a b)
+(quote (a b))
 fin

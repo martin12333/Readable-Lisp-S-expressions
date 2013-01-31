@@ -474,4 +474,44 @@ foo
 
 car $ gettimeofday()
 
+'
+  hi
+
+' hi
+
+'
+  one two
+
+' one two
+
+'
+  f()
+
+' f()
+
+'
+  f() g()
+
+' f() g()
+
+'
+  ((f))
+
+' ((f))
+
+' f(1) g(1)
+
+; Multiline - interpret this way so you can access weird extensions
+; such as multi-line quasiquote ("Bawden quasiquote")
+
+'
+  f(1)
+  g(1)
+
+'
+  a
+  b
+
+' a b
+
 fin
