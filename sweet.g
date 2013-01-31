@@ -146,7 +146,7 @@ tokens {
     indents.push("");  // Let's start over!
   }
 
-  private void process_restart_end(Token t) {
+  private void process_collecting_end(Token t) {
     // Must create independent EOL token for ANTLR.
     CommonToken extra = new CommonToken(input, Token.INVALID_TOKEN_TYPE,
                 Token.DEFAULT_CHANNEL, getCharIndex(), getCharIndex()-1);
@@ -162,7 +162,7 @@ tokens {
     dedent_it.setCharPositionInLine(getCharPositionInLine());
     process_indent("", dedent_it);  // Emit any dedents needed.
 
-    t.setType(RESTART_END);
+    t.setType(COLLECTING_END);
     emit(t);
 
     // Restore original indent stack.
@@ -412,9 +412,9 @@ PERIOD   : '.';
 // Special markers, which only have meaning outside (), [], {}.
 GROUP_SPLIT  : {indent_processing()}? => '\\' '\\'; // GROUP/split symbol.
 SUBLIST      : {indent_processing()}? =>'$';
-RESTART      : {indent_processing()}? => '<*' { restart_indent_level(); } ;
-// This generates EOL + (DEDENTs if any) + RESTART_END, and restores indents:
-RESTART_END  : {indent_processing()}? => t='*>' { process_restart_end($t); } ;
+COLLECTING     : {indent_processing()}? => '<*' { restart_indent_level(); } ;
+// This generates EOL + (any DEDENTs ) + COLLECTING_END, and restores indents:
+COLLECTING_END : {indent_processing()}? => t='*>' {process_collecting_end($t);};
 RESERVED_TRIPLE_DOLLAR : {indent_processing()}? => '$$$';  // Reserved.
 
 // Abbreviations followed by horizontal space are special:
@@ -813,7 +813,7 @@ error : ERROR;  // Specifically identifies an error branch.
 // These renames are completely unnecessasry, but they are helpful
 // when using the ANTLR debugger.
 
-restart_end :  RESTART_END;
+collecting_end :  COLLECTING_END;
 initial_indent_no_bang : INITIAL_INDENT_NO_BANG;
 initial_indent_with_bang : INITIAL_INDENT_WITH_BANG;
 indent  : INDENT;
@@ -970,17 +970,18 @@ comment_eol : LCOMMENT? EOL;
 
 // KEY BNF PRODUCTIONS for sweet-expressions:
 
-// Production "restart_tail" returns the contents of a restart, as a list.
+// Production "collection_tail" returns the contents of a collection list,
+// as a list.
 // Precondition: At beginning of line.
-// Postcondition: Consumed the matching restart_end.
+// Postcondition: Consumed the matching collection_end.
 // FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
 
-restart_tail returns [Object v]
-  : it_expr more=restart_tail {$v = cons($it_expr.v, $more.v);}
+collection_tail returns [Object v]
+  : it_expr more=collection_tail {$v = cons($it_expr.v, $more.v);}
   | (initial_indent_no_bang | initial_indent_with_bang)?
-    comment_eol    retry1=restart_tail {$v = $retry1.v;}
-  | (FF | VT)+ EOL retry2=restart_tail {$v = $retry2.v;}
-  | restart_end {$v = null;} ;
+    comment_eol    retry1=collection_tail {$v = $retry1.v;}
+  | (FF | VT)+ EOL retry2=collection_tail {$v = $retry2.v;}
+  | collecting_end {$v = null;} ;
 
 // Production "head" reads 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
@@ -1011,9 +1012,9 @@ head returns [Object v]
         (pn=n_expr hspace* (n_expr error)? {$v = list($pn.v);}
          | empty  {$v = list(".");} )
        | empty    {$v = list(".");} )
-  | RESTART hspace* restart_tail hspace*
-      (rr=rest            {$v = cons($restart_tail.v, $rr.v); }
-       | empty            {$v = list($restart_tail.v); } )
+  | COLLECTING hspace* collection_tail hspace*
+      (rr=rest            {$v = cons($collection_tail.v, $rr.v); }
+       | empty            {$v = list($collection_tail.v); } )
   | basic=n_expr_first /* Only match n_expr_first */
       ((hspace+ (br=rest  {$v = cons($basic.v, $br.v);}
                  | empty  {$v = list($basic.v);} ))
@@ -1044,9 +1045,9 @@ rest returns [Object v]
          | empty {$v = list(".");})
        | empty   {$v = list(".");})
   | scomment hspace* (sr=rest {$v = $sr.v;} | empty {$v = null;} )
-  | RESTART hspace* restart_tail hspace*
-    (rr=rest             {$v = cons($restart_tail.v, $rr.v);}
-     | empty             {$v = list($restart_tail.v);} )
+  | COLLECTING hspace* collection_tail hspace*
+    (rr=rest             {$v = cons($collection_tail.v, $rr.v);}
+     | empty             {$v = list($collection_tail.v);} )
   | basic=n_expr
       ((hspace+ (br=rest {$v = cons($basic.v, $br.v);}
                  | empty {$v = list($basic.v);} ))
@@ -1087,16 +1088,16 @@ body returns [Object v]
 // are child lines, those child lines are parameters of the right-hand-side,
 // not of the whole production.
 
-// Note: In a non-tokenizing implementation, a RESTART_END may be
-// returned by head, which ends a list of it_expr inside a restart.  it_expr
-// should then set the current_indent to RESTART_END, and return, to signal
-// the reception of RESTART_END.
+// Note: In a non-tokenizing implementation, a COLLECTING_END may be
+// returned by head, which ends a list of it_expr inside a collection. it_expr
+// should then set the current_indent to COLLECTING_END, and return, to signal
+// the reception of COLLECTING_END.
 
 // Note: This BNF presumes that "*>" generates multiple tokens,
-// "EOL DEDENT* RESTART_END", and resets the indentation list.
+// "EOL DEDENT* COLLECTING_END", and resets the indentation list.
 // You can change the BNF below to allow "head empty", and handle dedents
 // by directly comparing values; then "*>" only needs to generate
-// RESTART_END. But this creates a bunch of ambiguities
+// COLLECTING_END. But this creates a bunch of ambiguities
 // like a 'dangling else', which must all be disambiguated by accepting
 // the first or the longer sequence first.  Either approach is needed to
 // support "*>" as the non-first element so that the "head" can end
@@ -1116,7 +1117,7 @@ it_expr returns [Object v]
      | comment_eol // Normal case, handle child lines if any:
        (indent children=body {$v = append($head.v, $children.v);}
         | empty              {$v = monify($head.v);} /* No child lines */ )
-    // If RESTART_END doesn't generate 2 tokens "EOL RESTART_END", add:
+    // If COLLECTING_END doesn't generate 2 tokens "EOL COLLECTING_END", add:
     // | empty               {$v = monify($head.v);}
      ))
   | (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
