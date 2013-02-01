@@ -1557,25 +1557,26 @@
         results
         (cond
           ((and (eq? expr sublist) (eqv? c sublist-char))
-            (list 'sublist '()))
+            (list 'sublist_marker '()))
           ((and (eq? expr group_split) (eqv? c split-char))
-            (list 'group_split '()))
+            (list 'group_split_marker '()))
           (#t
             results)))))
 
-  ; Check if we have abbrev+hspace.  If the current peeked character
-  ; is hspace, return 'abbrev as the marker and abbrev_procedure
+  ; Check if we have abbrev+whitespace.  If the current peeked character
+  ; is one of certain whitespace chars,
+  ; return 'abbrevw as the marker and abbrev_procedure
   ; as the value (the cadr). Otherwise, return ('normal n_expr).
+  ; We do NOT consume the peeked char (so EOL can be examined later).
   ; Note that this calls the neoteric-read procedure directly, because
   ; quoted markers are no longer markers. E.G., '$ is just (quote $).
   (define (maybe-initial-abbrev port abbrev_procedure)
-    (if (char-hspace? (my-peek-char port))
-      (begin
-        (my-read-char port)
-        (list 'abbrevh abbrev_procedure))
-      (list 'normal (list abbrev_procedure (neoteric-read-nocomment port)))))
+    (let ((c (my-peek-char port)))
+      (if (or (char-hspace? c) (eqv? c carriage-return) (eqv? c linefeed))
+        (list 'abbrevw abbrev_procedure)
+        (list 'normal (list abbrev_procedure (neoteric-read-nocomment port))))))
 
-  ; Read the first n_expr on a line; handle abbrev+hspace specially.
+  ; Read the first n_expr on a line; handle abbrev+whitespace specially.
   ; Returns ('normal VALUE) in most cases.
   (define (n_expr_first port)
     (case (my-peek-char port)
@@ -1617,7 +1618,9 @@
       ((null? (cdr x)) (car x))
       (#t x)))
 
-  ; Returns (stopper computed_value); stopper may be 'normal, 'sublist, etc.
+  ; Returns (stopper computed_value).
+  ; The stopper may be 'normal, 'scomment (special comment),
+  ; 'abbrevw (initial abbreviation), 'sublist_marker, or 'group_split_marker
   (define (head port)
     (let* ((basic_full_results (debug-show "head's first=" (n_expr_first port)))
            (basic_special      (car basic_full_results))
@@ -1649,7 +1652,7 @@
         (#t 
           (list 'normal (list basic_value))))))
 
-  ; Returns (stopper computed_value); stopper may be 'normal, 'sublist, etc.
+  ; Returns (stopper computed_value); stopper may be 'normal, etc.
   (define (rest port)
     (let* ((basic_full_results (n_expr port))
            (basic_special      (car basic_full_results))
@@ -1702,16 +1705,16 @@
     (let* ((head_full_results (debug-show "head results = " (head port)))
            (head_stopper      (car head_full_results))
            (head_value        (cadr head_full_results)))
-      (if (and (not (null? head_value)) (not (eq? head_stopper 'abbrevh)))
+      (if (and (not (null? head_value)) (not (eq? head_stopper 'abbrevw)))
         ; The head... branches:
         (cond
-          ((eq? head_stopper 'group_split)
+          ((eq? head_stopper 'group_split_marker)
             (hspaces port)
             (if (memv (my-peek-char port) initial_comment_eol)
               (list starting_indent
                 (read-error "Cannot follow split with newline"))
               (list starting_indent (monify head_value))))
-          ((eq? head_stopper 'sublist)
+          ((eq? head_stopper 'sublist_marker)
             (hspaces port)
             (let* ((sub_i_full_results (it_expr port starting_indent))
                    (sub_i_new_indent   (car sub_i_full_results))
@@ -1731,7 +1734,8 @@
             (read-error "Must end line with newline")))
         ; Here, head begins with something special like GROUP_SPLIT:
         (cond
-          ((or (eq? head_stopper 'group_split) (eq? head_stopper 'scomment))
+          ((or (eq? head_stopper 'group_split_marker)
+               (eq? head_stopper 'scomment))
             (hspaces port)
             (if (not (memv (my-peek-char port) initial_comment_eol))
               (it_expr port starting_indent) ; Skip and try again.
@@ -1745,20 +1749,29 @@
                       (list new_indent (t_expr port)))) ; Restart, no indent.
                   (#t
                     (read-error "GROUP_SPLIT EOL DEDENT illegal"))))))
-          ((eq? head_stopper 'sublist)
+          ((eq? head_stopper 'sublist_marker)
             (hspaces port)
             (let* ((is_i_full_results (it_expr port starting_indent))
                    (is_i_new_indent   (car is_i_full_results))
                    (is_i_value        (cadr is_i_full_results)))
               (list is_i_new_indent
                 (list is_i_value))))
-          ((eq? head_stopper 'abbrevh)
+          ((eq? head_stopper 'abbrevw)
             (hspaces port)
-            (let* ((abbrev_i_expr_full_results (it_expr port starting_indent))
-                   (abbrev_i_expr_new_indent (car abbrev_i_expr_full_results))
-                   (abbrev_i_expr_value    (cadr abbrev_i_expr_full_results)))
-              (list abbrev_i_expr_new_indent
-                (list head_value abbrev_i_expr_value))))
+            (if (memv (my-peek-char port) initial_comment_eol)
+              (begin
+                (let ((new_indent (comment_eol_read_indent port)))
+                  ; TODO: check that we have an indent (it's required)
+                  (let* ((sub_abbrev_full_results (body port new_indent))
+                         (sub_abbrev_new_indent   (car sub_abbrev_full_results))
+                         (sub_abbrev_value      (cadr sub_abbrev_full_results)))
+                    (list sub_abbrev_new_indent
+                      (append (list head_value) sub_abbrev_value)))))
+              (let* ((abbrev_i_expr_full_results (it_expr port starting_indent))
+                     (abbrev_i_expr_new_indent (car abbrev_i_expr_full_results))
+                     (abbrev_i_expr_value    (cadr abbrev_i_expr_full_results)))
+                (list abbrev_i_expr_new_indent
+                  (list head_value abbrev_i_expr_value)))))
           (#t 
             (read-error "Initial head error")))
     )))

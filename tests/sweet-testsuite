@@ -659,20 +659,34 @@ foo6
 ; It should produce '(aaa).  So, if there's no \\, it makes sense
 ; to interpret it like this:
 
-; '(aaa bbb)
-; '
-;   (aaa bbb)
+'(aaa bbb)
+'
+  (aaa bbb)
 
 
-; '(aa bb)
-; '
-;   aa bb
+'(aa bb)
+'
+  aa bb
 
 ; quote followed by space + newline should be same as just followed by newline:
-; '(e f)
-; ' 
-;  e f
 
+'(e f)
+' 
+  e f
+
+'(f)
+'
+  f()
+
+'((f) (g))
+'
+  f() g()
+
+; Test support for multi-argument quasiquote.
+(quasiquote abc def)
+`
+  abc
+  def
 
 ; Test comments.
 (zz aa)
