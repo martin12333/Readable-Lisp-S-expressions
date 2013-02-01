@@ -305,6 +305,21 @@ tokens {
     } else {return x;}
   }
 
+  // This isn't an accurate implementation of "if" because it always
+  // evaluates the t_branch AND f_branch.  But if t_branch and f_branch
+  // have no side-effects, it's good enough.
+  public static Object ifp(Boolean b, Object t_branch, Object f_branch) {
+    if (b) return t_branch;
+    else   return f_branch;
+  }
+
+  // Is the parameter v a representation of the symbol "."?
+  public static Boolean isperiodp(Object v) {
+    if (!(v instanceof String))
+      return false;
+    else
+      return ((String) v).equals(".");
+  }
 
   // ; --------------------------------------------------------
   // ; Curly-infix support procedures - converted from SRFI-105
@@ -1090,9 +1105,13 @@ rest returns [Object v]
 // cons of the first it_expr and another body [if it exists] or '() [if not].
 
 body returns [Object v]
-  : it_expr
-    (same next_body=body  {$v = cons($it_expr.v, $next_body.v);}
-     | dedent             {$v = list($it_expr.v);} ) ;
+  : i=it_expr
+     (same
+       ( {isperiodp($i.v)}? => f=it_expr dedent
+           {$v = $f.v;} // Improper list final value
+       | {! isperiodp($i.v)}? => nxt=body
+           {$v = cons($i.v, $nxt.v);} )
+     | dedent {$v = list($i.v);} ) ;
 
 // Production "it_expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.

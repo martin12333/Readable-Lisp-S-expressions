@@ -1690,15 +1690,21 @@
 
   ; Returns (new_indent computed_value)
   (define (body port starting_indent)
-    (let* ((it_full_results (it_expr port starting_indent))
-           (it_new_indent   (car it_full_results))
-           (it_value        (cadr it_full_results)))
-      (if (string=? starting_indent it_new_indent)
-        (let* ((body_full_results (body port it_new_indent))
-               (body_new_indent   (car body_full_results))
-               (body_value        (cadr body_full_results)))
-          (list body_new_indent (cons it_value body_value)))
-        (list it_new_indent (list it_value)))))
+    (let* ((i_full_results (it_expr port starting_indent))
+           (i_new_indent   (car i_full_results))
+           (i_value        (cadr i_full_results)))
+      (if (string=? starting_indent i_new_indent)
+        (if (eq? i_value period_symbol)
+          (let* ((f_full_results (it_expr port i_new_indent))
+                 (f_new_indent   (car f_full_results))
+                 (f_value        (cadr f_full_results)))
+            ; TODO: Check for dedent.
+            (list f_new_indent f_value)) ; final value of improper list
+          (let* ((nxt_full_results (body port i_new_indent))
+                 (nxt_new_indent   (car nxt_full_results))
+                 (nxt_value        (cadr nxt_full_results)))
+            (list nxt_new_indent (cons i_value nxt_value))))
+        (list i_new_indent (list i_value))))) ; dedent - end list.
 
   ; Returns (new_indent computed_value)
   (define (it_expr port starting_indent)

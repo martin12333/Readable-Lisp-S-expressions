@@ -683,10 +683,10 @@ foo6
   f() g()
 
 ; Test support for multi-argument quasiquote.
-(quasiquote abc def)
-`
-  abc
-  def
+; (quasiquote abc def)
+; `
+;   abc
+;   def
 
 ; Test comments.
 (zz aa)
@@ -910,3 +910,18 @@ defun x (a b)
 (car (gettimeofday))
 car $ gettimeofday()
 
+(list-test aa bb . cc)
+list-test
+  aa
+  bb
+  .
+  cc
+
+(another aa . bb)
+another
+  aa
+  .
+  bb
+
+'.
+'.
