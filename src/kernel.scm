@@ -504,6 +504,7 @@
   (define carriage-return (integer->char #x000D)) ; \r.
   (define line-tab (integer->char #x000D))
   (define form-feed (integer->char #x000C))
+  (define vertical-tab (integer->char #x000b))
   (define space '#\space)
 
   (define line-ending-chars-ascii (list linefeed carriage-return))
@@ -1527,6 +1528,13 @@
         (cons (read-char port) (accumulate-ichar port))
         '()))
 
+  (define (consume-ff-vt port)
+    (let ((c (my-peek-char port)))
+      (cond
+        ((or (eqv? c form-feed) (eqv? c vertical-tab))
+          (my-read-char port)
+          (consume-ff-vt port)))))
+
   ; Read an n-expression.  Returns ('scomment '()) if it's an scomment,
   ; else returns ('normal n_expr).
   ; Note: If a *value* begins with #, process any potential neoteric tail,
@@ -1791,7 +1799,8 @@
             (consume-to-eol port)
             (consume-end-of-line port)
             (t_expr port))
-          ; TODO: FF/VT
+          ((or (eqv? c form-feed) (eqv? c vertical-tab))
+            (consume-ff-vt port))
           ((char-ichar? c)
             (let ((indentation-list (accumulate-ichar port)))
               (if (memv #\! indentation-list)
