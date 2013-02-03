@@ -1754,13 +1754,25 @@ foo
   ....
 </pre>
 <p>
-David A. Wheeler created an early splicing proposal. After much discussion, to solve the latter problem, the SPLIT symbol was created, so that you could do:
+David A. Wheeler created an early splicing proposal.
+After much discussion, to solve the latter problem, the SPLIT symbol was created, so that you could do:
 </p>
 <pre>
 foo
   keyword1: \\ parameter1
   keyword2: \\ parameter2
   ....
+</pre>
+
+<p>
+Or, equivalently:
+</p>
+<pre>
+foo
+  keyword1:
+  \\   parameter1
+  keyword2:
+  \\   parameter2
 </pre>
 
 <p>At first the symbol \ was used for SPLIT, but this
