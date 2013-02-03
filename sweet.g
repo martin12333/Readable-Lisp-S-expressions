@@ -1007,17 +1007,17 @@ comment_eol : LCOMMENT? EOL;
 
 // KEY BNF PRODUCTIONS for sweet-expressions:
 
-// Production "collection_tail" returns the contents of a collection list,
+// Production "collecting_tail" returns the contents of a collecting list,
 // as a list.
 // Precondition: At beginning of line.
-// Postcondition: Consumed the matching collection_end.
+// Postcondition: Consumed the matching collecting_end.
 // FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
 
-collection_tail returns [Object v]
-  : it_expr more=collection_tail {$v = cons($it_expr.v, $more.v);}
+collecting_tail returns [Object v]
+  : it_expr more=collecting_tail {$v = cons($it_expr.v, $more.v);}
   | (initial_indent_no_bang | initial_indent_with_bang)?
-    comment_eol    retry1=collection_tail {$v = $retry1.v;}
-  | (FF | VT)+ EOL retry2=collection_tail {$v = $retry2.v;}
+    comment_eol    retry1=collecting_tail {$v = $retry1.v;}
+  | (FF | VT)+ EOL retry2=collecting_tail {$v = $retry2.v;}
   | collecting_end {$v = null;} ;
 
 // Production "head" reads 1+ n-expressions on one line; it will
@@ -1049,9 +1049,9 @@ head returns [Object v]
         (pn=n_expr hspace* (n_expr error)? {$v = list($pn.v);}
          | empty  {$v = list(".");} )
        | empty    {$v = list(".");} )
-  | COLLECTING hspace* collection_tail hspace*
-      (rr=rest            {$v = cons($collection_tail.v, $rr.v); }
-       | empty            {$v = list($collection_tail.v); } )
+  | COLLECTING hspace* collecting_tail hspace*
+      (rr=rest            {$v = cons($collecting_tail.v, $rr.v); }
+       | empty            {$v = list($collecting_tail.v); } )
   | basic=n_expr_first /* Only match n_expr_first */
       ((hspace+ (br=rest  {$v = cons($basic.v, $br.v);}
                  | empty  {$v = list($basic.v);} ))
@@ -1082,9 +1082,9 @@ rest returns [Object v]
          | empty {$v = list(".");})
        | empty   {$v = list(".");})
   | scomment hspace* (sr=rest {$v = $sr.v;} | empty {$v = null;} )
-  | COLLECTING hspace* collection_tail hspace*
-    (rr=rest             {$v = cons($collection_tail.v, $rr.v);}
-     | empty             {$v = list($collection_tail.v);} )
+  | COLLECTING hspace* collecting_tail hspace*
+    (rr=rest             {$v = cons($collecting_tail.v, $rr.v);}
+     | empty             {$v = list($collecting_tail.v);} )
   | basic=n_expr
       ((hspace+ (br=rest {$v = cons($basic.v, $br.v);}
                  | empty {$v = list($basic.v);} ))
@@ -1130,9 +1130,9 @@ body returns [Object v]
 // not of the whole production.
 
 // Note: In a non-tokenizing implementation, a COLLECTING_END may be
-// returned by head, which ends a list of it_expr inside a collection. it_expr
-// should then set the current_indent to COLLECTING_END, and return, to signal
-// the reception of COLLECTING_END.
+// returned by head, which ends a list of it_expr inside a collecting list.
+// it_expr should then set the current_indent to COLLECTING_END,
+// and return, to signal the reception of COLLECTING_END.
 
 // Note: This BNF presumes that "*>" generates multiple tokens,
 // "EOL DEDENT* COLLECTING_END", and resets the indentation list.
