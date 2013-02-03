@@ -92,7 +92,7 @@ Here is an example:
 <td>
 <pre>
 define factorial(n)
-  if {n <= 1}
+  if {n &lt;= 1}
     1
     {n * factorial{n - 1}}
 </pre>
@@ -100,7 +100,7 @@ define factorial(n)
 <td>
 <pre>
 (define (factorial n)
-  (if (<= n 1)
+  (if (&lt;= n 1)
     1
     (* n (factorial (- n 1)))))
 </pre>
