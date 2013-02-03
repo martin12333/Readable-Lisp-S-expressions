@@ -1788,7 +1788,7 @@
                   (list body_new_indent (append head_value body_value)))
                 (list new_indent (monify head_value)))))
           (#t
-            (read-error "Must end line with newline")))
+            (read-error "Must end line with end-of-line sequence")))
         ; Here, head begins with something special like GROUP_SPLIT:
         (cond
           ((or (eq? head_stopper 'group_split_marker)
@@ -1818,7 +1818,6 @@
             (if (memv (my-peek-char port) initial_comment_eol)
               (begin
                 (let ((new_indent (comment_eol_read_indent port)))
-                  ; Check that we have an indent, it's required
                   (if (not (indentation>? new_indent starting_indent))
                     (read-error "Indent required after solo abbreviation"))
                   (let* ((sub_abbrev_full_results (body port new_indent))
@@ -1836,11 +1835,16 @@
           (#t 
             (read-error "Initial head error"))))))
 
-  ; Read it_expr.  This is a wrapper that attaches source info.
+  ; Read it_expr.  This is a wrapper that attaches source info
+  ; and checks for consistent indentation results.
   (define (it_expr port starting_indent)
     (let* ((pos (get-sourceinfo port))
-           (results (it_expr_real port starting_indent)))
-      (list (car results) (attach-sourceinfo pos (cadr results)))))
+           (results (it_expr_real port starting_indent))
+           (results_indent (car results))
+           (results_value (cadr results)))
+      (if (indentation>? results_indent starting_indent)
+        (read-error "Inconsistent indentation"))
+      (list results_indent (attach-sourceinfo pos results_value))))
 
   (define (t_expr port)
     (let* ((c (my-peek-char port)))
