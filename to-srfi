@@ -34,7 +34,7 @@ while (<>) {
     s/process_curly\(/(process_curly /g;
 
     # No parameters, so no space at end
-    s/generate_eof\(\)/(generate_eof/g;
+    s/generate_eof\(\)/(generate_eof)/g;
     s/indent_processing\(\)/(indent_processing)/g;
 
     s/{ ?\$v ?= ?/{/g;

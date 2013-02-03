@@ -92,7 +92,7 @@ Here is an example:
 <td>
 <pre>
 define factorial(n)
-  if {n <= 1}
+  if {n &lt;= 1}
     1
     {n * factorial{n - 1}}
 </pre>
@@ -100,7 +100,7 @@ define factorial(n)
 <td>
 <pre>
 (define (factorial n)
-  (if (<= n 1)
+  (if (&lt;= n 1)
     1
     (* n (factorial (- n 1)))))
 </pre>
@@ -264,7 +264,14 @@ whitespace-separated neoteric-expressions).</li>
 Sweet-expression rule clarifications:
 <ol>
 <li>You can indent using one or more of the indent characters,
-which are space, tab, and exclamation point (!).</li>
+which are space, tab, and exclamation point (!).
+Indentation must be <dfn>consistent</dfn>;
+if you use a tab character
+to indent at a certain column position,
+the next line should either have a tab character
+to indent at that same column position,
+or be indented less than that column position.
+</li>
 <li>An unescaped &#8220;;&#8221; not in a string (still) introduces comments
 that end at the end of the line.</li>
 <li>Lines with only a ;-comment (preceded by 0 or more indent characters)
@@ -274,11 +281,13 @@ are completely ignored - even their indentation (if any) is irrelevant.</li>
 where indentation is completely ignored.
 Instead, a sequence of white-space separated neoteric-expressions is read
 until the first end of line.</li>
-<li>Scheme&#8217;s #; datum comment comments out the next neoteric expression,
-not the next sweet expression.</li>
-<li>Block comments (<samp>#|</samp>...<samp>|#</samp>) are removed, but if it
-begins immediately after the indent (if any),
-the indentation at the beginning of the block comment is used.
+<li>Scheme&#8217;s <code>#;</code> datum comment comments out the next neoteric expression,
+not the next sweet expression.
+Datum comments ignore intervening whitespace, including spaces, tabs, and newlines.</li>
+<li>Block comments (<samp>#|</samp>...<samp>|#</samp>) are removed.</li>
+<li>For both datum and block comments, if they
+begin immediately after the indent (if any),
+the indentation at the beginning of the datum or block comment is used.
 </li>
 <li>
 A sweet-expression reader <i>MUST</i> accept, as an
@@ -301,10 +310,34 @@ end-of-line as though an end-of-line sequence had been added.
 <p>
 The sweet-expression advanced features are defined as follows:
 <ol>
-<li>The marker \\ is specially interpreted.  If any terms precede it on the line, it is called SPLIT, and it <em>MUST</em> be interpreted as if it started a new line at the current indentation.  If no terms precede \\ on the line, it is called GROUP, and it represents no symbol at all at that indentation (GROUP is useful for lists of lists).</li>
-<li>The marker $ (aka SUBLIST) <em>MUST</em> restart list processing.  If $ is preceded by any terms on the line, the right-hand-side (including its sub-blocks) is the last parameter of the left-hand side (of just that line). If there&#8217;s no left-hand-side, the right-hand-side is put in a list.</li>
-<li>A leading traditional abbreviation (quote, comma, backquote, or comma-at), followed by space or tab, <em>MUST</em> be interpreted as that operator applied to the entire sweet-expression that follows.</li>
-<li>The markers &#8220;&lt;*&#8221;, &#8220;*&gt;&#8221;, and &#8220;$$$&#8221; are reserved for future use.
+<li>
+The marker <code>\\</code> is specially interpreted.
+If any terms precede it on the line, it is called SPLIT,
+and it <em>MUST</em> be interpreted
+as if it started a new line at the current indentation.
+If no terms precede <code>\\</code> on the line,
+it is called GROUP,
+and it represents no symbol at all,
+located at that indentation (GROUP is useful for lists of lists).</li>
+<li>
+The marker <code>$</code> (aka SUBLIST) <em>MUST</em> restart list processing.
+If <code>$</code> is preceded by any terms on the line,
+the right-hand-side (including its sub-blocks)
+is the last parameter of the left-hand side
+(of just that line).
+If there&#8217;s no left-hand-side,
+the right-hand-side is put in a list.
+</li>
+<li>
+A leading traditional abbreviation
+(quote, comma, backquote, or comma-at),
+located after indentation,
+and followed by space or tab,
+<em>MUST</em> be interpreted as that operator applied to the entire sweet-expression that follows.
+</li>
+<li>
+The markers &#8220;&lt;*&#8221;, &#8220;*&gt;&#8221;, and &#8220;$$$&#8221; are reserved for future use.
+</li>
 </ol>
 
 <p>
@@ -351,7 +384,7 @@ and
 <p>
 Implementations of this SRFI <em>MAY</em>
 implement sweet-expressions in their datum readers by default,
-even when the <code>!#sweet</code> marker is not (yet) received.
+even when the <code>#!sweet</code> marker is not (yet) received.
 Portable applications <em>SHOULD</em> include the <code>#!sweet</code>
 marker before using sweet-expressions, typically near the top of a file.
 Portable applications <em>SHOULD NOT</em>
@@ -1445,6 +1478,234 @@ We are building on the experience of others to create what we hope
 is a useful and refined notation.
 </p>
 
+<h2 id="block-comment-indent-significant">Why are the indentations of block comments and datum comments significant?</h2>
+<p>
+A line that starts with a <code>;</code> after
+the indent is completely ignored,
+including the indent of that line.
+In contrast, a line that starts with
+a <code>#;</code> datum comment
+or a <code>#|</code> ... <code>|#</code> block comment
+after a possible indent is considered
+to be indented
+at the position where the comment starts.
+This means that
+in sweet-expressions,
+<code>;</code> line comments
+have a subtly different semantic meaning
+from datum or block comments.
+</p>
+<p>
+These are the reasons for this difference between line comments
+and datum or block comments:
+</p>
+<ol>
+<li>
+For block comments,
+it would be possible to write a comment
+that includes a newline,
+then some more comment text,
+then the <code>|#</code> terminator for block comments,
+followed by ordinary datums.
+We could have declared that block comments
+that include newlines would have the comment-only lines deleted,
+and block comments would have each character replaced with a space.
+For example:
+<table border="1">
+<tr><th>Original</th>
+<th>Could&#8217;ve mapped to (but doesn&#8217;t!)</th></tr>
+<tr>
+<td>
+<pre>
+foo
+ #|comment #1|# bar
+ #|comment #2|# quux
+</pre>
+</td>
+<td>
+<pre>
+foo
+                bar
+                quux
+</pre>
+</td>
+</tr>
+<tr>
+<td>
+<pre>
+foo
+#| block
+comment |# bar
+           quux
+</pre>
+</td>
+<td>
+<pre>
+foo
+           bar
+           quux
+</pre>
+</td>
+</tr>
+</table>
+But what if Chinese, Japanese, or Korean double-width characters
+are found?
+The sensible approach would be to require
+that double-width characters
+be replaced with two spaces rather than one,
+but this requires implementations to know those characters
+and replace them differently.
+It was judged to be a significant implementation overhead,
+for what is essentially an edge case,
+for a style that we felt
+utterly defeats the clarity of indentation.
+Instead, we mandate that block comments
+are simply deleted outright.
+</li>
+<li>
+Outright deleting comments
+makes the meaning of the sequence
+"indent, block/datum comment, space, datum"
+misleading.
+For example:
+<pre>
+foo
+    bar
+    #| ...
+|#  quux
+</pre>
+A simple "outright delete" would yield:
+<pre>
+foo
+    bar
+      quux
+</pre>
+This is arguably a misleading translation.
+</li>
+<li>
+Further, our expected use case for block comments would 
+look like this:
+<pre>
+define foo(x)
+  #|
+   | First, bar the x.
+   | Then quux it so that x is no longer xuuq-able
+   |#
+  bar x
+  quux x #| Need to quux here
+          | to prevent conflicting with
+          | the bar table
+          |#
+</pre>
+Again, a simple "outright delete"
+would yield an empty line
+right after the "<code>define foo(x)</code>" line.
+Instead, what we mandate is that,
+if a block or datum comment immediately follows indentation,
+it is deleted outright,
+and replaced with GROUP/SPLIT (<code>\\</code>).
+Block or datum comments that do not follow inndentation
+are simply deleted without being replaced with anything:
+<table border=1>
+<tr><th>Original</th><th>Maps to</th></tr>
+<tr>
+<td>
+<pre>
+define foo(x)
+  #|
+   | standalone comment
+   |#
+  #| pre-comment |# bar #| in-comment |# quux
+</pre>
+</td>
+<td>
+<pre>
+define foo(x)
+  \\
+  \\ bar  quux
+</pre>
+</td>
+</tr>
+</table>
+</li>
+</ol>
+
+<p>
+Although the reasons above pertain mostly to block comments,
+datum comments (<code>#;</code>) are considered
+essentially identical to block comments.
+</p>
+<p>
+We could have mandated a different behavior between datum
+and block comments.
+But it is helpful to review the <em>reason</em>
+for the existence of datum comments.
+There are two major use cases:
+</p>
+<ol>
+<li>
+To just comment out a single, short item from a list.
+<pre>(foo bar #;quux meow)</pre>
+</li>
+<li>
+To easily remove the last item of a multi-line list,
+where that item is itself several lines:
+<pre>
+(define (foo x)
+  (if (not (foo-able? x))
+    (error "Cannot foo the " x)
+    (begin
+      (en-bar x)
+      ; quuxing is currently buggy; dwheeler to fix
+      #;(quux
+        (barred-form x)
+        (co-barred-form x)
+        (de-xuuqed x)))))
+</pre>
+</li>
+</ol>
+<p>
+For the last case, while typically a muli-line list
+is commented out by using <code>;</code> line comments,
+in standard s-expression syntax all closing parentheses
+are "piled on" to the last line.
+Using just <code>;</code> would also comment out
+the closing parentheses of
+<code>begin</code>, <code>if</code>, and <code>define</code>.
+</p>
+<p>
+But with sweet-expressions,
+there are no explicit closing parentheses.
+In sweet-expression form, using line comments suffices:
+</p>
+<pre>
+define foo(x)
+  if not(foo-able?(x))
+    error "Cannot foo the " x
+    begin
+      en-bar x
+      ; quuxing is currently buggy; dwheeler to fix
+      ;;quux
+      ;;  barred-form x
+      ;;  co-barred-form x
+      ;;  de-xuuqed x
+</pre>
+<p>
+Thus, the expected use case of datum comments
+in sweet-expressions
+is limited to the first case,
+i.e. commenting-out a single short item.
+</p>
+<p>
+Since this first case can be handled sufficiently well
+by having datum comments
+take on the same behavior as block comments
+(i.e. delete outright, if at start of line after
+indent replace with <code>\\</code>)
+then it was considered simpler
+to just use the same behavior for both.
+</p>
+
 <h2 id="separate-105">Why are sweet-expressions separate from curly-infix and neoteric-expressions as defined in SRFI-105?</h2>
 <p>
 Some Scheme users and implementers may not want indentation-sensitive
@@ -1507,7 +1768,7 @@ type the special &#8220;end-of-expression&#8221; marker.
 As Beni Cherniavsky-Paskin observed on the readable-discuss mailing list
 (2013-01-16),
 "I absolutely hate SQL prompts that don't execute until I add a ;".
-Another solution, alread in sweet-expressions, is
+Another solution, already in sweet-expressions, is
 quickly executing one-line commands by
 typing an indent character first.
 But users will often not know exactly how long an expression
@@ -1566,8 +1827,8 @@ is defined so that people can use what they like.
 The only rule is that they must be consistent; if a line is indented with
 eight spaces, the next line cannot be indented with a tab.</p>
 
-<p>One objection that people raise about horizontal
-whitespace characters is that they can get lost in many transports
+<p>One objection that people raise about mandatory indentation
+is that horizontal whitespace can get lost in many transports
 (HTML readers, etc.).
 In addition, sometimes there are indented groups that you&#8217;d
 like to highlight; traditional whitespace indentation provides no
@@ -1592,8 +1853,9 @@ a number (.9), beginning a symbol (.xyz), and as a special operator to
 set the cdr of a list.
 Implementation of period as an indent character
 is much easier if there is a way to perform two-character lookahead
-(e.g., with an unread-char function),
-but this is not standard in Scheme R5RS.
+(e.g., with an <code>unread-char</code> function),
+but <code>unread-char</code> is not standard in Scheme R5RS,
+<a href='http://www.lispworks.com/documentation/HyperSpec/Issues/iss356_w.htm'>and Common Lisp does not mandate support for two-character lookahead</a>.
 Eventually the &#8220;!&#8221; was selected instead; it
 practically never begins a line, and if you need it, {!...} will work.
 The exclamation point is much easier to implement as an indent character,
@@ -1753,13 +2015,25 @@ foo
   ....
 </pre>
 <p>
-David A. Wheeler created an early splicing proposal. After much discussion, to solve the latter problem, the SPLIT symbol was created, so that you could do:
+David A. Wheeler created an early splicing proposal.
+After much discussion, to solve the latter problem, the SPLIT symbol was created, so that you could do:
 </p>
 <pre>
 foo
   keyword1: \\ parameter1
   keyword2: \\ parameter2
   ....
+</pre>
+
+<p>
+Or, equivalently:
+</p>
+<pre>
+foo
+  keyword1:
+  \\   parameter1
+  keyword2:
+  \\   parameter2
 </pre>
 
 <p>At first the symbol \ was used for SPLIT, but this
@@ -1807,7 +2081,20 @@ if
 ! \\ action2()
 ! \\ otherwise-action()
 </pre>
-<p>It&#8217;s easy to handle let* with an extra line, but there&#8217;s
+<p>
+For a more Scheme-centric viewpoint,
+some Scheme implementations use keyword objects.
+For example, in Guile, module declarations look like:
+</p>
+<pre>
+define-module
+! \\ amkg cat meow
+! #:use-module
+! \\ amkg dog woof
+! #:export
+! \\ (meow hiss)
+</pre>
+<p>It&#8217;s easy to handle <code>let*</code> with an extra line, but there&#8217;s
 no easy way to insert a short pseudo-comment character in the front unless
 we do it this way.</p>
 <p>The multi-line nature of let* turns out to be
@@ -1844,8 +2131,8 @@ quoted simply by prefixing a single quote and space.</p>
 
 <p>Alan Manuel Gloria
 noted that certain constructs were common and annoying to express,
-e.g., first(second(third(fourth))), and based on Haskell experience,
-suggested being able to write them as first $ second $ third(fourth).
+e.g., <samp>first(second(third(fourth)))</samp>, and based on Haskell experience,
+suggested being able to write them as <samp>first $ second $ third(fourth)</samp>.
 Again, the idea is that this is an abbreviation for a common-enough
 practice.</p>
 
@@ -1926,15 +2213,15 @@ makes possible the following code:
 </p>
 
 <pre>
-define merge(< as bs) $ cond
+define merge(&lt; as bs) $ cond
   null?(as)           $ bs
   null?(bs)           $ as
-  {car(as) < car(bs)} $ cons
+  {car(as) &lt; car(bs)} $ cons
                          car as
-                         merge < (cdr as) bs
+                         merge &lt; (cdr as) bs
   else                $ cons
                          car bs
-                         merge < as (cdr bs)
+                         merge &lt; as (cdr bs)
 </pre>
 
 <p>
@@ -2324,7 +2611,7 @@ s-expression. Here is a brief additional comparison:</p>
 &#8220;The exact rule for a distinguishing between a variable reference
 and a zero-argument function application isn&#8217;t decided yet.&#8221; In
 sweet-expressions, a zero-argument function name is called by adding
-() after it or around it, e.g., pi().</li>
+<code>()</code> after it or around it, e.g., <samp>pi()</samp>.</li>
 <li>&#8220;Flexible token format&#8221;
 - both require operators to be delimited.</li>
 <li>&#8220;Use indentation
