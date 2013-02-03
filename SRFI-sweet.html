@@ -310,10 +310,34 @@ end-of-line as though an end-of-line sequence had been added.
 <p>
 The sweet-expression advanced features are defined as follows:
 <ol>
-<li>The marker \\ is specially interpreted.  If any terms precede it on the line, it is called SPLIT, and it <em>MUST</em> be interpreted as if it started a new line at the current indentation.  If no terms precede \\ on the line, it is called GROUP, and it represents no symbol at all at that indentation (GROUP is useful for lists of lists).</li>
-<li>The marker $ (aka SUBLIST) <em>MUST</em> restart list processing.  If $ is preceded by any terms on the line, the right-hand-side (including its sub-blocks) is the last parameter of the left-hand side (of just that line). If there&#8217;s no left-hand-side, the right-hand-side is put in a list.</li>
-<li>A leading traditional abbreviation (quote, comma, backquote, or comma-at), followed by space or tab, <em>MUST</em> be interpreted as that operator applied to the entire sweet-expression that follows.</li>
-<li>The markers &#8220;&lt;*&#8221;, &#8220;*&gt;&#8221;, and &#8220;$$$&#8221; are reserved for future use.
+<li>
+The marker <code>\\</code> is specially interpreted.
+If any terms precede it on the line, it is called SPLIT,
+and it <em>MUST</em> be interpreted
+as if it started a new line at the current indentation.
+If no terms precede <code>\\</code> on the line,
+it is called GROUP,
+and it represents no symbol at all,
+located at that indentation (GROUP is useful for lists of lists).</li>
+<li>
+The marker <code>$</code> (aka SUBLIST) <em>MUST</em> restart list processing.
+If <code>$</code> is preceded by any terms on the line,
+the right-hand-side (including its sub-blocks)
+is the last parameter of the left-hand side
+(of just that line).
+If there&#8217;s no left-hand-side,
+the right-hand-side is put in a list.
+</li>
+<li>
+A leading traditional abbreviation
+(quote, comma, backquote, or comma-at),
+located after indentation,
+and followed by space or tab,
+<em>MUST</em> be interpreted as that operator applied to the entire sweet-expression that follows.
+</li>
+<li>
+The markers &#8220;&lt;*&#8221;, &#8220;*&gt;&#8221;, and &#8220;$$$&#8221; are reserved for future use.
+</li>
 </ol>
 
 <p>
