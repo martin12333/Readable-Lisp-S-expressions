@@ -1171,10 +1171,10 @@ it_expr returns [Object v]
           | dedent error ))
   | SUBLIST hspace* is_i=it_expr {$v=list($is_i.v);} /* "$" first on line */
   | abbrevw hspace*
-      (comment_eol indent sub_abbrev=body
-         {$v = append(list($abbrevw.v), $sub_abbrev.v);}
-       | abbrev_i_expr=it_expr
-         {$v=list($abbrevw.v, $abbrev_i_expr.v);} ) ;
+      (comment_eol indent ab=body
+         {$v = append(list($abbrevw.v), $ab.v);}
+       | ai=it_expr
+         {$v=list($abbrevw.v, $ai.v);} ) ;
 
 // Production "t_expr" is the top-level production for sweet-expressions.
 // This production handles special cases, then in the normal case

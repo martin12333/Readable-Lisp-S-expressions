@@ -1768,8 +1768,7 @@
           ((eq? head_stopper 'group_split_marker)
             (hspaces port)
             (if (memv (my-peek-char port) initial_comment_eol)
-              (list starting_indent
-                (read-error "Cannot follow split with newline"))
+              (read-error "Cannot follow split with end of line")
               (list starting_indent (monify head_value))))
           ((eq? head_stopper 'sublist_marker)
             (hspaces port)
@@ -1822,16 +1821,16 @@
                 (let ((new_indent (comment_eol_read_indent port)))
                   (if (not (indentation>? new_indent starting_indent))
                     (read-error "Indent required after solo abbreviation"))
-                  (let* ((sub_abbrev_full_results (body port new_indent))
-                         (sub_abbrev_new_indent   (car sub_abbrev_full_results))
-                         (sub_abbrev_value      (cadr sub_abbrev_full_results)))
-                    (list sub_abbrev_new_indent
-                      (append (list head_value) sub_abbrev_value)))))
-              (let* ((abbrev_i_expr_full_results (it_expr port starting_indent))
-                     (abbrev_i_expr_new_indent (car abbrev_i_expr_full_results))
-                     (abbrev_i_expr_value    (cadr abbrev_i_expr_full_results)))
-                (list abbrev_i_expr_new_indent
-                  (list head_value abbrev_i_expr_value)))))
+                  (let* ((ab_full_results (body port new_indent))
+                         (ab_new_indent   (car ab_full_results))
+                         (ab_value      (cadr ab_full_results)))
+                    (list ab_new_indent
+                      (append (list head_value) ab_value)))))
+              (let* ((ai_full_results (it_expr port starting_indent))
+                     (ai_new_indent (car ai_full_results))
+                     (ai_value    (cadr ai_full_results)))
+                (list ai_new_indent
+                  (list head_value ai_value)))))
           ((eq? head_stopper 'collecting_end)
             (list "" head_value))
           (#t 
