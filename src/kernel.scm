@@ -726,6 +726,8 @@
     (display "Error: ")
     (display message)
     (newline)
+    ; Guile extension, but many Schemes have exceptions
+    (throw 'readable)
     '())
 
   (define (read-number port starting-lyst)
@@ -1848,7 +1850,7 @@
 
   ; Top level - read a sweet-expression (t-expression).  Handle special
   ; cases, such as initial indent; call it_expr for normal case.
-  (define (t_expr port)
+  (define (t_expr_real port)
     (let* ((c (my-peek-char port)))
       (if (eof-object? c) ; Check EOF early (a guile bug consumes EOF on peek)
         c
@@ -1875,6 +1877,22 @@
                     (consume-end-of-line port)
                     (t_expr port))))))
           (#t (cadr (it_expr port "^")))))))
+
+  (define (read_to_blank_line port)
+    (consume-to-eol port)
+    (consume-end-of-line port)
+    (let* ((c (my-peek-char port)))
+      (if (not (or (eof-object? c)
+                   (eqv? c carriage-return)
+                   (eqv? c linefeed)))
+        (read_to_blank_line port))))
+
+  ; Call on sweet-expression reader - use guile's nonstandard catch/throw
+  ; so that errors will force a restart.
+  (define (t_expr port)
+    (catch 'readable
+      (lambda () (t_expr_real port))
+      (lambda (key . args) (read_to_blank_line port) (t_expr port))))
 
 ; NOTE: Commented out because this fails to compile and interferes
 ; with testing.   Once runs, re-enable.
