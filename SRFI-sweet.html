@@ -1566,8 +1566,8 @@ is defined so that people can use what they like.
 The only rule is that they must be consistent; if a line is indented with
 eight spaces, the next line cannot be indented with a tab.</p>
 
-<p>One objection that people raise about horizontal
-whitespace characters is that they can get lost in many transports
+<p>One objection that people raise about mandatory indentation
+is that horizontal whitespace can get lost in many transports
 (HTML readers, etc.).
 In addition, sometimes there are indented groups that you&#8217;d
 like to highlight; traditional whitespace indentation provides no
@@ -1592,8 +1592,9 @@ a number (.9), beginning a symbol (.xyz), and as a special operator to
 set the cdr of a list.
 Implementation of period as an indent character
 is much easier if there is a way to perform two-character lookahead
-(e.g., with an unread-char function),
-but this is not standard in Scheme R5RS.
+(e.g., with an <code>unread-char</code> function),
+but <code>unread-char</code> is not standard in Scheme R5RS,
+<a href='http://www.lispworks.com/documentation/HyperSpec/Issues/iss356_w.htm'>and Common Lisp does not mandate support for two-character lookahead</a>.
 Eventually the &#8220;!&#8221; was selected instead; it
 practically never begins a line, and if you need it, {!...} will work.
 The exclamation point is much easier to implement as an indent character,
