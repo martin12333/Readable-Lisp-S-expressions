@@ -1544,7 +1544,6 @@
   ; Markers only have special meaning if their first character is
   ; the "normal" character, e.g., {$} is not a sublist.
   ; Call "process-sharp" if first char is "#".
-  ; TODO: Change process-sharp, etc., calling conventions to simplify.
   (define (n_expr port)
     (let* ((c (my-peek-char port))
            (results (n_expr_or_scomment port))
@@ -1621,7 +1620,6 @@
 
   ; Return contents of collecting_tail.
   (define (collecting_tail port)
-    ; TODO - rest of cases
     (let* ((c (my-peek-char port)))
       (cond
         ((memv c initial_comment_eol)
@@ -1675,7 +1673,8 @@
                        (pn_stopper      (car pn_full_results))
                        (pn_value        (cadr pn_full_results)))
                   (hspaces port)
-                  ; TODO: Check for n_expr error
+                  (if (not (memv (my-peek-char port) initial_comment_eol))
+                    (read-error "Illegal value after . value in head"))
                   (list pn_stopper pn_value))
                 (list 'normal (list period_symbol))))
             (list 'normal (list period_symbol))))
@@ -1722,7 +1721,8 @@
                        (pn_stopper      (car pn_full_results))
                        (pn_value        (cadr pn_full_results)))
                   (hspaces port)
-                  ; TODO: Check for n_expr error
+                  (if (not (memv (my-peek-char port) initial_comment_eol))
+                    (read-error "Illegal value after . value in rest of line"))
                   (list pn_stopper pn_value))
                 (list 'normal (list period_symbol))))
             (list 'normal (list period_symbol))))
@@ -1746,7 +1746,8 @@
           (let* ((f_full_results (it_expr port i_new_indent))
                  (f_new_indent   (car f_full_results))
                  (f_value        (cadr f_full_results)))
-            ; TODO: Check for dedent.
+            (if (not (indentation>? starting_indent f_new_indent))
+              (read-error "Dedent required after lone . and value line"))
             (list f_new_indent f_value)) ; final value of improper list
           (let* ((nxt_full_results (body port i_new_indent))
                  (nxt_new_indent   (car nxt_full_results))
@@ -1817,7 +1818,9 @@
             (if (memv (my-peek-char port) initial_comment_eol)
               (begin
                 (let ((new_indent (comment_eol_read_indent port)))
-                  ; TODO: check that we have an indent (it's required)
+                  ; Check that we have an indent, it's required
+                  (if (not (indentation>? new_indent starting_indent))
+                    (read-error "Indent required after solo abbreviation"))
                   (let* ((sub_abbrev_full_results (body port new_indent))
                          (sub_abbrev_new_indent   (car sub_abbrev_full_results))
                          (sub_abbrev_value      (cadr sub_abbrev_full_results)))
@@ -1867,222 +1870,224 @@
                     (t_expr port))))))
           (#t (cadr (it_expr port "^")))))))
 
+; NOTE: Commented out because this fails to compile and interferes
+; with testing.   Once runs, re-enable.
 ; --- AmkG New implementation ---
-  (define sweet-read-amkg
-    (let ()
-
-
-      ; -- Parser Combinators sub-library
-
-      ; lazy parser definition, to handle interrecursive definitions
-      (define (parser f)
-        (let ((invoked? #f)
-              (value '()))
-          (lambda args
-            (if (not invoked?)
-              (begin
-                (set! value (f))
-                (set! invoked? #t)))
-            (apply value args))))
-
-      ; Parsers are:
-      ;   procedures taking the following arguments
-      ;     st - an input state
-      ;     pass0 - a pass continuation invoked if no input was consumed
-      ;     pass - a pass continuation invoked if at least 1 input was consumed
-      ;     fail0 - a fail continuation, no input was consumed
-      ;     fail - a fail continuation, at least 1 input was consumed
-
-      ; pass continuations (pass0 and pass) accept state and return value
-      ; fail continuations accept state and failed token.
-
-      ; Parser Monad bind
-      (define (parser-bind p f)
-        (lambda (st pass0 pass fail0 fail)
-          (p
-            (lambda (n-st a) ; pass0
-              (let ((q (f a)))
-                (q
-                  n-st
-                  pass0
-                  pass
-                  fail0
-                  fail)))
-            (lambda (n-st a) ; pass
-              (let ((q (f a)))
-                (q
-                  n-st
-                  pass ; p already consumed input
-                  pass
-                  fail ; p already consumed input
-                  fail)))
-            fail0
-            fail)))
-      ; Base
-      (define (return a)
-        (lambda (st pass0 pass fail0 fail)
-          (pass0 st a)))
-      ; Alternation
-      (define (</> p . rest)
-        (define (alts p rest)
-          (if (null? rest)
-            p
-            ; yes, this can probably be done with alts as
-            ; a tail loop, but the resulting combined parser
-            ; becomes less efficient.
-            (alt p (alts (car p) (cdr rest)))))
-        (define (alt p q)
-          (lambda (st pass0 pass fail0 fail)
-            (p
-              st
-              pass0
-              pass
-              (lambda (n-st _)
-                (q
-                  pass0
-                  pass
-                  fail0
-                  fail))
-              ; alt fails if the first parser already consumed
-              ; input
-              fail)))
-        (alts p rest))
-      ; bind a non-parser action to a parser
-      (define (action p f)
-        (parser-bind p
-          (lambda (a)
-            (return (apply f a)))))
-      ; Sequence
-      (define (seq p . rest)
-        (define (listify p)
-          (parser-bind p (lambda (p-result) (return (list p-result)))))
-        (define (seqs p rest)
-          (if (null? rest)
-            p
-            (seq2 p (seqs (car p) (cdr rest)))))
-        (define (seq2 p q)
-          (parser-bind p
-            (lambda (p-result)
-              (parser-bind q
-                (lambda (q-result)
-                  (return (append p-result q-result)))))))
-        (seqs (listify p) (map listify rest)))
-      ; Sequence with action.
-      (define (seq-act p q/a . rest)
-        (if (null? rest)
-          (action (seq p) q/a)
-          (let* ((rev-rest (reverse rest))
-                 (a        (car rev-rest))
-                 (rev-qs   (cdr rev-rest))
-                 (qs       (reverse rev-qs)))
-            (action (apply seq p q/a qs) a))))
-      ; Optional
-      (define (<?> p)
-        (lambda (st pass0 pass fail0 fail)
-          (p
-            st
-            (lambda (n-st a)
-              (pass0 (list a)))
-            (lambda (n-st a)
-              (pass (list a)))
-            (lambda (n-st a)
-              (pass0 '()))
-            fail)))
-      ; Many
-      (define (<*> p)
-        (define rv
-          (parser (lambda ()
-              (</> (seq-act p rv cons)
-                   (return '())))))
-        rv)
-      ; Many, at least 1
-      (define (<+> p)
-        (seq-act p (<*> p) cons))
-
-      ; -- Parser
-
-      ; terminals for this implementation
-      (define EOL (</> (seq (parser-char=? (integer->char 10)))
-                       (seq (parser-char=? (integer->char 13))
-                            (<?> (parser-char=? (integer->char 10))))))
-      (define LCOMMENT (parser-eq? 'LCOMMENT))
-      (define initial-indent-no-bang (parser-eq? 'INITIAL_INDENT_NO_BANG))
-      (define initial-indent-with-bang (parser-eq? 'INITIAL_INDENT_WITH_BANG))
-      (define EOF (parser-f? eof-object?))
-      (define hspace (parser-eq? 'HSPACE))
-      (define scomment (parser-eq? 'SCOMMENT))
-
-      ; common enough to justify this
-      (define hspace* (parser (lambda () (<*> hspace))))
-      (define hspace+ (parser (lambda () (<+> hspace))))
-
-      ; basic parsers
-      (define comment-eol (seq (<?> LCOMMENT) EOL))
-      (define abbrevw
-        (</>
-          (seq-act (parser-eq? 'APOSW)            (lambda (_) 'quote))
-          (seq-act (parser-eq? 'QUASIQUOTEW)      (lambda (_) 'quasiquote))
-          (seq-act (parser-eq? 'UNQUOTE_SPLICEW)  (lambda (_) 'unquote-splicing))
-          (seq-act (parser-eq? 'UNQUOTEEW)        (lambda (_) 'unquote))
-          ; for syntax-case
-          (seq-act (parser-eq? 'SYNTAXW)          (lambda (_) 'syntax))
-          (seq-act (parser-eq? 'QUASISYNTAXW)     (lambda (_) 'quasisyntax))
-          (seq-act (parser-eq? 'UNSYNTAX_SPLICEW) (lambda (_) 'unsyntax-splicing))
-          (seq-act (parser-eq? 'UNSYNTAXW)        (lambda (_) 'unsyntax))))
-
-      (define it-expr
-        (parser (lambda ()
-            (</>
-              ; parsers after head need access to it, so use parser-bind
-              (parser-bind
-                head
-                (lambda (head.v)
-                  (</>
-                    (seq-act GROUP_SPLIT hspace*
-                      (</> (seq-act comment-eol
-                             (lambda _ (read-error "\\\\ not allowed as line-continuation")))
-                        (return (monify head.v)))
-                      (lambda (_ _ v) v)))))))))
-
-      (define t-expr
-        (parser (lambda ()
-            (</>
-              (seq-act comment-eol t-expr
-                (lambda (_ retry1) retry1))
-              (seq-act (<+> (</> FF VT)) EOL t-expr
-                (lambda (_ _ retry2) retry2))
-              (seq-act (</> initial-indent-no-bang (<+> hspace))
-                (</> n-expr
-                     (seq-act scomment (<*> hspace)
-                       t-expr
-                       (lambda (_ _ sretry) sretry))
-                     (seq-act comment-eol t-expr
-                       (lambda (_ retry3) retry3)))
-                (lambda (_ v) v))
-              (seq-act initial-indent-with-bang
-                (lambda (_) (read-error "Initial indent with bang!")))
-              EOF
-              it-expr))))
-
-      ; sweet-read
-      (lambda (port)
-        (tokenizer
-          port
-          my-peek-char
-          my-read-char
-          eof-object?
-          (lambda (port)
-            (let ((rv (neoteric-read-real-comment-tag port)))
-              (if (eq? rv comment-tag)
-                  '()
-                  (list rv))))
-          (lambda (port)
-            (let ((rv (process-sharp-comment-tag neoteric-read-real port)))
-              (if (eq? rv comment-tag)
-                  '()
-                  (list rv))))
-          (lambda (get-token)
-            (run-parser get-token t-expr))))))
+;  (define sweet-read-amkg
+;    (let ()
+;
+;
+;      ; -- Parser Combinators sub-library
+;
+;      ; lazy parser definition, to handle interrecursive definitions
+;      (define (parser f)
+;        (let ((invoked? #f)
+;              (value '()))
+;          (lambda args
+;            (if (not invoked?)
+;              (begin
+;                (set! value (f))
+;                (set! invoked? #t)))
+;            (apply value args))))
+;
+;      ; Parsers are:
+;      ;   procedures taking the following arguments
+;      ;     st - an input state
+;      ;     pass0 - a pass continuation invoked if no input was consumed
+;      ;     pass - a pass continuation invoked if at least 1 input was consumed
+;      ;     fail0 - a fail continuation, no input was consumed
+;      ;     fail - a fail continuation, at least 1 input was consumed
+;
+;      ; pass continuations (pass0 and pass) accept state and return value
+;      ; fail continuations accept state and failed token.
+;
+;      ; Parser Monad bind
+;      (define (parser-bind p f)
+;        (lambda (st pass0 pass fail0 fail)
+;          (p
+;            (lambda (n-st a) ; pass0
+;              (let ((q (f a)))
+;                (q
+;                  n-st
+;                  pass0
+;                  pass
+;                  fail0
+;                  fail)))
+;            (lambda (n-st a) ; pass
+;              (let ((q (f a)))
+;                (q
+;                  n-st
+;                  pass ; p already consumed input
+;                  pass
+;                  fail ; p already consumed input
+;                  fail)))
+;            fail0
+;            fail)))
+;      ; Base
+;      (define (return a)
+;        (lambda (st pass0 pass fail0 fail)
+;          (pass0 st a)))
+;      ; Alternation
+;      (define (</> p . rest)
+;        (define (alts p rest)
+;          (if (null? rest)
+;            p
+;            ; yes, this can probably be done with alts as
+;            ; a tail loop, but the resulting combined parser
+;            ; becomes less efficient.
+;            (alt p (alts (car p) (cdr rest)))))
+;        (define (alt p q)
+;          (lambda (st pass0 pass fail0 fail)
+;            (p
+;              st
+;              pass0
+;              pass
+;              (lambda (n-st _)
+;                (q
+;                  pass0
+;                  pass
+;                  fail0
+;                  fail))
+;              ; alt fails if the first parser already consumed
+;              ; input
+;              fail)))
+;        (alts p rest))
+;      ; bind a non-parser action to a parser
+;      (define (action p f)
+;        (parser-bind p
+;          (lambda (a)
+;            (return (apply f a)))))
+;      ; Sequence
+;      (define (seq p . rest)
+;        (define (listify p)
+;          (parser-bind p (lambda (p-result) (return (list p-result)))))
+;        (define (seqs p rest)
+;          (if (null? rest)
+;            p
+;            (seq2 p (seqs (car p) (cdr rest)))))
+;        (define (seq2 p q)
+;          (parser-bind p
+;            (lambda (p-result)
+;              (parser-bind q
+;                (lambda (q-result)
+;                  (return (append p-result q-result)))))))
+;        (seqs (listify p) (map listify rest)))
+;      ; Sequence with action.
+;      (define (seq-act p q/a . rest)
+;        (if (null? rest)
+;          (action (seq p) q/a)
+;          (let* ((rev-rest (reverse rest))
+;                 (a        (car rev-rest))
+;                 (rev-qs   (cdr rev-rest))
+;                 (qs       (reverse rev-qs)))
+;            (action (apply seq p q/a qs) a))))
+;      ; Optional
+;      (define (<?> p)
+;        (lambda (st pass0 pass fail0 fail)
+;          (p
+;            st
+;            (lambda (n-st a)
+;              (pass0 (list a)))
+;            (lambda (n-st a)
+;              (pass (list a)))
+;            (lambda (n-st a)
+;              (pass0 '()))
+;            fail)))
+;      ; Many
+;      (define (<*> p)
+;        (define rv
+;          (parser (lambda ()
+;              (</> (seq-act p rv cons)
+;                   (return '())))))
+;        rv)
+;      ; Many, at least 1
+;      (define (<+> p)
+;        (seq-act p (<*> p) cons))
+;
+;      ; -- Parser
+;
+;      ; terminals for this implementation
+;      (define EOL (</> (seq (parser-char=? (integer->char 10)))
+;                       (seq (parser-char=? (integer->char 13))
+;                            (<?> (parser-char=? (integer->char 10))))))
+;      (define LCOMMENT (parser-eq? 'LCOMMENT))
+;      (define initial-indent-no-bang (parser-eq? 'INITIAL_INDENT_NO_BANG))
+;      (define initial-indent-with-bang (parser-eq? 'INITIAL_INDENT_WITH_BANG))
+;      (define EOF (parser-f? eof-object?))
+;      (define hspace (parser-eq? 'HSPACE))
+;      (define scomment (parser-eq? 'SCOMMENT))
+;
+;      ; common enough to justify this
+;      (define hspace* (parser (lambda () (<*> hspace))))
+;      (define hspace+ (parser (lambda () (<+> hspace))))
+;
+;      ; basic parsers
+;      (define comment-eol (seq (<?> LCOMMENT) EOL))
+;      (define abbrevw
+;        (</>
+;          (seq-act (parser-eq? 'APOSW)            (lambda (_) 'quote))
+;          (seq-act (parser-eq? 'QUASIQUOTEW)      (lambda (_) 'quasiquote))
+;          (seq-act (parser-eq? 'UNQUOTE_SPLICEW)  (lambda (_) 'unquote-splicing))
+;          (seq-act (parser-eq? 'UNQUOTEEW)        (lambda (_) 'unquote))
+;          ; for syntax-case
+;          (seq-act (parser-eq? 'SYNTAXW)          (lambda (_) 'syntax))
+;          (seq-act (parser-eq? 'QUASISYNTAXW)     (lambda (_) 'quasisyntax))
+;          (seq-act (parser-eq? 'UNSYNTAX_SPLICEW) (lambda (_) 'unsyntax-splicing))
+;          (seq-act (parser-eq? 'UNSYNTAXW)        (lambda (_) 'unsyntax))))
+;
+;      (define it-expr
+;        (parser (lambda ()
+;            (</>
+;              ; parsers after head need access to it, so use parser-bind
+;              (parser-bind
+;                head
+;                (lambda (head.v)
+;                  (</>
+;                    (seq-act GROUP_SPLIT hspace*
+;                      (</> (seq-act comment-eol
+;                             (lambda _ (read-error "\\\\ not allowed as line-continuation")))
+;                        (return (monify head.v)))
+;                      (lambda (_ _ v) v)))))))))
+;
+;      (define t-expr
+;        (parser (lambda ()
+;            (</>
+;              (seq-act comment-eol t-expr
+;                (lambda (_ retry1) retry1))
+;              (seq-act (<+> (</> FF VT)) EOL t-expr
+;                (lambda (_ _ retry2) retry2))
+;              (seq-act (</> initial-indent-no-bang (<+> hspace))
+;                (</> n-expr
+;                     (seq-act scomment (<*> hspace)
+;                       t-expr
+;                       (lambda (_ _ sretry) sretry))
+;                     (seq-act comment-eol t-expr
+;                       (lambda (_ retry3) retry3)))
+;                (lambda (_ v) v))
+;              (seq-act initial-indent-with-bang
+;                (lambda (_) (read-error "Initial indent with bang!")))
+;              EOF
+;              it-expr))))
+;
+;      ; sweet-read
+;      (lambda (port)
+;        (tokenizer
+;          port
+;          my-peek-char
+;          my-read-char
+;          eof-object?
+;          (lambda (port)
+;            (let ((rv (neoteric-read-real-comment-tag port)))
+;              (if (eq? rv comment-tag)
+;                  '()
+;                  (list rv))))
+;          (lambda (port)
+;            (let ((rv (process-sharp-comment-tag neoteric-read-real port)))
+;              (if (eq? rv comment-tag)
+;                  '()
+;                  (list rv))))
+;          (lambda (get-token)
+;            (run-parser get-token t-expr))))))
 
  ; TEMPORARY: Select between them.
 
