@@ -1487,17 +1487,6 @@
   ; TODO: Fix up error handling (read-error) return values, etc.
   ; TODO: Add positioning information
   ; TODO: Change end-of-line: to (LF | CR LF?)
-  ; TODO: Should we support abbreviation-only lines, e.g.:
-  ;       '
-  ;       ! x
-  ;  ==> (quote x)
-  ; TODO: Should we support "."-only lines, e.g.:
-  ;       foo
-  ;       ! a
-  ;       ! b
-  ;       ! .
-  ;       ! c
-  ;  ==> (foo a b c)
 
   (define initial_comment_eol (list #\; #\newline carriage-return))
 
@@ -1568,6 +1557,10 @@
             (list 'sublist_marker '()))
           ((and (eq? expr group_split) (eqv? c split-char))
             (list 'group_split_marker '()))
+          ((and (eq? expr '<*) (eqv? c #\<))
+            (list 'collecting '()))
+          ((and (eq? expr '*>) (eqv? c #\*))
+            (list 'collecting_end '()))
           (#t
             results)))))
 
@@ -1609,13 +1602,13 @@
   (define (comment_eol_read_indent port)
     (consume-to-eol port)
     (consume-end-of-line port)
-    (let* ((indentation (list->string (accumulate-ichar port)))
+    (let* ((indentation (list->string (cons #\^ (accumulate-ichar port))))
            (c (my-peek-char port)))
       (cond
         ((eqv? c #\;)  ; A ;-only line, consume and try again.
           (comment_eol_read_indent port))
         ((memv (my-peek-char port) initial_comment_eol) ; Indent-only line
-          "")
+          "^")
         (#t indentation))))
 
   ; Utility function:
@@ -1626,6 +1619,34 @@
       ((null? (cdr x)) (car x))
       (#t x)))
 
+  ; Return contents of collecting_tail.
+  (define (collecting_tail port)
+    ; TODO - rest of cases
+    (let* ((c (my-peek-char port)))
+      (cond
+        ((memv c initial_comment_eol)
+          (consume-to-eol port)
+          (consume-end-of-line port)
+          (collecting_tail port))
+        ((char-ichar? c)
+          (let ((indentation (accumulate-ichar port)))
+            (if (memv (my-peek-char port) initial_comment_eol)
+              (collecting_tail port)
+              (read-error "Collecting tail: Only ; or EOL after indent"))))
+        ((or (eqv? c form-feed) (eqv? c vertical-tab))
+          (consume-ff-vt port)
+          (if (memv (my-peek-char port) initial_comment_eol)
+            (collecting_tail port)
+            (read-error "Collecting tail: FF and VT must be alone on line")))
+        (#t
+          (let* ((it_full_results (debug-show "collecting-tail it_expr results are" (it_expr port "^")))
+                 (it_new_indent   (car it_full_results))
+                 (it_value        (cadr it_full_results)))
+            (cond
+              ((string=? it_new_indent "")
+                it_value)
+              (#t (cons it_value (collecting_tail port)))))))))
+
   ; Returns (stopper computed_value).
   ; The stopper may be 'normal, 'scomment (special comment),
   ; 'abbrevw (initial abbreviation), 'sublist_marker, or 'group_split_marker
@@ -1633,9 +1654,18 @@
     (let* ((basic_full_results (debug-show "head's first=" (n_expr_first port)))
            (basic_special      (car basic_full_results))
            (basic_value        (cadr basic_full_results)))
-      ; TODO: RESTART
       (cond
-        ((not (eq? basic_special 'normal)) (list basic_special basic_value))
+        ((eq? basic_special 'collecting)
+          (hspaces port)
+          (let* ((ct_results (collecting_tail port)))
+            (hspaces port)
+            (if (not (memv (my-peek-char port) initial_comment_eol))
+              (let* ((rr_full_results (rest port))
+                     (rr_stopper      (car rr_full_results))
+                     (rr_value        (cadr rr_full_results)))
+                (list rr_stopper (cons ct_results rr_value)))
+              (list 'normal (list ct_results)))))
+        ((not (eq? basic_special 'normal)) basic_full_results)
         ((eq? basic_value period_symbol)
           (if (char-hspace? (my-peek-char port))
             (begin
@@ -1661,19 +1691,29 @@
           (list 'normal (list basic_value))))))
 
   ; Returns (stopper computed_value); stopper may be 'normal, etc.
+  ; Read in one n_expr, then process based on whether or not it's special.
   (define (rest port)
     (let* ((basic_full_results (n_expr port))
            (basic_special      (car basic_full_results))
            (basic_value        (cadr basic_full_results)))
-      ; TODO: RESTART
       (cond
         ((eq? basic_special 'scomment)
           (hspaces port)
           (if (not (memv (my-peek-char port) initial_comment_eol))
             (rest port)
             (list 'normal '())))
+        ((eq? basic_special 'collecting)
+          (hspaces port)
+          (let* ((ct_results (collecting_tail port)))
+            (hspaces port)
+            (if (not (memv (my-peek-char port) initial_comment_eol))
+              (let* ((rr_full_results (rest port))
+                     (rr_stopper      (car rr_full_results))
+                     (rr_value        (cadr rr_full_results)))
+                (list rr_stopper (cons ct_results rr_value)))
+              (list 'normal (list ct_results)))))
         ((not (eq? basic_special 'normal)) (list basic_special '())) 
-        ((eq? basic_value period_symbol)
+        ((eq? basic_value period_symbol) ; special case: period.
           (if (char-hspace? (my-peek-char port))
             (begin
               (hspaces port)
@@ -1735,7 +1775,9 @@
                    (sub_i_value        (cadr sub_i_full_results)))
               (list sub_i_new_indent
                 (append head_value (list sub_i_value)))))
-          ((eq? head_stopper 'restart-end) "TODO4")
+          ((eq? head_stopper 'collecting_end)
+            ; Note that indent is "", forcing dedent all the way out.
+            (list "" (list (monify head_value))))
           ((memv (my-peek-char port) initial_comment_eol)
             (let ((new_indent (comment_eol_read_indent port)))
               (if (indentation>? new_indent starting_indent)
@@ -1786,6 +1828,8 @@
                      (abbrev_i_expr_value    (cadr abbrev_i_expr_full_results)))
                 (list abbrev_i_expr_new_indent
                   (list head_value abbrev_i_expr_value)))))
+          ((eq? head_stopper 'collecting_end)
+            (list "" head_value))
           (#t 
             (read-error "Initial head error")))
     )))
@@ -1802,7 +1846,7 @@
           ((or (eqv? c form-feed) (eqv? c vertical-tab))
             (consume-ff-vt port))
           ((char-ichar? c)
-            (let ((indentation-list (accumulate-ichar port)))
+            (let ((indentation-list (cons #\^ (accumulate-ichar port))))
               (if (memv #\! indentation-list)
                 (read-error "Initial ident must not use '!'")
                 (if (not (memv (my-peek-char port) initial_comment_eol))
@@ -1816,7 +1860,7 @@
                     (consume-to-eol port)
                     (consume-end-of-line port)
                     (t_expr port))))))
-          (#t (cadr (it_expr port "")))))))
+          (#t (cadr (it_expr port "^")))))))
 
  ; TEMPORARY: Select between them.
 
