@@ -1846,9 +1846,11 @@
         (read-error "Inconsistent indentation"))
       (list results_indent (attach-sourceinfo pos results_value))))
 
+  ; Top level - read a sweet-expression (t-expression).  Handle special
+  ; cases, such as initial indent; call it_expr for normal case.
   (define (t_expr port)
     (let* ((c (my-peek-char port)))
-      (if (eof-object? c)
+      (if (eof-object? c) ; Check EOF early (a guile bug consumes EOF on peek)
         c
         (cond
           ((memv c initial_comment_eol)
