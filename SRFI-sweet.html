@@ -264,7 +264,14 @@ whitespace-separated neoteric-expressions).</li>
 Sweet-expression rule clarifications:
 <ol>
 <li>You can indent using one or more of the indent characters,
-which are space, tab, and exclamation point (!).</li>
+which are space, tab, and exclamation point (!).
+Indentation must be <dfn>consistent</dfn>;
+if you use a tab character
+to indent at a certain column position,
+the next line should either have a tab character
+to indent at that same column position,
+or be indented less than that column position.
+</li>
 <li>An unescaped &#8220;;&#8221; not in a string (still) introduces comments
 that end at the end of the line.</li>
 <li>Lines with only a ;-comment (preceded by 0 or more indent characters)
@@ -274,11 +281,13 @@ are completely ignored - even their indentation (if any) is irrelevant.</li>
 where indentation is completely ignored.
 Instead, a sequence of white-space separated neoteric-expressions is read
 until the first end of line.</li>
-<li>Scheme&#8217;s #; datum comment comments out the next neoteric expression,
-not the next sweet expression.</li>
-<li>Block comments (<samp>#|</samp>...<samp>|#</samp>) are removed, but if it
-begins immediately after the indent (if any),
-the indentation at the beginning of the block comment is used.
+<li>Scheme&#8217;s <code>#;</code> datum comment comments out the next neoteric expression,
+not the next sweet expression.
+Datum comments ignore intervening whitespace, including spaces, tabs, and newlines.</li>
+<li>Block comments (<samp>#|</samp>...<samp>|#</samp>) are removed.</li>
+<li>For both datum and block comments, if they
+begin immediately after the indent (if any),
+the indentation at the beginning of the datum or block comment is used.
 </li>
 <li>
 A sweet-expression reader <i>MUST</i> accept, as an
