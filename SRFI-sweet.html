@@ -2081,7 +2081,20 @@ if
 ! \\ action2()
 ! \\ otherwise-action()
 </pre>
-<p>It&#8217;s easy to handle let* with an extra line, but there&#8217;s
+<p>
+For a more Scheme-centric viewpoint,
+some Scheme implementations use keyword objects.
+For example, in Guile, module declarations look like:
+</p>
+<pre>
+define-module
+! \\ amkg cat meow
+! #:use-module
+! \\ amkg dog woof
+! #:export
+! \\ (meow hiss)
+</pre>
+<p>It&#8217;s easy to handle <code>let*</code> with an extra line, but there&#8217;s
 no easy way to insert a short pseudo-comment character in the front unless
 we do it this way.</p>
 <p>The multi-line nature of let* turns out to be
