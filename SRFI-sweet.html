@@ -1926,15 +1926,15 @@ makes possible the following code:
 </p>
 
 <pre>
-define merge(< as bs) $ cond
+define merge(&lt; as bs) $ cond
   null?(as)           $ bs
   null?(bs)           $ as
-  {car(as) < car(bs)} $ cons
+  {car(as) &lt; car(bs)} $ cons
                          car as
-                         merge < (cdr as) bs
+                         merge &lt; (cdr as) bs
   else                $ cons
                          car bs
-                         merge < as (cdr bs)
+                         merge &lt; as (cdr bs)
 </pre>
 
 <p>
