@@ -1831,8 +1831,7 @@
           ((eq? head_stopper 'collecting_end)
             (list "" head_value))
           (#t 
-            (read-error "Initial head error")))
-    )))
+            (read-error "Initial head error"))))))
 
   (define (t_expr port)
     (let* ((c (my-peek-char port)))
