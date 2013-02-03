@@ -1478,6 +1478,234 @@ We are building on the experience of others to create what we hope
 is a useful and refined notation.
 </p>
 
+<h2 id="block-comment-indent-significant">Why are the indentations of block comments and datum comments significant?</h2>
+<p>
+A line that starts with a <code>;</code> after
+the indent is completely ignored,
+including the indent of that line.
+In contrast, a line that starts with
+a <code>#;</code> datum comment
+or a <code>#|</code> ... <code>|#</code> block comment
+after a possible indent is considered
+to be indented
+at the position where the comment starts.
+This means that
+in sweet-expressions,
+<code>;</code> line comments
+have a subtly different semantic meaning
+from datum or block comments.
+</p>
+<p>
+These are the reasons for this difference between line comments
+and datum or block comments:
+</p>
+<ol>
+<li>
+For block comments,
+it would be possible to write a comment
+that includes a newline,
+then some more comment text,
+then the <code>|#</code> terminator for block comments,
+followed by ordinary datums.
+We could have declared that block comments
+that include newlines would have the comment-only lines deleted,
+and block comments would have each character replaced with a space.
+For example:
+<table border="1">
+<tr><th>Original</th>
+<th>Could&#8217;ve mapped to (but doesn&#8217;t!)</th></tr>
+<tr>
+<td>
+<pre>
+foo
+ #|comment #1|# bar
+ #|comment #2|# quux
+</pre>
+</td>
+<td>
+<pre>
+foo
+                bar
+                quux
+</pre>
+</td>
+</tr>
+<tr>
+<td>
+<pre>
+foo
+#| block
+comment |# bar
+           quux
+</pre>
+</td>
+<td>
+<pre>
+foo
+           bar
+           quux
+</pre>
+</td>
+</tr>
+</table>
+But what if Chinese, Japanese, or Korean double-width characters
+are found?
+The sensible approach would be to require
+that double-width characters
+be replaced with two spaces rather than one,
+but this requires implementations to know those characters
+and replace them differently.
+It was judged to be a significant implementation overhead,
+for what is essentially an edge case,
+for a style that we felt
+utterly defeats the clarity of indentation.
+Instead, we mandate that block comments
+are simply deleted outright.
+</li>
+<li>
+Outright deleting comments
+makes the meaning of the sequence
+"indent, block/datum comment, space, datum"
+misleading.
+For example:
+<pre>
+foo
+    bar
+    #| ...
+|#  quux
+</pre>
+A simple "outright delete" would yield:
+<pre>
+foo
+    bar
+      quux
+</pre>
+This is arguably a misleading translation.
+</li>
+<li>
+Further, our expected use case for block comments would 
+look like this:
+<pre>
+define foo(x)
+  #|
+   | First, bar the x.
+   | Then quux it so that x is no longer xuuq-able
+   |#
+  bar x
+  quux x #| Need to quux here
+          | to prevent conflicting with
+          | the bar table
+          |#
+</pre>
+Again, a simple "outright delete"
+would yield an empty line
+right after the "<code>define foo(x)</code>" line.
+Instead, what we mandate is that,
+if a block or datum comment immediately follows indentation,
+it is deleted outright,
+and replaced with GROUP/SPLIT (<code>\\</code>).
+Block or datum comments that do not follow inndentation
+are simply deleted without being replaced with anything:
+<table border=1>
+<tr><th>Original</th><th>Maps to</th></tr>
+<tr>
+<td>
+<pre>
+define foo(x)
+  #|
+   | standalone comment
+   |#
+  #| pre-comment |# bar #| in-comment |# quux
+</pre>
+</td>
+<td>
+<pre>
+define foo(x)
+  \\
+  \\ bar  quux
+</pre>
+</td>
+</tr>
+</table>
+</li>
+</ol>
+
+<p>
+Although the reasons above pertain mostly to block comments,
+datum comments (<code>#;</code>) are considered
+essentially identical to block comments.
+</p>
+<p>
+We could have mandated a different behavior between datum
+and block comments.
+But it is helpful to review the <em>reason</em>
+for the existence of datum comments.
+There are two major use cases:
+</p>
+<ol>
+<li>
+To just comment out a single, short item from a list.
+<pre>(foo bar #;quux meow)</pre>
+</li>
+<li>
+To easily remove the last item of a multi-line list,
+where that item is itself several lines:
+<pre>
+(define (foo x)
+  (if (not (foo-able? x))
+    (error "Cannot foo the " x)
+    (begin
+      (en-bar x)
+      ; quuxing is currently buggy; dwheeler to fix
+      #;(quux
+        (barred-form x)
+        (co-barred-form x)
+        (de-xuuqed x)))))
+</pre>
+</li>
+</ol>
+<p>
+For the last case, while typically a muli-line list
+is commented out by using <code>;</code> line comments,
+in standard s-expression syntax all closing parentheses
+are "piled on" to the last line.
+Using just <code>;</code> would also comment out
+the closing parentheses of
+<code>begin</code>, <code>if</code>, and <code>define</code>.
+</p>
+<p>
+But with sweet-expressions,
+there are no explicit closing parentheses.
+In sweet-expression form, using line comments suffices:
+</p>
+<pre>
+define foo(x)
+  if not(foo-able?(x))
+    error "Cannot foo the " x
+    begin
+      en-bar x
+      ; quuxing is currently buggy; dwheeler to fix
+      ;;quux
+      ;;  barred-form x
+      ;;  co-barred-form x
+      ;;  de-xuuqed x
+</pre>
+<p>
+Thus, the expected use case of datum comments
+in sweet-expressions
+is limited to the first case,
+i.e. commenting-out a single short item.
+</p>
+<p>
+Since this first case can be handled sufficiently well
+by having datum comments
+take on the same behavior as block comments
+(i.e. delete outright, if at start of line after
+indent replace with <code>\\</code>)
+then it was considered simpler
+to just use the same behavior for both.
+</p>
+
 <h2 id="separate-105">Why are sweet-expressions separate from curly-infix and neoteric-expressions as defined in SRFI-105?</h2>
 <p>
 Some Scheme users and implementers may not want indentation-sensitive
