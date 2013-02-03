@@ -1637,7 +1637,7 @@
             (collecting_tail port)
             (read-error "Collecting tail: FF and VT must be alone on line")))
         (#t
-          (let* ((it_full_results (debug-show "collecting-tail it_expr results are" (it_expr port "^")))
+          (let* ((it_full_results (it_expr port "^"))
                  (it_new_indent   (car it_full_results))
                  (it_value        (cadr it_full_results)))
             (cond
@@ -1649,7 +1649,7 @@
   ; The stopper may be 'normal, 'scomment (special comment),
   ; 'abbrevw (initial abbreviation), 'sublist_marker, or 'group_split_marker
   (define (head port)
-    (let* ((basic_full_results (debug-show "head's first=" (n_expr_first port)))
+    (let* ((basic_full_results (n_expr_first port))
            (basic_special      (car basic_full_results))
            (basic_value        (cadr basic_full_results)))
       (cond
@@ -1757,7 +1757,7 @@
 
   ; Returns (new_indent computed_value)
   (define (it_expr_real port starting_indent)
-    (let* ((head_full_results (debug-show "head results = " (head port)))
+    (let* ((head_full_results (head port))
            (head_stopper      (car head_full_results))
            (head_value        (cadr head_full_results)))
       (if (and (not (null? head_value)) (not (eq? head_stopper 'abbrevw)))
