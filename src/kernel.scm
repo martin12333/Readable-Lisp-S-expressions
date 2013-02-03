@@ -566,6 +566,7 @@
     ; Do NOT consume the end-of-line character(s).
     (let ((c (my-peek-char port)))
       (cond
+        ((eof-object? c) (read-error "Unexpected EOF while skipping line"))
         ((not (or (eof-object? c)
                   (char-line-ending? c)))
           (my-read-char port)
@@ -1486,8 +1487,6 @@
   ; Warning: For portability use eqv?/memv, not eq?/memq, to compare chars
   ; A "case" is okay since it uses "eqv?".
 
-  ; TODO: Fix up error handling (read-error) return values, etc.
-  ; TODO: Add positioning information
   ; TODO: Change end-of-line: to (LF | CR LF?)
 
   (define initial_comment_eol (list #\; #\newline carriage-return))
@@ -1624,6 +1623,8 @@
   (define (collecting_tail port)
     (let* ((c (my-peek-char port)))
       (cond
+        ((eof-object? c)
+         (read-error "Collecting tail: EOF before collecting list ended"))
         ((memv c initial_comment_eol)
           (consume-to-eol port)
           (consume-end-of-line port)
