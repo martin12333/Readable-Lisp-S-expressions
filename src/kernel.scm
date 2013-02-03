@@ -1755,7 +1755,7 @@
         (list i_new_indent (list i_value))))) ; dedent - end list.
 
   ; Returns (new_indent computed_value)
-  (define (it_expr port starting_indent)
+  (define (it_expr_real port starting_indent)
     (let* ((head_full_results (debug-show "head results = " (head port)))
            (head_stopper      (car head_full_results))
            (head_value        (cadr head_full_results)))
@@ -1832,6 +1832,12 @@
             (list "" head_value))
           (#t 
             (read-error "Initial head error"))))))
+
+  ; Read it_expr.  This is a wrapper that attaches source info.
+  (define (it_expr port starting_indent)
+    (let* ((pos (get-sourceinfo port))
+           (results (it_expr_real port starting_indent)))
+      (list (car results) (attach-sourceinfo pos (cadr results)))))
 
   (define (t_expr port)
     (let* ((c (my-peek-char port)))
