@@ -508,33 +508,14 @@
   (define space '#\space)
 
   (define line-ending-chars-ascii (list linefeed carriage-return))
-  (define line-ending-chars
-    (append
-      line-ending-chars-ascii
-      (if next-line
-          (list next-line)
-          '())
-      (if line-separator
-          (list line-separator)
-          '())))
+  (define line-ending-chars line-ending-chars-ascii)
 
-  ; This definition of whitespace chars is per R6RS section 4.2.1.
+  ; This definition of whitespace chars is derived from R6RS section 4.2.1.
   ; R6RS doesn't explicitly list the #\space character, be sure to include!
   (define whitespace-chars-ascii
      (list tab linefeed line-tab form-feed carriage-return #\space))
-  (define whitespace-chars
-    (append
-      whitespace-chars-ascii
-      (if next-line
-          (list next-line)
-          '())
-      (if line-separator
-          (list line-separator)
-          '())
-      (if paragraph-separator
-          (list paragraph-separator)
-          '())))
-  ; If supported, add characters whose category is Zs, Zl, or Zp
+  ; Note that we are NOT trying to support all Unicode whitespace chars.
+  (define whitespace-chars whitespace-chars-ascii)
 
   ; Returns a true value (not necessarily #t)
   (define (char-line-ending? char) (memq char line-ending-chars))
@@ -555,10 +536,9 @@
       (if (char-line-ending? c)
         (begin
           (my-read-char port)
-          (let ((next (my-peek-char port)))
-            (if (and (not (eq? c next))
-                     (char-line-ending? next))
-              (my-read-char port)))))))
+          (if (and (eqv? c carriage-return)
+                   (eqv? (my-peek-char port) linefeed))
+            (my-read-char port))))))
 
   (define (consume-to-eol port)
     ; Consume every non-eol character in the current line.
@@ -567,8 +547,7 @@
     (let ((c (my-peek-char port)))
       (cond
         ((eof-object? c) (read-error "Unexpected EOF while skipping line"))
-        ((not (or (eof-object? c)
-                  (char-line-ending? c)))
+        ((not (char-line-ending? c))
           (my-read-char port)
           (consume-to-eol port)))))
 
