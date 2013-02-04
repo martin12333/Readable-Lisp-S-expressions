@@ -641,7 +641,7 @@
   (define (enable-neoteric)
     (if (not (or (eq? read neoteric-read)
                  (eq? read sweet-read)))
-        (replace-read neoteric-infix-read)))
+        (replace-read neoteric-read)))
 
   (define (enable-sweet)
     (replace-read sweet-read))
