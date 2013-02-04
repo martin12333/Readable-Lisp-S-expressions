@@ -976,9 +976,7 @@ abbrev_all returns [Object v]
   | abbrev_no_w     {$v = $abbrev_no_w.v;} ;
 
 // Production "n_expr" is a full neoteric-expression as defined in SRFI-105.
-// Note that n_expr does *not* consume any horizontal space that
-// follows it; this is important for
-// correctly handling initially-indented lines with multiple n-expressions.
+// n_expr does *not* consume any following horizontal space.
 // Uses "n_expr_noabbrev", an n-expression with no leading abbreviations:
 n_expr returns [Object v]
  : abbrev_all n1=n_expr {$v = list($abbrev_all.v, $n1.v);}
@@ -997,18 +995,15 @@ scomment : BLOCK_COMMENT
          | sharp_bang_comments ;
 
 // Production "comment_eol" reads an optional ;-comment (if it exists),
-// and the reads the end-of-line (EOL).  EOL processing consumes
+// and then reads the end-of-line (EOL) sequence.  EOL processing consumes
 // additional comment-only lines (if any) which may be indented.
-// On a non-tokenizing parser, this production may return the new indent
-// as found in EOL processing.
 
 comment_eol : LCOMMENT? EOL;
 
 
 // KEY BNF PRODUCTIONS for sweet-expressions:
 
-// Production "collecting_tail" returns the contents of a collecting list,
-// as a list.
+// Production "collecting_tail" returns a collecting list's contents.
 // Precondition: At beginning of line.
 // Postcondition: Consumed the matching collecting_end.
 // FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
@@ -1034,11 +1029,6 @@ collecting_tail returns [Object v]
 // Callers can depend on "head" and "rest" *not* changing indentation.
 // On entry, all indentation/hspace must have already been read.
 // On return, it will have consumed all hspace (spaces and tabs).
-// On a non-tokenizing recursive descent parser, the "head" and its callees
-// have to also read and determine if the n-expression is special
-// (e.g., //, $, #!...!#, abbreviation + hspace), and have it return a
-// distinct value if it is; head and friends operate a lot like a tokenizer
-// in that case.
 
 // Precondition: At beginning of line+indent
 // Postcondition: At unconsumed EOL
@@ -1063,16 +1053,7 @@ head returns [Object v]
 // The "rest" production is written this way so a non-tokenizing
 // implementation can read an expression specially. E.G., if it sees a period,
 // read the expression directly and then see if it's just a period.
-// Note that unlike the first head expression, block comments and
-// datum comments that don't begin a line (after indent) are consumed,
-// and abbreviations followed by a space merely apply to the
-// next n-expression (not to the entire indented expression).
-// Note that "rest" is very similar to "head" - a recursive descent parser
-// might implement "head" and "rest" as a single function with a parameter
-// that says if it's the first one (head) or not.
-
-// Precondition: At beginning of expression AFTER first one on line
-//               (we MUST have skipped any hspace)
+// Precondition: At beginning of non-first expression on line (past hspace)
 // Postcondition: At unconsumed EOL
 
 rest returns [Object v]
@@ -1095,12 +1076,6 @@ rest returns [Object v]
 // It returns the list of expressions in the body.
 // Note that an it-expr will consume any line comments or hspaces
 // before it returns back to the "body" production.
-// Non-tokenizing implementation notes:
-// Note that it_expr will consume any line comments (line comments after
-// content, as well as lines that just contain indents and comments).
-// Note also that it-expr may set the the current indent to a different value
-// than the indent used on entry to body; the latest indent is compared by
-// the special terminals DEDENT and BADDENT.
 // Since (list x) is simply (cons x '()), this production always does a
 // cons of the first it_expr and another body [if it exists] or '() [if not].
 
@@ -1115,25 +1090,8 @@ body returns [Object v]
 
 // Production "it_expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
-// This can be implemented with one-character-lookahead by also
-// passing in the "current" indent ("" to start), and having it return
-// the "new current indent".  The same applies to body.
-// If the line after a "head" has the same or smaller indentation,
-// that will end this it-expr (because it won't match INDENT),
-// returning to a higher-level production.
-
 // Precondition: At beginning of line+indent
 // Postcondition: it-expr ended by consuming EOL + examining indent
-
-// SUBLIST is handled in it_expr, not in "head", because if there
-// are child lines, those child lines are parameters of the right-hand-side,
-// not of the whole production.
-
-// Note: In a non-tokenizing implementation, a COLLECTING_END may be
-// returned by head, which ends a list of it_expr inside a collecting list.
-// it_expr should then set the current_indent to COLLECTING_END,
-// and return, to signal the reception of COLLECTING_END.
-
 // Note: This BNF presumes that "*>" generates multiple tokens,
 // "EOL DEDENT* COLLECTING_END", and resets the indentation list.
 // You can change the BNF below to allow "head empty", and handle dedents
@@ -1158,7 +1116,7 @@ it_expr returns [Object v]
      | comment_eol // Normal case, handle child lines if any:
        (indent children=body {$v = append($head.v, $children.v);}
         | empty              {$v = monify($head.v);} /* No child lines */ )
-    // If COLLECTING_END doesn't generate 2 tokens "EOL COLLECTING_END", add:
+    // If COLLECTING_END doesn't generate multiple tokens, can do:
     // | empty               {$v = monify($head.v);}
      ))
   | (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
@@ -1179,7 +1137,6 @@ it_expr returns [Object v]
 // Production "t_expr" is the top-level production for sweet-expressions.
 // This production handles special cases, then in the normal case
 // drops to the it_expr production.
-
 // Precondition: At beginning of line
 // Postcondition: At beginning of line
 
@@ -1189,11 +1146,6 @@ it_expr returns [Object v]
 // If there is more than one on an initially-indented line, the later
 // horizontal space will not have have been read, so this production will
 // fire again on the next invocation, doing the right thing.
-
-// Although "!" is an indent character, it's an error to use it at the
-// topmost level.  The only reason to indent at the top is to disable
-// indent processing, e.g., for backwards compatibility.  Detecting this as
-// an error should detect some mistakes.
 
 t_expr returns [Object v]
   : comment_eol    retry1=t_expr {$v=$retry1.v;}
