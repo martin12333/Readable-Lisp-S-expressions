@@ -555,16 +555,34 @@ PERIOD   : '.';
 // Special markers, which only have meaning outside (), [], {}.
 GROUP_SPLIT  : {(indent_processing)}? =&gt; '\\' '\\'; // GROUP/split symbol.
 SUBLIST      : {(indent_processing)}? =&gt;'$';
-RESTART      : {(indent_processing)}? =&gt; '&lt;*' { restart_indent_level()} ;
-// This generates EOL + (DEDENTs if any) + RESTART_END, and restores indents:
-RESTART_END  : {(indent_processing)}? =&gt; t='*&gt;' { process_restart_end($t)} ;
+COLLECTING     : {(indent_processing)}? =&gt; '&lt;*' { restart_indent_level()} ;
+// This generates EOL + (any DEDENTs ) + COLLECTING_END, and restores indents:
+COLLECTING_END : {(indent_processing)}? =&gt; t='*&gt;' {process_collecting_end($t)};
 RESERVED_TRIPLE_DOLLAR : {(indent_processing)}? =&gt; '$$$';  // Reserved.
 
-// Abbreviations followed by horizontal space are special:
-APOSH           : {(indent_processing)}? =&gt; '\'' (SPACE | TAB) ;
-QUASIQUOTEH     : {(indent_processing)}? =&gt; '\`' (SPACE | TAB) ;
-UNQUOTE_SPLICEH : {(indent_processing)}? =&gt; ',@' (SPACE | TAB) ;
-UNQUOTEH        : {(indent_processing)}? =&gt; ','  (SPACE | TAB) ;
+// Abbreviations followed by certain whitespace are special:
+APOSW           : {(indent_processing)}? =&gt; '\'' (SPACE | TAB) ;
+QUASIQUOTEW     : {(indent_processing)}? =&gt; '\`' (SPACE | TAB) ;
+UNQUOTE_SPLICEW : {(indent_processing)}? =&gt; ',@' (SPACE | TAB) ;
+UNQUOTEW        : {(indent_processing)}? =&gt; ','  (SPACE | TAB) ;
+
+// Abbreviations followed by EOL also generate abbrevW:
+APOS_EOL        : {(indent_processing)}? =&gt; '\'' EOL_SEQUENCE
+                  SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
+                  {emit_type(APOSW); emit_type(EOL);
+                   process_indent($i.text $i)};
+QUASIQUOTE_EOL  : {(indent_processing)}? =&gt; '\`' EOL_SEQUENCE
+                  SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
+                  {emit_type(QUASIQUOTEW); emit_type(EOL);
+                   process_indent($i.text $i)};
+UNQUOTE_SPLICE_EOL: {(indent_processing)}? =&gt; ',@' EOL_SEQUENCE
+                  SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
+                  {emit_type(UNQUOTE_SPLICEW); emit_type(EOL);
+                   process_indent($i.text $i)};
+UNQUOTE_EOL     : {(indent_processing)}? =&gt; ',' EOL_SEQUENCE
+                  SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
+                  {emit_type(UNQUOTEW); emit_type(EOL);
+                   process_indent($i.text $i)};
 
 // Abbreviations not followed by horizontal space are ordinary:
 APOS           : '\'';
@@ -603,37 +621,35 @@ SHARP_BANG_MARKER : '#!' (('a'..'z'|'A'..'Z'|'_')
 
 hspace  : SPACE | TAB ;        // horizontal space
 
-// Production "abbrevh" is an abbreviation with a following hspace:
-abbrevh returns [Object v]
-  : APOSH           {'quote}
-  | QUASIQUOTEH     {'quasiquote}
-  | UNQUOTE_SPLICEH {'unquote-splicing}
-  | UNQUOTEH        {'unquote} ;
+// Production "abbrevw" is an abbreviation with a following whitespace:
+abbrevw returns [Object v]
+  : APOSW           {'quote}
+  | QUASIQUOTEW     {'quasiquote}
+  | UNQUOTE_SPLICEW {'unquote-splicing}
+  | UNQUOTEW        {'unquote} ;
 
-// Production "abbrev_noh" is an abbreviation without a following hspace:
-abbrev_noh returns [Object v]
+// Production "abbrev_no_w" is an abbreviation without a following whitespace:
+abbrev_no_w returns [Object v]
   : APOS            {'quote}
   | QUASIQUOTE      {'quasiquote}
   | UNQUOTE_SPLICE  {'unquote-splicing}
   | UNQUOTE         {'unquote};
 
 abbrev_all returns [Object v]
-  : abbrevh         {$abbrevh}
-  | abbrev_noh      {$abbrev_noh} ;
+  : abbrevw         {$abbrevw}
+  | abbrev_no_w     {$abbrev_no_w} ;
 
 // Production "n_expr" is a full neoteric-expression as defined in SRFI-105.
-// Note that n_expr does *not* consume any horizontal space that
-// follows it; this is important for
-// correctly handling initially-indented lines with multiple n-expressions.
+// n_expr does *not* consume any following horizontal space.
 // Uses "n_expr_noabbrev", an n-expression with no leading abbreviations:
 n_expr returns [Object v]
  : abbrev_all n1=n_expr {(list $abbrev_all $n1)}
  | n_expr_noabbrev      {$n_expr_noabbrev} ;
 
 // Production "n_expr_first" is a neoteric-expression, but leading
-// abbreviations cannot have an hspace afterwards (this is used by "head"):
+// abbreviations cannot have an whitespace afterwards (used by "head"):
 n_expr_first returns [Object v]
-  : abbrev_noh n1=n_expr_first {(list $abbrev_noh $n1)}
+  : abbrev_no_w n1=n_expr_first {(list $abbrev_no_w $n1)}
   | n_expr_noabbrev            {$n_expr_noabbrev} ;
 
 // Production "scomment" (special comment) defines comments other than ";":
@@ -643,27 +659,25 @@ scomment : BLOCK_COMMENT
          | sharp_bang_comments ;
 
 // Production "comment_eol" reads an optional ;-comment (if it exists),
-// and the reads the end-of-line (EOL).  EOL processing consumes
+// and then reads the end-of-line (EOL) sequence.  EOL processing consumes
 // additional comment-only lines (if any) which may be indented.
-// On a non-tokenizing parser, this production may return the new indent
-// as found in EOL processing.
 
 comment_eol : LCOMMENT? EOL;
 
 
 // KEY BNF PRODUCTIONS for sweet-expressions:
 
-// Production "restart_tail" returns the contents of a restart, as a list.
+// Production "collecting_tail" returns a collecting list's contents.
 // Precondition: At beginning of line.
-// Postcondition: Consumed the matching restart_end.
+// Postcondition: Consumed the matching collecting_end.
 // FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
 
-restart_tail returns [Object v]
-  : it_expr more=restart_tail {(cons $it_expr $more)}
+collecting_tail returns [Object v]
+  : it_expr more=collecting_tail {(cons $it_expr $more)}
   | (initial_indent_no_bang | initial_indent_with_bang)?
-    comment_eol    retry1=restart_tail {$retry1}
-  | (FF | VT)+ EOL retry2=restart_tail {$retry2}
-  | restart_end {'()} ;
+    comment_eol    retry1=collecting_tail {$retry1}
+  | (FF | VT)+ EOL retry2=collecting_tail {$retry2}
+  | collecting_end {'()} ;
 
 // Production "head" reads 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
@@ -679,11 +693,6 @@ restart_tail returns [Object v]
 // Callers can depend on "head" and "rest" *not* changing indentation.
 // On entry, all indentation/hspace must have already been read.
 // On return, it will have consumed all hspace (spaces and tabs).
-// On a non-tokenizing recursive descent parser, the "head" and its callees
-// have to also read and determine if the n-expression is special
-// (e.g., //, $, #!...!#, abbreviation + hspace), and have it return a
-// distinct value if it is; head and friends operate a lot like a tokenizer
-// in that case.
 
 // Precondition: At beginning of line+indent
 // Postcondition: At unconsumed EOL
@@ -694,9 +703,9 @@ head returns [Object v]
         (pn=n_expr hspace* (n_expr error)? {(list $pn)}
          | empty  {(list '.)} )
        | empty    {(list '.)} )
-  | RESTART hspace* restart_tail hspace*
-      (rr=rest            {(cons $restart_tail $rr)}
-       | empty            {(list $restart_tail)} )
+  | COLLECTING hspace* collecting_tail hspace*
+      (rr=rest            {(cons $collecting_tail $rr)}
+       | empty            {(list $collecting_tail)} )
   | basic=n_expr_first /* Only match n_expr_first */
       ((hspace+ (br=rest  {(cons $basic $br)}
                  | empty  {(list $basic)} ))
@@ -708,16 +717,7 @@ head returns [Object v]
 // The "rest" production is written this way so a non-tokenizing
 // implementation can read an expression specially. E.G., if it sees a period,
 // read the expression directly and then see if it's just a period.
-// Note that unlike the first head expression, block comments and
-// datum comments that don't begin a line (after indent) are consumed,
-// and abbreviations followed by a space merely apply to the
-// next n-expression (not to the entire indented expression).
-// Note that "rest" is very similar to "head" - a recursive descent parser
-// might implement "head" and "rest" as a single function with a parameter
-// that says if it's the first one (head) or not.
-
-// Precondition: At beginning of expression AFTER first one on line
-//               (we MUST have skipped any hspace)
+// Precondition: At beginning of non-first expression on line (past hspace)
 // Postcondition: At unconsumed EOL
 
 rest returns [Object v]
@@ -727,9 +727,9 @@ rest returns [Object v]
          | empty {(list '.)})
        | empty   {(list '.)})
   | scomment hspace* (sr=rest {$sr} | empty {'()} )
-  | RESTART hspace* restart_tail hspace*
-    (rr=rest             {(cons $restart_tail $rr)}
-     | empty             {(list $restart_tail)} )
+  | COLLECTING hspace* collecting_tail hspace*
+    (rr=rest             {(cons $collecting_tail $rr)}
+     | empty             {(list $collecting_tail)} )
   | basic=n_expr
       ((hspace+ (br=rest {(cons $basic $br)}
                  | empty {(list $basic)} ))
@@ -740,46 +740,27 @@ rest returns [Object v]
 // It returns the list of expressions in the body.
 // Note that an it-expr will consume any line comments or hspaces
 // before it returns back to the "body" production.
-// Non-tokenizing implementation notes:
-// Note that it_expr will consume any line comments (line comments after
-// content, as well as lines that just contain indents and comments).
-// Note also that it-expr may set the the current indent to a different value
-// than the indent used on entry to body; the latest indent is compared by
-// the special terminals DEDENT and BADDENT.
 // Since (list x) is simply (cons x '()), this production always does a
 // cons of the first it_expr and another body [if it exists] or '() [if not].
 
 body returns [Object v]
-  : it_expr
-    (same next_body=body  {(cons $it_expr $next_body)}
-     | dedent             {(list $it_expr)} ) ;
+  : i=it_expr
+     (same
+       ( {isperiodp($i)}? =&gt; f=it_expr dedent
+           {$f} // Improper list final value
+       | {! isperiodp($i)}? =&gt; nxt=body
+           {(cons $i $nxt)} )
+     | dedent {(list $i)} ) ;
 
 // Production "it_expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
-// This can be implemented with one-character-lookahead by also
-// passing in the "current" indent ("" to start), and having it return
-// the "new current indent".  The same applies to body.
-// If the line after a "head" has the same or smaller indentation,
-// that will end this it-expr (because it won't match INDENT),
-// returning to a higher-level production.
-
 // Precondition: At beginning of line+indent
 // Postcondition: it-expr ended by consuming EOL + examining indent
-
-// SUBLIST is handled in it_expr, not in "head", because if there
-// are child lines, those child lines are parameters of the right-hand-side,
-// not of the whole production.
-
-// Note: In a non-tokenizing implementation, a RESTART_END may be
-// returned by head, which ends a list of it_expr inside a restart.  it_expr
-// should then set the current_indent to RESTART_END, and return, to signal
-// the reception of RESTART_END.
-
 // Note: This BNF presumes that "*&gt;" generates multiple tokens,
-// "EOL DEDENT* RESTART_END", and resets the indentation list.
+// "EOL DEDENT* COLLECTING_END", and resets the indentation list.
 // You can change the BNF below to allow "head empty", and handle dedents
 // by directly comparing values; then "*&gt;" only needs to generate
-// RESTART_END. But this creates a bunch of ambiguities
+// COLLECTING_END. But this creates a bunch of ambiguities
 // like a 'dangling else', which must all be disambiguated by accepting
 // the first or the longer sequence first.  Either approach is needed to
 // support "*&gt;" as the non-first element so that the "head" can end
@@ -799,7 +780,7 @@ it_expr returns [Object v]
      | comment_eol // Normal case, handle child lines if any:
        (indent children=body {(append $head $children)}
         | empty              {(monify $head)} /* No child lines */ )
-    // If RESTART_END doesn't generate 2 tokens "EOL RESTART_END", add:
+    // If COLLECTING_END doesn't generate multiple tokens, can do:
     // | empty               {(monify $head)}
      ))
   | (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
@@ -811,13 +792,15 @@ it_expr returns [Object v]
                    | comment_eol restart=t_expr {$restart} )
           | dedent error ))
   | SUBLIST hspace* is_i=it_expr {(list $is_i)} /* "$" first on line */
-  | abbrevh hspace* abbrev_i_expr=it_expr
-      {(list $abbrevh $abbrev_i_expr)} ;
+  | abbrevw hspace*
+      (comment_eol indent ab=body
+         {(append (list $abbrevw) $ab)}
+       | ai=it_expr
+         {(list $abbrevw $ai)} ) ;
 
 // Production "t_expr" is the top-level production for sweet-expressions.
 // This production handles special cases, then in the normal case
 // drops to the it_expr production.
-
 // Precondition: At beginning of line
 // Postcondition: At beginning of line
 
@@ -828,11 +811,6 @@ it_expr returns [Object v]
 // horizontal space will not have have been read, so this production will
 // fire again on the next invocation, doing the right thing.
 
-// Although "!" is an indent character, it's an error to use it at the
-// topmost level.  The only reason to indent at the top is to disable
-// indent processing, e.g., for backwards compatibility.  Detecting this as
-// an error should detect some mistakes.
-
 t_expr returns [Object v]
   : comment_eol    retry1=t_expr {$retry1}
   | (FF | VT)+ EOL retry2=t_expr {$retry2}
@@ -842,9 +820,8 @@ t_expr returns [Object v]
        sretry=t_expr {$sretry}))
      | comment_eol retry3=t_expr {$retry3} )
   | initial_indent_with_bang error
-  | EOF {(generate_eof} /* End of file */
+  | EOF {(generate_eof)} /* End of file */
   | it_expr {$it_expr} /* Normal case */ ;
-
 </pre>
 
 <h1><a name="examples">Examples</a></h1>
