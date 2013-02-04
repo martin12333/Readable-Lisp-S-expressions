@@ -293,10 +293,8 @@ the indentation at the beginning of the datum or block comment is used.
 A sweet-expression reader <i>MUST</i> accept, as an
 an end-of-line (EOL) sequence, either
 a newline <i>or</i> a carriage return followed by newline.
-A sweet-expression reader <i>SHOULD</i> accept
-an optional carriage return followed by a required newline,
-an optional newline followed by a required carriage return,
-or NEL (\u0085) as an end-of-line (EOL) sequence.
+A sweet-expression reader <i>SHOULD</i> also accept
+a carriage return without a following newline as an end-of-line sequence.
 </li>
 <li>
 Portable non-empty files <i>MUST</i> end with an unescaped end-of-line
@@ -413,14 +411,9 @@ filename extension &#8220;.sscm&#8221;
 when writing portable Scheme programs using sweet-expressions.
 </p>
 
-<p>
-A program editor <em>MAY</em> usefully highlight
-blank lines (as they separate expressions) and lines beginning at the
-left column (as these start new expressions).
-We <em>RECOMMEND</em> that program editors highlight
-expressions whose first line is indented,
-to reduce the risk of their accidental use.
-</p>
+<p>Note that, by definition, this SRFI modifies lexical syntax.</p>
+
+<h2><a name="related-tools">Related tools</a></h2>
 
 <p>
 Implementations <em>MAY</em> provide a tool,
@@ -444,7 +437,14 @@ follow a semicolon in the first column with a whitespace character
 or semicolon if they mean for it to be a comment.
 </p>
 
-<p>Note that, by definition, this SRFI modifies lexical syntax.</p>
+<p>
+A program editor <em>MAY</em> usefully highlight
+blank lines (as they separate expressions) and lines beginning at the
+left column (as these start new expressions).
+We <em>RECOMMEND</em> that program editors highlight
+expressions whose first line is indented,
+to reduce the risk of their accidental use.
+</p>
 
 <h2><a name="bnf">Backus&#45;Naur Form (BNF)</a></h2>
 <p>
@@ -2863,6 +2863,16 @@ GNOME libraries.
 The SRFI authors believe that the existence of these programs -
 written by two different people for different application areas -
 shows that sweet-expressions are mature enough to be standardized.
+</p>
+<p>
+The sweet-expression notation itself has been implemented
+in ANTLR, an LL(1) parser generator,
+and in Scheme as a recursive descent parser.
+The ANTLR grammar itself has been checked by ANTLR's grammar checker.
+These implementations, and the ANTLR checking, suggest that this
+notation is not too difficult to implement and eliminates
+some grammar flaws.
+These implementations have been peer reviewed and passed various test suites.
 </p>
 <p>
 The <a href="http://readable.sourceforge.net">Readable Lisp S-expressions Project</a> developed these notations and implementations of them.
