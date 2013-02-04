@@ -467,11 +467,10 @@ UNQUOTE_SPLICE : ',@';
 UNQUOTE        : ',';
 
 // Special end-of-line character definitions.
-fragment NEL: '\u0085';  // Hi, IBM mainframes!
-fragment EOL_CHAR : '\n' | '\r' | NEL;
+fragment EOL_CHAR : '\n' | '\r' ;
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
 fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
-fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
+fragment EOL_SEQUENCE : ('\r' '\n'? | '\n');
 
 // Comments. LCOMMENT=line comment, scomment=special comment.
 LCOMMENT :       ';' NOT_EOL_CHARS ; // Line comment - doesn't include EOL
