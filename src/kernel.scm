@@ -2116,9 +2116,9 @@
  ; TEMPORARY: Select between them.
 
  (define (sweet-expr-start-something port)
-   (if (getenv "SWEETNEW")
-     (t_expr port)
-     (sugar-start-expr port)))
+   (if (getenv "SWEETOLD")
+     (sugar-start-expr port)
+     (t_expr port)))
 
 ; -----------------------------------------------------------------------------
 ; Comparison procedures
