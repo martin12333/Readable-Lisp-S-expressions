@@ -176,7 +176,7 @@ We believe a Lisp-based notation <i>needs</i> to be general and homoiconic.
 For example, Lisp-based languages can trivially create new semantic constructs
 (e.g., with macros) or be used to process other constructs;
 a Lisp notation that is not general will always lag behind and lack
-the "full" power of s-expressions.
+the &#8220;full&#8221; power of s-expressions.
 </p>
 
 <p>
@@ -417,7 +417,7 @@ when writing portable Scheme programs using sweet-expressions.
 
 <p>
 Implementations <em>MAY</em> provide a tool,
-called an "unsweetener",
+called an &#8220;unsweetener&#8221;,
 that reads sweet-expressions and writes out s-expressions.
 An unsweetener <em>SHOULD</em> specially treat
 lines that begin with a semicolon
@@ -526,7 +526,7 @@ As a result, <tt>a(x)</tt> will be interpreted as
 three separate components:
 the symbol <tt>a</tt>, the block comment <tt>#||#</tt>,
 and list <tt>(x)</tt>.
-Note that this is the "obvious" implementation in
+Note that this is the &#8220;obvious&#8221; implementation in
 a recursive descent parser.
 </p>
 
@@ -1548,7 +1548,7 @@ are simply deleted outright.
 <li>
 Outright deleting comments
 makes the meaning of the sequence
-"indent, block/datum comment, space, datum"
+&#8220;indent, block/datum comment, space, datum&#8221;
 misleading.
 For example:
 <pre>
@@ -1557,7 +1557,7 @@ foo
     #| ...
 |#  quux
 </pre>
-A simple "outright delete" would yield:
+A simple &#8220;outright delete&#8221; would yield:
 <pre>
 foo
     bar
@@ -1580,9 +1580,9 @@ define foo(x)
           | the bar table
           |#
 </pre>
-Again, a simple "outright delete"
+Again, a simple &#8220;outright delete&#8221;
 would yield an empty line
-right after the "<code>define foo(x)</code>" line.
+right after the &#8220;<code>define foo(x)</code>&#8221; line.
 Instead, what we mandate is that,
 if a block or datum comment immediately follows indentation,
 it is deleted outright,
@@ -1651,7 +1651,7 @@ where that item is itself several lines:
 For the last case, while typically a muli-line list
 is commented out by using <code>;</code> line comments,
 in standard s-expression syntax all closing parentheses
-are "piled on" to the last line.
+are &#8220;piled on&#8221; to the last line.
 Using just <code>;</code> would also comment out
 the closing parentheses of
 <code>begin</code>, <code>if</code>, and <code>define</code>.
@@ -1750,7 +1750,7 @@ much less pleasant, since users then have to repeatedly
 type the special &#8220;end-of-expression&#8221; marker.
 As Beni Cherniavsky-Paskin observed on the readable-discuss mailing list
 (2013-01-16),
-"I absolutely hate SQL prompts that don't execute until I add a ;".
+&#8220;I absolutely hate SQL prompts that don&#8217;t execute until I add a ;&#8221;.
 Another solution, already in sweet-expressions, is
 quickly executing one-line commands by
 typing an indent character first.
@@ -1783,7 +1783,7 @@ this inconsistency is avoided.</p>
 
 <p>Of course, people sometimes want to have something like
 a blank line in the middle of an s-expression.
-The solution is that comment-only lines using ";"
+The solution is that comment-only lines using &#8220;;&#8221;
 (indented or not) are completely ignored and not even considered blank lines.
 That means you can use comment-only lines for the purpose
 of separating sections in a single datum.
@@ -2104,7 +2104,7 @@ quoted simply by prefixing a single quote and space.
 This makes it easy to abbreviations to complex indented structures.
 An abbrevation alone on a line (after indentation), followed by
 an indented expression, applies that abbreviation to the expression;
-this seems to be what "users expect", and supporting it
+this seems to be what &#8220;users expect&#8221;, and supporting it
 eliminates a potential source of confusion.
 </p>
 
@@ -2142,8 +2142,8 @@ For example, here&#8217;s a sweet-expression using scsh:
 For instance,
 some functions need to change their behavior
 based on the type of the inputs.
-Here's an example, a definition that could take advantage of
-SRFI-105's <var>$bracket-apply$</var>:
+Here&#8217;s an example, a definition that could take advantage of
+SRFI-105&#8217;s <var>$bracket-apply$</var>:
 </p>
 
 <pre>
@@ -2165,8 +2165,8 @@ in Scheme programming:
 A function that immediately begins with <code>cond</code>.
 The formatting of <code>cond</code> above, however,
 has several lines that consist of a single n-expression item
-(e.g. "<code>cond</code>", "<code>else</code>",
-"<code>string?(c)</code>", etc.).
+(e.g. &#8220;<code>cond</code>&#8221;, &#8220;<code>else</code>&#8221;,
+&#8220;<code>string?(c)</code>&#8221;, etc.).
 </p>
 
 <p>
@@ -2210,7 +2210,7 @@ define merge(&lt; as bs) $ cond
 <p>
 Without SUBLIST, the more complex branches of the <code>cond</code>
 would have to be formatted differently from the simpler branches
-(unless you are willing to waste a line to write just "<code>as</code>"),
+(unless you are willing to waste a line to write just &#8220;<code>as</code>&#8221;),
 or would be expressed in deeply-nested parentheses,
 defeating the purpose of using sweet-expressions.
 </p>
@@ -2232,7 +2232,7 @@ Scheme R7RS <tt>define-library</tt> and in some larger data structures.</li>
 with short initial values.</li>
 </ol>
 <p>
-Let's begin with the first use case.
+Let&#8217;s begin with the first use case.
 When there is a long sequence of definitions contained within an
 initial statement, and no special notation like collecting lists,
 all the definitions in the long sequence must be
@@ -2243,7 +2243,7 @@ for that long invites mistakes.
 </p>
 
 <p>
-For example, here's an example from the R7RS Scheme specification
+For example, here&#8217;s an example from the R7RS Scheme specification
 for define-library:
 </p>
 <pre>
@@ -2310,17 +2310,17 @@ and interactive and file notation should be identical
 </p>
 
 <p>
-Now let's look at the second use case.
+Now let&#8217;s look at the second use case.
 The sweet-expression notation cleanly handles cases where let-expression
 variables have complex values (e.g., using \\), but for simple cases
 (1-2 variables having short initial values)
 it can take up more vertical space than traditional formatting.
-Using a leading "$" takes up somewhat less vertical space, but it still
+Using a leading &#8220;$&#8221; takes up somewhat less vertical space, but it still
 takes up an additional line for a trivial case, it does not work
 the same way for let expressions with 2 variables,
 and David A. Wheeler thinks it is a rather unclear construction.
 In particular, you cannot use
-"$&nbsp;x&nbsp;5&nbsp;$&nbsp;y&nbsp;7"
+&#8220;$&nbsp;x&nbsp;5&nbsp;$&nbsp;y&nbsp;7&#8221;
 for a two-variable let statement; that would
 map to
 <code>((x&nbsp;5&nbsp;(y&nbsp;7)))</code>,
@@ -2424,7 +2424,7 @@ available in ASCII.
 What is more, they are not delimiters, so any underlying
 Scheme reader will not immediately stop on reading them
 (making it easier to reuse).
-The "*" is more arbitrary, but the collecting list markers
+The &#8220;*&#8221; is more arbitrary, but the collecting list markers
 need to be multiple
 characters to distinguish them from the less-than and greater-than procedures,
 and this seemed to be a fairly distinctive token that is rarely used
@@ -2454,8 +2454,8 @@ end-of-line sequence are not worth handling.
 <p>
 This requirement is not unique to sweet-expressions.
 For example, several versions of the C language standard say
-"A source file that is not empty shall end in a new-line character,
-which shall not be immediately preceded by a backslash character"
+&#8220;A source file that is not empty shall end in a new-line character,
+which shall not be immediately preceded by a backslash character&#8221;
 (section 2.1.1.2 of the ANSI C 1989 standard and
 section 5.1.1.2 of the ISO C 1999 standard).
 </p>
@@ -2469,14 +2469,14 @@ that fail to meet this requirement.
 
 <p>
 As described in the specification,
-a tool (called an "unsweetener")
+a tool (called an &#8220;unsweetener&#8221;)
 that reads sweet-expressions and writes out
 s-expressions <em>SHOULD</em> specially treat certain lines
 that begin with semicolons.
 </p>
 
 <p>
-The initial-semicolon rules for ";" followed by space or semicolon
+The initial-semicolon rules for &#8220;;&#8221; followed by space or semicolon
 are given so that some comments - particularly
 the ones about major new components -
 are likely to be included in a translation from sweet-expressions to
@@ -2636,11 +2636,11 @@ and that indentation can help do so.
 <p>
 The
 <a href="http://chrisdone.com/z/">
-"Z" language by Chris Done (not related to the Z specification language)</a>
+&#8220;Z&#8221; language by Chris Done (not related to the Z specification language)</a>
 has been
 <a href="http://www.reddit.com/r/programming/comments/15r6tb/z_a_tiny_strict_impure_dynamically_typed_curried/">
 discussed on Reddit</a>.
-It's an indentation-based lisp-like language, although the
+It&#8217;s an indentation-based lisp-like language, although the
 indentation rules differ somewhat from sweet-expressions.
 </p>
 <p>
@@ -2652,13 +2652,13 @@ In Z, a whitespace-separated sequence of terms applies to the next, so:
 <p>
 would parse (in s-expression form) as <tt>(foo (bar (mu zot)))</tt>.
 As its documentation states,
-"To pass additional arguments to a function, the arguments are
-put on the next line and indented to the column of the first argument"
+&#8220;To pass additional arguments to a function, the arguments are
+put on the next line and indented to the column of the first argument&#8221;
 </p>
 <p>
 This is an interesting approach, but David A. Wheeler
 agrees with 1337hephaestus_sc2 on Reddit:
-"The main idea seems clever, but also too clever."
+&#8220;The main idea seems clever, but also too clever.&#8221;
 </p>
 <p>
 Here are a few issues with Z syntax compared to sweet-expressions:
@@ -2667,28 +2667,28 @@ Here are a few issues with Z syntax compared to sweet-expressions:
 <li>When you have multi-parameter functions, this syntax quickly forces
 you to grow vertically.  This is exactly the opposite of the actual
 real estate available.  Screens are wide and short, and even if you use
-traditional paper sizes it's wider than tall (typically 80 characters
+traditional paper sizes it&#8217;s wider than tall (typically 80 characters
 across, ~66 lines down).</li>
 <li>
 Edits in one line could quietly change the meaning of other lines,
 in non-obvious ways.  If you edit a line with children, you have to make
 sure that the lines that follow are moved as well.  An IDE can do this,
-but it's concerning if an IDE is a practical necessity to edit files.
+but it&#8217;s concerning if an IDE is a practical necessity to edit files.
 Here is an example of this meaning change; if you started with:
 <pre>
    fee fie foe fum
                foo bar
 </pre>
 this would be <tt>(fee (fie (foe fun (foo bar))))</tt>, but merely
-changing "fie" to "faction" would produce
+changing &#8220;fie&#8221; to &#8220;faction&#8221; would produce
 <pre>
    fee faction foe fum
                foo bar
 </pre>
 which would be interpreted as <tt>(fee (faction (foe fum) (foo bar)))</tt>.
 </li>
-<li>I suspect is that it's <i>especially</i> easy to make a mistake with this
-notation in a lisp.  Writing "cons a b" would seem reasonable enough,
+<li>I suspect is that it&#8217;s <i>especially</i> easy to make a mistake with this
+notation in a lisp.  Writing &#8220;cons a b&#8221; would seem reasonable enough,
 but would be interpreted as (cons (a b)).
 </li>
 </ol>
@@ -2698,7 +2698,7 @@ but would be interpreted as (cons (a b)).
 <p>
 <a href="http://code.google.com/p/genyris/">Genyris</a> is another
 indentation-based Lisp.
-"All Genyris expressions are parsed and stored as linked-lists. A single
+&#8220;All Genyris expressions are parsed and stored as linked-lists. A single
 line is converted into a single list. Sub-expressions are denoted in two
 ways, either within parentheses on a single line, or by an indented line.
 For example the following line contains two sub-expressions:
@@ -2707,10 +2707,10 @@ For example the following line contains two sub-expressions:
 Alpha (Beta Charlie) (Delta)
 </pre>
 <p>
-"Sub-expressions made using parentheses must remain within a single line,
+&#8220;Sub-expressions made using parentheses must remain within a single line,
 they are not permitted to wrap. Indented lines are deemed to be
 sub-expressions of the superior, less indented, lines above. The above
-expression can be written in indented form as follows:"
+expression can be written in indented form as follows:&#8221;
 </p>
 <pre>
 Alpha
@@ -2720,16 +2720,16 @@ Delta
 <p>
 Thus, it is similar to the main rule of t-expressions, except that
 <a href="http://code.google.com/p/genyris/">Genyris</a> wraps
-"ALL sublines in lists, even if they consist of a single element."
+&#8220;ALL sublines in lists, even if they consist of a single element.&#8221;
 As
 Beni Cherniavsky-Paskin notes,
-"It can get away with that simpler rule because all data objects are
+&#8220;It can get away with that simpler rule because all data objects are
 callable and eval to themself...
-In fact it's much cleverer, though that's irrelevant for us.
-All objects are actually macros ("lazy functions" in the manual's
-terminology). What objects do if called with arguments - e.g. ("foo" arg1
+In fact it&#8217;s much cleverer, though that&#8217;s irrelevant for us.
+All objects are actually macros (&#8220;lazy functions&#8221; in the manual&#8217;s
+terminology). What objects do if called with arguments - e.g. (&#8220;foo&#8221; arg1
 arg2) - is evaluate those arguments in a dynamic-binding env enriched by
-the object's methods, and return the last value.
+the object&#8217;s methods, and return the last value.
 Dynamic scope only affects names starting with a dot, other names use
 lexical scoping.
 All this forms a clever implementation of method calling:
@@ -2868,7 +2868,7 @@ shows that sweet-expressions are mature enough to be standardized.
 The sweet-expression notation itself has been implemented
 in ANTLR, an LL(1) parser generator,
 and in Scheme as a recursive descent parser.
-The ANTLR grammar itself has been checked by ANTLR's grammar checker.
+The ANTLR grammar itself has been checked by ANTLR&#8217;s grammar checker.
 These implementations, and the ANTLR checking, suggest that this
 notation is not too difficult to implement and eliminates
 some grammar flaws.
