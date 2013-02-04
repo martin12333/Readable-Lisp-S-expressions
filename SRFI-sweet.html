@@ -336,12 +336,13 @@ and followed by space or tab,
 <em>MUST</em> be interpreted as that operator applied to the entire sweet-expression that follows.
 </li>
 <li>
-The markers &#8220;&lt;*&#8221;, &#8220;*&gt;&#8221;, and &#8220;$$$&#8221; are reserved for future use.
+The markers &#8220;&lt;*&#8221; and &#8220;*&gt;&#8221; surround a
+<i>collecting list</i>, and <i>MUST</i> accept
+a list of 0 or more un-indented sweet-expressions.
 </li>
 </ol>
-
 <p>
-??? TODO: Should we also spec the markers &lt;* and *&gt; ?
+The marker &#8220;$$$&#8221; is reserved for future use.
 </p>
 
 <p>
@@ -368,6 +369,8 @@ sweet-expressions in subsequent datums read from the same port,
 overriding any conflicting marker (such as <code>#!curly-infix</code>
 followed by whitespace)
 until some other conflicting marker is given.
+Once a sweet-expression reader is enabled,
+<code>#!sweet</code> <i>MUST</i> be accepted and ignored.
 </p>
 
 <p>
@@ -420,8 +423,10 @@ to reduce the risk of their accidental use.
 </p>
 
 <p>
-A tool that reads sweet-expressions and writes out
-s-expressions <em>SHOULD</em> specially treat
+Implementations <em>MAY</em> provide a tool,
+called an "unsweetener",
+that reads sweet-expressions and writes out s-expressions.
+An unsweetener <em>SHOULD</em> specially treat
 lines that begin with a semicolon
 when they are not currently reading an expression (e.g., no expression has
 been read, or the last expression read has been completed with a blank line).
@@ -1084,12 +1089,11 @@ define represent-as-infix?(x)
 <h1><a name="design-rationale">Design Rationale</a></h1>
 
 <p>
-This SRFI design
-rationale is unusually long, especially when you compare it to
-the simplicity of its specification.
 We have separated the design rationale from the overall rationale,
 as was previously done by SRFI-26, because it is easier to
 understand the design rationale after reading the specification.
+It is long because we wish to describe, in some detail, why things are
+done the way they are, including some helpful comparisons to other efforts.
 </p>
 
 <h2 id="general-and-homoiconic">General and homoiconic formats</h2>
@@ -1207,8 +1211,8 @@ This is an argument for our position, not for theirs.
 In other words, even Lisp&#8217;s creator (John McCarthy)
 understood that directly using s-expressions for Lisp programs was undesirable.
 No one argues that John McCarthy did not understand Lisp.
-This is strong evidence that traditional s-expression notation has problems;
-even Lisp&#8217;s creator thought its notation was poor.
+Since even Lisp&#8217;s creator thought traditional Lisp notation was poor,
+this is strong evidence that traditional s-expression notation has problems.
 </p>
 
 <blockquote>
@@ -1227,7 +1231,8 @@ concise, more convenient, or even more natural...&#8221;.</i>
 <p>
 Note that even these authors, who are advocates for s-expression notation,
 admit that for numerical expressions they are clumsy.
-We should also note that sweet-expressions do not try to create an
+We agree that slavishly copying Algol is not a good idea.
+However, sweet-expressions do not try to create an
 &#8220;Algol-like&#8221; syntax; sweet-expressions are entirely general
 and not tied to a particular semantic at all.
 </p>
@@ -1251,7 +1256,7 @@ just that Lisp programmers don&#8217;t wait until they fail.&#8221;</i>
 </p>
 </blockquote>
 <p>
-But this is a failing argument.
+This is a weak argument.
 Practically all languages allow compound symbols made from multiple
 characters, such as &gt;=; there is no shortage of symbols.
 Also, nearly all programming languages have a function-call notation, but
@@ -1266,7 +1271,6 @@ semantic or requiring a massive set of special symbols.
 
 <blockquote>
 <p>
-Then it said,
 <i>
 &#8220;Second, and
 perhaps more important, Algol-style syntax makes programs look less
@@ -1281,9 +1285,9 @@ of loop in Common Lisp).&#8221;
 </blockquote>
 <p>
 Here Steele and Gabriel are <b>extremely</b> insightful.
-Today we would say that s-expressions are &#8220;homoiconic&#8221;,
-and that is a rare trait among programming notations.
-This property, homoiconicity, is an important reason that
+Today we would say that s-expressions are &#8220;homoiconic&#8221;.
+Homoiconic notations are extremely rare,
+and this property (homoiconicity) is an important reason that
 Lisps are still used decades after their development.
 Steele and Gabriel are absolutely right; there have been many efforts
 to create readable Lisp formats, and they all failed because they
@@ -1300,7 +1304,8 @@ If you can, you can do amazing manipulations.
 </p>
 <p>
 But what Gabriel and Steele failed to appreciate in their paper is that
-it&#8217;s possible to have both.
+it&#8217;s possible to have a notation that is
+general, homoiconic, and easier to read.
 Now that we understand why past efforts failed, we can devise notations
 that are general and homoiconic - and succeed!
 </p>
@@ -1466,9 +1471,10 @@ Thus, based on experience and experimentation we made several
 changes to it.
 First, we fixed the problems listed above.
 We also addressed supporting other capabilities, namely,
-infix notation and allowing formats like <tt>f(x)</tt>.
+infix notation and allowing formats like <tt>f(x)</tt>
+(see neoteric expressions as defined in SRFI-105).
 We also found that certain constructs were somewhat ugly if indentation
-is required, so we added SUBLIST and SPLIT capabilities.
+is required, so we added sublists, split, and collecting list capabilities.
 </p>
 
 <p>
@@ -1604,7 +1610,7 @@ Instead, what we mandate is that,
 if a block or datum comment immediately follows indentation,
 it is deleted outright,
 and replaced with GROUP/SPLIT (<code>\\</code>).
-Block or datum comments that do not follow inndentation
+Block or datum comments that do not follow indentation
 are simply deleted without being replaced with anything:
 <table border=1>
 <tr><th>Original</th><th>Maps to</th></tr>
@@ -1817,6 +1823,15 @@ This eliminates some nasty usability problems that
 could arise if a &#8220;blank&#8221; line was interpreted differently
 if it had some whitespace in it;
 a silent error like this could be hard to debug.</p>
+
+<h2 id="trailing-hspace">Trailing horizontal spaces are ignored</h2>
+<p>
+It is not possible to see trailing horizontal space on most screens
+and printouts.
+Thus, the BNF is defined so that in most cases trailing horizontal space
+is ignored
+(except in special cases such as being inside a string constant).
+</p>
 
 <h2 id="indentation-characters">Indentation characters (! as indent)</h2>
 <p>Some
@@ -2094,45 +2109,36 @@ define-module
 ! #:export
 ! \\ (meow hiss)
 </pre>
-<p>It&#8217;s easy to handle <code>let*</code> with an extra line, but there&#8217;s
-no easy way to insert a short pseudo-comment character in the front unless
-we do it this way.</p>
-<p>The multi-line nature of let* turns out to be
-not a real problem, for 2 reasons:</p>
-<ol>
-<li>It turns out that in many
-&#8220;let*s&#8221; the variable settings can be put on one line. As of 2012-08-02 the
-&#8220;sweeten.sscm&#8221; has 305 non-blank, non-comment lines
-(as determined by <tt>grep -v '^$' sweeten.sscm | grep -v '^ *;' | wc -l</tt>).
-Of those, 13 lines use let or let*, and only one of those &#8220;lets&#8221; uses \\.
-It&#8217;s not worth optimizing a case that only happens approximately once in
-300 lines.</li>
-<li>
-Using the abbreviations as intended is REALLY
-clear, even though it uses an extra vertical line.
-</li>
-</ol>
-<p>So the savings for <em>let</em> aren&#8217;t significant, the
-semantics as designed are clear, and are intentionally using that
-notation for another purpose where it&#8217;s not as easy to use an
-alternative.</p>
+
+<p>
+Also, the collecting list notation (&lt;*...*&gt;) handles short
+let variable assignment in a more graceful way.
+</p>
+
 
 <h2 id="traditional-abbreviations">Traditional abbreviations</h2>
 
 <p>As with SRFI-49, a leading traditional
-abbreviation (quote, comma, backquote, or comma-at), followed by space
-or tab, is that operator applied to the sweet-expression starting at the
-same line.
-This makes it easy to abbreviations to complex indented structures.
+abbreviation (quote, comma, backquote, or comma-at) right after any indent,
+and followed by space or tab, is that operator
+applied to the sweet-expression starting at the same line.
 For example, a complex indented structure can be
-quoted simply by prefixing a single quote and space.</p>
+quoted simply by prefixing a single quote and space.
+This makes it easy to abbreviations to complex indented structures.
+An abbrevation alone on a line (after indentation), followed by
+an indented expression, applies that abbreviation to the expression;
+this seems to be what "users expect", and supporting it
+eliminates a potential source of confusion.
+</p>
 
 <h2 id="sublist">Sublist ($)</h2>
 
 <p>Alan Manuel Gloria
 noted that certain constructs were common and annoying to express,
-e.g., <samp>first(second(third(fourth)))</samp>, and based on Haskell experience,
-suggested being able to write them as <samp>first $ second $ third(fourth)</samp>.
+e.g., <samp>first(second(third(fourth)))</samp>,
+and based on Haskell experience,
+suggested being able to write them as
+<samp>first $ second $ third(fourth)</samp>.
 Again, the idea is that this is an abbreviation for a common-enough
 practice.</p>
 
@@ -2232,34 +2238,8 @@ or would be expressed in deeply-nested parentheses,
 defeating the purpose of using sweet-expressions.
 </p>
 
-<!-- to be inserted before this line: -->
-
 <p>After discussion, sublist was accepted in July 2012.</p>
 
-
-<h2 id="eof">End-of-file (EOF) handling</h2>
-<p>
-Non-empty files must end with an end-of-line sequence, before any
-end-of-file (EOF) marker, to be valid sweet-expression files.
-This limitation greatly simplifies the
-specification and implementation of a sweet-expression reader,
-without limiting the data that sweet-expressions can represent.
-In practice, text editors normally create such files anyway, so
-the complications of handling files where EOF occurs before an
-end-of-line sequence are not worth handling.
-</p>
-<p>
-This requirement is not unique to sweet-expressions.
-For example, several versions of the C language standard say
-"A source file that is not empty shall end in a new-line character,
-which shall not be immediately preceded by a backslash character"
-(section 2.1.1.2 of the ANSI C 1989 standard and
-section 5.1.1.2 of the ISO C 1999 standard).
-</p>
-<p>
-Sweet-expression reader implementations are free to warn about files
-that fail to meet this requirement.
-</p>
 
 <h2 id="restart-lists">Restart lists (&lt;* ... *&gt;)</h2>
 <p>
@@ -2545,22 +2525,49 @@ must be escaped (e.g., using {...}) if they are used in an
 indentation-processing context.
 </p>
 
-<h2 id="semicolon">Special semicolon values</h2>
+<h2 id="eof">End-of-file (EOF) handling</h2>
+<p>
+Non-empty files must end with an end-of-line sequence, before any
+end-of-file (EOF) marker, to be valid sweet-expression files.
+This limitation greatly simplifies the
+specification and implementation of a sweet-expression reader,
+without limiting the data that sweet-expressions can represent.
+In practice, text editors normally create such files anyway, so
+the complications of handling files where EOF occurs before an
+end-of-line sequence are not worth handling.
+</p>
+<p>
+This requirement is not unique to sweet-expressions.
+For example, several versions of the C language standard say
+"A source file that is not empty shall end in a new-line character,
+which shall not be immediately preceded by a backslash character"
+(section 2.1.1.2 of the ANSI C 1989 standard and
+section 5.1.1.2 of the ISO C 1999 standard).
+</p>
+<p>
+Sweet-expression reader implementations are free to warn about files
+that fail to meet this requirement.
+</p>
+
+
+<h2 id="semicolon">Special semicolon values for an unsweetener</h2>
 
 <p>
 As described in the specification,
-a tool that reads sweet-expressions and writes out
+a tool (called an "unsweetener")
+that reads sweet-expressions and writes out
 s-expressions <em>SHOULD</em> specially treat certain lines
 that begin with semicolons.
 </p>
 
 <p>
-The semicolon + whitespace rule is given so some comments - particularly
+The initial-semicolon rules for ";" followed by space or semicolon
+are given so that some comments - particularly
 the ones about major new components -
 are likely to be included in a translation from sweet-expressions to
 s-expressions (namely, any comments that precede an expression).
 This can greatly simplify examining the generated s-expression.
-the rules about &#8220;;#&#8221;, &#8220;;!&#8221;, and &#8220;;_&#8221;
+The rules about &#8220;;#&#8221;, &#8220;;!&#8221;, and &#8220;;_&#8221;
 make it easier to write shell scripts and similar constructs
 with embedded sweet-expressions; these
 lines can invoke some Scheme interpreter, possibly via a shell.
@@ -2568,11 +2575,13 @@ lines can invoke some Scheme interpreter, possibly via a shell.
 
 <p>
 This text is limited to only apply to lines outside of any sweet-expression.
-This is intentional, because this makes implementation easy
-on top of an existing existing sweet-expression reader.
-The top-level tool can simply see if a line begins with semicolon, and if
+This is intentional, because this makes it easy to implement
+an unsweetener on top of an existing existing sweet-expression reader.
+The top-level unsweetener
+tool can simply see if a line begins with semicolon, and if
 it does, handle it specially;
-if a line starts with any other character, it can call the sweet-expression
+if it starts with an end-of-line, it can just copy it, and
+if a line starts with any other character it can call the sweet-expression
 reader to handle it.
 There is no requirement to copy block comments, or comments inside
 a sweet-expression datum, because this would be much more complicated to do;
