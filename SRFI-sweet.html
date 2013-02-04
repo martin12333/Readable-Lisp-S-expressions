@@ -2241,11 +2241,11 @@ defeating the purpose of using sweet-expressions.
 <p>After discussion, sublist was accepted in July 2012.</p>
 
 
-<h2 id="restart-lists">Restart lists (&lt;* ... *&gt;)</h2>
+<h2 id="collecting-lists">Collecting lists (&lt;* ... *&gt;)</h2>
 <p>
-Sweet-expressions without restart lists (&lt;* ... *&gt;)
+Sweet-expressions without collecting lists (&lt;* ... *&gt;)
 work well in a vast number of circumstances.
-However, they can be somewhat awkward for two typical use cases:
+However, they can be somewhat awkward for two use cases:
 </p>
 <ol>
 <li>A long sequence of definitions contained within an initial statement.
@@ -2257,7 +2257,7 @@ with short initial values.</li>
 <p>
 Let's begin with the first use case.
 When there is a long sequence of definitions contained within an
-initial statement, and no special notation like restart lists,
+initial statement, and no special notation like collecting lists,
 all the definitions in the long sequence must be
 indented and none can be separated by a blank line
 (since that would end the entire sequence, not just a definition).
@@ -2285,14 +2285,16 @@ for define-library:
     (define (cols grid)
       (vector-length (vector-ref grid 0)))
     (define (ref grid n m)
-      (and (< -1 n (rows grid))
-           (< -1 m (cols grid))
+      (and (&lt; -1 n (rows grid))
+           (&lt; -1 m (cols grid))
            (vector-ref (vector-ref grid n) m)))
     (define (put! grid n m v)
       (vector-set! (vector-ref grid n) m v))))
 </pre>
 <p>
-This is easily reformatted into this sweet-expression:
+This is easily reformatted into this sweet-expression, but
+notice the long sequence of indented definitions that, if long,
+loses a lot of horizontal space and can invite mistakes:
 </p>
 <pre>
 define-library
@@ -2309,14 +2311,16 @@ define-library
     define cols(grid) vector-length(vector-ref(grid 0))
     define ref(grid n m)
       and
-        {-1 < n < rows(grid)}
-        {-1 < m < cols(grid)}
+        {-1 &lt; n &lt; rows(grid)}
+        {-1 &lt; m &lt; cols(grid)}
         vector-ref vector-ref(grid n) m
     define put!(grid n m v) vector-set!(vector-ref(grid n) m v)
 </pre>
 
 <p>
-But there are reasons that sweet-expressions are defined the way they are.
+But wholesale changes to sweet-expressions do not seem warranted
+for this special case, because
+there are reasons that sweet-expressions are defined the way they are.
 It is fundamental that a child line is indented from its parent, since
 that is the point of indentation.
 Opening a parentheses intentionally disables indentation processing;
@@ -2339,8 +2343,12 @@ takes up an additional line for a trivial case, it does not work
 the same way for let expressions with 2 variables,
 and David A. Wheeler thinks it is a rather unclear construction.
 In particular, you cannot use
-"$ x 5 $ y 7" for a two-variable let statement; that would
-map to ((x 5 (y 7))), not ((x 5) (y 7)).
+"$&nbsp;x&nbsp;5&nbsp;$&nbsp;y&nbsp;7"
+for a two-variable let statement; that would
+map to
+<code>((x&nbsp;5&nbsp;(y&nbsp;7)))</code>,
+not
+<code>((x&nbsp;5)&nbsp;(y&nbsp;7))</code>.
 You can also use parenthetical notation directly, but this is
 relatively ugly and it is annoying to need to do this for a common case.
 A similar argument applies to do-expressions, and these are
@@ -2358,7 +2366,7 @@ let
     y 7
   {x + x}
 
-let  ; Less vertical space, but 1 variable only
+let  ; Less vertical space, but works for 1 variable only
   $ x 5
   {x + 5}
 
@@ -2376,26 +2384,24 @@ let (x(5) y(7))
 </pre>
 
 <p>
-A <i>restart list</i> is surrounded by the markers &lt;* and *&gt;.
+A <i>collecting list</i> is surrounded by the markers &lt;* and *&gt;.
 The &lt;* and *&gt; represent opening and closing
 parentheses, but restart indentation processing
-at the left edge instead of disabling indentation processing.
-The purpose of restart lists is to make it easy to clearly
+at the beginning instead of disabling indentation processing,
+and collect any sweet-expressions inside.
+The purpose of collecting lists is to make it easy to clearly
 express these and similar use cases.
 </p>
 
 <p>
-In a restart list, the rest of the text after the initial &lt;*
-is treated specially.
-That's because this initial line will be far more indented than
-text in future lines (if any) of the restart list, and it would confusing
-if the first line of an expression is more indented than its children.
-It also makes it possible to have special semantics especially tuned
-to work cleanly on common cases.
+In a collecting list, horizontal spaces after the initial &lt;*
+are consumed, and then sweet-expressions are read.
+These t-expressions must not be indented (though you can indent
+lines with only ;-comments).
 </p>
 
 <p>
-Here are examples of the same constructs, using restart lists:
+Here an example of using collecting lists for the library structure above:
 </p>
 <pre>
 define-library
@@ -2406,122 +2412,54 @@ define-library
 
 define make(n m)
   let (grid(make-vector(n)))
-...
+    do (i(0 {i + 1}))
+    ! {i = n} grid
+    ! let (v(make-vector(m #f alse))) vector-set!(grid i v)
+define rows(grid) vector-length(grid)
+define cols(grid) vector-length(vector-ref(grid 0))
+define ref(grid n m)
+  and
+    {-1 &lt; n &lt; rows(grid)}
+    {-1 &lt; m &lt; cols(grid)}
+    vector-ref vector-ref(grid n) m
+define put!(grid n m v) vector-set!(vector-ref(grid n) m v)
 *&gt;
-
-let &lt;* x 5 *&gt;
-  {x + x}
-
-let &lt;* x 5 \\ y 7 *&gt;
-  {x + x}
 </pre>
 
 <p>
-The restart list symbols are carefully chosen.
+Here are some examples of collecting lists for the let-variable cases:
+</p>
+<pre>
+let &lt;* x 5 *&gt;
+  {x + x}
+; ==&gt; (let ((x 5)) (+ x x))
+
+let &lt;* x 5 \\ y 7 *&gt;
+  {x + x}
+; ==&gt; (let ((x 5) (y 7)) (+ x x))
+</pre>
+
+
+<p>
+The collecting list symbols are carefully chosen.
 The characters &lt; and &gt; are natural character pairs that are
 available in ASCII.
 What is more, they are not delimiters, so any underlying
 Scheme reader will not immediately stop on reading them
 (making it easier to reuse).
-The "*" is more arbitrary, but the restart markers need to be multiple
+The "*" is more arbitrary, but the collecting list markers
+need to be multiple
 characters to distinguish them from the less-than and greater-than procedures,
 and this seemed to be a fairly distinctive token that is rarely used
 in existing code.
 </p>
 
-<h2 id="reserved">Reserved markers</h2>
+<h2 id="reserved">Reserved marker</h2>
 <p>
-???
-The markers &lt;* and *&gt; are reserved for future use.
-These may, at some point, have the following syntax
-as described in an
-<a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg00806.html">email posted 2012-09-02</a>:
-
-<blockquote>
-<p>
-<i>
-&lt;* ... *&gt; are like ( ... ) in that they surround a list,
-but they do NOT turn 
-off indentation processing.
-A &#8220;&lt;*&#8221; resets the &#8220;indent&#8221; level to a 0-length 
-string, skips all horizontal whitespace, and then restarts reading an 
-expression with indentation processing still live.
-A blank line inside &lt;* ... 
-*&gt; ends an expression WITHIN the &lt;* ... *&gt;,
-but stays within &lt;* ... *&gt;; only 
-eof or active *&gt; can close the &lt;*.
-Once all that mapping is done, the range of 
-&lt;* ... *&gt; is replaced with the mapped result.
-</i>
-</p>
-</blockquote>
-
-<p>
-These markers may be very useful in the future, e.g., for let expressions.
-However, we have not included them at this time, because
-these markers can complicate processing.
-Other markers can be read and handled with one-character lookahead, and
-cause a simple return in some cases.
-However, processing the closing *&gt; requires potentially a return up
-multiple levels, which requires a different implementation approach than
-is otherwise required.
-It is also unclear that this is really necessary, and we are hesitant
-to add yet more syntax beyond the <tt>$</tt> and <tt>\\</tt> markers.
-</p>
-
-<p>
-The marker <tt>$$$</tt> is also reserved for potential future use.
-No particular semantics for this symbol are agreed on.
-It could be used in the future to implement ENLIST,
-an older proposed semantic where if it occurs at the beginning of a line,
-it immediately inserts a list level,
-regardless of whether it is by itself or with other elements on the line.
-Another speculative semantic (that has not yet been
-significantly discussed) might be to implement the following kind of mapping:
-</p>
-<table border="1">
-<tr><th>Original</th><th>Maps to</th></tr>
-<tr>
-<td>
-<pre>
-let $$$ var1 initial(value1)
-  expression1()
-</pre>
-</td>
-<td>
-<pre>
-(let ((var1 (initial value1)))
-  (expression1))
-</pre>
-</td>
-</tr>
-
-<tr>
-<td>
-<pre>
-let
-  $$$ var1 initial(value1)
-      var2 initial(value2)
-  expression1()
-</pre>
-</td>
-<td>
-<pre>
-(let
-  ((var1 (initial value1))
-   (var2 (initial value2)))
-  (expression1))
-</pre>
-</td>
-</tr>
-</table>
-
-
-<p>
-These mappings are not required in sweet-expression implementations,
-but it seems prudent to have a few symbols available for future expansion.
-Thus, the symbols <tt>&lt;*</tt>, <tt>*&gt;</tt>, and <tt>$$$</tt>
-must be escaped (e.g., using {...}) if they are used in an
+It seems prudent to have a symbol available for future expansion.
+Thus, the marker <tt>$$$</tt> is reserved for future use.
+This means that <tt>$$$</tt>
+must be escaped (e.g., using {...}) if it is used in an
 indentation-processing context.
 </p>
 
