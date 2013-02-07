@@ -606,7 +606,7 @@
         (#t
           (let ((datum (my-read port)))
             (cond
-               ((eq? datum '.)
+               ((eq? datum period-symbol)
                  (let ((datum2 (my-read port)))
                    (consume-whitespace port)
                    (cond
@@ -623,6 +623,20 @@
                  (attach-sourceinfo pos
                    (cons datum
                      (my-read-delimited-list my-read stop-char port))))))))))
+
+  ; period symbol.  A symbol starting with "." is not
+  ; validly readable in R5RS, R6RS, R7RS (except for
+  ; the peculiar identifier "..."); with the
+  ; R6RS and R7RS the print representation of
+  ; string->symbol(".") should be |.| .  However, our
+  ; Scheme reader accepts "." as a valid identifier
+  ; initial character, and the rest of the parser stack
+  ; *expects* this to be so!
+  ; We got trapped into this by Guile, which has the
+  ; same extension; for portability, use this formulation
+  ; instead of '. at least in our own source code, so
+  ; that other implementations don't balk at it.
+  (define period-symbol (string->symbol "."))
 
 ; -----------------------------------------------------------------------------
 ; Read Preservation and Replacement
@@ -829,7 +843,7 @@
     (my-read-char port) ; Remove .
     (let ((c (my-peek-char port)))
       (cond
-        ((eof-object? c) '.) ; period eof; return period.
+        ((eof-object? c) period-symbol) ; period eof; return period.
         ((ismember? c digits)
           (read-number port (list #\.)))  ; period digit - it's a number.
         (#t
@@ -1218,7 +1232,7 @@
           (let* ((reads (readblocks level port))
                  (next-next-level (car reads))
                  (next-blocks (cdr reads)))
-            (if (eq? block '.)
+            (if (eq? block period-symbol)
                 (if (pair? next-blocks)
                     (cons next-next-level (car next-blocks))
                     (cons next-next-level next-blocks))
@@ -1340,7 +1354,7 @@
                     ((eqv? level -1)
                       ; EOF encountered - end at first
                       (cons "" (list first)))
-                    ((eq? first '.)
+                    ((eq? first period-symbol)
                       (if (pair? block)
                           (cons level (car block))
                           rest))
@@ -1381,7 +1395,7 @@
               (cons next-level '())
               (cons next-level (car block))))
         (#t
-          (cons next-level '.)))))
+          (cons next-level period-symbol)))))
 
   ; TODO: merge the latter part of readblock-clean and
   ; readblock-clean-rotated, so that changes need to
@@ -1437,7 +1451,7 @@
                     (let* ((sub-read (readblock-clean-rotated "" port pos obj))
                            (block (cdr sub-read)))
                       (cond
-                        ((eq? block '.)
+                        ((eq? block period-symbol)
                           (attach-sourceinfo pos '()))
                         (#t
                           (attach-sourceinfo pos block)))))))
@@ -1456,7 +1470,7 @@
                      (level (car read))
                      (block (cdr read)))
                 (cond
-                 ((eq? block '.)
+                 ((eq? block period-symbol)
                     (attach-sourceinfo pos '()))
                  (#t
                     (attach-sourceinfo pos block))))))))))
@@ -1472,7 +1486,7 @@
 
   (define group_split split)
 
-  (define period_symbol '.)
+  (define period_symbol period-symbol)
 
   ; Consume 0+ spaces or tab
   (define (hspaces port)
