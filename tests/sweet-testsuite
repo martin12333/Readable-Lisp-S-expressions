@@ -1199,6 +1199,8 @@ define rows(grid)
   vector-length(grid)
 *>
 
+
+
 ; import (scheme base) <* begin stuff
 ; 
 ; define make(n m)
@@ -1349,63 +1351,103 @@ f[]
 ($bracket-apply$ f x)
 f[x]
 
-; MORE TESTS TO ADD:
-; 
-; f{}
-; f{x}
-; f{+ x}
-; f{x + 1}
-; 
-; x(a)(b)
-; 
-; #t
-; #f
-; 
-; #\Q 1 #\( 2 #\a 3 #\newline 4
-; 
-; #(1 2 3)
+(f)
+f{}
+
+(f x)
+f{x}
+
+(f (+ x))
+f{+ x}
+
+(f (+ x 1))
+f{x + 1}
+
+((x a) b)
+x(a)(b)
+
+#t
+#t
+
+#f
+#f
+
+(#\Q 1 #\( 2 #\a 3 #\newline 4)
+#\Q 1 #\( 2 #\a 3 #\newline 4
+
+#(1 2 3)
+#(1 2 3)
+
+; TODO:
 ; #u8(5 6 7)
 ; 
+; TODO:
 ; #!sweet
 ; 
-; {n * factorial{n - 1}}
-; 
+
+(* n (factorial (- n 1)))
+{n * factorial{n - 1}}
+
+; TODO: FIXME
+; ((x) z)
 ; #;a#|hi|#(x) z
-; 
-; <* *>
-; <* hi *>
-; <* a b *>
-; <* a b c *>
-; <* (x) (y) (z) *>
-; 
-; <* this *> is a test
-; <* define(x 5) define(y 7) *> is a test
-; 
-; <*
-; library \\ amkg animals $ 1 0
-; export
-;   cat
-;   rename $ rover dog
-; import
-;   only
-;     amkg pets $ 1 0
-;     rover
-; 
-; define cat 'meow
-; 
-; *>
-; 
-; let ((x cos(f(c))))
-; ! dostuff x
-; 
+
+()
+<* *>
+
+(hi)
+<* hi *>
+
+((a b))
+<* a b *>
+
+((a b c))
+<* a b c *>
+
+(((x) (y) (z)))
+<* (x) (y) (z) *>
+
+((this) is a test)
+<* this *> is a test
+
+((((define x 5) (define y 7))) is a test)
+<* define(x 5) define(y 7) *> is a test
+
+(library (amkg animals (1 0)) (export cat (rename (rover dog))) (import (only (amkg pets (1 0)) rover)) (define cat (quote meow)))
+<*
+library \\ amkg animals $ 1 0
+export
+  cat
+  rename $ rover dog
+import
+  only
+    amkg pets $ 1 0
+    rover
+
+define cat 'meow
+
+*>
+
+
+(let ((x (cos (f c)))) (dostuff x))
+let ((x cos(f(c))))
+! dostuff x
+
+
+; TODO: FIXME
+; (let ((x (cos (f c)))) (dostuff x))
 ; let <* x $ cos $ f c *>
 ; ! dostuff x
-; 
-; test <* x 1 *> <* y 2 *>
-;   <* a 3 *> <* b 4 *>
-; 
-; <* t 1 *>
-;   <* u 2 *>
+
+(test ((x 1)) ((y 2)) (((a 3)) ((b 4))))
+test <* x 1 *> <* y 2 *>
+  <* a 3 *> <* b 4 *>
+
+(((t 1)) ((u 2)))
+<* t 1 *>
+   <* u 2 *>
+
+; TODO: Add more tests from below
 ; 
 ; library \\ amkg animals $ 1 0
 ; 
@@ -1567,4 +1609,3 @@ f[x]
 ;   .
 ;   cc1
 ; 
-; fin
