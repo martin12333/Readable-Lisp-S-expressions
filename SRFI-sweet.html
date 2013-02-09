@@ -2217,6 +2217,144 @@ defeating the purpose of using sweet-expressions.
 
 <p>After discussion, sublist was accepted in July 2012.</p>
 
+<h2 id="single-item-sublist">Why is <code>a $ b</code> equivalent to <code>(a b)</code> rather than <code>(a (b))</code>?</h2>
+
+<p>
+When initially learning SUBLIST,
+people tend to assume
+that the following transformation
+should be correct:
+</p>
+
+<table border="1" cellpadding="4">
+<tr><th>Original</th>
+<th>Could&#8217;ve mapped to (but doesn&#8217;t!)</th></tr>
+<tr>
+<th>
+<pre>
+a $ b
+</pre>
+</th>
+<th>
+<pre>
+(a (b))
+</pre>
+</th>
+</tr>
+</table>
+
+<p>
+However, the specification specifically does not
+yield this semantic.
+Some people think that this is an inconsistency.
+</p>
+<p>
+However, this is actually more consistent.
+SUBLIST (<code>$</code>) does not imply
+that the succeeding text should be a list;
+instead, it denotes that the succeeding text
+is the last argument of the current line.
+</p>
+<p>
+More concretely, consider this code:
+</p>
+<pre>
+a
+  b
+    c
+      d
+</pre>
+<p>
+The sub-list starting with <code>b</code>
+is the last (and only) argument of <code>a</code>,
+the sub-list starting with <code>c</codE>
+is the last (and only) argument of <code>b</code>,
+and so on.
+</p>
+<p>
+SUBLIST allows us to compress this text
+into a shorter form:
+</p>
+<pre>
+a $ b
+  c
+    d
+</pre>
+<p>
+We can repeat this:
+</p>
+<pre>
+a $ b $ c
+  d
+</pre>
+<p>
+However, if <code>a $ b</code> is
+<code>(a (b))</code>,
+we need to stop at this point,
+because:
+</p>
+<table border=1 cellpadding=4>
+<tr><th>Original</th><th>Maps to:</th></tr>
+<tr><td>
+<pre>
+a
+  b
+</pre></td><td><pre>
+(a
+  b)
+</pre></td></tr>
+</table>
+<p>
+Since outside of SUBLIST,
+we consistently map a singleton datum
+as that datum by itself,
+SUBLIST also consistently maps a singleton datum
+as that datum by itself.
+</p>
+<p>
+By selecting this behavior,
+the example above
+can be expressed as:
+</p>
+<table border=1 cellpadding=4>
+<tr><th>Original</th><th>Equivalent to:</th><th>Maps to:</th></tr>
+<tr>
+<td><pre>
+a
+  b
+    c
+      d
+</pre></td>
+<td><pre>a $ b $ c $ d</pre></td>
+<td><pre>(a (b (c d)))</pre></td>
+</tr>
+</table>
+<p>
+This consistency is desirable;
+let's review the <code>merge</code> example
+from the previous question:
+</p>
+<pre>
+define merge(&lt; as bs) $ cond
+  null?(as)           $ bs
+  null?(bs)           $ as
+  {car(as) &lt; car(bs)} $ cons
+                         car as
+                         merge &lt; (cdr as) bs
+  else                $ cons
+                         car bs
+                         merge &lt; as (cdr bs)
+</pre>
+<p>
+We can adopt a coding style
+where the condition and the branch code
+in a <code>cond</code> expression
+is separated consistently by a SUBLIST character.
+This consistency is impossible
+if SUBLIST always created a list
+even in the case that the right-hand side
+is a single datum.
+</p>
 
 <h2 id="collecting-lists">Collecting lists (&lt;* ... *&gt;)</h2>
 <p>
