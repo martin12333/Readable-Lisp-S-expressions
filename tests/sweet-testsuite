@@ -409,13 +409,12 @@ abc
 bar
 ! x y
 
-; Disable for now; it's not clear this should be supported.
-; Re-enable if this is (re)instated.
-; (foo (a b) . c)
-; foo
-;   a b
-;   .
-;   c
+
+(foo (a b) . c)
+foo
+  a b
+  .
+  c
 
 (foo nnn)
 foo
@@ -649,15 +648,6 @@ foo6
   a b
 
 ; Quote followed by newline: interpret ' as quote.
-; This is debatable, but I think it makes sense.
-; In particular, if you start with:
-; \\
-;    aaa
-; and then quote it:
-; ' \\
-;   aaa
-; It should produce '(aaa).  So, if there's no \\, it makes sense
-; to interpret it like this:
 
 '(aaa bbb)
 '
