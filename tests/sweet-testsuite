@@ -1114,7 +1114,7 @@ a b
   e f \\ g h
   i j k \\ l m n \\ o p q
 
-; Reserve top-level tests for some other test approach
+; FIXME: Reserve top-level tests for some other test approach
 ; p \\ q
 ; 
 ; n a b \\ sing sang sung
@@ -1190,15 +1190,18 @@ define rows(grid)
 *>
 
 
+(import (scheme base) ( (begin stuff)
+(define (make n m) (do-make))
+(define (rows grid) (vector-length grid)) ))
 
-; import (scheme base) <* begin stuff
-; 
-; define make(n m)
-;   do-make()
-; 
-; define rows(grid)
-;   vector-length(grid)
-; *>
+import (scheme base) <* begin stuff
+
+define make(n m)
+  do-make()
+
+define rows(grid)
+  vector-length(grid)
+*>
 
 
 ; Initial indents:
