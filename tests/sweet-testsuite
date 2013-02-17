@@ -1447,48 +1447,60 @@ test <* x 1 *> <* y 2 *>
 <* t 1 *>
    <* u 2 *>
 
-; TODO: Add more tests from below
-; 
-; library \\ amkg animals $ 1 0
-; 
-; another
-; 
-; amkg animals $ 1 0
-; 
-; define cuddle-first-parameter '(
-;   if when unless case
-;   define lambda
-;   define-module                  ; Guile modules
-;   library export import          ; R6RS library modules
-;   letrec let let* let1
-;   let-syntax letcrec-syntax
-;   define-syntax syntax-rules
-;   set! do
-;   setq block typecase)           ; Common Lisp
-; 
-; fred
-;  
+
+(fuss library (amkg animals (1 0)))
+fuss
+  library \\ amkg animals $ 1 0
+
+another
+another
+
+(amkg animals (1 0))
+amkg animals $ 1 0
+
+(define cuddle-first-parameter '(
+  if when unless case define lambda define-module library export import
+  letrec let let* let1 let-syntax letcrec-syntax define-syntax syntax-rules
+  set! do setq block typecase))
+define cuddle-first-parameter '(
+  if when unless case
+  define lambda
+  define-module                  ; Guile modules
+  library export import          ; R6RS library modules
+  letrec let let* let1
+  let-syntax letcrec-syntax
+  define-syntax syntax-rules
+  set! do
+  setq block typecase)           ; Common Lisp
+
+fred
+fred
+
+; FIXME: Test initial indent
 ;     (define (f a) (* 2 a)) (define x 4)
 ; 
-; normal
-; 
+; FIXME: Sharp-bang processing
 ; #!sweet
 ; 
 ;   hello world
-; 
-; all-okay
-; 
-; ; (define f before (let (begin (define x 1) (define y 2)) q) after)
-; define f
-;   before
-;   let <* begin
-; define x 1
-; define y 2
-; *> q
-;   after
-; 
-; after-okay
-; 
+
+
+all-okay
+all-okay
+
+(define f before (let (begin (define x 1) (define y 2)) q) after)
+define f
+  before
+  let <* begin
+define x 1
+define y 2
+*> q
+  after
+
+after-okay
+after-okay
+
+
 ; f 1
 ; 
 ;   b c
@@ -1609,3 +1621,48 @@ test <* x 1 *> <* y 2 *>
 ;   .
 ;   cc1
 ; 
+
+
+(define-library
+  (srfi 41 primitive)
+  (export
+    stream-cons
+    stream-null
+    stream-pair?
+    stream-null?
+    stream?
+    stream-car
+    stream-cdr
+    stream-lambda))
+
+<* define-library \\ (srfi 41 primitive)
+export . (
+stream-cons stream-null
+stream-pair? stream-null? stream?
+stream-car stream-cdr
+stream-lambda
+)
+*>
+
+; TODO: FIXME -
+; must handle "." in middle of line with (..) list on RHS followed by *>
+;
+; (define-library
+;   (srfi 41 primitive)
+;   (export
+;     stream-cons
+;     stream-null
+;     stream-pair?
+;     stream-null?
+;     stream?
+;     stream-car
+;     stream-cdr
+;     stream-lambda))
+; 
+; <* define-library \\ (srfi 41 primitive)
+; export . (
+; stream-cons stream-null
+; stream-pair? stream-null? stream?
+; stream-car stream-cdr
+; stream-lambda
+; ) *>
