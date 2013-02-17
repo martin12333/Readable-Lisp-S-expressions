@@ -1618,26 +1618,32 @@ car $ gettimeofday()
 
 ; ; Multiline - interpret this way so you can access weird extensions
 ; ; such as multi-line quasiquote ("Bawden quasiquote")
-; 
-; '
-;   f(1)
-;   g(1)
-; 
-; '
-;   a
-;   b
-; 
-; ' a b
-; 
-; (dd1 ee1 . ff1)
-; 
-; foo1
-;  bar
-;   aa1
-;   bb1
-;   .
-;   cc1
-; 
+
+(quote (f 1) (g 1))
+'
+  f(1)
+  g(1)
+
+(quote a b)
+'
+  a
+  b
+
+(quote (a b))
+' a b
+
+
+(dd1 ee1 . ff1)
+(dd1 ee1 . ff1)
+
+
+(foo1 (bar aa1 bb1 . cc1))
+foo1
+ bar
+  aa1
+  bb1
+  .
+  cc1
 
 
 (define-library
@@ -1683,3 +1689,4 @@ stream-lambda
 ; stream-car stream-cdr
 ; stream-lambda
 ; ) *>
+
