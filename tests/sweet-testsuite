@@ -1501,104 +1501,121 @@ after-okay
 after-okay
 
 
-; f 1
-; 
-;   b c
-; 
-; before
-; ; 
-; after
-; 
-;   separate datums
-; 
-; let <*
-; first
-; 
-; last
-; *>
-; 
-; ; ((hello) (f x))
-; <* hello *>
-;   f x
-; 
-; ; ((bye) a b (f x))
-; <* bye *> a b
-;   f x
-; 
-; ; ((one) (two) (three) ((four) (five)) (f x))
-; <* one *> <* two *> <* three *>
-;   <* four *> <* five *>
-;   f x
-; 
-; . n(expr)
-; 
-; foo
-;   \\ ; comment_eol
-;   ; same followed by comment_eol
-;   foo
-; 
-; foo
-;   a
-;   \\
-;   b
-; 
+(let (first last))
+let <*
+first
+
+last
+*>
+
+((hello) (f x))
+<* hello *>
+  f x
+
+((bye) a b (f x))
+<* bye *> a b
+  f x
+
+((one) (two) (three) ((four) (five)) (f x))
+<* one *> <* two *> <* three *>
+  <* four *> <* five *>
+  f x
+
+(n expr)
+. n(expr)
+
+(foo1 foo2)
+foo1
+  \\ ; comment_eol
+  ; same followed by comment_eol
+  foo2
+
+(foo a b)
+foo
+  a
+  \\
+  b
+
+; FIXME: Enable these tests
 ; a \\ b
 ; 
 ; a
 ; \\
 ; b
 ; 
-; foo
-; ! c \\ d
-; 
-; foo
-; ! c
-; ! \\
-; ! d
-; 
-; f
-;  \\ a
-;  \\ b
-;  \\ c
-; 
+
+(foo c d)
+foo
+! c \\ d
+
+(foo c d)
+foo
+! c
+! \\
+! d
+
+(f a b c)
+f
+ \\ a
+ \\ b
+ \\ c
+
+; FIXME: Move these tests
 ; \\ a
 ; \\ b
 ; \\ c
 ; 
-; foo
-; ! bar batz
-; ; comment
-; ! nitz koo
-; 
-; car $ gettimeofday()
-; 
-; '
-;   hi
-; 
-; ' hi
-; 
-; '
-;   one two
-; 
-; ' one two
-; 
-; '
-;   f()
-; 
-; ' f()
-; 
-; '
-;   f() g()
-; 
-; ' f() g()
-; 
-; '
-;   ((f))
-; 
-; ' ((f))
-; 
-; ' f(1) g(1)
-; 
+
+
+(foo (bar batz) (nitz koo))
+foo
+! bar batz
+; comment
+! nitz koo
+
+(car (gettimeofday))
+car $ gettimeofday()
+
+'hi
+'
+  hi
+
+'hi
+' hi
+
+'(one two)
+'
+  one two
+
+'(one two)
+' one two
+
+'(f)
+'
+  f()
+
+'(f)
+' f()
+
+'((f) (g))
+'
+  f() g()
+
+
+'((f) (g))
+' f() g()
+
+
+'((f))
+'
+  ((f))
+
+'((f))
+' ((f))
+
+'((f 1) (g 1))
+' f(1) g(1)
+
 ; ; Multiline - interpret this way so you can access weird extensions
 ; ; such as multi-line quasiquote ("Bawden quasiquote")
 ; 
