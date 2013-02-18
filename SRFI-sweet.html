@@ -373,13 +373,20 @@ Once a sweet-expression reader is enabled,
 
 <p>
 A sweet-expression reader <i>SHOULD</i> support
-<a href="http://srfi.schemers.org/srfi-22/">SRFI-22
-(Running Scheme Scripts on Unix)</a>,
 <a href="http://srfi.schemers.org/srfi-30/">SRFI-30
 (Nested Multi-line comments)</a>,
 and
 <a href="http://srfi.schemers.org/srfi-62/">SRFI-62
 (S-expression comments)</a>.
+A sweet-expression reader <i>SHOULD</i> support
+<a href="http://srfi.schemers.org/srfi-22/">SRFI-22
+(Running Scheme Scripts on Unix)</a> (where #!+space ignores
+to the end of the line),
+<tt>#!</tt>+letter as a directive where the letter begins a
+datum (such as <tt>#!fold-case</tt>),
+and the formats
+<tt>#!/</tt>...<tt>!#</tt> and
+<tt>#!.</tt>...<tt>!#</tt> as multi-line non-nesting comments.
 </p>
 
 <p>
