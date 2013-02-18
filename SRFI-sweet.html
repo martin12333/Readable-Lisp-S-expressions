@@ -528,13 +528,6 @@ A sweet-expression reader <i>MUST</i> read n-expression tails greedily.
 That is, if a potential tail begins with an opening parenthesis,
 bracket, or brace, it <i>MUST</i> be considered a tail; otherwise,
 it <i>MUST NOT</i> be considered a tail.
-As a result, <tt>a(x)</tt> will be interpreted as
-<tt>(a&nbsp;x)</tt>, while <tt>a#||#(x)</tt> will be interpreted as
-three separate components:
-the symbol <tt>a</tt>, the block comment <tt>#||#</tt>,
-and list <tt>(x)</tt>.
-Note that this is the &#8220;obvious&#8221; implementation in
-a recursive descent parser.
 </p>
 
 <p>
