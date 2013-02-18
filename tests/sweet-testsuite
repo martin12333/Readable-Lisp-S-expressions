@@ -1114,17 +1114,6 @@ a b
   e f \\ g h
   i j k \\ l m n \\ o p q
 
-; FIXME: Reserve top-level tests for some other test approach
-; p \\ q
-; 
-; n a b \\ sing sang sung
-; n a b \\ sing sang sung
-;  d e f
-; a $ b \\ c $ d
-; e f $ g h \\ i j $ k l
-; a b c $ d e f $ g h i \\ j k l $ m n o $ p q r \\ s t u $ v w x $ y z zz
-
-
 use-dash
 use-dash
 
@@ -1168,16 +1157,9 @@ h
   ; ignore me, too.
   i
 
-; TEST ANOTHER WAY
-;  first second third
-;back to
-;  working correctly
+(import (scheme short) ())
+import (scheme short) <* *>
 
-; NOT WORKING YET - restart after head:
-;  define-library (example grid)
-;  \>  export make rows cols ref each rename(put! set!)
-
-; import (scheme short) <* *>
 
 (import (scheme base) (begin (define (make n m) (do-make)) (define (rows grid) (vector-length grid))))
 import (scheme base) <* begin
@@ -1204,22 +1186,6 @@ define rows(grid)
 *>
 
 
-; Initial indents:
-;   indent-disabled
-; 
-;   indent-disabled1 indent-disabled2
-; 
-;   indent-disabled1   indent-disabled2     indent-disabled3
-; 
-;   initial-indents $ disable \\ processing
-; 
-;   indent-disabled
-;   indent-disabled-another
-;   ; Indented comments should be ignored
-; g 1 2
-;   ; Even if they occur after a normal line
-; h 3 4
- 
 (f 1 2 (a 3 4 (b 5 6 (c 7 8) (d 9 9))))
 ; Check deep nesting - does it dedent?
 f 1 2
@@ -1469,9 +1435,6 @@ define cuddle-first-parameter '(
 fred
 fred
 
-; FIXME: Test initial indent
-;     (define (f a) (* 2 a)) (define x 4)
-; 
 ; FIXME: Sharp-bang processing
 ; #!sweet
 ; 
@@ -1529,14 +1492,6 @@ foo
   \\
   b
 
-; FIXME: Enable these tests
-; a \\ b
-; 
-; a
-; \\
-; b
-; 
-
 (foo c d)
 foo
 ! c \\ d
@@ -1553,11 +1508,6 @@ f
  \\ b
  \\ c
 
-; FIXME: Move these tests
-; \\ a
-; \\ b
-; \\ c
-; 
 
 
 (foo (bar batz) (nitz koo))
@@ -1683,4 +1633,53 @@ stream-lambda
 
 ((a . b))
 <* a . b *>
+
+
+
+; FIXME: The following are hard to test using this test framework;
+; change to use a different test approach for them.
+
+;  first second third
+;back to
+;  working correctly
+
+; Initial indents:
+;   indent-disabled
+; 
+;   indent-disabled1 indent-disabled2
+; 
+;   indent-disabled1   indent-disabled2     indent-disabled3
+; 
+;   initial-indents $ disable \\ processing
+; 
+;   indent-disabled
+;   indent-disabled-another
+;   ; Indented comments should be ignored
+; g 1 2
+;   ; Even if they occur after a normal line
+; h 3 4
+ 
+; p \\ q
+; 
+; n a b \\ sing sang sung
+; n a b \\ sing sang sung
+;  d e f
+; a $ b \\ c $ d
+; e f $ g h \\ i j $ k l
+; a b c $ d e f $ g h i \\ j k l $ m n o $ p q r \\ s t u $ v w x $ y z zz
+
+;     (define (f a) (* 2 a)) (define x 4)
+
+; a \\ b
+; 
+; a
+; \\
+; b
+; 
+
+; \\ a
+; \\ b
+; \\ c
+
+
 
