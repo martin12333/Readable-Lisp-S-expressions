@@ -6,6 +6,9 @@
 ; Some of these tests are basically duplicative; it's better to have
 ; "extra" tests than not enough.
 
+1
+#!sweet
+1
 
 x
 x
@@ -971,17 +974,23 @@ cos 0
 #e42
 #e42
 
-; TO FIX
-; #! SRFI-22
-; one
-; #!/bin/sh
-;   weird script should be ignored
-; !#
-; two
-; #!sweet
-; three
-; #!
-; four
+one
+#! SRFI-22
+one
+
+two
+#!/bin/sh
+  weird script should be ignored
+!#
+two
+
+three
+#!sweet
+three
+
+four
+#!
+four
 
 (a)
 $ a
@@ -1340,10 +1349,6 @@ x(a)(b)
 #u8(5 6 7)
 #u8(5 6 7)
 
-; TODO:
-; #!sweet
-; 
-
 (* n (factorial (- n 1)))
 {n * factorial{n - 1}}
 
@@ -1434,12 +1439,6 @@ define cuddle-first-parameter '(
 
 fred
 fred
-
-; FIXME: Sharp-bang processing
-; #!sweet
-; 
-;   hello world
-
 
 all-okay
 all-okay

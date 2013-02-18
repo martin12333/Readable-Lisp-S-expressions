@@ -294,7 +294,6 @@
           (integer->char #x2028)
           #f))
 
-    ; Guile has #! !# comments; these comments do *not* nest.
     ; On Guile 1.6 and 1.8 the only comments are ; and #! !#
     ; On Guile 2.0, #; (SRFI-62) and #| #| |# |# (SRFI-30) comments exist.
     ; On Guile 2.0, #' #` #, #,@ have the R6RS meaning; on
@@ -307,13 +306,6 @@
              (c   (string-ref ver 0))
              (>=2 (and (not (char=? c #\0)) (not (char=? c #\1)))))
         (cond
-          ((char=? char #\!)
-            (if (consume-curly-infix fake-port)
-              '()  ; We saw #!curly-infix, we're done.
-              ; Otherwise, process non-nestable comment #! ... !#
-              (begin
-                (non-nest-comment fake-port)
-                '())))
           ((char=? char #\:)
             ; On Guile 1.6, #: reads characters until it finds non-symbol
             ; characters.
@@ -451,14 +443,8 @@
     (define line-separator #f)
     (define paragraph-separator #f)
 
-    ; R5RS has no hash extensions, but handle #!curly-infix.
-    (define (parse-hash no-indent-read char fake-port)
-      (cond
-        ((eq? c #\!)
-          (if (consume-curly-infix fake-port)
-             '()  ; Found #!curly-infix, quietly accept it.
-             #f))
-        (#t #f))) ; No other hash extensions.
+    ; R5RS has no hash extensions
+    (define (parse-hash no-indent-read char fake-port) #f)
 
     ; Hash-pipe comment is not in R5RS, but support
     ; it as an extension, and make them nest.
@@ -551,23 +537,16 @@
           (my-read-char port)
           (consume-to-eol port)))))
 
-  ; Consume exactly lyst from port.
-  (define (consume-exactly port lyst)
-    (cond
-      ((null? lyst) #t)
-      ((eq? (my-peek-char port) (car lyst))
-        (my-read-char port)
-        (consume-exactly port (cdr lyst)))
-      (#t #f)))
-
-  ; Consume exactly "curly-infix" WHITESPACE, for use in #!curly-infix
-  (define (consume-curly-infix port)
-    (if (and (consume-exactly port (string->list "curly-infix"))
-             (my-char-whitespace? (my-peek-char port)))
-      (begin
-        (my-read-char port)
-        #t)
-      #f))
+  (define (consume-to-whitespace port)
+    ; Consume to whitespace
+    (let ((c (my-peek-char port)))
+      (cond
+        ((eof-object? c) c)
+        ((my-char-whitespace? c)
+          '())
+        (#t
+          (my-read-char port)
+          (consume-to-whitespace port)))))
 
   (define (ismember? item lyst)
     ; Returns true if item is member of lyst, else false.
@@ -773,6 +752,27 @@
       (my-string-foldcase s)
       s))
 
+  (define (process-sharp-bang port)
+    (let ((c (my-peek-char port)))
+      (cond
+        ((char=? c #\space) ; SRFI-22
+          (consume-to-eol port)
+          (consume-end-of-line port)
+          '() ) ; Treat as comment.
+        ((memq c '(#\/ #\.)) ; Multi-line, non-nesting #!/ ... !# or #!. ...!#
+          (non-nest-comment port)
+          '() ) ; Treat as comment.
+        ((char-alphabetic? c)  ; #!directive
+          ; TODO: For now, just consume and ignore directives.
+          (consume-to-whitespace port)
+          '() )
+        ((or (eqv? c carriage-return) (eqv? c #\newline))
+          ; Extension: Ignore lone #!
+          (consume-to-eol port)
+          (consume-end-of-line port)
+          '() ) ; Treat as comment.
+        (#t (read-error "Unsupported #! combination")))))
+
   (define (process-sharp no-indent-read port)
     ; We've read a # character.  Returns a list whose car is what it
     ; represents; empty list means "comment".
@@ -812,6 +812,8 @@
             ((char=? c #\|)
               (nest-comment port)
               '()) ; Return comment
+            ((char=? c #\!)
+              (process-sharp-bang port))
             (#t
               (let ((rv (parse-hash no-indent-read c port)))
                 (cond
