@@ -1098,7 +1098,7 @@ languages can trivially create new semantic constructs (via macros), and
 are often used to process fragments of <em>other</em> languages, these
 did not work well.  It was often difficult to keep updating the parser to
 match the underlying system, so the parser was always less capable than
-using s-expressions... leading to its abandonment.
+using s-expressions... leading to abandonment of the specialized parser.
 One example of this process, among many, is the
 IACL2 (Infix ACL2) interface of ACL2.
 Sometimes the parser
@@ -1106,11 +1106,7 @@ was continuously maintained, but this led to the development
 of a completely new language that was less suitable for self-analysis
 of program fragments and similar tasks (and thus no longer a suitable
 &#8220;Lisp&#8221;).
-Any new notation should be general.
-It&#8217;s easy to create a new &#8220;operator&#8221; in a Lisp, yet many
-infix systems cannot work without having its precedence predefined.
-Similarly, it&#8217;s easy to create a macro in Lisp, and using it must not
-require that the parser be changed each time.
+In short, any new Lisp notation should be general.
 </li>
 <li>
 A <em>homoiconic</em> format is a surface format in which the <em>human</em>
@@ -1118,7 +1114,8 @@ reader can easily determine what the underlying representation is.
 It is very difficult to take advantage of Lisp capabilities, such as
 macros, without a homoiconic format. Yet many past readability efforts
 made it difficult to determine exactly what structures were being
-created by the notation.  Typical infix notations with precedence were
+created by the notation.
+Typical infix notations with precedence were
 especially common examples of this problem - they would quietly create
 multiple lists without obvious indications that this was happening.
 <a href="http://javascript.crockford.com/tdop/tdop.html">
@@ -1127,13 +1124,12 @@ Top Down Operator Precedence by Douglas Crockford
 Operator Precedence&#8221; and shows how important homoiconicity is.
 He stated that &#8220;parsing techniques are not greatly valued in the
 LISP community, which celebrates the Spartan denial of syntax.
-There
-have been many attempts since LISP&#8217;s creation to give the language a
-rich ALGOL-like syntax, including Pratt&#8217;s CGOL, LISP 2, MLISP, Dylan,
-Interlisp&#8217;s Clisp, and McCarthy&#8217;s original M-expressions. All failed
-to find acceptance. That community found the correspondence between
-programs and data to be much more valuable than expressive syntax. But
-the mainstream programming community likes its syntax, so LISP has
+There have been many attempts since LISP&#8217;s creation to give the language
+a rich ALGOL-like syntax, including Pratt&#8217;s CGOL, LISP 2, MLISP, Dylan,
+Interlisp&#8217;s Clisp, and McCarthy&#8217;s original M-expressions.
+All failed to find acceptance. That community found the correspondence between
+programs and data to be much more valuable than expressive syntax.
+But the mainstream programming community likes its syntax, so LISP has
 never been accepted by the mainstream.&#8221;
 As discussed below,
 <a href="http://www.dreamsongs.com/Files/Hopl2.pdf">
@@ -1145,8 +1141,7 @@ also stresses the importance of homoiconic notations in Lisp-based languages.
 See
 <a href="http://www.dwheeler.com/readable/readable-s-expressions.html">http://www.dwheeler.com/readable/readable-s-expressions.html</a>
 for a longer discussion on past efforts.
-In any case,
-now that
+In any case, now that
 this pattern has been identified, new notations can be devised that are
 general and homoiconic - avoiding the problems of past efforts.
 </p>
