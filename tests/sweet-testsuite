@@ -1643,6 +1643,74 @@ stream-lambda
 <* a . b *>
 
 
+(g (- (cos 0)) (factorial 7))
+g -(cos(0)) factorial(7)
+
+(aaa bbb (cc dd))
+aaa bbb
+      ; Comment indent ignored
+  cc dd
+
+(f (a . b))
+f ; Demo improper lists
+  a . b
+
+'(a b ('c d e) (f g h))
+' a b ; Demo abbreviations
+  'c d e \\ f g h
+
+(ff
+  (t1 t2)
+  (t3 t4
+    (t5 t6)
+    (t7 t9)))
+ff ; Comments
+  #| qq |# t1 t2
+  t3 t4
+    t5 #| xyz |# t6
+    t7 #;t8(q) t9
+
+
+(define (init win area)
+  (let
+    ((style (get-style win)))
+    (set! back-pen (black style))
+    (set! fore-pen (white style))
+    (let
+      (
+        (config (make-c area))
+        (expose (make-e area)))
+      (set! now expose)
+      (dostuff config expose))))
+
+define init(win area)
+  let
+    $ style $ get-style win
+    set! back-pen $ black style
+    set! fore-pen $ white style
+    let
+      \\
+        config $ make-c area
+        expose $ make-e area
+      set! now expose
+      dostuff config expose
+
+
+(define (represent-as-infix? x)
+  (and
+    (pair? x)
+    (is-infix-operator? (car x))
+    (list? x)
+    (<= (length x) 6)))
+
+define represent-as-infix?(x)
+  and
+    pair? x
+    is-infix-operator? car(x)
+    list? x
+    {length(x) <= 6}
+
+
 
 ; FIXME: The following are hard to test using this test framework;
 ; change to use a different test approach for them.
@@ -1688,6 +1756,15 @@ stream-lambda
 ; \\ a
 ; \\ b
 ; \\ c
+
+; (f a)
+; (g x)
+; This BEGINS with an indent
+;  f(a) g(x)
+
+	
+
+
 
 
 
