@@ -1730,7 +1730,7 @@
                     (let* ((e_full_results (n_expr port))
                            (e_stopper      (car e_full_results))
                            (e_value        (cadr e_full_results)))
-                      (if (eq? e_stopper 'normal)
+                      (if (memq e_stopper '(normal sublist_marker))
                         (read-error "Illegal value after . value, rest of line")
                         (list e_stopper pn_value)))
                     (list pn_stopper pn_value)))
