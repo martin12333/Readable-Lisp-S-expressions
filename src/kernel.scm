@@ -793,7 +793,16 @@
                             #\I #\E #\B #\O #\D #\X))
               (list (read-number port (list #\# (char-downcase c)))))
             ((char=? c #\( )  ; Vector.
-              (list (list->vector (my-read-delimited-list no-indent-read #\) port))))
+              (list (list->vector
+                (my-read-delimited-list no-indent-read #\) port))))
+            ((char=? c #\u )  ; u8 Vector.
+              (cond
+                ((not (eqv? (my-read-char port) #\8 ))
+                  (read-error "#u must be followed by 8"))
+                ((not (eqv? (my-read-char port) #\( ))
+                  (read-error "#u8 must be followed by left paren"))
+                (#t (list (list->u8vector
+                      (my-read-delimited-list no-indent-read #\) port))))))
             ((char=? c #\\) (list (process-char port)))
             ; Handle #; (item comment).
             ((char=? c #\;)
