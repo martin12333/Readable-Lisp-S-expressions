@@ -1400,8 +1400,14 @@ define cat 'meow
 let ((x cos(f(c))))
 ! dostuff x
 
+(x (cos (f c)))
+x $ cos $ f c
 
-; TODO: FIXME
+; TODO: FIXME.  ANTLR BNF passes this, but Scheme implementation FAILS:
+; !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ERROR
+; Should be:(let ((x (cos (f c)))) (dostuff x))
+; Got:      (let (x (cos ((f c)))) (dostuff x))
+;
 ; (let ((x (cos (f c)))) (dostuff x))
 ; let <* x $ cos $ f c *>
 ; ! dostuff x
