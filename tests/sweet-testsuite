@@ -1660,26 +1660,24 @@ stream-lambda
 )
 *>
 
-; TODO: FIXME -
-; must handle "." in middle of line with (..) list on RHS followed by *>
-;
-; (define-library
-;   (srfi 41 primitive)
-;   (export
-;     stream-cons
-;     stream-null
-;     stream-pair?
-;     stream-null?
-;     stream?
-;     stream-car
-;     stream-cdr
-;     stream-lambda))
-; 
-; <* define-library \\ (srfi 41 primitive)
-; export . (
-; stream-cons stream-null
-; stream-pair? stream-null? stream?
-; stream-car stream-cdr
-; stream-lambda
-; ) *>
+; Must handle "." in middle of line with (..) list on RHS followed by *>
+
+(define-library
+  (srfi 41 primitive)
+  (export
+    stream-cons
+    stream-null
+    stream-pair?
+    stream-null?
+    stream?
+    stream-car
+    stream-cdr
+    stream-lambda))
+<* define-library \\ (srfi 41 primitive)
+export . (
+stream-cons stream-null
+stream-pair? stream-null? stream?
+stream-car stream-cdr
+stream-lambda
+) *>
 
