@@ -1681,3 +1681,6 @@ stream-car stream-cdr
 stream-lambda
 ) *>
 
+((a . b))
+<* a . b *>
+
