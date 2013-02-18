@@ -1783,10 +1783,8 @@ believes it&#8217;s important to have exactly
 the same syntax in both cases in a Lisp-based system, because
 in Lisp-based systems, switching between
 the REPL and files is extremely common.
-This would also cause confusion, since information would be interpreted
-differently depending on some mode switch.
 By making &#8220;Enter Enter&#8221; <em>always</em> end an expression,
-this inconsistency is avoided.</p>
+the notation stays consistent.</p>
 
 <p>Of course, people sometimes want to have something like
 a blank line in the middle of an s-expression.
@@ -1798,6 +1796,8 @@ The indentation of comment-only lines is intentionally ignored;
 that way, you don&#8217;t have to worry about
 making sure that comment indentation matches its surroundings.
 We&#8217;ve found that in practice this works very well.
+In very long expressions (e.g., for a set of definitions in a library),
+a collecting list can typically be used.
 </p>
 
 <p>Since a line with only indentation may look exactly identical to a
