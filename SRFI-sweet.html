@@ -357,49 +357,49 @@ For example, <samp><tt>{$}</tt></samp>
 that can correctly read and map sweet-expressions as defined above
 (including the advanced sweet-expression features).
 An implementation of this SRFI <em>MUST</em> accept
-the marker <code>#!sweet</code> followed by a whitespace character
+the directive <code>#!sweet</code> followed by a whitespace character
 in its standard datum readers (e.g., <code>read</code> and, if applicable,
 the default implementation REPL).
-This marker (including the trailing whitespace character)
-<em>MUST</em> be consumed and considered whitespace.
-After reading this marker, the reader <em>MUST</em> accept
+This directive <em>MUST</em> be consumed and considered whitespace.
+After reading this directive, the reader <em>MUST</em> accept
 sweet-expressions in subsequent datums read from the same port,
-overriding any conflicting marker (such as <code>#!curly-infix</code>
-followed by whitespace)
-until some other conflicting marker is given.
+overriding any previous conflicting directive
+(such as <code>#!curly-infix</code> followed by whitespace)
+until some other conflicting directive is given.
 Once a sweet-expression reader is enabled,
-<code>#!sweet</code> <i>MUST</i> be accepted and ignored.
+the <code>#!sweet</code> directive <i>MUST</i> be accepted and ignored.
 </p>
 
 <p>
 A sweet-expression reader <i>SHOULD</i> support
 <a href="http://srfi.schemers.org/srfi-30/">SRFI-30
-(Nested Multi-line comments)</a>,
+(Nested Multi-line comments)</a> (<tt>#|</tt>&nbsp;...&nbsp;<tt>|#</tt>)
 and
 <a href="http://srfi.schemers.org/srfi-62/">SRFI-62
-(S-expression comments)</a>.
+(S-expression comments)</a> (<tt>#;</tt><var>datum</var>).
 A sweet-expression reader <i>SHOULD</i> support
 <a href="http://srfi.schemers.org/srfi-22/">SRFI-22
 (Running Scheme Scripts on Unix)</a> (where #!+space ignores
 to the end of the line),
-<tt>#!</tt>+letter as a directive where the letter begins a
-datum (such as <tt>#!fold-case</tt>),
+<tt>#!</tt> followed by a letter as a directive
+(such as <tt>#!fold-case</tt>) that is delimited by a whitespace character
+or end-of-file,
 and the formats
-<tt>#!/</tt>...<tt>!#</tt> and
-<tt>#!.</tt>...<tt>!#</tt> as multi-line non-nesting comments.
+<tt>#!/</tt>&nbsp;...&nbsp;<tt>!#</tt> and
+<tt>#!.</tt>&nbsp;...&nbsp;<tt>!#</tt> as multi-line non-nesting comments.
 </p>
 
 <p>
 Implementations of this SRFI <em>MAY</em>
 implement sweet-expressions in their datum readers by default,
-even when the <code>#!sweet</code> marker is not (yet) received.
+even when the <code>#!sweet</code> directive is not (yet) received.
 Portable applications <em>SHOULD</em> include the <code>#!sweet</code>
-marker before using sweet-expressions, typically near the top of a file.
+directive before using sweet-expressions, typically near the top of a file.
 Portable applications <em>SHOULD NOT</em>
-use this marker as the very first characters
-of a file (e.g., it could be preceded by a newline),
+use this directive as the very first characters of a file
 because they might be misinterpreted on some platforms
-as an executable script header.
+as an executable script header; preceding this directive with a newline
+avoids this problem.
 </p>
 
 <p>
