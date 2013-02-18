@@ -1352,7 +1352,10 @@ x(a)(b)
 (* n (factorial (- n 1)))
 {n * factorial{n - 1}}
 
-; TODO: FIXME
+; NOTE: This is not a valid test, because different Scheme specifications
+; differ on whether or not "#" is a delimiter.
+; In particular, in R7RS draft 9 the "#" is NOT a delimiter, producing "z".
+; So let's not use this as a test case at all.
 ; ((x) z)
 ; #;a#|hi|#(x) z
 
