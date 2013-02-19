@@ -2529,13 +2529,16 @@ define make(n m)
     do (i(0 {i + 1}))
     ! {i = n} grid
     ! let (v(make-vector(m #f alse))) vector-set!(grid i v)
+
 define rows(grid) vector-length(grid)
 define cols(grid) vector-length(vector-ref(grid 0))
+
 define ref(grid n m)
   and
     {-1 &lt; n &lt; rows(grid)}
     {-1 &lt; m &lt; cols(grid)}
     vector-ref vector-ref(grid n) m
+
 define put!(grid n m v) vector-set!(vector-ref(grid n) m v)
 *&gt;
 </pre>
@@ -2580,13 +2583,12 @@ indentation-processing context.
 <h2 id="eof">End-of-file (EOF) handling</h2>
 <p>
 Non-empty files must end with an end-of-line sequence, before any
-end-of-file (EOF) marker, to be valid sweet-expression files.
+end-of-file (EOF) marker, to be portable sweet-expression files.
 This limitation greatly simplifies the
 specification and implementation of a sweet-expression reader,
 without limiting the data that sweet-expressions can represent.
 In practice, text editors normally create such files anyway, so
-the complications of handling files where EOF occurs before an
-end-of-line sequence are not worth handling.
+this is not a serious limitation.
 </p>
 <p>
 This requirement is not unique to sweet-expressions.
@@ -2599,6 +2601,8 @@ section 5.1.1.2 of the ISO C 1999 standard).
 <p>
 Sweet-expression reader implementations are free to warn about files
 that fail to meet this requirement.
+Sweet-expression reader implementations are also free to support files
+that do not meet this limitation.
 </p>
 
 
