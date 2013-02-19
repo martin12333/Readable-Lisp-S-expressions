@@ -80,7 +80,7 @@ and it builds on the infix and traditional function notation defined in
 <a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
 Unlike nearly all past efforts to improve s-expression readability,
 sweet-expressions are
-general (the notation does not depend on an underlying semantic)
+general (the notation is independent from any underlying semantic)
 and homoiconic (the underlying data structure is clear from the syntax).
 Sweet-expressions can be used both for program and data input.
 Here is an example:
@@ -112,7 +112,10 @@ define factorial(n)
 Sweet-expressions and traditionally formatted s-expressions
 can be freely mixed, allowing the developer
 to easily transition and maximize readability when laying out code.
-(For example, a sweet-expression reader would accept either format above.)
+For example, a sweet-expression reader would accept
+<i>either</i> the sweet-expression or s-expression format shown above.
+In short, sweet-expressions can be considered simply
+a set of some additional abbreviations.
 The sweet-expression notation was developed by the
 &#8220;<a href="http://readable.sourceforge.net/">Readable Lisp S-expressions Project</a>&#8221;.
 </p>
@@ -170,7 +173,7 @@ as long as no one is forced to use it.&#8221;
 Many new syntaxes have been invented for various Lisp dialects,
 including McCarthy&#8217;s original M-expression notation for Lisp.
 However, nearly all of these past notations are not
-general (i.e., the notation does not depend on an underlying semantic) or
+general (i.e., the notation is independent of an underlying semantic) or
 homoiconic (i.e., the underlying data structure is clear from the syntax).
 We believe a Lisp-based notation <i>needs</i> to be general and homoiconic.
 For example, Lisp-based languages can trivially create new semantic constructs
@@ -1091,7 +1094,7 @@ typically failed to be <em>general</em> or <em>homoiconic</em>:
 <ul>
 <li>
 A <em>general</em>
-format is <em>not</em> tied to some specific underlying semantic.
+format is <em>independent</em> of any specific underlying semantic.
 Most readability efforts focused on creating special syntax for each
 language construct of an underlying language.  But since Lisp-based
 languages can trivially create new semantic constructs (via macros), and
