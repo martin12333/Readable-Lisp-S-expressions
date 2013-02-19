@@ -1565,6 +1565,8 @@
             (list 'collecting '()))
           ((and (eq? expr '*>) (eqv? c #\*))
             (list 'collecting_end '()))
+          ((and (eq? expr '$$$) (eqv? c #\$))
+            (read-error "Error - $$$ is reserved"))
           (#t
             results)))))
 
