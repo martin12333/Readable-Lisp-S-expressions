@@ -523,4 +523,10 @@ foo1
   .
   cc1
 
+a $
+  b c
+
+$
+  ddd eee
+
 fin

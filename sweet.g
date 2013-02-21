@@ -1110,8 +1110,9 @@ it_expr returns [Object v]
         //   comment_eol same more=it_expr {$v = append($head.v, $more.v);}
         comment_eol error
         | empty {$v = monify($head.v);} )
-     | SUBLIST hspace* sub_i=it_expr /* head SUBLIST it_expr case */
-       {$v=append($head.v, list($sub_i.v));}
+     | SUBLIST hspace* /* head SUBLIST ... case */
+       (sub_i=it_expr {$v=append($head.v, list($sub_i.v));}
+        | comment_eol indent sub_b=body {$v = append($head.v, list($sub_b.v));} )
      | comment_eol // Normal case, handle child lines if any:
        (indent children=body {$v = append($head.v, $children.v);}
         | empty              {$v = monify($head.v);} /* No child lines */ )
@@ -1126,7 +1127,9 @@ it_expr returns [Object v]
                    /* Handle #!sweet EOL EOL t_expr */
                    | comment_eol restart=t_expr {$v = $restart.v;} )
           | dedent error ))
-  | SUBLIST hspace* is_i=it_expr {$v=list($is_i.v);} /* "$" first on line */
+  | SUBLIST hspace* /* "$" first on line */
+    (is_i=it_expr {$v=list($is_i.v);}
+     | comment_eol indent sub_body=body {$v = list($sub_body.v);} )
   | abbrevw hspace*
       (comment_eol indent ab=body
          {$v = append(list($abbrevw.v), $ab.v);}

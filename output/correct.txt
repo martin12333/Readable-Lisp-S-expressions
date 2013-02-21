@@ -209,4 +209,6 @@ c
 (quote (a b))
 (dd1 ee1 . ff1)
 (foo1 (bar aa1 bb1 . cc1))
+(a ((b c)))
+(((ddd eee)))
 fin
