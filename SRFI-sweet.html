@@ -2887,6 +2887,318 @@ s-expressions, in particular, it makes it more
 difficult to notate simple atoms.
 </p>
 
+<h2 id="arne">Comparison to the "Arne formulation"</h2>
+<!-- TODO: add link to readable-discuss archive -->
+<p>On xxxx, Arne Babenhauserheide made an alternative indentation proposal
+and posted it on the readable-discuss mailing list.
+</p>
+
+<p>
+Aside from the basic indentation-means-subitem,
+it has the following important points:
+</p>
+
+<ol>
+<li>
+The marker &#8220;<code>:</code>&#8221; indicates that an indentation
+is explicitly placed at the column
+where that marker is.
+That is, you might conceptually consider it
+as ending a line,
+then inserting an indentation to that column position,
+followed by the text after the <code>:</code>.
+As a precis, a <code>:</code> on an indented line by itself
+is a placeholder
+indicating an indentation at its column position,
+similar to our GROUP <code>\\</code> marker.
+For example, the following are equivalent:
+<table border="1" cellpadding="4">
+<tr>
+<th>Arne formulation</th>
+<th>Basic indentation format</th>
+<th>s-expression</th></tr>
+<tr>
+<td><pre>
+let : : x : compute 'x
+      : y : compute 'y
+    use x y
+</pre></td>
+<td><pre>
+let
+    :
+      x
+          compute 'x
+      y
+          compute 'y
+    use x y
+</pre></td>
+<td><pre>
+(let
+    (
+      (x
+          (compute 'x))
+      (y
+          (compute 'y)))
+    (use x y))
+</pre></td>
+</tr>
+</table>
+</li>
+<li>
+A single datum on a line by itself
+without a child line
+is a single-item list;
+this is unlike in SRFI-49 or this SRFI,
+where a single datum on a line by itself
+without a child line
+is just that datum.
+<table border="1" cellpadding="4">
+<tr><th>Arne formulation</th><th>s-expression</th></tr>
+<tr>
+<td><pre>
+foo
+(bar)
+5
+#f
+</pre></td>
+<td><pre>
+(foo)
+((bar))
+(5)
+(#f)
+</pre></td>
+</tr>
+</table>
+</li>
+<li>
+The marker &#8220;<code>.</code>&#8221;,
+when it starts a line,
+splices the list after it into the parent list.
+This is primarily used
+to turn the single-item lists
+formed by the previous rule
+into actual single datums.
+<table border="1" cellpadding="4">
+<tr><th>Arne formulation</th><th>s-expression</th></tr>
+<tr>
+<td><pre>
+foo
+  bar
+  . 5
+  . #f #t "hello"
+</pre></td>
+<td><pre>
+(foo
+  (bar)
+  5
+  #f #t "hello")
+</pre></td>
+</tr>
+</table>
+</li>
+<li>
+Inconsistent dedents are accepted.
+For example,
+the following text is accepted in Arne's formulation,
+but would be rejected as an error by this SRFI:
+<table border="1" cellpadding="4">
+<tr><th>Arne formulation</th><th>s-expression</th></tr>
+<tr>
+<td><pre>
+foo
+    bar quux
+  kuu nitz
+</pre></td>
+<td><pre>
+(foo
+    (bar quux)
+  (kuu nitz))
+</pre></td>
+</tr>
+</table>
+</li>
+</ol>
+
+<p>
+After being proposed,
+it was suggested that the rule 2 above
+should be amended
+to be similar to equivalent rules in SRFI-49 and this SRFI;
+that is,
+a single datum on a line by itself
+should be only that datum, not wrapped in a list.
+Further, a &#8220;.&#8221; marker followed by
+a single datum without a child line
+should be a no-op.
+</p>
+<p>
+Rule 2 was formulated that way
+since the intention was
+to build an indentation processor,
+not a full parser.
+However, further discussion revealed
+that a simple rule could be formulated
+to differentiate between one-item and two-item lines;
+specifically, a space outside of parentheses or strings
+indicated that the line had two or more items.
+Thus even a simple indentation processor
+could support SRFI-49-like rule 2.
+</p>
+
+<p>
+This proposal was initially quite attractive
+(at least to Alan Manuel K. Gloria).
+It is simpler to describe informally,
+and appears, at first glance,
+to replace many actual uses for
+GROUP/SPLIT, SUBLIST, and COLLECTINGLIST.
+Thus, it was hoped that these three extensions
+could be removed with the simpler <code>:</code> marker rule.
+</p>
+
+<p>
+However, there are use cases
+where SUBLIST has superior semantics
+over Arne's <code>:</code>.
+For instance, consider the following SUBLIST code:
+</p>
+<pre>
+call/cc $ lambda (exit)
+  body
+  ...
+</pre>
+<p>
+Replacing this with Arne's <code>:</code> requires
+further indenting the body
+to after the <code>:</code> marker.
+</p>
+<pre>
+call/cc : lambda (exit)
+            body
+            ...
+</pre>
+<p>
+With Arne's formulation, a trade-off exists:
+either
+(1) add a separate line for the <code>lambda</code>
+(which increases vertical lines
+in exchange for reduced indentation),
+or (2) use <code>:</code>
+(which increases horizontal indentation
+in exchange for reduced vertical lines).
+</p>
+<table border="1" cellpadding="4">
+<tr><th>either (1)</th><th>or (2)</th></tr>
+<tr>
+<td><pre>
+call/cc
+  lambda (exit)
+    body
+    ...
+</pre></td>
+<td><pre>
+call/cc : lambda (exit)
+            body
+            ...
+</pre></td>
+</tr>
+</table>
+
+<p>
+SUBLIST is powerful precisely because it collects child lines.
+This allows you to simultaneously reduce
+horizontal indentation and vertical lines.
+</p>
+
+<p>
+The <code>:</code> and <code>.</code> markers
+are also insufficient replacements for GROUP/SPLIT.
+At first glance it might seem that <code>.</code> is superior
+to the SPLIT meaning of <code>\\</code>:
+</p>
+<table border="1" cellpadding="4">
+<tr><th>Arne's formulation</th><th>sweet-expression</th></tr>
+<tr>
+<td><pre>
+export
+  . api-init api-use api-close
+</pre></td>
+<td><pre>
+export
+  api-init \\ api-use \\ api-close
+</pre></td>
+</tr>
+</table>
+<p>
+But we expect that more typically,
+you want to express the code that looks like this:
+</p>
+<table border="1" cellpadding="4">
+<tr><th>Arne's formulation</th><th>sweet-expression</th></tr>
+<tr>
+<td><pre>
+foo
+  . (display "Welcome, ") (display player) (display ", to the Dungeons!") (newline)
+</pre></td>
+<td><pre>
+foo
+  display "Welcome, " \\ display player \\ display ", to the Dungeons!" \\ (newline)
+</pre></td>
+</tr>
+</table>
+<p>
+If you truly want several single items to be spliced,
+the following trick takes advantage
+of the fact that indentation processing
+is disabled inside parentheses:
+</p>
+<pre>
+export . (
+  api-init api-use api-close
+)
+</pre>
+<p>
+Arne's formulation also does not have
+a method to conveniently express
+a single gigantic top-level datum
+that contains several complex sub-datums,
+a.k.a. the <code>define-library</code> problem.
+</p>
+<pre>
+&lt;* define-library \\ (example)
+import (scheme base)
+export . (
+  example-init
+  example-open example-close
+)
+&lt;* begin
+
+define example-init()
+  whatever ...
+  ...
+
+define example-open(x)
+  whatever ...
+  ...
+
+define example-close(y)
+  whatever ...
+  ...
+
+*&gt;; begin
+*&gt;; define-library
+</pre>
+<p>
+But those are secondary reasons.
+We could retain COLLECTINGLIST,
+and live without the SPLIT behavior,
+or even SUBLIST.
+</p>
+<p>
+The real reason is that its implementation has important subtleties.
+</p>
+<!-- TODO: discuss ASCII; need to sleep. -->
+
 <h2 id="writing-out-results">Writing out results</h2>
 <p>An obvious question
 is, &#8220;how do you write them out?&#8221;  After all, with these notations there is
