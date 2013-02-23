@@ -104,6 +104,7 @@ tokens {
   }
 
   private void process_indent(String indent_text, Token t) {
+    String deepest = "";
     if (indents.isEmpty()) indents.push("");
     if (indents.peek().equals(indent_text)) { // no-op
     } else if (indentation_greater_than(indent_text, indents.peek())) {
@@ -114,15 +115,23 @@ tokens {
     } else if (indentation_greater_than(indents.peek(), indent_text)) {
       while (!indents.isEmpty() &&
              indentation_greater_than(indents.peek(), indent_text)) {
+        deepest = indents.peek();
         indents.removeFirst(); // drop
         // System.out.print("Generate DEDENT(s)\n");
         t.setType(DEDENT);
         emit(t);
       }
       if (!indents.peek().equals(indent_text)) { 
-       // System.out.print("Generate BADDENT(s)\n");
-        t.setType(BADDENT);
-        emit(t);
+        if ( (indents.peek().length() < indent_text.length()) &&
+             (indent_text.length() < deepest.length()) &&
+             deepest.startsWith(indent_text) ) {
+          emit_type(RE_INDENT);
+          indents.push(indent_text);
+        } else {
+          // System.out.print("Generate BADDENT(s)\n");
+          t.setType(BADDENT);
+          emit(t);
+        }
       }
     } else {
       // System.out.print("Generate BADDENT\n");
@@ -543,6 +552,8 @@ fragment INITIAL_INDENT_NO_BANG: ' ';
 fragment INITIAL_INDENT_WITH_BANG: ' ';
 fragment INDENT: ' ';
 fragment DEDENT: ' ';
+fragment RE_INDENT: ' ';
+
 
 // EOL after contents - may have a following indented/dedented line.
 EOL: {enclosure==0 &&
@@ -854,6 +865,7 @@ initial_indent_no_bang : INITIAL_INDENT_NO_BANG;
 initial_indent_with_bang : INITIAL_INDENT_WITH_BANG;
 indent  : INDENT;
 dedent  : DEDENT;
+re_indent : RE_INDENT;
 
 // This BNF uses the following slightly complicated pattern in some places:
 //   from_n_expr ((hspace+ (stuff {action1} | empty {action2} ))
@@ -1112,7 +1124,10 @@ it_expr returns [Object v]
         | empty {$v = monify($head.v);} )
      | SUBLIST hspace* /* head SUBLIST ... case */
        (sub_i=it_expr {$v=append($head.v, list($sub_i.v));}
-        | comment_eol indent sub_b=body {$v = append($head.v, list($sub_b.v));} )
+        | comment_eol indent sub_b=body
+          ( re_indent partial_out=body
+             {$v = append(append($head.v, list($sub_b.v)), $partial_out.v);}
+           | empty {$v = append($head.v, list($sub_b.v));} ) )
      | comment_eol // Normal case, handle child lines if any:
        (indent children=body {$v = append($head.v, $children.v);}
         | empty              {$v = monify($head.v);} /* No child lines */ )
