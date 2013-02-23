@@ -3137,11 +3137,11 @@ you want to express the code that looks like this:
 <tr><th>Arne's formulation</th><th>sweet-expression</th></tr>
 <tr>
 <td><pre>
-foo
+begin
   . (display "Welcome, ") (display player) (display ", to the Dungeons!") (newline)
 </pre></td>
 <td><pre>
-foo
+begin
   display "Welcome, " \\ display player \\ display ", to the Dungeons!" \\ (newline)
 </pre></td>
 </tr>
@@ -3195,9 +3195,103 @@ and live without the SPLIT behavior,
 or even SUBLIST.
 </p>
 <p>
-The real reason is that its implementation has important subtleties.
+The <em>real</em> reason
+that this propsal was not accepted
+is that its implementation has important subtleties.
 </p>
-<!-- TODO: discuss ASCII; need to sleep. -->
+<p>
+For example, some East Asian characters,
+<a href='http://www.unicode.org/reports/tr11/'>called fullwidth characters</a>,
+should be displayed on two columns
+even on a fixed-width font display.
+In Arne's formulation,
+the width of non-whitespace characters
+is significant,
+since the <code>:</code> marker can record
+the column position
+after non-whitespace characters occur.
+This SRFI, on the other hand,
+requires recording only the column position
+of horizontal whitespace characters;
+we handle the different possible widths
+of the TAB character
+by requiring consistent indentation.
+</p>
+<p>
+Arne's formulation requires either that implementations
+know all fullwidth characters
+(a much longer list
+than the list of horizontal whitespace characters),
+or would leave handling of fullwidth characters
+up to implementations,
+meaning that indentation expressions
+have potential portability problems.
+</p>
+<p>
+Granted that almost all code
+will not utilize symbols
+containing fullwidth East Asian glyphs,
+one must consider <em>strings</em>
+containing fullwidth East Asian glyphs,
+which we expect to occur regularly in East Asia.
+</p>
+<p>
+This also brings the issue of character encoding.
+To properly recognize fullwidth characters,
+the encoding must be known.
+Granted, many East Asian-specific encodings
+use two bytes for fullwidth characters,
+and one byte for halfwidth characters.
+So a simple byte-as-character interpretation
+would keep track of column positions correctly,
+if you are using such a East Asian-specific encoding.
+Until you re-encode the text into UTF-8.
+</p>
+<p>
+UTF-8 use is spreading;
+it can encode any Unicode code point,
+and is largely back-compatible with ASCII.
+But East Asian fullwidth characters
+do not necessarily encode in two bytes in UTF-8.
+Not to mention that many more characters in UTF-8
+are encoded in 3 or more bytes
+but do not take 3 or more columns,
+just one.
+Characters which can occur in strings,
+which might usefully be placed before
+some <code>:</code> marker.
+</p>
+<p>
+If we are sensitive to only initial indentation,
+then we need only worry
+about the widths
+of two characters,
+TAB and SPACE
+(and <code>!</code> for this SRFI).
+This SRFI sidesteps this issue by requiring
+that indentation be consistent across lines.
+In Arne's proposal,
+we need to worry
+about the widths
+of every character,
+and also know the encoding.
+Scheme code
+(and Lisp code in general)
+will increasingly need
+to embed strings
+with international (non-ASCII) characters,
+and R7RS at least allows optional support
+for symbols
+that contain international (non-ASCII) characters.
+R6RS mandates that support.
+</p>
+
+<!-- TODO: link to archived message -->
+<p>
+After discussion,
+this proposal was turned down
+by the authors of this SRFI.
+</p>
 
 <h2 id="writing-out-results">Writing out results</h2>
 <p>An obvious question
