@@ -1651,7 +1651,14 @@
                  (it_value        (cadr it_full_results)))
             (cond
               ((string=? it_new_indent "")
-                it_value)
+                ; Specially compensate for "*>" at the end of a line if it's
+                ; after something else.  This must be interpreted as EOL *>,
+                ; which would cons a () after the result.
+                ; Directly calling list for a non-null it_value has
+                ; the same effect, but is a lot quicker and simpler.
+                (if (null? it_value)
+                   it_value
+                   (list it_value)))
               (#t (cons it_value (collecting_tail port)))))))))
 
   ; Returns (stopper computed_value).
@@ -1791,7 +1798,7 @@
                 (append head_value (list sub_i_value)))))
           ((eq? head_stopper 'collecting_end)
             ; Note that indent is "", forcing dedent all the way out.
-            (list "" (list (monify head_value))))
+            (list "" (monify head_value)))
           ((memv (my-peek-char port) initial_comment_eol)
             (let ((new_indent (comment_eol_read_indent port)))
               (if (indentation>? new_indent starting_indent)

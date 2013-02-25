@@ -1403,14 +1403,21 @@ let ((x cos(f(c))))
 (x (cos (f c)))
 x $ cos $ f c
 
-; TODO: FIXME.  ANTLR BNF passes this, but Scheme implementation FAILS:
-; !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ERROR
-; Should be:(let ((x (cos (f c)))) (dostuff x))
-; Got:      (let (x (cos ((f c)))) (dostuff x))
-;
-; (let ((x (cos (f c)))) (dostuff x))
-; let <* x $ cos $ f c *>
-; ! dostuff x
+; This next test checks for an old bug in the Scheme implementation
+; (the ANTLR BNF already passed it). It involves collecting-end on the
+; same line after other operators.
+
+(let ((x (cos (f c)))) (dostuff x))
+let <* x $ cos $ f c *>
+! dostuff x
+
+(let ((var1 value1) (var2 (min 5 (sin var1)))) (domore stuff))
+let <* var1 value1 \\ var2 $ min 5 $ sin var1 *>
+! domore stuff
+
+( ((a b (c d (e f)))) body... )
+<* a b $ c d $ e f *>
+! body...
 
 (test ((x 1)) ((y 2)) (((a 3)) ((b 4))))
 test <* x 1 *> <* y 2 *>
