@@ -54,6 +54,55 @@ and
 <a href="#reference-implementation">reference implementation</a>.
 </p>
 
+<!-- SRFI-97 has a TOC after the Status -->
+<h1><a name="toc">Table of Contents</a></h1>
+<ul>
+<li><a href="#related-srfis">Related SRFIs</a></li>
+<li><a href="#abstract">Abstract</a></li>
+<li><a href="#rationale">Rationale</a></li>
+<li><a href="#specification">Specification</a>
+  <ul>
+  <li><a href="#related-tools">Related tools</a></li>
+  <li><a href="#bnf">Backus&#45;Naur Form (BNF)</a></li>
+  </ul></li>
+<li><a href="#examples">Examples</a></li>
+<li><a href="#design-rationale">Design Rationale</a>
+  <ul>
+  <li><a href="#general-and-homoiconic">General and homoiconic formats</a></li>
+  <li><a href="#cant-improve">Is it impossible to improve on s-expression notation?</a></li>
+  <li><a href="#why-indent">Why should indentation be syntactically relevant?</a></li>
+  <li><a href="#srfi-49">What is the relationship between sweet-expressions and SRFI-49 (I-expressions)?</a></li>
+  <li><a href="#block-comment-indent-significant">Why are the indentations of block comments and datum comments significant?</a></li>
+  <li><a href="#separate-105">Why are are sweet-expression separate from curly-infix and neoteric-expressions as defined in SRFI-105?</a></li>
+  <li><a href="#blank-lines">Blank Lines</a></li>
+  <li><a href="#trailing-hspace">Trailing horizontal spaces are ignored</a></li>
+  <li><a href="#indentation-characters">Indentation characters (! as indent)</a></li>
+  <li><a href="#disabling-indentation-processing-with-paired-characters">Disabling indentation processing with paired characters</a></li>
+  <li><a href="#disabling-indentation-processing-with-an-initial-indent">Disabling indentation processing with an initial indent</a></li>
+  <li><a href="#grouping-and-splitting">Grouping and splitting (\\)</a></li>
+  <li><a href="#initial-group-mean-nothing">Why does initial \\ mean nothing if there are datums afterwards on the same line?</a></li>
+  <li><a href="#traditional-abbreviations">Traditional abbreviations</a></li>
+  <li><a href="#sublist">Sublist ($)</a></li>
+  <li><a href="#single-item-sublist">Why is <code>a $ b</code> equivalent to <code>(a b)</code> rather than <code>(a (b))</code>?</a></li>
+  <li><a href="#collecting-lists">Collecting lists (&lt;* ... *&gt;)</a></li>
+  <li><a href="#reserved">Reserved marker</a></li>
+  <li><a href="#eof">End-of-file (EOF) handling</a></li>
+  <li><a href="#semicolon">Special semicolon values for an unsweetener</a></li>
+  <li><a href="#q2">Comparison to Q2</a></li>
+  <li><a href="#p4p">Comparison to P4P</a></li>
+  <li><a href="#z">Comparison to Z</a></li>
+  <li><a href="#genyris">Comparison to Genyris</a></li>
+  <li><a href="#arne">Comparison to "Arne formulation"</a></li>
+  <li><a href="#writing-out-results">Writing out results</a></li>
+  <li><a href="#backwards-compatibility">Backwards compatibility</a></li>
+  <li><a href="#experiences">Past experiences</a></li>
+  </ul></li>
+<li><a href="#reference-implementation">Reference implementation</a></li>
+<li><a href="#references">References</a></li>
+<li><a href="#acknowledgments">Acknowledgments</a></li>
+<li><a href="#copyright">Copyright</a></li>
+</ul>
+
 <h1><a name="related-srfis">Related SRFIs</a></h1>
 <p>
 <a href="http://srfi.schemers.org/srfi-49/">SRFI-49
@@ -2837,7 +2886,7 @@ but would be interpreted as (cons (a b)).
 </ol>
 
 
-<h2>Comparison to Genyris</h2>
+<h2 id="genyris">Comparison to Genyris</h2>
 <p>
 <a href="http://code.google.com/p/genyris/">Genyris</a> is another
 indentation-based Lisp.
