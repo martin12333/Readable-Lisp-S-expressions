@@ -209,9 +209,4 @@ c
 (quote (a b))
 (dd1 ee1 . ff1)
 (foo1 (bar aa1 bb1 . cc1))
-(a ((b c)))
-(((ddd eee)))
-(let ((var1 value1)) body...)
-(let ((var1 value1) (var2 value2)) body...)
-(let ((var1 value1) (var2 value2) (var3 value3)) (body1 param1) (body2 param2))
 fin
