@@ -3414,6 +3414,22 @@ followed by a RE_INDENT.
 Here is an example of how the modified indent processor could tokenize
 its input:
 </p>
+<!-- Here's sample code, from ANTLR:
+       if (!indents.peek().equals(indent_text)) {
+-       // System.out.print("Generate BADDENT(s)\n");
+-        t.setType(BADDENT);
+-        emit(t);
++        if ( (indents.peek().length() < indent_text.length()) &&
++             (indent_text.length() < deepest.length()) &&
++             deepest.startsWith(indent_text) ) {
++          emit_type(RE_INDENT);
++          indents.push(indent_text);
++        } else {
++          // System.out.print("Generate BADDENT(s)\n");
++          t.setType(BADDENT);
++          emit(t);
++        }
+-->
 
 <table>
 <tr>
