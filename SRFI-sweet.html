@@ -92,7 +92,7 @@ and
   <li><a href="#p4p">Comparison to P4P</a></li>
   <li><a href="#z">Comparison to Z</a></li>
   <li><a href="#genyris">Comparison to Genyris</a></li>
-  <li><a href="#arne">Comparison to "Arne formulation"</a></li>
+  <li><a href="#arne">Comparison to &#8220;Arne formulation&#8221;</a></li>
   <li><a href="#writing-out-results">Writing out results</a></li>
   <li><a href="#backwards-compatibility">Backwards compatibility</a></li>
   <li><a href="#experiences">Past experiences</a></li>
@@ -359,13 +359,13 @@ end-of-line as though an end-of-line sequence had been added.
 
 <p>
 A sweet-expression reader <em>MUST</em> implement these
-sweet-expression "advanced features":
+sweet-expression &#8220;advanced features&#8221;:
 <ol>
 <li>
 The marker <code>\\</code> is specially interpreted.
 If any terms precede it on the line, it is called SPLIT,
 and it <em>MUST</em> be interpreted
-as if it started a new line, at the current line's indentation.
+as if it started a new line, at the current line&#8217;s indentation.
 If no terms precede <code>\\</code> on the line,
 it is called GROUP,
 and it represents no symbol at all,
@@ -2386,7 +2386,7 @@ a
 </table>
 <p>
 This consistency is desirable;
-let's review the <code>merge</code> example
+let&#8217;s review the <code>merge</code> example
 from the previous question:
 </p>
 <pre>
@@ -2943,7 +2943,7 @@ s-expressions, in particular, it makes it more
 difficult to notate simple atoms.
 </p>
 
-<h2 id="arne">Comparison to the "Arne formulation"</h2>
+<h2 id="arne">Comparison to the &#8220;Arne formulation&#8221;</h2>
 <p>On <a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg01047.html">
 2013-02-08, Arne Babenhauserheide made an alternative indentation proposal</a>
 and posted it on the readable-discuss mailing list.
@@ -3055,7 +3055,7 @@ foo
 <li>
 Inconsistent dedents are accepted.
 For example,
-the following text is accepted in Arne's formulation,
+the following text is accepted in Arne&#8217;s formulation,
 but would be rejected as an error by this SRFI:
 <table border="1" cellpadding="4">
 <tr><th>Arne formulation</th><th>s-expression</th></tr>
@@ -3115,7 +3115,7 @@ could be removed with the simpler <code>:</code> marker rule.
 <p>
 However, there are use cases
 where SUBLIST has superior semantics
-over Arne's <code>:</code>.
+over Arne&#8217;s <code>:</code>.
 For instance, consider the following SUBLIST code:
 </p>
 <pre>
@@ -3124,7 +3124,7 @@ call/cc $ lambda (exit)
   ...
 </pre>
 <p>
-Replacing this with Arne's <code>:</code> requires
+Replacing this with Arne&#8217;s <code>:</code> requires
 further indenting the body
 to after the <code>:</code> marker.
 </p>
@@ -3134,7 +3134,7 @@ call/cc : lambda (exit)
             ...
 </pre>
 <p>
-With Arne's formulation, a trade-off exists:
+With Arne&#8217;s formulation, a trade-off exists:
 either
 (1) add a separate line for the <code>lambda</code>
 (which increases vertical lines
@@ -3173,7 +3173,7 @@ At first glance it might seem that <code>.</code> is superior
 to the SPLIT meaning of <code>\\</code>:
 </p>
 <table border="1" cellpadding="4">
-<tr><th>Arne's formulation</th><th>sweet-expression</th></tr>
+<tr><th>Arne&#8217;s formulation</th><th>sweet-expression</th></tr>
 <tr>
 <td><pre>
 export
@@ -3190,7 +3190,7 @@ But we expect that more typically,
 you want to express the code that looks like this:
 </p>
 <table border="1" cellpadding="4">
-<tr><th>Arne's formulation</th><th>sweet-expression</th></tr>
+<tr><th>Arne&#8217;s formulation</th><th>sweet-expression</th></tr>
 <tr>
 <td><pre>
 begin
@@ -3214,7 +3214,7 @@ export . (
 )
 </pre>
 <p>
-Arne's formulation also does not have
+Arne&#8217;s formulation also does not have
 a method to conveniently express
 a single gigantic top-level datum
 that contains several complex sub-datums,
@@ -3260,7 +3260,7 @@ For example, some East Asian characters,
 <a href='http://www.unicode.org/reports/tr11/'>called fullwidth characters</a>,
 should be displayed on two columns
 even on a fixed-width font display.
-In Arne's formulation,
+In Arne&#8217;s formulation,
 the width of non-whitespace characters
 is significant,
 since the <code>:</code> marker can record
@@ -3274,7 +3274,7 @@ of the TAB character
 by requiring consistent indentation.
 </p>
 <p>
-Arne's formulation requires either that implementations
+Arne&#8217;s formulation requires either that implementations
 know all fullwidth characters
 (a much longer list
 than the list of horizontal whitespace characters),
@@ -3326,7 +3326,7 @@ TAB and SPACE
 (and <code>!</code> for this SRFI).
 This SRFI sidesteps this issue by requiring
 that indentation be consistent across lines.
-In Arne's proposal,
+In Arne&#8217;s proposal,
 we need to worry
 about the widths
 of every character,
@@ -3357,14 +3357,125 @@ Beni Cherniavsky-Paskin proposed...
 ??? FIXME
 </p>
 
-<h2 id="closing-ending-sublist-results">Variation: Closing end-of-line SUBLIST by unmatched dedent</h2>
+<h2 id="closing-ending-sublist-results">Variation: Closing end-of-line SUBLIST by unmatched dedent (&#8220;Beni-Lite&#8221;)</h2>
 <p>
-David A. Wheeler counterproposed a subset of
-Beni Cherniavsky-Paskin's proposal, where only
-"$" at the end of a line (after other text) could be closed by a
-"partial dedent".
-He also implemented this counterproposal in ANTLR to enable experimentation.
-??? FIXME
+On 2013-02-23, David A. Wheeler counterproposed (for purposes
+of experimentation) a subset of Beni Cherniavsky-Paskin&#8217;s proposal.
+He christened the approach &#8220;Beni-Lite&#8221;,
+and included a sample implementation using ANTLR and its BNF.
+This was eventually rejected, but
+we believe it&#8217;s important to document this approach -
+in part because it could be added later if desired.
+</p>
+<p>
+In this alternative, a &#8220;$&#8221; can be closed by an unmatched partial
+dedent, but only if the &#8220;$&#8221; is at the end of a line and there is
+other text besides any indentation characters.
+The primary argument given for this variant is that it
+covers the primary use cases David A. Wheeler had seen, and
+it is possible to formulate this limited variant while continuing
+to use ANTLR&#8217;s grammar checking.
+It also retains stronger run-time input checking; partial dedents
+are only legal when including &#8220;$&#8221; at the end of the line, making them
+unlikely to use accidentally.
+It is still complicated, but it is not much more complicated than
+notations without unmatched dedents.
+</p>
+<p>
+Here are some sample test cases to demonstrate its impact:
+</p>
+<pre>
+let $
+! ! var1 value1
+! body...
+; ==> (let ((var1 value1)) body...)
+
+let $
+! ! var1 value1
+! ! var2 value2
+! body...
+; ==> (let ((var1 value1) (var2 value2)) body...)
+
+let $
+! ! var1 value1
+! ! var2 value2
+! ! var3 value3
+! body1 param1
+! body2 param2
+; ==>
+; (let ((var1 value1) (var2 value2) (var3 value3))
+;        (body1 param1) (body2 param2))
+</pre>
+
+<p>
+The sample implementation tweaked the indent processor so that
+if a dedent doesn&#8217;t match the parent indent, it generates DEDENT
+followed by a RE_INDENT.
+Here is an example of how the modified indent processor could tokenize
+its input:
+</p>
+
+<table>
+<tr>
+<th>Original Input</th><th>Tokenized version</th>
+</tr>
+<tr>
+<td>
+<pre>
+let $
+! ! var1 value1
+! body...
+</pre>
+</td>
+<td>
+<pre>
+let SUBLIST EOL
+INDENT var1 value2 EOL
+DEDENT RE_INDENT body...
+</pre>
+</td>
+</tr>
+</table>
+
+<p>
+The BNF was then changed so that SUBLIST allowed more constructs:
+</p>
+<pre>
+it_expr returns [Object v]
+  : head
+    ...
+     | SUBLIST hspace* /* head SUBLIST ... case */
+       (sub_i=it_expr {(append $head (list $sub_i))}
+        | comment_eol indent sub_b=body
+          ( re_indent partial_out=body
+             {(append (append $head (list $sub_b)) $partial_out)}
+           | empty {(append $head (list $sub_b))} ) )
+  ...
+  | SUBLIST hspace* /* "$" first on line */
+    (is_i=it_expr {(list $is_i)}
+     | comment_eol indent sub_body=body {(list $sub_body)} )
+</pre>
+
+
+<p>
+However, Alan Manuel Gloria reviewed it and stated that,
+&#8220;I think that, conceptually, having a limitation is an additional
+complication when teaching the notation...
+Granted we could just mandate these patterns, but I worry that we are
+now slipping into the &#8216;notation is tied to underlying semantic&#8217; bug.
+Or in this case, &#8216;notation is tied to underlying legacy syntax&#8217;.
+I&#8217;d rather have the full Beni formulation of SUBLIST or the classic
+0.4 formulation, in that preference order.
+I&#8217;ll admit that I don&#8217;t have a use for the full Beni formulation other
+than for let, though.  I suspect there may be further use cases; but I
+haven&#8217;t found any others yet.&#8221;
+</p>
+<p>
+The current notation does not support either approach at this time.
+However, the BNF specifically requires that these constructs be
+detected and forbidden; that way, if future versions add these capabilities,
+it will be known that they cannot have any other meaning in
+existing sweet-expressions.
 </p>
 
 <h2 id="writing-out-results">Writing out results</h2>
