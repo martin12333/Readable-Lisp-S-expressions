@@ -1,8 +1,7 @@
 ; kernel.scm
 ; Implementation of the sweet-expressions project by readable mailinglist.
 ;
-; Copyright (C) 2005-2012 by David A. Wheeler, Alan Manuel K. Gloria,
-;                         and Egil Möller.
+; Copyright (C) 2005-2013 by David A. Wheeler and Alan Manuel K. Gloria
 ;
 ; This software is released as open source software under the "MIT" license:
 ;
