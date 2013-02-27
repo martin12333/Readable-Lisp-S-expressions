@@ -1123,6 +1123,10 @@
   (define sublist (string->symbol "$"))
   (define sublist-char #\$) ; First character of sublist symbol.
 
+  (define group_split split)
+  (define period_symbol period-symbol)
+
+
 ; --- New implementation for sweet-expressions, based on BNF ---
 
 ; TODO: Further cleanup - remove unnecessary declarations, etc.
@@ -1145,11 +1149,7 @@
        (eof-object? c)
        (memv c initial_comment_eol)))
 
-  (define group_split split)
-
-  (define period_symbol period-symbol)
-
-  ; Consume 0+ spaces or tab
+  ; Consume 0+ spaces or tabs
   (define (hspaces port)
     (cond
       ((char-horiz-whitespace? (my-peek-char port))
