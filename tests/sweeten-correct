@@ -98,4 +98,14 @@ a(b) c(d) e(f)
   e z
   g y
 
+{$}
+
+{\\}
+
+{<*}
+
+{*>}
+
+{$$$}
+
 ; Comment at end of file.
