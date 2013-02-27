@@ -373,6 +373,7 @@ define exposed-unit(x)
     eq?(x '\\ ) string->list("{\\\\}")
     eq?(x '<* ) string->list("{<*}")
     eq?(x '*> ) string->list("{*>}")
+    eq?(x '$$$) string->list("{$$$}")
     #t          unit(x)
 
 ; Return x as a unit, but always represent lists as (a b c):
