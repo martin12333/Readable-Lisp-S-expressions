@@ -644,11 +644,10 @@ UNQUOTE_SPLICE : ',@';
 UNQUOTE        : ',';
 
 // Special end-of-line character definitions.
-fragment NEL: '\u0085';  // Hi, IBM mainframes!
-fragment EOL_CHAR : '\n' | '\r' | NEL;
+fragment EOL_CHAR : '\n' | '\r' ;
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
 fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
-fragment EOL_SEQUENCE : ('\r' '\n'? | '\n' '\r'? | NEL);
+fragment EOL_SEQUENCE : ('\r' '\n'? | '\n');
 
 // Comments. LCOMMENT=line comment, scomment=special comment.
 LCOMMENT :       ';' NOT_EOL_CHARS ; // Line comment - doesn't include EOL
@@ -828,8 +827,9 @@ it_expr returns [Object v]
         //   comment_eol same more=it_expr {(append $head $more)}
         comment_eol error
         | empty {(monify $head)} )
-     | SUBLIST hspace* sub_i=it_expr /* head SUBLIST it_expr case */
-       {(append $head (list $sub_i))}
+     | SUBLIST hspace* /* head SUBLIST ... case */
+       (sub_i=it_expr {(append $head (list $sub_i))}
+        | comment_eol error )
      | comment_eol // Normal case, handle child lines if any:
        (indent children=body {(append $head $children)}
         | empty              {(monify $head)} /* No child lines */ )
@@ -844,7 +844,9 @@ it_expr returns [Object v]
                    /* Handle #!sweet EOL EOL t_expr */
                    | comment_eol restart=t_expr {$restart} )
           | dedent error ))
-  | SUBLIST hspace* is_i=it_expr {(list $is_i)} /* "$" first on line */
+  | SUBLIST hspace* /* "$" first on line */
+    (is_i=it_expr {(list $is_i)}
+     | comment_eol error )
   | abbrevw hspace*
       (comment_eol indent ab=body
          {(append (list $abbrevw) $ab)}
@@ -875,6 +877,7 @@ t_expr returns [Object v]
   | initial_indent_with_bang error
   | EOF {(generate_eof)} /* End of file */
   | it_expr {$it_expr} /* Normal case */ ;
+
 </pre>
 
 <h1><a name="examples">Examples</a></h1>
