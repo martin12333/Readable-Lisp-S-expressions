@@ -503,7 +503,7 @@
   (define whitespace-chars whitespace-chars-ascii)
 
   ; Returns a true value (not necessarily #t)
-  (define (char-line-ending? char) (memq char line-ending-chars))
+  (define (char-line-ending? char) (memv char line-ending-chars))
 
   ; Return #t if char is space or tab.
   (define (char-horiz-whitespace? char)
@@ -512,7 +512,7 @@
 
   ; Create own version, in case underlying implementation omits some.
   (define (my-char-whitespace? c)
-    (or (char-whitespace? c) (memq c whitespace-chars)))
+    (or (char-whitespace? c) (memv c whitespace-chars)))
 
   ; Consume an end-of-line sequence. This is 2 unequal end-of-line
   ; characters, or a single end-of-line character, whichever is longer.
@@ -757,7 +757,7 @@
           (consume-to-eol port)
           (consume-end-of-line port)
           '() ) ; Treat as comment.
-        ((memq c '(#\/ #\.)) ; Multi-line, non-nesting #!/ ... !# or #!. ...!#
+        ((memv c '(#\/ #\.)) ; Multi-line, non-nesting #!/ ... !# or #!. ...!#
           (non-nest-comment port)
           '() ) ; Treat as comment.
         ((char-alphabetic? c)  ; #!directive
