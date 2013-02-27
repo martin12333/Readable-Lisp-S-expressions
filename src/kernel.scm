@@ -532,8 +532,7 @@
     ; Do NOT consume the end-of-line character(s).
     (let ((c (my-peek-char port)))
       (cond
-        ((eof-object? c) (read-error "Unexpected EOF while skipping line"))
-        ((not (char-line-ending? c))
+        ((and (not (eof-object? c)) (not (char-line-ending? c)))
           (my-read-char port)
           (consume-to-eol port)))))
 
@@ -1494,6 +1493,10 @@
   ; TODO: Change end-of-line: to (LF | CR LF?)
 
   (define initial_comment_eol (list #\; #\newline carriage-return))
+  (define (is_initial_comment_eol c)
+    (or
+       (eof-object? c)
+       (memv c initial_comment_eol)))
 
   (define group_split split)
 
@@ -1613,7 +1616,7 @@
       (cond
         ((eqv? c #\;)  ; A ;-only line, consume and try again.
           (comment_eol_read_indent port))
-        ((memv (my-peek-char port) initial_comment_eol) ; Indent-only line
+        ((is_initial_comment_eol c) ; Indent-only line
           "^")
         (#t indentation))))
 
@@ -1631,18 +1634,18 @@
       (cond
         ((eof-object? c)
          (read-error "Collecting tail: EOF before collecting list ended"))
-        ((memv c initial_comment_eol)
+        ((is_initial_comment_eol c)
           (consume-to-eol port)
           (consume-end-of-line port)
           (collecting_tail port))
         ((char-ichar? c)
           (let ((indentation (accumulate-ichar port)))
-            (if (memv (my-peek-char port) initial_comment_eol)
+            (if (is_initial_comment_eol (my-peek-char port))
               (collecting_tail port)
               (read-error "Collecting tail: Only ; or EOL after indent"))))
         ((or (eqv? c form-feed) (eqv? c vertical-tab))
           (consume-ff-vt port)
-          (if (memv (my-peek-char port) initial_comment_eol)
+          (if (is_initial_comment_eol (my-peek-char port))
             (collecting_tail port)
             (read-error "Collecting tail: FF and VT must be alone on line")))
         (#t
@@ -1673,7 +1676,7 @@
           (hspaces port)
           (let* ((ct_results (collecting_tail port)))
             (hspaces port)
-            (if (not (memv (my-peek-char port) initial_comment_eol))
+            (if (not (is_initial_comment_eol (my-peek-char port)))
               (let* ((rr_full_results (rest port))
                      (rr_stopper      (car rr_full_results))
                      (rr_value        (cadr rr_full_results)))
@@ -1684,19 +1687,19 @@
           (if (char-hspace? (my-peek-char port))
             (begin
               (hspaces port)
-              (if (not (memv (my-peek-char port) initial_comment_eol))
+              (if (not (is_initial_comment_eol (my-peek-char port)))
                 (let* ((pn_full_results (n_expr port))
                        (pn_stopper      (car pn_full_results))
                        (pn_value        (cadr pn_full_results)))
                   (hspaces port)
-                  (if (not (memv (my-peek-char port) initial_comment_eol))
+                  (if (not (is_initial_comment_eol (my-peek-char port)))
                     (read-error "Illegal value after . value in head"))
                   (list pn_stopper pn_value))
                 (list 'normal (list period_symbol))))
             (list 'normal (list period_symbol))))
         ((char-hspace? (my-peek-char port))
           (hspaces port)
-          (if (not (memv (my-peek-char port) initial_comment_eol))
+          (if (not (is_initial_comment_eol (my-peek-char port)))
             (let* ((br_full_results (rest port))
                    (br_stopper      (car br_full_results))
                    (br_value        (cadr br_full_results)))
@@ -1714,14 +1717,14 @@
       (cond
         ((eq? basic_special 'scomment)
           (hspaces port)
-          (if (not (memv (my-peek-char port) initial_comment_eol))
+          (if (not (is_initial_comment_eol (my-peek-char port)))
             (rest port)
             (list 'normal '())))
         ((eq? basic_special 'collecting)
           (hspaces port)
           (let* ((ct_results (collecting_tail port)))
             (hspaces port)
-            (if (not (memv (my-peek-char port) initial_comment_eol))
+            (if (not (is_initial_comment_eol (my-peek-char port)))
               (let* ((rr_full_results (rest port))
                      (rr_stopper      (car rr_full_results))
                      (rr_value        (cadr rr_full_results)))
@@ -1732,12 +1735,12 @@
           (if (char-hspace? (my-peek-char port))
             (begin
               (hspaces port)
-              (if (not (memv (my-peek-char port) initial_comment_eol))
+              (if (not (is_initial_comment_eol (my-peek-char port)))
                 (let* ((pn_full_results (n_expr port))
                        (pn_stopper      (car pn_full_results))
                        (pn_value        (cadr pn_full_results)))
                   (hspaces port)
-                  (if (not (memv (my-peek-char port) initial_comment_eol))
+                  (if (not (is_initial_comment_eol (my-peek-char port)))
                     (let* ((e_full_results (n_expr port))
                            (e_stopper      (car e_full_results))
                            (e_value        (cadr e_full_results)))
@@ -1749,7 +1752,7 @@
             (list 'normal (list period_symbol))))
         ((char-hspace? (my-peek-char port))
           (hspaces port)
-          (if (not (memv (my-peek-char port) initial_comment_eol))
+          (if (not (is_initial_comment_eol (my-peek-char port)))
             (let* ((br_full_results (rest port))
                    (br_stopper      (car br_full_results))
                    (br_value        (cadr br_full_results)))
@@ -1786,12 +1789,12 @@
         (cond
           ((eq? head_stopper 'group_split_marker)
             (hspaces port)
-            (if (memv (my-peek-char port) initial_comment_eol)
+            (if (is_initial_comment_eol (my-peek-char port))
               (read-error "Cannot follow split with end of line")
               (list starting_indent (monify head_value))))
           ((eq? head_stopper 'sublist_marker)
             (hspaces port)
-            (if (memv (my-peek-char port) initial_comment_eol)
+            (if (is_initial_comment_eol (my-peek-char port))
               (read-error "EOL illegal immediately after sublist"))
             (let* ((sub_i_full_results (it_expr port starting_indent))
                    (sub_i_new_indent   (car sub_i_full_results))
@@ -1801,7 +1804,7 @@
           ((eq? head_stopper 'collecting_end)
             ; Note that indent is "", forcing dedent all the way out.
             (list "" (monify head_value)))
-          ((memv (my-peek-char port) initial_comment_eol)
+          ((is_initial_comment_eol (my-peek-char port))
             (let ((new_indent (comment_eol_read_indent port)))
               (if (indentation>? new_indent starting_indent)
                 (let* ((body_full_results (body port new_indent))
@@ -1816,21 +1819,21 @@
           ((or (eq? head_stopper 'group_split_marker)
                (eq? head_stopper 'scomment))
             (hspaces port)
-            (if (not (memv (my-peek-char port) initial_comment_eol))
+            (if (not (is_initial_comment_eol (my-peek-char port)))
               (it_expr port starting_indent) ; Skip and try again.
               (let ((new_indent (comment_eol_read_indent port)))
                 (cond
                   ((indentation>? new_indent starting_indent)
                     (body port new_indent))
                   ((string=? starting_indent new_indent)
-                    (if (not (memv (my-peek-char port) initial_comment_eol))
+                    (if (not (is_initial_comment_eol (my-peek-char port)))
                       (it_expr port new_indent)
                       (list new_indent (t_expr port)))) ; Restart, no indent.
                   (#t
                     (read-error "GROUP_SPLIT EOL DEDENT illegal"))))))
           ((eq? head_stopper 'sublist_marker)
             (hspaces port)
-            (if (memv (my-peek-char port) initial_comment_eol)
+            (if (is_initial_comment_eol (my-peek-char port))
               (read-error "EOL illegal immediately after solo sublist"))
             (let* ((is_i_full_results (it_expr port starting_indent))
                    (is_i_new_indent   (car is_i_full_results))
@@ -1839,7 +1842,7 @@
                 (list is_i_value))))
           ((eq? head_stopper 'abbrevw)
             (hspaces port)
-            (if (memv (my-peek-char port) initial_comment_eol)
+            (if (is_initial_comment_eol (my-peek-char port))
               (begin
                 (let ((new_indent (comment_eol_read_indent port)))
                   (if (not (indentation>? new_indent starting_indent))
@@ -1877,7 +1880,7 @@
       (if (eof-object? c) ; Check EOF early (a guile bug consumes EOF on peek)
         c
         (cond
-          ((memv c initial_comment_eol)
+          ((is_initial_comment_eol c)
             (consume-to-eol port)
             (consume-end-of-line port)
             (t_expr port))
