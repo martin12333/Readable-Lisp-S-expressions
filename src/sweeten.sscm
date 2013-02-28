@@ -61,6 +61,8 @@
 ; get the "old" reader format on read; this is important for handling
 ; badly-formatted old files.   In the standard build this is unnecessary.
 
+#!sweet
+
 define build-on-sweet #f
 if build-on-sweet
   use-modules
