@@ -23,8 +23,8 @@
 ; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ; OTHER DEALINGS IN THE SOFTWARE.
 
-; This file includes code from SRFI-49 (by Egil Möller),
-; but significantly modified.
+; Warning: For portability use eqv?/memv (not eq?/memq) to compare characters.
+; A "case" is okay since it uses "eqv?".
 
 ; -----------------------------------------------------------------------------
 ; Compatibility Layer
@@ -492,8 +492,18 @@
   (define vertical-tab (integer->char #x000b))
   (define space '#\space)
 
-  (define line-ending-chars-ascii (list linefeed carriage-return))
-  (define line-ending-chars line-ending-chars-ascii)
+  ; Period symbol.  A symbol starting with "." is not
+  ; validly readable in R5RS, R6RS, R7RS (except for
+  ; the peculiar identifier "..."); with the
+  ; R6RS and R7RS the print representation of
+  ; string->symbol(".") should be |.| .  However, as an extension, this
+  ; Scheme reader accepts "." as a valid identifier initial character,
+  ; in part because guile permits it.
+  ; For portability, use this formulation instead of '. in this
+  ; implementation so other implementations don't balk at it.
+  (define period-symbol (string->symbol "."))
+
+  (define line-ending-chars (list linefeed carriage-return))
 
   ; This definition of whitespace chars is derived from R6RS section 4.2.1.
   ; R6RS doesn't explicitly list the #\space character, be sure to include!
@@ -514,16 +524,19 @@
   (define (my-char-whitespace? c)
     (or (char-whitespace? c) (memv c whitespace-chars)))
 
-  ; Consume an end-of-line sequence. This is 2 unequal end-of-line
-  ; characters, or a single end-of-line character, whichever is longer.
+  ; Consume an end-of-line sequence, ('\r' '\n'? | '\n'), and nothing else.
+  ; Don't try to handle reversed \n\r (LFCR); doing so will make interactive
+  ; guile use annoying (EOF won't be correctly detected) due to a guile bug
+  ; (in guile, peek-char incorrectly *consumes* EOF instead of just peeking).
   (define (consume-end-of-line port)
     (let ((c (my-peek-char port)))
-      (if (char-line-ending? c)
-        (begin
+      (cond
+        ((eqv? c carriage-return)
           (my-read-char port)
-          (if (and (eqv? c carriage-return)
-                   (eqv? (my-peek-char port) linefeed))
-            (my-read-char port))))))
+          (if (eqv? (my-peek-char port) linefeed)
+            (my-read-char port)))
+        ((eqv? c linefeed)
+          (my-read-char port)))))
 
   (define (consume-to-eol port)
     ; Consume every non-eol character in the current line.
@@ -562,7 +575,6 @@
         (display "\n")))
     data)
 
-
   (define (my-read-delimited-list my-read stop-char port)
     ; Read the "inside" of a list until its matching stop-char, returning list.
     ; stop-char needs to be closing paren, closing bracket, or closing brace.
@@ -600,20 +612,6 @@
                  (attach-sourceinfo pos
                    (cons datum
                      (my-read-delimited-list my-read stop-char port))))))))))
-
-  ; period symbol.  A symbol starting with "." is not
-  ; validly readable in R5RS, R6RS, R7RS (except for
-  ; the peculiar identifier "..."); with the
-  ; R6RS and R7RS the print representation of
-  ; string->symbol(".") should be |.| .  However, our
-  ; Scheme reader accepts "." as a valid identifier
-  ; initial character, and the rest of the parser stack
-  ; *expects* this to be so!
-  ; We got trapped into this by Guile, which has the
-  ; same extension; for portability, use this formulation
-  ; instead of '. at least in our own source code, so
-  ; that other implementations don't balk at it.
-  (define period-symbol (string->symbol "."))
 
 ; -----------------------------------------------------------------------------
 ; Read Preservation and Replacement
@@ -819,7 +817,6 @@
                     (read-error "Invalid #-prefixed string"))
                   (#t
                     rv)))))))))
-
 
   ; detect #| or |#
   (define (nest-comment fake-port)
@@ -1123,9 +1120,9 @@
   (define sublist (string->symbol "$"))
   (define sublist-char #\$) ; First character of sublist symbol.
 
+  ; Add these names so that we can exactly match BNF.
   (define group_split split)
   (define period_symbol period-symbol)
-
 
 ; --- New implementation for sweet-expressions, based on BNF ---
 
@@ -1136,12 +1133,6 @@
             (len2 (string-length indentation2)))
       (and (> len1 len2)
              (string=? indentation2 (substring indentation1 0 len2)))))
-
-
-  ; Warning: For portability use eqv?/memv, not eq?/memq, to compare chars
-  ; A "case" is okay since it uses "eqv?".
-
-  ; TODO: Change end-of-line: to (LF | CR LF?)
 
   (define initial_comment_eol (list #\; #\newline carriage-return))
   (define (is_initial_comment_eol c)
