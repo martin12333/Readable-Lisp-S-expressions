@@ -93,7 +93,7 @@ and
   <li><a href="#z">Comparison to Z</a></li>
   <li><a href="#genyris">Comparison to Genyris</a></li>
   <li><a href="#arne">Comparison to &#8220;Arne formulation&#8221;</a></li>
-  <li><a href="#closing-sublist-unmatched-dedent">Closing SUBLIST by unmatched dedent</a></li>
+  <li><a href="#closing-sublist-unmatched-dedent">Closing SUBLIST by unmatched dedent (&#8220;Beni Formulation of SUBLIST&#8221)</a></li>
   <li><a href="#closing-ending-sublist-results">Variation: Closing end-of-line SUBLIST by unmatched dedent (&#8220;Beni-Lite&#8221;)</a></li>
   <li><a href="#writing-out-results">Writing out results</a></li>
   <li><a href="#backwards-compatibility">Backwards compatibility</a></li>
@@ -3352,10 +3352,229 @@ by the authors of this SRFI.
 </a>
 </p>
 
-<h2 id="closing-sublist-unmatched-dedent">Closing SUBLIST by unmatched dedent</h2>
+<h2 id="closing-sublist-unmatched-dedent">Closing SUBLIST by unmatched dedent (&#8220;Beni Formulation of SUBLIST&#8221)</h2>
 <p>
-Beni Cherniavsky-Paskin proposed...
-??? FIXME
+<a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg01082.html">
+On 2013-02-18, Beni Cherniavsky-Paskin proposed
+an extension of SUBLIST semantics.
+</a>
+</p>
+
+<p>
+Informally, in Beni&#8217;s proposed extension,
+any occurrence of SUBLIST
+would mark a fresh indent level,
+which could be matched
+by an otherwise-unmatched dedent.
+For example:
+</p>
+<table border="1" cellpadding="4">
+<tr><th>Extended SUBLIST</th><th>Equivalent</th></tr>
+<tr>
+<td><pre>
+outer1 outer2 $ inner1
+! ! inner2
+! outer3
+</pre></td>
+<td><pre>
+outer1 outer2
+! inner1
+! ! inner2
+! outer3
+</pre></td>
+</tr>
+</table>
+
+<p>
+The original formal description by Beni Cherniavsky-Paskin,
+<a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg01100.html">
+as expanded by Alan Manuel K. Gloria</a>,
+involves moving SUBLIST and SPLIT processing
+from the parser to the indentation preprocessor
+(i.e. the part that inserts INDENT and DEDENT tokens).
+In the current specifications, the indentation preprocessor
+handles a stack of indentations
+(in the implementation, a cons-cell stack of strings).
+Beni&#8217;s formulation expands this stack
+to include the special indentation marker <code>?</code>.
+In the succeeding formal description,
+we assume two variables,
+the <code>indentation-stack</code>
+and <code>current-indentation</code>.
+</p>
+
+<ol>
+<li>
+On encountering a SUBLIST,
+consume the SUBLIST and emit INDENT.
+Push <code>?</code> on <code>indentation-stack</code>.
+</li>
+<li>
+On encountering an inline GROUP/SPLIT
+(i.e. SPLIT meaning),
+consume it, then:
+<ol>
+<li>
+If <code>indentation-stack</code>'s top is <code>?</code>:
+Pop off every <code>?</code>
+on top of <code>indentation-stack</code>
+and emit DEDENT for each popped item.
+</li>
+<li>
+Otherwise, emit SAME.
+</li>
+</ol>
+</li>
+<li>
+On encountering an EOL,
+consume it,
+then consume indentation whitespace
+(<code>(TAB | SPACE | !)*</code>)
+and put it in <code>current-indentation</code>.
+Then:
+<ol>
+<li>
+If the <code>indentation-stack</code>'s topmost non-<code>?</code> item
+is "not consistent" with <code>current-indentation</code>,
+signal a bad indent error (BADDENT).
+</li>
+<li>
+If the <code>indentation-stack</code>'s topmost non-<code>?</code> item
+is less than <code>current-indentation</code>,
+push <code>current-indentation</code> on <code>indentation-stack</code>
+and emit INDENT.
+</li>
+<li>
+If the <code>indentation-stack</code>'s topmost non-<code>?</code> item
+is equal to <code>current-indentation</code>:
+<small>(note: this is a copy of 2.1 and 2.2 above)</small>
+<ol>
+<li>
+If <code>indentation-stack</code>'s top is <code>?</code>:
+Pop off every <code>?</code>
+on top of <code>indentation-stack</code>
+and emit DEDENT for each popped item.
+</li>
+<li>
+Otherwise, emit SAME.
+</li>
+</ol>
+</li>
+<li>
+Otherwise, the <code>indentation-stack</code>'s topmost non-<code>?</code> item
+is greater than <code>current-indentation</code>:
+<ol>
+<li>
+Pop off stack items until
+<code>indentation-stack</code>'s topmost non-<code>?</code> item
+is less than or equal to <code>current-indentation</code>;
+emit a DEDENT for each popped item.
+</li>
+<li>
+If the <code>indentation-stack</code>'s topmost non-<code>?</code> item
+is equal to <code>current-indentation</code>,
+pop off all <code>?</code> and emit a DEDENT for each.
+</li>
+<li>
+Otherwise, if the <code>indentation-stack</code>'s top is <code>?</code>,
+pop it off and push <code>current-indentation</code> on the stack.
+</li>
+<li>
+Otherwise, this is a DEDENT
+that is not matched by an earlier INDENT
+and is not matched by an earlier SUBLIST,
+so signal an error (BADDENT).
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+
+<p>
+This extension of SUBLIST
+turns out to be backward-compatible
+with the current SUBLIST semantics,
+in the sense that
+any SUBLIST-using text
+constructed using the current SUBLIST semantics
+would have <em>exactly</em> the same meaning
+in Beni&#8217;s extended SUBLIST semantics.
+This is a significant advantage
+as it means we can apply this extended rule
+at any future time
+without fear of breaking existing code.
+</p>
+
+<p>
+This extension allows code like the following:
+</p>
+<table border="1" cellpadding="4">
+<tr><th>Extended SUBLIST</th><th>Current SRFI</th></tr>
+<tr>
+<td><pre>
+let $
+! ! x $ compute 'x
+! ! y $ compute 'y
+! use x y
+</pre></td>
+<td><pre>
+let
+! \\
+! ! x $ compute 'x
+! ! y $ compute 'y
+! use x y
+</pre></td>
+</tr>
+</table>
+
+<p>
+While Alan Manuel K. Gloria was excited with this proposal,
+and considered it superior to his original SUBLIST formulation,
+David A. Wheeler was more reserved.
+Moving handling from the parser to the indentation preprocessor
+meant that many tools for proving parser correctness
+(i.e. ANTLR)
+could not be used on the extended handling.
+In addition, the formal rules
+<a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg01105.html">
+are difficult to reason about
+(&#8220;(pft)... That&#8217;s the sound of my head exploding&#8221;)
+</a>
+.
+</p>
+<p>
+Further, this extended proposal
+is more difficult to describe informally,
+and makes incorrect indentation
+after uses of SUBLIST
+a potential source of silently passed mistakes.
+In addition,
+the given <code>let</code> example above
+remains
+(as of the time of this writing)
+the only use case
+for Beni&#8217;s extended SUBLIST formulation.
+</p>
+
+<p>
+<a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg01115.html">
+Alan Manuel K. Gloria continues to hold out hope
+that this extended formulation will get more use-cases,
+</a>
+but decided not to press for <em>immediate</em> inclusion
+in this SRFI.
+</p>
+
+<p>
+David A. Wheeler mentioned the possibility of using
+a PARTIAL_DEDENT token
+so that full Beni formulation of SUBLIST
+could be handled completely in the parser.
+This possibility has not been explored fully as yet.
+It may be explored if further use cases
+for the full Beni formulation
+are found in the future.
 </p>
 
 <h2 id="closing-ending-sublist-results">Variation: Closing end-of-line SUBLIST by unmatched dedent (&#8220;Beni-Lite&#8221;)</h2>
