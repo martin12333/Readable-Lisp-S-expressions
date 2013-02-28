@@ -93,6 +93,8 @@ and
   <li><a href="#z">Comparison to Z</a></li>
   <li><a href="#genyris">Comparison to Genyris</a></li>
   <li><a href="#arne">Comparison to &#8220;Arne formulation&#8221;</a></li>
+  <li><a href="#closing-sublist-unmatched-dedent">Closing SUBLIST by unmatched dedent</a></li>
+  <li><a href="#closing-ending-sublist-results">Variation: Closing end-of-line SUBLIST by unmatched dedent (&#8220;Beni-Lite&#8221;)</a></li>
   <li><a href="#writing-out-results">Writing out results</a></li>
   <li><a href="#backwards-compatibility">Backwards compatibility</a></li>
   <li><a href="#experiences">Past experiences</a></li>
@@ -1116,6 +1118,22 @@ define represent-as-infix?(x)
 </pre>
 </td>
 </tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+let &lt;* x $ cos $ f c *&gt;
+! dostuff x
+</pre>
+</td>
+<td>
+<pre>
+(let ((x (cos (f c))))
+  (dostuff x))
+</pre>
+</td>
+</tr>
+
 </table>
 
 
@@ -2277,41 +2295,19 @@ SUBLIST was accepted in 2012-07-23</a>.</p>
 <h2 id="single-item-sublist">Why is <code>a $ b</code> equivalent to <code>(a b)</code> rather than <code>(a (b))</code>?</h2>
 
 <p>
-<a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg00562.html">
 When initially learning SUBLIST,
-people tend to assume
-that the following transformation
-should be correct</a>:
-</p>
-
-<table border="1" cellpadding="4">
-<tr><th>Original</th>
-<th>Could&#8217;ve mapped to (but doesn&#8217;t!)</th></tr>
-<tr>
-<th>
-<pre>
-a $ b
-</pre>
-</th>
-<th>
-<pre>
-(a (b))
-</pre>
-</th>
-</tr>
-</table>
-
-<p>
+<a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg00562.html">
+some people assume that "a $ b" should map to "(a (b))"</a>.
 However, the specification specifically does not
-yield this semantic.
-Some people think that this is an inconsistency.
+yield this semantic; "a $ b" maps to "(a b)".
+At first, some people think that this is an inconsistency.
 </p>
 <p>
-However, this is actually more consistent.
+However, this is actually more consistent and produces better results.
 SUBLIST (<code>$</code>) does not imply
 that the succeeding text should be a list;
 instead, it denotes that the succeeding text
-is the last argument of the current line.
+is the <i>last argument</i> of the current line.
 </p>
 <p>
 More concretely, consider this code:
@@ -2662,6 +2658,8 @@ Sweet-expression reader implementations are free to warn about files
 that fail to meet this requirement.
 Sweet-expression reader implementations are also free to support files
 that do not meet this limitation.
+The sample reader accepts, in most cases, files that end without
+a preceding end-of-line sequence.
 </p>
 
 
