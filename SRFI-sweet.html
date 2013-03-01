@@ -1553,7 +1553,7 @@ past work on indentation to represent s-expressions.
 Examples include:</p>
 <ul>
 <li>Paul Graham (developer of Arc) is known to
-be an advocate of indentation for this purpose.  As I noted above, <a
+be an advocate of indentation for this purpose.  As noted above, <a
 href="http://lists.canonical.org/pipermail/kragen-tol/2002-January/000666.html"
 rel="nofollow">Kragen Sitaker&#8217;s notes on Graham and Arc</a>
 discusses how indentation can really help (in this notation,
@@ -4040,13 +4040,17 @@ written by two different people for different application areas -
 shows that sweet-expressions are mature enough to be standardized.
 </p>
 <p>
-The sweet-expression notation itself has been implemented
-in ANTLR, an LL(1) parser generator,
-and in Scheme as a recursive descent parser.
-The ANTLR grammar itself has been checked by ANTLR&#8217;s grammar checker.
+The sweet-expression notation itself has been implemented at least twice;
+one in ANTLR (an LL(*) parser generator)
+and one in Scheme (as a recursive descent parser).
+Since it has been implemented two different ways, it is less likely to
+be extremely difficult to implement.
+The ANTLR grammar itself has been checked by ANTLR&#8217;s grammar checker
+for ambiguities and other problems.
+Also, ANTLR confirms that the given BNF grammar is LL(1).
 These implementations, and the ANTLR checking, suggest that this
-notation is not too difficult to implement and eliminates
-some grammar flaws.
+notation is not too difficult to implement and eliminates the risks
+of certain kinds of grammar flaws.
 These implementations have been peer reviewed and passed various test suites.
 </p>
 <p>
