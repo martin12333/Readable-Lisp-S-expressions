@@ -515,11 +515,6 @@
   ; Returns a true value (not necessarily #t)
   (define (char-line-ending? char) (memv char line-ending-chars))
 
-  ; Return #t if char is space or tab.
-  (define (char-horiz-whitespace? char)
-    (or (eqv? char #\space)
-        (eqv? char tab)))
-
   ; Create own version, in case underlying implementation omits some.
   (define (my-char-whitespace? c)
     (or (char-whitespace? c) (memv c whitespace-chars)))
@@ -1109,11 +1104,9 @@
     (neoteric-read-real port))
 
 ; -----------------------------------------------------------------------------
-; Sweet Expressions
+; Sweet Expressions (this implementation maps to the BNF)
 ; -----------------------------------------------------------------------------
 
-  ; NOTE split et al. should not begin in #, as # causes
-  ; the top-level parser to guard against multiline comments.
   (define split (string->symbol "\\\\"))
   (define split-char #\\ ) ; First character of split symbol.
   (define non-whitespace-indent #\!) ; Non-whitespace-indent char.
@@ -1123,8 +1116,6 @@
   ; Add these names so that we can exactly match BNF.
   (define group_split split)
   (define period_symbol period-symbol)
-
-; --- New implementation for sweet-expressions, based on BNF ---
 
 ; TODO: Further cleanup - remove unnecessary declarations, etc.
 
@@ -1140,17 +1131,17 @@
        (eof-object? c)
        (memv c initial_comment_eol)))
 
-  ; Consume 0+ spaces or tabs
-  (define (hspaces port)
-    (cond
-      ((char-horiz-whitespace? (my-peek-char port))
-        (my-read-char port)
-        (hspaces port))))
-
   ; Return #t if char is space or tab.
   (define (char-hspace? char)
     (or (eqv? char #\space)
         (eqv? char tab)))
+
+  ; Consume 0+ spaces or tabs
+  (define (hspaces port)
+    (cond
+      ((char-hspace? (my-peek-char port))
+        (my-read-char port)
+        (hspaces port))))
 
   ; Return #t if char is space, tab, or !
   (define (char-ichar? char)
