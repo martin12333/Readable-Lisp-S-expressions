@@ -1007,8 +1007,8 @@ aaa bbb
 <pre>
 let ; Demo GROUP
   \\
-    var1 $ cos a
-    var2 $ sin a
+    var1 cos(a)
+    var2 sin(a)
   body...
 </pre>
 </td>
@@ -1057,6 +1057,19 @@ sin 0 \\ cos 0
 <tr>
 <td align="left" valign="top">
 <pre>
+a b $ c d e #f() $ g
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(a b (c d e (#f) g))
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
 define merge(&lt; as bs) $ cond
   null?(as)           $ bs
   null?(bs)           $ as
@@ -1079,19 +1092,6 @@ define merge(&lt; as bs) $ cond
   (else (cons
     (car bs)
     (merge &lt; as (cdr bs))))))
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
-a b $ c #f() d $ e
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-(a b (c (#f) d e))
 </pre>
 </td>
 </tr>
