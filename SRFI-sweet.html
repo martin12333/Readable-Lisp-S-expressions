@@ -1076,10 +1076,10 @@ define merge(&lt; as bs) $ cond
   null?(bs)           $ as
   {car(as) &lt; car(bs)} $ cons
                          car as
-                         merge &lt; (cdr as) bs
+                         merge &lt; cdr(as) bs
   else                $ cons
                          car bs
-                         merge &lt; as (cdr bs)
+                         merge &lt; as cdr(bs)
 </pre>
 </td>
 <td align="left" valign="top">
