@@ -158,6 +158,7 @@ The sweet-expression notation was developed by the
   </li>
   <li><a href="#comparisons">Comparisons to other notations</a>
   <ul>
+  <li><a href="#m-expressions">Comparison to M-expressions</a></li>
   <li><a href="#q2">Comparison to Q2</a></li>
   <li><a href="#p4p">Comparison to P4P</a></li>
   <li><a href="#z">Comparison to Z</a></li>
@@ -2967,6 +2968,74 @@ indentation-processing context.
 The following subsections compare sweet-expressions to a few
 of the many alternative notations that exist
 (including some alternatives created during its construction).
+</p>
+
+
+<h3 id="m-expressions">Comparison to M-expressions</h3>
+
+<p>
+M-expressions (or meta-expressions) are a notation
+developed by John McCarthy, and were intended to be
+the primary notation for developing software in Lisp.
+As later explained by
+<a href="http://www-formal.stanford.edu/jmc/history/lisp/node3.html">
+John McCarthy in "History of Lisp" (1979-02-12)</a>,
+"The project of defining M-expressions precisely and compiling them or
+at least translating them into S-expressions was neither finalized nor
+explicitly abandoned. It just receded into the indefinite future, and a
+new generation of programmers appeared who preferred internal notation
+to any FORTRAN-like or ALGOL-like notation that could be devised."
+</p>
+<p>
+Documents such as the
+<a href="http://www.softwarepreservation.org/projects/LISP/book/LISP%201.5%20Programmers%20Manual.pdf">LISP 1.5 Programmer's Manual</a>
+do hint at the intended syntax of M-expressions.
+Function names were written in lower case letters
+(to distinguish them from atoms, which were only upper case),
+followed by a pair of square brackets.
+Inside the square brackers were semicolon-separated arguments.
+Thus, the M-expression
+<tt>cons[A;&nbsp;(B&nbsp;C)]</tt>
+represented the s-expression
+<tt>(cons&nbsp;A&nbsp;(B&nbsp;C))</tt>;
+if computed it would produce
+<tt>(A&nbsp;B&nbsp;C)</tt>.
+M-expressions included some other features, for example:
+</p>
+<ul>
+<li>
+The special infix operator "="
+could be used to define new functions, and thus was a synonym
+for Scheme's "define".
+An example of its expected use was:
+<pre>
+    third[x]=car[cdr[cdr[x]]]
+</pre>
+</li>
+<li>
+A conditional expression of the form
+<tt>[p1 &rarr; e1 ; p2 &rarr; e2 ; ... pn &rarr; en]</tt>
+evaluated each p left-to-right; where the first is true,
+its corresponding e is returned.
+This presumably could map to
+<tt>(cond (p1 e1) (p2 e2) ... (pn en))</tt>.
+</li>
+</ul>
+
+<p>
+The fundamental problem with M-expressions was that they were not general.
+When a new syntactic structure was created
+(e.g., with a macro), the new construct could easily be
+accessed using s-expressions, but not with M-expressions.
+Also, M-expressions were never widely implemented;
+if you wanted to actually use a Lisp-based language, you had to
+use s-expressions.
+</p>
+
+<p>
+Sweet-expressions avoid these problems of M-expressions.
+The sweet-expression notation is not tied to any particular semantic,
+and it has been implemented multiple times.
 </p>
 
 <h3 id="q2">Comparison to Q2</h3>
