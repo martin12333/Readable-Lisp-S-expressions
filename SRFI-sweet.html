@@ -55,11 +55,63 @@ and
 <a href="#reference-implementation">reference implementation</a>.
 </p>
 
-<!-- SRFI-97 has a TOC after the Status -->
+<h1><a name="abstract">Abstract</a></h1>
+<p>
+This SRFI describes a new extended syntax for Scheme, called sweet-expressions
+(t-expressions), that has the same descriptive power as s-expressions
+but is designed to be easier for humans to read.
+The sweet-expression syntax enables the use of syntactically-meaningful
+indentation to group expressions (similar to Python),
+and it builds on the infix and traditional function notation defined in
+<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
+Unlike nearly all past efforts to improve s-expression readability,
+sweet-expressions are
+general (the notation is independent from any underlying semantic)
+and homoiconic (the underlying data structure is clear from the syntax).
+Sweet-expressions can be used both for program and data input.
+Here is an example:
+</p>
+
+<table border="1" cellpadding="4">
+<tr><th>sweet-expression</th><th>s-expression</th></tr>
+<tr>
+<td>
+<pre>
+define factorial(n)
+  if {n &lt;= 1}
+    1
+    {n * factorial{n - 1}}
+</pre>
+</td>
+<td>
+<pre>
+(define (factorial n)
+  (if (&lt;= n 1)
+    1
+    (* n (factorial (- n 1)))))
+</pre>
+</td>
+</tr>
+</table>
+
+<p>
+Sweet-expressions and traditionally formatted s-expressions
+can be freely mixed, allowing the developer
+to easily transition and maximize readability when laying out code.
+For example, a sweet-expression reader would accept
+<i>either</i> the sweet-expression or s-expression format shown above.
+In short, sweet-expressions can be considered simply
+a set of some additional abbreviations.
+The sweet-expression notation was developed by the
+&#8220;<a href="http://readable.sourceforge.net/">Readable Lisp S-expressions Project</a>&#8221;.
+</p>
+
+
+
+<!-- SRFI-97 has a TOC; we think a TOC would be helpful here too. -->
 <h1><a name="toc">Table of Contents</a></h1>
 <ul>
 <li><a href="#related-srfis">Related SRFIs</a></li>
-<li><a href="#abstract">Abstract</a></li>
 <li><a href="#rationale">Rationale</a></li>
 <li><a href="#specification">Specification</a>
   <ul>
@@ -136,58 +188,6 @@ and
 <a href="http://srfi.schemers.org/srfi-62/">SRFI-62
 (S-expression comments)</a> (some interactions)
 </p>
-
-<h1><a name="abstract">Abstract</a></h1>
-<p>
-This SRFI describes a new extended syntax for Scheme, called sweet-expressions
-(t-expressions), that has equal descriptive power as s-expressions
-but is designed to be easier for humans to read.
-The sweet-expression syntax enables the use of syntactically-meaningful
-indentation to group expressions (similar to Python),
-and it builds on the infix and traditional function notation defined in
-<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
-Unlike nearly all past efforts to improve s-expression readability,
-sweet-expressions are
-general (the notation is independent from any underlying semantic)
-and homoiconic (the underlying data structure is clear from the syntax).
-Sweet-expressions can be used both for program and data input.
-Here is an example:
-</p>
-
-<table border="1" cellpadding="4">
-<tr><th>sweet-expression</th><th>s-expression</th></tr>
-<tr>
-<td>
-<pre>
-define factorial(n)
-  if {n &lt;= 1}
-    1
-    {n * factorial{n - 1}}
-</pre>
-</td>
-<td>
-<pre>
-(define (factorial n)
-  (if (&lt;= n 1)
-    1
-    (* n (factorial (- n 1)))))
-</pre>
-</td>
-</tr>
-</table>
-
-<p>
-Sweet-expressions and traditionally formatted s-expressions
-can be freely mixed, allowing the developer
-to easily transition and maximize readability when laying out code.
-For example, a sweet-expression reader would accept
-<i>either</i> the sweet-expression or s-expression format shown above.
-In short, sweet-expressions can be considered simply
-a set of some additional abbreviations.
-The sweet-expression notation was developed by the
-&#8220;<a href="http://readable.sourceforge.net/">Readable Lisp S-expressions Project</a>&#8221;.
-</p>
-
 
 <h1><a name="rationale">Rationale</a></h1>
 <p>
