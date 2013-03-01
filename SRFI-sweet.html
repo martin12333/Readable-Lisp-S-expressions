@@ -976,12 +976,12 @@ define factorial(n)
 <tr>
 <td align="left" valign="top">
 <pre>
-g factorial(7) -(cos(0))
+g factorial(7) my-pi() #f() -(cos(0))
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
-(g (factorial 7) (- (cos 0)))
+(g (factorial 7) (my-pi) (#f) (- (cos 0)))
 </pre>
 </td>
 </tr>
@@ -1058,12 +1058,33 @@ sin 0 \\ cos 0
 <tr>
 <td align="left" valign="top">
 <pre>
-a b $ c d e #f() $ g
+a b $ c d e f $ g
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
-(a b (c d e (#f) g))
+(a b (c d e f g))
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+define c[i] $ cond
+  vector?(c) $ vector-ref c i
+  string?(c) $ string-ref c i
+  pair?(c)   $ list-ref c i
+  else       $ error "Not a collection"
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(define ($bracket-apply$ c i) (cond
+  ((vector? c) (vector-ref c i))
+  ((string? c) (string-ref c i))
+  ((pair? c) (list-ref c i))
+  (else (error "Not a collection"))))
 </pre>
 </td>
 </tr>
