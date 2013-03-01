@@ -901,7 +901,7 @@ traditional s-expression reader with support for some additional abbreviations.
 define fibfast(n)  ; Typical function notation
   if {n &lt; 2}       ; Indentation, infix {...}
     n              ; Single expr = no new list
-    fibup(n 2 1 0) ; Simple function calls
+    fibup n 2 1 0  ; Simple function calls
 </pre>
 </td>
 <td align="left" valign="top">
@@ -955,12 +955,12 @@ define factorial(n)
 <tr>
 <td align="left" valign="top">
 <pre>
-g -(cos(0)) factorial(7)
+g factorial(7) -(cos(0))
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
-(g (- (cos 0)) (factorial 7))
+(g (factorial 7) (- (cos 0)))
 </pre>
 </td>
 </tr>
@@ -976,23 +976,102 @@ aaa bbb
 <td align="left" valign="top">
 <pre>
 (aaa bbb
+
   (cc dd))
 </pre>
 </td>
 </tr>
 
-
 <tr>
 <td align="left" valign="top">
 <pre>
-f ; Demo improper lists
-  a . b
+let ; Demo GROUP
+  \\
+    var1 $ cos a
+    var2 $ sin a
+  body...
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
-(f
-  (a . b))
+(let
+  (
+    (var1 (cos a))
+    (var2 (sin a)))
+  body...)
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+myfunction ; Demo SPLIT
+! x: \\ xpos
+! y: \\ ypos
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(myfunction
+  x: xpos
+  y: ypos)
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+sin 0 \\ cos 0
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(sin 0)
+(cos 0)
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+define merge(&lt; as bs) $ cond
+  null?(as)           $ bs
+  null?(bs)           $ as
+  {car(as) &lt; car(bs)} $ cons
+                         car as
+                         merge &lt; (cdr as) bs
+  else                $ cons
+                         car bs
+                         merge &lt; as (cdr bs)
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(define (merge &lt; as bs) (cond
+  ((null? as) bs)
+  ((null? bs) as)
+  ((&lt; (car as) (car bs)) (cons
+    (car as)
+    (merge &lt; (cdr as) bs)))
+  (else (cons
+    (car bs)
+    (merge &lt; as (cdr bs))))))
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+a b $ c #f() d $ e
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(a b (c (#f) d e))
 </pre>
 </td>
 </tr>
@@ -1015,7 +1094,37 @@ f ; Demo improper lists
 <tr>
 <td align="left" valign="top">
 <pre>
-ff ; Comments
+let &lt;* x $ {oldx - 1} \\ y $ {oldy - 1} *&gt;
+! {{x * x} + {y * y}}
+</pre>
+</td>
+<td>
+<pre>
+(let ((x (- oldx 1)) (y (- oldy 1)))
+  (+ (* x x) (* y y)))
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+let &lt;* x $ cos $ f c *&gt;
+! dostuff x
+</pre>
+</td>
+<td>
+<pre>
+(let ((x (cos (f c))))
+  (dostuff x))
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+ff ; Demo comments
   #| qq |# t1 t2
   t3 t4
     t5 #| xyz |# t6
@@ -1036,7 +1145,22 @@ ff ; Comments
 <tr>
 <td align="left" valign="top">
 <pre>
-; This BEGINS with an indent
+f ; Demo improper lists
+  a . b
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(f
+  (a . b))
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+; Demo BEGIN with an indent
   f(a) g(x)
 </pre>
 </td>
@@ -1098,6 +1222,7 @@ define init(win area)
 </tr>
 
 <tr>
+<!-- From "sweeten" -->
 <td align="left" valign="top">
 <pre>
 define represent-as-infix?(x)
@@ -1115,21 +1240,6 @@ define represent-as-infix?(x)
     (is-infix-operator? (car x))
     (list? x)
     (&lt;= (length x) 6)))
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
-let &lt;* x $ cos $ f c *&gt;
-! dostuff x
-</pre>
-</td>
-<td>
-<pre>
-(let ((x (cos (f c))))
-  (dostuff x))
 </pre>
 </td>
 </tr>
@@ -3002,13 +3112,11 @@ let
 </table>
 </li>
 <li>
-A single datum on a line by itself
-without a child line
+A single datum on a line by itself without a child line
 is a single-item list;
 this is unlike in SRFI-49 or this SRFI,
 where a single datum on a line by itself
-without a child line
-is just that datum.
+without a child line is just that datum.
 <table border="1" cellpadding="4">
 <tr><th>Arne formulation</th><th>s-expression</th></tr>
 <tr>
@@ -3081,8 +3189,7 @@ After being proposed,
 it was suggested that the rule 2 above
 should be amended
 to be similar to equivalent rules in SRFI-49 and this SRFI;
-that is,
-a single datum on a line by itself
+that is, a single datum on a line by itself
 should be only that datum, not wrapped in a list.
 Further, a &#8220;.&#8221; marker followed by
 a single datum without a child line
@@ -3091,8 +3198,7 @@ should be a no-op.
 <p>
 Rule 2 was formulated that way
 since the intention was
-to build an indentation processor,
-not a full parser.
+to build an indentation processor, not a full parser.
 However, further discussion revealed
 that a simple rule could be formulated
 to differentiate between one-item and two-item lines;
@@ -3246,18 +3352,29 @@ define example-close(y)
 *&gt;; define-library
 </pre>
 <p>
-But those are secondary reasons.
 We could retain COLLECTINGLIST,
 and live without the SPLIT behavior,
-or even SUBLIST.
+or even SUBLIST,
+though this would be important losses.
+Conversely, they could be re-added, but at
+that point, its simplicity has completely disappeared.
+But these ignore the biggest problem.
 </p>
 <p>
-The <em>real</em> reason
-that this propsal was not accepted
-is that its implementation has important subtleties.
+The most important problem with this proposal
+is that it falsely assumes
+that it's possible to know the visual width of different characters.
+In today's world, this is impractical, especially across
+the many different implementations of Scheme and other Lisps.
 </p>
 <p>
-For example, some East Asian characters,
+Most obviously this presumption is false on systems with variable-width
+fonts, and tehse are widely used for email messages.
+You simply cannot presume you know anything about the actual widths
+of different character sequences in this case.
+</p>
+<p>
+For another example, some East Asian characters,
 <a href='http://www.unicode.org/reports/tr11/'>called fullwidth characters</a>,
 should be displayed on two columns
 even on a fixed-width font display.
@@ -3320,30 +3437,21 @@ some <code>:</code> marker.
 </p>
 <p>
 If we are sensitive to only initial indentation,
-then we need only worry
-about the widths
-of two characters,
-TAB and SPACE
-(and <code>!</code> for this SRFI).
-This SRFI sidesteps this issue by requiring
-that indentation be consistent across lines.
-In Arne&#8217;s proposal,
-we need to worry
-about the widths
-of every character,
+then we need only worry about the widths of two characters,
+TAB and SPACE (and <code>!</code> for this SRFI).
+This causes no problems in this SRFI, because
+indentation is required to be consistent across lines.
+In contrast, in Arne&#8217;s proposal,
+we need to worry about the widths of every character,
 and also know the encoding.
-Scheme code
-(and Lisp code in general)
-will increasingly need
-to embed strings
+Scheme code (and Lisp code in general)
+will increasingly need to embed strings
 with international (non-ASCII) characters,
-and R7RS at least allows optional support
-for symbols
+and R7RS at least allows optional support for symbols
 that contain international (non-ASCII) characters.
 R6RS mandates that support.
 </p>
 
-<!-- TODO: link to archived message -->
 <p>
 After discussion,
 <a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg01097.html">
@@ -3354,9 +3462,118 @@ by the authors of this SRFI.
 
 <h2 id="closing-sublist-unmatched-dedent">Closing SUBLIST by unmatched dedent</h2>
 <p>
-Beni Cherniavsky-Paskin proposed...
-??? FIXME
+On 2013-02-19, Beni Cherniavsky-Paskin
+posted a very interesting
+proposal to "allow closing SUBLIST by [partial] dedenting".
+He stated that this proposal is
+"a backward-compatible extension to SUBLIST (similarly applicable to
+any competing FOOLIST semantics), so we could leave it undecided for now,
+and legalize it later...
+The proposal is to allow an unmatched dedent after inner2, and have that
+return you to the outer level:"
 </p>
+<pre>
+  outer1 outer2 $ inner1
+  ! ! inner2
+  ! outer3
+</pre>
+<p>
+which would be equivalent to:
+</p>
+<pre>
+outer1 outer2
+! inner1
+! ! inner2
+</pre>
+<p>
+He proposed a formal description as follows:
+</p>
+<ul>
+<li>Every $ pushes a "?" placeholder onto the stack of known indent levels.</li>
+<li>As before, increases in indentation push a specific number onto the stack.
+</li>
+<li>Dedents matching a level on the stack are handled as before, closing all
+levels to the right, whether specific or placeholders.</li>
+<li>A dedent that doesn't match any specific level is *only* allowed if there
+is at least one placeholder between the closest specific levels.  All
+higher levels are closed, and the *rightmost* (see rationate at end) of
+these placeholders is converted to the specific level seen.
+</li>
+</ul>
+
+<p>
+Alan Manuel Gloria liked this approach, as a backward-compatible
+extension of SUBLIST, but David A. Wheeler strongly objected to it.
+The following concerns were noted about this formulation:
+</p>
+
+<ol>
+<li>
+It complicates explanation of "$".
+Some people require a second explanation now of sublist ("$") now,
+and "$" is currently really simple.
+Adding this capability to "$" makes it much more
+complicated to describe.
+Every time we add a complication,
+we risk losing some potential users and implementers.
+</li>
+<li>
+It complicates the implementation.
+</li>
+<li>
+We leave better-understood parsing theory if this is added.
+There's already a body of material on how
+to handle indentation-based languages,
+which tend to follow Python approaches
+and specifically do NOT differentiate
+ between "indent 3 spaces" and "indent 1 space",
+just INDENT.
+We want to have this easily implemented, with many reasons to
+be confident that it is well-designed;
+the more we leave established theory, the harder it is to do that.
+David A. Wheeeler in particular wanted
+to make sure that the constructs are clearly and
+unambiguously defined as part of some well-checked BNF grammar.
+</li>
+<li>
+It complicates the definition of the notation and weakens error-checking
+for correctness of the notation.
+In particular, the extant definitions
+disable the error-checking of our notation that we currently have
+from ANTLR.
+We want this notation to work "because it's clearly correct";
+using ANTLR to check it rigorously is a valuable way to get there.
+That would be unfortunate to lose.
+</li>
+<li>
+This partly disables error-checking for code that uses sweet-expressions.
+With this, a line with indentation that unintentionally
+does not match its parents is more likely to be okay.
+</li>
+<li>
+It can be viewed as complicating the reading of code that uses it.
+Up to this point, a dedent always ended the whole line above; now it
+can end it a part.
+It is unclear that the reduction in line count is fair compensation.
+</li>
+<li>
+It's not clear (at least to David A. Wheeler)
+that there's enough <i>value</i> to adding it.
+"There *ARE* use cases, and these use cases are
+definitely common enough to discuss doing something special with them.
+But I worry that the contravening downsides will overwhelm it.
+Currently, in certain cases we have to add '\\' -only lines;
+that's not really
+a hardship, especially since the resulting constructs
+are pretty easy to understand."
+</li>
+<li>
+This "partial dedenting" approach is
+backwards-compatible with the current specification,
+and thus could be added *later* if desired.
+</li>
+</ol>
+
 
 <h2 id="closing-ending-sublist-results">Variation: Closing end-of-line SUBLIST by unmatched dedent (&#8220;Beni-Lite&#8221;)</h2>
 <p>
@@ -4052,8 +4269,7 @@ and many others whose names
 should be here but aren&#8217;t.</p>
 
 <h1><a name="copyright">Copyright</a></h1>
-<p>Copyright (C) 2012 <a href="http://www.dwheeler.com">David A. Wheeler</a>
-and Alan Manuel K. Gloria.
+<p>Copyright (C) 2012-2013 <a href="http://www.dwheeler.com">David A. Wheeler</a> and Alan Manuel K. Gloria.
 All Rights Reserved.</p>
 <pre>
 Permission is hereby granted, free of charge, to any person
@@ -4079,29 +4295,4 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 </pre>
 </body>
 </html>
-<!--
-Notes on HTML 3.2:
-* HTML 3.2 has no attribute "id", so we use <a name="ID">...</a> instead.
-* HTML 3.2 doesn't include CSS "style", so a table is is used to format
-  the curly-infix list BNF.
-* HTML 3.2 lacks many named entities, so we use numbered entities.
-  Although HTML 3.2 includes a mechanism to define new entities inline
-  (as part of the DOCTYPE), this is not supported by more modern
-  systems (e.g., Firefox).  In contrast, *EVERYONE* supports HTML
-  numbered entities.
-* The character ' is fine in HTML and XML, but the "quoter" tool
-  (that automatically convert single and double quotes into curly quotes)
-  will convert them.  That's fine for constructs like "doesn't", but
-  is wrong when referring to Scheme's "quote" abbreviation.
-  A useful solution is to represent it as an HTML entity.
-  The named entity &apos; is in XML 1.0 and HTML 4.0, but not in HTML 3.2,
-  so we cannot use "&apos;" to represent it.  Instead, this file
-  uses &#39; for single vertical apostrophe.  That way, it will
-  not be converted later to curly quotes by "quoter" and similar tools.
-* HTML 3.2 doesn't allow <style...> in the head; but this is
-  commonly-implemented, and implementations that don't will just
-  back off to a less-pretty format.
-* HTML 3.2 doesn't allow <div> to declare a class, but this is
-  widely implemented, and helpful for the CSS.  Systems that
-  don't implement it can trivially back off of it.
--->
+
