@@ -4,7 +4,7 @@
 <title>Draft SRFI Sweet: Sweet-expressions (t-expressions)</title>
 <meta content="text/html; charset=us-ascii" http-equiv="content-type">
 <meta name="description" content="This defines sweet-expressions (t-expressions) for Scheme, building on neoteric-expressions (n-expressions) and curly-infix-expressions (c-expressions). This defines an approach to making Scheme more 'readable' by adding syntactically-relevant indentation, as well as supporting infix and functions whose names precede the opening parenthesis.">
-<meta name="keywords" content="sweet, sweet-expression, sweet-expressions, t-expression, Scheme, Lisp, Common Lisp, neoteric-expression, n-expression, readable, notation, s-expression, s-expr, M-expression, SRFI, implementation, David Wheeler, David A. Wheeler, Alan Manuel Gloria, Alan Manuel K. Gloria">
+<meta name="keywords" content="sweet, sweet-expression, sweet-expressions, t-expression, Scheme, Lisp, Common Lisp, neoteric-expression, n-expression, readable, notation, s-expression, s-expr, M-expressions, SRFI, implementation, David Wheeler, David A. Wheeler, Alan Manuel Gloria, Alan Manuel K. Gloria">
 <meta name="generator" content="vim">
 <!-- Copy CSS style of SRFI-64; credits to Per Bothner. -->
 <!-- Note: "style" isn't in HTML 3.2, but SRFI-64 set a precedent
@@ -241,7 +241,8 @@ as long as no one is forced to use it.&#8221;
 
 <p>
 Many new syntaxes have been invented for various Lisp dialects,
-including McCarthy&#8217;s original M-expression notation for Lisp.
+including <a href="#m-expressions">McCarthy&#8217;s
+original M-expression notation for Lisp</a>.
 However, nearly all of these past notations are not
 general (i.e., the notation is independent of an underlying semantic) or
 homoiconic (i.e., the underlying data structure is clear from the syntax).
@@ -1289,7 +1290,8 @@ that sweet-expressions take to improve s-expression readability.
 <p>There have been a huge number of past efforts
 to create readable formats for Lisp-based languages,
 going all the way back to the original
-M-expression syntax that Lisp&#8217;s creator expected to be used when
+<a href="#m-expressions">M-expression syntax</a>
+that Lisp&#8217;s creator expected to be used when
 programming.  Generally, they&#8217;ve been unsuccessful, or they end up
 creating a completely different language that lacks the advantages
 of Lisp-based languages.
@@ -1337,7 +1339,8 @@ He stated that &#8220;parsing techniques are not greatly valued in the
 LISP community, which celebrates the Spartan denial of syntax.
 There have been many attempts since LISP&#8217;s creation to give the language
 a rich ALGOL-like syntax, including Pratt&#8217;s CGOL, LISP 2, MLISP, Dylan,
-Interlisp&#8217;s Clisp, and McCarthy&#8217;s original M-expressions.
+Interlisp&#8217;s Clisp, and McCarthy&#8217;s original
+<a href="#m-expressions">M-expressions</a>.
 All failed to find acceptance. That community found the correspondence between
 programs and data to be much more valuable than expressive syntax.
 But the mainstream programming community likes its syntax, so LISP has
