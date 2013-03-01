@@ -1107,14 +1107,11 @@
 ; Sweet Expressions (this implementation maps to the BNF)
 ; -----------------------------------------------------------------------------
 
-  (define split (string->symbol "\\\\"))
-  (define split-char #\\ ) ; First character of split symbol.
+  (define group_split (string->symbol "\\\\"))
+  (define group-split-char #\\ ) ; First character of split symbol.
   (define non-whitespace-indent #\!) ; Non-whitespace-indent char.
   (define sublist (string->symbol "$"))
   (define sublist-char #\$) ; First character of sublist symbol.
-
-  ; Add these names so that we can exactly match BNF.
-  (define group_split split)
   (define period_symbol period-symbol)
 
 ; TODO: Further cleanup - remove unnecessary declarations, etc.
@@ -1191,7 +1188,7 @@
         (cond
           ((and (eq? expr sublist) (eqv? c sublist-char))
             (list 'sublist_marker '()))
-          ((and (eq? expr group_split) (eqv? c split-char))
+          ((and (eq? expr group_split) (eqv? c group-split-char))
             (list 'group_split_marker '()))
           ((and (eq? expr '<*) (eqv? c #\<))
             (list 'collecting '()))
