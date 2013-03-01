@@ -2407,9 +2407,9 @@ SUBLIST was accepted in 2012-07-23</a>.</p>
 <p>
 When initially learning SUBLIST,
 <a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg00562.html">
-some people assume that "a $ b" should map to "(a (b))"</a>.
+some people assume that &#8220;a $ b&#8221; should map to &#8220;(a (b))&#8221;</a>.
 However, the specification specifically does not
-yield this semantic; "a $ b" maps to "(a b)".
+yield this semantic; &#8220;a $ b&#8221; maps to &#8220;(a b)&#8221;.
 At first, some people think that this is an inconsistency.
 </p>
 <p>
@@ -3363,8 +3363,8 @@ But these ignore the biggest problem.
 <p>
 The most important problem with this proposal
 is that it falsely assumes
-that it's possible to know the visual width of different characters.
-In today's world, this is impractical, especially across
+that it&#8217;s possible to know the visual width of different characters.
+In today&#8217;s world, this is impractical, especially across
 the many different implementations of Scheme and other Lisps.
 </p>
 <p>
@@ -3465,7 +3465,7 @@ by the authors of this SRFI.
 <a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg01082.html">
 On 2013-02-18, Beni Cherniavsky-Paskin
 proposed an extension of SUBLIST semantics, to
-"allow closing SUBLIST by [partial] dedenting"</a>.
+&#8220;allow closing SUBLIST by [partial] dedenting&#8221;</a>.
 Informally, in Beni&#8217;s proposed extension,
 any occurrence of SUBLIST would mark a fresh indent level,
 which could be matched by an otherwise-unmatched dedent.
@@ -3533,7 +3533,7 @@ On encountering an inline GROUP/SPLIT
 consume it, then:
 <ol>
 <li>
-If <code>indentation-stack</code>'s top is <code>?</code>:
+If <code>indentation-stack</code>&#8217;s top is <code>?</code>:
 Pop off every <code>?</code>
 on top of <code>indentation-stack</code>
 and emit DEDENT for each popped item.
@@ -3552,23 +3552,23 @@ and put it in <code>current-indentation</code>.
 Then:
 <ol>
 <li>
-If the <code>indentation-stack</code>'s topmost non-<code>?</code> item
-is "not consistent" with <code>current-indentation</code>,
+If the <code>indentation-stack</code>&#8217;s topmost non-<code>?</code> item
+is &#8220;not consistent&#8221; with <code>current-indentation</code>,
 signal a bad indent error (BADDENT).
 </li>
 <li>
-If the <code>indentation-stack</code>'s topmost non-<code>?</code> item
+If the <code>indentation-stack</code>&#8217;s topmost non-<code>?</code> item
 is less than <code>current-indentation</code>,
 push <code>current-indentation</code> on <code>indentation-stack</code>
 and emit INDENT.
 </li>
 <li>
-If the <code>indentation-stack</code>'s topmost non-<code>?</code> item
+If the <code>indentation-stack</code>&#8217;s topmost non-<code>?</code> item
 is equal to <code>current-indentation</code>:
 <small>(note: this is a copy of 2.1 and 2.2 above)</small>
 <ol>
 <li>
-If <code>indentation-stack</code>'s top is <code>?</code>:
+If <code>indentation-stack</code>&#8217;s top is <code>?</code>:
 Pop off every <code>?</code>
 on top of <code>indentation-stack</code>
 and emit DEDENT for each popped item.
@@ -3579,22 +3579,22 @@ Otherwise, emit SAME.
 </ol>
 </li>
 <li>
-Otherwise, the <code>indentation-stack</code>'s topmost non-<code>?</code> item
+Otherwise, the <code>indentation-stack</code>&#8217;s topmost non-<code>?</code> item
 is greater than <code>current-indentation</code>:
 <ol>
 <li>
 Pop off stack items until
-<code>indentation-stack</code>'s topmost non-<code>?</code> item
+<code>indentation-stack</code>&#8217;s topmost non-<code>?</code> item
 is less than or equal to <code>current-indentation</code>;
 emit a DEDENT for each popped item.
 </li>
 <li>
-If the <code>indentation-stack</code>'s topmost non-<code>?</code> item
+If the <code>indentation-stack</code>&#8217;s topmost non-<code>?</code> item
 is equal to <code>current-indentation</code>,
 pop off all <code>?</code> and emit a DEDENT for each.
 </li>
 <li>
-Otherwise, if the <code>indentation-stack</code>'s top is <code>?</code>,
+Otherwise, if the <code>indentation-stack</code>&#8217;s top is <code>?</code>,
 pop it off and push <code>current-indentation</code> on the stack.
 </li>
 <li>
@@ -3634,22 +3634,22 @@ The following concerns were noted about this formulation:
 
 <ol>
 <li>
-It complicates explanation of "$" and is more difficult to
+It complicates explanation of &#8220;$&#8221; and is more difficult to
 describe infomally.
 Some people require a second explanation of the simpler version
-of sublist ("$"), even though "$" is currently very simple.
-Adding this capability to "$" makes it much more
+of sublist (&#8220;$&#8221;), even though &#8220;$&#8221; is currently very simple.
+Adding this capability to &#8220;$&#8221; makes it much more
 complicated to describe.
 Every time we add a complication,
 we risk losing some potential users and implementers.
 </li>
 <li>
 We leave better-understood parsing theory if this is added.
-There's already a body of material on how
+There&#8217;s already a body of material on how
 to handle indentation-based languages,
 which tend to follow Python approaches
 and specifically do NOT differentiate
- between "indent 3 spaces" and "indent 1 space",
+ between &#8220;indent 3 spaces&#8221; and &#8220;indent 1 space&#8221;,
 just INDENT.
 We want to have this easily implemented, with many reasons to
 be confident that it is well-designed;
@@ -3664,7 +3664,7 @@ for correctness of the notation.
 Moving handling from the parser to the indentation preprocessor
 meant that many tools for proving parser correctness (i.e. ANTLR)
 could not be used on the extended handling.
-We want this notation to work "because it's clearly correct";
+We want this notation to work &#8220;because it&#8217;s clearly correct&#8221;;
 using ANTLR to check it rigorously is a valuable way to get there.
 In addition, the formal rules
 for this extended SUBLIST
@@ -3687,15 +3687,15 @@ can end it a part.
 It is unclear that the reduction in line count is fair compensation.
 </li>
 <li>
-It's not clear (at least to David A. Wheeler)
-that there's enough <i>value</i> to adding it.
-"There *ARE* use cases, and these use cases are
+It&#8217;s not clear (at least to David A. Wheeler)
+that there&#8217;s enough <i>value</i> to adding it.
+&#8220;There *ARE* use cases, and these use cases are
 definitely common enough to discuss doing something special with them.
 But I worry that the contravening downsides will overwhelm it.
-Currently, in certain cases we have to add '\\' -only lines;
-that's not really
+Currently, in certain cases we have to add &#8216;\\&#8217; -only lines;
+that&#8217;s not really
 a hardship, especially since the resulting constructs
-are pretty easy to understand."
+are pretty easy to understand.&#8221;
 In particular, the given <code>let</code> example above remains
 (as of the time of this writing)
 the only significant use case
@@ -3704,7 +3704,7 @@ and there are already other relatively-painless
 ways to handle this construct.
 </li>
 <li>
-This "partial dedenting" approach is
+This &#8220;partial dedenting&#8221; approach is
 backwards-compatible with the current specification,
 and thus could be added <i>later</i> if desired.
 </li>
@@ -3731,9 +3731,9 @@ in this SRFI.
 
 <p>
 Beni Cherniavsky-Paskin&#8217; himself noted that this proposal is
-"a backward-compatible extension to SUBLIST (similarly applicable to
+&#8220;a backward-compatible extension to SUBLIST (similarly applicable to
 any competing FOOLIST semantics), so we could leave it undecided for now,
-and legalize it later...".
+and legalize it later...&#8221;.
 For the moment, that is what we have done; we have ensured that
 it could be added later if turns out to be important to do so.
 </p>
