@@ -440,24 +440,17 @@ This directive <em>MUST</em> be consumed and considered whitespace.
 After reading this directive, the reader <em>MUST</em> accept
 sweet-expressions in subsequent datums read from the same port,
 until some other conflicting directive is given.
-No such conflicting directive is defined here;
-<code>#!curly-infix</code> followed by whitespace
-does not change anything, since sweet-expressions
-embed curly-infix functionality.
 Once a sweet-expression reader is enabled,
 the <code>#!sweet</code> directive <i>MUST</i> be accepted and ignored.
 </p>
 
 <p>
-<i>??? NOTE: Please discuss what the semantics of #!curly-infix
-should be, and if a #!no-sweet should be added.
-Alan Manuel Gloria observed on 2 Mar 2013 that since
-"implementations MAY have sweet-expressions
-enabled by default...
-That actually argues for having a #!no-sweet, and
-having #!curly-infix disable sweet expressions but retaining
-curly-infix."
-</i>
+A <code>#!curly-infix</code> <em>MUST</em> be accepted, and
+<em>SHOULD</em> cause the current port to switch to SRFI-105
+semantics (e.g., sweet-expression indentation processing is disabled).
+A <code>#!no-sweet</code> <em>MUST</em> be accepted, and
+<em>SHOULD</em> disable sweet-expression indentation processing
+(it <em>MAY</em> also disable curly-infix expressions).
 </p>
 
 <p>

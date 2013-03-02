@@ -748,8 +748,10 @@
       ; TODO: These should be specific to the port.
       ((string-ci=? dir "sweet")
         (enable-sweet))
+      ((string-ci=? dir "no-sweet")
+        (restore-traditional-read))
       ((string-ci=? dir "curly-infix")
-        (enable-curly-infix))
+        (replace-read curly-infix-read))
       ((string-ci=? dir "fold-case")
         (set! is-foldcase #t))
       ((string-ci=? dir "no-fold-case")
