@@ -1120,12 +1120,12 @@ sin 0 \\ cos 0
 <tr>
 <td align="left" valign="top">
 <pre>
-run $ grep -v "xx.*zz" &lt;(oldfile) &gt;(newfile)
+run $ grep |-v| "xx.*zz" &lt;(oldfile) &gt;(newfile)
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
-(run (grep -v "xx.*zz" (&lt; oldfile) (&gt; newfile)))
+(run (grep |-v| "xx.*zz" (&lt; oldfile) (&gt; newfile)))
 </pre>
 </td>
 </tr>
@@ -2636,23 +2636,26 @@ With sublist, this is easily expressed.
 For example, here&#8217;s a sweet-expression using scsh:
 </p>
 <pre>
-  run $ grep -v "xx.*zz" &lt;(oldfile) &gt;(newfile)
+  run $ grep |-v| "xx.*zz" &lt;(oldfile) &gt;(newfile)
 </pre>
 
 <p>
-(Oh, and a brief aside: in fully compliant Schemes,
-&#8220;-i&#8221; is the negated square root of 1.
-That means that any &#8220;-i&#8221; option should be specially escaped
-in a fully-compliant Scheme.
-That odd special case has nothing to do with sweet-expressions,
-but we thought you should know about that.)
-</p>
-<p>
-(And another brief aside: technically,
-RnRS do not allow symbols to start with &#8220;-&#8221; for that matter,
+(Oh, and a brief aside:
+For full Scheme standards compliance, you should escape any symbol
+beginning with "-" by surrounding it with |...|.
+One problem is that RnRS does not require support for <i>any</i>
+symbols that start with &#8220;-&#8221;,
 as they are not in the set of defined <code>&lt;initial&gt;</code>.
-However, many actual Schemes in practice support such symbols,
-including the sample implementation.)
+Many actual Schemes in practice do support such symbols,
+including the sample implementation, but such code is not portable.
+Another problem is that
+&#8220;-i&#8221; is the negated square root of 1, so
+that specific option is especially awkward.
+The sample implementation supports |...|, so |-v| would work
+and comply with the latest standards.
+Note, however, that scsh does not yet directly support |...|.
+These issues have nothing to do with sweet-expressions,
+but we thought you should know about that.)
 </p>
 
 <p>SUBLIST also makes certain idioms possible.
