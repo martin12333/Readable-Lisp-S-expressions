@@ -478,7 +478,7 @@
   ; so let's start with #f (case-sensitive).
   ; This doesn't affect character names; as an extension,
   ; We always accept arbitrary case for them, e.g., #\newline or #\NEWLINE.
-  (define foldcase-default #f)
+  (define is-foldcase #f)
 
   ; special tag to denote comment return from hash-processing
 
@@ -736,12 +736,25 @@
 
   ; If fold-case is active on this port, return string "s" in folded case.
   ; Otherwise, just return "s".  This is needed to support our
-  ; foldcase-default configuration value when processing symbols.
-  ; TODO: If R7RS adds #!fold-case and #!no-fold-case, add support here.
+  ; is-foldcase configuration value when processing symbols.
+  ; TODO: Should be port-specific
   (define (fold-case-maybe port s)
-    (if foldcase-default
+    (if is-foldcase
       (my-string-foldcase s)
       s))
+
+  (define (process-directive dir)
+    (cond
+      ; TODO: These should be specific to the port.
+      ((string-ci=? dir "sweet")
+        (enable-sweet))
+      ((string-ci=? dir "curly-infix")
+        (enable-curly-infix))
+      ((string-ci=? dir "fold-case")
+        (set! is-foldcase #t))
+      ((string-ci=? dir "no-fold-case")
+        (set! is-foldcase #f))
+      (#t (display "Warning: Unknown process directive"))))
 
   (define (process-sharp-bang port)
     (let ((c (my-peek-char port)))
@@ -754,8 +767,8 @@
           (non-nest-comment port)
           '() ) ; Treat as comment.
         ((char-alphabetic? c)  ; #!directive
-          ; TODO: For now, just consume and ignore directives.
-          (consume-to-whitespace port)
+          (process-directive
+            (list->string (read-until-delim port neoteric-delimiters)))
           '() )
         ((or (eqv? c carriage-return) (eqv? c #\newline))
           ; Extension: Ignore lone #!
