@@ -2318,7 +2318,7 @@ where that item is itself several lines:
 </li>
 </ol>
 <p>
-For the last case, while typically a muli-line list
+For the last case, while typically a multi-line list
 is commented out by using <code>;</code> line comments,
 in standard s-expression syntax all closing parentheses
 are &#8220;piled on&#8221; to the last line.
@@ -2337,7 +2337,7 @@ define foo(x)
     error "Cannot foo the " x
     begin
       en-bar x
-      ; quuxing is currently buggy; dwheeler to fix
+      ; quuxing is currently buggy
       ;;quux
       ;;  barred-form x
       ;;  co-barred-form x
@@ -2600,7 +2600,7 @@ applied to the sweet-expression starting at the same line.
 For example, a complex indented structure can be
 quoted simply by prefixing a single quote and space.
 This makes it easy to abbreviations to complex indented structures.
-An abbrevation alone on a line (after indentation), followed by
+An abbreviation alone on a line (after indentation), followed by
 an indented expression, applies that abbreviation to the expression;
 this seems to be what &#8220;users expect&#8221;, and supporting it
 eliminates a potential source of confusion.
@@ -3108,7 +3108,7 @@ do hint at the intended syntax of M-expressions.
 Function names were written in lower case letters
 (to distinguish them from atoms, which were only upper case),
 followed by a pair of square brackets.
-Inside the square brackers were semicolon-separated arguments.
+Inside the square brackets were semicolon-separated arguments.
 Thus, the M-expression
 <tt>cons[A;&nbsp;(B&nbsp;C)]</tt>
 represented the s-expression
@@ -3364,7 +3364,7 @@ Thus, it is similar to the main rule of t-expressions, except that
 As
 Beni Cherniavsky-Paskin notes,
 &#8220;It can get away with that simpler rule because all data objects are
-callable and eval to themself...
+callable and eval to [themselves]...
 In fact it&#8217;s much cleverer, though that&#8217;s irrelevant for us.
 All objects are actually macros (&#8220;lazy functions&#8221; in the manual&#8217;s
 terminology). What objects do if called with arguments - e.g. (&#8220;foo&#8221; arg1
@@ -3699,7 +3699,7 @@ the many different implementations of Scheme and other Lisps.
 </p>
 <p>
 Most obviously this presumption is false on systems with variable-width
-fonts, and tehse are widely used for email messages.
+fonts, and these are widely used for email messages.
 You simply cannot presume you know anything about the actual widths
 of different character sequences in this case.
 </p>
@@ -3965,7 +3965,7 @@ The following concerns were noted about this formulation:
 <ol>
 <li>
 It complicates explanation of &#8220;$&#8221; and is more difficult to
-describe infomally.
+describe informally.
 If we used this semantic,
 some people would require
 a second explanation of SUBLIST (&#8220;$&#8221;)
