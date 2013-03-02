@@ -4271,6 +4271,25 @@ written by two different people for different application areas -
 shows that sweet-expressions are mature enough to be standardized.
 </p>
 <p>
+In addition, the older paper
+<a href="http://www.dwheeler.com/readable/version02.html">Sweet-expressions: Version 0.2 (draft)</a>
+created sweet-expressions versions of a variety of
+expressions in a variety of Lisp-based languages,
+to (1) ensure that the sweet-expression notation is general
+(not tied to some specific semantic), and (2) show that it
+is relatively easy to notate common constructs in sweet-expressions.
+Sweet-expressions were developed for expressions in
+Scheme, Common Lisp, Arc, ACL2, PVS, s-expression BitC,
+AutoCAD Lisp (AutoLisp), Emacs Lisp,
+SUO-KIF, Scheme Shell (Scsh), GCC Register Transfer Language (RTL),
+MiddleEndLispTranslator (MELT),
+Satisfiability Modulo Theories Library (SMT-LIB), NewLisp, Clojure, and ISLisp.
+(Clojure currently uses {...} for a different construct, but
+sweet-expressions could still be used for Clojure.)
+This demonstration provides evidence that the sweet-expression
+notation is sufficiently general and expressive.
+</p>
+<p>
 The sweet-expression notation itself has been implemented at least twice;
 one in ANTLR (an LL(*) parser generator)
 and one in Scheme (as a recursive descent parser).
