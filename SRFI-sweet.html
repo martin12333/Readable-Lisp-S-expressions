@@ -63,12 +63,14 @@ but is designed to be easier for humans to read.
 The sweet-expression syntax enables the use of syntactically-meaningful
 indentation to group expressions (similar to Python),
 and it builds on the infix and traditional function notation defined in
-<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
+<a href="http://srfi.schemers.org/srfi-105/">SRFI-105 (curly-infix-expressions)</a>.
 Unlike nearly all past efforts to improve s-expression readability,
 sweet-expressions are
 general (the notation is independent from any underlying semantic)
 and homoiconic (the underlying data structure is clear from the syntax).
 Sweet-expressions can be used both for program and data input.
+This notation was developed by the
+&#8220;<a href="http://readable.sourceforge.net/">Readable Lisp S-expressions Project</a>&#8221;.
 </p>
 <p>
 Sweet-expressions can be considered simply
@@ -78,8 +80,6 @@ can be freely mixed, allowing the developer
 to easily transition and maximize readability when laying out code.
 For example, a sweet-expression reader would accept
 <i>either</i> the sweet-expression or s-expression format shown below.
-The sweet-expression notation was developed by the
-&#8220;<a href="http://readable.sourceforge.net/">Readable Lisp S-expressions Project</a>&#8221;.
 Here is an example:
 </p>
 <table border="1" cellpadding="4">
@@ -365,16 +365,16 @@ begin immediately after the indent (if any),
 the indentation at the beginning of the datum or block comment is used.
 </li>
 <li>
-A sweet-expression reader <i>MUST</i> accept, as an
+A sweet-expression reader <em>MUST</em> accept, as an
 an end-of-line (EOL) sequence, either
 a newline <i>or</i> a carriage return followed by newline.
-A sweet-expression reader <i>SHOULD</i> also accept
+A sweet-expression reader <em>SHOULD</em> also accept
 a carriage return without a following newline as an end-of-line sequence.
 </li>
 <li>
-Portable non-empty files <i>MUST</i> end with an unescaped end-of-line
+Portable non-empty files <em>MUST</em> end with an unescaped end-of-line
 sequence before the end-of-file.
-A sweet-expression reader <i>MAY</i> treat non-empty files that do
+A sweet-expression reader <em>MAY</em> treat non-empty files that do
 not end in an unescaped
 end-of-line as though an end-of-line sequence had been added.
 </li>
@@ -411,7 +411,7 @@ and followed by space or tab,
 </li>
 <li>
 The markers &#8220;&lt;*&#8221; and &#8220;*&gt;&#8221; surround a
-<i>collecting list</i>, and <i>MUST</i> accept
+<i>collecting list</i>, and <em>MUST</em> accept
 a list of 0 or more un-indented sweet-expressions.
 </li>
 <li>
@@ -441,7 +441,7 @@ After reading this directive, the reader <em>MUST</em> accept
 sweet-expressions in subsequent datums read from the same port,
 until some other conflicting directive is given.
 Once a sweet-expression reader is enabled,
-the <code>#!sweet</code> directive <i>MUST</i> be accepted and ignored.
+the <code>#!sweet</code> directive <em>MUST</em> be accepted and ignored.
 </p>
 
 <p>
@@ -455,13 +455,13 @@ disable sweet-expression indentation processing and
 </p>
 
 <p>
-A sweet-expression reader <i>SHOULD</i> support
+A sweet-expression reader <em>SHOULD</em> support
 <a href="http://srfi.schemers.org/srfi-30/">SRFI-30
 (Nested Multi-line comments)</a> (<tt>#|</tt>&nbsp;...&nbsp;<tt>|#</tt>)
 and
 <a href="http://srfi.schemers.org/srfi-62/">SRFI-62
 (S-expression comments)</a> (<tt>#;</tt><var>datum</var>).
-A sweet-expression reader <i>SHOULD</i> support
+A sweet-expression reader <em>SHOULD</em> support
 <a href="http://srfi.schemers.org/srfi-22/">SRFI-22
 (Running Scheme Scripts on Unix)</a> (where #!+space ignores
 to the end of the line),
@@ -540,7 +540,7 @@ to reduce the risk of their accidental use.
 <h2><a name="bnf">Backus&#45;Naur Form (BNF)</a></h2>
 <p>
 The following BNF rules define sweet-expressions;
-a sweet-expression reader <i>MUST</i> implement the productions
+a sweet-expression reader <em>MUST</em> implement the productions
 below unless otherwise noted.
 The BNF is intended to capture the specification above;
 in case of (unintentional)
@@ -561,16 +561,17 @@ If the indentation is invalid, BADDENT is generated which is not
 matched by the grammar.
 </p>
 <p>
-A sweet-expression reader MUST support three modes: indentation processing,
+A sweet-expression reader <em>MUST</em>
+support three modes: indentation processing,
 enclosed (when inside pairs of parentheses, brackets, or curly braces,
 recursively), and initial indent.
-On initialization a sweet-expression reader MUST be
+On initialization a sweet-expression reader <em>MUST</em> be
 in indentation processing mode.
-An initial indent <i>MUST</i> enter indentation processing mode,
-which <i>MUST</i> end on an end-of-line sequence.
+An initial indent <em>MUST</em> enter indentation processing mode,
+which <em>MUST</em> end on an end-of-line sequence.
 The markers <tt>\\</tt>, <tt>$</tt>, <tt>&lt;*</tt>, <tt>*&gt;</tt>,
 and the abbreviations followed by horizontal space
-<i>MUST</i> only have their
+<em>MUST</em> only have their
 special meaning in indentation processing mode.
 </p>
 
@@ -608,10 +609,10 @@ clear.
 </p>
 
 <p>
-A sweet-expression reader <i>MUST</i> read n-expression tails greedily.
+A sweet-expression reader <em>MUST</em> read n-expression tails greedily.
 That is, if a potential tail begins with an opening parenthesis,
-bracket, or brace, it <i>MUST</i> be considered a tail; otherwise,
-it <i>MUST NOT</i> be considered a tail.
+bracket, or brace, it <em>MUST</em> be considered a tail; otherwise,
+it <em>MUST NOT</em> be considered a tail.
 </p>
 
 <p>
