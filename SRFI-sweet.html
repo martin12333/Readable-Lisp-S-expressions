@@ -4335,19 +4335,22 @@ Whenever you have an infix expression, just surround it with {...}. You can use 
 <h3>Use infix notation</h3>
 
 <p>
-If the function is typically written as infix (including &#8220;+&#8221;, &#8220;*&#8221;,
-&#8220;or&#8221;, and &#8220;\<&#8221;), use {...} to write it as an infix value. Generally
-these operators will be &#8220;and&#8221;, &#8220;or&#8221;, or an operator that only uses
-punctuation. If you&#8217;re calling a function with only one parameter, and
-that parameter is calculated with an infix operation, use the f{...}
-shorthand.
+If the function is typically written as infix
+(including &#8220;+&#8221;, &#8220;*&#8221;,
+&#8220;or&#8221;, and &#8220;&lt;&#8221;),
+use {...} to write it as an infix value.
+Generally these operators will be &#8220;and&#8221;, &#8220;or&#8221;,
+or an operator that only uses punctuation.
+If you&#8217;re calling a function with only one parameter, and
+that parameter is calculated with an infix operation, use the f{...} shorthand.
 </p>
 
 <p>
 However, you may want to keep using prefix form if indentation still
 matters and one or more of the parameters is exceedingly complex (e.g.,
 it&#8217;s nested very deeply or includes program structuring forms like
-&#8220;cond&#8221; and &#8220;define&#8221;). This situation can often occur with &#8220;and&#8221; and &#8220;or&#8221;
+&#8220;cond&#8221; and &#8220;define&#8221;).
+This situation can often occur with &#8220;and&#8221; and &#8220;or&#8221;
 if you&#8217;re using a functional programming style.
 </p>
 
@@ -4374,8 +4377,10 @@ of structure (where you won&#8217;t go beyond the end of the line).
 
 <p>
 If you are providing a list of data (and not performing a function/method
-call), then use the traditional list notation such as &#8220;(a b c)&#8221;. This is
-exactly equivalent to &#8220;a(b c)&#8221;, but expressing it as a list will give
+call), then use the traditional list notation such as
+&#8220;(a&nbsp;b&nbsp;c)&#8221;.
+This is exactly equivalent to &#8220;a(b&nbsp;c)&#8221;,
+but expressing it as a list will give
 the human reader a hint that this data is not considered a potential
 program. If it&#8217;s used as both data and as program, then consider it a
 program, and use function call notation.
@@ -4412,8 +4417,8 @@ Consider using &#8220;!&#8221; followed by space if you&#8217;re using a medium
 that hides indentation,
 or want to highlight a particular vertical group.
 However, beware if you start a paired expression and let it continue to
-the next line; the &#8220;!&#8221; is <i>not</i> an indent character inside parentheses,
-braces, or brackets.
+the next line; the &#8220;!&#8221; is <i>not</i>
+an indent character inside parentheses, braces, or brackets.
 </p>
 
 <!-- See original page for "notes about cond", etc. -->
