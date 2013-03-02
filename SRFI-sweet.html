@@ -3949,12 +3949,10 @@ we risk losing some potential users and implementers.
 </li>
 <li>
 We leave better-understood parsing theory if this is added.
-There&#8217;s already a body of material on how
-to handle indentation-based languages,
-which tend to follow Python approaches
-and specifically do NOT differentiate
- between &#8220;indent 3 spaces&#8221; and &#8220;indent 1 space&#8221;,
-just INDENT.
+Existing approaches
+tend to follow Python or Haskell approaches and specifically
+consider the actual source stream to have matching indentations and
+dedentations.
 We want to have this easily implemented, with many reasons to
 be confident that it is well-designed;
 the more we leave established theory, the harder it is to do that.
