@@ -449,6 +449,18 @@ the <code>#!sweet</code> directive <i>MUST</i> be accepted and ignored.
 </p>
 
 <p>
+<i>??? NOTE: Please discuss what the semantics of #!curly-infix
+should be, and if a #!no-sweet should be added.
+Alan Manuel Gloria observed on 2 Mar 2013 that since
+"implementations MAY have sweet-expressions
+enabled by default...
+That actually argues for having a #!no-sweet, and
+having #!curly-infix disable sweet expressions but retaining
+curly-infix."
+</i>
+</p>
+
+<p>
 A sweet-expression reader <i>SHOULD</i> support
 <a href="http://srfi.schemers.org/srfi-30/">SRFI-30
 (Nested Multi-line comments)</a> (<tt>#|</tt>&nbsp;...&nbsp;<tt>|#</tt>)
