@@ -2534,7 +2534,12 @@ let
 ! nitz var1 var2
 </pre>
 <p>
-We discussed this, but after long discussion we decided on a defined semantic that means that &#8220;\\&#8221; is an empty symbol, making that expression exactly the same as:
+We discussed this, but after long discussion we decided against this.
+There are other ways handling constructs like multi-variable let, also,
+if the first variable later has a more complex expression it
+cannot be so easily extended with indentation.
+Instead, we decided on defining &#8220;\\&#8221; as an empty symbol,
+making that expression exactly the same as:
 </p>
 <pre>
 let
@@ -2574,6 +2579,8 @@ define-module
 </pre>
 
 <p>
+As noted earlier, there are other ways handling constructs
+like multi-variable let.
 You can use an empty GROUP symbol to achieve the same effect
 (at the cost of one more line).
 Also, the collecting list notation (&lt;*...*&gt;) handles short
