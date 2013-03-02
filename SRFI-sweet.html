@@ -974,14 +974,66 @@ define factorial(n)
 </tr>
 
 <tr>
+<!-- From "sweeten" -->
 <td align="left" valign="top">
 <pre>
-g factorial(7) my-pi() #f() -(cos(0))
+define represent-as-infix?(x)
+  and
+    pair? x
+    is-infix-operator? car(x)
+    list? x
+    {length(x) &lt;= 6}
+</pre>
+<td align="left" valign="top">
+<pre>
+(define (represent-as-infix? x)
+  (and
+    (pair? x)
+    (is-infix-operator? (car x))
+    (list? x)
+    (&lt;= (length x) 6)))
+</pre>
+</td>
+</tr>
+
+<tr>
+<!-- From "sweeten" -->
+<td align="left" valign="top">
+<pre>
+define line-tail(x)
+  cond
+    null?(x)  '()
+    pair?(x)
+      append '(#\space)
+        exposed-unit car(x)
+        line-tail cdr(x)
+    #t
+      append LISTSP.SP exposed-unit(x)
+</pre>
+<td align="left" valign="top">
+<pre>
+(define (line-tail x)
+  (cond
+    ((null? x) (quote ()))
+    ((pair? x)
+      (append '(#\space)
+        (exposed-unit (car x))
+        (line-tail (cdr x))))
+    (#t
+      (append LISTSP.SP (exposed-unit x)))))
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+g factorial(7) my-pi() #f() -i -(cos(0))
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
-(g (factorial 7) (my-pi) (#f) (- (cos 0)))
+(g (factorial 7) (my-pi) (#f) 0-i (- (cos 0)))
 </pre>
 </td>
 </tr>
@@ -1028,8 +1080,8 @@ let ; Demo GROUP
 <td align="left" valign="top">
 <pre>
 myfunction ; Demo SPLIT
-! x: \\ xpos
-! y: \\ ypos
+  x: \\ xpos
+  y: \\ ypos
 </pre>
 </td>
 <td align="left" valign="top">
@@ -1058,6 +1110,19 @@ sin 0 \\ cos 0
 <tr>
 <td align="left" valign="top">
 <pre>
+run $ grep -v "xx.*zz" &lt;(oldfile) &gt;(newfile)
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(run (grep -v "xx.*zz" (&lt; oldfile) (&gt; newfile)))
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
 a b $ c d e f $ g
 </pre>
 </td>
@@ -1071,7 +1136,7 @@ a b $ c d e f $ g
 <tr>
 <td align="left" valign="top">
 <pre>
-define c[i] $ cond
+define extract(c i) $ cond
   vector?(c) $ vector-ref c i
   string?(c) $ string-ref c i
   pair?(c)   $ list-ref c i
@@ -1080,7 +1145,7 @@ define c[i] $ cond
 </td>
 <td align="left" valign="top">
 <pre>
-(define ($bracket-apply$ c i) (cond
+(define (extract c i) (cond
   ((vector? c) (vector-ref c i))
   ((string? c) (string-ref c i))
   ((pair? c) (list-ref c i))
@@ -1122,13 +1187,28 @@ define merge(&lt; as bs) $ cond
 <td align="left" valign="top">
 <pre>
 ' a b ; Demo abbreviations
-  'c d e \\ f g h
+  ' c d e \\ 'f g h
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
-'(a b
-    ('c d e) (f g h))
+(quote (a b
+  (quote (c d e)) ((quote f) g h)))
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+let &lt;* x sqrt(a) *&gt;
+! g {x + 1} {x - 1}
+</pre>
+</td>
+<td>
+<pre>
+(let ((x (sqrt a)))
+  (g (+ x 1) (- x 1)))
 </pre>
 </td>
 </tr>
@@ -1259,29 +1339,6 @@ define init(win area)
         (expose (make-e area)))
       (set! now expose)
       (dostuff config expose))))
-</pre>
-</td>
-</tr>
-
-<tr>
-<!-- From "sweeten" -->
-<td align="left" valign="top">
-<pre>
-define represent-as-infix?(x)
-  and
-    pair? x
-    is-infix-operator? car(x)
-    list? x
-    {length(x) &lt;= 6}
-</pre>
-<td align="left" valign="top">
-<pre>
-(define (represent-as-infix? x)
-  (and
-    (pair? x)
-    (is-infix-operator? (car x))
-    (list? x)
-    (&lt;= (length x) 6)))
 </pre>
 </td>
 </tr>
@@ -2554,9 +2611,19 @@ scsh, which has functions like &#8220;run&#8221; that are applied to
 another list.
 With sublist, this is easily expressed.
 For example, here&#8217;s a sweet-expression using scsh:
+</p>
 <pre>
-  run $ grep -i "xx.*zz" &lt;(oldfile) &gt;(newfile)
+  run $ grep -v "xx.*zz" &lt;(oldfile) &gt;(newfile)
 </pre>
+
+<p>
+(Oh, and a brief aside: in fully compliant Schemes,
+"-i" is the negated square root of 1.
+That means that any "-i" option should be specially escaped
+in a fully-compliant Scheme.
+That odd special case has nothing to do with sweet-expressions,
+but we thought you should know about that.)
+</p>
 
 <p>SUBLIST also makes certain idioms possible.
 For instance,
