@@ -1666,6 +1666,11 @@ f ; Demo improper lists
 ' a b ; Demo abbreviations
   'c d e \\ f g h
 
+(quote (a b
+  (quote (c d e)) ((quote f) g h)))
+' a b
+  ' c d e \\ 'f g h
+
 (ff
   (t1 t2)
   (t3 t4
@@ -1716,4 +1721,10 @@ define represent-as-infix?(x)
     is-infix-operator? car(x)
     list? x
     {length(x) <= 6}
+
+0-i
+-i
+
+-v
+-v
 

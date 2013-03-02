@@ -895,11 +895,13 @@
               ((char=? c #\.) (process-period port))
               ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
                 (my-read-char port)
-                (if (ismember? (my-peek-char port) digits)
-                  (read-number port (list c))
-                  (string->symbol (fold-case-maybe port
-                    (list->string (cons c
-                      (read-until-delim port neoteric-delimiters)))))))
+                (let*
+                  ((maybe-number (list->string (cons c
+                     (read-until-delim port neoteric-delimiters))))
+                   (as-number (string->number maybe-number)))
+                  (if as-number
+                    as-number
+                    (string->symbol (fold-case-maybe port maybe-number)))))
               ((char=? c #\')
                 (my-read-char port)
                 (list (attach-sourceinfo pos 'quote)
