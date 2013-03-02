@@ -168,6 +168,7 @@ define factorial(n)
   </ul>
   </li>
   <li><a href="#experience">Experience using and implementing sweet-expressions</a></li>
+  <li><a href="#style">Style guide</a></li>
   </ul></li>
 <li><a href="#reference-implementation">Reference implementation</a></li>
 <li><a href="#references">References</a></li>
@@ -2640,17 +2641,18 @@ For example, here&#8217;s a sweet-expression using scsh:
 
 <p>
 (Oh, and a brief aside: in fully compliant Schemes,
-"-i" is the negated square root of 1.
-That means that any "-i" option should be specially escaped
+&#8220;-i&#8221; is the negated square root of 1.
+That means that any &#8220;-i&#8221; option should be specially escaped
 in a fully-compliant Scheme.
 That odd special case has nothing to do with sweet-expressions,
 but we thought you should know about that.)
 </p>
 <p>
 (And another brief aside: technically,
-RnRS do not allow symbols to start with "-" for that matter
-(it's not in the set of defined <code>&lt;initial&gt;</code>),
-although many actual Schemes in practice support such symbols)
+RnRS do not allow symbols to start with &#8220;-&#8221; for that matter,
+as they are not in the set of defined <code>&lt;initial&gt;</code>.
+However, many actual Schemes in practice support such symbols,
+including the sample implementation.)
 </p>
 
 <p>SUBLIST also makes certain idioms possible.
@@ -4311,6 +4313,111 @@ into s-expressions) and
 <i>sweeten</i> (which takes s-expressions and transforms them into
 sweet-expressions), as well as other related tools.
 </p>
+
+<h2 id="style">Style guide</h2>
+<p>
+Here are some style guidelines that may help you create
+easy-to-read sweet-expressions, based on the
+<a href="http://sourceforge.net/p/readable/wiki/Style/">
+Readable project style guide</a>.
+</p>
+
+<h3>General Guidance</h3>
+
+<p>
+Mentally, this is pretty straightforward - on each line, write an expression; everything after the first term on the line, or all child lines, are parameters of the first term. You can use grouping operators ( ), [ ], and { } to put subexpressions on the same line, if you want. Use -( ... ) to negate something.
+</p>
+
+<p>
+Whenever you have an infix expression, just surround it with {...}. You can use the form f(...) to call a function; if it has zero parameters, express it as f(), and if it has more than one parameter, separate the parameters with spaces. The f(...) form is especially handy for creating short expressions as a parameter on a line; for long expressions, use indentation instead.
+</p>
+
+<h3>Use infix notation</h3>
+
+<p>
+If the function is typically written as infix (including &#8220;+&#8221;, &#8220;*&#8221;,
+&#8220;or&#8221;, and &#8220;\<&#8221;), use {...} to write it as an infix value. Generally
+these operators will be &#8220;and&#8221;, &#8220;or&#8221;, or an operator that only uses
+punctuation. If you&#8217;re calling a function with only one parameter, and
+that parameter is calculated with an infix operation, use the f{...}
+shorthand.
+</p>
+
+<p>
+However, you may want to keep using prefix form if indentation still
+matters and one or more of the parameters is exceedingly complex (e.g.,
+it&#8217;s nested very deeply or includes program structuring forms like
+&#8220;cond&#8221; and &#8220;define&#8221;). This situation can often occur with &#8220;and&#8221; and &#8220;or&#8221;
+if you&#8217;re using a functional programming style.
+</p>
+
+<h3>Use indentation for major program/data structure</h3>
+
+<p>
+In general, use indentation to make it easy to see the larger-scale
+structure of a program or data. Typically major structural atoms should
+start a new line, including defining a new term (e.g., &#8220;define&#8221; and
+&#8220;let&#8221;), conditionals (e.g., &#8220;if&#8221; and &#8220;cond&#8221;), and loops (e.g., &#8220;loop&#8221;).
+</p>
+
+<h3>Use function call notation for parameters if they fit in a line</h3>
+
+<p>
+When calling a function, if the parameters will fit easily on a line if
+you use function notation like f(x y(z)), then put them all on a line.
+When you&#8217;re calling a function with no parameters, use function-calling
+format with &#8220;()&#8221; at the end, e.g., &#8220;f()&#8221;.
+In general, indentation is used for the major &#8220;structural&#8221; elements
+of a program, and function calls get used once you&#8217;re &#8220;near the leaf&#8221;
+of structure (where you won&#8217;t go beyond the end of the line).
+</p>
+
+<p>
+If you are providing a list of data (and not performing a function/method
+call), then use the traditional list notation such as &#8220;(a b c)&#8221;. This is
+exactly equivalent to &#8220;a(b c)&#8221;, but expressing it as a list will give
+the human reader a hint that this data is not considered a potential
+program. If it&#8217;s used as both data and as program, then consider it a
+program, and use function call notation.
+</p>
+
+
+<h3>Avoid unnecessary parentheses</h3>
+
+<p>
+Where it&#8217;s understandable, don&#8217;t include unnecessary parentheses.
+In particular, when indentation processing is active, the name of the
+function is right after the indent, and there are no child lines, simply
+state the function followed by space-separated parameters.
+</p>
+
+
+<h3>Width</h3>
+
+<p>
+You should probably stick to an 80-character width for program text.
+</p>
+
+
+<h3>Indentation</h3>
+<p>
+Use a consistent amount of indenting for each level.
+We tend to use
+2 spaces for indentation; indentation nesting is more common in
+sweet-expressions, so 8-character indentations are often too much.
+</p>
+
+<p>
+Consider using &#8220;!&#8221; followed by space if you&#8217;re using a medium
+that hides indentation,
+or want to highlight a particular vertical group.
+However, beware if you start a paired expression and let it continue to
+the next line; the &#8220;!&#8221; is <i>not</i> an indent character inside parentheses,
+braces, or brackets.
+</p>
+
+<!-- See original page for "notes about cond", etc. -->
+
 
 <h1><a name="reference-implementation">Reference implementation</a></h1>
 
