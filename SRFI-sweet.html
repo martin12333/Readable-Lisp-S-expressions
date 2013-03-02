@@ -439,9 +439,11 @@ the default implementation REPL).
 This directive <em>MUST</em> be consumed and considered whitespace.
 After reading this directive, the reader <em>MUST</em> accept
 sweet-expressions in subsequent datums read from the same port,
-overriding any previous conflicting directive
-(such as <code>#!curly-infix</code> followed by whitespace)
 until some other conflicting directive is given.
+No such conflicting directive is defined here;
+<code>#!curly-infix</code> followed by whitespace
+does not change anything, since sweet-expressions
+embed curly-infix functionality.
 Once a sweet-expression reader is enabled,
 the <code>#!sweet</code> directive <i>MUST</i> be accepted and ignored.
 </p>
