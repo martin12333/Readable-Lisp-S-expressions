@@ -2541,6 +2541,9 @@ let
 ! var1 $ bar x
 ! !  var2 $ quux x
 ! nitz var1 var2
+; =&gt;
+;   (let (var1 (bar x (var2 (quux x))))
+;      (nitz var1 var2))
 </pre>
 
 <p>We did this
@@ -2571,9 +2574,12 @@ define-module
 </pre>
 
 <p>
+You can use an empty GROUP symbol to achieve the same effect
+(at the cost of one more line).
 Also, the collecting list notation (&lt;*...*&gt;) handles short
-let variable assignment in a more graceful way, so there was no
-strong reason to use the first semantic while many good reasons to
+let variable assignment in a more graceful way.
+Thus, there was no strong reason to use the first semantic
+while there were many good reasons to
 choose the semantic actually chosen.
 </p>
 
