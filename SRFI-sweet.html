@@ -445,12 +445,13 @@ the <code>#!sweet</code> directive <i>MUST</i> be accepted and ignored.
 </p>
 
 <p>
-A <code>#!curly-infix</code> <em>MUST</em> be accepted, and
+A <code>#!curly-infix</code>
 <em>SHOULD</em> cause the current port to switch to SRFI-105
 semantics (e.g., sweet-expression indentation processing is disabled).
-A <code>#!no-sweet</code> <em>MUST</em> be accepted, and
-<em>SHOULD</em> disable sweet-expression indentation processing
-(it <em>MAY</em> also disable curly-infix expressions).
+A <code>#!no-sweet</code>
+<em>SHOULD</em> cause the current port to
+disable sweet-expression indentation processing and
+<em>MAY</em> also disable curly-infix expression processing.
 </p>
 
 <p>
