@@ -956,6 +956,7 @@
               ((char=? c #\| )
                 ; Scheme extension, |...| symbol (like Common Lisp)
                 ; This is present in R7RS draft 6.
+                ; TODO: Handle \r, \\, \|, \x, etc.
                 (my-read-char port) ; Consume the initial vertical bar.
                 (let ((newsymbol
                   ; Do NOT call fold-case-maybe; always use literal values.
