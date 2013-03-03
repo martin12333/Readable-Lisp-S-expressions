@@ -107,17 +107,6 @@
 ;     needs any kind of involved magic to handle load and loading
 ;     modules correctly, do it here.
 ;
-;   next-line
-;   line-separator
-;   paragraph-separator
-;   - The Unicode characters with those names.
-;   - If your Scheme does *not* support Unicode, define these to be #f.
-;   - If your Scheme *does* support Unicode, to prevent other Schemes
-;     from misreading this file, use the following defines:
-;       (define next-line (integer->char #x0085))
-;       (define line-separator (integer->char #x2028))
-;       (define paragraph-separator (integer->char #x2029))
-;
 ;   (parse-hash no-indent-read char fake-port)
 ;   - a procedure that is invoked when an unrecognized, non-R5RS hash
 ;     character combination is encountered in the input port.
@@ -271,28 +260,6 @@
       (setup-primitive-load)
       (set! read f))
 
-    ; define Unicode chars based on version.  On 1.x assume
-    ; no Unicode (actually 1.9 has Unicode, but that's not a
-    ; stable branch.)
-    (define has-unicode
-      (let* ((v (effective-version))
-             (c (string-ref v 0)))
-        (if (or (char=? c #\0) (char=? c #\1))
-            #f
-            #t)))
-    (define next-line
-      (if has-unicode
-          (integer->char #x0085)
-          #f))
-    (define line-separator
-      (if has-unicode
-          (integer->char #x2028)
-          #f))
-    (define paragraph-separator
-      (if has-unicode
-          (integer->char #x2028)
-          #f))
-
     ; On Guile 1.6 and 1.8 the only comments are ; and #! !#
     ; On Guile 2.0, #; (SRFI-62) and #| #| |# |# (SRFI-30) comments exist.
     ; On Guile 2.0, #' #` #, #,@ have the R6RS meaning; on
@@ -435,12 +402,6 @@
     ; to allow this somehow.
     (define (replace-read-with f)
       (set! read f))
-
-    ; Assume that a random R5RS Scheme doesn't support Unicode
-    ; out-of-the-box
-    (define next-line #f)
-    (define line-separator #f)
-    (define paragraph-separator #f)
 
     ; R5RS has no hash extensions
     (define (parse-hash no-indent-read char fake-port) #f)
