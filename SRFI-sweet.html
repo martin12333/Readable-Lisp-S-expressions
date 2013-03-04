@@ -3245,11 +3245,25 @@ that it obeys and leverages binding information to support hygiene,
 macro-generating macros, and local macro binding - facilities that
 have proven important for building expressive and composable language
 extensions in Lisp, Scheme, and Racket.&#8221;
+An example of its syntax, per its paper, is:
 </p>
+
+<pre>
+function quadratic(a, b, c) {
+  var discriminant = sqr(b) - 4 * a * c
+  if ( discriminant &lt; 0) {
+    []
+  } else if (discriminant == 0) {
+    [-b / (2 * a)]
+  } else {
+    [-b / (2 * a), b / (2 * a) ]
+  }
+}
+</pre>
 
 <p>
 At the surface, perhaps the most obvious difference is that
-Honu uses {} for major structures, in way that looks somewhat similar
+Honu uses {} for major structures, in a way that looks somewhat similar
 to C, instead of using indentation.
 This means that, like Scheme and C, users must use tools to keep
 the visual indentation consistent with the {} that are actually used
@@ -3331,8 +3345,8 @@ with higher precedences from grouping with the constituent parts
 of the expression&#8221;.
 This is similar to many other languages, but it means
 that a Honu reader cannot double as a Scheme reader.
-In contrast, most users could silently switch to a sweet-reader
-and have no idea that it had occurred, since normally-formatted
+In contrast, most users could silently switch to a sweet-expression reader
+and have no idea that a change had occurred, since normally-formatted
 Scheme expressions will continue to work unchanged.
 This means it is much easier to transition to sweet-expressions.
 </p>
