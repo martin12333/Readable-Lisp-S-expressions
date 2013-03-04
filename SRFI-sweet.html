@@ -140,6 +140,7 @@ define factorial(n)
   <li><a href="#disabling-indentation-processing-with-paired-characters">Disabling indentation processing with paired characters</a></li>
   <li><a href="#disabling-indentation-processing-with-an-initial-indent">Disabling indentation processing with an initial indent</a></li>
   <li><a href="#block-comment-indent-significant">Why are the indentations of block comments and datum comments significant?</a></li>
+  <li><a href="#eol">End-of-line (EOL) handling</a></li>
   <li><a href="#eof">End-of-file (EOF) handling</a></li>
   <li><a href="#semicolon">Special semicolon values for an unsweetener</a></li>
   </ul>
@@ -2369,6 +2370,51 @@ then it was considered simpler
 to just use the same behavior for both.
 </p>
 
+<h3 id="eol">End-of-line (EOL) handling</h3>
+<p>
+This SRFI only requires support for the end-of-line
+sequences linefeed (LF), carriage return (CR), and CRLF.
+Earlier versions also supported reversed LFCR,
+IBM&#8217;s NEL (U+0085), Unicode line-separator (LS, U+2028), and
+Unicode paragraph-separator (PS, U+2029),
+but these have been dropped.
+This is because in practice the only end-of-line markers
+that are used in practice
+are LF, CR, and CRLF.
+For exampple, these are the only end-of-line markers included in
+Scheme R7RS draft 9.
+</p>
+<p>
+John Cowan posted on 2013-02-28 that,
+&#8220;NEL is used only on EBCDIC systems, and conversion to ASCII
+usually changes it to LF rather than U+0085.
+LS was Unicode&#8217;s attempt
+to kill CR/LF/CR+LF, which failed completely...&#8221;
+The same problem applies to PS, which is not used in practice.
+</p>
+
+<!--
+John Cowan posted on 2013-02-28,
+"Take it from the guy at the sharp point of the XML 1.1 mess:
+the only newlines anyone cares about are CR, LF, and CR+LF,
+and even CR is obsolescent.
+NEL is used only on EBCDIC systems, and conversion to ASCII
+usually changes it to LF rather than U+0085. LS was Unicode's attempt
+to kill CR/LF/CR+LF, which failed completely..."
+-->
+
+<p>
+Reversed LFCR does not happen in practice, and attempting to
+detect it triggers a bug in many versions of the
+guile implementation of Scheme.
+In many versions of guile, peek-char consumes (instead of just peeking)
+an end-of-file (EOF) marker.
+Thus, after seeing an LF, peeking to see if there is a CR
+would consume any EOF after an LF, making ending interactive
+use awkward on systems that use just LF for end-of-line.
+</p>
+
+
 <h3 id="eof">End-of-file (EOF) handling</h3>
 <p>
 Non-empty files must end with an end-of-line sequence, before any
@@ -3278,11 +3324,11 @@ and still know what exactly what the underlying structure will be.
 <p>
 Another complication with Honu is that it is not backwards-compatible
 with existing Lisp constructs.
-In Honu, the "(expression)" production
-"performs the traditional role
+In Honu, the &#8220;(expression)&#8221; production
+&#8220;performs the traditional role
 of parenthesizing an expression to prevent surrounding operators
 with higher precedences from grouping with the constituent parts
-of the expression".
+of the expression&#8221;.
 This is similar to many other languages, but it means
 that a Honu reader cannot double as a Scheme reader.
 In contrast, most users could silently switch to a sweet-reader
