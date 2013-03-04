@@ -158,6 +158,7 @@ define factorial(n)
   <li><a href="#comparisons">Comparisons to other notations</a>
   <ul>
   <li><a href="#m-expressions">Comparison to M-expressions</a></li>
+  <li><a href="#honu">Comparison to Honu</a></li>
   <li><a href="#q2">Comparison to Q2</a></li>
   <li><a href="#p4p">Comparison to P4P</a></li>
   <li><a href="#z">Comparison to Z</a></li>
@@ -2642,7 +2643,7 @@ For example, here&#8217;s a sweet-expression using scsh:
 <p>
 (Oh, and a brief aside:
 For full Scheme standards compliance, you should escape any symbol
-beginning with "-" by surrounding it with |...|.
+beginning with &#8220;-&#8221; by surrounding it with |...|.
 One problem is that RnRS does not require support for <i>any</i>
 symbols that start with &#8220;-&#8221;,
 as they are not in the set of defined <code>&lt;initial&gt;</code>.
@@ -3156,6 +3157,124 @@ use s-expressions.
 Sweet-expressions avoid these problems of M-expressions.
 The sweet-expression notation is not tied to any particular semantic,
 and it has been implemented multiple times.
+</p>
+
+<h3 id="honu">Comparison to Honu</h3>
+<p>
+Honu, as described in
+<a href="http://www.cs.utah.edu/plt/publications/gpce12-rf.pdf">
+Honu: Syntactic Extension for Algebraic Notation
+through Enforestation</a>, is
+&#8220;a new language that fuses traditional algebraic notation
+(e.g., infix binary operators) with Scheme-style language extensibility.
+A key element of Honu&#8217;s design is an enforestation parsing
+step, which converts a flat stream of tokens into an S-expression-
+like tree, in addition to the initial &#8216;read&#8217; phase of parsing and in-
+terleaved with the &#8216;macro-expand&#8217; phase.
+We present the design of Honu, explain its parsing and macro-extension
+algorithm, and show example syntactic extensions.&#8221;
+</p>
+<p>
+In particular, the Honu authors state that their
+&#8220;immediate goal is to produce a syntax that is
+more natural for many programmers than Lisp notation -
+most notably, using infix notation for operators -
+but that is similarly easy for programmers to extend.
+Honu adds a precedence-based parsing step to a Lisp-like pars-
+ing pipeline to support infix operators and syntax unconstrained
+by parentheses. Since the job of this step is to turn a relatively
+flat sequence of terms into a Lisp-like syntax tree, we call it
+en forestation.
+Enforestation is not merely a preprocessing of program text;
+it is integrated into the macro-expansion machinery so
+that it obeys and leverages binding information to support hygiene,
+macro-generating macros, and local macro binding - facilities that
+have proven important for building expressive and composable language
+extensions in Lisp, Scheme, and Racket.&#8221;
+</p>
+
+<p>
+At the surface, perhaps the most obvious difference is that
+Honu uses {} for major structures, in way that looks somewhat similar
+to C, instead of using indentation.
+This means that, like Scheme and C, users must use tools to keep
+the visual indentation consistent with the {} that are actually used
+to nest constructs... leading to the risk that they will go out of sync
+(misleading human readers).
+Another obvious difference is that Honu supports user-defined
+precedence levels; as noted in SRFI-105, this causes trouble in dealing
+with operators if the precedence is defined differently in different
+code sections, and also makes it more difficult for human readers to
+determine where lists begin and end.
+</p>
+
+<p>
+There are some surface similarities as well.
+Honu does support a more traditional-looking function call notation,
+of the form &#8220;quadratic(a,&nbsp;b,&nbsp;c)&#8221;.
+Sweet-expressions accept a similar function call format,
+though without the commas (which we found were annoying in practice,
+as they were extraneous and interfered with the comma operator).
+Both Honu and sweet-expressions accept infix notation,
+which are essentially universally used
+elsewhere, though with some minor differences in syntax
+(in part due to Honu&#8217;s use of precedence).
+</p>
+
+<p>
+But Honu&#8217;s major approach is fundamentally different;
+the syntax is actually embedded with the language,
+making it difficult to separate the two:
+&#8220;To handle infix syntax, the Honu parser relies on an
+enforestation phase that converts a relatively flat sequence of
+terms into a more Scheme-like tree of nested expressions.
+Enforestation handles operator precedence and the relatively
+delimiter-free nature of Honu syntax, and it is macro-extensible.
+After a layer of enforestation, Scheme-like macro expansion takes over
+to handle binding, scope, and cooperation among syntactic forms.
+Enforestation and expansion are interleaved,
+which allows the enforestation process to be sensitive to bindings.&#8221;
+Honu&#8217;s approach enables new syntaxes and meanings to be installed,
+which its authors presumably expect to be a good thing,
+but this approach also has significant downsides.
+</p>
+
+<p>
+Honu&#8217;s approach appears to impede generality.
+For example, {...} is defined as starting
+&#8220;a new sequence of expressions that evaluates
+to the last expression in the block.&#8221;
+Note that this definition is more than simply the definition of a list
+in terms of syntax; the notion of how to calculate it seems to be
+embedded in the syntax.
+Honu&#8217;s approach seems to be at odds with the idea that a notation
+should be <i>independent</i> of the evaluation approach.
+</p>
+
+<p>
+Honu&#8217;s approach certainly sacrifices homoiconicity.
+The whole Honu process invokes macros that can transform the results.
+What&#8217;s more, these macros can be defined later.
+As a result, it is not possible to know what a syntactic construct means
+without knowing all the tranformation definitions active at the time
+the construct was read.
+The precedence definitions for infix operators are an example of
+this problem, but this turns out to be systemic in Honu.
+In short,
+Honu&#8217;s approach is at odds with the idea that a
+a human reader should be able to read just that surface syntax,
+without knowing anything about what macros are active,
+and still know what exactly what the underlying structure will be.
+</p>
+
+<p>
+Fundamentally, the Honu approach
+sacrifices both generality and homoiconicity to achieve readability.
+In addition, its use of {...} creates the
+risk that visual indentation will be inconsistent with
+the actual expression structure.
+We applaud Honu&#8217;s goal of readability,
+but do not believe its sacrifices are necessary to achieve that goal.
 </p>
 
 <h3 id="q2">Comparison to Q2</h3>
