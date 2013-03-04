@@ -3177,8 +3177,8 @@ through Enforestation</a>, is
 (e.g., infix binary operators) with Scheme-style language extensibility.
 A key element of Honu&#8217;s design is an enforestation parsing
 step, which converts a flat stream of tokens into an S-expression-
-like tree, in addition to the initial &#8216;read&#8217; phase of parsing and in-
-terleaved with the &#8216;macro-expand&#8217; phase.
+like tree, in addition to the initial &#8216;read&#8217;
+phase of parsing and interleaved with the &#8216;macro-expand&#8217; phase.
 We present the design of Honu, explain its parsing and macro-extension
 algorithm, and show example syntactic extensions.&#8221;
 </p>
@@ -3192,7 +3192,7 @@ Honu adds a precedence-based parsing step to a Lisp-like pars-
 ing pipeline to support infix operators and syntax unconstrained
 by parentheses. Since the job of this step is to turn a relatively
 flat sequence of terms into a Lisp-like syntax tree, we call it
-en forestation.
+enforestation.
 Enforestation is not merely a preprocessing of program text;
 it is integrated into the macro-expansion machinery so
 that it obeys and leverages binding information to support hygiene,
@@ -3273,6 +3273,22 @@ Honu&#8217;s approach is at odds with the idea that a
 a human reader should be able to read just that surface syntax,
 without knowing anything about what macros are active,
 and still know what exactly what the underlying structure will be.
+</p>
+
+<p>
+Another complication with Honu is that it is not backwards-compatible
+with existing Lisp constructs.
+In Honu, the "(expression)" production
+"performs the traditional role
+of parenthesizing an expression to prevent surrounding operators
+with higher precedences from grouping with the constituent parts
+of the expression".
+This is similar to many other languages, but it means
+that a Honu reader cannot double as a Scheme reader.
+In contrast, most users could silently switch to a sweet-reader
+and have no idea that it had occurred, since normally-formatted
+Scheme expressions will continue to work unchanged.
+This means it is much easier to transition to sweet-expressions.
 </p>
 
 <p>
