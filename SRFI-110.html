@@ -2107,9 +2107,11 @@ where surprising indentation is occurring (e.g., through highlighting),
 so this risk appears to be minimal.</p>
 
 <p>Disabling on initial indent
-also deals with a subtle potential problem in implementation.
-In a reader implementation, if we tried to just accept some indentation
-of the first line and use it as the starting point, we create problems.
+also deals with a subtle problem in implementation.
+We would create significant reader implementation problems
+if we tried to accept expressions
+that began with arbitrary indentation on the first line
+(using that indentation as the starting point).
 Typically readers return a whole value once that value has been
 determined, and in many cases it&#8217;s tricky to store state (such as that
 new indentation value) for an arbitrary port.  By disabling indentation
@@ -2119,14 +2121,20 @@ users a useful tool.</p>
 <p>Since this latter point isn&#8217;t obvious, here&#8217;s
 a little more detailed explanation.  Obviously, to make indentation
 syntactically meaningful, you need to know where an expression indents,
-and where it ends. If you read in a line, and it has the same indentation
-level, that should end the previous expression. If its indentation is
-<em>less</em>, it should close out all the lines with deeper or equal
-indentation.  But we&#8217;re trying to <em>minimize</em> the changes to the
-underlying language, and in particular, we don&#8217;t want to change the &#8220;read&#8221;
+and where it ends.
+If you read in a line, and it has the same indentation
+level, that should end the previous expression.
+If its indentation is <em>less</em>,
+it should close out all the lines with deeper or equal indentation.
+But we&#8217;re trying to <em>minimize</em> the changes to the
+underlying language, and in particular, we don&#8217;t want
+to change the &#8220;read&#8221;
 interface and we&#8217;re not assuming arbitrary amounts of unread-char.
-Scheme R5RS, for example, doesn&#8217;t have a standard unread-char
-at all.  So let&#8217;s say you are trying to read the following:</p>
+Scheme R5RS, for example, doesn&#8217;t have a standard unread-char at all.
+Now imagine that the implementation tries to support
+arbitrary indentatation for the initial line of an expression
+(instead of requiring that expressions normally start at the left edge).
+Let&#8217;s say you are trying to read the following:</p>
 <pre>
 ! ! foo
 ! ! ! bar
@@ -2134,8 +2142,8 @@ at all.  So let&#8217;s say you are trying to read the following:</p>
 ! ! cheese
 </pre>
 <p>You might expect this to
-return three datums: (foo bar), eggs, and cheese. It won&#8217;t, in a typical
-implementation; here&#8217;s why:
+return three datums: (foo bar), eggs, and cheese.
+It won&#8217;t, in a typical implementation; here&#8217;s why:
 <ul>
 <li>
 In the first read(), it reads foo, bar, and it
