@@ -3364,12 +3364,34 @@ In Honu, the &#8220;(expression)&#8221; production
 of parenthesizing an expression to prevent surrounding operators
 with higher precedences from grouping with the constituent parts
 of the expression&#8221;.
-This is similar to many other languages, but it means
+It seems that internally,
+the base Honu reader <em>does</em> read it in
+as a single-item list.
+But the subsequent enforestation step
+removes any extra layers of parentheses.
+This semantic is similar to many other languages, but it means
 that a Honu reader cannot double as a Scheme reader.
 In contrast, most users could silently switch to a sweet-expression reader
 and have no idea that a change had occurred, since normally-formatted
 Scheme expressions will continue to work unchanged.
 This means it is much easier to transition to sweet-expressions.
+</p>
+
+<p>
+Honu's approach ties together
+desugaring and macro-expansion;
+the text &#8220;<code>foo(bar, quux)</code>&#8221;
+is two datums,
+&#8220;<code>foo</code>&#8221; and &#8220;<code>(bar |,| quux)</code>&#8221;,
+and the enforestation step
+(which doubles as the macro-expansion step)
+converts it to &#8220;<code>(foo bar quux)</code>&#8221;
+at the Racket level.
+Honu's macros are not actually the same type as
+the hosting Racket implementation's macros.
+A <code>honu-block</code> Racket macro
+calls the enforest routine,
+which then calls Honu-level macros.
 </p>
 
 <p>
