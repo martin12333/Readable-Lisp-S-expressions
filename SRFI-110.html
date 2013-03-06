@@ -3766,19 +3766,16 @@ foo
 </ol>
 
 <p>
-After being proposed,
-it was suggested that the rule 2 above
+After being proposed, it was suggested that the rule 2 above
 should be amended
 to be similar to equivalent rules in SRFI-49 and this SRFI;
 that is, a single datum on a line by itself
 should be only that datum, not wrapped in a list.
 Further, a &#8220;.&#8221; marker followed by
-a single datum without a child line
-should be a no-op.
+a single datum without a child line should be a no-op.
 </p>
 <p>
-Rule 2 was formulated that way
-since the intention was
+Rule 2 was formulated that way since the intention was
 to build an indentation processor, not a full parser.
 However, further discussion revealed
 that a simple rule could be formulated
@@ -3955,6 +3952,12 @@ You simply cannot presume you know anything about the actual widths
 of different character sequences in this case.
 </p>
 <p>
+Even when only Western symbol sets are used,
+some letters can or must be expressed using combining characters.
+In these cases, what is stored as two characters are supposed
+to be displayed as one.
+</p>
+<p>
 For another example, some East Asian characters,
 <a href='http://www.unicode.org/reports/tr11/'>called fullwidth characters</a>,
 should be displayed on two columns
@@ -3983,8 +3986,7 @@ meaning that indentation expressions
 have potential portability problems.
 </p>
 <p>
-Granted that almost all code
-will not utilize symbols
+Granted that almost all code will not utilize symbols
 containing fullwidth East Asian glyphs,
 one must consider <em>strings</em>
 containing fullwidth East Asian glyphs,
@@ -4036,10 +4038,8 @@ R6RS mandates that support.
 
 <p>
 After discussion,
-<a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg01097.html">
-this proposal was turned down
-by the authors of this SRFI.
-</a>
+<a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg01097.html">this proposal was turned down
+by the authors of this SRFI</a>.
 </p>
 
 <h3 id="closing-sublist-unmatched-dedent">Closing SUBLIST by unmatched dedent (&#8220;Beni Formulation of SUBLIST&#8221)</h3>
