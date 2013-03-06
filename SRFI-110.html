@@ -364,12 +364,12 @@ A sweet-expression reader <em>MUST</em> apply these rule clarifications:
 <ol>
 <li>You can indent using one or more of the indent characters,
 which are space, tab, and exclamation point (!).
-Indentation must be <dfn>consistent</dfn>;
-if you use a tab character
-to indent at a certain column position,
-the next line should either have a tab character
-to indent at that same column position,
-or be indented less than that column position.
+Except for lines with initial indents and the first line of a stream,
+every line <em>MUST</em> be <dfn>consistently indented</dfn>.
+A line is consistently indented if
+the indent character sequence of that line, when compared to the
+indent character sequence of the preceding line,
+is equal or one is a prefix of the other.
 </li>
 <li>An unescaped &#8220;;&#8221; not in a string (still) introduces comments
 that end at the end of the line.</li>
