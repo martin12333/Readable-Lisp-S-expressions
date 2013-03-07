@@ -384,9 +384,15 @@ until the first end of line.</li>
 not the next sweet expression.
 Datum comments ignore intervening whitespace, including spaces, tabs, and newlines.</li>
 <li>Block comments (<samp>#|</samp>...<samp>|#</samp>) are removed.</li>
-<li>For both datum and block comments, if they
+<li>For all <code>#</code>-based comments
+(i.e. datum comments <code>#;</code>,
+block comments <code>#|</code>...<code>|#</code>,
+the markers <code>#!fold-case</code> <code>#!no-fold-case</code> <code>#!sweet</code> <code>#!curly-infix</code>,
+and anything else an implementation can read
+but does not return a datum),
+if they
 begin immediately after the indent (if any),
-the indentation at the beginning of the datum or block comment is used.
+the indentation at the beginning of the comment is used.
 </li>
 <li>
 A sweet-expression reader <em>MUST</em> accept, as an
