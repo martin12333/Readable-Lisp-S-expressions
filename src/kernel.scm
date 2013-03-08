@@ -836,7 +836,7 @@
     (let* ((chars (read-until-delim port '(#\;)))
            (n (string->number (list->string chars) 16)))
       (if (not (eof-object? (my-peek-char port)))
-        (read-char port))
+        (my-read-char port))
       (if (not n)
         (read-error "Bad inline hex escape"))
       (integer->char n)))
@@ -844,12 +844,12 @@
   ; We're inside |...| ; return the list of characters inside.
   ; Do NOT call fold-case-maybe, because we always use literal values here.
   (define (read-symbol-elements port)
-    (let ((c (read-char port)))
+    (let ((c (my-read-char port)))
       (cond
         ((eof-object? c) '())
         ((eqv? c #\|)    '()) ; Expected end of symbol elements
         ((eqv? c #\\)
-          (let ((c2 (read-char port)))
+          (let ((c2 (my-read-char port)))
             (cond
               ((eof-object? c) '())
               ((eqv? c2 #\|)   (cons #\| (read-symbol-elements port)))
@@ -944,18 +944,18 @@
                   (my-read-char port)
                   (my-read-delimited-list no-indent-read #\) port))
               ((char=? c #\) )
-                (read-char port)
+                (my-read-char port)
                 (read-error "Closing parenthesis without opening")
                 (underlying-read no-indent-read port))
               ((char=? c #\[ )
                   (my-read-char port)
                   (my-read-delimited-list no-indent-read #\] port))
               ((char=? c #\] )
-                (read-char port)
+                (my-read-char port)
                 (read-error "Closing bracket without opening")
                 (underlying-read no-indent-read port))
               ((char=? c #\} )
-                (read-char port)
+                (my-read-char port)
                 (read-error "Closing brace without opening")
                 (underlying-read no-indent-read port))
               ((char=? c #\| )
@@ -1070,7 +1070,7 @@
                     (cons prefix
                       (my-read-delimited-list neoteric-read-nocomment #\] port))))))
           ((char=? c #\{ )  ; Implement f{x}
-            (read-char port)
+            (my-read-char port)
             (neoteric-process-tail port
               (attach-sourceinfo pos
                 (let
@@ -1165,7 +1165,7 @@
 
   (define (accumulate-ichar port)
     (if (char-ichar? (my-peek-char port))
-        (cons (read-char port) (accumulate-ichar port))
+        (cons (my-read-char port) (accumulate-ichar port))
         '()))
 
   (define (consume-ff-vt port)
