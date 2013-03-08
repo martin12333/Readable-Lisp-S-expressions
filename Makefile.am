@@ -195,6 +195,11 @@ bin/sweet-run: src/sweet-run my-subst
 # the Common Lisp implementation.
 EXTRA_DIST += readable.cl
 
+# Implementation and test cases for ANTLR implementation
+# of sweet-expressions.  Again, don't install.
+EXTRA_DIST += sweet.g
+EXTRA_DIST += output/input.txt output/correct.txt output/go
+EXTRA_DIST += output/scheme/Pair.java
 
 # Distribute examples (but don't install them).
 EXTRA_DIST += \
@@ -222,8 +227,8 @@ dist_doc_DATA = README COPYING AUTHORS ChangeLog solution.md tutorial.md
 # Presentation in Open Document Format (.odp) about these formats:
 dist_doc_DATA += readable-s-expressions.odp
 
-# Include SRFI-105 specification as documentation (defines curly-infix):
-dist_doc_DATA += SRFI-105.html
+# Include SRFI specifications as documentation:
+dist_doc_DATA += SRFI-105.html SRFI-110.html
 
 # Distribute the specs.  They're not up-to-date, but they
 # are referred to in the README, so distribute them too

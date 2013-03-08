@@ -1329,6 +1329,25 @@ f ; Demo improper lists
 <tr>
 <td align="left" valign="top">
 <pre>
+f ; Demo vertical improper lists
+  x y
+  .
+  z
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(f
+  (x y)
+  .
+  z)
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
 ; Demo BEGIN with an indent
   f(a) g(x)
 </pre>
@@ -1340,6 +1359,31 @@ f ; Demo improper lists
 </pre>
 </td>
 </tr>
+
+<tr>
+<!-- 
+; From http://docs.racket-lang.org/ts-guide/quick.html#%28part._.Using_.Typed_.Racket_from_the_.Racket_.R.E.P.L%29
+-->
+<td align="left" valign="top">
+<pre>
+struct: pt ((x : Real) (y : Real))
+{distance : (pt pt -> Real)}
+define distance(p1 p2)
+  sqrt{sqr{pt-x(p2) - pt-x(p1)} +
+       sqr{pt-y(p2) - pt-y(p1)}}
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(struct: pt ((x : Real) (y : Real)))
+(: distance (pt pt -> Real))
+(define (distance p1 p2)
+  (sqrt (+ (sqr (- (pt-x p2) (pt-x p1)))
+           (sqr (- (pt-y p2) (pt-y p1))))))
+</pre>
+</td>
+</tr>
+
 
 <tr>
 <td align="left" valign="top">
