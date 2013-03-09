@@ -4719,7 +4719,7 @@ that we consider to be quite clear:
 define probe(x)
   display "probe: " \\ write x \\ newline()
 
-define buggy-function(a) $ probe $ let ()
+define buggy-function(a) $ probe
   define buggy-sub-function(b) $ short-call b
   body
   ...
