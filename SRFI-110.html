@@ -4712,6 +4712,12 @@ state the function followed by space-separated parameters.
 Both SUBLIST (<code>$</code>) and SPLIT (inline <code>\\</code>)
 allow some limited freedom in laying out the program text
 without disabling indentation processing.
+For example, in a
+<code>cond</code> construct, you can combine on one line
+a clause&#8217;s test and expression by separating them with <code>$</code>.
+Similarly, the common sequence &#8220;(define (f x) (cond ...))&#8221;
+can be represented by putting <code>define</code> and <code>cond</code>
+on one line and putting <code>$</code> before <code>cond</code>.
 Below are some examples
 that we consider to be quite clear:
 </p>
