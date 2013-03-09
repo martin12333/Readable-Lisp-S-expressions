@@ -1021,6 +1021,26 @@ define factorial(n)
 </tr>
 
 <tr>
+<!-- Here's another trivial Scheme program, a greatest common divisor function straight from Carl A. Gunter's "Semantics of Programming Languages" page 2: -->
+<td align="left" valign="top">
+<pre>
+define gcd(x y)
+  if {y = 0}
+    x
+    gcd y rem(x y)
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(define (gcd x y)
+  (if (= y 0)
+    x
+    (gcd y (rem x y))))
+</pre>
+</td>
+</tr>
+
+<tr>
 <!-- From "sweeten" -->
 <td align="left" valign="top">
 <pre>
@@ -1153,6 +1173,66 @@ sin 0 \\ cos 0
 </pre>
 </td>
 </tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+define-syntax my-let*
+  syntax-rules ()
+    \\
+    ! my-let* ()
+    !   body
+    !   ...
+    ! \\ begin
+    ! !    body
+    ! !    ...
+    \\
+    ! my-let*
+    !   \\
+    !     assignment
+    !     assignments
+    !     ...
+    !   body
+    !   ...
+    ! \\ let (assignment)
+    ! !    my-let*
+    ! !      \\
+    ! !        assignments
+    ! !        ...
+    ! !      body
+    ! !      ...
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(define-syntax my-let*
+  (syntax-rules ()
+    (
+     (my-let* ()
+       body
+       ...)
+      (begin
+        body
+        ...))
+    (
+     (my-let*
+       (
+        assignment
+        assignments
+        ...)
+       body
+       ...)
+      (let (assignment)
+        (my-let*
+          (
+           assignments
+           ...)
+          body
+          ...)))))
+</pre>
+</td>
+</tr>
+
 
 <tr>
 <td align="left" valign="top">
