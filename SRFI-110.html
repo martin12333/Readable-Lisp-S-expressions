@@ -4708,6 +4708,39 @@ function is right after the indent, and there are no child lines, simply
 state the function followed by space-separated parameters.
 </p>
 
+<p>
+Both SUBLIST (<code>$</code>) and SPLIT (inline <code>\\</code>)
+allow some limited freedom in laying out the program text
+without disabling indentation processing.
+Below are some common examples
+that we consider to be quite clear:
+</p>
+<pre>
+define (probe x)
+  display "probe: " \\ write x \\ (newline)
+
+define (buggy-function a) $ probe $ let ()
+  define (buggy-sub-function b) $ short-call b
+  body
+  ...
+
+define (polymorphic-function a) $ cond
+  (type1? a) $ handle-type1 a
+  (type2? a) $ handle-type2 a
+  (type3? a) $ begin
+    display "type3 handling not yet fully operational\n"
+    log-possible-error a
+    handle-type3 a
+  (type4? a) $ cond ; cond-in-cond - very clear
+    (type4-subtype1? a) $ handle-type4-subtype1 a
+    (type4-subtype2? a) $ handle-type4-subtype2 a
+    else                $ error 'polymorphic-function "impossible!" a
+  else       $ error 'polymorphic-function "unrecognized type" a
+
+define (func-w/return a) $ call/cc $ lambda (return)
+  body ... (return whatever) ...
+</pre>
+
 
 <h3>Width</h3>
 
