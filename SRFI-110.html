@@ -4716,14 +4716,6 @@ Below are some examples
 that we consider to be quite clear:
 </p>
 <pre>
-define probe(x)
-  display "probe: " \\ write x \\ newline()
-
-define buggy-function(a) $ probe
-  define buggy-sub-function(b) $ short-call b
-  body
-  ...
-
 define polymorphic-function(a) $ cond
   type1?(a) $ handle-type1 a
   type2?(a) $ handle-type2 a
@@ -4737,8 +4729,16 @@ define polymorphic-function(a) $ cond
     else                $ error 'polymorphic-function "impossible!" a
   else       $ error 'polymorphic-function "unrecognized type" a
 
+define probe(x)
+  display "probe: " \\ write x \\ newline()
+
+define buggy-function(a) $ probe
+  define buggy-sub-function(b) $ short-call b
+  body
+  ...
+
 define func-w/return(a) $ call/cc $ lambda (return)
-  body ... (return whatever) ...
+  body ... return(whatever) ...
 </pre>
 
 
