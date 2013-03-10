@@ -1404,6 +1404,67 @@ define distance(p1 p2)
 </td>
 </tr>
 
+<tr>
+<td align="left" valign="top">
+<pre>
+define-library
+  example grid
+  export make rows cols ref each rename(put! set!)
+  import (scheme base)
+  &lt;* begin
+
+define make(n m)
+  let (grid(make-vector(n)))
+    do &lt;* i 0 {i + 1} *&gt;
+    ! {i = n} grid
+    ! let &lt;* v make-vector(m #f alse) *&gt;
+        vector-set! grid i v
+
+define rows(grid) vector-length(grid)
+define cols(grid)
+  vector-length(vector-ref(grid 0))
+
+define ref(grid n m)
+  and
+    {-1 &lt; n &lt; rows(grid)}
+    {-1 &lt; m &lt; cols(grid)}
+    vector-ref vector-ref(grid n) m
+
+define put!(grid n m v)
+  vector-set! vector-ref(grid n) m v
+*&gt;
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(define-library
+  (example grid)
+  (export make rows cols ref each (rename put! set!))
+  (import (scheme base))
+  (begin
+
+    (define (make n m)
+      (let ((grid (make-vector n)))
+        (do ((i 0 (+ i 1)))
+            ((= i n) grid)
+            (let ((v (make-vector m #f alse)))
+              (vector-set! grid i v)))))
+
+    (define (rows grid) (vector-length grid))
+    (define (cols grid)
+      (vector-length (vector-ref grid 0)))
+
+    (define (ref grid n m)
+      (and
+        (< -1 n (rows grid))
+        (< -1 m (cols grid))
+        (vector-ref (vector-ref grid n) m)))
+
+    (define (put! grid n m v)
+      (vector-set! (vector-ref grid n) m v))))
+</pre>
+</td>
+</tr>
 
 <tr>
 <td align="left" valign="top">
