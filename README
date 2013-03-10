@@ -182,7 +182,8 @@ The spec-* files need to be updated (volunteers welcome).  For now, see
     ready for full use yet (help wanted!).
     To try it out, run your implentation (e.g., clisp), then:
       (load "readable.cl")
-
+*   SRFI-105.html - The SRFI defining curly-infix-expressions for Scheme
+*   SRFI-110.html - The draft SRFI defining sweet-expressions for Scheme
 
 Key directories
 ===============
