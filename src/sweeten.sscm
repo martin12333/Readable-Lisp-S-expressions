@@ -1,8 +1,8 @@
 ;_#!/bin/sh
 ;_if test "$#" = "0"; then
-;_  exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ -q -s "$0"
+;_  exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0"
 ;_else
-;_  cat "$@" | /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ -q -s "$0"
+;_  cat "$@" | /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0"
 ;_  exit $?
 ;_fi
 ;_
@@ -43,27 +43,35 @@
 ; Key functions include:
 ; sweeten-top(): Returns a list-of-characters representation of an
 ;   expression; it may generate multiple lines with indentation.
+;   Indentation must be active at the start of the line.
 ; line(): Return a list-of-characters representation of *one* line
 ;   of space-separated neoteric-expression units.
+;   The generated result may be rejected, e.g., if it's too long.
 ;   Indentation must be active at the start of the line.
 ; unit(): Return a list-of-characters representation of some unit.
 ;   Indentation processing *may* be active, but the character sequence
 ;   returned must not depend on that; it returns a list without newline.
+;
+; For debugging, add "--debug" after the two @ GUILE @ statements at the
+; beginning of the file; this will enable very useful backtraces.
 
-; Set to #t if you want to run while invoking the sweet module directly.
+; Set build-on-top to #t if you want to run while invoking the
+; sweet module directly.
 ; We need to explicitly *disable* the sweet-reader if it's active so that we
 ; get the "old" reader format on read; this is important for handling
 ; badly-formatted old files.   In the standard build this is unnecessary.
+
+#!sweet
+
 define build-on-sweet #f
 if build-on-sweet
   use-modules
     readable kernel
 
-; These are settings that control the "look" of the formatted result.
+; Here are settings that control the "look" of the formatted result.
 ; In the future these might be controlled via option flags.
-
-; Note: The maxwidth may be violated if, at a current indent, there is a
-; long non-pair that exceeds it.  But other than long atoms, it's respected,
+; Note that maxwidth may be violated if, at a current indent, there is a
+; long non-pair that exceeds it.  Other than that, it's respected,
 ; so it's unlikely to exceed this width in practice:
 define maxwidth 78
 define indent-increment '(#\space #\space)
@@ -71,25 +79,35 @@ define marked-indent-increment '(#\! #\space)
 define min-indent-marking {length(indent-increment) * 3}
 define max-unit-character-length 60  ; Max character length of single unit.
 define max-unit-list-length 8        ; Max list length of single unit.
+define max-uncomplicated-meta-length 9 ; "Complicated" if more than this.
 define boring-length 16              ; Lists >= this length may be boring.
 
-define infix-operators
-  ' and or xor + - * / ^ ++ -- ** // ^^ < <= > >= = <> != ==
+define special-infix-operators
+  ' and or xor
 
-; Lists with these symbols as first parameter, and aren't shown as 1 line,
-; are be shown as a line with SYMBOL FIRST-PARAMETER, followed by
-; child lines (where we can manage it).
+; This is a list of operators that we prefer to present as "cuddled" with
+; one following parameter. In other words, if multi-line, show these as
+; "OPERATOR FIRST-PARAMETER" followed by other parameters as child lines.
+; This is different from the usual multi-line format, which is just
+; "OPERATOR" on the first line followed by child lines.
 ; This format is used when in typical uses the first parameter is *special*
-; and has a different semantic meaning from later parameters.
+; and has a different semantic meaning from later parameters,
+; such as defining operators and control flow operators.
 ; This refinement isn't *necessary* but I think it looks better.
-define cuddle-first-parameter
-  '(define lambda
+; The "complicated?" routine, below, will recommend that lists with these
+; operators be split into multiple lines if their parameters are complex.
+; We actually cuddle TWO parameters for Common Lisp defun, but that's
+; so unusual that we handle "defun" as a separate special case.
+define cuddle-first-parameter '(
   if when unless case
-  set! setq let let* letrec let1 do
+  define lambda
   define-module                  ; Guile modules
   library export import          ; R6RS library modules
-  defun block typecase           ; Common Lisp
-  let-syntax letcrec-syntax define-syntax syntax-rules)
+  letrec let let* let1
+  let-syntax letcrec-syntax
+  define-syntax syntax-rules
+  set! do
+  setq block typecase)           ; Common Lisp
 
 ; Control what symbol is used for grouping.  This isn't likely to change
 ; now, but it was a subject of long mailing list discussion.
@@ -104,9 +122,18 @@ define LISTLP          list( #\( )
 define LISTRP          list( #\) )
 define LISTLBRACE      list((integer->char 123))
 define LISTRBRACE      list((integer->char 125))
-define LISTSPACE       list( #\space )
+define LIST.SP         list( #\. #\space )
 define LISTSP.SP       list( #\space #\. #\space )
-
+; This list of punctuation characters is the list of punctuation characters
+; in the POSIX/C locale as defined in the POSIX.1 2008 specification
+; XBD section 7.3.1.1, in the same order as given for "punct".
+; Thus, this is the set of characters for which C ispunct() is true in the
+; POSIX or C locale.
+define punct-chars     list( #\! #\" #\# #\$ #\% #\& #\'
+                             #\( #\) #\* #\+ #\, #\- #\. #\/
+                             #\: #\; #\< #\= #\> #\? #\@
+                             #\[ #\\ #\] #\^ #\_ #\` #\{
+                             #\| #\} #\~ )
 
 ; This program automatically handles various end-of-line situations.
 ; An end-of-line is a sequence of two different end-of-line chars,
@@ -121,6 +148,29 @@ define end-of-line-chars
     ; If wide chars are supported, add this:
     ; integer->char(#x2028)   ; <line separator>
 
+; Returns #f if x has >1 element. Improper lists are #t.
+define multi-element-list?(x)
+  {pair?(x) and not(null?(cdr(x)))}
+
+; Returns #t if x is a list with exactly 1 element.  Improper lists are #f.
+define single-element-list?(x)
+  {pair?(x) and null?(cdr(x))}
+
+; Does x contain a list of ONLY punctuation characters?
+; An empty list is considered true.
+define contains-only-punctuation?(x)
+  cond
+    null?(x)                 #t
+    not(pair?(x))            #f ; Check this before evaluating car(x)!
+    memq(car(x) punct-chars) contains-only-punctuation?(cdr(x))
+    #t                       #f
+
+; Returns #t if x is a symbol that would typically be used in infix position.
+define is-infix-operator?(x)
+  cond
+    not(symbol?(x)) #f
+    memq(x special-infix-operators) #t
+    #t contains-only-punctuation?(string->list(symbol->string(x)))
 
 ; Given an indent, return the next deeper indent.
 define deeper(indent)
@@ -142,7 +192,6 @@ define mark-deeper(indent)
     append indent marked-indent-increment
     append indent indent-increment
 
-
 ; An x is boring if it's not a list, or it's a list with ONLY non-pair members.
 define boring?(x)
   cond
@@ -162,7 +211,6 @@ define long-and-boring?(x)
     {length(x) < boring-length}   #f
     #t                            boring?(x)
 
-
 ; Support general-length-inner - help count length of possibly-improper list.
 define general-length-inner(x count-so-far)
   cond
@@ -176,16 +224,41 @@ define general-length-inner(x count-so-far)
 define general-length(x)
   general-length-inner x 0
 
+; The "meta-length" is an estimate of how complicated an expression is.
+; Every list element counts as 1, and every new list also adds one
+; (because we count () as 1) recursively.
+define meta-length(x)
+  cond
+    not(pair?(x)) 1  ; Includes ().
+    #t            {meta-length(car(x)) + meta-length(cdr(x))}
+
+; Return true if m is "complicated" (and thus should split lines).
+; All Common Lisp "defuns" are considered complicated.
+; If an operator is one that we prefer to cuddle, and its meta-length
+; is long, then say that's complicated too.
+define complicated?(x)
+  cond
+    eq?(car(x) 'defun) #t
+    memq(car(x) cuddle-first-parameter)
+      if pair?(cdr(x))
+        {meta-length(cddr(x)) > max-uncomplicated-meta-length}
+        #f
+    #t #f
 
 ; Return #t if x should be represented using curly-infix notation {...}.
 define represent-as-infix?(x)
   and
     pair? x
-    symbol? car(x)
-    memq car(x) infix-operators
-    list? x
-    {length(x) >= 3}
+    is-infix-operator? car(x)
+    list? x           ; No improper lists!
     {length(x) <= 6}
+
+define represent-as-inline-infix?(x)
+  {represent-as-infix?(x) and {length(x) >= 3}}
+
+; Return #t if x should be represented as a brace suffix
+define represent-as-brace-suffix?(x)
+  {represent-as-infix?(x) and {length(x) >= 2}}
 
 ; Define an association list mapping the Lisp function names which have
 ; abbreviations ==> the list of characters in their abbreviation
@@ -213,8 +286,8 @@ define unit-list(x)
     pair?(x)
       if null?(cdr(x))
         unit car(x)
-        append unit(car(x)) LISTSPACE unit-list(cdr(x))
-    #t  append(LISTSP.SP unit(x))
+        append unit(car(x)) '(#\space) unit-list(cdr(x))
+    #t  append(LIST.SP unit(x))
 
 ; Return tail of an infix expression, as list of chars
 ; The "op" is the infix operator represented as a list of chars.
@@ -223,11 +296,17 @@ define infix-tail(op x)
     null?(x)
       LISTRBRACE
     pair?(x)
-      append LISTSPACE op LISTSPACE unit(car(x)) infix-tail(op cdr(x))
+      append '(#\space) op '(#\space) unit(car(x)) infix-tail(op cdr(x))
     ; The following is used if we get an improper list.  This can't
     ; happen if only proper lists are represented using curly-infix:
     #t
       append LISTSP.SP unit(x) LISTRBRACE
+
+; Return "x" as a list of characters, surrounded by {...}, for use as f{...}.
+define as-brace-suffix(x)
+  if {general-length(x) < 3}
+    append LISTLBRACE unit-list(x) LISTRBRACE
+    append LISTLBRACE unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
 
 ; Given list of characters, return the characters that would REPRESENT
 ; those characters inside a string AFTER the initial double-quote,
@@ -270,9 +349,17 @@ define unit(x)
        long-and-boring?(x)
          append LISTLP unit-list(x) LISTRP
        symbol?(car(x))
-         if represent-as-infix?(x)
-           append LISTLBRACE unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
-           append unit(car(x)) LISTLP unit-list(cdr(x)) LISTRP
+         cond
+           represent-as-inline-infix?(x)
+             ; Special case, use {...}:
+             append LISTLBRACE unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
+           {single-element-list?(cdr(x)) and pair?(cadr(x)) and
+             represent-as-brace-suffix?(cadr(x))}
+             ; Special case, use f{...}:
+             append unit(car(x)) as-brace-suffix(cadr(x))
+           #t
+             ; Normal case, use f(...):
+             append unit(car(x)) LISTLP unit-list(cdr(x)) LISTRP
        #t
          append LISTLP unit-list(x) LISTRP
     #t  string->list(object->string(x))
@@ -280,31 +367,49 @@ define unit(x)
     ; You might be able to use these in a pinch:
     ; char?(x)     append '(#\# #\\) x ; Doesn't handle special chars
 
+; Display a unit, but it's exposed, that is, it's outside (), [], {}.
+; Thus, we need to specially escape markers like "$".
+define exposed-unit(x)
+  cond
+    eq?(x '$  ) string->list("{$}")
+    eq?(x '\\ ) string->list("{\\\\}")
+    eq?(x '<* ) string->list("{<*}")
+    eq?(x '*> ) string->list("{*>}")
+    eq?(x '$$$) string->list("{$$$}")
+    #t          unit(x)
+
+; Return x as a unit, but always represent lists as (a b c):
+define unit-force-list(x)
+  if pair?(x)
+    append LISTLP unit-list(x) LISTRP
+    unit(x)
 
 ; Return x, the rest of the list, as a list of characters. See line().
 define line-tail(x)
   cond
     null?(x)  '()
     pair?(x)
-      append LISTSPACE unit(car(x)) line-tail(cdr(x))
+      append '(#\space) exposed-unit(car(x)) line-tail(cdr(x))
     #t
-      append LISTSP.SP unit(x)
+      append LISTSP.SP exposed-unit(x)
 
 ; Return x represented as a line of space-separated neoteric-expression units,
 ; as a list of characters.
 ; Indentation processing *MUST* be active.
 define line(x)
   cond
-    not(pair?(x))                 unit(x)
-    represent-as-abbreviation?(x) unit(x)
-    represent-as-infix?(x)        unit(x)
-    {pair?(x) and null?(cdr(x))} ; Handle 1-datum case specially.
+    not(pair?(x))                  exposed-unit(x)
+    represent-as-inline-infix?(x)  unit(x)
+    represent-as-abbreviation?(x)
+      if multi-element-list?(cadr(x))
+        append cadr(assq(car(x) abbreviations)) '(#\space) line(cadr(x))
+        exposed-unit(x) ; Show 'ITEM (etc.) if x isn't a multi-item list.
+    single-element-list?(x)  ; Handle 1-datum case specially.
       if symbol?(car(x))
-        append unit(car(x)) LISTLP LISTRP
-        append LISTLP unit(car(x)) LISTRP
+        append exposed-unit(car(x)) LISTLP LISTRP
+        append LISTLP unit(car(x)) LISTRP ; This unit is not exposed.
     #t
-      append unit(car(x)) line-tail(cdr(x))
-
+      append exposed-unit(car(x)) line-tail(cdr(x))
 
 ; Return list "m" as a list of characters representing
 ; a long and boring split list.  We'll keep track of position inside
@@ -315,28 +420,26 @@ define sweeten-boring-list(x first? pos next-indent)
     first?
       ; if first, force its disply, even if that goes beyond width max.
       let
-        $ item unit(car(x))
+        $ item exposed-unit(car(x))
         append item 
           sweeten-boring-list(cdr(x) #f {pos + length(item)} next-indent)
     #t ; Not first.
       let
-        $ item unit(car(x))
+        $ item exposed-unit(car(x))
         let
-          $ item-sameline append(LISTSPACE group-list LISTSPACE item)
+          $ item-sameline append('(#\space) group-list '(#\space) item)
           if {{pos + length(item-sameline)} < maxwidth}
             append item-sameline
               sweeten-boring-list cdr(x) #f
                 {pos + length(item-sameline)} \\ next-indent
-            begin
-              append '(#\newline) next-indent
-                sweeten-boring-list x #t length(next-indent) next-indent
+            append '(#\newline) next-indent
+              sweeten-boring-list x #t length(next-indent) next-indent
 
 
-; Return the string to add as indentation; should be empty if indentation
-; has already occurred.
+; Return the string to add as indentation (empty if already indented).
 define getdent(indent-already indent)
   if indent-already
-    string->list("")
+    '()
     indent
 
 ; What's the number of characters consumed in the indent (and thus
@@ -372,7 +475,7 @@ define sweeten-top-normal-indent(x indent indent-already)
     ; know that the indentation has been performed.
     let*
       \\
-        prefix  append(cadr(assq(car(x) abbreviations)) LISTSPACE)
+        prefix  append(cadr(assq(car(x) abbreviations)) '(#\space))
         newdent append(getdent(indent-already indent) prefix)
       append newdent
         sweeten-top cadr(x) indent newdent
@@ -387,7 +490,7 @@ define sweeten-top-normal-indent(x indent indent-already)
 ; to determine the most pleasing format.
 define sweeten-top-multiline(m indent indent-already)
   if pair?(car(m))  ; Is car a pair?  If so, we may need GROUP.
-    let* (asunit-car(unit(car(m)))) ; Get representation of car.
+    let* (asunit-car(exposed-unit(car(m)))) ; Get representation of car.
     ! if fits-width?(indent-already indent length(asunit-car))
     !   ; We can squeeze the car into the line - don't use GROUP.
     !   append getdent(indent-already indent) asunit-car '(#\newline)
@@ -408,15 +511,33 @@ define sweeten-top-multiline(m indent indent-already)
     ! !   deeper(indent)
     ! !   sweeten-boring-list m #t posdent(indent-already indent)
     ! !                       deeper(indent)
-    ! {memq(car(m) cuddle-first-parameter) and {length(m) >= 3}}
-    ! ! ; the car is a symbol that we'd like to cuddle. Try to do so.
+    ! {eq?(car(m) 'defun) and {general-length(m) > 3}}
+    ! ! ; Handle Common Lisp "defun" specially; try to cuddle the
+    ! ! ; first 2 parameters of the defun operator.
+    ! ! let*
+    ! !    $ asline-cuddled
+    ! !      append
+    ! !        line list(car(m) cadr(m))  ; "defun" name-of-function
+    ! !        '(#\space)                 ; space between name and parameters
+    ! !        unit-force-list caddr(m)   ; list of parameters.
+    ! !    if fits-width?(indent-already indent length(asline-cuddled))
+    ! !      ; We can cuddle up on line with name and list of parameters:
+    ! !      append getdent(indent-already indent)
+    ! !        asline-cuddled \\ '(#\newline)
+    ! !        sweeten-body cdddr(m) mark-deeper(indent) #f
+    ! !      ; Can't cuddle "defun funcname (params)" - use normal format.
+    ! !      sweeten-top-normal-indent m
+    ! !        getdent(indent-already indent) \\ #f
+    ! memq(car(m) cuddle-first-parameter)
+    ! ! ; We'd like to cuddle the first parameter of this operator,
+    ! ! ; if we can... so try to do so.
     ! ! let* (asline-cuddled(line(list(car(m) cadr(m)))))
     ! !    if fits-width?(indent-already indent length(asline-cuddled))
     ! !       ; We can cuddle up on line with one parameter:
     ! !       append getdent(indent-already indent)
     ! !         asline-cuddled \\ '(#\newline)
     ! !         sweeten-body cddr(m) mark-deeper(indent) #f
-    ! !       ; Can't cuddle - use normal format.
+    ! !       ; Can't cuddle with one parameter - use normal format.
     ! !       sweeten-top-normal-indent m
     ! !         getdent(indent-already indent) \\ #f
     ! ; Nothing special.  Use normal multi-line format:
@@ -433,21 +554,23 @@ define sweeten-top-multiline(m indent indent-already)
 ; line with sweet-expression (indentation) processing active.
 define sweeten-top(m indent indent-already)
   if not(pair?(m)) ; if not a pair, just print it. () handled here
-    append(getdent(indent-already indent) unit(m) '(#\newline))
+    append(getdent(indent-already indent) exposed-unit(m) '(#\newline))
     ; We have a pair. Can we represent it as one line of space-sep params?
     let* (asline(line(m)) length-asline(length(asline)))
       if { {length-asline < max-unit-character-length} and
            fits-width?(indent-already indent length-asline) and
+           {not complicated?(m)} and
            {general-length(m) < max-unit-list-length} }
         ; Yes, we can represent it as one list of space-separated parameters:
         append getdent(indent-already indent) asline '(#\newline)
-        ; No, can't put entire expression on one line. Use a multiline format.
+        ; No, don't put entire expression on one line; use multiline.
+        ; This can happen even if we COULD have put it on one line,
+        ; because we intentionally break up "complicated" expressions:
         sweeten-top-multiline(m indent indent-already)
 
 ; True if at beginning of column (line), otherwise false.
 ; This value is only used when we're looking for a datum to read() in.
 define column1 #t
-
 
 ; Display x (a list of chars and strings), but do NOT display
 ; the last end-of-line.  Because we only take generated files,
@@ -482,8 +605,6 @@ define display-sweeten-format(x)
     begin newline() set!(column1 #t)
   display-skip-last-eol sweeten-top(x string->list("") #f)
 
-
-
 ; Consume an end-of-line. This is 2 unequal end-of-line characters,
 ; or a single end-of-line character, whichever is longer.
 define consume-end-of-line()
@@ -494,8 +615,7 @@ define consume-end-of-line()
         let
           $ next peek-char()
           if {not{c eq? next} and memq(next end-of-line-chars)}
-            begin
-              read-char()
+            read-char()
 
 ; Copy one line from stdin to stdout, end on EOF or end-of-line.
 ; Consume the end of line.
@@ -509,7 +629,6 @@ define copy-line(port)
         newline()
         set! column1 #t
       #t write-char(read-char(port)) set!(column1 #f) copy-line(port)
-
 
 ; filter stdin to stdout, reading in traditional s-expressions and outputting
 ; sweet-expressions.  Preserve the comments outside an s-expression.
@@ -562,6 +681,4 @@ define sweeten-filter()
 ; And run:
 ;    guile sweeten.scm
 
-
 sweeten-filter()
-

@@ -15,7 +15,7 @@ define f(a) {2 * a}
 
    (define (f a) (* 2 a)) (define x 4)
 
-#! This is a multiline comment
+#!/bin/sh This is a multiline comment
 !#
 #| This is a another hash comment. |#
 #| This is a another multiline
@@ -23,5 +23,53 @@ define f(a) {2 * a}
 g(x)
 
 #f()
+
+
+ first second third
+;back to
+ working correctly
+
+  indent-disabled
+
+  indent-disabled1 indent-disabled2
+
+  indent-disabled1   indent-disabled2     indent-disabled3
+
+  initial-indents $ disable \\ processing
+
+  indent-disabled
+  indent-disabled-another
+  ; Indented comments should be ignored
+g 1 2
+  ; Even if they occur after a normal line
+h 3 4
+ 
+p \\ q
+
+n a b \\ sing sang sung
+n a b \\ sing sang sung
+ d e f
+a $ b \\ c $ d
+e f $ g h \\ i j $ k l
+a b c $ d e f $ g h i \\ j k l $ m n o $ p q r \\ s t u $ v w x $ y z zz
+
+    (define (f a) (* 2 a)) (define x 4)
+
+a \\ b
+
+a
+\\
+b
+
+
+\\ a
+\\ b
+\\ c
+
+(f a)
+(g x)
+
+; This BEGINS with an indent
+ f(a) g(x)
 
 ; Comment at end of file.

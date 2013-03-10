@@ -1,0 +1,22 @@
+concat "I want "
+  getwish from me
+  . " - " username
+a b c d e
+  . f g h
+  . i j k
+define (fibfast n)
+  if (< n 2)
+    . n
+    fibup n 2 1 0
+define (fibup maxnum count n-1 n-2)
+  if (= maxnum count)
+    (+ n-1 n-2)
+    fibup maxnum (+ count 1) (+ n-1 n-2) n-1
+define (factorial n)
+  if (<= n 1)
+    . 1
+    (* n (factorial (- n 1)))
+define (gcd x y)
+  if (= y 0)
+    . x
+    gcd y (rem x y)

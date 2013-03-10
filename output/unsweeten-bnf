@@ -1,0 +1,21 @@
+#!/bin/sh
+
+antlrworks_jar=../antlrworks-*.jar
+output_dir=.
+# Note: Remove GNU extension --strip-trailing-cr if you don't have it
+diff_options="-u --strip-trailing-cr"
+
+if [ -x /usr/bin/cygpath ] ; then
+  antlrworks_jar="$(cygpath -wa $antlrworks_jar)"
+  output_dir="$(cygpath -wa $output_dir)"
+fi
+
+CLASSPATH="$CLASSPATH;$antlrworks_jar;$output_dir"
+# echo "CLASSPATH=\"$CLASSPATH\""
+# echo
+
+# Clear out old version
+rm -f output.txt
+
+java Unsweeten_ANTLR | (cd ..; ./unsweeten)
+

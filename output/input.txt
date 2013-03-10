@@ -1,0 +1,526 @@
+one
+
+one two
+
+one two three
+
+one two three
+  four
+
+one two three
+  four
+  five
+
+one two three
+  four
+  five
+  six
+
+a b
+  c
+  d e
+
+a
+   ' c d e
+      g h i
+
+cos 0
+
+42
+7.0
+#xffff
+#i#b1001
+#b#e1001
+#e42
+
+#! SRFI-22
+one
+#!/bin/sh
+  weird script should be ignored
+!#
+two
+#!sweet
+three
+#!
+four
+
+$ a
+$ a b
+$ a b c
+x $ a
+x $ a b
+x $ a b c
+x y $ a
+x y $ a b
+x y $ a b c
+x y z $ a
+x y z $ a b
+x y z $ a b c
+
+$ a
+  b
+
+$ a
+  b c
+
+$ a z
+  o p
+
+; "$" is different from \\; initial "$" always makes another list. Since:
+; \\
+;   d
+; would create (d), a "$" inserts another (...) level vs \\, making ((d)):
+$ \\
+  d
+
+; This is (((d e))) :
+$ \\
+  d e
+
+$ \\
+  d e f
+
+
+fee $ fie
+  foe fum
+
+' a b
+  c d
+
+m ' n o
+  p q
+
+'x y z
+  c d
+
+'a b c
+
+a 'c e
+
+m n 'o
+
+\\
+  q1
+
+\\
+  q1 q2
+
+\\
+  q1 q2 q3
+
+\\
+  a1 a2
+  b1 b2
+  c1 c2
+
+\\ a
+
+\\ a
+  b
+
+\\ a
+  b c
+
+
+\\ x y z
+  aa bb
+  cc dd
+  ee ff
+
+a b
+  c \\ d
+  e f \\ g h
+  i j k \\ l m n \\ o p q
+
+p \\ q
+
+n a b \\ sing sang sung
+
+n a b \\ sing sang sung
+  d e f
+
+use-dash
+
+let <* *>
+let <* hello *>
+let <* var1 value1 *>
+let <* var1 value1 \\ var2 value2 *>
+
+let <* var1 value1 *>
+  fact var1
+
+; "$" inside parens is just another atom.
+
+(a b $ c d)
+
+xyz
+
+($ x)
+
+a $ b \\ c $ d
+
+e f $ g h \\ i j $ k l
+
+a b c $ d e f $ g h i \\ j k l $ m n o $ p q r \\ s t u $ v w x $ y z zz
+
+; Test tabs
+
+f
+	a
+	b
+
+g
+! h
+
+h
+; ignore me.
+  ; ignore me, too.
+  i
+
+  first second third
+back to
+  working correctly
+
+; NOT WORKING YET - restart after head:
+;  define-library (example grid)
+;  \>  export make rows cols ref each rename(put! set!)
+
+; import (scheme short) <* *>
+
+import (scheme base) <* begin
+
+define make(n m)
+  do-make()
+
+define rows(grid)
+  vector-length(grid)
+*>
+
+; import (scheme base) <* begin stuff
+; 
+; define make(n m)
+;   do-make()
+; 
+; define rows(grid)
+;   vector-length(grid)
+; *>
+
+
+; Initial indents:
+
+  indent-disabled
+
+  indent-disabled1 indent-disabled2
+
+  indent-disabled1   indent-disabled2     indent-disabled3
+
+  initial-indents $ disable \\ processing
+
+  indent-disabled
+  indent-disabled-another
+  ; Indented comments should be ignored
+g 1 2
+  ; Even if they occur after a normal line
+h 3 4
+ 
+
+; Check deep nesting - does it dedent?
+f 1 2
+  a 3 4
+    ; Embedded comments should be ignored.
+    b 5 6
+      c 7 8
+      d 9 9
+
+a 1 2
+  b 2 3
+  c 4 5
+    d 6 7
+    e 8 9
+      f 10 11
+  g again
+
+\\
+  1 2
+
+\\ #| Ignore this |#
+  4 5
+
+\\
+  1 2
+  3 4
+
+\\ #| Ignore this |#
+  4 5
+  a b
+
+#| Ignore this |#
+  6 7
+  8 9
+
+\\
+  1 2
+  3 4
+
+$ \\
+  1 2
+  3 4
+
+f
+  a
+  \\
+  b
+
+x . y
+
+x y . z
+
+{}
+
+{solo}
+
+{+ x}
+
+{a eq b}
+
+{a + b + c}
+
+{a + b + c +}
+
+(  x  y  z  )
+(  x  y  )
+(  x  )
+(  )
+
+(  . a  )
+(  a . b  )
+(  a  b  .  c  )
+
+(  .  )
+(  quote  .  )
+
+f()
+f(x)
+f(a b)
+f(a b c)
+
+f[]
+f[x]
+
+f{}
+f{x}
+f{+ x}
+f{x + 1}
+
+x(a)(b)
+
+#t
+#f
+
+#\Q 1 #\( 2 #\a 3 #\newline 4
+
+#(1 2 3)
+#u8(5 6 7)
+
+#!sweet
+
+{n * factorial{n - 1}}
+
+#;a#|hi|#(x) z
+
+<* *>
+<* hi *>
+<* a b *>
+<* a b c *>
+<* (x) (y) (z) *>
+
+<* this *> is a test
+<* define(x 5) define(y 7) *> is a test
+
+<*
+library \\ amkg animals $ 1 0
+export
+  cat
+  rename $ rover dog
+import
+  only
+    amkg pets $ 1 0
+    rover
+
+define cat 'meow
+
+*>
+
+let ((x cos(f(c))))
+! dostuff x
+
+let <* x $ cos $ f c *>
+! dostuff x
+
+test <* x 1 *> <* y 2 *>
+  <* a 3 *> <* b 4 *>
+
+<* t 1 *>
+  <* u 2 *>
+
+library \\ amkg animals $ 1 0
+
+another
+
+amkg animals $ 1 0
+
+define cuddle-first-parameter '(
+  if when unless case
+  define lambda
+  define-module                  ; Guile modules
+  library export import          ; R6RS library modules
+  letrec let let* let1
+  let-syntax letcrec-syntax
+  define-syntax syntax-rules
+  set! do
+  setq block typecase)           ; Common Lisp
+
+fred
+ 
+    (define (f a) (* 2 a)) (define x 4)
+
+normal
+
+#!sweet
+
+  hello world
+
+all-okay
+
+; (define f before (let (begin (define x 1) (define y 2)) q) after)
+define f
+  before
+  let <* begin
+define x 1
+define y 2
+*> q
+  after
+
+after-okay
+
+f 1
+
+  b c
+
+before
+; 
+after
+
+  separate datums
+
+let <*
+first
+
+last
+*>
+
+; ((hello) (f x))
+<* hello *>
+  f x
+
+; ((bye) a b (f x))
+<* bye *> a b
+  f x
+
+; ((one) (two) (three) ((four) (five)) (f x))
+<* one *> <* two *> <* three *>
+  <* four *> <* five *>
+  f x
+
+. n(expr)
+
+foo
+  \\ ; comment_eol
+  ; same followed by comment_eol
+  foo
+
+foo
+  a
+  \\
+  b
+
+a \\ b
+
+a
+\\
+b
+
+foo
+! c \\ d
+
+foo
+! c
+! \\
+! d
+
+f
+ \\ a
+ \\ b
+ \\ c
+
+\\ a
+\\ b
+\\ c
+
+foo
+! bar batz
+; comment
+! nitz koo
+
+car $ gettimeofday()
+
+'
+  hi
+
+' hi
+
+'
+  one two
+
+' one two
+
+'
+  f()
+
+' f()
+
+'
+  f() g()
+
+' f() g()
+
+'
+  ((f))
+
+' ((f))
+
+' f(1) g(1)
+
+; Multiline - interpret this way so you can access weird extensions
+; such as multi-line quasiquote ("Bawden quasiquote")
+
+'
+  f(1)
+  g(1)
+
+'
+  a
+  b
+
+' a b
+
+(dd1 ee1 . ff1)
+
+foo1
+ bar
+  aa1
+  bb1
+  .
+  cc1
+
+fin

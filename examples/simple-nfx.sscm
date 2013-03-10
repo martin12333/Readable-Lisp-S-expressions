@@ -32,7 +32,7 @@ define-module
   examples simple-nfx
   :export-syntax
   \\
-    nfx
+    $nfx$
 
 cond-expand
   guile-2
@@ -75,6 +75,6 @@ define-syntax nfx::helper
 define-syntax nfx
   syntax-rules (+ - * /)
     \\
-    ! nfx terms ...
+    ! $nfx$ terms ...
     ! \\ nfx::helper (terms ...) ()
 

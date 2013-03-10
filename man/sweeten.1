@@ -47,8 +47,10 @@ None.
 .\" .SH "ENVIRONMENT"
 .\" .PP
 
-.\" .SH BUGS
-.\" .PP
+.SH BUGS
+.PP
+This program assumes that the input does not contain any cycles
+(improper lists are okay).
 
 .SH EXAMPLES
 .PP
@@ -63,7 +65,10 @@ The sweeten tool could be sent the following traditional s-expression:
 Sweeten might choose to represent it this way:
 
 .PP
-  define factorial(n) if({n <= 1} 1 {n * factorial({n - 1})})
+  define factorial(n)
+    if {n <= 1}
+      1
+      {n * factorial{n - 1}}
 
 .SH "SEE ALSO"
 .PP
