@@ -164,17 +164,17 @@ The list elements inside {...} can be neoteric-expressions, not just ordinary li
 
 Just execute "(exit)" to get out.
 
-(Note: If you want to try the draft curly-infix implementation in Common Lisp, run a Common Lisp implementation such as clisp, and then execute (load "readable.cl")).
+(Note: If you want to try the draft curly-infix implementation in Common Lisp, run a Common Lisp implementation such as clisp, and then execute (load "readable.cl").).
 
 
 Using Neoteric-expressions (n-expressions)
 ===========================================
 
-Now let's do more with neoteric-expressions (which include curly-infix-expressions).  This time we'll use guile, a Scheme implementation.   You'll need to have guile and expect for this to work; assuming you do, try this:
+Now let's do more with neoteric-expressions (which include curly-infix-expressions).  You'll need to have guile and expect for this to work; assuming you do, try this:
 
       ./neoteric-guile
 
-We have reports that guile version 2.0's new "autocompilation" feature can cause troubles.  If you see ";; compiling /blah/blah...", then just exit by typing **exit()** and **Enter**.  Then restart it (don't the clear cache first), and it should work.
+We have reports that guile version 2.0's "autocompilation" feature can cause troubles.  If you see ";; compiling /blah/blah...", then just exit by typing **exit()** and **Enter**.  Then restart it (don't the clear cache first), and it should work.
 
 Neoteric-expressions support curly-infix-expressions, including normally-formatted s-expressions.  In addition, neoteric-expressions add special meanings to the grouping symbols ( ), [ ], and { } if they *immediately* follow an expression (instead of being separated by whitespace).  In particular, any e( ... ) is mapped to (e ...), and any e{ ... } is mapped to (e { ... }).
 
@@ -224,7 +224,7 @@ Sweet-expressions take neoteric-expressions and infers parentheses from indentat
     ./sweet-guile
 
 
-Again, we have reports that guile version 2.0's new "autocompilation" feature can cause troubles.  If you see ";; compiling /blah/blah...", then just exit by typing **(exit)** and **Enter** **Enter**.  Then restart it (don't the clear cache first), and it should work.
+Again, we have reports that guile version 2.0's "autocompilation" feature can cause troubles.  If you see ";; compiling /blah/blah...", then just exit by typing **(exit)** and **Enter** **Enter**.  Then restart it (don't the clear cache first), and it should work.
 
 In sweet-expressions, an indented line is a parameter of its parent, and later terms on a line are parameters of the first term. A line with exactly one term, and no child lines, is simply that item; otherwise those terms and its child lines are themselves a new list. Lines with *only* a ;-comment, and nothing else, are completely ignored - even their indentation is irrelevant. Whitespace-only lines at the beginning of a new expression are ignored, but a whitespace-only line (including a zero-length line) ends an expression. So, just type in your expression, and type a blank line (an extra Enter) to indicate that you're done.
 
@@ -488,6 +488,19 @@ Empty lines
 Since empty lines end an expression, you can't have an empty line in the middle of one.  That's not as bad as it sounds, though.  You can instead use a semicolon comment (the indentation doesn't matter in this case) or \\\\ by itself at the correct indentation.
 
 The reason is that this (1) makes interactive use pleasant, and (2) we don't want the interactive and file syntax to be different.
+
+Collecting lists
+----------------
+
+When indentation is active, you can use &lt;* and *&gt; as essentially parentheses, but indentation processing is still active, and inside the indent starts again at the edge.  This is useful for short expressions after a "let", as well as for creating long module definitions. E.G.:
+
+    let* &lt;* x cos(a) *&gt;
+        {2 * x}
+
+which becomes:
+
+    (let ((x (cos a)))
+        (* 2 x))
 
 
 What's the big deal?
