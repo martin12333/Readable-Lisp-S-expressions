@@ -1177,66 +1177,6 @@ sin 0 \\ cos 0
 <tr>
 <td align="left" valign="top">
 <pre>
-define-syntax my-let*
-  syntax-rules ()
-    \\
-    ! my-let* ()
-    !   body
-    !   ...
-    ! \\ begin
-    ! !    body
-    ! !    ...
-    \\
-    ! my-let*
-    !   \\
-    !     assignment
-    !     assignments
-    !     ...
-    !   body
-    !   ...
-    ! \\ let (assignment)
-    ! !    my-let*
-    ! !      \\
-    ! !        assignments
-    ! !        ...
-    ! !      body
-    ! !      ...
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-(define-syntax my-let*
-  (syntax-rules ()
-    (
-     (my-let* ()
-       body
-       ...)
-      (begin
-        body
-        ...))
-    (
-     (my-let*
-       (
-        assignment
-        assignments
-        ...)
-       body
-       ...)
-      (let (assignment)
-        (my-let*
-          (
-           assignments
-           ...)
-          body
-          ...)))))
-</pre>
-</td>
-</tr>
-
-
-<tr>
-<td align="left" valign="top">
-<pre>
 run $ grep |-v| "xx.*zz" &lt;(oldfile) &gt;(newfile)
 </pre>
 </td>
