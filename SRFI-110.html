@@ -4819,7 +4819,7 @@ define polymorphic-function(a) $ cond
 define probe(x)
   display "probe: " \\ write x \\ newline()
 
-define buggy-function(a) $ probe
+define buggy-function(a) $ probe $ let ()
   define buggy-sub-function(b) $ short-call b
   body
   ...
