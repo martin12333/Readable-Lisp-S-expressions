@@ -2682,12 +2682,16 @@ to similar markers, such as
 <code>#!r6rs</code> (R6RS), and
 <code>#!curly-infix</code> (SRFI-105).
 </p>
+
 <p>
 A list expression such as <code>(srfi&nbsp;110)</code>
 was intentionally <i>not</i> used.
-A reader would not be able to
-distinguish a list to read or compared to a
-command to change modes.
+If this was used, a reader would not be able to easily
+distinguish between (1) a list to read and
+(2) a command to change modes.
+Also, not all Scheme systems support ways to invoke SRFIs,
+or even a module system, and there are many module systems in use.
+A special marker avoids these issues.
 </p>
 
 <p>
