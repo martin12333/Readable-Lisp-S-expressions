@@ -1471,6 +1471,32 @@ define put!(grid n m v)
 
 <tr>
 <td align="left" valign="top">
+<pre>
+define foo(x) . &lt;*
+
+define bar(y)
+! y
+
+define baz(z)
+! z
+*&gt;
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(define (foo x)
+
+  (define (bar y)
+    y)
+
+  (define (baz z)
+    z))
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
 <!-- Inspired by letterfall's code:
 define screen-initialize-post-show(toplevel-window drawing-area)
   let
