@@ -1937,3 +1937,19 @@ foo2
 (quasiquote zz)
 ` zz
 
+(define x1 (define x2 2) (define x3 3))
+define x1 . <*
+
+define x2 2
+
+define x3 3
+*>
+
+
+(define x5 (define x6 2) (define x7 3))
+define x5 . <*
+define x6 2
+
+define x7 3 *>
+
+
