@@ -2569,7 +2569,8 @@ Reversed LFCR does not happen in practice, and attempting to
 detect it triggers a bug in many versions of the
 guile implementation of Scheme.
 In many versions of guile, peek-char consumes (instead of just peeking)
-an end-of-file (EOF) marker.
+an end-of-file (EOF) marker
+(<a href="http://debbugs.gnu.org/cgi/bugreport.cgi?bug=12216">bug 12216</a>).
 Thus, after seeing an LF, peeking to see if there is a CR
 would consume any EOF after an LF, making ending interactive
 use awkward on systems that use just LF for end-of-line.
