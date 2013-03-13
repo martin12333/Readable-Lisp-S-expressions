@@ -847,6 +847,8 @@ rest returns [Object v]
   : PERIOD /* Improper list */
       (hspace+
         (pn=n_expr hspace* (n_expr error)? {$pn}
+         | COLLECTING hspace* pc=collecting_tail hspace*
+           (n_expr error)? {$pc}
          | empty {(list '.)})
        | empty   {(list '.)})
   | scomment hspace* (sr=rest {$sr} | empty {'()} )
