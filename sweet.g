@@ -1059,6 +1059,8 @@ rest returns [Object v]
   : PERIOD /* Improper list */
       (hspace+
         (pn=n_expr hspace* (n_expr error)? {$v = $pn.v;}
+         | COLLECTING hspace* pc=collecting_tail hspace*
+           (n_expr error)? {$v = $pc.v;}
          | empty {$v = list(".");})
        | empty   {$v = list(".");})
   | scomment hspace* (sr=rest {$v = $sr.v;} | empty {$v = null;} )
