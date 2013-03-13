@@ -1953,3 +1953,14 @@ define x6 2
 define x7 3 *>
 
 
+(define (foo x) (define (bar y) y) (define (baz z) z))
+define foo(x) . <*
+
+define bar(y)
+! y
+
+define baz(z)
+! z
+*>
+
+
