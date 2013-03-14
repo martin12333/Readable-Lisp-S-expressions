@@ -318,7 +318,7 @@ define unit-string-tail(x)
   if null?(x)
     '(#\")  ; Return the string's closing double-quote.
     append
-      let <* c car(x) *>
+      let <* c $ car x *>
         cond             ; Can't use "case" because of "tab" variable.
           eq?(c #\\)              '(#\\ #\\)
           eq?(c #\")              '(#\\ #\")
@@ -419,13 +419,11 @@ define sweeten-boring-list(x first? pos next-indent)
     null?(x) '(#\newline)
     first?
       ; if first, force its disply, even if that goes beyond width max.
-      let
-        $ item exposed-unit(car(x))
+      let <* item $ exposed-unit car(x) *>
         append item 
           sweeten-boring-list(cdr(x) #f {pos + length(item)} next-indent)
     #t ; Not first.
-      let
-        $ item exposed-unit(car(x))
+      let <* item $ exposed-unit car(x) *>
         let
           $ item-sameline append('(#\space) group-list '(#\space) item)
           if {{pos + length(item-sameline)} < maxwidth}
@@ -556,7 +554,7 @@ define sweeten-top(m indent indent-already)
   if not(pair?(m)) ; if not a pair, just print it. () handled here
     append(getdent(indent-already indent) exposed-unit(m) '(#\newline))
     ; We have a pair. Can we represent it as one line of space-sep params?
-    let* <* asline $ line(m) \\ length-asline $ length(asline) *>
+    let* <* asline $ line m \\ length-asline $ length asline *>
       if { {length-asline < max-unit-character-length} and
            fits-width?(indent-already indent length-asline) and
            {not complicated?(m)} and
@@ -612,16 +610,14 @@ define consume-end-of-line()
     if memq(c end-of-line-chars)
       begin
         read-char()
-        let
-          $ next peek-char()
+        let <* next $ peek-char() *>
           if {not{c eq? next} and memq(next end-of-line-chars)}
             read-char()
 
 ; Copy one line from stdin to stdout, end on EOF or end-of-line.
 ; Consume the end of line.
 define copy-line(port)
-  let
-    $ c peek-char(port)
+  let <* c $ peek-char port *>
     cond
       eof-object?(c)   c
       memq(c end-of-line-chars)
@@ -635,8 +631,7 @@ define copy-line(port)
 define sweeten-filter()
   if build-on-sweet
     restore-traditional-read()
-  let
-    $ c peek-char(current-input-port())
+  let <* c $ peek-char current-input-port() *>
     cond
       eof-object?(c)
         c
