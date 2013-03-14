@@ -318,7 +318,7 @@ define unit-string-tail(x)
   if null?(x)
     '(#\")  ; Return the string's closing double-quote.
     append
-      let ((c car(x)))
+      let <* c car(x) *>
         cond             ; Can't use "case" because of "tab" variable.
           eq?(c #\\)              '(#\\ #\\)
           eq?(c #\")              '(#\\ #\")
@@ -490,7 +490,7 @@ define sweeten-top-normal-indent(x indent indent-already)
 ; to determine the most pleasing format.
 define sweeten-top-multiline(m indent indent-already)
   if pair?(car(m))  ; Is car a pair?  If so, we may need GROUP.
-    let* (asunit-car(exposed-unit(car(m)))) ; Get representation of car.
+    let* <* asunit-car $ exposed-unit car(m) *> ; Get representation of car.
     ! if fits-width?(indent-already indent length(asunit-car))
     !   ; We can squeeze the car into the line - don't use GROUP.
     !   append getdent(indent-already indent) asunit-car '(#\newline)
@@ -531,7 +531,7 @@ define sweeten-top-multiline(m indent indent-already)
     ! memq(car(m) cuddle-first-parameter)
     ! ! ; We'd like to cuddle the first parameter of this operator,
     ! ! ; if we can... so try to do so.
-    ! ! let* (asline-cuddled(line(list(car(m) cadr(m)))))
+    ! ! let* <* asline-cuddled $ line list(car(m) cadr(m)) *>
     ! !    if fits-width?(indent-already indent length(asline-cuddled))
     ! !       ; We can cuddle up on line with one parameter:
     ! !       append getdent(indent-already indent)
@@ -556,7 +556,7 @@ define sweeten-top(m indent indent-already)
   if not(pair?(m)) ; if not a pair, just print it. () handled here
     append(getdent(indent-already indent) exposed-unit(m) '(#\newline))
     ; We have a pair. Can we represent it as one line of space-sep params?
-    let* (asline(line(m)) length-asline(length(asline)))
+    let* <* asline $ line(m) \\ length-asline $ length(asline) *>
       if { {length-asline < max-unit-character-length} and
            fits-width?(indent-already indent length-asline) and
            {not complicated?(m)} and
@@ -608,7 +608,7 @@ define display-sweeten-format(x)
 ; Consume an end-of-line. This is 2 unequal end-of-line characters,
 ; or a single end-of-line character, whichever is longer.
 define consume-end-of-line()
-  let ( c(peek-char()) )
+  let <* c $ peek-char() *>
     if memq(c end-of-line-chars)
       begin
         read-char()
@@ -655,7 +655,7 @@ define sweeten-filter()
         read-char()
         sweeten-filter()
       #t
-        let ((datum read(current-input-port())))
+        let <* datum $ read current-input-port() *>
           if eof-object?(datum)
             datum
             ; We have a datum to format and display - begin the real work:
