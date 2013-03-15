@@ -3152,58 +3152,14 @@ is a single datum.
 
 <h3 id="collecting-lists">Collecting lists (&lt;* ... *&gt;)</h3>
 <p>
-Sweet-expressions without collecting lists (&lt;* ... *&gt;)
-work well in a vast number of circumstances.
-However, they can be somewhat awkward for two use cases:
+Each sweet-expression is ended with a blank line, which is usually what you
+want.  There is one circumstance where that behavior is awkward: a long
+sequence of definitions within an initial statement.  The solution is also
+useful for 1-2 variable let-like statements.
 </p>
-<ol>
-<li>A long sequence of definitions contained within an initial statement.
-This situation occurs in many library definition structures such as
-Scheme R7RS <tt>define-library</tt> and in some larger data structures.</li>
-<li>A let-style statement with one or two variables
-with short initial values.</li>
-</ol>
 <p>
-Let&#8217;s begin with the first use case.
-When there is a long sequence of definitions contained within an
-initial statement, and no special notation like collecting lists,
-all the definitions in the long sequence must be
-indented and none can be separated by a blank line
-(since that would end the entire sequence, not just a definition).
-Indenting almost an entire file is annoying, and needing no blank lines
-for that long invites mistakes.
-</p>
-
-<p>
-For example, here&#8217;s an example from the R7RS Scheme specification
-for define-library:
-</p>
-<pre>
-(define-library
-  (example grid)
-  (export make rows cols ref each (rename put! set!))
-  (import (scheme base))
-  (begin
-    (define (make n m)
-      (let ((grid (make-vector n)))
-        (do ((i 0 (+ i 1)))
-            ((= i n) grid)
-          (let ((v (make-vector m #f alse)))
-            (vector-set! grid i v)))))
-    (define (rows grid) (vector-length grid))
-    (define (cols grid)
-      (vector-length (vector-ref grid 0)))
-    (define (ref grid n m)
-      (and (&lt; -1 n (rows grid))
-           (&lt; -1 m (cols grid))
-           (vector-ref (vector-ref grid n) m)))
-    (define (put! grid n m v)
-      (vector-set! (vector-ref grid n) m v))))
-</pre>
-<p>
-This is easily reformatted into this sweet-expression, but
-notice the long sequence of indented definitions that, if long,
-loses a lot of horizontal space and can invite mistakes:
+An accidental blank line between two internal definitions will end the initial
+statement:
 </p>
 <pre>
 define-library
@@ -3218,6 +3174,8 @@ define-library
         ! let (v(make-vector(m #f alse))) vector-set!(grid i v)
     define rows(grid) vector-length(grid)
     define cols(grid) vector-length(vector-ref(grid 0))
+
+; above blank line prematurely ends define-library
     define ref(grid n m)
       and
         {-1 &lt; n &lt; rows(grid)}
@@ -3225,9 +3183,57 @@ define-library
         vector-ref vector-ref(grid n) m
     define put!(grid n m v) vector-set!(vector-ref(grid n) m v)
 </pre>
+<p>
+You can work around this for short sequences by removing the blank lines or
+replacing them with one of:
+</p>
+<ol>
+<li>a <code>;</code> comment (optionally indented)</li>
+<li>a correctly-indented GROUP (<code>\\</code>) symbol</li>
+<li>a correctly-indented special comment (<code>#|...|#</code> or <code>#;...</code>)</li>
+</ol>
+<p>
+For longer sequences, use collecting lists (&lt;* ... *&gt;).  The &lt;* and
+*&gt; represent opening and closing parentheses, but restart indentation
+processing at the beginning, and collect any sweet-expressions inside.  In a
+collecting list, horizontal spaces after the initial &lt;* are consumed, and
+then sweet-expressions are read.  These t-expressions must not be indented
+(though you can indent lines with only ;-comments).
+</p>
 
 <p>
-But wholesale changes to sweet-expressions do not seem warranted
+Here an example of using collecting lists for the library structure above:
+</p>
+<pre>
+define-library
+  example grid
+  export make rows cols ref each rename(put! set!)
+  import scheme(base)
+  &lt;* begin
+
+define make(n m)
+  let (grid(make-vector(n)))
+    do (i(0 {i + 1}))
+    ! {i = n} grid
+    ! let (v(make-vector(m #f alse))) vector-set!(grid i v)
+
+define rows(grid) vector-length(grid)
+define cols(grid) vector-length(vector-ref(grid 0))
+
+define ref(grid n m)
+  and
+    {-1 &lt; n &lt; rows(grid)}
+    {-1 &lt; m &lt; cols(grid)}
+    vector-ref vector-ref(grid n) m
+
+define put!(grid n m v) vector-set!(vector-ref(grid n) m v)
+*&gt;
+</pre>
+<p>
+Why a new construct?  
+</p>
+<p>
+Wholesale changes to sweet-expressions do not seem warranted
 for this special case, because
 there are reasons that sweet-expressions are defined the way they are.
 It is fundamental that a child line is indented from its parent, since
@@ -3240,9 +3246,57 @@ Ending a definition at a blank line is very convenient for interactive use,
 and interactive and file notation should be identical
 (since people often switch between them).
 </p>
+<p>
+Note: Python works around this by having different semantics for files vs.
+interactive use.
+</p>
+<p>
+The collecting list symbols are carefully chosen.
+The characters &lt; and &gt; are natural character pairs that are
+available in ASCII.
+What is more, they are not delimiters, so any underlying
+Scheme reader will not immediately stop on reading them
+(making it easier to reuse).
+The &#8220;*&#8221; is more arbitrary, but the collecting list markers
+need to be multiple
+characters to distinguish them from the less-than and greater-than procedures,
+and this seemed to be a fairly distinctive token that is rarely used
+in existing code.
+</p>
+<p>
+For schemes with implicit begin, collecting lists can be used after a .:
+</p>
+<pre>
+define-library . &lt;*
+
+example grid
+export make rows cols ref each rename(put! set!)
+import scheme(base)
+
+define make(n m)
+  let (grid(make-vector(n)))
+    do (i(0 {i + 1}))
+    ! {i = n} grid
+    ! let (v(make-vector(m #f alse))) vector-set!(grid i v)
+
+define rows(grid) vector-length(grid)
+define cols(grid) vector-length(vector-ref(grid 0))
+
+define ref(grid n m)
+  and
+    {-1 &lt; n &lt; rows(grid)}
+    {-1 &lt; m &lt; cols(grid)}
+    vector-ref vector-ref(grid n) m
+
+define put!(grid n m v) vector-set!(vector-ref(grid n) m v)
+*&gt;
+</pre>
 
 <p>
-Now let&#8217;s look at the second use case.
+Happily, collecting lists can also help a let-style statement with one or
+two variables with short initial values.
+</p>
+<p>
 The sweet-expression notation cleanly handles cases where let-expression
 variables have complex values (e.g., using \\), but for simple cases
 (1-2 variables having short initial values)
@@ -3293,52 +3347,6 @@ let (x(5) y(7))
 </pre>
 
 <p>
-A <i>collecting list</i> is surrounded by the markers &lt;* and *&gt;.
-The &lt;* and *&gt; represent opening and closing
-parentheses, but restart indentation processing
-at the beginning instead of disabling indentation processing,
-and collect any sweet-expressions inside.
-The purpose of collecting lists is to make it easy to clearly
-express these and similar use cases.
-</p>
-
-<p>
-In a collecting list, horizontal spaces after the initial &lt;*
-are consumed, and then sweet-expressions are read.
-These t-expressions must not be indented (though you can indent
-lines with only ;-comments).
-</p>
-
-<p>
-Here an example of using collecting lists for the library structure above:
-</p>
-<pre>
-define-library
-  example grid
-  export make rows cols ref each rename(put! set!)
-  import scheme(base)
-  &lt;* begin
-
-define make(n m)
-  let (grid(make-vector(n)))
-    do (i(0 {i + 1}))
-    ! {i = n} grid
-    ! let (v(make-vector(m #f alse))) vector-set!(grid i v)
-
-define rows(grid) vector-length(grid)
-define cols(grid) vector-length(vector-ref(grid 0))
-
-define ref(grid n m)
-  and
-    {-1 &lt; n &lt; rows(grid)}
-    {-1 &lt; m &lt; cols(grid)}
-    vector-ref vector-ref(grid n) m
-
-define put!(grid n m v) vector-set!(vector-ref(grid n) m v)
-*&gt;
-</pre>
-
-<p>
 Here are some examples of collecting lists for the let-variable cases:
 </p>
 <pre>
@@ -3352,19 +3360,6 @@ let &lt;* x 5 \\ y 7 *&gt;
 </pre>
 
 
-<p>
-The collecting list symbols are carefully chosen.
-The characters &lt; and &gt; are natural character pairs that are
-available in ASCII.
-What is more, they are not delimiters, so any underlying
-Scheme reader will not immediately stop on reading them
-(making it easier to reuse).
-The &#8220;*&#8221; is more arbitrary, but the collecting list markers
-need to be multiple
-characters to distinguish them from the less-than and greater-than procedures,
-and this seemed to be a fairly distinctive token that is rarely used
-in existing code.
-</p>
 
 <h3 id="reserved">Reserved marker ($$$)</h3>
 <p>
