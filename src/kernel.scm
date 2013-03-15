@@ -536,10 +536,6 @@
           (my-read-char port)
           (consume-to-whitespace port)))))
 
-  (define (ismember? item lyst)
-    ; Returns true if item is member of lyst, else false.
-    (pair? (member item lyst)))
-
   (define debugger-output #f)
   ; Quick utility for debugging.  Display marker, show data, return data.
   (define (debug-show marker data)
@@ -568,7 +564,7 @@
         ((char=? c stop-char)
           (my-read-char port)
           (attach-sourceinfo pos '()))
-        ((ismember? c '(#\) #\] #\}))  (read-error "Bad closing character") c)
+        ((memv c '(#\) #\] #\}))  (read-error "Bad closing character") c)
         (#t
           (let ((datum (my-read port)))
             (cond
@@ -665,7 +661,7 @@
     (let ((c (my-peek-char port)))
       (cond
          ((eof-object? c) '())
-         ((ismember? c delims) '())
+         ((memv c delims) '())
          (#t (cons (my-read-char port) (read-until-delim port delims))))))
 
   (define (read-error message)
@@ -777,8 +773,8 @@
           (cond
             ((char-ci=? c #\t)  '(#t))
             ((char-ci=? c #\f)  '(#f))
-            ((ismember? c '(#\i #\e #\b #\o #\d #\x
-                            #\I #\E #\B #\O #\D #\X))
+            ((memv c '(#\i #\e #\b #\o #\d #\x
+                       #\I #\E #\B #\O #\D #\X))
               (list (read-number port (list #\# (char-downcase c)))))
             ((char=? c #\( )  ; Vector.
               (list (list->vector
@@ -842,7 +838,7 @@
     (let ((c (my-peek-char port)))
       (cond
         ((eof-object? c) period-symbol) ; period eof; return period.
-        ((ismember? c digits)
+        ((memv c digits)
           (read-number port (list #\.)))  ; period digit - it's a number.
         (#t
           ; At this point, Scheme only requires support for "." or "...".
@@ -918,7 +914,7 @@
           ; attach the source information to the item read-in
           (attach-sourceinfo pos
             (cond
-              ((ismember? c digits) ; Initial digit.
+              ((memv c digits) ; Initial digit.
                 (read-number port '()))
               ((char=? c #\#)
                 (my-read-char port)
