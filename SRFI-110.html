@@ -3269,12 +3269,15 @@ and this seemed to be a fairly distinctive token that is rarely used
 in existing code.
 </p>
 <p>
-For schemes with implicit begin, collecting lists can be used after a .:
+In some cases, you might want to use a collecting list around a long
+construct, but not actually create a new list.
+This occurs, for example, in a library module system
+with an implicit begin.
+This is not a problem; just use a collecting list after a period (.):
 </p>
 <pre>
-define-library . &lt;*
+define-library (example grid) . &lt;*
 
-example grid
 export make rows cols ref each rename(put! set!)
 import scheme(base)
 
@@ -3298,22 +3301,20 @@ define put!(grid n m v) vector-set!(vector-ref(grid n) m v)
 </pre>
 
 <p>
-Happily, collecting lists can also help a let-style statement with one or
+Collecting lists can also be used in a let-style statement with one or
 two variables with short initial values.
-</p>
-<p>
 The sweet-expression notation cleanly handles cases where let-expression
 variables have complex values (e.g., using \\), but for simple cases
 (1-2 variables having short initial values)
 it can take up more vertical space than traditional formatting.
-Using a leading &#8220;$&#8221; takes up somewhat less vertical space, but it still
+Using a leading &#8220;$&#8221; takes up somewhat less vertical space,
+but it still
 takes up an additional line for a trivial case, it does not work
 the same way for let expressions with 2 variables,
 and David A. Wheeler thinks it is a rather unclear construction.
 In particular, you cannot use
 &#8220;$&nbsp;x&nbsp;5&nbsp;$&nbsp;y&nbsp;7&#8221;
-for a two-variable let statement; that would
-map to
+for a two-variable let statement; that would map to
 <code>((x&nbsp;5&nbsp;(y&nbsp;7)))</code>,
 not
 <code>((x&nbsp;5)&nbsp;(y&nbsp;7))</code>.
