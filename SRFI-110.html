@@ -3154,7 +3154,8 @@ is a single datum.
 <p>
 Each sweet-expression is ended with a blank line, which is usually what you
 want.  There is one circumstance where that behavior is awkward: a long
-sequence of definitions within an initial statement.  The solution is also
+sequence of definitions within an initial statement.
+We have developed a solution, collecting lists, that are also
 useful for 1-2 variable let-like statements.
 </p>
 <p>
@@ -3188,16 +3189,20 @@ You can work around this for short sequences by removing the blank lines or
 replacing them with one of:
 </p>
 <ol>
-<li>a <code>;</code> comment (optionally indented)</li>
+<li>a <code>;</code> comment (optionally indented) &mdash;
+the recommended approach</li>
 <li>a correctly-indented GROUP (<code>\\</code>) symbol</li>
 <li>a correctly-indented special comment (<code>#|...|#</code> or <code>#;...</code>)</li>
 </ol>
 <p>
-For longer sequences, use collecting lists (&lt;* ... *&gt;).  The &lt;* and
-*&gt; represent opening and closing parentheses, but restart indentation
-processing at the beginning, and collect any sweet-expressions inside.  In a
-collecting list, horizontal spaces after the initial &lt;* are consumed, and
-then sweet-expressions are read.  These t-expressions must not be indented
+For longer sequences (say, much longer than a screen),
+use collecting lists (&lt;* ... *&gt;).
+The &lt;* and *&gt; represent opening and closing parentheses,
+but restart indentation processing at the beginning,
+and collect any sweet-expressions inside.
+In a collecting list, horizontal spaces after the initial &lt;* are consumed,
+and then sweet-expressions are read.
+These t-expressions must not be indented
 (though you can indent lines with only ;-comments).
 </p>
 
