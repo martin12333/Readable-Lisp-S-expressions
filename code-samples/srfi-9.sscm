@@ -62,11 +62,11 @@ define record-type(record) record-ref(record 0)
 ;----------------
 ; Record types are themselves records, so we first define the type for
 ; them.  Except for problems with circularities, this could be defined as:
-;  (define-record-type :record-type
-;    (make-record-type name field-tags)
+;  define-record-type :record-type
+;    make-record-type name field-tags
 ;    record-type?
-;    (name record-type-name)
-;    (field-tags record-type-field-tags))
+;    name record-type-name
+;    field-tags record-type-field-tags
 ; As it is, we need to define everything by hand.
 
 define :record-type make-record(3)
@@ -144,10 +144,10 @@ define record-modifier(type tag)
 ; except that they are not vectors (VECTOR? returns false when given a
 ; record and RECORD? returns false when given a vector).  The following
 ; procedures are provided:
-;   (record? <value>)                -> <boolean>
-;   (make-record <size>)             -> <record>
-;   (record-ref <record> <index>)    -> <value>
-;   (record-set! <record> <index> <value>) -> <unspecific>
+;   record?(<value>)                -> <boolean>
+;   make-record(<size>)             -> <record>
+;   record-ref(<record> <index>)    -> <value>
+;   record-set!(<record> <index> <value>) -> <unspecific>
 ;
 ; These can implemented in R5RS Scheme as vectors with a distinguishing
 ; value at index zero, providing VECTOR? is redefined to be a procedure
