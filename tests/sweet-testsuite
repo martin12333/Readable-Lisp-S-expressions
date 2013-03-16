@@ -1963,4 +1963,7 @@ define baz(z)
 ! z
 *>
 
+; This is a lame test, but the test framework makes this hard to really test
+(a b)
+#1=(a b)
 
