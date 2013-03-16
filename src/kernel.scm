@@ -857,6 +857,8 @@
                   (list (cons unmatched-datum-label-tag label)))
                 ((eqv? (my-peek-char port) #\=)
                   (my-read-char port)
+                  (if (my-char-whitespace? (my-peek-char port))
+                    (read-error "#num= must be followed by non-whitespace"))
                   (list (patch-datum-label label (no-indent-read port))))
                 (#t
                   (read-error "Datum label #NUM requires = or #")))))
