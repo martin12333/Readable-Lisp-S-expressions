@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# same-sweet-result: Given two filenames
+# diff-s-sweet: Given two filenames
 # (in s-expressions and sweet-expressions respectively),
 # show the semantic differences between them.
 # If there's a difference, show the difference and return an error code,

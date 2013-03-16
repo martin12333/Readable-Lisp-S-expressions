@@ -53,7 +53,7 @@ CLEANFILES = readable/kernel.scm
 script_sources = src/sweeten.sscm src/unsweeten \
                  src/curly-guile src/neoteric-guile src/sweet-guile \
                  src/sweet-run src/sweet-scsh \
-                 src/same-sweet-result \
+                 src/diff-s-sweet \
                  src/kernel.scm \
                  src/srfi-curly-infix.scm
 
@@ -64,13 +64,13 @@ EXTRA_DIST += $(script_sources)
 bin_SCRIPTS  = bin/sweeten bin/unsweeten
 bin_SCRIPTS += bin/curly-guile bin/neoteric-guile bin/sweet-guile
 bin_SCRIPTS += bin/sweet-run bin/sweet-scsh
-bin_SCRIPTS += bin/same-sweet-result
+bin_SCRIPTS += bin/diff-s-sweet
 CLEANFILES  += $(bin_SCRIPTS)
 
 # These are the local scripts, for testing, and are not installed.
 noinst_SCRIPTS = ./sweeten ./unsweeten \
                  ./curly-guile ./neoteric-guile ./sweet-guile \
-                 ./sweet-scsh ./sweet-run ./same-sweet-result
+                 ./sweet-scsh ./sweet-run ./diff-s-sweet
 
 CLEANFILES += $(noinst_SCRIPTS)
 
@@ -135,7 +135,7 @@ bin/sweet-run: src/sweet-run my-subst
 	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
 	chmod a+x $@
 
-bin/same-sweet-result: src/same-sweet-result my-subst
+bin/diff-s-sweet: src/diff-s-sweet my-subst
 	$(MKDIR_P) bin
 	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
 	chmod a+x $@
@@ -186,7 +186,7 @@ bin/same-sweet-result: src/same-sweet-result my-subst
 	chmod a+x $@
 	chmod a-w $@
 
-./same-sweet-result: src/same-sweet-result my-subst
+./diff-s-sweet: src/diff-s-sweet my-subst
 	$(RM) -f $@
 	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
 	chmod a+x $@
