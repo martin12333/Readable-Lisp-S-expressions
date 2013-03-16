@@ -3274,7 +3274,8 @@ The characters &lt; and &gt; are natural character pairs that are
 available in ASCII.
 What is more, they are not delimiters, so any underlying
 Scheme reader will not immediately stop on reading them
-(making it easier to reuse).
+(making it easier to reuse an underlying Scheme reader when
+implementing a sweet-expression reader).
 The &#8220;*&#8221; is more arbitrary, but the collecting list markers
 need to be multiple
 characters to distinguish them from the less-than and greater-than procedures,
