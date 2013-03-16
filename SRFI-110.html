@@ -3287,7 +3287,18 @@ In some cases, you might want to use a collecting list around a long
 construct, but not actually create a new list.
 This occurs, for example, in a library module system
 with an implicit begin.
-This is not a problem; just use a collecting list after a period (.):
+This is not a problem; just use a collecting list after a period (.).
+This will attach the collecting list to the end of the list
+in process of being defined, instead of creating completely subordinate list.
+After all, since
+&#8220;<code>(a&nbsp;b&nbsp;.&nbsp;(c&nbsp;d))</code>&#8221;
+is just
+&#8220;<code>(a&nbsp;b&nbsp;c&nbsp;d)</code>&#8221;,
+when indentation processing is active the line
+&#8220;<code>a&nbsp;b&nbsp;.&nbsp;&lt;*&nbsp;c&nbsp;d&nbsp;*&gt;</code>&#8221;
+is also just
+&#8220;<code>(a&nbsp;b&nbsp;c&nbsp;d)</code>&#8221;.
+Here is an example:
 </p>
 <pre>
 define-library (example grid) . &lt;*
