@@ -672,11 +672,19 @@
     (throw 'readable)
     '())
 
+  ; Return the number by reading from port, and prepending starting-lyst.
   (define (read-number port starting-lyst)
     (string->number (list->string
       (append starting-lyst
         (read-until-delim port neoteric-delimiters)))))
 
+  ; Return list of digits read from port; may be empty.
+  (define (read-digits port)
+    (let ((c (my-peek-char port)))
+      (cond
+        ((memv c digits)
+          (cons (my-read-char port) (read-digits port)))
+        (#t '()))))
 
   (define (process-char port)
     ; We've read #\ - returns what it represents.
@@ -757,6 +765,47 @@
           '() ) ; Treat as comment.
         (#t (read-error "Unsupported #! combination")))))
 
+  ; A cons cell always has a unique address (as determined by eq?);
+  ; we'll use this special cell to tag unmatched datum label references.
+  ; An unmatched datum label will have the form
+  ; (cons unmatched-datum-label-tag NUMBER)
+  (define unmatched-datum-label-tag
+    (cons 'unmatched-datum-label-tag 'label))
+  (define (is-matching-label-tag? number value)
+    (and
+      (pair? value)
+      (eq?  (car value) unmatched-datum-label-tag)
+      (eqv? (cdr value) number)))
+
+  ; Patch up datum, starting at position,
+  ; so that all labels "number" are replaced
+  ; with the value of "replace".
+  ; Note that this actually OVERWRITES PORTIONS OF A LIST with "set!",
+  ; so that we can maintain "eq?"-ness.  This is really wonky,
+  ; but datum labels are themselves wonky.
+  ; "skip" is a list of locations that don't need (re)processing; it
+  ; should be a hash table but those aren't portable.
+  (define (patch-datum-label-tail number replace position skip)
+    (let ((new-skip (cons position skip)))
+      (cond
+        ((and (pair? position)
+              (not (eq? (car position) unmatched-datum-label-tag))
+              (not (memq position skip)))
+          (if (is-matching-label-tag? number (car position))
+            (set-car! position replace) ; Yes, "set!" !!
+            (patch-datum-label-tail number replace (car position) new-skip))
+          (if (is-matching-label-tag? number (cdr position))
+            (set-cdr! position replace) ; Yes, "set!" !!
+            (patch-datum-label-tail number replace (cdr position) new-skip)))
+        ; TODO: Handle vectors.
+        (#t (values)))))
+
+  (define (patch-datum-label number starting-position)
+    (if (is-matching-label-tag? number starting-position)
+      (read-error "Illegal reference as the labelled object itself"))
+    (patch-datum-label-tail number starting-position starting-position '())
+    starting-position)
+
   (define (process-sharp no-indent-read port)
     ; We've read a # character.  Returns a list whose car is what it
     ; represents; empty list means "comment".
@@ -798,6 +847,19 @@
               '()) ; Return comment
             ((char=? c #\!)
               (process-sharp-bang port))
+            ((memv c digits) ; Datum label, #num# or #num=...
+              (let* ((rest-digits (read-digits port))
+                     (label (string->number (list->string
+                            (cons c rest-digits)))))
+              (cond
+                ((eqv? (my-peek-char port) #\#)
+                  (my-read-char port)
+                  (list (cons unmatched-datum-label-tag label)))
+                ((eqv? (my-peek-char port) #\=)
+                  (my-read-char port)
+                  (list (patch-datum-label label (no-indent-read port))))
+                (#t
+                  (read-error "Datum label #NUM requires = or #")))))
             (#t
               (let ((rv (parse-hash no-indent-read c port)))
                 (cond
