@@ -1,7 +1,8 @@
 #!/bin/sh
 
-# same-result: Given two filenames (in s-expressions and sweet-expressions
-# respectively), determine if they mean the same thing.
+# same-sweeet-result: Given two filenames
+# (in s-expressions and sweet-expressions respectively),
+# determine if they mean the same thing.
 # If there's a difference, show the difference and return an error code,
 # else show nothing and return true (0).
 
