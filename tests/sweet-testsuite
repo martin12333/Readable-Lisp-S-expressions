@@ -1908,6 +1908,54 @@ define put!(grid n m v)
 aa1 bb1 <* aa2 bb2 *> <* aa3 bb3 *> ddd
   eee fff
 
+
+(define-library
+  (example grid)
+  (export make rows cols ref each (rename put! set!))
+  (import (scheme base))
+  (define (make n m)
+    (let ((grid (make-vector n)))
+      (do ((i 0 (+ i 1)))
+          ((= i n) grid)
+          (let ((v (make-vector m #f alse)))
+            (vector-set! grid i v)))))
+
+  (define (rows grid) (vector-length grid))
+  (define (cols grid)
+    (vector-length (vector-ref grid 0)))
+
+  (define (ref grid n m)
+    (and
+      (< -1 n (rows grid))
+      (< -1 m (cols grid))
+      (vector-ref (vector-ref grid n) m)))
+
+  (define (put! grid n m v)
+    (vector-set! (vector-ref grid n) m v)))
+define-library (example grid) . <*
+
+export make rows cols ref each rename(put! set!)
+import scheme(base)
+
+define make(n m)
+  let (grid(make-vector(n)))
+    do (i(0 {i + 1}))
+    ! {i = n} grid
+    ! let (v(make-vector(m #f alse))) vector-set!(grid i v)
+
+define rows(grid) vector-length(grid)
+define cols(grid) vector-length(vector-ref(grid 0))
+
+define ref(grid n m)
+  and
+    {-1 < n < rows(grid)}
+    {-1 < m < cols(grid)}
+    vector-ref vector-ref(grid n) m
+
+define put!(grid n m v) vector-set!(vector-ref(grid n) m v)
+*>
+
+
 (let ((var1 value1) (var2 let ((x 0)))) (+ var1 var2))
 let <*
 var1 value1
