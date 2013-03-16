@@ -68,8 +68,6 @@
 ;   - make-read creates a new procedure that supports your Scheme's reader
 ;     interface.  Usually, this means making a new procedure that accepts
 ;     either 0 or 1 parameters, defaulting to (current-input-port).
-;   - If your Scheme doesn't support unlimited lookahead, you should make
-;     the fake port that supports 2-char lookahead at this point.
 ;   - If your Scheme doesn't keep track of source location information
 ;     automatically with the ports, you may again need to wrap it here.
 ;   - If your Scheme needs a particularly magical incantation to attach
