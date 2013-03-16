@@ -366,7 +366,8 @@ A sweet-expression reader <em>MUST</em> apply these rule clarifications:
 <li>You can indent using one or more of the indent characters,
 which are space, tab, and exclamation point (!).
 Except for lines with initial indents and the first line of a stream,
-every line <em>MUST</em> be <dfn>consistently indented</dfn>.
+every line <em>MUST</em> be <dfn>consistently indented</dfn>
+when indentation processing is active.
 A line is consistently indented if
 the indent character sequence of that line, when compared to the
 indent character sequence of the preceding line,
