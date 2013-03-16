@@ -119,20 +119,24 @@ define input-string:string selector(input-string? 2)
 define input-string:size   selector(input-string? 3)
 define input-string:next   selector(input-string? 4)
 define input-string:next!  setter(input-string? 4)
+
 define make-output-string()
   vector output-string-tag #t '()
 define output-string:open?     selector(output-string? 1)
 define output-string:open?!    setter(output-string? 1)
 define output-string:contents  selector(output-string? 2)
 define output-string:contents! setter(output-string? 2)
+
 set! open-input-string  make-input-string
 set! open-output-string make-output-string
 set! get-output-string
-  lambda x() list->string(reverse(output-string:contents(x)))
+  lambda x()
+    list->string reverse(output-string:contents(x))
 set! input-port?
   lambda x() {ur-input-port?(x) or input-string?(x)}
 set! output-port?
   lambda x() {ur-output-port?(x) or output-string?(x)}
+
 set! close-input-port
   lambda x()
     if input-string?(x)
@@ -151,7 +155,8 @@ set! peek-char
       let <* x car(args) *>
         if input-string?(x)
         ! let
-        !   s(input-string:string(x))
+        !   \\
+        !     s input-string:string(x)
         !     i input-string:next(x)
         !     n input-string:size(x)
         !   if input-string:open?(x)
