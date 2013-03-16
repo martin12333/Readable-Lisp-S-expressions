@@ -806,6 +806,16 @@
     (patch-datum-label-tail number starting-position starting-position '())
     starting-position)
 
+  ; Gobble up the to-gobble characters from port, and return # ungobbled.
+  (define (gobble-chars port to-gobble)
+    (if (null? to-gobble)
+      0
+      (cond
+        ((char-ci=? (my-peek-char port) (car to-gobble))
+          (my-read-char port)
+          (gobble-chars port (cdr to-gobble)))
+        (#t (length to-gobble)))))
+
   (define (process-sharp no-indent-read port)
     ; We've read a # character.  Returns a list whose car is what it
     ; represents; empty list means "comment".
@@ -820,8 +830,14 @@
           ; Not EOF. Read in the next character, and start acting on it.
           (my-read-char port)
           (cond
-            ((char-ci=? c #\t)  '(#t))
-            ((char-ci=? c #\f)  '(#f))
+            ((char-ci=? c #\t)
+              (if (memv (gobble-chars port '(#\r #\u #\e)) '(0 3))
+                '(#t)
+                (read-error "Incomplete #true")))
+            ((char-ci=? c #\f)
+              (if (memv (gobble-chars port '(#\a #\l #\s #\e)) '(0 4))
+                '(#f)
+                (read-error "Incomplete #false")))
             ((memv c '(#\i #\e #\b #\o #\d #\x
                        #\I #\E #\B #\O #\D #\X))
               (list (read-number port (list #\# (char-downcase c)))))
