@@ -505,6 +505,19 @@ and the formats
 </p>
 
 <p>
+A sweet-expression reader <em>MAY</em> implement datum labels
+with syntax <code>#<i>number</i>=<i>datum</i></code>.
+If the first character after the equal sign is not whitespace,
+such a reader <em>SHOULD</em> read it as a neoteric-expression.
+If the first character after the equal sign is whitespace,
+a datum reader <em>MAY</em> reject it.
+A reader <em>MAY</em> also accept a datum label
+that is an initial expression of a <i>head</i> production (see the BNF below),
+with a trailing space or tab,
+as labelling the rest of the sweet-expression.
+</p>
+
+<p>
 Implementations of this SRFI <em>MAY</em>
 implement sweet-expressions in their datum readers by default,
 even when the <code>#!sweet</code> directive is not (yet) received.
