@@ -1,33 +1,33 @@
 #!/bin/sh
 
-# same-sweeet-result: Given two filenames
+# same-sweet-result: Given two filenames
 # (in s-expressions and sweet-expressions respectively),
-# determine if they mean the same thing.
+# show the semantic differences between them.
 # If there's a difference, show the difference and return an error code,
 # else show nothing and return true (0).
-
-# You may want to add the current directory to the PATH, e.g.:
-#   PATH=".:$PATH" ./same-result file1.scm file1.sscm
 
 # (C) 2013 David A. Wheeler
 # Released under the MIT license
 
-
-echo $#
+export PATH="@PATH_PREFIX@$PATH"
+SWEETEN="sweeten"
+UNSWEETEN="unsweeten"
 
 if [ $# -ne 2 ] ; then
-  echo "Must have exactly two arguments; # arguments = $#"
+  echo "Must have exactly two arguments, but # arguments = $#"
   exit 99
 fi
 if [ ! -f "$1" ] ; then
-  echo "File 1 must exist"
+  echo "File 1 must exist as a normal file"
   exit 98
 fi
 if [ ! -f "$2" ] ; then
-  echo "File 2 must exist"
+  echo "File 2 must exist as a normal file"
   exit 98
 fi
 
-unsweeten "$1" > ,first
-unsweeten "$2" > ,second
+${SWEETEN} "$1" | ${UNSWEETEN} > ,first
+
+${UNSWEETEN} "$2" > ,second
+
 diff -u ,first ,second
