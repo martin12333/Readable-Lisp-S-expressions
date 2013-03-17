@@ -424,6 +424,8 @@ define line-tail(x)
 define line(x)
   cond
     not(pair?(x))                  exposed-unit(x)
+    {list1?(x) and represent-as-inline-infix?(car(x))} ; ({a + b}) => $ {a + b}
+      append '(#\$ #\space) unit(car(x))
     represent-as-inline-infix?(x)  unit(x)
     represent-as-abbreviation?(x)
       if multi-element-list?(cadr(x))

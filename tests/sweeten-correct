@@ -141,4 +141,6 @@ hello
   .
   impish
 
+$ {a + b}
+
 ; Comment at end of file.
