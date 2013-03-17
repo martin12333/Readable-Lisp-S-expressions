@@ -39,7 +39,7 @@ defun f (a b)
   boggle a
   boggle b
 
-let (a(cos(0)))
+let <* a $ cos 0 *>
   fiddle a
   faddle {2 + a}
   display foo()
@@ -114,9 +114,21 @@ a
       d
         e
           #t
-            let (item(unit(car(x))))
+            let <* item $ unit car(x) *>
             ! let
             !   $ item-sameline append('(#\space) group-list '(#\space) item)
             !   item-sameline
+
+let <* x 5 *>
+  {2 * x}
+  {2 * x}
+  {2 * x}
+  {x + {3 * x}}
+
+let <* x 5 \\ y 7 *>
+  {2 * x}
+  {2 * x}
+  {2 * x}
+  {x + {3 * x}}
 
 ; Comment at end of file.

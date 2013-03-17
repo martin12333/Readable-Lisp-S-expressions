@@ -90,4 +90,8 @@ $$$
    item-sameline
 ))))))))
 
+(let ((x 5)) (* 2 x) (* 2 x) (* 2 x) (+ x (* 3 x)))
+
+(let ((x 5) (y 7)) (* 2 x) (* 2 x) (* 2 x) (+ x (* 3 x)))
+
 ; Comment at end of file.

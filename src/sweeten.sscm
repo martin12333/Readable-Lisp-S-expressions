@@ -386,6 +386,23 @@ define exposed-unit(x)
     eq?(x '$$$) string->list("{$$$}")
     #t          unit(x)
 
+; Display a unit (like exposed-unit), but possibly use a collecting list.
+define exposed-unit-collecting(x)
+  cond
+    {list1?(x) and list2?(car(x))}
+      append
+        '(#\< #\* #\space)
+        line-in-collecting car(x)
+        '(#\space #\* #\>)
+    {list2?(x) and list2?(car(x)) and list2?(cadr(x))}
+      append
+        '(#\< #\* #\space)
+        line-in-collecting car(x)
+        '(#\space #\\ #\\ #\space)
+        line-in-collecting cadr(x)
+        '(#\space #\* #\>)
+    #t exposed-unit(x)
+
 ; Return x as a unit, but always represent lists as (a b c):
 define unit-force-list(x)
   if pair?(x)
@@ -418,6 +435,14 @@ define line(x)
         append LISTLP unit(car(x)) LISTRP ; This unit is not exposed.
     #t
       append exposed-unit(car(x)) line-tail(cdr(x))
+
+define line-in-collecting(x)
+  if {list2?(x) and symbol?(car(x)) and pair?(cadr(x))}
+    append
+      exposed-unit car(x)
+      '(#\space #\$ #\space)
+      line cadr(x)
+    line x
 
 ; Return list "m" as a list of characters representing
 ; a long and boring split list.  We'll keep track of position inside
@@ -542,18 +567,25 @@ define sweeten-top-multiline(m indent indent-already)
     ! {memq(car(m) cuddle-first-parameter) and list-3-plus?(m)}
     ! ! ; We'd like to cuddle the first parameter of this operator,
     ! ! ; if we can... so try to do so.
-    ! ! let* <* asline-cuddled $ line list(car(m) cadr(m)) *>
-    ! !    if fits-width?(indent-already indent length(asline-cuddled))
-    ! !       ; We can cuddle up on line with one parameter:
-    ! !       append getdent(indent-already indent)
-    ! !         asline-cuddled \\ '(#\newline)
-    ! !         sweeten-body cddr(m) mark-deeper(indent) #f
-    ! !       ; Can't cuddle with one parameter - use normal format.
-    ! !       sweeten-top-normal-indent m
-    ! !         getdent(indent-already indent) \\ #f
+    ! ! let
+    ! !   \\
+    ! !     asline-cuddled
+    ! !       append
+    ! !         exposed-unit car(m)
+    ! !         '(#\space)
+    ! !         exposed-unit-collecting cadr(m)
+    ! !   if fits-width?(indent-already indent length(asline-cuddled))
+    ! !     ; We can cuddle up on line with one parameter:
+    ! !     append getdent(indent-already indent)
+    ! !       asline-cuddled \\ '(#\newline)
+    ! !       sweeten-body cddr(m) mark-deeper(indent) #f
+    ! !     ; Can't cuddle with one parameter - use normal format.
+    ! !     sweeten-top-normal-indent m
+    ! !       getdent(indent-already indent) \\ #f
     ! ; Nothing special.  Use normal multi-line format:
     ! #t
     ! ! sweeten-top-normal-indent m indent indent-already
+
 
 ; Input: expression "m" with indentation string "indent".
 ;        indent-already is #f if no indentation has already taken place;
