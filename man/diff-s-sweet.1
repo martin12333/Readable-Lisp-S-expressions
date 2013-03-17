@@ -1,0 +1,85 @@
+.TH UNSWEETEN 1 local
+.SH NAME
+diff-s-sweet \- report differences between s-expression and t-expression files
+.SH SYNOPSIS
+.ll +8
+.B unsweeten
+.ll -8
+.br
+.SH DESCRIPTION
+.PP
+.I diff-s-sweet
+reports semantic differences (if any) between two files.
+The first file is in Lisp/Scheme s-expressions, and
+the second file is sweet-expressions (t-expressions).
+Sweet-expressions are a way to represent Lisp/Scheme data and programs
+that adds additional abbreviations beyond those in traditional s-expressions.
+
+.PP
+If there are no differences, there is no report, and
+true (0) is returned.
+If there are differences, the differences are reported in
+unified diff format.
+Differences in ;-comment lines are not considered differences.
+
+.PP
+The
+.I diff-s-sweet
+tool
+is expected to be used as part of a transition process to sweet-expressions.
+Basically, use
+.I sweeten
+to transform your current s-expressions, tweak the results
+in the way you want, then use
+.I diff-s-sweet
+to confirm that the tweaked file is semantically identical
+to the original.
+
+.PP
+For more information, see
+http://readable.sourceforge.net.
+
+
+.SH OPTIONS
+.PP
+None.
+
+.\" .SH "ENVIRONMENT"
+.\" .PP
+
+.SH BUGS
+.PP
+This program assumes that all inputs do not contain any cycles
+(improper lists are okay).
+
+.SH "SEE ALSO"
+.PP
+.IR sweeten(1) ,
+.IR unsweeten(1) ,
+.IR sweet-run(1) .
+
+.SH "COPYRIGHT NOTICE"
+.PP
+Copyright \(co 2013 David A. Wheeler
+.PP
+This software (including the documentation)
+is released as open source software under the "MIT" license:
+.PP
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+.PP
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+.PP
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
