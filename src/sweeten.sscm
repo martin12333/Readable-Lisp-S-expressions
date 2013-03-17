@@ -153,8 +153,16 @@ define multi-element-list?(x)
   {pair?(x) and not(null?(cdr(x)))}
 
 ; Returns #t if x is a list with exactly 1 element.  Improper lists are #f.
-define single-element-list?(x)
+define list1?(x)
   {pair?(x) and null?(cdr(x))}
+
+; Returns #t if x is a list with exactly 2 elements.  Improper lists are #f.
+define list2?(x)
+  {pair?(x) and pair?(cdr(x)) and null?(cddr(x))}
+
+; Returns #t if x is a list or improper list of 3+ elements.
+define list-3-plus?(x)
+  {pair?(x) and pair?(cdr(x)) and pair?(cddr(x))}
 
 ; Does x contain a list of ONLY punctuation characters?
 ; An empty list is considered true.
@@ -353,7 +361,7 @@ define unit(x)
            represent-as-inline-infix?(x)
              ; Special case, use {...}:
              append LISTLBRACE unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
-           {single-element-list?(cdr(x)) and pair?(cadr(x)) and
+           {list1?(cdr(x)) and pair?(cadr(x)) and
              represent-as-brace-suffix?(cadr(x))}
              ; Special case, use f{...}:
              append unit(car(x)) as-brace-suffix(cadr(x))
@@ -404,7 +412,7 @@ define line(x)
       if multi-element-list?(cadr(x))
         append cadr(assq(car(x) abbreviations)) '(#\space) line(cadr(x))
         exposed-unit(x) ; Show 'ITEM (etc.) if x isn't a multi-item list.
-    single-element-list?(x)  ; Handle 1-datum case specially.
+    list1?(x)  ; Handle 1-datum case specially.
       if symbol?(car(x))
         append exposed-unit(car(x)) LISTLP LISTRP
         append LISTLP unit(car(x)) LISTRP ; This unit is not exposed.
@@ -531,7 +539,7 @@ define sweeten-top-multiline(m indent indent-already)
     ! !      ; Can't cuddle "defun funcname (params)" - use normal format.
     ! !      sweeten-top-normal-indent m
     ! !        getdent(indent-already indent) \\ #f
-    ! memq(car(m) cuddle-first-parameter)
+    ! {memq(car(m) cuddle-first-parameter) and list-3-plus?(m)}
     ! ! ; We'd like to cuddle the first parameter of this operator,
     ! ! ; if we can... so try to do so.
     ! ! let* <* asline-cuddled $ line list(car(m) cadr(m)) *>
