@@ -14,20 +14,20 @@ SWEETEN="sweeten"
 UNSWEETEN="unsweeten"
 
 if [ $# -ne 2 ] ; then
-  echo "Must have exactly two arguments, but # arguments = $#"
+  echo "Usage: $0 s-expression-filename sweet-expression-filename"
   exit 99
 fi
 if [ ! -f "$1" ] ; then
-  echo "File 1 must exist as a normal file"
+  echo "File 1 (for s-expressions) must exist as a normal file"
   exit 98
 fi
 if [ ! -f "$2" ] ; then
-  echo "File 2 must exist as a normal file"
+  echo "File 2 (for sweet-expressions) must exist as a normal file"
   exit 98
 fi
 
-${SWEETEN} "$1" | ${UNSWEETEN} > ,first
+${SWEETEN} "$1" | ${UNSWEETEN} | sed -e '/[ 	]*;/d' > ,first
 
-${UNSWEETEN} "$2" > ,second
+${UNSWEETEN} "$2"              | sed -e '/[ 	]*;/d' > ,second
 
 diff -u ,first ,second
