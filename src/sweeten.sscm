@@ -488,10 +488,15 @@ define sweeten-top-normal-indent(x indent indent-already)
 ; to determine the most pleasing format.
 define sweeten-top-multiline(m indent indent-already)
   if pair?(car(m))  ; Is car a pair?  If so, we may need GROUP.
-    let* <* asunit-car $ exposed-unit car(m) *> ; Get representation of car.
-    ! if fits-width?(indent-already indent length(asunit-car))
+    let*
+    ! \\
+    !   asline-car
+    !     if null?(cdr(m)) ; If one-element list, prepend '$'
+    !       append '(#\$ #\space) line(car(m))
+    !       exposed-unit car(m) ; Get representation of car.
+    ! if fits-width?(indent-already indent length(asline-car))
     !   ; We can squeeze the car into the line - don't use GROUP.
-    !   append getdent(indent-already indent) asunit-car '(#\newline)
+    !   append getdent(indent-already indent) asline-car '(#\newline)
     !     sweeten-body cdr(m) deeper(indent) #f
     !   ; We *cannot* squeeze the car into the line - use GROUP
     !   append getdent(indent-already indent)
