@@ -490,11 +490,18 @@ define fits-width?(indent-already indent newlen)
 ; This tail handles the body of a list (after its first entry) when
 ; indentation processing is active, each of these is its own initial line.
 define sweeten-body(m indent indent-already)
-  if null?(m)
-    '()
-    append
-      sweeten-top  car(m) indent indent-already
-      sweeten-body cdr(m) indent #f
+  cond
+    null?(m)
+      '()
+    not(pair?(m)) ; Improper list
+      append
+        getdent indent-already indent
+        '(#\. #\newline)
+        sweeten-top  m indent indent-already
+    #t
+      append
+        sweeten-top  car(m) indent indent-already
+        sweeten-body cdr(m) indent #f
 
 ; Return list m represented in the typical indent style.
 define sweeten-top-normal-indent(x indent indent-already)
