@@ -108,4 +108,15 @@ a(b) c(d) e(f)
 
 {$$$}
 
+a
+  b
+    c
+      d
+        e
+          #t
+            let (item(unit(car(x))))
+            ! let
+            !   $ item-sameline append('(#\space) group-list '(#\space) item)
+            !   item-sameline
+
 ; Comment at end of file.
