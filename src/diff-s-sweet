@@ -26,8 +26,19 @@ if [ ! -f "$2" ] ; then
   exit 98
 fi
 
-${SWEETEN} "$1" | ${UNSWEETEN} | sed -e '/[ 	]*;/d' > ,first
+# The sed commands deletes ;-only lines; the awk command
+# merges 2+ blank lines into one blank line.
+# We don't ignore ALL blank lines, because blank lines can have an effect.
+# For example, a blank line followed by an indent has
+# a different meaning if we remove the blank line.
+# All of this assumes that we're not using multi-line strings.
 
-${UNSWEETEN} "$2"              | sed -e '/[ 	]*;/d' > ,second
+${SWEETEN} "$1" | ${UNSWEETEN} | \
+  sed -e '/[ 	]*;/d' | \
+  awk '/^$/{ if (! blank++) print; next } { blank=0; print }' > ,first
+
+${UNSWEETEN} "$2" | \
+  sed -e '/[ 	]*;/d' | \
+  awk '/^$/{ if (! blank++) print; next } { blank=0; print }' > ,second
 
 diff -u ,first ,second
