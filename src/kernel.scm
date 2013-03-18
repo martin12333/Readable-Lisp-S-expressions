@@ -1481,23 +1481,27 @@
               (list 'normal (list ct_results)))))
         ((not (eq? basic_special 'normal)) (list basic_special '())) 
         ((eq? basic_value period_symbol) ; special case: period.
-          (if (char-hspace? (my-peek-char port))
-            (begin
+          (hspaces port) ; We have a delimiter since we have period_symbol
+          ; TODO: Handle scomments
+          (if (not (is_initial_comment_eol (my-peek-char port)))
+            ; "n_expr_or_collecting" handles both two cases in BNF
+            (let* ((pn_full_results (n_expr_or_collecting port))
+                   (pn_stopper      (car pn_full_results))
+                   (pn_value        (cadr pn_full_results)))
               (hspaces port)
-              (if (not (is_initial_comment_eol (my-peek-char port)))
-                (let* ((pn_full_results (n_expr_or_collecting port))
-                       (pn_stopper      (car pn_full_results))
-                       (pn_value        (cadr pn_full_results)))
-                  (hspaces port)
-                  (if (not (is_initial_comment_eol (my-peek-char port)))
+              (cond
+                ((eq? pn_stopper 'sublist_marker)
+                  (rest port))
+                ((eq? pn_stopper 'normal) ; Includes collecting lists
+                  (if (is_initial_comment_eol (my-peek-char port))
+                    pn_full_results
                     (let* ((e_full_results (n_expr port))
                            (e_stopper      (car e_full_results))
                            (e_value        (cadr e_full_results)))
-                      (if (memq e_stopper '(normal sublist_marker))
-                        (read-error "Illegal value after . value, rest of line")
-                        (list e_stopper pn_value)))
-                    (list pn_stopper pn_value)))
-                (list 'normal (list period_symbol))))
+                      (if (eq? e_stopper 'normal)
+                        (read-error "Illegal . value . value, rest of line")
+                        (list e_stopper pn_value)))))
+                (#t (read-error "Unexpected marker after . value"))))
             (list 'normal (list period_symbol))))
         ((char-hspace? (my-peek-char port))
           (hspaces port)
