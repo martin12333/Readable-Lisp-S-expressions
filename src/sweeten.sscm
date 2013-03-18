@@ -617,7 +617,7 @@ define sweeten-top-multiline(m indent indent-already)
     ! !       let*
     ! !         \\
     ! !           currentdent $ getdent indent-already indent
-    ! !           nextdent    $ deeper currentdent
+    ! !           nextdent    $ deeper indent
     ! !           next2dent   $ deeper nextdent
     ! !         append currentdent exposed-unit(car(m)) '(#\newline)
     ! !           nextdent \\ '(#\\ #\\ #\newline)
