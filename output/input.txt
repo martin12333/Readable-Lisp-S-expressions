@@ -533,6 +533,6 @@ define x3 3
 define x5 . <*
 define x6 2
 
-define x6 3 *>
+define x8 3 *>
 
 fin

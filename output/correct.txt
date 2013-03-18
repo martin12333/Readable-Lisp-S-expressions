@@ -210,5 +210,5 @@ c
 (dd1 ee1 . ff1)
 (foo1 (bar aa1 bb1 . cc1))
 (define x1 (define x2 2) (define x3 3))
-(define x5 (define x6 2) (define x7 3))
+(define x5 (define x6 2) (define x8 3))
 fin
