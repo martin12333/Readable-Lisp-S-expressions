@@ -1318,6 +1318,7 @@
            (expr (cadr results)))
       (cond
         ((eq? type 'collecting)
+          (hspaces port)
           (list 'normal (collecting_tail port)))
         (#t results))))
 
