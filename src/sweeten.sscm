@@ -109,6 +109,8 @@ define cuddle-first-parameter '(
   set! do
   setq block typecase)           ; Common Lisp
 
+define let-likes '(let let*)
+
 ; Control what symbol is used for grouping.  This isn't likely to change
 ; now, but it was a subject of long mailing list discussion.
 define group-string "\\\\"
@@ -588,9 +590,21 @@ define sweeten-top-multiline(m indent indent-already)
     ! !     append getdent(indent-already indent)
     ! !       asline-cuddled \\ '(#\newline)
     ! !       sweeten-body cddr(m) mark-deeper(indent) #f
-    ! !     ; Can't cuddle with one parameter - use normal format.
-    ! !     sweeten-top-normal-indent m
-    ! !       getdent(indent-already indent) \\ #f
+    ! !     ; Can't cuddle with one parameter:
+    ! !     if {memq(car(m) let-likes) and list?(cadr(m))
+                and not(list1?(cadr(m)))}
+    ! !       ; Handle let-likes specially - use GROUP for variable list 
+    ! !       let*
+    ! !         \\
+    ! !           currentdent $ getdent indent-already indent
+    ! !           nextdent    $ deeper currentdent
+    ! !           next2dent   $ deeper nextdent
+    ! !         append currentdent exposed-unit(car(m)) '(#\newline)
+    ! !           nextdent \\ '(#\\ #\\ #\newline)
+    ! !           sweeten-body cadr(m) next2dent #f
+    ! !           sweeten-body cddr(m) nextdent #f
+    ! !       sweeten-top-normal-indent m ; Normal format.
+    ! !         getdent(indent-already indent) \\ #f
     ! ; Nothing special.  Use normal multi-line format:
     ! #t
     ! ! sweeten-top-normal-indent m indent indent-already
