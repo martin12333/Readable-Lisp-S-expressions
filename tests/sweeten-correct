@@ -145,9 +145,9 @@ $ {a + b}
 
 let
   \\
-    x a(b c d e f g h i j k l m n)
-    y a(b c d e f g h i)
-    z za(zb zc zd ze zf zg)
+    x $ a b c d e f g h i j k l m n
+    y $ a b c d e f g h i
+    z $ za zb zc zd ze zf zg
   {x + x + x + x}
   {x * x * x * x}
   x

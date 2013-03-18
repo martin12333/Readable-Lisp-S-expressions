@@ -507,6 +507,26 @@ define sweeten-body(m indent indent-already)
         sweeten-top  car(m) indent indent-already
         sweeten-body cdr(m) indent #f
 
+; Body-like construct, but for variable lists.
+define sweeten-body-varlist(m indent indent-already)
+  if {null?(m) or not(pair?(m))}
+    sweeten-body m indent indent-already
+    append
+      cond ; Represent car(m)
+        {list2?(car(m)) and symbol?(caar(m))}
+          let*
+            \\
+              asline $ line-in-collecting car(m)
+              length-asline $ length asline
+            if fits-width?(indent-already indent length-asline)
+              append
+                getdent indent-already indent
+                asline
+                '(#\newline)
+              sweeten-top car(m) indent indent-already
+        #t $ sweeten-top car(m) indent indent-already
+      sweeten-body-varlist cdr(m) indent #f
+
 ; Return list m represented in the typical indent style.
 define sweeten-top-normal-indent(x indent indent-already)
   if represent-as-abbreviation?(x)
@@ -601,7 +621,7 @@ define sweeten-top-multiline(m indent indent-already)
     ! !           next2dent   $ deeper nextdent
     ! !         append currentdent exposed-unit(car(m)) '(#\newline)
     ! !           nextdent \\ '(#\\ #\\ #\newline)
-    ! !           sweeten-body cadr(m) next2dent #f
+    ! !           sweeten-body-varlist cadr(m) next2dent #f
     ! !           sweeten-body cddr(m) nextdent #f
     ! !       sweeten-top-normal-indent m ; Normal format.
     ! !         getdent(indent-already indent) \\ #f
