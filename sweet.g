@@ -1061,6 +1061,7 @@ rest returns [Object v]
         (pn=n_expr hspace* (n_expr error)? {$v = $pn.v;}
          | COLLECTING hspace* pc=collecting_tail hspace*
            (n_expr error)? {$v = $pc.v;}
+         | SUBLIST hspace* ps=rest {$v = $ps.v;}
          | empty {$v = list(".");})
        | empty   {$v = list(".");})
   | scomment hspace* (sr=rest {$v = $sr.v;} | empty {$v = null;} )
