@@ -212,4 +212,5 @@ c
 (define x1 (define x2 2) (define x3 3))
 (define x5 (define x6 2) (define x8 3))
 (a b c d)
+(a b)
 fin
