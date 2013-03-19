@@ -152,4 +152,10 @@ let
   {x * x * x * x}
   x
 
+let pair
+  \\
+    x 1
+    y $ cos b
+  {x + y}
+
 ; Comment at end of file.

@@ -102,4 +102,6 @@ $$$
 
 (let ((x (a b c d e f g h i j k l m n)) (y (a b c d e f g h i)) (z (za zb zc zd ze zf zg))) (+ x x x x) (* x x x x) x)
 
+(let pair ((x 1) (y (cos b))) (+ x y))
+
 ; Comment at end of file.
