@@ -214,4 +214,6 @@ c
 (a b c d)
 (a b)
 (dog . cat)
+(fickle (abc def . ghi) (jkl mno . pqr) (another . line) (stu aaa bbb))
+(fred x (a b))
 fin
