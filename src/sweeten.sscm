@@ -138,17 +138,11 @@ define punct-chars     list( #\! #\" #\# #\$ #\% #\& #\'
                              #\| #\} #\~ )
 
 ; This program automatically handles various end-of-line situations.
-; An end-of-line is a sequence of two different end-of-line chars,
-; otherwise, it is a single end-of-line char.
-; Thus we handle \n, \r\n, \n\r, \r, and variations of <next line> too.
-; To do this, we need a list of end-of-line characters:
+; An end-of-line if LF, CR, or CRLF; that is, (\n | \r \n?)
 define end-of-line-chars
   list 
     integer->char(#x0a)     ; <linefeed>, aka \n
     integer->char(#x0d)     ; <carriage return>, aka \r
-    integer->char(#x85)     ; <next line>
-    ; If wide chars are supported, add this:
-    ; integer->char(#x2028)   ; <line separator>
 
 ; Returns #f if x has >1 element. Improper lists are #t.
 define multi-element-list?(x)
@@ -701,12 +695,13 @@ define display-sweeten-format(x)
 ; or a single end-of-line character, whichever is longer.
 define consume-end-of-line()
   let <* c $ peek-char() *>
-    if memq(c end-of-line-chars)
-      begin
+    cond
+      memq(c end-of-line-chars)
         read-char()
-        let <* next $ peek-char() *>
-          if {not{c eq? next} and memq(next end-of-line-chars)}
-            read-char()
+        if eqv?(c carriage-return)
+          let <* c2 $ peek-char() *>
+            if eqv?(c2 #\newline)
+              read-char()
 
 ; Copy one line from stdin to stdout, end on EOF or end-of-line.
 ; Consume the end of line.
