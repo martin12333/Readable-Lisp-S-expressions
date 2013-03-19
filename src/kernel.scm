@@ -876,6 +876,13 @@
                   (list (patch-datum-label label (no-indent-read port))))
                 (#t
                   (read-error "Datum label #NUM requires = or #")))))
+            ((or (char=? c #\space) (char=? c tab))
+              ; Extension - treat # (space|tab) as a comment to end of line.
+              ; This is not required by SRFI-105 or SRFI-110, but it's
+              ; handy because "# " is a comment-to-EOL in many other
+              ; languages (Bourne shells, Perl, Python, etc.)
+              (consume-to-eol port)
+              '())
             (#t
               (let ((rv (parse-hash no-indent-read c port)))
                 (cond
