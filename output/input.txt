@@ -535,4 +535,6 @@ define x6 2
 
 define x8 3 *>
 
+a b . $ c d
+
 fin
