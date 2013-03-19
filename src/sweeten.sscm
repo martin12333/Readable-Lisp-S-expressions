@@ -598,33 +598,39 @@ define sweeten-top-multiline(m indent indent-already)
     ! {memq(car(m) cuddle-first-parameter) and list-3-plus?(m)}
     ! ! ; We'd like to cuddle the first parameter of this operator,
     ! ! ; if we can... so try to do so.
-    ! ! let
+    ! ! let*
     ! !   \\
     ! !     asline-cuddled
     ! !       append
     ! !         exposed-unit car(m)
     ! !         '(#\space)
     ! !         exposed-unit-collecting cadr(m)
+    ! !     currentdent $ getdent indent-already indent
+    ! !     nextdent    $ deeper indent
+    ! !     next2dent   $ deeper nextdent
     ! !   if fits-width?(indent-already indent length(asline-cuddled))
     ! !     ; We can cuddle up on line with one parameter:
-    ! !     append getdent(indent-already indent)
-    ! !       asline-cuddled \\ '(#\newline)
-    ! !       sweeten-body cddr(m) mark-deeper(indent) #f
+    ! !     append currentdent asline-cuddled '(#\newline)
+    ! !       ; Now figure out what to do with the rest of the parameters:
+    ! !       if {memq(car(m) let-likes) and symbol?(cadr(m))
+                  and pair?(cddr(m)) and list?(caddr(m))}
+    ! !         ; Specially handle let name var-list; use GROUP for var-list 
+    ! !         append
+    ! !           nextdent \\ '(#\\ #\\ #\newline)
+    ! !           sweeten-body-varlist caddr(m) next2dent #f
+    ! !           sweeten-body cdddr(m) nextdent #f
+    ! !         ; Normal case with a cuddled parameter:
+    ! !         sweeten-body cddr(m) mark-deeper(indent) #f
     ! !     ; Can't cuddle with one parameter:
     ! !     if {memq(car(m) let-likes) and list?(cadr(m))
                 and not(list1?(cadr(m)))}
-    ! !       ; Handle let-likes specially - use GROUP for variable list 
-    ! !       let*
-    ! !         \\
-    ! !           currentdent $ getdent indent-already indent
-    ! !           nextdent    $ deeper indent
-    ! !           next2dent   $ deeper nextdent
-    ! !         append currentdent exposed-unit(car(m)) '(#\newline)
-    ! !           nextdent \\ '(#\\ #\\ #\newline)
-    ! !           sweeten-body-varlist cadr(m) next2dent #f
-    ! !           sweeten-body cddr(m) nextdent #f
-    ! !       sweeten-top-normal-indent m ; Normal format.
-    ! !         getdent(indent-already indent) \\ #f
+    ! !       ; Specially handle let var-list; use GROUP for var-list 
+    ! !       append currentdent exposed-unit(car(m)) '(#\newline)
+    ! !         nextdent \\ '(#\\ #\\ #\newline)
+    ! !         sweeten-body-varlist cadr(m) next2dent #f
+    ! !         sweeten-body cddr(m) nextdent #f
+    ! !       ; Give up, use normal format.
+    ! !       sweeten-top-normal-indent m indent indent-already
     ! ; Nothing special.  Use normal multi-line format:
     ! #t
     ! ! sweeten-top-normal-indent m indent indent-already
