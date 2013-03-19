@@ -229,6 +229,16 @@ MD5 9638f9b7b1b823fcaba977f06f0dd761
 SHA-1 f7974cf14ac19c3aa1841ee88c6d2dcbad89af01
 SHA-512 99374a96b541f09367af56bf704601204a6abb658ae9400776da15b4cae0e98674ee2a812d34ebad8a3fcfcde90087d031379ff88a3bd5acf02ddeaea924197b
 
+ANTLRWorks 1.4.3 is available from:
+http://www.antlr3.org/works/
+in particular from:
+http://www.antlr3.org/download/
+The ANTLRWorks GUI is released under the BSD 3-clause license,
+and it includes the ANTLR tool version 3.4, which is also
+released under the BSD 3-clause license:
+http://www.antlr3.org/license.html
+
+
 For more information
 ===================
 
