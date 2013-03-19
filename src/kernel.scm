@@ -826,23 +826,27 @@
         ((eof-object? c) (list c)) ; If eof, return eof.
         (#t
           ; Not EOF. Read in the next character, and start acting on it.
-          (my-read-char port)
           (cond
             ((char-ci=? c #\t)
+              (my-read-char port)
               (if (memv (gobble-chars port '(#\r #\u #\e)) '(0 3))
                 '(#t)
                 (read-error "Incomplete #true")))
             ((char-ci=? c #\f)
+              (my-read-char port)
               (if (memv (gobble-chars port '(#\a #\l #\s #\e)) '(0 4))
                 '(#f)
                 (read-error "Incomplete #false")))
             ((memv c '(#\i #\e #\b #\o #\d #\x
                        #\I #\E #\B #\O #\D #\X))
+              (my-read-char port)
               (list (read-number port (list #\# (char-downcase c)))))
             ((char=? c #\( )  ; Vector.
+              (my-read-char port)
               (list (list->vector
                 (my-read-delimited-list no-indent-read #\) port))))
             ((char=? c #\u )  ; u8 Vector.
+              (my-read-char port)
               (cond
                 ((not (eqv? (my-read-char port) #\8 ))
                   (read-error "#u must be followed by 8"))
@@ -850,32 +854,34 @@
                   (read-error "#u8 must be followed by left paren"))
                 (#t (list (list->u8vector
                       (my-read-delimited-list no-indent-read #\) port))))))
-            ((char=? c #\\) (list (process-char port)))
+            ((char=? c #\\) (my-read-char port) (list (process-char port)))
             ; Handle #; (item comment).
             ((char=? c #\;)
+              (my-read-char port)
               (no-indent-read port)  ; Read the datum to be consumed.
               '()) ; Return comment
             ; handle nested comments
             ((char=? c #\|)
+              (my-read-char port)
               (nest-comment port)
               '()) ; Return comment
             ((char=? c #\!)
+              (my-read-char port)
               (process-sharp-bang port))
             ((memv c digits) ; Datum label, #num# or #num=...
-              (let* ((rest-digits (read-digits port))
-                     (label (string->number (list->string
-                            (cons c rest-digits)))))
-              (cond
-                ((eqv? (my-peek-char port) #\#)
-                  (my-read-char port)
-                  (list (cons unmatched-datum-label-tag label)))
-                ((eqv? (my-peek-char port) #\=)
-                  (my-read-char port)
-                  (if (my-char-whitespace? (my-peek-char port))
-                    (read-error "#num= must be followed by non-whitespace"))
-                  (list (patch-datum-label label (no-indent-read port))))
-                (#t
-                  (read-error "Datum label #NUM requires = or #")))))
+              (let* ((my-digits (read-digits port))
+                     (label (string->number (list->string my-digits))))
+                (cond
+                  ((eqv? (my-peek-char port) #\#)
+                    (my-read-char port)
+                    (list (cons unmatched-datum-label-tag label)))
+                  ((eqv? (my-peek-char port) #\=)
+                    (my-read-char port)
+                    (if (my-char-whitespace? (my-peek-char port))
+                      (read-error "#num= must be followed by non-whitespace"))
+                    (list (patch-datum-label label (no-indent-read port))))
+                  (#t
+                    (read-error "Datum label #NUM requires = or #")))))
             ((or (char=? c #\space) (char=? c tab))
               ; Extension - treat # (space|tab) as a comment to end of line.
               ; This is not required by SRFI-105 or SRFI-110, but it's
@@ -883,7 +889,11 @@
               ; languages (Bourne shells, Perl, Python, etc.)
               (consume-to-eol port)
               '())
+            ((char-line-ending? c)
+              ; Extension - treat # EOL as a comment.
+              '())
             (#t
+              (my-read-char port)
               (let ((rv (parse-hash no-indent-read c port)))
                 (cond
                   ((not rv)
