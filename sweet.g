@@ -1035,8 +1035,8 @@ collecting_tail returns [Object v]
 
 head returns [Object v]
   : PERIOD /* Leading ".": escape following datum like an n-expression. */
-      (hspace+
-        (pn=n_expr hspace* (n_expr error)? {$v = list($pn.v);}
+      (hspace+ (scomment hspace*)*
+        (pn=n_expr hspace* (scomment hspace)* (n_expr error)? {$v = list($pn.v);}
          | /*empty*/  {$v = list(".");} )
        | /*empty*/    {$v = list(".");} )
   | COLLECTING hspace* collecting_tail hspace*
@@ -1058,10 +1058,10 @@ head returns [Object v]
 
 rest returns [Object v]
   : PERIOD /* Improper list */
-      (hspace+
-        (pn=n_expr hspace* (n_expr error)? {$v = $pn.v;}
+      (hspace+  (scomment hspace*)*
+        (pn=n_expr hspace* (scomment hspace+)* (n_expr error)? {$v = $pn.v;}
          | COLLECTING hspace* pc=collecting_tail hspace*
-           (n_expr error)? {$v = $pc.v;}
+           (scomment hspace+)* (n_expr error)? {$v = $pc.v;}
          | SUBLIST hspace* ps=rest {$v = $ps.v;}
          | /*empty*/ {$v = list(".");})
        | /*empty*/   {$v = list(".");})
