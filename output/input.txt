@@ -539,4 +539,6 @@ a b . $ c d
 
 a . $ b
 
+dog . #| hi |# #| byte |#   cat   #|another|#   
+
 fin

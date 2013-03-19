@@ -1015,6 +1015,17 @@ collecting_tail returns [Object v]
   | (FF | VT)+ EOL retry2=collecting_tail {$v = $retry2.v;}
   | collecting_end {$v = null;} ;
 
+// Process line after ". hspace+" sequence.  Does not go past current line.
+post_period returns [Object v]
+  : (scomment hspace*)*
+    // NOTE: The SUBLIST and empty branch (alternatives 3 and 4) are
+    // technically ambiguous (SUBLIST is first, so it's resolved first).
+    (pn=n_expr hspace* (scomment hspace*)* (n_expr error)? {$v = $pn.v;}
+     | COLLECTING hspace* pc=collecting_tail hspace*
+       (scomment hspace*)* (n_expr error)? {$v = $pc.v;}
+     | SUBLIST hspace* ps=rest {$v = $ps.v;}
+     | /*empty*/ {$v = list(".");} ) ;
+
 // Production "head" reads 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
 // on the line, it returns a list of exactly one item; this makes it
@@ -1035,9 +1046,7 @@ collecting_tail returns [Object v]
 
 head returns [Object v]
   : PERIOD /* Leading ".": escape following datum like an n-expression. */
-      (hspace+ (scomment hspace*)*
-        (pn=n_expr hspace* (scomment hspace)* (n_expr error)? {$v = list($pn.v);}
-         | /*empty*/  {$v = list(".");} )
+      (hspace+ pp=post_period {$v = list($pp.v);}
        | /*empty*/    {$v = list(".");} )
   | COLLECTING hspace* collecting_tail hspace*
       (rr=rest            {$v = cons($collecting_tail.v, $rr.v); }
@@ -1058,12 +1067,7 @@ head returns [Object v]
 
 rest returns [Object v]
   : PERIOD /* Improper list */
-      (hspace+  (scomment hspace*)*
-        (pn=n_expr hspace* (scomment hspace+)* (n_expr error)? {$v = $pn.v;}
-         | COLLECTING hspace* pc=collecting_tail hspace*
-           (scomment hspace+)* (n_expr error)? {$v = $pc.v;}
-         | SUBLIST hspace* ps=rest {$v = $ps.v;}
-         | /*empty*/ {$v = list(".");})
+      (hspace+  pp=post_period {$v = $pp.v;}
        | /*empty*/   {$v = list(".");})
   | scomment hspace* (sr=rest {$v = $sr.v;} | /*empty*/ {$v = null;} )
   | COLLECTING hspace* collecting_tail hspace*
