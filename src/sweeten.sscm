@@ -675,15 +675,15 @@ define display-skip-last-eol(x)
       display(car(x))
       ; In this program, strings only happen from indents:
       set! column1 #f
-      display-skip-last-eol(cdr(x))
+      display-skip-last-eol cdr(x)
     {char?(car(x)) and null?(cdr(x)) and {car(x) eq? #\newline}}
       #t
     char?(car(x))
-      write-char(car(x))
+      write-char car(x)
       set! column1 #f
-      display-skip-last-eol(cdr(x))
+      display-skip-last-eol cdr(x)
     #t
-      display("BUG!!! in display-skip-last-eof!")
+      display "BUG!!! in display-skip-last-eof!"
 
 ; Display formatted expression "x" using indentation string "indent".
 ; Do NOT display the final end-of-line, due to an interesting subtlety:
