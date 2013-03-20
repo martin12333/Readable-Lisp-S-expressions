@@ -1328,17 +1328,6 @@
           (#t
             results)))))
 
-  ; read n_expr, but process collecting list.
-  (define (n_expr_or_collecting port)
-    (let* ((results (n_expr port))
-           (type (car results))
-           (expr (cadr results)))
-      (cond
-        ((eq? type 'collecting)
-          (hspaces port)
-          (list 'normal (collecting_tail port)))
-        (#t results))))
-
   ; Check if we have abbrev+whitespace.  If the current peeked character
   ; is one of certain whitespace chars,
   ; return 'abbrevw as the marker and abbrev_procedure
@@ -1394,7 +1383,8 @@
       ((null? (cdr x)) (car x))
       (#t x)))
 
-  ; Return contents of collecting_tail.
+  ; Return contents (value) of collecting_tail.  It does *not* report a
+  ; stopper or ending indent, because it is *ONLY* stopped by collecting_end
   (define (collecting_tail port)
     (let* ((c (my-peek-char port)))
       (cond
@@ -1430,6 +1420,52 @@
                    (list it_value)))
               (#t (cons it_value (collecting_tail port)))))))))
 
+  ; Skip scomments and error out if we have a normal n_expr;
+  ; Basically implement this BNF:
+  ;    (scomment hspace*)* (n_expr error)?
+  ; This procedure is used after ". value".
+  (define (n_expr_error port full)
+    (if (not (eq? (car full) 'normal))
+      (read-error "BUG! n_expr_error called but stopper not normal"))
+    (if (is_initial_comment_eol (my-peek-char port))
+      full ; All done!
+      (let* ((n_full_results (n_expr port))
+             (n_stopper      (car n_full_results))
+             (n_value        (cadr n_full_results)))
+      (cond
+        ((eq? n_stopper 'scomment) ; Consume scomments.
+          (hspaces port)
+          (n_expr_error port full))
+        ((eq? n_stopper 'normal)
+          (read-error "Illegal second value after ."))
+        (#t ; We found a stopper, return it with the value from "full"
+          (list n_stopper (cadr full)))))))
+
+  ; Returns (stopper value_after_period)
+  (define (post_period port)
+    (if (not (is_initial_comment_eol (my-peek-char port)))
+      (let* ((pn_full_results (n_expr port))
+             (pn_stopper      (car pn_full_results))
+             (pn_value        (cadr pn_full_results)))
+        (cond
+          ((eq? pn_stopper 'scomment)
+            (hspaces port)
+            (post_period port))
+          ((eq? pn_stopper 'normal)
+            (hspaces port)
+            (n_expr_error port pn_full_results))
+          ((eq? pn_stopper 'collecting)
+            (hspaces port)
+            (let ((ct (collecting_tail port)))
+              (hspaces port)
+              (n_expr_error port (list 'normal ct))))
+          ((eq? pn_stopper 'sublist_marker)
+            (hspaces port)
+            (rest port))
+          (#t ; Different stopper; respond as empty branch with that stopper
+            (list pn_stopper (list period_symbol)))))
+      (list 'normal (list period_symbol)))) ; Empty branch.
+
   ; Returns (stopper computed_value).
   ; The stopper may be 'normal, 'scomment (special comment),
   ; 'abbrevw (initial abbreviation), 'sublist_marker, or 'group_split_marker
@@ -1453,15 +1489,10 @@
           (if (char-hspace? (my-peek-char port))
             (begin
               (hspaces port)
-              (if (not (is_initial_comment_eol (my-peek-char port)))
-                (let* ((pn_full_results (n_expr port))
-                       (pn_stopper      (car pn_full_results))
-                       (pn_value        (cadr pn_full_results)))
-                  (hspaces port)
-                  (if (not (is_initial_comment_eol (my-peek-char port)))
-                    (read-error "Illegal value after . value in head"))
-                  (list pn_stopper pn_value))
-                (list 'normal (list period_symbol))))
+              (let* ((ct_full_results (post_period port))
+                     (ct_stopper      (car ct_full_results))
+                     (ct_value        (cadr ct_full_results)))
+                (list ct_stopper (list ct_value))))
             (list 'normal (list period_symbol))))
         ((char-hspace? (my-peek-char port))
           (hspaces port)
@@ -1498,27 +1529,10 @@
               (list 'normal (list ct_results)))))
         ((not (eq? basic_special 'normal)) (list basic_special '())) 
         ((eq? basic_value period_symbol) ; special case: period.
-          (hspaces port) ; We have a delimiter since we have period_symbol
-          ; TODO: Handle scomments
-          (if (not (is_initial_comment_eol (my-peek-char port)))
-            ; "n_expr_or_collecting" handles both two cases in BNF
-            (let* ((pn_full_results (n_expr_or_collecting port))
-                   (pn_stopper      (car pn_full_results))
-                   (pn_value        (cadr pn_full_results)))
+          (if (char-hspace? (my-peek-char port))
+            (begin
               (hspaces port)
-              (cond
-                ((eq? pn_stopper 'sublist_marker)
-                  (rest port))
-                ((eq? pn_stopper 'normal) ; Includes collecting lists
-                  (if (is_initial_comment_eol (my-peek-char port))
-                    pn_full_results
-                    (let* ((e_full_results (n_expr port))
-                           (e_stopper      (car e_full_results))
-                           (e_value        (cadr e_full_results)))
-                      (if (eq? e_stopper 'normal)
-                        (read-error "Illegal . value . value, rest of line")
-                        (list e_stopper pn_value)))))
-                (#t (read-error "Unexpected marker after . value"))))
+              (post_period port))
             (list 'normal (list period_symbol))))
         ((char-hspace? (my-peek-char port))
           (hspaces port)
