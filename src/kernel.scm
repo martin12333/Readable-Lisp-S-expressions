@@ -1274,8 +1274,6 @@
   (define sublist-char #\$) ; First character of sublist symbol.
   (define period_symbol period-symbol)
 
-; TODO: Further cleanup - remove unnecessary declarations, etc.
-
   (define (indentation>? indentation1 indentation2)
     (let ((len1 (string-length indentation1))
             (len2 (string-length indentation2)))
