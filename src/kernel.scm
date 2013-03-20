@@ -1311,6 +1311,13 @@
           (my-read-char port)
           (consume-ff-vt port)))))
 
+  ; Do 2-item append, but report read-error if the LHS is not a proper list.
+  ; Don't use this if the lhs *must* be a list (e.g., if we have (list x)).
+  (define (my-append lhs rhs)
+    (if (list? lhs)
+      (append lhs rhs)
+      (read-error "Must have a proper list on left-hand-side to append data")))
+
   ; Read an n-expression.  Returns ('scomment '()) if it's an scomment,
   ; else returns ('normal n_expr).
   ; Note: If a *value* begins with #, process any potential neoteric tail,
@@ -1608,7 +1615,7 @@
                    (sub_i_new_indent   (car sub_i_full_results))
                    (sub_i_value        (cadr sub_i_full_results)))
               (list sub_i_new_indent
-                (append head_value (list sub_i_value)))))
+                (my-append head_value (list sub_i_value)))))
           ((eq? head_stopper 'collecting_end)
             ; Note that indent is "", forcing dedent all the way out.
             (list "" (monify head_value)))
@@ -1618,7 +1625,7 @@
                 (let* ((body_full_results (body port new_indent))
                        (body_new_indent (car body_full_results))
                        (body_value      (cadr body_full_results)))
-                  (list body_new_indent (append head_value body_value)))
+                  (list body_new_indent (my-append head_value body_value)))
                 (list new_indent (monify head_value)))))
           (#t
             (read-error "Must end line with end-of-line sequence")))
