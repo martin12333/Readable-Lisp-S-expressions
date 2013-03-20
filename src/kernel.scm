@@ -795,7 +795,14 @@
           (if (is-matching-label-tag? number (cdr position))
             (set-cdr! position replace) ; Yes, "set!" !!
             (patch-datum-label-tail number replace (cdr position) new-skip)))
-        ; TODO: Handle vectors.
+        ((vector? position)
+          (do ((len (vector-length position))
+               (k 0 (+ k 1)))
+            ((>= k len) (values))
+            (let ((x (vector-ref position k)))
+              (if (is-matching-label-tag? number x)
+                (vector-set! position k replace)
+                (patch-datum-label-tail number replace x new-skip)))))
         (#t (values)))))
 
   (define (patch-datum-label number starting-position)
