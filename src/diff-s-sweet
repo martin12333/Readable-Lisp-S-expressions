@@ -9,6 +9,14 @@
 # (C) 2013 David A. Wheeler
 # Released under the MIT license
 
+# TODO: Add support for:
+# -w Check if file list is set of well-formatted s-expressions
+#    (if no files, stdin; support - as stdin)
+# -u Use *only* unsweeten for actual diff s and sweet, not "sweeten".
+#    This requires file 1 to be well-formatted (checked)
+# -s Use *only* sweeten for actual diff s and sweet, not "unsweeten".
+# Document usage, etc. in man page
+
 export PATH="@PATH_PREFIX@$PATH"
 SWEETEN="sweeten"
 UNSWEETEN="unsweeten"
