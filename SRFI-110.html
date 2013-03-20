@@ -150,7 +150,7 @@ define factorial(n)
   <li><a href="#srfi-49">What is the relationship between sweet-expressions and SRFI-49 (I-expressions)?</a></li>
   <li><a href="#separate-105">Why are sweet-expression separate from curly-infix and neoteric-expressions as defined in SRFI-105?</a></li>
   <li><a href="#writing-out-results">Writing out results</a></li>
-  <li><a href="#backwards-compatibility">Backwards compatibility</a></li>
+  <li><a href="#backwards-compatibility">Backwards compatibility (well-formatted s-expressions)</a></li>
   </ul>
   </li>
   <li><a href="#whitespace-indentation-comment">Whitespace, indentation, and comment handling</a>
@@ -516,6 +516,16 @@ A reader <em>MAY</em> also accept a datum label
 that is an initial expression of a <i>head</i> production (see the BNF below),
 with a trailing space or tab,
 as labelling the rest of the sweet-expression.
+</p>
+
+<p>
+A <i>well-formatted</i> s-expression is an expression interpreted
+identically by both traditional s-expressions and by sweet-expressions.
+A well-formatted file is a file interpreted identically
+by both traditional s-expressions and sweet-expressions.
+(In practice,
+<a href="#backwards-compatibility">most s-expressions used in
+real programs are well-formatted</a>.)
 </p>
 
 <p>
@@ -2007,7 +2017,7 @@ Nothing has fundamentally changed;
 as always, you should implement your Lisp expression writer so that
 it presents a format convenient to both human and machine readers.</p>
 
-<h3 id="backwards-compatibility">Backwards compatibility</h3>
+<h3 id="backwards-compatibility">Backwards compatibility (well-formatted s-expressions)</h3>
 
 <p>Backwards compatibility with traditional Lisp notation is helpful.
 A reader that can also read traditional s-expressions, formatted
@@ -2017,12 +2027,13 @@ conventionally, is much easier to switch to.
 <p>
 The sweet-expression notation is fully backwards-compatible with
 <em>well-formatted</em> Lisp s-expressions.
+In practice, most s-expressions used in real programs are well-formatted.
 Thus, a user can enable sweet-expressions and continue to read and
 process traditionally-formatted s-expressions as well.
 If an s-expression is so badly formatted that it
-would be interpreted differently, that s-expression could first be sent
-through a traditional s-expression pretty-printer and have the
-problem resolved.
+would be interpreted differently, that s-expression can
+be processed by a traditional s-expression pretty-printer
+and have the problem resolved.
 </p>
 <p>
 The changes that can cause a difference in interpretation are due
@@ -2068,20 +2079,22 @@ followed by &#8220;<samp>(b)</samp>&#8221; in traditional
 Lisp, but this is a single &#8220;<samp>((a)&nbsp;(b))</samp>&#8221;
 in sweet-expressions.
 Note that this interpretation is also disabled by any indentation, so just
-inserting a space on those rare lines where this occurs
-<em>ensures</em> compatibility with the
-sweet-expression indentation processing.
+inserting an initial space on those rare lines where this occurs
+<em>ensures</em> compatibility for this case.
 </li>
 <li>Sweet-expressions also count &#8220;!&#8221; at the beginning of a line as
-an indent character.  This rarely causes any issue, since once you
+an indent character while indentation processing is enabled.
+This rarely causes any issue, since once you
 use an open parenthesis to start an expression any this meaning for
-&#8220;!&#8221; is disabled.
+&#8220;!&#8221; is disabled, and practically all non-trivial s-expressions
+begin with an open parenthesis.
 In addition, the first character on a line other than space, tab, or
 &#8220;!&#8221; also disables this interpretation on that line.
-Generally, you&#8217;d have to have a symbol whose name
-<em>starts</em> with &#8220;!&#8221; before any issue could come up
-(such symbols are unusual), and then use them directly at the top level
-to retrieve its value (which would also be unusual).</li>
+Generally, to have an issue you&#8217;d have to have a symbol whose name
+<em>starts</em> with &#8220;!&#8221;
+(such symbols are extremely unusual), and then use them directly at
+the top level to retrieve its value
+(this would also be extremely unusual).</li>
 </ul>
 
 
