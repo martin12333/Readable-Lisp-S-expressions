@@ -1236,6 +1236,30 @@
 ; Sweet Expressions (this implementation maps to the BNF)
 ; -----------------------------------------------------------------------------
 
+  ; There is no standard Scheme mechanism to unread multiple characters.
+  ; Therefore, the key productions and some of their supporting procedures
+  ; return both the information on what ended their reading process,
+  ; as well the actual value (if any) they read before whatever stopped them.
+  ; That way, procedures can process the value as read, and then pass on
+  ; the ending information to whatever needs it next.  This approach,
+  ; which we call a "non-tokenizing" implementation, implements a tokenizer
+  ; via procedure calls instead of needing a separate tokenizer.
+  ; The ending information can be:
+  ; - "stopper" - this is returned by productions etc. that do NOT
+  ;     read past the of a line (outside of paired characters and strings).
+  ;     It is 'normal if it ended normally (e.g., at end of line); else it's
+  ;     'sublist_marker ($), 'group_split_marker (\\), 'collecting (<*),
+  ;     'collecting_end (*>), 'scomment (special comments like #|...|#), or
+  ;     'abbrevw (initial abbreviation with whitespace after it).
+  ; - "new_indent" - this is returned by productions etc. that DO read
+  ;     past the end of a line.  Such productions typically read the
+  ;     next line's indent to determine if they should return.
+  ;     If they should, they return the new indent so callers can
+  ;     determine what to do next.  A "*>" should return even though its
+  ;     visible indent level is length 0; we handle this by prepending
+  ;     all normal indents with "^", and "*>" generates a length-0 indent
+  ;     (which is thus shorter than even an indent of 0 characters).
+
   (define group_split (string->symbol "\\\\"))
   (define group-split-char #\\ ) ; First character of split symbol.
   (define non-whitespace-indent #\!) ; Non-whitespace-indent char.
