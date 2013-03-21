@@ -5,6 +5,8 @@
 # show the semantic differences between them.
 # If there's a difference, show the difference and return an error code,
 # else show nothing and return true (0).
+# When given "-w" ("well-formatted"), check if it's well-formatted
+# by running "unsweeten" and seeing if there's a semantic difference.
 
 # (C) 2013 David A. Wheeler
 # Released under the MIT license
@@ -12,9 +14,6 @@
 # TODO: Add support for:
 # -w Check if file list is set of well-formatted s-expressions
 #    (if no files, stdin; support - as stdin)
-# -u Use *only* unsweeten for actual diff s and sweet, not "sweeten".
-#    This requires file 1 to be well-formatted (checked)
-# -s Use *only* sweeten for actual diff s and sweet, not "unsweeten".
 # Document usage, etc. in man page
 
 export PATH="@PATH_PREFIX@$PATH"
@@ -34,6 +33,16 @@ if [ ! -f "$2" ] ; then
   exit 98
 fi
 
+
+# Pretty print filter, from stdin to stdout.
+prettyprint() {
+guile -c '
+  (use-modules (ice-9 pretty-print))
+   (do ((x (read) (read)))
+     ((eof-object? x))
+   (pretty-print x))'
+}
+
 # The sed commands deletes ;-only lines; the awk command
 # merges 2+ blank lines into one blank line.
 # We don't ignore ALL blank lines, because blank lines can have an effect.
@@ -41,12 +50,8 @@ fi
 # a different meaning if we remove the blank line.
 # All of this assumes that we're not using multi-line strings.
 
-${SWEETEN} "$1" | ${UNSWEETEN} | \
-  sed -e '/[ 	]*;/d' | \
-  awk '/^$/{ if (! blank++) print; next } { blank=0; print }' > ,first
+prettyprint < "$1" > ,first
 
-${UNSWEETEN} "$2" | \
-  sed -e '/[ 	]*;/d' | \
-  awk '/^$/{ if (! blank++) print; next } { blank=0; print }' > ,second
+${UNSWEETEN} "$2" | prettyprint > ,second
 
 diff -u ,first ,second
