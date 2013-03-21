@@ -1500,9 +1500,11 @@
           ((eq? pn_stopper 'sublist_marker)
             (hspaces port)
             (rest port))
+          ((eq? pn_stopper 'period_marker)
+            (list 'normal period_symbol))
           (#t ; Different stopper; respond as empty branch with that stopper
             (list pn_stopper (list period_symbol)))))
-      (list 'normal (list period_symbol)))) ; Empty branch.
+      (list 'normal period_symbol))) ; Empty branch.
 
   ; Returns (stopper computed_value).
   ; The stopper may be 'normal, 'scomment (special comment),
