@@ -566,7 +566,7 @@
         (#t
           (let ((datum (my-read port)))
             (cond
-               ((eq? datum period-symbol)
+               ((and (eq? datum period-symbol) (char=? c #\.))
                  (let ((datum2 (my-read port)))
                    (consume-whitespace port)
                    (cond
