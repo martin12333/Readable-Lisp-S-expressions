@@ -3,24 +3,45 @@
 diff-s-sweet \- report differences between s-expression and t-expression files
 .SH SYNOPSIS
 .ll +8
-.B unsweeten
+.B diff-s-sweet s-expression-file sweet-expression-file
+.PP
+.B diff-s-sweet -w s-expression-file
 .ll -8
 .br
 .SH DESCRIPTION
 .PP
 .I diff-s-sweet
-reports semantic differences (if any) between two files.
-The first file is in Lisp/Scheme s-expressions, and
-the second file is sweet-expressions (t-expressions).
+reports semantic differences (if any) involving a file
+in traditional s-expression format, when considering the
+sweet-expression notation.
 Sweet-expressions are a way to represent Lisp/Scheme data and programs
 that adds additional abbreviations beyond those in traditional s-expressions.
 
 .PP
+By default, this program requires two filenames;
+the first file is in Lisp/Scheme s-expressions, and
+the second file is sweet-expressions (t-expressions).
 If there are no differences, there is no report, and
 true (0) is returned.
 If there are differences, the differences are reported in
 unified diff format.
 Differences in ;-comment lines are not considered differences.
+
+.PP
+If the "well-formatted" (-w) option is used, just one filename is provided,
+which is presumed to be in s-expression format.
+This is then examined to report where the file is not "well-formatted"
+with respect to sweet-expressions.
+A "well-formatted" s-expression file is interpreted exactly the same way
+(semantically) by a sweet-expression reader.
+Most s-expression files are well-formatted, but in a few cases
+some formats will be interpreted differently.
+For example, "a(b)" is interpreted by s-expressions as 2 datums,
+a and (b), while in sweet-expressions this is interpreted as the
+one datum (a b).
+This comparison is done reading the file as if it were in
+sweet-expressions (to create a new file to compare to),
+and then doing a diff as described above.
 
 .PP
 The
@@ -34,6 +55,9 @@ in the way you want, then use
 .I diff-s-sweet
 to confirm that the tweaked file is semantically identical
 to the original.
+Alternatively, even if you're not transitioning to sweet-expressions
+yourself, you can use "-w" to ensure that your file would be
+interpreted identically by a sweet-expression reader.
 
 .PP
 For more information, see
@@ -42,7 +66,8 @@ http://readable.sourceforge.net.
 
 .SH OPTIONS
 .PP
-None.
+-w
+Report if file is "well-formatted".
 
 .\" .SH "ENVIRONMENT"
 .\" .PP
@@ -51,6 +76,9 @@ None.
 .PP
 This program assumes that all inputs do not contain any cycles
 (improper lists are okay).
+.PP
+It depends on guile, so extensions of other versions of Scheme or Lisp
+are not really handled.
 
 .SH "SEE ALSO"
 .PP
