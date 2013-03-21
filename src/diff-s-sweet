@@ -79,7 +79,7 @@ prettyprint < "$1" > ,first
 if [ "$well_formatted" -eq 0 ] ; then
   ${UNSWEETEN} "$2" | prettyprint > ,second
 else
-  ${SWEETEN} "$1" | ${UNSWEETEN} | prettyprint > ,second
+  ${UNSWEETEN} "$1" | prettyprint > ,second
 fi
 
 diff -u ,first ,second
