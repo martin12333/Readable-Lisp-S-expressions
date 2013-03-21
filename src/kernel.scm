@@ -1361,6 +1361,8 @@
             (list 'collecting_end '()))
           ((and (eq? expr '$$$) (eqv? c #\$))
             (read-error "Error - $$$ is reserved"))
+          ((and (eq? expr period-symbol) (eqv? c #\.))
+            (list 'period_marker '()))
           (#t
             results)))))
 
@@ -1520,8 +1522,7 @@
                      (rr_value        (cadr rr_full_results)))
                 (list rr_stopper (cons ct_results rr_value)))
               (list 'normal (list ct_results)))))
-        ((not (eq? basic_special 'normal)) basic_full_results)
-        ((eq? basic_value period_symbol)
+        ((eq? basic_special 'period_marker)
           (if (char-hspace? (my-peek-char port))
             (begin
               (hspaces port)
@@ -1530,6 +1531,7 @@
                      (ct_value        (cadr ct_full_results)))
                 (list ct_stopper (list ct_value))))
             (list 'normal (list period_symbol))))
+        ((not (eq? basic_special 'normal)) basic_full_results)
         ((char-hspace? (my-peek-char port))
           (hspaces port)
           (if (not (is_initial_comment_eol (my-peek-char port)))
@@ -1563,13 +1565,13 @@
                      (rr_value        (cadr rr_full_results)))
                 (list rr_stopper (cons ct_results rr_value)))
               (list 'normal (list ct_results)))))
-        ((not (eq? basic_special 'normal)) (list basic_special '())) 
-        ((eq? basic_value period_symbol) ; special case: period.
+        ((eq? basic_special 'period_marker)
           (if (char-hspace? (my-peek-char port))
             (begin
               (hspaces port)
               (post_period port))
             (list 'normal (list period_symbol))))
+        ((not (eq? basic_special 'normal)) (list basic_special '())) 
         ((char-hspace? (my-peek-char port))
           (hspaces port)
           (if (not (is_initial_comment_eol (my-peek-char port)))
