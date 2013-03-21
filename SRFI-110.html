@@ -453,9 +453,10 @@ The marker &#8220;$$$&#8221; <em>MUST</em> be reserved for future use.
 
 <p>
 The markers for the advanced sweet-expression features <em>MUST</em>
-only be accepted as such when indentation processing is active,
-and character sequence <em>MUST NOT</em> be considered one of those
-markers if it does not begin with exactly the marker&#8217;s first character.
+only be accepted as such when indentation processing is active.
+A character sequence <em>MUST NOT</em> be considered one of those
+markers (or as the dot operator) if it
+does not begin with exactly the marker or operator&#8217;s first character.
 For example, <samp><tt>{$}</tt></samp>
 <em>MUST NOT</em> be interpreted as the SUBLIST marker; instead, it
 <em>MUST</em> be interpreted as the symbol <samp>$</samp>.
@@ -1391,6 +1392,22 @@ f ; Demo vertical improper lists
 </pre>
 </td>
 </tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+; Torture test
+a |.| b {$} c d . .
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+; Presumes |...| supported
+(a |.| b |$| c d . |.|)
+</pre>
+</td>
+</tr>
+
 
 <tr>
 <td align="left" valign="top">
