@@ -9,7 +9,7 @@ unsweeten \- filter to translate Lisp/Scheme sweet-expressions to s-expressions
 .SH DESCRIPTION
 .PP
 .I unsweeten
-translates Lisp/Scheme sweet-expressions to s-expressions.
+translates Lisp/Scheme sweet-expressions (t-expressions) into s-expressions.
 It takes input from standard input, and outputs to standard output.
 .PP
 Sweet-expressions are a way to represent Lisp/Scheme data and programs
@@ -150,13 +150,15 @@ s-expression (which is a valid Scheme program):
 
 .SH "SEE ALSO"
 .PP
+.IR diff-s-sweet(1) ,
 .IR sweeten(1) ,
+and
 .IR sweet-run(1) .
 
 
 .SH "COPYRIGHT NOTICE"
 .PP
-Copyright \(co 2012 David A. Wheeler
+Copyright \(co 2012-2013 David A. Wheeler
 .PP
 This software (including the documentation)
 is released as open source software under the "MIT" license:
