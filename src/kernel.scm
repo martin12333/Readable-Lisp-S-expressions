@@ -1016,8 +1016,6 @@
           ; attach the source information to the item read-in
           (attach-sourceinfo pos
             (cond
-              ((memv c digits) ; Initial digit.
-                (read-number port '()))
               ((char=? c #\#)
                 (my-read-char port)
                 (let ((rv (process-sharp no-indent-read port)))
@@ -1032,11 +1030,10 @@
                     (#t ; convention violated
                       (read-error "readable/kernel: ***ERROR IN COMPATIBILITY LAYER parse-hash must return #f '() or `(,a)")))))
               ((char=? c #\.) (process-period port))
-              ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
-                (my-read-char port)
+              ((or (memv c digits) (char=? c #\+) (char=? c #\-))
                 (let*
-                  ((maybe-number (list->string (cons c
-                     (read-until-delim port neoteric-delimiters))))
+                  ((maybe-number (list->string
+                     (read-until-delim port neoteric-delimiters)))
                    (as-number (string->number maybe-number)))
                   (if as-number
                     as-number
