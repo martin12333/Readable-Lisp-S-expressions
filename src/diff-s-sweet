@@ -20,6 +20,9 @@ list_filenames=0
 unified=10
 invoke_error=99
 keep_temp=0
+summary=0
+files_tested=0
+files_passed=0
 
 
 # Process options.
@@ -27,12 +30,12 @@ keep_temp=0
 # it only portably handles short option names. (You can use "-:" to sort-of
 # get long names, but it's a rather ugly hack.)  It'll do for us.
 
-GETOPTS="hklwU:"
+GETOPTS="hklwSU:"
 
 usage() {
   echo "Usage:"
   echo "  $0 [-l | -U n] [-k] s-expression-filename sweet-expression-filename"
-  echo "  $0 -w [-l | -U n] [-k] s-expression-filename*"
+  echo "  $0 -w [-l | -U n] [-Sk] s-expression-filename*"
   exit $invoke_error
 }
 
@@ -48,6 +51,7 @@ while getopts "$GETOPTS" optchar ; do
     k) keep_temp=1 ;;
     l) list_filenames=1 ;;
     w) well_formatted=1 ;;
+    S) summary=1 ;;
     U) unified="$OPTARG" ;;  # Presume it's an integer.
     \?) usage ;;
     *) echo "Unimplemented option" ; usage ;;  # "Can't" happen
@@ -115,8 +119,10 @@ report_comparison() {
   # Always print the filenames on a difference, then optionally the details.
   # We do it this way because diff only reports the irrelevant *temporary*
   # filenames unless we use the nonportable GNU extension "--label"
+  files_tested=$(($files_tested + 1))
   if cmp -s -- "$fmt_s" "$fmt_t" ; then
     returnvalue=0
+    files_passed=$(($files_passed + 1))
   else
     if [ "$list_filenames" -eq 1 ] ; then
       printf "%s\n" "$oldname"
@@ -154,6 +160,9 @@ if [ "$well_formatted" -eq 1 ] ; then
         exit_value=$(($exit_value + 1))
       fi
     done
+  fi
+  if [ $summary -eq 1 ] ; then
+    echo "Files passed=$files_passed ; files tested=$files_tested"
   fi
 else
   if [ $# -ne 2 ] ; then

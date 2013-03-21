@@ -3,9 +3,9 @@
 diff-s-sweet \- report differences between s-expression and t-expression files
 .SH SYNOPSIS
 .ll +8
-.B diff-s-sweet [-l] [-U n] s-expression-file sweet-expression-file
+.B diff-s-sweet [-l] [-U n] [-Sk] s-expression-file sweet-expression-file
 .PP
-.B diff-s-sweet -w [-l] [-U n] s-expression-file*
+.B diff-s-sweet -w [-l] [-U n] [-Sk] s-expression-file*
 .ll -8
 .br
 .SH DESCRIPTION
@@ -84,9 +84,9 @@ http://readable.sourceforge.net.
 .SH OPTIONS
 
 .TP 6
-.BI -w
-Report if file not is "well-formatted", and expect a list of
-zero or more files in s-expression format.
+.BI -k
+Keep intermediate files and report their filenames
+(this can be useful for debugging).
 
 .TP
 .BI -l
@@ -94,10 +94,18 @@ Just report the s-expression filenames that are different
 or not well-formatted; don't show the specific differences.
 
 .TP
+.BI -w
+Report if file not is "well-formatted", and expect a list of
+zero or more files in s-expression format.
+
+.TP
+.BI -S
+Produce summary statistics at end.  Only useful if option -w is given.
+
+.TP
 .BI -U\  n
 Produce \fIn\fR lines of unified context when showing a difference.
 This is useless if the -l option is given.
-
 
 .\" .SH "ENVIRONMENT"
 .\" .PP
