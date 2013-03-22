@@ -687,6 +687,7 @@
 
   (define (process-char port)
     ; We've read #\ - returns what it represents.
+    ; See http://www.gnu.org/software/guile/manual/html_node/Characters.html
     (cond
       ((eof-object? (my-peek-char port)) (my-peek-char port))
       (#t
@@ -703,8 +704,10 @@
                   ; of any case, no matter what the case-folding value is.
                   ((string-ci=? rest-string "space") #\space)
                   ((string-ci=? rest-string "newline") #\newline)
+                  ((string-ci=? rest-string "nl") #\newline)
                   ((string-ci=? rest-string "tab") tab)
                   ((string-ci=? rest-string "nul") (integer->char #x0000))
+                  ((string-ci=? rest-string "null") (integer->char #x0000))
                   ((string-ci=? rest-string "alarm") (integer->char #x0007))
                   ((string-ci=? rest-string "backspace") (integer->char #x0008))
                   ((string-ci=? rest-string "linefeed") (integer->char #x000A))
@@ -714,9 +717,38 @@
                   ((string-ci=? rest-string "esc") (integer->char #x001B))
                   ((string-ci=? rest-string "delete") (integer->char #x007F))
                   ; Additional character names as extensions:
-                  ((string-ci=? rest-string "ht") tab)
-                  ((string-ci=? rest-string "cr") (integer->char #x000d))
+                  ((string-ci=? rest-string "soh") (integer->char #x0001))
+                  ((string-ci=? rest-string "stx") (integer->char #x0002))
+                  ((string-ci=? rest-string "etx") (integer->char #x0003))
+                  ((string-ci=? rest-string "eot") (integer->char #x0004))
+                  ((string-ci=? rest-string "enq") (integer->char #x0005))
+                  ((string-ci=? rest-string "ack") (integer->char #x0006))
+                  ((string-ci=? rest-string "bel") (integer->char #x0007))
                   ((string-ci=? rest-string "bs") (integer->char #x0008))
+                  ((string-ci=? rest-string "ht") tab)
+                  ((string-ci=? rest-string "lf") (integer->char #x000a))
+                  ((string-ci=? rest-string "vt") (integer->char #x000b))
+                  ((string-ci=? rest-string "ff") (integer->char #x000c))
+                  ((string-ci=? rest-string "cr") (integer->char #x000d))
+                  ((string-ci=? rest-string "so") (integer->char #x000e))
+                  ((string-ci=? rest-string "si") (integer->char #x000f))
+                  ((string-ci=? rest-string "dle") (integer->char #x0010))
+                  ((string-ci=? rest-string "dc1") (integer->char #x0011))
+                  ((string-ci=? rest-string "dc2") (integer->char #x0012))
+                  ((string-ci=? rest-string "dc3") (integer->char #x0013))
+                  ((string-ci=? rest-string "dc4") (integer->char #x0014))
+                  ((string-ci=? rest-string "nak") (integer->char #x0015))
+                  ((string-ci=? rest-string "syn") (integer->char #x0016))
+                  ((string-ci=? rest-string "etb") (integer->char #x0017))
+                  ((string-ci=? rest-string "can") (integer->char #x0018))
+                  ((string-ci=? rest-string "em") (integer->char #x0019))
+                  ((string-ci=? rest-string "sub") (integer->char #x001a))
+                  ((string-ci=? rest-string "fs") (integer->char #x001c))
+                  ((string-ci=? rest-string "gs") (integer->char #x001d))
+                  ((string-ci=? rest-string "rs") (integer->char #x001e))
+                  ((string-ci=? rest-string "sp") (integer->char #x0020))
+                  ((string-ci=? rest-string "del") (integer->char #x0020))
+                  ((string-ci=? rest-string "np") (integer->char #x000C))
                   (#t (read-error "Invalid character name"))))))))))
 
   ; If fold-case is active on this port, return string "s" in folded case.
