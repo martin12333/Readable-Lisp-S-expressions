@@ -1016,8 +1016,6 @@ collecting_tail returns [Object v]
   | collecting_end {$v = null;} ;
 
 // Process line after ". hspace+" sequence.  Does not go past current line.
-// NOTE: The SUBLIST and empty branch (alternatives 3 and 4) are
-// technically ambiguous (SUBLIST is first, so it's resolved first).
 post_period returns [Object v]
   : scomment hspace* rpt=post_period {$v = $rpt.v;} // (scomment hspace*)*
     | pn=n_expr hspace* (scomment hspace*)* (n_expr error)? {$v = $pn.v;}
