@@ -671,6 +671,7 @@
     '())
 
   ; Return the number by reading from port, and prepending starting-lyst.
+  ; Returns #f if it's not a number.
   (define (read-number port starting-lyst)
     (string->number (list->string
       (append starting-lyst
@@ -847,7 +848,10 @@
             ((memv c '(#\i #\e #\b #\o #\d #\x
                        #\I #\E #\B #\O #\D #\X))
               (my-read-char port)
-              (list (read-number port (list #\# (char-downcase c)))))
+              (let ((num (read-number port (list #\# (char-downcase c)))))
+                (if num
+                  (list num)
+                  (read-error "Not a number after number-required start"))))
             ((char=? c #\( )  ; Vector.
               (my-read-char port)
               (list (list->vector
@@ -940,8 +944,11 @@
     (let ((c (my-peek-char port)))
       (cond
         ((eof-object? c) period-symbol) ; period eof; return period.
-        ((memv c digits)
-          (read-number port (list #\.)))  ; period digit - it's a number.
+        ((memv c digits) ; period digit - it's a number.
+          (let ((num (read-number port (list #\.))))
+            (if num
+              num
+              (read-error "period digit must be a number"))))
         (#t
           ; At this point, Scheme only requires support for "." or "...".
           ; As an extension we can support them all.
