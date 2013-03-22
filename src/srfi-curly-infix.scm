@@ -74,6 +74,7 @@
         ((char=? c stop-char)
           (read-char port)
           '())
+        ; Char without matching (, [, or {
         ((or (eq? c #\)) (eq? c #\]) (eq? c #\}))
           (read-char port)
           (read-error "Bad closing character"))
@@ -94,7 +95,7 @@
                        datum2))))
                (#t
                    (cons datum
-                     (my-read-delimited-list my-read stop-char port))))))))
+                     (my-read-delimited-list my-read stop-char port)))))))))
 
 
   ; Implement neoteric-expression's prefixed (), [], and {}.
