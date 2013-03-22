@@ -827,6 +827,14 @@ collecting_tail returns [Object v]
   | (FF | VT)+ EOL retry2=collecting_tail {$retry2}
   | collecting_end {'()} ;
 
+// Process line after ". hspace+" sequence.  Does not go past current line.
+post_period returns [Object v]
+  : scomment hspace* rpt=post_period {$rpt} // (scomment hspace*)*
+    | pn=n_expr hspace* (scomment hspace*)* (n_expr error)? {$pn}
+    | COLLECTING hspace* pc=collecting_tail hspace*
+      (scomment hspace*)* (n_expr error)? {$pc}
+    | /*empty*/ {"."} ;
+
 // Production "head" reads 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
 // on the line, it returns a list of exactly one item; this makes it
@@ -847,17 +855,15 @@ collecting_tail returns [Object v]
 
 head returns [Object v]
   : PERIOD /* Leading ".": escape following datum like an n-expression. */
-      (hspace+
-        (pn=n_expr hspace* (n_expr error)? {(list $pn)}
-         | empty  {(list '.)} )
-       | empty    {(list '.)} )
+      (hspace+ pp=post_period {(list $pp)}
+       | /*empty*/    {(list '.)} )
   | COLLECTING hspace* collecting_tail hspace*
       (rr=rest            {(cons $collecting_tail $rr)}
-       | empty            {(list $collecting_tail)} )
+       | /*empty*/        {(list $collecting_tail)} )
   | basic=n_expr_first /* Only match n_expr_first */
       ((hspace+ (br=rest  {(cons $basic $br)}
-                 | empty  {(list $basic)} ))
-       | empty            {(list $basic)} ) ;
+                 | /*empty*/  {(list $basic)} ))
+       | /*empty*/            {(list $basic)} ) ;
 
 // Production "rest" production reads the rest of the expressions on a line
 // (the "rest of the head"), after the first expression of the line.
@@ -870,20 +876,16 @@ head returns [Object v]
 
 rest returns [Object v]
   : PERIOD /* Improper list */
-      (hspace+
-        (pn=n_expr hspace* (n_expr error)? {$pn}
-         | COLLECTING hspace* pc=collecting_tail hspace*
-           (n_expr error)? {$pc}
-         | empty {(list '.)})
-       | empty   {(list '.)})
-  | scomment hspace* (sr=rest {$sr} | empty {'()} )
+      (hspace+  pp=post_period {$pp}
+       | /*empty*/   {(list '.)})
+  | scomment hspace* (sr=rest {$sr} | /*empty*/ {'()} )
   | COLLECTING hspace* collecting_tail hspace*
     (rr=rest             {(cons $collecting_tail $rr)}
-     | empty             {(list $collecting_tail)} )
+     | /*empty*/             {(list $collecting_tail)} )
   | basic=n_expr
       ((hspace+ (br=rest {(cons $basic $br)}
-                 | empty {(list $basic)} ))
-       | empty           {(list $basic)} ) ;
+                 | /*empty*/ {(list $basic)} ))
+       | /*empty*/           {(list $basic)} ) ;
 
 // Production "body" handles the sequence of 1+ child lines in an it_expr
 // (e.g., after a "head"), each of which is itself an it_expr.
@@ -908,7 +910,7 @@ body returns [Object v]
 // Postcondition: it-expr ended by consuming EOL + examining indent
 // Note: This BNF presumes that "*&gt;" generates multiple tokens,
 // "EOL DEDENT* COLLECTING_END", and resets the indentation list.
-// You can change the BNF below to allow "head empty", and handle dedents
+// You can change the BNF below to allow "head /*empty*/", and handle dedents
 // by directly comparing values; then "*&gt;" only needs to generate
 // COLLECTING_END. But this creates a bunch of ambiguities
 // like a 'dangling else', which must all be disambiguated by accepting
@@ -924,15 +926,15 @@ it_expr returns [Object v]
         // To allow \\ EOL as line-continuation, instead do:
         //   comment_eol same more=it_expr {(append $head $more)}
         comment_eol error
-        | empty {(monify $head)} )
+        | /*empty*/ {(monify $head)} )
      | SUBLIST hspace* /* head SUBLIST ... case */
        (sub_i=it_expr {(append $head (list $sub_i))}
         | comment_eol error )
      | comment_eol // Normal case, handle child lines if any:
        (indent children=body {(append $head $children)}
-        | empty              {(monify $head)} /* No child lines */ )
+        | /*empty*/          {(monify $head)} /* No child lines */ )
     // If COLLECTING_END doesn't generate multiple tokens, can do:
-    // | empty               {(monify $head)}
+    // | /*empty*/           {(monify $head)}
      ))
   | (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
       (group_i=it_expr {$group_i} /* Ignore initial GROUP/scomment */
@@ -975,7 +977,6 @@ t_expr returns [Object v]
   | initial_indent_with_bang error
   | EOF {(generate_eof)} /* End of file */
   | it_expr {$it_expr} /* Normal case */ ;
-
 </pre>
 
 <h1><a name="examples">Examples</a></h1>
