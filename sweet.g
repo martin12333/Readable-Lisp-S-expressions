@@ -1023,7 +1023,6 @@ post_period returns [Object v]
     | pn=n_expr hspace* (scomment hspace*)* (n_expr error)? {$v = $pn.v;}
     | COLLECTING hspace* pc=collecting_tail hspace*
       (scomment hspace*)* (n_expr error)? {$v = $pc.v;}
-    | SUBLIST hspace* ps=rest {$v = $ps.v;}
     | /*empty*/ {$v = ".";} ;
 
 // Production "head" reads 1+ n-expressions on one line; it will

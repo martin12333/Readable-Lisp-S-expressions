@@ -1494,9 +1494,6 @@
             (let ((ct (collecting_tail port)))
               (hspaces port)
               (n_expr_error port (list 'normal ct))))
-          ((eq? pn_stopper 'sublist_marker)
-            (hspaces port)
-            (rest port))
           ((eq? pn_stopper 'period_marker)
             (list 'normal period_symbol))
           (#t ; Different stopper; respond as empty branch with that stopper

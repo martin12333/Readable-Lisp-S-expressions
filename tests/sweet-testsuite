@@ -2021,12 +2021,6 @@ define baz(z)
 #f
 #false
 
-(a11 b c)
-a11 b . $ c
-
-(a12 b c d)
-a12 b . $ c d
-
 (combiney1 (a b (xx yy)) (zz1 zz2))
 combiney1
   a b . <* xx yy *> \\ zz1 zz2

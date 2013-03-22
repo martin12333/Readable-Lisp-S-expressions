@@ -535,19 +535,10 @@ define x6 2
 
 define x8 3 *>
 
-a b . $ c d
-
-a . $ b
-
 dog . #| hi |# #| byte |#   cat   #|another|#   
 
 fickle
   abc def . #|1|# ghi
   jkl mno . #|2|# pqr #|3|# \\ another . #|4|# line #|5|#
-  stu . #|6|# $ aaa bbb
-
-fred
-  . x
-  . $ a b
 
 fin
