@@ -94,7 +94,7 @@
                        datum2))))
                (#t
                    (cons datum
-                     (my-read-delimited-list my-read stop-char port)))))))))
+                     (my-read-delimited-list my-read stop-char port))))))))
 
 
   ; Implement neoteric-expression's prefixed (), [], and {}.
