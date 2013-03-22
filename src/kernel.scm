@@ -660,7 +660,7 @@
       (cond
          ((eof-object? c) '())
          ((memv c delims) '())
-         (#t (cons (my-read-char port) (read-until-delim port delims))))))
+         (#t (my-read-char port) (cons c (read-until-delim port delims))))))
 
   (define (read-error message)
     (display "Error: ")
