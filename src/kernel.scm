@@ -959,10 +959,11 @@
 
   ; Read an inline hex escape (after \x), return the character it represents
   (define (read-inline-hex-escape port)
-    (let* ((chars (read-until-delim port '(#\;)))
+    (let* ((chars (read-until-delim port (append neoteric-delimiters '(#\;))))
            (n (string->number (list->string chars) 16)))
-      (if (not (eof-object? (my-peek-char port)))
-        (my-read-char port))
+      (if (eqv? #\; (my-peek-char port))
+        (my-read-char port)
+        (read-error "Unfinished inline hex escape"))
       (if (not n)
         (read-error "Bad inline hex escape"))
       (integer->char n)))
