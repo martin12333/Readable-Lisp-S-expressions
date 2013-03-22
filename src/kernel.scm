@@ -1742,6 +1742,10 @@
   ; Call on sweet-expression reader - use guile's nonstandard catch/throw
   ; so that errors will force a restart.
   (define (t_expr_catch port)
+
+    ; Default guile stack size is FAR too small
+    (debug-set! stack 500000)
+
     (catch 'readable
       (lambda () (t_expr port))
       (lambda (key . args) (read_to_blank_line port) (t_expr_catch port))))
