@@ -7,10 +7,6 @@
 # (C) 2013 David A. Wheeler
 # Released under the MIT license
 
-# -w Check if file list is set of well-formatted s-expressions
-#    (if no files, stdin; support - as stdin)
-# -l don't show differences, just list s-expression filenames with differences
-
 # Set up the defaults.
 export PATH="@PATH_PREFIX@$PATH"
 SWEETEN="sweeten"
@@ -23,6 +19,7 @@ keep_temp=0
 summary=0
 files_tested=0
 files_passed=0
+progress_report=0
 
 
 # Process options.
@@ -30,7 +27,7 @@ files_passed=0
 # it only portably handles short option names. (You can use "-:" to sort-of
 # get long names, but it's a rather ugly hack.)  It'll do for us.
 
-GETOPTS="hklwSU:"
+GETOPTS="hklwPSU:"
 
 usage() {
   echo "Usage:"
@@ -51,6 +48,7 @@ while getopts "$GETOPTS" optchar ; do
     k) keep_temp=1 ;;
     l) list_filenames=1 ;;
     w) well_formatted=1 ;;
+    P) progress_report=1 ;;
     S) summary=1 ;;
     U) unified="$OPTARG" ;;  # Presume it's an integer.
     \?) usage ;;
@@ -97,6 +95,9 @@ report_comparison() {
   # Create formatted s-expression and t-expression files to compare
   fmt_s="$(mktemp)"  # formatted s-expression file
   fmt_t="$(mktemp)"  # formatted t-expression file
+  if [ "$progress_report" -eq 1 ] ; then
+    echo "**** $oldname"
+  fi
   if [ "$keep_temp" -eq 1 ] ; then
     echo "S-expr file '$oldname' to be formatted into $fmt_s"
     echo "T-expr file to be formatted into $fmt_t"
