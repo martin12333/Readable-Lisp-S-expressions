@@ -685,9 +685,60 @@
           (cons (my-read-char port) (read-digits port)))
         (#t '()))))
 
+
+  (define char-name-values
+    ; Includes standard names and guile extensions; see
+    ; http://www.gnu.org/software/guile/manual/html_node/Characters.html
+    '((space #x0020)
+      (newline #x000a)
+      (nl #x000a)
+      (tab #x0009)
+      (nul #x0000)
+      (null #x0000)
+      (alarm #x0007)
+      (backspace #x0008)
+      (linefeed #x000a)
+      (vtab #x000b)
+      (page #x000c)
+      (return #x000d)
+      (esc #x001b)
+      (delete #x007f)
+      ; Additional character names as extensions:
+      (soh #x0001)
+      (stx #x0002)
+      (etx #x0003)
+      (eot #x0004)
+      (enq #x0005)
+      (ack #x0006)
+      (bel #x0007)
+      (bs #x0008)
+      (ht #x0009)
+      (lf #x000a)
+      (vt #x000b)
+      (ff #x000c)
+      (np #x000c) ; new page
+      (cr #x000d)
+      (so #x000e)
+      (si #x000f)
+      (dle #x0010)
+      (dc1 #x0011)
+      (dc2 #x0012)
+      (dc3 #x0013)
+      (dc4 #x0014)
+      (nak #x0015)
+      (syn #x0016)
+      (etb #x0017)
+      (can #x0018)
+      (em #x0019)
+      (sub #x001a)
+      (fs #x001c)
+      (gs #x001d)
+      (rs #x001e)
+      (sp #x0020)
+      (del #x007f)))
+  
   (define (process-char port)
     ; We've read #\ - returns what it represents.
-    ; See http://www.gnu.org/software/guile/manual/html_node/Characters.html
     (cond
       ((eof-object? (my-peek-char port)) (my-peek-char port))
       (#t
@@ -696,60 +747,13 @@
               (rest (read-until-delim port neoteric-delimiters)))
           (cond
             ((null? rest) c) ; only one char after #\ - so that's it!
-            (#t
-              (let ((rest-string (list->string (cons c rest))))
-                (cond
-                  ; Implement R6RS character names, see R6RS section 4.2.6.
-                  ; As an extension, we will ALWAYS accept character names
-                  ; of any case, no matter what the case-folding value is.
-                  ((string-ci=? rest-string "space") #\space)
-                  ((string-ci=? rest-string "newline") #\newline)
-                  ((string-ci=? rest-string "nl") #\newline)
-                  ((string-ci=? rest-string "tab") tab)
-                  ((string-ci=? rest-string "nul") (integer->char #x0000))
-                  ((string-ci=? rest-string "null") (integer->char #x0000))
-                  ((string-ci=? rest-string "alarm") (integer->char #x0007))
-                  ((string-ci=? rest-string "backspace") (integer->char #x0008))
-                  ((string-ci=? rest-string "linefeed") (integer->char #x000A))
-                  ((string-ci=? rest-string "vtab") (integer->char #x000B))
-                  ((string-ci=? rest-string "page") (integer->char #x000C))
-                  ((string-ci=? rest-string "return") (integer->char #x000D))
-                  ((string-ci=? rest-string "esc") (integer->char #x001B))
-                  ((string-ci=? rest-string "delete") (integer->char #x007F))
-                  ; Additional character names as extensions:
-                  ((string-ci=? rest-string "soh") (integer->char #x0001))
-                  ((string-ci=? rest-string "stx") (integer->char #x0002))
-                  ((string-ci=? rest-string "etx") (integer->char #x0003))
-                  ((string-ci=? rest-string "eot") (integer->char #x0004))
-                  ((string-ci=? rest-string "enq") (integer->char #x0005))
-                  ((string-ci=? rest-string "ack") (integer->char #x0006))
-                  ((string-ci=? rest-string "bel") (integer->char #x0007))
-                  ((string-ci=? rest-string "bs") (integer->char #x0008))
-                  ((string-ci=? rest-string "ht") tab)
-                  ((string-ci=? rest-string "lf") (integer->char #x000a))
-                  ((string-ci=? rest-string "vt") (integer->char #x000b))
-                  ((string-ci=? rest-string "ff") (integer->char #x000c))
-                  ((string-ci=? rest-string "cr") (integer->char #x000d))
-                  ((string-ci=? rest-string "so") (integer->char #x000e))
-                  ((string-ci=? rest-string "si") (integer->char #x000f))
-                  ((string-ci=? rest-string "dle") (integer->char #x0010))
-                  ((string-ci=? rest-string "dc1") (integer->char #x0011))
-                  ((string-ci=? rest-string "dc2") (integer->char #x0012))
-                  ((string-ci=? rest-string "dc3") (integer->char #x0013))
-                  ((string-ci=? rest-string "dc4") (integer->char #x0014))
-                  ((string-ci=? rest-string "nak") (integer->char #x0015))
-                  ((string-ci=? rest-string "syn") (integer->char #x0016))
-                  ((string-ci=? rest-string "etb") (integer->char #x0017))
-                  ((string-ci=? rest-string "can") (integer->char #x0018))
-                  ((string-ci=? rest-string "em") (integer->char #x0019))
-                  ((string-ci=? rest-string "sub") (integer->char #x001a))
-                  ((string-ci=? rest-string "fs") (integer->char #x001c))
-                  ((string-ci=? rest-string "gs") (integer->char #x001d))
-                  ((string-ci=? rest-string "rs") (integer->char #x001e))
-                  ((string-ci=? rest-string "sp") (integer->char #x0020))
-                  ((string-ci=? rest-string "del") (integer->char #x0020))
-                  ((string-ci=? rest-string "np") (integer->char #x000C))
-                  (#t (read-error "Invalid character name"))))))))))
+            (#t ; More than one char; do a lookup.
+              (let* ((cname (string->symbol
+                       (string-downcase (list->string (cons c rest)))))
+                     (found (assq cname char-name-values)))
+                (if found
+                  (integer->char (cadr found))
+                  (read-error "Invalid character name")))))))))
 
   ; If fold-case is active on this port, return string "s" in folded case.
   ; Otherwise, just return "s".  This is needed to support our
