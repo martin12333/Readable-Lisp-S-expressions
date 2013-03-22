@@ -1701,7 +1701,7 @@
 
   ; Top level - read a sweet-expression (t-expression).  Handle special
   ; cases, such as initial indent; call it_expr for normal case.
-  (define (t_expr_real port)
+  (define (t_expr port)
     (let* ((c (my-peek-char port)))
       (if (eof-object? c) ; Check EOF early (a guile bug consumes EOF on peek)
         c
@@ -1741,10 +1741,10 @@
 
   ; Call on sweet-expression reader - use guile's nonstandard catch/throw
   ; so that errors will force a restart.
-  (define (t_expr port)
+  (define (t_expr_catch port)
     (catch 'readable
-      (lambda () (t_expr_real port))
-      (lambda (key . args) (read_to_blank_line port) (t_expr port))))
+      (lambda () (t_expr port))
+      (lambda (key . args) (read_to_blank_line port) (t_expr_catch port))))
 
 ; -----------------------------------------------------------------------------
 ; Comparison procedures
@@ -1758,7 +1758,7 @@
 
   (define curly-infix-read (make-read curly-infix-read-nocomment))
   (define neoteric-read (make-read neoteric-read-nocomment))
-  (define sweet-read (make-read t_expr))
+  (define sweet-read (make-read t_expr_catch))
 
   )
 
