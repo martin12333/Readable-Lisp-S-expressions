@@ -33,6 +33,7 @@ This SRFI is currently in ``draft'' status.
   h3 { color: blue ; font-style: italic }
   /* So var inside pre gets same font as var in paragraphs. */
   var { font-family: monospace; }
+  li li {list-style-type:lower-alpha}
 </style>
 </head>
 
@@ -108,24 +109,22 @@ Here is an example:
 <tr>
 <td>
 <pre>
-define factorial(n)
-  if {n &lt;= 1}
-    1
-    {n * factorial{n - 1}}
+define fibfast(n)  ; Typical function notation
+  if {n &lt; 2}       ; Indentation, infix {...}
+    n              ; Single expr = no new list
+    fibup n 2 1 0  ; Simple function calls
 </pre>
 </td>
 <td>
 <pre>
-(define (factorial n)
-  (if (&lt;= n 1)
-    1
-    (* n (factorial (- n 1)))))
+(define (fibfast n)
+  (if (&lt; n 2)
+    n
+    (fibup n 2 1 0)))
 </pre>
 </td>
 </tr>
 </table>
-
-
 
 
 <!-- SRFI-97 has a TOC; we think a TOC would be helpful here too. -->
@@ -358,76 +357,11 @@ is an external representations of a Scheme object,
 which may include other Scheme objects.
 A sweet-expression reader converts a sweet-expression
 into the objects the sweet-expression represents.
-To understand sweet-expressions, we first need these definitions:
-</p>
-<ul>
-<li>eol character: A character that is a carriage return
-(U+000D) or linefeed (U+000A).
-(eol is short for "end of line").</li>
-<li>eol sequence: A carriage return (U+000D)
-optionally followed by linefeed (U+000A), or a linefeed (U+000A).</li>
-(short for "horizontal space"). This is EOL_SEQUENCE in the BNF.
-Implementations <em>MAY</em>
-also recognize other end of line characters or sequences.
-</li>
-<li>line: A sequence of non-eol characters terminated by an eol sequence.
-A sweet-expression reader <em>MAY</em> also support a final line without
-an eol sequence.</li>
-<li>hspace: A character that is a space (U+0020) or tab (U+0009)
-(short for "horizontal space").</li>
-<li>indent character: A character that is a space (U+0020), tab (U+0009), or
-exclamation point "!" (U+0021).</li>
-<li>indentation: The set of all 0+ indent characters
-at the beginning of a line.</li>
-<li>line comment: An unescaped semicolon and all 0+ non-eol characters
-after it.
-Lines with only indentation followed by a line comment
-are completely ignored - even their indentation (if any) is irrelevant.</li>
-<li>empty line: A line with only 0+ hspace characters.
-</ul>
-
-<p>
-A sweet-expression reader <em>MUST</em>
-support three modes: indentation processing, enclosed, and initial indent.
-A sweet-expression reader <em>MUST</em> start
-in indentation processing mode before it begins to read a sweet-expression.
-If, on entry to a t_expr production, the first character is
-space or tab, the sweet-expression reader switches to
-initial indent mode (this ends when the reader returns).
-The reader temporarily switches to enclosed mode when it is inside
-any unescaped pairs of parentheses, brackets, or curly braces.
-</p>
-
-<p>
-In indentation processing mode, lines after the first line
-of a sweet-expression may be indented.
-In the following syntax definition, this indentation is not
-directly represented.
-Instead, preceding any matching, the indentation of each line
-is compared to the preceding line
-(ignoring lines with just indentation and a line comment), and this
-indentation text is then removed.
-If this line's indentation is longer than the un-ignored preceding line,
-the special symbol INDENT is added to the beginning of the line;
-the preceding line is termed a parent line, while this line
-is termed a child line (as are all later lines with the same indentation
-until a line with less indentation occurs).
-If the current line indent is shorter than the preceding
-un-ignored line,
-the special symbol DEDENT is repeatedly added to
-undo previous INDENT symbols until the previous indentation
-matches the current line indentation.
-It is an error if neither one of the indentations
-are a prefix of the other, nor are they equal.
-In indentation processing mode, a line (outside a string)
-with only hspace before the end-of-line
-is considered equivalent to a line with no characters before the end-of-line,
-and thus can generate multiple DEDENTs.
 </p>
 
 <p>
 The BNF rules below define the syntax of sweet-expressions,
-in particular, the t_expr production defines one sweet-expression.
+in particular, the production <code>t_expr</code> defines one sweet-expression.
 A sweet-expression reader <em>MUST</em> implement the productions
 below unless otherwise noted.
 The BNF is an LL(1) grammar, written using
@@ -437,58 +371,162 @@ You can also separately view the
 <a href="sweet.g">full ANTLR BNF definition of sweet-expressions
 with Java action rules</a>, along with a support Java class
 <a href="Pair.java">Pair.java</a>.
+The non-terminal <code>same</code> emphasizes where there is a new
+line with unchanged indentation; it matches nothing.
+The non-terminal <code>error</code> emphasizes certain sequences that
+are not defined by this BNF
+(an implementation <em>MAY</em> implement an extension, but if it does
+not, it <em>SHOULD</em> report an error).
+The sequence <code>/*empty*/</code> identifies an empty branch.
 </p>
 
 <p>
-The production "n_expr" is a full neoteric-expression
+A sweet-expression reader <em>MUST</em>
+support three modes: indentation processing, enclosed, and initial indent.
+A sweet-expression reader <em>MUST</em> start
+in indentation processing mode before it begins to read a sweet-expression.
+The reader temporarily switches to enclosed mode when it is reading inside
+any unescaped pairs of parentheses, brackets, or curly braces.
+</p>
+
+<p>
+To further understand sweet-expressions, we first need these definitions:
+</p>
+<ul>
+<li>eol character: A character that is a carriage return
+(U+000D) or linefeed (U+000A)
+(eol is short for &#8220;end of line&#8221;).</li>
+<li>eol sequence: A carriage return (U+000D)
+optionally followed by linefeed (U+000A), or a linefeed (U+000A)
+(short for &#8220;horizontal space&#8221;). This is EOL_SEQUENCE in the BNF.
+Implementations <em>MAY</em>
+also recognize other end of line characters or sequences.</li>
+<li>line: A sequence of non-eol characters terminated by an eol sequence.
+A sweet-expression reader <em>MAY</em> also support a final line without
+an eol sequence.
+The line terminator is not considered part of the line contents.</li>
+<li>hspace: A character that is a space (U+0020) or tab (U+0009)
+(short for &#8220;horizontal space&#8221;).</li>
+<li>indent character: A character that is a space (U+0020), tab (U+0009), or
+exclamation point &#8220;!&#8221; (U+0021).</li>
+<li>indentation: The set of all 0+ indent characters
+at the beginning of a line.</li>
+</ul>
+
+<p>
+Indentation is not directly represented in the following syntax definition,
+instead,
+a sweet-expression reader <em>MUST</em> act as if it preprocessed it
+as follows.
+First, when an attempt is made to read a sweet-expression,
+a stack called the &#8220;indentation stack&#8221;
+is initialized to contain exactly one value, the empty string
+(<tt>""</tt>).
+The current value of the top of the indentation stack
+is called &#8220;top&#8221;.
+Then, whenever a line is read and the current mode is not enclosed,
+the line indentation is removed and possibly replaced by other generated
+symbols as follows (in order):
+</p>
+<ol>
+<li>If an end-of-line sequence immediately follows the indentation
+and the indentation length is nonzero:
+<ol>
+<li>If the indentation contains &#8220;!&#8221;, it is an error.</li>
+<li>If indentation does not contain &#8220;!&#8221;,
+it is considered a line with no characters
+(thus indentation is empty)
+and the rest of these rules are applied.</li>
+</ol>
+</li>
+<li>If top is the empty string and the indentation length is nonzero:
+<ol>
+<li>
+If the indentation does not contain &#8220;!&#8221;, then
+symbol <code>initial_indent_no_bang</code>
+is generated and the reader changes to initial indent mode.
+When an end-of-line sequence is reached
+the mode changes back to indentation processing.
+</li>
+<li>If the indentation does contain &#8220;!&#8221;, then
+symbol <code>initial_indent_with_bang</code> is generated.</li>
+</ol>
+</li>
+<li>If top is not the empty string, and
+&#8220;;&#8221; immediately follows the indentation, the line is skipped
+&mdash; with the indentation completely ignored &mdash;
+and the following line is examined instead.</li>
+<li>If the indentation is equal to top, no extra symbol is generated
+(this is called &#8220;same&#8221;).</li>
+<li>If the indentation is longer than top, and top is a prefix of indentation,
+the indentation is pushed onto the indentation stack
+and the symbol <code>indent</code> is generated.</li>
+<li>If top is longer than indentation, and the indentation is a prefix
+of top, the indentation stack is repeatedly popped until
+the new top matches the current indentation or the
+new top is not longer than the indentation;
+a <code>dedent</code> symbol is generated for each pop.
+The matching top (if any) is not popped.
+If no match is found, it is an error.</li>
+<li>Otherwise, it is an error.</li>
+</ol>
+
+<p>
+The production &#8220;n_expr&#8221; is a neoteric-expression
 as defined in
 <a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
 Thus <samp>{a&nbsp;+&nbsp;b}</samp> maps to <samp>(+&nbsp;a&nbsp;b)</samp>,
 <samp>f(...)</samp> maps to <samp>(f&nbsp;...)</samp>, and
-<samp>f{...}</samp> with non-empty content
-maps to <samp>(f&nbsp;{...})</samp>.</li>
-The production n_expr does *not* consume any following horizontal space.
-A sweet-expression reader <em>MUST</em> read n-expression tails greedily.
-That is, if a potential tail begins with an opening parenthesis,
-bracket, or brace, it <em>MUST</em> be considered a tail; otherwise,
-it <em>MUST NOT</em> be considered a tail.
+<samp>f{...}</samp> with content other than whitespace
+maps to <samp>(f&nbsp;{...})</samp>.
 </p>
 
 <p>
-Markers are special character sequences that have special meanings,
-but only when indentation processing is enabled.
-Markers only have their special meaning if
-they are preceded by indentation or hspace and followed by
-hspace or end-of-line, and they must start with the character shown
-(e.g., |$| is not a marker).
+Markers are character sequences that have special meanings.
+A marker only has its special meaning when
+indentation processing is enabled,
+it is preceded by indentation or hspace,
+it is followed by an hspace or end-of-line,
+and it starts with the character shown
+(e.g., neither <tt>|$|</tt> nor <tt>'$</tt> contains a marker).
 The markers, BNF names, and meanings are:
 </p>
 <ul>
-<li>\\ : GROUP_SPLIT.  This is called GROUP if it immediately follows
+<li><tt>\\</tt> : GROUP_SPLIT.  This is called GROUP if it immediately follows
 indentation; in this case it represents no symbol at all at that indentation,
-simplifying simplifies representations of lists-of-lists.
+simplifying representations of lists-of-lists.
 Otherwise it is called SPLIT; it represents starting a new line at
 the same indentation as the current line.</li>
-<li>$ : SUBLIST. This makes the right-hand-side (including
+<li><tt>$</tt> : SUBLIST. This makes the right-hand-side (including
 all child lines) the last parameter of the
 left-hand-side of this line; if there is no left-hand-side,
 the right-hand-side is wrapped into a list.</li>
-<li>&lt;* : COLLECTING .  Begins a "collecting list".
-<li>*&gt; : COLLECTING_END .  Ends a "collecting list".
-<li>$$$ : RESERVED_TRIPLE_DOLLAR.  Reserved.
-</li>
+<li><tt>&lt;*</tt> : COLLECTING.  Begins a &#8220;collecting list&#8221;, a
+new list that ends with a matching COLLECTING_END.
+This pushes an empty string onto the indentation stack as
+well as generating the symbol COLLECTING.</li>
+<li><tt>*&gt;</tt> : COLLECTING_END.
+This pops any non-empty strings from the indentation stack (generating a
+dedent for each one),
+then pops the empty string initially placed by COLLECTING,
+and then generates the two symbols EOL and finally COLLECTING_END.</li>
+<li><tt>$$$</tt> : RESERVED_TRIPLE_DOLLAR.  Reserved.</li>
 </ul>
 
 <p>
-When indentation processing is enabled,
+In indentation processing mode,
 a leading traditional abbreviation (quote, comma, backquote, or comma-at)
 immediately after indentation, and followed by space, tab, or end-of-line,
-<em>MUST</em> be interpreted as that operator
-applied to the entire sweet-expression that follows.
-In the BNF these are represented as
+is represented as
 APOSW, QUASIQUOTEW, UNQUOTE_SPLICEW, and UNQUOTEW respectively.
+Per the BNF, these
+<em>MUST</em> be interpreted as that abbreviation
+applied to the entire sweet-expression that follows.
+Note that an end-of-line (if any) immediately after them <em>MUST</em>
+also generate EOL.
 A sweet-expression reader <em>MAY</em> implement additional
-abbreviations such as <code>#'</code>.
+abbreviations such as <tt>#'</tt>.
+</p>
 
 <!--
 
@@ -529,16 +567,13 @@ clear.
 
 -->
 
-
 <p>
-The non-terminal <code>same</code> emphasizes where neither an indent
-nor dedent has occurred, and matches nothing.
-The non-terminal <code>error</code> emphasizes certain sequences that
-are not defined by this BNF
-(an implementation <em>MAY</em> implement an extension, but if it does
-not, it <em>SHOULD</em> report an error).
-The sequence <code>/*empty*/</code> identifies an empty branch.
+An implication of these definitions is that a line with only
+0+ hspace characters (aka an &#8220;empty line&#8221;) terminates
+a sweet-expression once it has begun in the normal case,
+per the it_expr production defined below.
 </p>
+
 
 <p>
 The BNF depends on this utility function (this enables lines with a
@@ -593,7 +628,7 @@ SHARP_BANG_FILE : '#!' ('/' | '.') (options {greedy=false;} : .)*
 // These match #!fold-case, #!no-fold-case, #!sweet, and #!curly-infix;
 // it also matches a lone "#!".  The "#!"+space case is handled above,
 // in SRFI_22_COMMENT, overriding this one:
-SHARP_BANG_MARKER : '#!' (('a'..'z'|'A'..'Z'|'_')
+SHARP_BANG_DIRECTIVE : '#!' (('a'..'z'|'A'..'Z'|'_')
                     ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')*)? (SPACE|TAB)* ;
 
 // IMPORTANT SUPPORTING PARSER DEFINITIONS for the BNF
@@ -632,7 +667,8 @@ n_expr_first returns [Object v]
   | n_expr_noabbrev            {$n_expr_noabbrev} ;
 
 // Production "scomment" (special comment) defines comments other than ";":
-sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER ;
+sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE
+                      | SHARP_BANG_DIRECTIVE ;
 scomment : BLOCK_COMMENT
          | DATUM_COMMENT_START (options : {greedy=true} hspace)* n_expr
          | sharp_bang_comments ;
@@ -718,8 +754,6 @@ it_expr returns [Object v]
     (options {greedy=true} : (
      GROUP_SPLIT hspace* /* Not initial; interpret as split */
       (options {greedy=true} :
-        // To allow \\ EOL as line-continuation, instead do:
-        //   comment_eol same more=it_expr {(append $head $more)}
         comment_eol error
         | /*empty*/ {(monify $head)} )
      | SUBLIST hspace* /* head SUBLIST ... case */
@@ -753,10 +787,10 @@ it_expr returns [Object v]
 t_expr returns [Object v]
   : comment_eol    retry1=t_expr {$retry1}
   | (FF | VT)+ EOL retry2=t_expr {$retry2}
-  | (initial_indent_no_bang | hspace+ )
-    (n_expr {$n_expr} /* indent processing disabled */
-     | ((scomment (options {greedy=true} : hspace)*
-       sretry=t_expr {$sretry}))
+  | (initial_indent_no_bang | hspace+ ) /* initial indent */
+    (n_expr {$n_expr}
+     | (scomment (options {greedy=true} : hspace)*
+       sretry=t_expr {$sretry})
      | comment_eol retry3=t_expr {$retry3} )
   | initial_indent_with_bang error
   | EOF {(generate_eof)} /* End of file */
@@ -2040,6 +2074,14 @@ is required, so we added sublists, split, and collecting list capabilities.
 </p>
 
 <p>
+Although the SRFI-49 BNF was simple, it was simple in part because
+some whitespace processing requirements were not clear.
+The BNF in this specification makes comment and whitespace
+processing explicit, to make comment and whitespace processing requirements
+clear.
+</p>
+
+<p>
 The very existence of SRFI-49 shows that others believe
 there is value in using syntactically-significant indentation.
 We are building on the experience of others to create what we hope
@@ -2366,6 +2408,19 @@ this is less likely to happen interactively (users can typically see
 something happened immediately), and editors can easily detect and show
 where surprising indentation is occurring (e.g., through highlighting),
 so this risk appears to be minimal.</p>
+
+<p>
+The specification description might seem to imply that a reader
+must track the initial indent state after it returns,
+but this is not the case.
+If a reader can avoid consuming any whitespace after an initial indent
+and a neoteric-expression, it can simply return and use that
+whitespace to re-trigger the initial indent state.
+This approach will not work if the reader performs all lexical analysis
+before parsing (as ANTLR does), but in that case,
+the lexer can simply keep track of the current mode
+(as shown in the BNF).
+</p>
 
 <p>Disabling on initial indent
 also deals with a subtle problem in implementation.
