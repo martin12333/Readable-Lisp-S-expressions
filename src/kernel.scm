@@ -444,8 +444,6 @@
   ; exported procedures
   (; tier read procedures
    curly-infix-read neoteric-read sweet-read
-   ; comparison procedures
-   compare-read-file ; compare-read-string
    ; replacing the reader
    replace-read restore-traditional-read
    enable-curly-infix enable-neoteric enable-sweet)
@@ -1793,12 +1791,6 @@
     (catch 'readable
       (lambda () (t_expr port))
       (lambda (key . args) (read_to_blank_line port) (t_expr_catch port))))
-
-; -----------------------------------------------------------------------------
-; Comparison procedures
-; -----------------------------------------------------------------------------
-
-  (define compare-read-file '()) ; TODO
 
 ; -----------------------------------------------------------------------------
 ; Exported Interface
