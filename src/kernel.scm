@@ -1445,14 +1445,16 @@
   (define (comment_eol_read_indent port)
     (consume-to-eol port)
     (consume-end-of-line port)
-    (let* ((indentation (list->string (cons #\^ (accumulate-ichar port))))
+    (let* ((indentation-as-list (cons #\^ (accumulate-ichar port)))
            (c (my-peek-char port)))
       (cond
         ((eqv? c #\;)  ; A ;-only line, consume and try again.
           (comment_eol_read_indent port))
         ((is_initial_comment_eol c) ; Indent-only line
-          "^")
-        (#t indentation))))
+          (if (memv #\! indentation-as-list)
+            (read-error "Ending indentation-only line must not use '!'")
+            "^"))
+        (#t (list->string indentation-as-list)))))
 
   ; Utility function:
   ; If x is a 1-element list, return (car x), else return x
