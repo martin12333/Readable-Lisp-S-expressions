@@ -136,8 +136,8 @@ define factorial(n)
 <li><a href="#specification">Specification</a>
   <ul>
   <li><a href="#basic-specification">Basic specification</a></li>
+  <li><a href="#other-requirements">Other requirements</a></li>
   <li><a href="#related-tools">Related tools</a></li>
-  <li><a href="#bnf">Backus&#45;Naur Form (BNF)</a></li>
   </ul></li>
 <li><a href="#examples">Examples</a></li>
 <li><a href="#design-rationale">Design Rationale</a>
@@ -337,7 +337,442 @@ document are to be interpreted as described in
 <a href="http://www.ietf.org/rfc/rfc2119.txt">RFC 2119</a>.
 </p>
 
-<h3 id="basic-specification">Basic specification</h3>
+<p>&#8220;<dfn>Sweet-expressions</dfn>&#8221;
+(aka &#8220;<dfn>t-expressions</dfn>&#8221;)
+imply parentheses through indentation, and include a few
+additional abbreviations to make them especially convenient to use.
+They build on neoteric-expressions as defined in
+<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>,
+and thus, can support infix notation such as <code>{a&nbsp;+&nbsp;b}</code>
+and traditional function call notation such as <code>cos(x)</code>.
+The following subsections provide the basic specification
+including its syntax in Backus-Naur Form (BNF),
+other requirements, and specifications about related tools.
+</p>
+
+<h2 id="basic-specification">Basic specification</h2>
+
+<p>
+A sweet-expression (aka t-expression)
+is an external representations of a Scheme object,
+which may include other Scheme objects.
+A sweet-expression reader converts a sweet-expression
+into the objects the sweet-expression represents.
+To understand sweet-expressions, we first need these definitions:
+</p>
+<ul>
+<li>eol character: A character that is a carriage return
+(U+000D) or linefeed (U+000A).
+(eol is short for "end of line").</li>
+<li>eol sequence: A carriage return (U+000D)
+optionally followed by linefeed (U+000A), or a linefeed (U+000A).</li>
+(short for "horizontal space"). This is EOL_SEQUENCE in the BNF.
+Implementations <em>MAY</em>
+also recognize other end of line characters or sequences.
+</li>
+<li>line: A sequence of non-eol characters terminated by an eol sequence.
+A sweet-expression reader <em>MAY</em> also support a final line without
+an eol sequence.</li>
+<li>hspace: A character that is a space (U+0020) or tab (U+0009)
+(short for "horizontal space").</li>
+<li>indent character: A character that is a space (U+0020), tab (U+0009), or
+exclamation point "!" (U+0021).</li>
+<li>indentation: The set of all 0+ indent characters
+at the beginning of a line.</li>
+<li>line comment: An unescaped semicolon and all 0+ non-eol characters
+after it.
+Lines with only indentation followed by a line comment
+are completely ignored - even their indentation (if any) is irrelevant.</li>
+<li>empty line: A line with only 0+ hspace characters.
+</ul>
+
+<p>
+A sweet-expression reader <em>MUST</em>
+support three modes: indentation processing, enclosed, and initial indent.
+A sweet-expression reader <em>MUST</em> start
+in indentation processing mode before it begins to read a sweet-expression.
+If, on entry to a t_expr production, the first character is
+space or tab, the sweet-expression reader switches to
+initial indent mode (this ends when the reader returns).
+The reader temporarily switches to enclosed mode when it is inside
+any unescaped pairs of parentheses, brackets, or curly braces.
+</p>
+
+<p>
+In indentation processing mode, lines after the first line
+of a sweet-expression may be indented.
+In the following syntax definition, this indentation is not
+directly represented.
+Instead, preceding any matching, the indentation of each line
+is compared to the preceding line
+(ignoring lines with just indentation and a line comment), and this
+indentation text is then removed.
+If this line's indentation is longer than the un-ignored preceding line,
+the special symbol INDENT is added to the beginning of the line;
+the preceding line is termed a parent line, while this line
+is termed a child line (as are all later lines with the same indentation
+until a line with less indentation occurs).
+If the current line indent is shorter than the preceding
+un-ignored line,
+the special symbol DEDENT is repeatedly added to
+undo previous INDENT symbols until the previous indentation
+matches the current line indentation.
+It is an error if neither one of the indentations
+are a prefix of the other, nor are they equal.
+In indentation processing mode, a line (outside a string)
+with only hspace before the end-of-line
+is considered equivalent to a line with no characters before the end-of-line,
+and thus can generate multiple DEDENTs.
+</p>
+
+<p>
+The BNF rules below define the syntax of sweet-expressions,
+in particular, the t_expr production defines one sweet-expression.
+A sweet-expression reader <em>MUST</em> implement the productions
+below unless otherwise noted.
+The BNF is an LL(1) grammar, written using
+<a href="http://www.antlr.org/">ANTLR version 3</a>.
+The action rules inside {...} are in Scheme syntax.
+You can also separately view the
+<a href="sweet.g">full ANTLR BNF definition of sweet-expressions
+with Java action rules</a>, along with a support Java class
+<a href="Pair.java">Pair.java</a>.
+</p>
+
+<p>
+The production "n_expr" is a full neoteric-expression
+as defined in
+<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
+Thus <samp>{a&nbsp;+&nbsp;b}</samp> maps to <samp>(+&nbsp;a&nbsp;b)</samp>,
+<samp>f(...)</samp> maps to <samp>(f&nbsp;...)</samp>, and
+<samp>f{...}</samp> with non-empty content
+maps to <samp>(f&nbsp;{...})</samp>.</li>
+The production n_expr does *not* consume any following horizontal space.
+A sweet-expression reader <em>MUST</em> read n-expression tails greedily.
+That is, if a potential tail begins with an opening parenthesis,
+bracket, or brace, it <em>MUST</em> be considered a tail; otherwise,
+it <em>MUST NOT</em> be considered a tail.
+</p>
+
+<p>
+Markers are special character sequences that have special meanings,
+but only when indentation processing is enabled.
+Markers only have their special meaning if
+they are preceded by indentation or hspace and followed by
+hspace or end-of-line, and they must start with the character shown
+(e.g., |$| is not a marker).
+The markers, BNF names, and meanings are:
+</p>
+<ul>
+<li>\\ : GROUP_SPLIT.  This is called GROUP if it immediately follows
+indentation; in this case it represents no symbol at all at that indentation,
+simplifying simplifies representations of lists-of-lists.
+Otherwise it is called SPLIT; it represents starting a new line at
+the same indentation as the current line.</li>
+<li>$ : SUBLIST. This makes the right-hand-side (including
+all child lines) the last parameter of the
+left-hand-side of this line; if there is no left-hand-side,
+the right-hand-side is wrapped into a list.</li>
+<li>&lt;* : COLLECTING .  Begins a "collecting list".
+<li>*&gt; : COLLECTING_END .  Ends a "collecting list".
+<li>$$$ : RESERVED_TRIPLE_DOLLAR.  Reserved.
+</li>
+</ul>
+
+<p>
+When indentation processing is enabled,
+a leading traditional abbreviation (quote, comma, backquote, or comma-at)
+immediately after indentation, and followed by space, tab, or end-of-line,
+<em>MUST</em> be interpreted as that operator
+applied to the entire sweet-expression that follows.
+In the BNF these are represented as
+APOSW, QUASIQUOTEW, UNQUOTE_SPLICEW, and UNQUOTEW respectively.
+A sweet-expression reader <em>MAY</em> implement additional
+abbreviations such as <code>#'</code>.
+
+<!--
+
+<p>&#8220;<dfn>Sweet-expressions</dfn>&#8221; (aka &#8220;<dfn>t-expressions</dfn>&#8221;) deduce parentheses from indentation.
+A sweet-expression reader <em>MUST</em> interpret its input
+as follows when indentation processing is active:
+</p>
+<ol>
+<li>An indented line is a parameter of its parent.</li>
+<li>Later terms on a line are parameters of the first term.</li>
+<li>A line with exactly one term, and no child lines, is simply that term; multiple terms are wrapped into a list.</li>
+<li>An empty line ends the expression; empty lines before expressions are ignored.</li>
+<li>Terms are neoteric-expressions as defined in
+<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
+Thus <samp>{a&nbsp;+&nbsp;b}</samp> maps to <samp>(+&nbsp;a&nbsp;b)</samp>,
+<samp>f(...)</samp> maps to <samp>(f&nbsp;...)</samp>, and
+<samp>f{...}</samp> with non-empty content
+maps to <samp>(f&nbsp;{...})</samp>.</li>
+<li>When reading begins, indentation processing is active, but indentation processing is disabled inside ( ), [ ], and { }, whether they are prefixed or not
+(inside they&#8217;re a sequence of
+whitespace-separated neoteric-expressions).</li>
+</ol>
+
+
+<p>
+The BNF productions below are intentionally written so that they can
+be easily implemented using a recursive descent parser that
+corresponds to the given rules.
+In particular, the rules are given so that it would be easy to implement
+a parser that does not consume characters unless
+necessary and to not require multi-character unread-char
+(this makes it easy to reuse an underlying <var>read</var> procedure).
+However, no particular implementation approach is required.
+Unlike the SRFI-49 BNF, this BNF makes comment and whitespace
+processing explicit, to make comment and whitespace processing requirements
+clear.
+</p>
+
+-->
+
+
+<p>
+The non-terminal <code>same</code> emphasizes where neither an indent
+nor dedent has occurred, and matches nothing.
+The non-terminal <code>error</code> emphasizes certain sequences that
+are not defined by this BNF
+(an implementation <em>MAY</em> implement an extension, but if it does
+not, it <em>SHOULD</em> report an error).
+The sequence <code>/*empty*/</code> identifies an empty branch.
+</p>
+
+<p>
+The BNF depends on this utility function (this enables lines with a
+single n-expression and no child lines to represent themselves and
+not be wrapped into a list):
+</p>
+<pre>
+; If x is a 1-element list, return (car x), else return x
+(define (monify x)
+  (cond
+    ((not (pair? x)) x)
+    ((null? (cdr x)) (car x))
+    (#t x)))
+</pre>
+
+<p>
+Here is the actual BNF:
+</p>
+
+<!-- Between start and end pre, insert the results of ./to-srfi < sweet.g -->
+<pre>
+SPACE    : ' ';
+TAB      : '\t';
+PERIOD   : '.';
+
+// Abbreviations not followed by horizontal space are ordinary:
+APOS           : '\'';
+QUASIQUOTE     : '\`';
+UNQUOTE_SPLICE : ',@';
+UNQUOTE        : ',';
+
+// Special end-of-line character definitions.
+fragment EOL_CHAR : '\n' | '\r' ;
+fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
+fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
+fragment EOL_SEQUENCE : ('\r' '\n'? | '\n');
+
+// Comments. LCOMMENT=line comment, scomment=special comment.
+LCOMMENT :       ';' NOT_EOL_CHARS ; // Line comment - doesn't include EOL
+BLOCK_COMMENT : '#|' // This is #| ... #|
+      (options {greedy=false;} : (BLOCK_COMMENT | .))* '|#' ;
+DATUM_COMMENT_START : '#;' ;
+// SRFI-105 notes that "implementations could trivially support
+// (simultaneously) markers beginning with #! followed by a letter
+// (such as the one to identify support for curly-infix-expressions),
+// the SRFI-22 #!+space marker as an ignored line, and the
+// format #!/ ... !# and #!. ... !# as a multi-line comment."
+// We'll implement that approach for maximum flexibility.
+SRFI_22_COMMENT : '#! ' NOT_EOL_CHARS ;
+SHARP_BANG_FILE : '#!' ('/' | '.') (options {greedy=false;} : .)*
+                  '!#' (SPACE|TAB)* ;
+// These match #!fold-case, #!no-fold-case, #!sweet, and #!curly-infix;
+// it also matches a lone "#!".  The "#!"+space case is handled above,
+// in SRFI_22_COMMENT, overriding this one:
+SHARP_BANG_MARKER : '#!' (('a'..'z'|'A'..'Z'|'_')
+                    ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')*)? (SPACE|TAB)* ;
+
+// IMPORTANT SUPPORTING PARSER DEFINITIONS for the BNF
+
+hspace  : SPACE | TAB ;        // horizontal space
+
+// Production "abbrevw" is an abbreviation with a following whitespace:
+abbrevw returns [Object v]
+  : APOSW           {'quote}
+  | QUASIQUOTEW     {'quasiquote}
+  | UNQUOTE_SPLICEW {'unquote-splicing}
+  | UNQUOTEW        {'unquote} ;
+
+// Production "abbrev_no_w" is an abbreviation without a following whitespace:
+abbrev_no_w returns [Object v]
+  : APOS            {'quote}
+  | QUASIQUOTE      {'quasiquote}
+  | UNQUOTE_SPLICE  {'unquote-splicing}
+  | UNQUOTE         {'unquote};
+
+abbrev_all returns [Object v]
+  : abbrevw         {$abbrevw}
+  | abbrev_no_w     {$abbrev_no_w} ;
+
+// Production "n_expr" is a full neoteric-expression as defined in SRFI-105.
+// n_expr does *not* consume any following horizontal space.
+// Uses "n_expr_noabbrev", an n-expression with no leading abbreviations:
+n_expr returns [Object v]
+ : abbrev_all n1=n_expr {(list $abbrev_all $n1)}
+ | n_expr_noabbrev      {$n_expr_noabbrev} ;
+
+// Production "n_expr_first" is a neoteric-expression, but leading
+// abbreviations cannot have an whitespace afterwards (used by "head"):
+n_expr_first returns [Object v]
+  : abbrev_no_w n1=n_expr_first {(list $abbrev_no_w $n1)}
+  | n_expr_noabbrev            {$n_expr_noabbrev} ;
+
+// Production "scomment" (special comment) defines comments other than ";":
+sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER ;
+scomment : BLOCK_COMMENT
+         | DATUM_COMMENT_START (options : {greedy=true} hspace)* n_expr
+         | sharp_bang_comments ;
+
+// Production "comment_eol" reads an optional ;-comment (if it exists),
+// and then reads the end-of-line (EOL) sequence.  EOL processing consumes
+// additional comment-only lines (if any) which may be indented.
+
+comment_eol : LCOMMENT? EOL;
+
+
+// KEY BNF PRODUCTIONS for sweet-expressions:
+
+// Production "collecting_tail" returns a collecting list's contents.
+// FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
+
+collecting_tail returns [Object v]
+  : it_expr more=collecting_tail {(cons $it_expr $more)}
+  | (initial_indent_no_bang | initial_indent_with_bang)?
+    comment_eol    retry1=collecting_tail {$retry1}
+  | (FF | VT)+ EOL retry2=collecting_tail {$retry2}
+  | collecting_end {'()} ;
+
+// Process line after ". hspace+" sequence.  Does not go past current line.
+post_period returns [Object v]
+  : scomment hspace* rpt=post_period {$rpt} // (scomment hspace*)*
+    | pn=n_expr hspace* (scomment hspace*)* (n_expr error)? {$pn}
+    | COLLECTING hspace* pc=collecting_tail hspace*
+      (scomment hspace*)* (n_expr error)? {$pc}
+    | /*empty*/ {"."} ;
+
+// Production "head" reads 1+ n-expressions on one line; it will
+// return the list of n-expressions on the line.  If there is one n-expression
+// on the line, it returns a list of exactly one item
+
+head returns [Object v]
+  : PERIOD /* Leading ".": escape following datum like an n-expression. */
+      (hspace+ pp=post_period {(list $pp)}
+       | /*empty*/    {(list '.)} )
+  | COLLECTING hspace* collecting_tail hspace*
+      (rr=rest            {(cons $collecting_tail $rr)}
+       | /*empty*/        {(list $collecting_tail)} )
+  | basic=n_expr_first /* Only match n_expr_first */
+      ((hspace+ (br=rest  {(cons $basic $br)}
+                 | /*empty*/  {(list $basic)} ))
+       | /*empty*/            {(list $basic)} ) ;
+
+// Production "rest" production reads the rest of the expressions on a line
+// (the "rest of the head"), after the first expression of the line.
+// Like head, it consumes any hspace before it returns.
+
+rest returns [Object v]
+  : PERIOD /* Improper list */
+      (hspace+  pp=post_period {$pp}
+       | /*empty*/   {(list '.)})
+  | scomment hspace* (sr=rest {$sr} | /*empty*/ {'()} )
+  | COLLECTING hspace* collecting_tail hspace*
+    (rr=rest             {(cons $collecting_tail $rr)}
+     | /*empty*/             {(list $collecting_tail)} )
+  | basic=n_expr
+      ((hspace+ (br=rest {(cons $basic $br)}
+                 | /*empty*/ {(list $basic)} ))
+       | /*empty*/           {(list $basic)} ) ;
+
+// Production "body" handles the sequence of 1+ child lines in an it_expr
+// (e.g., after a "head"), each of which is itself an it_expr.
+// It returns the list of expressions in the body.
+
+body returns [Object v]
+  : i=it_expr
+     (same
+       ( {isperiodp($i)}? =&gt; f=it_expr dedent
+           {$f} // Improper list final value
+       | {! isperiodp($i)}? =&gt; nxt=body
+           {(cons $i $nxt)} )
+     | dedent {(list $i)} ) ;
+
+// Production "it_expr" (indented sweet-expressions)
+// is the main production for sweet-expressions in the usual case.
+
+it_expr returns [Object v]
+  : head
+    (options {greedy=true} : (
+     GROUP_SPLIT hspace* /* Not initial; interpret as split */
+      (options {greedy=true} :
+        // To allow \\ EOL as line-continuation, instead do:
+        //   comment_eol same more=it_expr {(append $head $more)}
+        comment_eol error
+        | /*empty*/ {(monify $head)} )
+     | SUBLIST hspace* /* head SUBLIST ... case */
+       (sub_i=it_expr {(append $head (list $sub_i))}
+        | comment_eol error )
+     | comment_eol // Normal case, handle child lines if any:
+       (indent children=body {(append $head $children)}
+        | /*empty*/          {(monify $head)} /* No child lines */ )
+     ))
+  | (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
+      (group_i=it_expr {$group_i} /* Ignore initial GROUP/scomment */
+       | comment_eol
+         (indent g_body=body {$g_body} /* Normal GROUP use */
+          | same ( g_i=it_expr {$g_i} /* Plausible separator */
+                   /* Handle #!sweet EOL EOL t_expr */
+                   | comment_eol restart=t_expr {$restart} )
+          | dedent error ))
+  | SUBLIST hspace* /* "$" first on line */
+    (is_i=it_expr {(list $is_i)}
+     | comment_eol error )
+  | abbrevw hspace*
+      (comment_eol indent ab=body
+         {(append (list $abbrevw) $ab)}
+       | ai=it_expr
+         {(list $abbrevw $ai)} ) ;
+
+// Production "t_expr" is the top-level production for sweet-expressions.
+// This production handles special cases, then in the normal case
+// drops to the it_expr production.
+
+t_expr returns [Object v]
+  : comment_eol    retry1=t_expr {$retry1}
+  | (FF | VT)+ EOL retry2=t_expr {$retry2}
+  | (initial_indent_no_bang | hspace+ )
+    (n_expr {$n_expr} /* indent processing disabled */
+     | ((scomment (options {greedy=true} : hspace)*
+       sretry=t_expr {$sretry}))
+     | comment_eol retry3=t_expr {$retry3} )
+  | initial_indent_with_bang error
+  | EOF {(generate_eof)} /* End of file */
+  | it_expr {$it_expr} /* Normal case */ ;
+</pre>
+
+
+
+<!--
+
+<p>
+
+<h2 id="old-basic-specification">Old Basic specification</h2>
+
+<p><i>This is the older version, eventually we're delete this
+if the new one is better</i></p>
 
 <p>&#8220;<dfn>Sweet-expressions</dfn>&#8221; (aka &#8220;<dfn>t-expressions</dfn>&#8221;) deduce parentheses from indentation.
 A sweet-expression reader <em>MUST</em> interpret its input
@@ -462,9 +897,13 @@ For example, <samp><tt>{$}</tt></samp>
 <em>MUST</em> be interpreted as the symbol <samp>$</samp>.
 </p>
 
-<p>A <dfn>sweet-expression reader</dfn> is a datum reader
-that can correctly read and map sweet-expressions as defined above
-(including the advanced sweet-expression features).
+-->
+
+
+<h2 id="other-specification">Other requirements</h2>
+
+
+<p>
 An implementation of this SRFI <em>MUST</em> accept
 the directive <code>#!sweet</code> followed by a whitespace character
 in its standard datum readers (e.g., <code>read</code> and, if applicable,
@@ -514,7 +953,7 @@ such a reader <em>SHOULD</em> read it as a neoteric-expression.
 If the first character after the equal sign is whitespace,
 a datum reader <em>MAY</em> reject it.
 A reader <em>MAY</em> also accept a datum label
-that is an initial expression of a <i>head</i> production (see the BNF below),
+that is an initial expression of a <i>head</i> production (see the BNF),
 with a trailing space or tab,
 as labelling the rest of the sweet-expression.
 </p>
@@ -560,6 +999,7 @@ when writing portable Scheme programs using sweet-expressions.
 
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
 
+
 <h2><a name="related-tools">Related tools</a></h2>
 
 <p>
@@ -593,391 +1033,6 @@ expressions whose first line is indented,
 to reduce the risk of their accidental use.
 </p>
 
-<h2><a name="bnf">Backus&#45;Naur Form (BNF)</a></h2>
-<p>
-The following BNF rules define sweet-expressions;
-a sweet-expression reader <em>MUST</em> implement the productions
-below unless otherwise noted.
-The BNF is intended to capture the specification above;
-in case of (unintentional)
-conflict, the specification text above governs.
-The BNF is an LL(1) grammar, written using
-<a href="http://www.antlr.org/">ANTLR version 3</a>.
-</p>
-
-<p>
-In the summarized BNF below,
-the action rules inside {...} are in Scheme syntax.
-You can also separately view the
-<a href="sweet.g">full ANTLR BNF definition of sweet-expressions
-with Java action rules</a>, along with a support Java class
-<a href="Pair.java">Pair.java</a>.
-</p>
-
-<p>
-As with SRFI-49, we model input as being preprocessed and having
-INDENT and DEDENT tokens inserted to represent the addition or
-removal of indentation; a single end-of-line may translate to a single
-EOL followed by multiple DEDENT tokens.
-(The indent and dedent non-terminals just refer to INDENT and DEDENT
-respectively.)
-If the indentation is invalid, BADDENT is generated which is not
-matched by the grammar.
-</p>
-<p>
-A sweet-expression reader <em>MUST</em>
-support three modes: indentation processing,
-enclosed (when inside pairs of parentheses, brackets, or curly braces,
-recursively), and initial indent.
-On initialization a sweet-expression reader <em>MUST</em> be
-in indentation processing mode.
-An initial indent <em>MUST</em> enter indentation processing mode,
-which <em>MUST</em> end on an end-of-line sequence.
-The markers <tt>\\</tt>, <tt>$</tt>, <tt>&lt;*</tt>, <tt>*&gt;</tt>,
-and the abbreviations followed by horizontal space
-<em>MUST</em> only have their
-special meaning in indentation processing mode.
-</p>
-
-<p>
-There are a few special non-terminals that act essentially as comments
-and are used to clarify the grammar; each matches an empty sequence:
-</p>
-<ol>
-<li>empty : Identifies an empty branch</li>
-<li>same  : Emphasizes where neither indent nor dedent has occurred</li>
-<li>error : Specifically identifies an error branch.</li>
-</ol>
-<p>
-The error non-terminal makes it clear where a sequence is
-not defined by this specification, and thus
-recommends where a parser might specifically check for errors.
-It also also acts as a check on the grammar itself (to help warn the
-BNF developers of unintended interpretation).
-Note that errors can occur elsewhere, and an implementation
-MAY include an extension where an error is noted in this grammar.
-</p>
-
-<p>
-The BNF productions below are intentionally written so that they can
-be easily implemented using a recursive descent parser that
-corresponds to the given rules.
-In particular, the rules are given so that it would be easy to implement
-a parser that does not consume characters unless
-necessary and to not require multi-character unread-char
-(this makes it easy to reuse an underlying <var>read</var> procedure).
-However, no particular implementation approach is required.
-Unlike the SRFI-49 BNF, this BNF makes comment and whitespace
-processing explicit, to make comment and whitespace processing requirements
-clear.
-</p>
-
-<p>
-A sweet-expression reader <em>MUST</em> read n-expression tails greedily.
-That is, if a potential tail begins with an opening parenthesis,
-bracket, or brace, it <em>MUST</em> be considered a tail; otherwise,
-it <em>MUST NOT</em> be considered a tail.
-</p>
-
-<p>
-The BNF depends on this utility function:
-</p>
-<pre>
-; If x is a 1-element list, return (car x), else return x
-(define (monify x)
-  (cond
-    ((not (pair? x)) x)
-    ((null? (cdr x)) (car x))
-    (#t x)))
-</pre>
-
-<p>
-Here is the actual BNF:
-</p>
-
-<!-- Between start and end pre, insert the results of ./to-srfi < sweet.g -->
-<pre>
-SPACE    : ' ';
-TAB      : '\t';
-PERIOD   : '.';
-
-// Special markers, which only have meaning outside (), [], {}.
-GROUP_SPLIT  : {(indent_processing)}? =&gt; '\\' '\\'; // GROUP/split symbol.
-SUBLIST      : {(indent_processing)}? =&gt;'$';
-COLLECTING     : {(indent_processing)}? =&gt; '&lt;*' { restart_indent_level()} ;
-// This generates EOL + (any DEDENTs ) + COLLECTING_END, and restores indents:
-COLLECTING_END : {(indent_processing)}? =&gt; t='*&gt;' {process_collecting_end($t)};
-RESERVED_TRIPLE_DOLLAR : {(indent_processing)}? =&gt; '$$$';  // Reserved.
-
-// Abbreviations followed by certain whitespace are special:
-APOSW           : {(indent_processing)}? =&gt; '\'' (SPACE | TAB) ;
-QUASIQUOTEW     : {(indent_processing)}? =&gt; '\`' (SPACE | TAB) ;
-UNQUOTE_SPLICEW : {(indent_processing)}? =&gt; ',@' (SPACE | TAB) ;
-UNQUOTEW        : {(indent_processing)}? =&gt; ','  (SPACE | TAB) ;
-
-// Abbreviations followed by EOL also generate abbrevW:
-APOS_EOL        : {(indent_processing)}? =&gt; '\'' EOL_SEQUENCE
-                  SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
-                  {emit_type(APOSW); emit_type(EOL);
-                   process_indent($i.text $i)};
-QUASIQUOTE_EOL  : {(indent_processing)}? =&gt; '\`' EOL_SEQUENCE
-                  SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
-                  {emit_type(QUASIQUOTEW); emit_type(EOL);
-                   process_indent($i.text $i)};
-UNQUOTE_SPLICE_EOL: {(indent_processing)}? =&gt; ',@' EOL_SEQUENCE
-                  SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
-                  {emit_type(UNQUOTE_SPLICEW); emit_type(EOL);
-                   process_indent($i.text $i)};
-UNQUOTE_EOL     : {(indent_processing)}? =&gt; ',' EOL_SEQUENCE
-                  SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
-                  {emit_type(UNQUOTEW); emit_type(EOL);
-                   process_indent($i.text $i)};
-
-// Abbreviations not followed by horizontal space are ordinary:
-APOS           : '\'';
-QUASIQUOTE     : '\`';
-UNQUOTE_SPLICE : ',@';
-UNQUOTE        : ',';
-
-// Special end-of-line character definitions.
-fragment EOL_CHAR : '\n' | '\r' ;
-fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
-fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
-fragment EOL_SEQUENCE : ('\r' '\n'? | '\n');
-
-// Comments. LCOMMENT=line comment, scomment=special comment.
-LCOMMENT :       ';' NOT_EOL_CHARS ; // Line comment - doesn't include EOL
-BLOCK_COMMENT : '#|' // This is #| ... #|
-      (options {greedy=false;} : (BLOCK_COMMENT | .))* '|#' ;
-DATUM_COMMENT_START : '#;' ;
-// SRFI-105 notes that "implementations could trivially support
-// (simultaneously) markers beginning with #! followed by a letter
-// (such as the one to identify support for curly-infix-expressions),
-// the SRFI-22 #!+space marker as an ignored line, and the
-// format #!/ ... !# and #!. ... !# as a multi-line comment."
-// We'll implement that approach for maximum flexibility.
-SRFI_22_COMMENT : '#! ' NOT_EOL_CHARS ;
-SHARP_BANG_FILE : '#!' ('/' | '.') (options {greedy=false;} : .)*
-                  '!#' (SPACE|TAB)* ;
-// These match #!fold-case, #!no-fold-case, #!sweet, and #!curly-infix;
-// it also matches a lone "#!".  The "#!"+space case is handled above,
-// in SRFI_22_COMMENT, overriding this one:
-SHARP_BANG_MARKER : '#!' (('a'..'z'|'A'..'Z'|'_')
-                    ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')*)? (SPACE|TAB)* ;
-
-// IMPORTANT SUPPORTING PARSER DEFINITIONS for the BNF
-
-hspace  : SPACE | TAB ;        // horizontal space
-
-// Production "abbrevw" is an abbreviation with a following whitespace:
-abbrevw returns [Object v]
-  : APOSW           {'quote}
-  | QUASIQUOTEW     {'quasiquote}
-  | UNQUOTE_SPLICEW {'unquote-splicing}
-  | UNQUOTEW        {'unquote} ;
-
-// Production "abbrev_no_w" is an abbreviation without a following whitespace:
-abbrev_no_w returns [Object v]
-  : APOS            {'quote}
-  | QUASIQUOTE      {'quasiquote}
-  | UNQUOTE_SPLICE  {'unquote-splicing}
-  | UNQUOTE         {'unquote};
-
-abbrev_all returns [Object v]
-  : abbrevw         {$abbrevw}
-  | abbrev_no_w     {$abbrev_no_w} ;
-
-// Production "n_expr" is a full neoteric-expression as defined in SRFI-105.
-// n_expr does *not* consume any following horizontal space.
-// Uses "n_expr_noabbrev", an n-expression with no leading abbreviations:
-n_expr returns [Object v]
- : abbrev_all n1=n_expr {(list $abbrev_all $n1)}
- | n_expr_noabbrev      {$n_expr_noabbrev} ;
-
-// Production "n_expr_first" is a neoteric-expression, but leading
-// abbreviations cannot have an whitespace afterwards (used by "head"):
-n_expr_first returns [Object v]
-  : abbrev_no_w n1=n_expr_first {(list $abbrev_no_w $n1)}
-  | n_expr_noabbrev            {$n_expr_noabbrev} ;
-
-// Production "scomment" (special comment) defines comments other than ";":
-sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER ;
-scomment : BLOCK_COMMENT
-         | DATUM_COMMENT_START (options : {greedy=true} hspace)* n_expr
-         | sharp_bang_comments ;
-
-// Production "comment_eol" reads an optional ;-comment (if it exists),
-// and then reads the end-of-line (EOL) sequence.  EOL processing consumes
-// additional comment-only lines (if any) which may be indented.
-
-comment_eol : LCOMMENT? EOL;
-
-
-// KEY BNF PRODUCTIONS for sweet-expressions:
-
-// Production "collecting_tail" returns a collecting list's contents.
-// Precondition: At beginning of line.
-// Postcondition: Consumed the matching collecting_end.
-// FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
-
-collecting_tail returns [Object v]
-  : it_expr more=collecting_tail {(cons $it_expr $more)}
-  | (initial_indent_no_bang | initial_indent_with_bang)?
-    comment_eol    retry1=collecting_tail {$retry1}
-  | (FF | VT)+ EOL retry2=collecting_tail {$retry2}
-  | collecting_end {'()} ;
-
-// Process line after ". hspace+" sequence.  Does not go past current line.
-post_period returns [Object v]
-  : scomment hspace* rpt=post_period {$rpt} // (scomment hspace*)*
-    | pn=n_expr hspace* (scomment hspace*)* (n_expr error)? {$pn}
-    | COLLECTING hspace* pc=collecting_tail hspace*
-      (scomment hspace*)* (n_expr error)? {$pc}
-    | /*empty*/ {"."} ;
-
-// Production "head" reads 1+ n-expressions on one line; it will
-// return the list of n-expressions on the line.  If there is one n-expression
-// on the line, it returns a list of exactly one item; this makes it
-// easy to append to later (if appropriate).  In some cases, we want
-// single items to be themselves, not in a list; function monify does this.
-// The "head" production never reads beyond the current line
-// (except within a block comment), so it doesn't need to keep track
-// of indentation, and indentation will NOT change within head.
-// The "head" production only directly handles the first n-expression on the
-// line, and then calls on "rest" to process the rest (if any); we do this
-// because in a few cases it matters if an expression is the first one.
-// Callers can depend on "head" and "rest" *not* changing indentation.
-// On entry, all indentation/hspace must have already been read.
-// On return, it will have consumed all hspace (spaces and tabs).
-
-// Precondition: At beginning of line+indent
-// Postcondition: At unconsumed EOL
-
-head returns [Object v]
-  : PERIOD /* Leading ".": escape following datum like an n-expression. */
-      (hspace+ pp=post_period {(list $pp)}
-       | /*empty*/    {(list '.)} )
-  | COLLECTING hspace* collecting_tail hspace*
-      (rr=rest            {(cons $collecting_tail $rr)}
-       | /*empty*/        {(list $collecting_tail)} )
-  | basic=n_expr_first /* Only match n_expr_first */
-      ((hspace+ (br=rest  {(cons $basic $br)}
-                 | /*empty*/  {(list $basic)} ))
-       | /*empty*/            {(list $basic)} ) ;
-
-// Production "rest" production reads the rest of the expressions on a line
-// (the "rest of the head"), after the first expression of the line.
-// Like head, it consumes any hspace before it returns.
-// The "rest" production is written this way so a non-tokenizing
-// implementation can read an expression specially. E.G., if it sees a period,
-// read the expression directly and then see if it's just a period.
-// Precondition: At beginning of non-first expression on line (past hspace)
-// Postcondition: At unconsumed EOL
-
-rest returns [Object v]
-  : PERIOD /* Improper list */
-      (hspace+  pp=post_period {$pp}
-       | /*empty*/   {(list '.)})
-  | scomment hspace* (sr=rest {$sr} | /*empty*/ {'()} )
-  | COLLECTING hspace* collecting_tail hspace*
-    (rr=rest             {(cons $collecting_tail $rr)}
-     | /*empty*/             {(list $collecting_tail)} )
-  | basic=n_expr
-      ((hspace+ (br=rest {(cons $basic $br)}
-                 | /*empty*/ {(list $basic)} ))
-       | /*empty*/           {(list $basic)} ) ;
-
-// Production "body" handles the sequence of 1+ child lines in an it_expr
-// (e.g., after a "head"), each of which is itself an it_expr.
-// It returns the list of expressions in the body.
-// Note that an it-expr will consume any line comments or hspaces
-// before it returns back to the "body" production.
-// Since (list x) is simply (cons x '()), this production always does a
-// cons of the first it_expr and another body [if it exists] or '() [if not].
-
-body returns [Object v]
-  : i=it_expr
-     (same
-       ( {isperiodp($i)}? =&gt; f=it_expr dedent
-           {$f} // Improper list final value
-       | {! isperiodp($i)}? =&gt; nxt=body
-           {(cons $i $nxt)} )
-     | dedent {(list $i)} ) ;
-
-// Production "it_expr" (indented sweet-expressions)
-// is the main production for sweet-expressions in the usual case.
-// Precondition: At beginning of line+indent
-// Postcondition: it-expr ended by consuming EOL + examining indent
-// Note: This BNF presumes that "*&gt;" generates multiple tokens,
-// "EOL DEDENT* COLLECTING_END", and resets the indentation list.
-// You can change the BNF below to allow "head /*empty*/", and handle dedents
-// by directly comparing values; then "*&gt;" only needs to generate
-// COLLECTING_END. But this creates a bunch of ambiguities
-// like a 'dangling else', which must all be disambiguated by accepting
-// the first or the longer sequence first.  Either approach is needed to
-// support "*&gt;" as the non-first element so that the "head" can end
-// without a literal EOL, e.g., as in "let &lt;* y 5 *&gt;".
-
-it_expr returns [Object v]
-  : head
-    (options {greedy=true} : (
-     GROUP_SPLIT hspace* /* Not initial; interpret as split */
-      (options {greedy=true} :
-        // To allow \\ EOL as line-continuation, instead do:
-        //   comment_eol same more=it_expr {(append $head $more)}
-        comment_eol error
-        | /*empty*/ {(monify $head)} )
-     | SUBLIST hspace* /* head SUBLIST ... case */
-       (sub_i=it_expr {(append $head (list $sub_i))}
-        | comment_eol error )
-     | comment_eol // Normal case, handle child lines if any:
-       (indent children=body {(append $head $children)}
-        | /*empty*/          {(monify $head)} /* No child lines */ )
-    // If COLLECTING_END doesn't generate multiple tokens, can do:
-    // | /*empty*/           {(monify $head)}
-     ))
-  | (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
-      (group_i=it_expr {$group_i} /* Ignore initial GROUP/scomment */
-       | comment_eol
-         (indent g_body=body {$g_body} /* Normal GROUP use */
-          | same ( g_i=it_expr {$g_i} /* Plausible separator */
-                   /* Handle #!sweet EOL EOL t_expr */
-                   | comment_eol restart=t_expr {$restart} )
-          | dedent error ))
-  | SUBLIST hspace* /* "$" first on line */
-    (is_i=it_expr {(list $is_i)}
-     | comment_eol error )
-  | abbrevw hspace*
-      (comment_eol indent ab=body
-         {(append (list $abbrevw) $ab)}
-       | ai=it_expr
-         {(list $abbrevw $ai)} ) ;
-
-// Production "t_expr" is the top-level production for sweet-expressions.
-// This production handles special cases, then in the normal case
-// drops to the it_expr production.
-// Precondition: At beginning of line
-// Postcondition: At beginning of line
-
-// The rule for "indent processing disabled on initial top-level hspace"
-// is a very simple (and clever) BNF construction by Alan Manuel K. Gloria.
-// If there is an indent it simply reads a single n-expression and returns.
-// If there is more than one on an initially-indented line, the later
-// horizontal space will not have have been read, so this production will
-// fire again on the next invocation, doing the right thing.
-
-t_expr returns [Object v]
-  : comment_eol    retry1=t_expr {$retry1}
-  | (FF | VT)+ EOL retry2=t_expr {$retry2}
-  | (initial_indent_no_bang | hspace+ )
-    (n_expr {$n_expr} /* indent processing disabled */
-     | ((scomment (options {greedy=true} : hspace)*
-       sretry=t_expr {$sretry}))
-     | comment_eol retry3=t_expr {$retry3} )
-  | initial_indent_with_bang error
-  | EOF {(generate_eof)} /* End of file */
-  | it_expr {$it_expr} /* Normal case */ ;
-</pre>
 
 <h1><a name="examples">Examples</a></h1>
 <p>
