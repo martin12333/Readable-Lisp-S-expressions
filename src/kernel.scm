@@ -1766,7 +1766,13 @@
                     (consume-to-eol port)
                     (consume-end-of-line port)
                     (t_expr port))))))
-          (#t (cadr (it_expr port "^")))))))
+          (#t
+            (let* ((results (it_expr port "^"))
+                   (results_indent (car results))
+                   (results_value (cadr results)))
+              (if (string=? results_indent "")
+                (read-error "Closing *> without preceding matching <*")
+                results_value)))))))
 
   (define (read_to_blank_line port)
     (consume-to-eol port)
