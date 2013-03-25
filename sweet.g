@@ -1158,8 +1158,8 @@ it_expr returns [Object v]
 t_expr returns [Object v]
   : comment_eol    retry1=t_expr {$v=$retry1.v;}
   | (FF | VT)+ EOL retry2=t_expr {$v=$retry2.v;}
-  | (initial_indent_no_bang | hspace+ )
-    (n_expr {$v = $n_expr.v;} /* indent processing disabled */
+  | (initial_indent_no_bang | hspace+ ) /* initial indent */
+    (n_expr {$v = $n_expr.v;}
      | (scomment (options {greedy=true;} : hspace)*
        sretry=t_expr {$v=$sretry.v;})
      | comment_eol retry3=t_expr {$v=$retry3.v;} )
