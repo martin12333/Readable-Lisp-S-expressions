@@ -489,7 +489,7 @@ SHARP_BANG_FILE : '#!' ('/' | '.') (options {greedy=false;} : .)*
 // These match #!fold-case, #!no-fold-case, #!sweet, and #!curly-infix;
 // it also matches a lone "#!".  The "#!"+space case is handled above,
 // in SRFI_22_COMMENT, overriding this one:
-SHARP_BANG_MARKER : '#!' (('a'..'z'|'A'..'Z'|'_')
+SHARP_BANG_DIRECTIVE : '#!' (('a'..'z'|'A'..'Z'|'_')
                     ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')*)? (SPACE|TAB)* ;
 
 // STOP INCLUDING IN SRFI
@@ -989,7 +989,8 @@ n_expr_first returns [Object v]
   | n_expr_noabbrev            {$v = $n_expr_noabbrev.v;} ;
 
 // Production "scomment" (special comment) defines comments other than ";":
-sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER ;
+sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE
+                      | SHARP_BANG_DIRECTIVE ;
 scomment : BLOCK_COMMENT
          | DATUM_COMMENT_START (options : {greedy=true;} hspace)* n_expr
          | sharp_bang_comments ;
