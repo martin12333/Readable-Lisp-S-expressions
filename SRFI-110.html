@@ -267,6 +267,22 @@ as long as no one is forced to use it.&#8221;
 </p>
 
 <p>
+It has often been said that the parentheses
+&#8220;just disappear&#8221; after experience.
+But as
+<a href="http://www.gregslepak.com/on-lisps-readability">bhurt notes</a>,
+&#8220;I&#8217;m always somewhat amazed by the claim that the
+parens &#8216;just disappear&#8217;, as if this is a good thing.
+Bugs live in the difference between the code in your head
+and the code on the screen - and having the parens
+in the wrong place causes bugs.
+And autoindenting isn&#8217;t the answer -
+I don&#8217;t want the indenting to follow the parens,
+I want the parens to follow the indenting.
+The indenting I can see, and can see is correct.&#8221;
+</p>
+
+<p>
 Many new syntaxes have been invented for various Lisp dialects,
 including <a href="#m-expressions">McCarthy&#8217;s
 original M-expression notation for Lisp</a>.
@@ -525,21 +541,27 @@ that it has priority; ",@" is interpreted differently from
 -->
 
 <p>
-In indentation processing mode,
-a leading traditional abbreviation
-(<tt>'</tt> and <tt>`</tt> and <tt>,@</tt> and <tt>,</tt>)
+The <i>traditional abbreviations</i> are
+&#8220;<tt>'</tt>&#8221;, &#8220;<tt>`</tt>&#8221;,
+&#8220;<tt>,@</tt>&#8221;, and &#8220;<tt>,</tt>&#8221;,
+which stand for
+quote, quasiquote, unquote-splicing, and unquote respectively.
+In indentation processing mode, a traditional abbreviation
 that is immediately after indentation,
-and followed by space, tab, or end-of-line, is represented as
+and is followed by space, tab, or end-of-line, is represented as
 APOSW, QUASIQUOTEW, UNQUOTE_SPLICEW, and UNQUOTEW respectively.
 Per the BNF, these
 <em>MUST</em> be interpreted as that abbreviation
 applied to the entire sweet-expression that follows.
-Note that an end-of-line (if any) immediately after these
+An end-of-line (if any) immediately after these
 abbreviations <em>MUST</em> also generate EOL.
+The <i>syntax-case related abbreviations</i> are
+&#8220;<tt>#'</tt>&#8221;, &#8220;<tt>#`</tt>&#8221;,
+&#8220;<tt>#,</tt>&#8221;, and &#8220;<tt>#,@</tt>&#8221;,
+which stand for
+syntax, quasisyntax, unsyntax-splicing, and unsyntax respectively.
 If a Scheme system supports both this SRFI
-and the syntax-case related reader syntax abbreviations
-(<tt>#'</tt> and <tt>#`</tt> and <tt>#,</tt> and <tt>#,@</tt> that
-represent syntax, quasisyntax, unsyntax-splicing, and unsyntax respectively),
+and the syntax-case related abbreviations,
 then the reader <em>SHOULD</em>
 treat those syntax-case abbreviations in the same manner.
 A sweet-expression reader <em>MAY</em> implement additional abbreviations.
