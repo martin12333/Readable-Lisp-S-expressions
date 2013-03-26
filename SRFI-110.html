@@ -518,19 +518,31 @@ and then generates the two symbols EOL and finally COLLECTING_END.</li>
 <li><tt>$$$</tt> : RESERVED_TRIPLE_DOLLAR.  Reserved.</li>
 </ul>
 
+<!--
+Note "UNQUOTE_SPLICEW" before "UNQUOTEW" so that it's clear
+that it has priority; ",@" is interpreted differently from
+"," without an "@" that follows.
+-->
+
 <p>
 In indentation processing mode,
-a leading traditional abbreviation (quote, comma, backquote, or comma-at)
-immediately after indentation, and followed by space, tab, or end-of-line,
-is represented as
+a leading traditional abbreviation
+(<tt>'</tt> and <tt>`</tt> and <tt>,@</tt> and <tt>,</tt>)
+that is immediately after indentation,
+and followed by space, tab, or end-of-line, is represented as
 APOSW, QUASIQUOTEW, UNQUOTE_SPLICEW, and UNQUOTEW respectively.
 Per the BNF, these
 <em>MUST</em> be interpreted as that abbreviation
 applied to the entire sweet-expression that follows.
-Note that an end-of-line (if any) immediately after them <em>MUST</em>
-also generate EOL.
-A sweet-expression reader <em>MAY</em> implement additional
-abbreviations such as <tt>#'</tt>.
+Note that an end-of-line (if any) immediately after these
+abbreviations <em>MUST</em> also generate EOL.
+If a Scheme system supports both this SRFI
+and the syntax-case related reader syntax abbreviations
+(<tt>#'</tt> and <tt>#`</tt> and <tt>#,</tt> and <tt>#,@</tt> that
+represent syntax, quasisyntax, unsyntax-splicing, and unsyntax respectively),
+then the reader <em>SHOULD</em>
+treat those syntax-case abbreviations in the same manner.
+A sweet-expression reader <em>MAY</em> implement additional abbreviations.
 </p>
 
 <!--
