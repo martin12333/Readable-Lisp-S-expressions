@@ -2463,29 +2463,34 @@ It won&#8217;t, in a typical implementation; here&#8217;s why:
 <ul>
 <li>
 In the first read(), it reads foo, bar, and it
-consumes the indentation of &#8220;eggs&#8221; so that it can determine that another
-is at the same level. It returns (foo bar).</li>
+consumes the indentation of &#8220;eggs&#8221; so that it can
+determine that the line with eggs is at the same level as foo.
+It returns (foo bar).</li>
 <li>In the second read(), it reads
-eggs with NO indentation, because the indentation was consumed by the
-first read() so it could determine when it was finished. It then reads
-the indentation of cheese, which has an indentation more than zero. It
-returns (eggs cheese), and we&#8217;ve consumed it all.</li>
+eggs with NO indentation, because the indentation was previously
+consumed by the first read() so it could determine when it was finished.
+It then reads the indentation of cheese,
+which has an indentation more than zero, and thus appears to be
+more deeply indented than eggs.
+It returns (eggs cheese), and we&#8217;ve consumed it all...
+but perhaps not with the expected semantics.</li>
 </ul>
 
 <p>Some solutions:</p>
 <ul>
 <li>If you have unlimited unread-char, there is no problem, just
-unconsume characters once you&#8217;ve found the end. But many Lisps don&#8217;t have
-that.</li>
-<li>Read could store indentation state associated with the
-port. But the user could call other routines, and a naive implementation
-would read the wrong values. You&#8217;d have to re-wrap the entire I/O system
-if you really wanted to be able to undo the indentation reliably. That
-creates a complicated implementation that is likely to be unreliable,
+unconsume characters once you&#8217;ve found the end.
+But many Lisps don&#8217;t have that.</li>
+<li>Read could store indentation state associated with the port.
+But the user could call other routines, and a naive implementation
+would read the wrong values.
+You&#8217;d have to re-wrap the entire I/O system
+if you really wanted to be able to undo the indentation reliably.
+That creates a complicated implementation that is likely to be unreliable,
 and it&#8217;s lousy for performance.</li>
 </ul>
-<p>So for all the reasons
-above, initial indent disables indentation processing for that line.</p>
+<p>So for all the reasons above,
+initial indent disables indentation processing for that line.</p>
 
 <h3 id="block-comment-indent-significant">Why are the indentations of block comments and datum comments significant?</h3>
 <p>
