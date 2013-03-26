@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
 <title>SRFI 110: Sweet-expressions (t-expressions)</title>
@@ -25,6 +25,10 @@ This SRFI is currently in ``draft'' status.
 <!-- Copy CSS style of SRFI-64; credits to Per Bothner. -->
 <!-- Note: "style" isn't in HTML 3.2, but SRFI-64 set a precedent
      for allowing this: -->
+<!-- Using just this:
+   li li {list-style-type:lower-alpha}
+     would make the TOC look funny.
+ -->
 <style type="text/css">
   div.title h1 { font-size: small; color: blue }
   div.title { font-size: xx-large; color: blue; font-weight: bold }
@@ -33,7 +37,6 @@ This SRFI is currently in ``draft'' status.
   h3 { color: blue ; font-style: italic }
   /* So var inside pre gets same font as var in paragraphs. */
   var { font-family: monospace; }
-  li li {list-style-type:lower-alpha}
 </style>
 </head>
 
@@ -150,6 +153,7 @@ define fibfast(n)  ; Typical function notation
   <li><a href="#separate-105">Why are sweet-expression separate from curly-infix and neoteric-expressions as defined in SRFI-105?</a></li>
   <li><a href="#writing-out-results">Writing out results</a></li>
   <li><a href="#backwards-compatibility">Backwards compatibility (well-formatted s-expressions)</a></li>
+  <li><a href="#ease-of-implementation">Ease of implementation</li>
   </ul>
   </li>
   <li><a href="#whitespace-indentation-comment">Whitespace, indentation, and comment handling</a>
@@ -344,9 +348,12 @@ They build on neoteric-expressions as defined in
 <a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>,
 and thus, can support infix notation such as <code>{a&nbsp;+&nbsp;b}</code>
 and traditional function call notation such as <code>cos(x)</code>.
-The following subsections provide the basic specification
+The following subsections provide the
+<a href="#basic-specification">basic specification</a>
 including its syntax in Backus-Naur Form (BNF),
-other requirements, and specifications about related tools.
+<a href="#other-requirements">other requirements</a>,
+and specifications about
+<a href="#related-tools">related tools</a>.
 </p>
 
 <h2 id="basic-specification">Basic specification</h2>
@@ -414,26 +421,24 @@ at the beginning of a line.</li>
 </ul>
 
 <p>
-Indentation is not directly represented in the following syntax definition,
-instead,
-a sweet-expression reader <em>MUST</em> act as if it preprocessed it
-as follows.
-First, when an attempt is made to read a sweet-expression,
+Indentation is not directly represented in the following syntax definition.
+Instead, a sweet-expression reader <em>MUST</em> act as if it preprocessed
+its input as follows.
+First, when the sweet-expression reader begins,
 a stack called the &#8220;indentation stack&#8221;
 is initialized to contain exactly one value, the empty string
 (<tt>""</tt>).
-The current value of the top of the indentation stack
-is called &#8220;top&#8221;.
-Then, whenever a line is read and the current mode is not enclosed,
+Then, when a line is read and the current mode is not enclosed,
 the line indentation is removed and possibly replaced by other generated
-symbols as follows (in order):
+symbols as follows (where &#8220;top&#8221; is the
+value of the top of the indentation stack):
 </p>
 <ol>
 <li>If an end-of-line sequence immediately follows the indentation
 and the indentation length is nonzero:
 <ol>
-<li>If the indentation contains &#8220;!&#8221;, it is an error.</li>
-<li>If indentation does not contain &#8220;!&#8221;,
+<li type="a">If the indentation contains &#8220;!&#8221;, it is an error.</li>
+<li type="a">If indentation does not contain &#8220;!&#8221;,
 it is considered a line with no characters
 (thus indentation is empty)
 and the rest of these rules are applied.</li>
@@ -441,14 +446,14 @@ and the rest of these rules are applied.</li>
 </li>
 <li>If top is the empty string and the indentation length is nonzero:
 <ol>
-<li>
+<li type="a">
 If the indentation does not contain &#8220;!&#8221;, then
 symbol <code>initial_indent_no_bang</code>
 is generated and the reader changes to initial indent mode.
 When an end-of-line sequence is reached
 the mode changes back to indentation processing.
 </li>
-<li>If the indentation does contain &#8220;!&#8221;, then
+<li type="a">If the indentation does contain &#8220;!&#8221;, then
 symbol <code>initial_indent_with_bang</code> is generated.</li>
 </ol>
 </li>
@@ -551,20 +556,6 @@ whitespace-separated neoteric-expressions).</li>
 </ol>
 
 
-<p>
-The BNF productions below are intentionally written so that they can
-be easily implemented using a recursive descent parser that
-corresponds to the given rules.
-In particular, the rules are given so that it would be easy to implement
-a parser that does not consume characters unless
-necessary and to not require multi-character unread-char
-(this makes it easy to reuse an underlying <var>read</var> procedure).
-However, no particular implementation approach is required.
-Unlike the SRFI-49 BNF, this BNF makes comment and whitespace
-processing explicit, to make comment and whitespace processing requirements
-clear.
-</p>
-
 -->
 
 <p>
@@ -619,7 +610,7 @@ DATUM_COMMENT_START : '#;' ;
 // SRFI-105 notes that "implementations could trivially support
 // (simultaneously) markers beginning with #! followed by a letter
 // (such as the one to identify support for curly-infix-expressions),
-// the SRFI-22 #!+space marker as an ignored line, and the
+// the SRFI-22 #! space marker as an ignored line, and the
 // format #!/ ... !# and #!. ... !# as a multi-line comment."
 // We'll implement that approach for maximum flexibility.
 SRFI_22_COMMENT : '#! ' NOT_EOL_CHARS ;
@@ -934,7 +925,7 @@ For example, <samp><tt>{$}</tt></samp>
 -->
 
 
-<h2 id="other-specification">Other requirements</h2>
+<h2 id="other-requirements">Other requirements</h2>
 
 
 <p>
@@ -969,8 +960,8 @@ and
 (S-expression comments)</a> (<tt>#;</tt><var>datum</var>).
 A sweet-expression reader <em>SHOULD</em> support
 <a href="http://srfi.schemers.org/srfi-22/">SRFI-22
-(Running Scheme Scripts on Unix)</a> (where #!+space ignores
-to the end of the line),
+(Running Scheme Scripts on Unix)</a> (where <tt>#!</tt>
+followed by space ignores text to the end of the line),
 <tt>#!</tt> followed by a letter as a directive
 (such as <tt>#!fold-case</tt>) that is delimited by a whitespace character
 or end-of-file,
@@ -997,9 +988,12 @@ A <i>well-formatted</i> s-expression is an expression interpreted
 identically by both traditional s-expressions and by sweet-expressions.
 A well-formatted file is a file interpreted identically
 by both traditional s-expressions and sweet-expressions.
-(In practice,
-<a href="#backwards-compatibility">most s-expressions used in
-real programs are well-formatted</a>.)
+(In practice, it appears that
+<a href="#backwards-compatibility">most real s-expression files
+in Scheme are well-formatted</a>.)
+It is <em>RECOMMENDED</em> that files in traditional
+s-expression notation be well-formatted so that they can be
+directly read using a sweet-expression reader.
 </p>
 
 <p>
@@ -1059,12 +1053,13 @@ or semicolon if they mean for it to be a comment.
 </p>
 
 <p>
-A program editor <em>MAY</em> usefully highlight
-blank lines (as they separate expressions) and lines beginning at the
-left column (as these start new expressions).
+A program editor <em>MAY</em> consider highlighting
+lines with only 0+ hspaces (since they separate expressions)
+and lines beginning at the
+left column (since these start new expressions).
 We <em>RECOMMEND</em> that program editors highlight
-expressions whose first line is indented,
-to reduce the risk of their accidental use.
+expressions that use initial indent mode,
+to reduce the risk of accidental use of this mode.
 </p>
 
 
@@ -2212,6 +2207,31 @@ the top level to retrieve its value
 (this would also be extremely unusual).</li>
 </ul>
 
+<h3 id="ease-of-implementation">Ease of implementation</h3>
+
+<p>
+The notation has been designed to be relatively easy to implement.
+In addition, the BNF specification is specifically written
+so that it can be easily implemented using a recursive descent parser that
+corresponds to the given rules.
+For example, the BNF specification is LL(1).
+The BNF rules are given in a form so that it would be easy to implement
+a parser that does not consume characters unless
+necessary and to not require multi-character unread-char
+(this makes it easy to reuse an underlying <var>read</var> procedure).
+</p>
+
+<p>
+Unlike the SRFI-49 BNF, this BNF makes comment and whitespace
+processing explicit, to make comment and whitespace processing requirements
+clear.
+</p>
+
+<p>
+Our
+<a href="#experience">experience implementing this notation</a>
+suggests that our ease-of-implementation goal has been met.
+</p>
 
 <h2 id="whitespace-indentation-comment">Whitespace, indentation, and comment handling</h2>
 <p>
