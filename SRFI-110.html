@@ -75,9 +75,10 @@ This SRFI contains all the required sections, including
 an <a href="#abstract">abstract</a>,
 <a href="#rationale">rationale</a>,
 <a href="#specification">specification</a>,
-<a href="#design-rationale">design rationale</a>,
 and
 <a href="#reference-implementation">reference implementation</a>.
+It also includes a longer
+<a href="#design-rationale">design rationale</a>.
 </p>
 
 <h1><a name="abstract">Abstract</a></h1>
@@ -135,6 +136,7 @@ define fibfast(n)  ; Typical function notation
 <ul>
 <li><a href="#related-srfis">Related SRFIs</a></li>
 <li><a href="#rationale">Rationale</a></li>
+<li><a href="#tutorial">Tutorial</a>
 <li><a href="#specification">Specification</a>
   <ul>
   <li><a href="#basic-specification">Basic specification</a></li>
@@ -338,6 +340,155 @@ for s-expressions, in much the same way that
 <samp>&#39;x</samp> is an abbreviation for <samp>(quote&nbsp;x)</samp>.
 </p>
 
+<h1><a name="tutorial">Tutorial</a></h1>
+
+<p>
+The <a href="#specification">specification</a>
+below will be easier to understand if we first introduce
+the basic concepts of sweet-expressions.
+</p>
+
+<p>&#8220;<dfn>Sweet-expressions</dfn>&#8221;
+(aka &#8220;<dfn>t-expressions</dfn>&#8221;)
+deduce parentheses from indentation, and also include a few
+additional abbreviations to make them especially convenient to use.
+They also build on neoteric-expressions as defined in
+<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>,
+and thus, can support infix notation such as <code>{a&nbsp;+&nbsp;b}</code>
+and traditional function call notation such as <code>cos(x)</code>.
+</p>
+
+<p>
+TODO???: The following text is more like a specification.
+Use this, along with existing tutorials and examples, as a starting
+point to develop a brief tutorial (it need not cover every point, just
+enough to make the spec easy to understand).
+</p>
+
+<p>&#8220;<dfn>Sweet-expressions</dfn>&#8221; (aka &#8220;<dfn>t-expressions</dfn>&#8221;) deduce parentheses from indentation.
+A sweet-expression reader <em>MUST</em> interpret its input
+as follows when indentation processing is active:
+</p>
+<ol>
+<li>An indented line is a parameter of its parent.</li>
+<li>Later terms on a line are parameters of the first term.</li>
+<li>A line with exactly one term, and no child lines, is simply that term; multiple terms are wrapped into a list.</li>
+<li>An empty line ends the expression; empty lines before expressions are ignored.</li>
+<li>Terms are neoteric-expressions as defined in
+<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
+Thus <samp>{a&nbsp;+&nbsp;b}</samp> maps to <samp>(+&nbsp;a&nbsp;b)</samp>,
+<samp>f(...)</samp> maps to <samp>(f&nbsp;...)</samp>, and
+<samp>f{...}</samp> with non-empty content
+maps to <samp>(f&nbsp;{...})</samp>.</li>
+<li>When reading begins, indentation processing is active, but indentation processing is disabled inside ( ), [ ], and { }, whether they are prefixed or not
+(inside they&#8217;re a sequence of
+whitespace-separated neoteric-expressions).</li>
+</ol>
+
+<p>
+A sweet-expression reader <em>MUST</em> apply these rule clarifications:
+</p>
+<ol>
+<li>You can indent using one or more of the indent characters,
+which are space, tab, and exclamation point (!).
+Except for lines with initial indents and the first line of a stream,
+every line <em>MUST</em> be <dfn>consistently indented</dfn>
+when indentation processing is active.
+A line is consistently indented if
+the indent character sequence of that line, when compared to the
+indent character sequence of the preceding line,
+is equal or one is a prefix of the other.
+</li>
+<li>An unescaped &#8220;;&#8221; not in a string (still) introduces comments
+that end at the end of the line.</li>
+<li>Lines with only a ;-comment (preceded by 0 or more indent characters)
+are completely ignored - even their indentation (if any) is irrelevant.</li>
+<li>A line with only indentation is an empty line.</li>
+<li>An expression that starts indented enables &#8220;indented-compatibility&#8221; mode,
+where indentation is completely ignored.
+Instead, a sequence of white-space separated neoteric-expressions is read
+until the first end of line.</li>
+<li>Scheme&#8217;s <code>#;</code> datum comment comments out the next neoteric expression,
+not the next sweet expression.
+Datum comments ignore intervening whitespace, including spaces, tabs, and newlines.</li>
+<li>Block comments (<samp>#|</samp>...<samp>|#</samp>) are removed.</li>
+<li>For all <code>#</code>-based comments
+(i.e. datum comments <code>#;</code>,
+block comments <code>#|</code>...<code>|#</code>,
+the markers <code>#!fold-case</code> <code>#!no-fold-case</code> <code>#!sweet</code> <code>#!curly-infix</code>,
+and anything else an implementation can read
+but does not return a datum),
+if they
+begin immediately after the indent (if any),
+the indentation at the beginning of the comment is used.
+</li>
+<li>
+A sweet-expression reader <em>MUST</em> accept, as an
+an end-of-line (EOL) sequence, either
+a newline <i>or</i> a carriage return followed by newline.
+A sweet-expression reader <em>SHOULD</em> also accept
+a carriage return without a following newline as an end-of-line sequence.
+</li>
+<li>
+Portable non-empty files <em>MUST</em> end with an unescaped end-of-line
+sequence before the end-of-file.
+A sweet-expression reader <em>MAY</em> treat non-empty files that do
+not end in an unescaped
+end-of-line as though an end-of-line sequence had been added.
+</li>
+</ol>
+
+<p>
+A sweet-expression reader <em>MUST</em> implement these
+sweet-expression &#8220;advanced features&#8221;:
+<ol>
+<li>
+The marker <code>\\</code> is specially interpreted.
+If any terms precede it on the line, it is called SPLIT,
+and it <em>MUST</em> be interpreted
+as if it started a new line, at the current line&#8217;s indentation.
+If no terms precede <code>\\</code> on the line,
+it is called GROUP,
+and it represents no symbol at all,
+located at that indentation (GROUP is useful for lists of lists).</li>
+<li>
+The marker <code>$</code> (aka SUBLIST) <em>MUST</em> restart list processing.
+If <code>$</code> is preceded by any terms on the line,
+the right-hand-side (including its sub-blocks)
+is the last parameter of the left-hand side
+(of just that line).
+If there&#8217;s no left-hand-side,
+the right-hand-side is put in a list.
+</li>
+<li>
+A leading traditional abbreviation
+(quote, comma, backquote, or comma-at),
+located after indentation,
+and followed by space or tab,
+<em>MUST</em> be interpreted as that operator applied to the entire sweet-expression that follows.
+</li>
+<li>
+The markers &#8220;&lt;*&#8221; and &#8220;*&gt;&#8221; surround a
+<i>collecting list</i>, and <em>MUST</em> accept
+a list of 0 or more un-indented sweet-expressions.
+</li>
+<li>
+The marker &#8220;$$$&#8221; <em>MUST</em> be reserved for future use.
+</li>
+</ol>
+
+<p>
+The markers for the advanced sweet-expression features <em>MUST</em>
+only be accepted as such when indentation processing is active.
+A character sequence <em>MUST NOT</em> be considered one of those
+markers (or as the dot operator) if it
+does not begin with exactly the marker or operator&#8217;s first character.
+For example, <samp><tt>{$}</tt></samp>
+<em>MUST NOT</em> be interpreted as the SUBLIST marker; instead, it
+<em>MUST</em> be interpreted as the symbol <samp>$</samp>.
+</p>
+
+
 
 <h1><a name="specification">Specification</a></h1>
 <p>
@@ -356,14 +507,7 @@ document are to be interpreted as described in
 <a href="http://www.ietf.org/rfc/rfc2119.txt">RFC 2119</a>.
 </p>
 
-<p>&#8220;<dfn>Sweet-expressions</dfn>&#8221;
-(aka &#8220;<dfn>t-expressions</dfn>&#8221;)
-imply parentheses through indentation, and include a few
-additional abbreviations to make them especially convenient to use.
-They build on neoteric-expressions as defined in
-<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>,
-and thus, can support infix notation such as <code>{a&nbsp;+&nbsp;b}</code>
-and traditional function call notation such as <code>cos(x)</code>.
+<p>
 The following subsections provide the
 <a href="#basic-specification">basic specification</a>
 including its syntax in Backus-Naur Form (BNF),
