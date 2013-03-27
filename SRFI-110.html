@@ -157,6 +157,7 @@ define fibfast(n)  ; Typical function notation
   <li><a href="#writing-out-results">Writing out results</a></li>
   <li><a href="#backwards-compatibility">Backwards compatibility (well-formatted s-expressions)</a></li>
   <li><a href="#ease-of-implementation">Ease of implementation</a></li>
+  <li><a href="#simplicity">Simplicity</a></li>
   </ul>
   </li>
   <li><a href="#whitespace-indentation-comment">Whitespace, indentation, and comment handling</a>
@@ -2490,6 +2491,31 @@ Our
 <a href="#experience">experience implementing this notation</a>
 suggests that our ease-of-implementation goal has been met.
 </p>
+
+<h3 id="simplicity">Simplicity</h3>
+
+<p>
+We have strived to provide powerful capabilities with a relatively
+small number of constructs.
+We combined s-expressions,
+the infix and traditional function call notation of SRFI-105,
+and an indentation processing and abbreviation approach based on SRFI-49.
+We then added a few special abbreviations to make
+common constructs especially easy to notate
+(<tt>\\</tt>, <tt>$</tt>, and <tt>&lt;*...*&gt;</tt>).
+</p>
+
+<p>
+Since sweet-expressions are essentially superset of s-expression notation,
+they are necessarily "more complex" than s-expressions.
+But developers must routinely read and write many programs and
+data structures; having a few additional abbreviations to make them
+more readable seems to us to be a reasonable trade-off.
+It is also clear that many developers do not find traditional s-expression
+notation adequately readable, so <i>some</i> sort of change
+is worth considering.
+</p>
+
 
 <h2 id="whitespace-indentation-comment">Whitespace, indentation, and comment handling</h2>
 <p>
