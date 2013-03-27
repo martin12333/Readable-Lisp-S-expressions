@@ -4247,9 +4247,16 @@ changing &#8220;fie&#8221; to &#8220;faction&#8221; would produce
 </pre>
 which would be interpreted as <tt>(fee (faction (foe fum) (foo bar)))</tt>.
 </li>
-<li>I suspect is that it&#8217;s <i>especially</i> easy to make a mistake with this
-notation in a lisp.  Writing &#8220;cons a b&#8221; would seem reasonable enough,
+<li>It may be <i>especially</i> easy to make a mistake with this
+notation in a lisp.
+Writing &#8220;cons a b&#8221; would seem reasonable enough,
 but would be interpreted as (cons (a b)).
+</li>
+<li>The notation seems to assume that all characters have the
+same (or at least predictable) width, an assumption that is
+much more difficult to ensure in a multi-lingual world with
+multiple encodings, variable-width fonts, and a much richer
+set of characters.
 </li>
 </ol>
 
