@@ -415,13 +415,13 @@ a <i>child</i> line, and the previous line is a <i>parent</i> to that child.
 Later lines with the same indentation as the child are also children
 of that parent, until there is another line with the parent&#8217;s
 indentation or less.
-</p>
-
-<p>
 A line with only one n-expression, and no child lines, represents itself.
 Otherwise, the line represents a list; each n-expression on the line
 is an element of the list, and each of its child lines represents
 an element of the list (in order).
+</p>
+
+<p>
 Here&#8217;s an example:
 </p>
 
@@ -457,20 +457,17 @@ Empty lines are ignored before an expression begins.
 </p>
 
 <p>
-Indentation is ignored inside ( ), [ ], and { },
-whether they are prefixed or not.
-This makes sweet-expressions backwards-compatible with traditional
-s-expressions, and also provides an easy way to disable indentation
-processing if it&#8217;s inconvenient.
-</p>
-
-<p>
 You can indent using one or more of the indent characters,
 which are space, tab, and the exclamation point (!).
 Lines after the first line
 need to be <dfn>consistently indented</dfn>, that is,
 the current line&#8217;s indentation, when compared to the
-previous line&#8217;s, is equal or one is a prefix of the other.
+previous line&#8217;s, are equal or one is a prefix of the other.
+Indentation is ignored inside ( ), [ ], and { },
+whether they are prefixed or not.
+This makes sweet-expressions backwards-compatible with traditional
+s-expressions, and also provides an easy way to disable indentation
+processing if it&#8217;s inconvenient.
 </p>
 
 <p>
@@ -493,16 +490,16 @@ not the next sweet expression.
 Datum comments ignore intervening whitespace,
 including spaces, tabs, and newlines.</li>
 <li>Block comments (<samp>#|</samp>...<samp>|#</samp>) are removed.</li>
-<li>Special comments are sequences that do not return a datum other
-than ;-comments, such as
+<li>Special comments are non-whitespace sequences
+other than ;-comments that do not return a datum; they include
 datum comments <code>#;</code>,
 block comments <code>#|</code>...<code>|#</code>,
 and directives
 (such as <code>#!fold-case</code>, <code>#!no-fold-case</code>,
 <code>#!sweet</code>, and <code>#!curly-infix</code>).
-If they
-begin immediately after the indent (if any),
-the indentation at the beginning of the comment is used.
+If a special comment
+begins immediately after the indent,
+the indentation of the special comment is used.
 </li>
 </ol>
 
@@ -560,8 +557,8 @@ let expressions with short variable expressions.
 Your Scheme implementation may already provide these capabilities
 if you simply enter the <code>#!sweet</code> directive.
 If your preferred Scheme implementation does not yet support
-sweet-expressions, encourage them to add it.
-You might want to try out the
+sweet-expressions, encourage them to add it, or
+consider trying out the
 <a href="http://readable.sourceforge.net/">Readable Lisp S-expressions Project</a>
 sample implementation and tools.
 </p>
