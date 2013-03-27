@@ -350,12 +350,30 @@ the basic concepts of sweet-expressions.
 
 <p>&#8220;<dfn>Sweet-expressions</dfn>&#8221;
 (aka &#8220;<dfn>t-expressions</dfn>&#8221;)
-deduce parentheses from indentation, and also include a few
-additional abbreviations to make them especially convenient to use.
-They also build on neoteric-expressions as defined in
-<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>,
-and thus, can support infix notation such as <code>{a&nbsp;+&nbsp;b}</code>
-and traditional function call notation such as <code>cos(x)</code>.
+build on neoteric-expressions (n-expressions) as defined in
+<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
+N-expressions are an extension
+of traditional s-expression notation, so
+Traditional s-expressions such as
+numbers, strings surrounded by double-quotes, and lists
+(expressed as whitespace-separated terms surrounded by parentheses)
+are also n-expressions.
+N-expressions add support for infix expressions which are surrounded by
+curly braces; thus
+<samp>{a&nbsp;+&nbsp;b}</samp> maps to <samp>(+&nbsp;a&nbsp;b)</samp>.
+In addition,
+<samp>f(...)</samp> maps to <samp>(f&nbsp;...)</samp>, and
+<samp>f{...}</samp> with non-whitespace content
+maps to <samp>(f&nbsp;{...})</samp>.</li>
+For more details, see
+<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
+</p>
+
+<p>
+Sweet-expressions add the ability to
+deduce parentheses from indentation,
+as well as adding a few additional abbreviations
+to make the notation especially convenient to use.
 </p>
 
 <p>
