@@ -108,6 +108,7 @@ For example, a sweet-expression reader would accept
 <i>either</i> the sweet-expression or s-expression format shown below.
 Here is an example:
 </p>
+
 <table border="1" cellpadding="4">
 <tr><th>sweet-expression</th><th>s-expression</th></tr>
 <tr>
@@ -343,24 +344,32 @@ for s-expressions, in much the same way that
 <h1><a name="tutorial">Tutorial</a></h1>
 
 <p>
-The <a href="#specification">specification</a>
-below will be easier to understand if we first introduce
-the basic concepts of sweet-expressions.
+This section provides a basic tutorial on sweet-expressions,
+which should also make the
+<a href="#specification">specification</a>
+below easier to understand.
 </p>
 
 <p>&#8220;<dfn>Sweet-expressions</dfn>&#8221;
 (aka &#8220;<dfn>t-expressions</dfn>&#8221;)
-build on neoteric-expressions (n-expressions) as defined in
+build on neoteric-expressions (aka n-expressions) as defined in
 <a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
-N-expressions are an extension
-of traditional s-expression notation, so
-Traditional s-expressions such as
+N-expressions are a simple extension of traditional s-expression notation,
+so valid n-expressions include
 numbers, strings surrounded by double-quotes, and lists
-(expressed as whitespace-separated terms surrounded by parentheses)
-are also n-expressions.
-N-expressions add support for infix expressions which are surrounded by
-curly braces; thus
+(whitespace-separated n-expressions surrounded by parentheses).
+N-expressions add support for
+infix expressions surrounded by curly braces
+(aka curly-infix lists), so
 <samp>{a&nbsp;+&nbsp;b}</samp> maps to <samp>(+&nbsp;a&nbsp;b)</samp>.
+There is no precedence, but you can use braces in braces, e.g.,
+<samp>{a&nbsp;+&nbsp;b&nbsp;+&nbsp;{x&nbsp;*&nbsp;y}}</samp>
+maps to
+<samp>(+&nbsp;a&nbsp;b&nbsp;(*&nbsp;x&nbsp;y))</samp>.
+A curly-infix list with two elements
+<samp>{e1&nbsp;e2}</samp> maps to 
+<samp>(e1&nbsp;e2)</samp>, and a one-element curly-infix list
+<samp>{e}</samp> maps to just that element <samp>e</samp>.
 In addition,
 <samp>f(...)</samp> maps to <samp>(f&nbsp;...)</samp>, and
 <samp>f{...}</samp> with non-whitespace content
@@ -374,138 +383,194 @@ Sweet-expressions add the ability to
 deduce parentheses from indentation,
 as well as adding a few additional abbreviations
 to make the notation especially convenient to use.
+Let&#8217;s first examine how parentheses are deduced.
 </p>
 
 <p>
-TODO???: The following text is more like a specification.
-Use this, along with existing tutorials and examples, as a starting
-point to develop a brief tutorial (it need not cover every point, just
-enough to make the spec easy to understand).
+In sweet-expressions, a line consists of one or more
+n-expressions, separated by one or more spaces or tabs.
+If there is more than one n-expression, they are considered the
+contents of a list.
+Here&#8217;s a sweet-expression and an equivalent s-expression:
 </p>
 
-<p>&#8220;<dfn>Sweet-expressions</dfn>&#8221; (aka &#8220;<dfn>t-expressions</dfn>&#8221;) deduce parentheses from indentation.
-A sweet-expression reader <em>MUST</em> interpret its input
-as follows when indentation processing is active:
-</p>
-<ol>
-<li>An indented line is a parameter of its parent.</li>
-<li>Later terms on a line are parameters of the first term.</li>
-<li>A line with exactly one term, and no child lines, is simply that term; multiple terms are wrapped into a list.</li>
-<li>An empty line ends the expression; empty lines before expressions are ignored.</li>
-<li>Terms are neoteric-expressions as defined in
-<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
-Thus <samp>{a&nbsp;+&nbsp;b}</samp> maps to <samp>(+&nbsp;a&nbsp;b)</samp>,
-<samp>f(...)</samp> maps to <samp>(f&nbsp;...)</samp>, and
-<samp>f{...}</samp> with non-empty content
-maps to <samp>(f&nbsp;{...})</samp>.</li>
-<li>When reading begins, indentation processing is active, but indentation processing is disabled inside ( ), [ ], and { }, whether they are prefixed or not
-(inside they&#8217;re a sequence of
-whitespace-separated neoteric-expressions).</li>
-</ol>
+<table border="1" cellpadding="4">
+<tr><th>sweet-expression</th><th>s-expression</th></tr>
+<tr>
+<td>
+<pre>
+a b (c1 c2) d(1 2) e
+</pre>
+</td>
+<td>
+<pre>
+(a b (c1 c2) (d 1 2) e)
+</pre>
+</td>
+</table>
 
 <p>
-A sweet-expression reader <em>MUST</em> apply these rule clarifications:
+If a line is indented more than the previous line, that line is
+a <i>child</i> line, and the previous line is a <i>parent</i> to that child.
+Later lines with the same indentation as the child are also children
+of that parent, until there is another line with the parent&#8217;s
+indentation or less.
+</p>
+
+<p>
+A line with only one n-expression, and no child lines, represents itself.
+Otherwise, the line represents a list; each n-expression on the line
+is an element of the list, and each of its child lines represents
+an element of the list (in order).
+Here&#8217;s an example:
+</p>
+
+<!-- Here's another trivial Scheme program, a greatest common divisor function straight from Carl A. Gunter's "Semantics of Programming Languages" page 2: -->
+<table border="1" cellpadding="4">
+<tr><th>sweet-expression</th><th>s-expression</th></tr>
+<tr>
+<td align="left" valign="top">
+<pre>
+define gcd(x y)
+  if {y = 0}
+    x
+    gcd y rem(x y)
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(define (gcd x y)
+  (if (= y 0)
+    x
+    (gcd y (rem x y))))
+</pre>
+</td>
+</tr>
+</table>
+
+<p>
+An empty line (a line containing only 0+ spaces and tabs)
+ends an expression once one has begun.
+This makes sweet-expressions easy to use interactively; just press
+&#8220;Enter Enter&#8221; to end an expression.
+Empty lines are ignored before an expression begins.
+</p>
+
+<p>
+Indentation is ignored inside ( ), [ ], and { },
+whether they are prefixed or not.
+This makes sweet-expressions backwards-compatible with traditional
+s-expressions, and also provides an easy way to disable indentation
+processing if it&#8217;s inconvenient.
+</p>
+
+<p>
+You can indent using one or more of the indent characters,
+which are space, tab, and the exclamation point (!).
+Lines after the first line
+need to be <dfn>consistently indented</dfn>, that is,
+the current line&#8217;s indentation, when compared to the
+previous line&#8217;s, is equal or one is a prefix of the other.
+</p>
+
+<p>
+Here are a few clarifications:
 </p>
 <ol>
-<li>You can indent using one or more of the indent characters,
-which are space, tab, and exclamation point (!).
-Except for lines with initial indents and the first line of a stream,
-every line <em>MUST</em> be <dfn>consistently indented</dfn>
-when indentation processing is active.
-A line is consistently indented if
-the indent character sequence of that line, when compared to the
-indent character sequence of the preceding line,
-is equal or one is a prefix of the other.
-</li>
 <li>An unescaped &#8220;;&#8221; not in a string (still) introduces comments
 that end at the end of the line.</li>
 <li>Lines with only a ;-comment (preceded by 0 or more indent characters)
 are completely ignored - even their indentation (if any) is irrelevant.</li>
-<li>A line with only indentation is an empty line.</li>
-<li>An expression that starts indented enables &#8220;indented-compatibility&#8221; mode,
-where indentation is completely ignored.
-Instead, a sequence of white-space separated neoteric-expressions is read
+<li>An expression that starts
+indented enables &#8220;initial-indent&#8221; mode,
+a special compatibility mode where indentation is completely ignored.
+Instead, it is considered a sequence of
+whitespace-separated neoteric-expressions that are each read separately
 until the first end of line.</li>
-<li>Scheme&#8217;s <code>#;</code> datum comment comments out the next neoteric expression,
+<li>Scheme&#8217;s <code>#;</code> datum comment
+comments out the next neoteric expression,
 not the next sweet expression.
-Datum comments ignore intervening whitespace, including spaces, tabs, and newlines.</li>
+Datum comments ignore intervening whitespace,
+including spaces, tabs, and newlines.</li>
 <li>Block comments (<samp>#|</samp>...<samp>|#</samp>) are removed.</li>
-<li>For all <code>#</code>-based comments
-(i.e. datum comments <code>#;</code>,
+<li>Special comments are sequences that do not return a datum other
+than ;-comments, such as
+datum comments <code>#;</code>,
 block comments <code>#|</code>...<code>|#</code>,
-the markers <code>#!fold-case</code> <code>#!no-fold-case</code> <code>#!sweet</code> <code>#!curly-infix</code>,
-and anything else an implementation can read
-but does not return a datum),
-if they
+and directives
+(such as <code>#!fold-case</code>, <code>#!no-fold-case</code>,
+<code>#!sweet</code>, and <code>#!curly-infix</code>).
+If they
 begin immediately after the indent (if any),
 the indentation at the beginning of the comment is used.
 </li>
-<li>
-A sweet-expression reader <em>MUST</em> accept, as an
-an end-of-line (EOL) sequence, either
-a newline <i>or</i> a carriage return followed by newline.
-A sweet-expression reader <em>SHOULD</em> also accept
-a carriage return without a following newline as an end-of-line sequence.
-</li>
-<li>
-Portable non-empty files <em>MUST</em> end with an unescaped end-of-line
-sequence before the end-of-file.
-A sweet-expression reader <em>MAY</em> treat non-empty files that do
-not end in an unescaped
-end-of-line as though an end-of-line sequence had been added.
-</li>
 </ol>
 
 <p>
-A sweet-expression reader <em>MUST</em> implement these
+As mentioned above,
+sweet-expressions add a few additional abbreviations.
+These additions are sometimes called
 sweet-expression &#8220;advanced features&#8221;:
+</p>
+
 <ol>
 <li>
 The marker <code>\\</code> is specially interpreted.
-If any terms precede it on the line, it is called SPLIT,
-and it <em>MUST</em> be interpreted
-as if it started a new line, at the current line&#8217;s indentation.
-If no terms precede <code>\\</code> on the line,
+If any terms precede it on the line, it is called SPLIT, and
+it is interpreted
+the start of a new line at the current line&#8217;s indentation.
+If no terms precede <code>\\</code> on the line (other than the indentation),
 it is called GROUP,
 and it represents no symbol at all,
-located at that indentation (GROUP is useful for lists of lists).</li>
+located at that indentation.
+GROUP is useful for representing lists of lists.</li>
 <li>
-The marker <code>$</code> (aka SUBLIST) <em>MUST</em> restart list processing.
+The marker <code>$</code> is called SUBLIST.
 If <code>$</code> is preceded by any terms on the line,
-the right-hand-side (including its sub-blocks)
-is the last parameter of the left-hand side
-(of just that line).
+the right-hand-side (including any child lines)
+is the last parameter of the list described on the left-hand side
+of just the line with the <code>$</code>.
+(This is basically the same meaning it has in Haskell.)
 If there&#8217;s no left-hand-side,
 the right-hand-side is put in a list.
+Thus,
+&#8220;<code>a&nbsp;b&nbsp;$&nbsp;c&nbsp;d</code>&#8221;
+represents
+&#8220;<code>(a&nbsp;b&nbsp;(c&nbsp;d))</code>&#8221;.
 </li>
 <li>
 A leading traditional abbreviation
-(quote, comma, backquote, or comma-at),
-located after indentation,
-and followed by space or tab,
-<em>MUST</em> be interpreted as that operator applied to the entire sweet-expression that follows.
+(quote, comma, backquote, or comma-at)
+located after indentation, and followed by space, tab, or the end-of-line,
+is interpreted as that operator applied to
+the entire sweet-expression that follows.
 </li>
 <li>
 The markers &#8220;&lt;*&#8221; and &#8220;*&gt;&#8221; surround a
-<i>collecting list</i>, and <em>MUST</em> accept
-a list of 0 or more un-indented sweet-expressions.
-</li>
-<li>
-The marker &#8220;$$$&#8221; <em>MUST</em> be reserved for future use.
+<i>collecting list</i>.
+This represents a list, but unlike (...), indentation processing
+continues to work, and the indentation level is temporary restarted
+at the left edge.
+These are useful for long lists (e.g., in modules), as well as for
+let expressions with short variable expressions.
 </li>
 </ol>
 
 <p>
-The markers for the advanced sweet-expression features <em>MUST</em>
-only be accepted as such when indentation processing is active.
-A character sequence <em>MUST NOT</em> be considered one of those
-markers (or as the dot operator) if it
-does not begin with exactly the marker or operator&#8217;s first character.
-For example, <samp><tt>{$}</tt></samp>
-<em>MUST NOT</em> be interpreted as the SUBLIST marker; instead, it
-<em>MUST</em> be interpreted as the symbol <samp>$</samp>.
+Your Scheme implementation may already provide these capabilities
+if you simply enter the <code>#!sweet</code> directive.
+If your preferred Scheme implementation does not yet support
+sweet-expressions, encourage them to add it.
+You might want to try out the
+<a href="http://readable.sourceforge.net/">Readable Lisp S-expressions Project</a>
+sample implementation and tools.
 </p>
 
+<p>
+The next two sections provide a more rigorous
+<a href="#specification">specification</a>
+and many more <a href="#examples">examples</a>.
+</p>
 
 
 <h1><a name="specification">Specification</a></h1>
