@@ -140,7 +140,9 @@ define fibfast(n)  ; Typical function notation
 <li><a href="#tutorial">Tutorial</a>
 <li><a href="#specification">Specification</a>
   <ul>
-  <li><a href="#basic-specification">Basic specification</a></li>
+  <li><a href="#bnf-conventions">BNF conventions</a></li>
+  <li><a href="#bnf-supporting">Supporting BNF definitions</a></li>
+  <li><a href="#bnf-key">Key BNF productions</a></li>
   <li><a href="#other-requirements">Other requirements</a></li>
   <li><a href="#related-tools">Related tools</a></li>
   </ul></li>
@@ -395,7 +397,7 @@ n-expressions, separated by one or more spaces or tabs.
 If a line is indented more than the previous line, that line is
 a <i>child</i> line, and the previous line is a <i>parent</i> to that child.
 Later lines with the same indentation as the child are also children
-of that parent, until there is another line with the parent&#8217;s
+of that parent, until there is an intervening line with the parent&#8217;s
 indentation or less.
 A line with only one n-expression, and no child lines, represents itself.
 Otherwise, the line represents a list; each n-expression on the line
@@ -493,12 +495,13 @@ If a special comment
 begins immediately after the indent,
 the indentation of the special comment is used.
 </li>
+<li>
+A single delimited period (.) still sets the value of the cdr field of a pair.
+</li>
 </ol>
 
 <p>
-A single delimited period (.) still sets the
-value of the cdr field of a pair.
-For example:
+Here are some examples:
 </p>
 
 <blockquote>
@@ -507,6 +510,7 @@ For example:
 <th align="center">Sweet-expressions (t-expressions)</th>
 <th align="center">s-expressions</th>
 </tr>
+
 <tr>
 <td align="left" valign="top">
 <pre>
@@ -540,6 +544,26 @@ f ; Demo vertical improper lists
 </pre>
 </td>
 </tr>
+<tr>
+<td align="left" valign="top">
+<pre>
+ff ; Demo comments
+  #| qq |# t1 t2
+  t3 t4
+    t5 #| xyz |# t6
+    t7 #;t8(q) t9
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(ff
+  (t1 t2)
+  (t3 t4
+    (t5 t6)
+    (t7 t9)))
+</pre>
+</td>
+</tr>
 </table>
 </blockquote>
 
@@ -550,7 +574,7 @@ As mentioned above,
 sweet-expressions add a few additional abbreviations,
 which are sometimes called
 sweet-expression &#8220;advanced features&#8221;.
-These involve the marker <code>\\</code> (called GROUP and SPLIT),
+These involve the marker <code>\\</code>> (called GROUP and SPLIT),
 the marker <code>$</code> (SUBLIST),
 leading traditional abbreviations
 (quote, comma, backquote, or comma-at) with following whitespace,
@@ -637,7 +661,7 @@ sin 0 \\ cos 0
 The marker <code>$</code> is called SUBLIST.
 If <code>$</code> is preceded by any terms on the line,
 the right-hand-side (including any child lines)
-is the last parameter of the list described on the left-hand side
+is the last element of the list described on the left-hand side
 of just the line with the <code>$</code>.
 (This is basically the same meaning it has in Haskell.)
 If there&#8217;s no left-hand-side,
@@ -669,12 +693,16 @@ a b $ c d e f $ g
 <tr>
 <td align="left" valign="top">
 <pre>
-$ x sqrt(a)
+let
+  $ x sqrt(a)
+  {2 * x}
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
-((x (sqrt a))
+(let
+  ((x (sqrt a)))
+  (* 2 x))
 </pre>
 </td>
 </tr>
@@ -809,14 +837,13 @@ document are to be interpreted as described in
 
 <p>
 The following subsections provide the
-<a href="#basic-specification">basic specification</a>
-including its syntax in Backus-Naur Form (BNF),
+<a href="#bnf-conventions">Backus-Naur Form (BNF) conventions</a>,
+<a href="#bnf-supporting">supporting definitions in BNF format</a>
+<a href="#bnf-supporting">key productions in BNF format</a>,
 <a href="#other-requirements">other requirements</a>,
 and specifications about
 <a href="#related-tools">related tools</a>.
 </p>
-
-<h2 id="basic-specification">Basic specification</h2>
 
 <p>
 A sweet-expression (aka t-expression)
@@ -963,7 +990,7 @@ simplifying representations of lists-of-lists.
 Otherwise it is called SPLIT; it represents starting a new line at
 the same indentation as the current line.</li>
 <li><tt>$</tt> : SUBLIST. This makes the right-hand-side (including
-all child lines) the last parameter of the
+all child lines) the last element of the
 left-hand-side of this line; if there is no left-hand-side,
 the right-hand-side is wrapped into a list.</li>
 <li><tt>&lt;*</tt> : COLLECTING.  Begins a &#8220;collecting list&#8221;, a
@@ -1043,7 +1070,6 @@ a sweet-expression once it has begun in the normal case,
 per the it_expr production defined below.
 </p>
 
-
 <p>
 The BNF depends on this utility function (this enables lines with a
 single n-expression and no child lines to represent themselves and
@@ -1058,8 +1084,11 @@ not be wrapped into a list):
     (#t x)))
 </pre>
 
+
+<h2><a name="bnf-supporting">Supporting BNF definitions</a></h2>
+
 <p>
-Here is the actual BNF:
+Here are supporting definitions in BNF format:
 </p>
 
 <!-- Between start and end pre, insert the results of ./to-srfi < sweet.g -->
@@ -1147,10 +1176,16 @@ scomment : BLOCK_COMMENT
 // additional comment-only lines (if any) which may be indented.
 
 comment_eol : LCOMMENT? EOL;
+</pre>
 
 
-// KEY BNF PRODUCTIONS for sweet-expressions:
+<h2><a name="bnf-key">Key BNF productions</a></h2>
 
+<p>
+Here are the key BNF productions for sweet-expressions:
+</p>
+
+<pre>
 // Production "collecting_tail" returns a collecting list's contents.
 // FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
 
@@ -1774,27 +1809,6 @@ let &lt;* x $ cos $ f c *&gt;
 <pre>
 (let ((x (cos (f c))))
   (dostuff x))
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
-ff ; Demo comments
-  #| qq |# t1 t2
-  t3 t4
-    t5 #| xyz |# t6
-    t7 #;t8(q) t9
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-(ff
-  (t1 t2)
-  (t3 t4
-    (t5 t6)
-    (t7 t9)))
 </pre>
 </td>
 </tr>
