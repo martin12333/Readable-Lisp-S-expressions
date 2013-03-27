@@ -351,6 +351,8 @@ which should also make the
 below easier to understand.
 </p>
 
+<h2><a name="tutorial-basics">Basics</a></h2>
+
 <p>&#8220;<dfn>Sweet-expressions</dfn>&#8221;
 (aka &#8220;<dfn>t-expressions</dfn>&#8221;)
 build on neoteric-expressions (aka n-expressions) as defined in
@@ -388,13 +390,21 @@ Let&#8217;s first examine how parentheses are deduced.
 </p>
 
 <p>
-In sweet-expressions, a line consists of one or more
+In sweet-expressions, a line with content consists of one or more
 n-expressions, separated by one or more spaces or tabs.
-If there is more than one n-expression, they are considered the
-contents of a list.
-Here&#8217;s a sweet-expression and an equivalent s-expression:
+If a line is indented more than the previous line, that line is
+a <i>child</i> line, and the previous line is a <i>parent</i> to that child.
+Later lines with the same indentation as the child are also children
+of that parent, until there is another line with the parent&#8217;s
+indentation or less.
+A line with only one n-expression, and no child lines, represents itself.
+Otherwise, the line represents a list; each n-expression on the line
+is an element of the list, and each of its child lines represents
+an element of the list (in order).
+Here are some examples:
 </p>
 
+<blockquote>
 <table border="1" cellpadding="4">
 <tr><th>sweet-expression</th><th>s-expression</th></tr>
 <tr>
@@ -408,28 +418,8 @@ a b (c1 c2) d(1 2) e
 (a b (c1 c2) (d 1 2) e)
 </pre>
 </td>
-</table>
-
-<p>
-If a line is indented more than the previous line, that line is
-a <i>child</i> line, and the previous line is a <i>parent</i> to that child.
-Later lines with the same indentation as the child are also children
-of that parent, until there is another line with the parent&#8217;s
-indentation or less.
-A line with only one n-expression, and no child lines, represents itself.
-Otherwise, the line represents a list; each n-expression on the line
-is an element of the list, and each of its child lines represents
-an element of the list (in order).
-</p>
-
-<p>
-Here&#8217;s an example:
-</p>
-
-<!-- Here's another trivial Scheme program, a greatest common divisor function straight from Carl A. Gunter's "Semantics of Programming Languages" page 2: -->
-<table border="1" cellpadding="4">
-<tr><th>sweet-expression</th><th>s-expression</th></tr>
 <tr>
+<!-- Here's another trivial Scheme program, a greatest common divisor function straight from Carl A. Gunter's "Semantics of Programming Languages" page 2: -->
 <td align="left" valign="top">
 <pre>
 define gcd(x y)
@@ -448,6 +438,7 @@ define gcd(x y)
 </td>
 </tr>
 </table>
+</blockquote>
 
 <p>
 An empty line (a line containing only 0+ spaces and tabs)
@@ -471,6 +462,8 @@ s-expressions, and also provides an easy way to disable indentation
 processing if it&#8217;s inconvenient.
 </p>
 
+<h2><a name="tutorial-clarifications">Clarifications</a></h2>
+
 <p>
 Here are a few clarifications:
 </p>
@@ -482,19 +475,17 @@ are completely ignored - even their indentation (if any) is irrelevant.</li>
 <li>An expression that starts
 indented enables &#8220;initial-indent&#8221; mode,
 a special compatibility mode where indentation is completely ignored.
-Instead, it is considered a sequence of
-whitespace-separated neoteric-expressions that are each read separately
-until the first end of line.</li>
-<li>Scheme&#8217;s <code>#;</code> datum comment
-comments out the next neoteric expression,
+Instead, that line is considered a sequence of
+whitespace-separated neoteric-expressions that are each read separately.</li>
+<li>Scheme&#8217;s datum comments (<code>#;</code><i>datum</i>)
+comment out the next neoteric expression,
 not the next sweet expression.
 Datum comments ignore intervening whitespace,
 including spaces, tabs, and newlines.</li>
-<li>Block comments (<samp>#|</samp>...<samp>|#</samp>) are removed.</li>
 <li>Special comments are non-whitespace sequences
 other than ;-comments that do not return a datum; they include
-datum comments <code>#;</code>,
-block comments <code>#|</code>...<code>|#</code>,
+datum comments (<code>#;</code><i>datum</i>),
+block comments (<code>#|</code>...<code>|#</code>),
 and directives
 (such as <code>#!fold-case</code>, <code>#!no-fold-case</code>,
 <code>#!sweet</code>, and <code>#!curly-infix</code>).
@@ -505,14 +496,71 @@ the indentation of the special comment is used.
 </ol>
 
 <p>
-As mentioned above,
-sweet-expressions add a few additional abbreviations.
-These additions are sometimes called
-sweet-expression &#8220;advanced features&#8221;:
+A single delimited period (.) still sets the
+value of the cdr field of a pair.
+For example:
 </p>
 
-<ol>
-<li>
+<blockquote>
+<table border="1" cellpadding="4">
+<tr>
+<th align="center">Sweet-expressions (t-expressions)</th>
+<th align="center">s-expressions</th>
+</tr>
+<tr>
+<td align="left" valign="top">
+<pre>
+f ; Demo improper lists
+  a . b
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(f
+  (a . b))
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+f ; Demo vertical improper lists
+  x y
+  .
+  z
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(f
+  (x y)
+  .
+  z)
+</pre>
+</td>
+</tr>
+</table>
+</blockquote>
+
+<h2><a name="tutorial-advanced-features">Advanced features</a></h2>
+
+<p>
+As mentioned above,
+sweet-expressions add a few additional abbreviations,
+which are sometimes called
+sweet-expression &#8220;advanced features&#8221;.
+These involve the marker <code>\\</code> (called GROUP and SPLIT),
+the marker <code>$</code> (SUBLIST),
+leading traditional abbreviations
+(quote, comma, backquote, or comma-at) with following whitespace,
+and the pair of
+markers &#8220;&lt;*&#8221; and &#8220;*&gt;&#8221;
+(which surround a <i>collecting list</i>).
+We will examine each in turn.
+</p>
+
+<p>
 The marker <code>\\</code> is specially interpreted.
 If any terms precede it on the line, it is called SPLIT, and
 it is interpreted
@@ -521,8 +569,71 @@ If no terms precede <code>\\</code> on the line (other than the indentation),
 it is called GROUP,
 and it represents no symbol at all,
 located at that indentation.
-GROUP is useful for representing lists of lists.</li>
-<li>
+GROUP is useful for representing lists of lists.
+Here are some examples:
+</p>
+
+<blockquote>
+<table border="1" cellpadding="4">
+<tr>
+<th align="center">Sweet-expressions (t-expressions)</th>
+<th align="center">s-expressions</th>
+</tr>
+<tr>
+<td align="left" valign="top">
+<pre>
+let ; Demo GROUP
+  \\
+    var1 cos(a)
+    var2 sin(a)
+  body...
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(let
+  (
+    (var1 (cos a))
+    (var2 (sin a)))
+  body...)
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+myfunction ; Demo SPLIT
+  x: \\ xpos
+  y: \\ ypos
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(myfunction
+  x: xpos
+  y: ypos)
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+sin 0 \\ cos 0
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(sin 0)
+(cos 0)
+</pre>
+</td>
+</tr>
+</table>
+</blockquote>
+
+<p>
 The marker <code>$</code> is called SUBLIST.
 If <code>$</code> is preceded by any terms on the line,
 the right-hand-side (including any child lines)
@@ -535,15 +646,85 @@ Thus,
 &#8220;<code>a&nbsp;b&nbsp;$&nbsp;c&nbsp;d</code>&#8221;
 represents
 &#8220;<code>(a&nbsp;b&nbsp;(c&nbsp;d))</code>&#8221;.
-</li>
-<li>
+</p>
+
+<blockquote>
+<table border="1" cellpadding="4">
+<tr>
+<th align="center">Sweet-expressions (t-expressions)</th>
+<th align="center">s-expressions</th>
+</tr>
+<tr>
+<td align="left" valign="top">
+<pre>
+a b $ c d e f $ g
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(a b (c d e f g))
+</pre>
+</td>
+</tr>
+<tr>
+<td align="left" valign="top">
+<pre>
+$ x sqrt(a)
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+((x (sqrt a))
+</pre>
+</td>
+</tr>
+<tr>
+<td align="left" valign="top">
+<pre>
+run $ grep |-v| "xx.*zz" &lt;(oldfile) &gt;(newfile)
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(run (grep |-v| "xx.*zz" (&lt; oldfile) (&gt; newfile)))
+</pre>
+</td>
+</tr>
+</table>
+</blockquote>
+
+<p>
 A leading traditional abbreviation
 (quote, comma, backquote, or comma-at)
 located after indentation, and followed by space, tab, or the end-of-line,
 is interpreted as that operator applied to
 the entire sweet-expression that follows.
-</li>
-<li>
+</p>
+
+<blockquote>
+<table border="1" cellpadding="4">
+<tr>
+<th align="center">Sweet-expressions (t-expressions)</th>
+<th align="center">s-expressions</th>
+</tr>
+<tr>
+<td align="left" valign="top">
+<pre>
+' a b ; Demo abbreviations
+  ' c d e \\ 'f g h
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(quote (a b
+  (quote (c d e)) ((quote f) g h)))
+</pre>
+</td>
+</tr>
+</table>
+</blockquote>
+
+<p>
 The markers &#8220;&lt;*&#8221; and &#8220;*&gt;&#8221; surround a
 <i>collecting list</i>.
 This represents a list, but unlike (...), indentation processing
@@ -551,8 +732,46 @@ continues to work, and the indentation level is temporary restarted
 at the left edge.
 These are useful for long lists (e.g., in modules), as well as for
 let expressions with short variable expressions.
-</li>
-</ol>
+We will show just some short examples here; see the
+<a href="#examples">examples</a> section for longer examples.
+</p>
+
+<blockquote>
+<table border="1" cellpadding="4">
+<tr>
+<th align="center">Sweet-expressions (t-expressions)</th>
+<th align="center">s-expressions</th>
+</tr>
+<tr>
+<td align="left" valign="top">
+<pre>
+let &lt;* x sqrt(a) *&gt;
+! g {x + 1} {x - 1}
+</pre>
+</td>
+<td>
+<pre>
+(let ((x (sqrt a)))
+  (g (+ x 1) (- x 1)))
+</pre>
+</td>
+</tr>
+<tr>
+<td align="left" valign="top">
+<pre>
+let &lt;* x $ {oldx - 1} \\ y $ {oldy - 1} *&gt;
+! {{x * x} + {y * y}}
+</pre>
+</td>
+<td>
+<pre>
+(let ((x (- oldx 1)) (y (- oldy 1)))
+  (+ (* x x) (* y y)))
+</pre>
+</td>
+</tr>
+</table>
+</blockquote>
 
 <p>
 Your Scheme implementation may already provide these capabilities
@@ -1497,84 +1716,6 @@ aaa bbb
 <tr>
 <td align="left" valign="top">
 <pre>
-let ; Demo GROUP
-  \\
-    var1 cos(a)
-    var2 sin(a)
-  body...
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-(let
-  (
-    (var1 (cos a))
-    (var2 (sin a)))
-  body...)
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
-myfunction ; Demo SPLIT
-  x: \\ xpos
-  y: \\ ypos
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-(myfunction
-  x: xpos
-  y: ypos)
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
-sin 0 \\ cos 0
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-(sin 0)
-(cos 0)
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
-run $ grep |-v| "xx.*zz" &lt;(oldfile) &gt;(newfile)
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-(run (grep |-v| "xx.*zz" (&lt; oldfile) (&gt; newfile)))
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
-a b $ c d e f $ g
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-(a b (c d e f g))
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
 define extract(c i) $ cond
   vector?(c) $ vector-ref c i
   string?(c) $ string-ref c i
@@ -1625,51 +1766,6 @@ define merge(&lt; as bs) $ cond
 <tr>
 <td align="left" valign="top">
 <pre>
-' a b ; Demo abbreviations
-  ' c d e \\ 'f g h
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-(quote (a b
-  (quote (c d e)) ((quote f) g h)))
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
-let &lt;* x sqrt(a) *&gt;
-! g {x + 1} {x - 1}
-</pre>
-</td>
-<td>
-<pre>
-(let ((x (sqrt a)))
-  (g (+ x 1) (- x 1)))
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
-let &lt;* x $ {oldx - 1} \\ y $ {oldy - 1} *&gt;
-! {{x * x} + {y * y}}
-</pre>
-</td>
-<td>
-<pre>
-(let ((x (- oldx 1)) (y (- oldy 1)))
-  (+ (* x x) (* y y)))
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
 let &lt;* x $ cos $ f c *&gt;
 ! dostuff x
 </pre>
@@ -1699,40 +1795,6 @@ ff ; Demo comments
   (t3 t4
     (t5 t6)
     (t7 t9)))
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
-f ; Demo improper lists
-  a . b
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-(f
-  (a . b))
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
-f ; Demo vertical improper lists
-  x y
-  .
-  z
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-(f
-  (x y)
-  .
-  z)
 </pre>
 </td>
 </tr>
