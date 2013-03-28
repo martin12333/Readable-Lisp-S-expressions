@@ -4689,20 +4689,35 @@ export
 </pre></td>
 </tr>
 </table>
+
 <p>
 But we expect that more typically,
 you want to express the code that looks like this:
 </p>
+
+<!-- The following examples use a different format and
+are changed slightly to fit on narrower displays. -->
+
 <table border="1" cellpadding="4">
-<tr><th>Arne&#8217;s formulation</th><th>sweet-expression</th></tr>
+<tr><th>Arne&#8217;s formulation</th></tr>
 <tr>
 <td><pre>
 begin
-  . (display "Welcome, ") (display player) (display ", to the Dungeons!") (newline)
+  . (display "Welcome, ") (display player) (display ", to Chicago!") (newline)
 </pre></td>
+</tr>
+</table>
+
+<p>
+This can be expressed, more cleanly, in sweet-expressions:
+</p>
+
+<table border="1" cellpadding="4">
+<tr><th>sweet-expression</th></tr>
+<tr>
 <td><pre>
 begin
-  display "Welcome, " \\ display player \\ display ", to the Dungeons!" \\ (newline)
+  display "Welcome, " \\ display player \\ display ", to Chicago!" \\ newline()
 </pre></td>
 </tr>
 </table>
