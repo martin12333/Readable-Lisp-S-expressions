@@ -138,6 +138,11 @@ define fibfast(n)  ; Typical function notation
 <li><a href="#related-srfis">Related SRFIs</a></li>
 <li><a href="#rationale">Rationale</a></li>
 <li><a href="#tutorial">Tutorial</a>
+  <ul>
+  <li><a href="#tutorial-basics">Basics</a></li>
+  <li><a href="#tutorial-clarifications">Clarifications</a></li>
+  <li><a href="#tutorial-advanced-features">Advanced features</a></li>
+  </ul></li>
 <li><a href="#specification">Specification</a>
   <ul>
   <li><a href="#bnf-conventions">BNF conventions</a></li>
@@ -604,13 +609,11 @@ We will examine each in turn, including some examples.
 
 <p>
 The marker <code>\\</code> is specially interpreted.
-If any terms precede it on the line, it is called SPLIT, and
+If any n-expressions precede it on the line, it is called SPLIT, and
 it is interpreted
 the start of a new line at the current line&#8217;s indentation.
-If no terms precede <code>\\</code> on the line (other than the indentation),
-it is called GROUP,
-and it represents no symbol at all,
-located at that indentation.
+Otherwise it is called GROUP,
+and it represents no symbol at all located at that indentation.
 GROUP is useful for representing lists of lists.
 Examples:
 </p>
@@ -677,7 +680,7 @@ sin 0 \\ cos 0
 
 <p>
 The marker <code>$</code> is called SUBLIST.
-If <code>$</code> is preceded by any terms on the line,
+If <code>$</code> is preceded by any n-expressions on the line,
 the right-hand-side (including any child lines)
 is the last element of the list described on the left-hand side
 of just the line with the <code>$</code>.
@@ -2613,6 +2616,13 @@ additional syntax to make these expressions more readable.
 Some people have argued for more complex structures than this,
 and others have argued for less;
 we have tried to strike a balance.
+The notation is actually relatively simple.
+The key BNF definitions
+only required 88 non-comment non-blank lines for 7 productions in ANTLR.
+In contrast, simple datums (such as identifiers and numbers)
+required more lines (109 non-comment non-blank lines)
+and 52 productions.
+<!-- measurement taken on 2013-03-27 using "sweet.g" -->
 </p>
 
 <p>
