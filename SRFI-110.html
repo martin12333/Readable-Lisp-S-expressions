@@ -4611,7 +4611,7 @@ This proposal was initially quite attractive
 It is simpler to describe informally,
 and appears, at first glance,
 to replace many actual uses for
-GROUP/SPLIT, SUBLIST, and COLLECTINGLIST.
+GROUP/SPLIT, SUBLIST, and collecting lists.
 Thus, it was hoped that these three extensions
 could be removed with the simpler <code>:</code> marker rule.
 </p>
@@ -4764,10 +4764,10 @@ define example-close(y)
 *&gt;; define-library
 </pre>
 <p>
-We could retain COLLECTINGLIST,
+We could retain collecting lists,
 and live without the SPLIT behavior,
 or even SUBLIST,
-though this would be important losses.
+though these would be important losses.
 Conversely, they could be re-added, but at
 that point, its simplicity has completely disappeared.
 But these ignore the biggest problem.
@@ -4797,22 +4797,17 @@ For another example, some East Asian characters,
 should be displayed on two columns
 even on a fixed-width font display.
 In Arne&#8217;s formulation,
-the width of non-whitespace characters
-is significant,
-since the <code>:</code> marker can record
-the column position
+the width of non-whitespace characters is significant,
+since the <code>:</code> marker can record the column position
 after non-whitespace characters occur.
-This SRFI, on the other hand,
-requires recording only the column position
+This SRFI, on the other hand, requires recording only the column position
 of horizontal whitespace characters;
-we handle the different possible widths
-of the TAB character
+we handle the different possible widths of the TAB character
 by requiring consistent indentation.
 </p>
 <p>
 Arne&#8217;s formulation requires either that implementations
-know all fullwidth characters
-(a much longer list
+know all fullwidth characters (a much longer list
 than the list of horizontal whitespace characters),
 or would leave handling of fullwidth characters
 up to implementations,
@@ -4871,7 +4866,10 @@ R6RS mandates that support.
 </p>
 
 <p>
-After discussion,
+You can learn more about this alternative approach at the
+<a href="http://draketo.de/light/english/wisp-lisp-indentation-preprocessor">wisp: Whitespace to Lisp</a>
+web page.
+After a long discussion,
 <a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg01097.html">this proposal was turned down
 by the authors of this SRFI</a>.
 </p>
