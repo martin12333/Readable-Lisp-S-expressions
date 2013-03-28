@@ -114,18 +114,18 @@ Here is an example:
 <tr>
 <td>
 <pre>
-define fibfast(n)  ; Typical function notation
-  if {n &lt; 2}       ; Indentation, infix {...}
-    n              ; Single expr = no new list
-    fibup n 2 1 0  ; Simple function calls
+define fibfast(n)   ; Typical function notation
+  if {n &lt; 2}        ; Indentation, infix {...}
+     n              ; Single expr = no new list
+     fibup n 2 1 0  ; Simple function calls
 </pre>
 </td>
 <td>
 <pre>
 (define (fibfast n)
   (if (&lt; n 2)
-    n
-    (fibup n 2 1 0)))
+      n
+      (fibup n 2 1 0)))
 </pre>
 </td>
 </tr>
@@ -415,32 +415,33 @@ Here are some examples:
 <table border="1" cellpadding="4">
 <tr><th>sweet-expression</th><th>s-expression</th></tr>
 <tr>
-<td>
+<td align="left" valign="top">
 <pre>
-a b (c1 c2) d(1 2) e
+a b c(1 2)
 </pre>
 </td>
-<td>
+<td align="left" valign="top">
 <pre>
-(a b (c1 c2) (d 1 2) e)
+(a b (c 1 2))
 </pre>
 </td>
+</tr>
 <tr>
 <!-- Here's another trivial Scheme program, a greatest common divisor function straight from Carl A. Gunter's "Semantics of Programming Languages" page 2: -->
 <td align="left" valign="top">
 <pre>
 define gcd(x y)
   if {y = 0}
-    x
-    gcd y rem(x y)
+     x
+     gcd y rem(x y)
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
 (define (gcd x y)
   (if (= y 0)
-    x
-    (gcd y (rem x y))))
+      x
+      (gcd y (rem x y))))
 </pre>
 </td>
 </tr>
@@ -556,7 +557,7 @@ ff ; Demo special comments
 <tr>
 <td align="left" valign="top">
 <pre>
-f ; Demo improper lists
+f ; Demo improper list
   a . b
 </pre>
 </td>
@@ -571,7 +572,7 @@ f ; Demo improper lists
 <tr>
 <td align="left" valign="top">
 <pre>
-f ; Demo vertical improper lists
+f ; Demo vertical improper list
   x y
   .
   z
@@ -594,8 +595,8 @@ f ; Demo vertical improper lists
 <p>
 As mentioned above,
 sweet-expressions add a few additional abbreviations,
-which are sometimes called
-sweet-expression &#8220;advanced features&#8221;.
+sometimes called sweet-expression &#8220;advanced features&#8221;,
+that make sweet-expressions even more pleasant to use.
 These involve the marker &#8220;<code>\\</code>&#8221;
 (called GROUP and SPLIT),
 the marker &#8220;<code>$</code>&#8221; (SUBLIST),
@@ -604,13 +605,13 @@ leading traditional abbreviations
 and the pair of
 markers &#8220;&lt;*&#8221; and &#8220;*&gt;&#8221;
 (which surround a <i>collecting list</i>).
-We will examine each in turn, including some examples.
+Below is an explanation of each.
 </p>
 
 <p>
 The marker <code>\\</code> is specially interpreted.
 If any n-expressions precede it on the line, it is called SPLIT, and
-it is interpreted
+it is interpreted as
 the start of a new line at the current line&#8217;s indentation.
 Otherwise it is called GROUP,
 and it represents no symbol at all located at that indentation.
@@ -787,10 +788,10 @@ Examples:
 The markers &#8220;&lt;*&#8221; and &#8220;*&gt;&#8221; surround a
 <i>collecting list</i>.
 This represents a list, but unlike (...), indentation processing
-continues to work, the indentation level is temporary restarted
-at the left edge, and empty lines do not a collecting list.
-These are useful for long lists (e.g., in modules), because they
-shorten indentation and allow empty lines.
+continues to work, the indentation level is temporarily restarted
+at the left edge, and empty lines do not end a collecting list.
+Collecting lists are useful for very long lists (such as module definitions)
+because they shorten indentation and allow empty lines.
 They are also useful in let expressions with short variable expressions.
 The <a href="#examples">examples</a> section has longer examples;
 here are short examples:
@@ -958,25 +959,19 @@ value of the top of the indentation stack):
 <li>If an end-of-line sequence immediately follows the indentation
 and the indentation length is nonzero:
 <ol>
-<li type="a">If the indentation contains &#8220;!&#8221;, it is an error.</li>
-<li type="a">If indentation does not contain &#8220;!&#8221;,
+<li type="a">If the indentation contains &#8220;!&#8221;, it is an error;
+an implementation <em>SHOULD</em> reject it.</li>
+<li type="a">If the indentation does not contain &#8220;!&#8221;,
 it is considered a line with no characters
-(thus indentation is empty)
+(thus indentation has zero length)
 and the rest of these rules are applied.</li>
 </ol>
 </li>
-<li>If top is the empty string and the indentation length is nonzero:
-<ol>
-<li type="a">
-If the indentation does not contain &#8220;!&#8221;, then
-symbol <code>initial_indent_no_bang</code>
+<li>If top is the empty string and the indentation length is nonzero,
+symbol <code>INITIAL_INDENT</code>
 is generated and the reader changes to initial indent mode.
 When an end-of-line sequence is reached
 the mode changes back to indentation processing.
-</li>
-<li type="a">If the indentation does contain &#8220;!&#8221;, then
-symbol <code>initial_indent_with_bang</code> is generated.</li>
-</ol>
 </li>
 <li>If top is not the empty string, and
 &#8220;;&#8221; immediately follows the indentation, the line is skipped
@@ -986,12 +981,12 @@ and the following line is examined instead.</li>
 (this is called &#8220;same&#8221;).</li>
 <li>If the indentation is longer than top, and top is a prefix of indentation,
 the indentation is pushed onto the indentation stack
-and the symbol <code>indent</code> is generated.</li>
+and the symbol <code>INDENT</code> is generated.</li>
 <li>If top is longer than indentation, and the indentation is a prefix
 of top, the indentation stack is repeatedly popped until
 the new top matches the current indentation or the
 new top is not longer than the indentation;
-a <code>dedent</code> symbol is generated for each pop.
+a <code>DEDENT</code> symbol is generated for each pop.
 The matching top (if any) is not popped.
 If no match is found, it is an error.</li>
 <li>Otherwise, it is an error.</li>
@@ -1027,7 +1022,7 @@ This pushes an empty string onto the indentation stack as
 well as generating the symbol COLLECTING.</li>
 <li><tt>*&gt;</tt> : COLLECTING_END.
 This pops any non-empty strings from the indentation stack (generating a
-dedent for each one),
+<code>DEDENT</code> for each one),
 then pops the empty string initially placed by COLLECTING,
 and then generates the two symbols EOL and finally COLLECTING_END.</li>
 <li><tt>$$$</tt> : RESERVED_TRIPLE_DOLLAR.  Reserved.</li>
@@ -1121,7 +1116,7 @@ SPACE    : ' ';
 TAB      : '\t';
 PERIOD   : '.';
 
-// Abbreviations not followed by horizontal space are ordinary:
+// Abbreviations not followed by horizontal space/EOL are ordinary:
 APOS           : '\'';
 QUASIQUOTE     : '\`';
 UNQUOTE_SPLICE : ',@';
@@ -1153,9 +1148,12 @@ SHARP_BANG_FILE : '#!' ('/' | '.') (options {greedy=false;} : .)*
 SHARP_BANG_DIRECTIVE : '#!' (('a'..'z'|'A'..'Z'|'_')
                     ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')*)? (SPACE|TAB)* ;
 
-// IMPORTANT SUPPORTING PARSER DEFINITIONS for the BNF
-
 hspace  : SPACE | TAB ;        // horizontal space
+
+// This is for handling non-first n-expressions in initial indent.
+// An implementation MAY implement this as "(hspace | '!')+"
+// (e.g., to avoid retaining state when returning a value).
+hspaces_maybe_bang: hspace+ ;
 
 // Production "abbrevw" is an abbreviation with a following whitespace:
 abbrevw returns [Object v]
@@ -1192,7 +1190,7 @@ n_expr_first returns [Object v]
 sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE
                       | SHARP_BANG_DIRECTIVE ;
 scomment : BLOCK_COMMENT
-         | DATUM_COMMENT_START (options : {greedy=true} hspace)* n_expr
+         | DATUM_COMMENT_START (options {greedy=true} : hspace)* n_expr
          | sharp_bang_comments ;
 
 // Production "comment_eol" reads an optional ;-comment (if it exists),
@@ -1214,11 +1212,13 @@ Here are the key BNF productions for sweet-expressions:
 // FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
 
 collecting_tail returns [Object v]
-  : it_expr more=collecting_tail {(cons $it_expr $more)}
-  | (initial_indent_no_bang | initial_indent_with_bang)?
-    comment_eol    retry1=collecting_tail {$retry1}
-  | (FF | VT)+ EOL retry2=collecting_tail {$retry2}
-  | collecting_end {'()} ;
+  : it_expr more=collecting_tail {$v = cons($it_expr.v, $more.v);}
+  | comment_eol    retry1=collecting_tail {$v = $retry1.v;}
+  | INITIAL_INDENT /* Initial indent only allowed for lcomment */
+    LCOMMENT EOL   retry2=collecting_tail {$v = $retry2.v;}
+  | (FF | VT)+ EOL retry3=collecting_tail {$v = $retry3.v;}
+  | COLLECTING_END {$v = null;} ;
+
 
 // Process line after ". hspace+" sequence.  Does not go past current line.
 post_period returns [Object v]
@@ -1268,11 +1268,11 @@ rest returns [Object v]
 body returns [Object v]
   : i=it_expr
      (same
-       ( {isperiodp($i)}? =&gt; f=it_expr dedent
+       ( {isperiodp($i)}? =&gt; f=it_expr DEDENT
            {$f} // Improper list final value
        | {! isperiodp($i)}? =&gt; nxt=body
            {(cons $i $nxt)} )
-     | dedent {(list $i)} ) ;
+     | DEDENT {(list $i)} ) ;
 
 // Production "it_expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
@@ -1288,22 +1288,22 @@ it_expr returns [Object v]
        (sub_i=it_expr {(append $head (list $sub_i))}
         | comment_eol error )
      | comment_eol // Normal case, handle child lines if any:
-       (indent children=body {(append $head $children)}
+       (INDENT children=body {(append $head $children)}
         | /*empty*/          {(monify $head)} /* No child lines */ )
      ))
   | (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
       (group_i=it_expr {$group_i} /* Ignore initial GROUP/scomment */
        | comment_eol
-         (indent g_body=body {$g_body} /* Normal GROUP use */
+         (INDENT g_body=body {$g_body} /* Normal GROUP use */
           | same ( g_i=it_expr {$g_i} /* Plausible separator */
                    /* Handle #!sweet EOL EOL t_expr */
                    | comment_eol restart=t_expr {$restart} )
-          | dedent error ))
+          | DEDENT error ))
   | SUBLIST hspace* /* "$" first on line */
     (is_i=it_expr {(list $is_i)}
      | comment_eol error )
   | abbrevw hspace*
-      (comment_eol indent ab=body
+      (comment_eol INDENT ab=body
          {(append (list $abbrevw) $ab)}
        | ai=it_expr
          {(list $abbrevw $ai)} ) ;
@@ -1315,12 +1315,11 @@ it_expr returns [Object v]
 t_expr returns [Object v]
   : comment_eol    retry1=t_expr {$retry1}
   | (FF | VT)+ EOL retry2=t_expr {$retry2}
-  | (initial_indent_no_bang | hspace+ ) /* initial indent */
+  | (INITIAL_INDENT | hspaces_maybe_bang) /* initial indent */
     (n_expr {$n_expr}
      | (scomment (options {greedy=true} : hspace)*
        sretry=t_expr {$sretry})
      | comment_eol retry3=t_expr {$retry3} )
-  | initial_indent_with_bang error
   | EOF {(generate_eof)} /* End of file */
   | it_expr {$it_expr} /* Normal case */ ;
 </pre>
@@ -5522,6 +5521,9 @@ Use a consistent amount of indenting for each level.
 We tend to use
 2 spaces for indentation; indentation nesting is more common in
 sweet-expressions, so 8-character indentations are often too much.
+Some people prefer to have a larger indent to line up with a parameter
+in certain cases (e.g., with &#8220;if&#8221;, put the condition after the if,
+and line up the branches with the condition).
 </p>
 
 <p>
