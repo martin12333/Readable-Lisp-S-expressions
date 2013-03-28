@@ -1019,14 +1019,8 @@ The markers, BNF names, and meanings are:
 </p>
 <ul>
 <li><tt>\\</tt> : GROUP_SPLIT.  This is called GROUP if it immediately follows
-indentation; in this case it represents no symbol at all at that indentation,
-simplifying representations of lists-of-lists.
-Otherwise it is called SPLIT; it represents starting a new line at
-the same indentation as the current line.</li>
-<li><tt>$</tt> : SUBLIST. This makes the right-hand-side (including
-all child lines) the last element of the
-left-hand-side of this line; if there is no left-hand-side,
-the right-hand-side is wrapped into a list.</li>
+indentation; otherwise it is called SPLIT.</li>
+<li><tt>$</tt> : SUBLIST.</li>
 <li><tt>&lt;*</tt> : COLLECTING.  Begins a &#8220;collecting list&#8221;, a
 new list that ends with a matching COLLECTING_END.
 This pushes an empty string onto the indentation stack as
@@ -1052,12 +1046,8 @@ The <i>traditional abbreviations</i> are
 which stand for
 quote, quasiquote, unquote-splicing, and unquote respectively.
 In indentation processing mode, a traditional abbreviation
-that is immediately after indentation,
-and is followed by space, tab, or end-of-line, is represented as
+followed by space, tab, or end-of-line is represented as
 APOSW, QUASIQUOTEW, UNQUOTE_SPLICEW, and UNQUOTEW respectively.
-Per the BNF, these
-<em>MUST</em> be interpreted as that abbreviation
-applied to the entire sweet-expression that follows.
 An end-of-line (if any) immediately after these
 abbreviations <em>MUST</em> also generate EOL.
 The <i>syntax-case related abbreviations</i> are
