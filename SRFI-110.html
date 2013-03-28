@@ -510,6 +510,43 @@ Here are some examples:
 <th align="center">Sweet-expressions (t-expressions)</th>
 <th align="center">s-expressions</th>
 </tr>
+<tr>
+<td align="left" valign="top">
+<pre>
+aaa bbb
+      ; Comment indent ignored
+  cc dd
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(aaa bbb
+
+  (cc dd))
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+ff ; Demo special comments
+  #| qq |# t1 t2
+  t3 t4
+    t5 #| xyz |# t6
+    t7 #;t8(q) t9
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(ff
+  (t1 t2)
+  (t3 t4
+    (t5 t6)
+    (t7 t9)))
+</pre>
+</td>
+</tr>
 
 <tr>
 <td align="left" valign="top">
@@ -544,26 +581,6 @@ f ; Demo vertical improper lists
 </pre>
 </td>
 </tr>
-<tr>
-<td align="left" valign="top">
-<pre>
-ff ; Demo comments
-  #| qq |# t1 t2
-  t3 t4
-    t5 #| xyz |# t6
-    t7 #;t8(q) t9
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-(ff
-  (t1 t2)
-  (t3 t4
-    (t5 t6)
-    (t7 t9)))
-</pre>
-</td>
-</tr>
 </table>
 </blockquote>
 
@@ -574,14 +591,15 @@ As mentioned above,
 sweet-expressions add a few additional abbreviations,
 which are sometimes called
 sweet-expression &#8220;advanced features&#8221;.
-These involve the marker <code>\\</code>> (called GROUP and SPLIT),
-the marker <code>$</code> (SUBLIST),
+These involve the marker &#8220;<code>\\</code>&#8221;
+(called GROUP and SPLIT),
+the marker &#8220;<code>$</code>&#8221; (SUBLIST),
 leading traditional abbreviations
 (quote, comma, backquote, or comma-at) with following whitespace,
 and the pair of
 markers &#8220;&lt;*&#8221; and &#8220;*&gt;&#8221;
 (which surround a <i>collecting list</i>).
-We will examine each in turn.
+We will examine each in turn, including some examples.
 </p>
 
 <p>
@@ -594,7 +612,7 @@ it is called GROUP,
 and it represents no symbol at all,
 located at that indentation.
 GROUP is useful for representing lists of lists.
-Here are some examples:
+Examples:
 </p>
 
 <blockquote>
@@ -666,10 +684,7 @@ of just the line with the <code>$</code>.
 (This is basically the same meaning it has in Haskell.)
 If there&#8217;s no left-hand-side,
 the right-hand-side is put in a list.
-Thus,
-&#8220;<code>a&nbsp;b&nbsp;$&nbsp;c&nbsp;d</code>&#8221;
-represents
-&#8220;<code>(a&nbsp;b&nbsp;(c&nbsp;d))</code>&#8221;.
+Examples:
 </p>
 
 <blockquote>
@@ -677,6 +692,18 @@ represents
 <tr>
 <th align="center">Sweet-expressions (t-expressions)</th>
 <th align="center">s-expressions</th>
+</tr>
+<tr>
+<td align="left" valign="top">
+<pre>
+a b $ c d
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(a b (c d))
+</pre>
+</td>
 </tr>
 <tr>
 <td align="left" valign="top">
@@ -727,6 +754,7 @@ A leading traditional abbreviation
 located after indentation, and followed by space, tab, or the end-of-line,
 is interpreted as that operator applied to
 the entire sweet-expression that follows.
+Examples:
 </p>
 
 <blockquote>
@@ -756,12 +784,13 @@ the entire sweet-expression that follows.
 The markers &#8220;&lt;*&#8221; and &#8220;*&gt;&#8221; surround a
 <i>collecting list</i>.
 This represents a list, but unlike (...), indentation processing
-continues to work, and the indentation level is temporary restarted
-at the left edge.
-These are useful for long lists (e.g., in modules), as well as for
-let expressions with short variable expressions.
-We will show just some short examples here; see the
-<a href="#examples">examples</a> section for longer examples.
+continues to work, the indentation level is temporary restarted
+at the left edge, and empty lines do not a collecting list.
+These are useful for long lists (e.g., in modules), because they
+shorten indentation and allow empty lines.
+They are also useful in let expressions with short variable expressions.
+The <a href="#examples">examples</a> section has longer examples;
+here are short examples:
 </p>
 
 <blockquote>
@@ -839,11 +868,13 @@ document are to be interpreted as described in
 The following subsections provide the
 <a href="#bnf-conventions">Backus-Naur Form (BNF) conventions</a>,
 <a href="#bnf-supporting">supporting definitions in BNF format</a>
-<a href="#bnf-supporting">key productions in BNF format</a>,
+<a href="#bnf-key">key productions in BNF format</a>,
 <a href="#other-requirements">other requirements</a>,
 and specifications about
 <a href="#related-tools">related tools</a>.
 </p>
+
+<h2 id="bnf-conventions">Backus-Naur Form (BNF) conventions</h2>
 
 <p>
 A sweet-expression (aka t-expression)
@@ -1734,23 +1765,6 @@ g factorial(7) my-pi() #f() -i -(cos(0))
 <tr>
 <td align="left" valign="top">
 <pre>
-aaa bbb
-      ; Comment indent ignored
-  cc dd
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-(aaa bbb
-
-  (cc dd))
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
 define extract(c i) $ cond
   vector?(c) $ vector-ref c i
   string?(c) $ string-ref c i
@@ -2583,13 +2597,41 @@ common constructs especially easy to notate
 
 <p>
 Since sweet-expressions are essentially superset of s-expression notation,
-they are necessarily "more complex" than s-expressions.
-But developers must routinely read and write many programs and
-data structures; having a few additional abbreviations to make them
-more readable seems to us to be a reasonable trade-off.
-It is also clear that many developers do not find traditional s-expression
-notation adequately readable, so <i>some</i> sort of change
-is worth considering.
+they are necessarily &#8220;more complex&#8221; than s-expressions.
+But all notations are a trade-off; if a notation is often used,
+it may be useful to add additional syntax to make it easier to read
+and write.
+It is clear that many developers do not find traditional s-expression
+notation adequately readable, and Lisp developers
+must routinely read and write many programs and data structures
+in some notation.
+Thus, we believe it is a reasonable trade-off to add
+additional syntax to make these expressions more readable.
+</p>
+
+<p>
+Some people have argued for more complex structures than this,
+and others have argued for less;
+we have tried to strike a balance.
+</p>
+
+<p>
+We have written real programs using this notation, to validate that it is
+reasonably easy to understand and is practical in real use.
+In the process of using this notation we developed
+SPLIT, SUBLIST, and collecting list constructs
+to deal with real-world constructs.
+It is possible to work without them, but we believe
+without them the notation would be less pleasant to use.
+</p>
+
+<p>
+The specification itself looks more complex, but in part that is a reaction
+to the ambiguities in SRFI-49.
+SRFI-49 left a number of issues underspecified, which could easily lead to
+different interpretations in implementation.
+We have chosen to develop a rigorous BNF to create a more rigorous
+specification.
 </p>
 
 
