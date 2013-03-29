@@ -147,6 +147,7 @@ define fibfast(n)   ; Typical function notation
   <li><a href="#tutorial-basics">Basics</a></li>
   <li><a href="#tutorial-clarifications">Clarifications</a></li>
   <li><a href="#tutorial-advanced-features">Advanced features</a></li>
+  <li><a href="#tutorial-implementation">Getting an implementation</a></li>
   </ul></li>
 <li><a href="#specification">Specification</a>
   <ul>
@@ -482,12 +483,6 @@ Here are a few clarifications:
 that end at the end of the line.</li>
 <li>Lines with only a ;-comment (preceded by 0 or more indent characters)
 are completely ignored - even their indentation (if any) is irrelevant.</li>
-<li>An expression that
-<a href="#disabling-indentation-processing-with-an-initial-indent">starts
-indented enables &#8220;initial-indent&#8221; mode</a>,
-a special compatibility mode where indentation is completely ignored.
-Instead, that line is considered a sequence of
-whitespace-separated neoteric-expressions that are each read separately.</li>
 <li>Scheme&#8217;s datum comments (<code>#;</code><i>datum</i>)
 comment out the next neoteric expression,
 not the next sweet expression
@@ -507,6 +502,12 @@ the indentation of the special comment is used</a>.
 <li>
 A single delimited period (.) still sets the value of the cdr field of a pair.
 </li>
+<li>An expression that
+<a href="#disabling-indentation-processing-with-an-initial-indent">starts
+indented enables &#8220;initial-indent&#8221; mode</a>.
+That line is considered a sequence of whitespace-separated
+neoteric-expressions that are each read separately
+(this also helps backwards compatibility).</li>
 </ol>
 
 <p>
@@ -587,6 +588,21 @@ f ; Demo vertical improper list
   (x y)
   .
   z)
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+; Initial indent
+  (define x 1) (define y 2)
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(define x 1)
+(define y 2)
 </pre>
 </td>
 </tr>
@@ -828,13 +844,13 @@ let &lt;* x sqrt(a) *&gt;
 <tr>
 <td align="left" valign="top">
 <pre>
-let &lt;* x $ {oldx - 1} \\ y $ {oldy - 1} *&gt;
+let &lt;* x $ getx() \\ y $ gety() *&gt;
 ! {{x * x} + {y * y}}
 </pre>
 </td>
 <td>
 <pre>
-(let ((x (- oldx 1)) (y (- oldy 1)))
+(let ((x (getx)) (y (gety)))
   (+ (* x x) (* y y)))
 </pre>
 </td>
@@ -842,16 +858,28 @@ let &lt;* x $ {oldx - 1} \\ y $ {oldy - 1} *&gt;
 </table>
 </blockquote>
 
+<h2><a name="tutorial-implementation">Getting an implementation</a></h2>
+
 <p>
 Your Scheme implementation may already provide these capabilities
 if you simply enter the
-<a href="#sweet"><code>#!sweet</code> directive</a>.
+<a href="#sweet"><code>#!sweet</code></a> directive first.
 If your preferred Scheme implementation does not yet support
-sweet-expressions, encourage them to add it, or
-consider trying out the
+sweet-expressions, encourage them to add it.
+As an alternative, consider trying out the
 <a href="http://readable.sourceforge.net/">Readable Lisp S-expressions Project</a>
-sample implementation and tools.
+sample implementation and tools, including:
 </p>
+<ul>
+<li><i>unsweeten</i>, which translates sweet-expressions to s-expressions</li>
+<li><i>sweeten</i>, which translates s-expressions to sweet-expressions
+(so you can switch to sweet-expressions) and is itself
+written using sweet-expressions</li>
+<li><i>diff-s-sweet</i>, which reports semantic differences between
+a file of s-expressions and a file of sweet-expressions.
+It can even detect those rare s-expression files that would be
+interpreted differently by a sweet-expression reader.</li>
+</ul>
 
 <p>
 The next two sections provide a more rigorous
@@ -1833,6 +1861,21 @@ let &lt;* x $ cos $ f c *&gt;
 <tr>
 <td align="left" valign="top">
 <pre>
+let &lt;* x $ {oldx - 1} \\ y $ {oldy - 1} *&gt;
+! {{x * x} + {y * y}}
+</pre>
+</td>
+<td>
+<pre>
+(let ((x (- oldx 1)) (y (- oldy 1)))
+  (+ (* x x) (* y y)))
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
 ; Torture test
 a |.| b {$} c d . .
 </pre>
@@ -2421,11 +2464,12 @@ is required, so we added sublists, split, and collecting list capabilities.
 </p>
 
 <p>
-Although the SRFI-49 BNF was simple, it was simple in part because
-some whitespace processing requirements were not clear.
-The BNF in this specification makes comment and whitespace
-processing explicit, to make comment and whitespace processing requirements
-clear.
+The SRFI-49 BNF is simpler, but it is simpler in part because
+some whitespace processing requirements are not made clear.
+The BNF in this specification, in contrast, makes comment and whitespace
+processing explicit (e.g., using the hspace non-terminal).
+Our goal was to make comment and whitespace processing requirements
+unambiguous.
 </p>
 
 <p>
@@ -2596,6 +2640,7 @@ and an indentation processing and abbreviation approach based on SRFI-49.
 We then added a few special abbreviations to make
 common constructs especially easy to notate
 (<tt>\\</tt>, <tt>$</tt>, and <tt>&lt;*...*&gt;</tt>).
+That&#8217;s all.
 </p>
 
 <p>
@@ -2616,12 +2661,21 @@ additional syntax to make these expressions more readable.
 Some people have argued for more complex structures than this,
 and others have argued for less;
 we have tried to strike a balance.
-The notation is actually relatively simple.
+</p>
+
+
+<p>
+The specification itself looks more complex, but that is because
+we have chosen to develop a rigorous specification using an exacting BNF.
+This was in response to lessons learned with SRFI-49;
+SRFI-49 was simpler but left a number of issues underspecified,
+and thus it easily led to different interpretations.
 The key BNF definitions
-only required 88 non-comment non-blank lines for 7 productions in ANTLR.
-In contrast, simple datums (such as identifiers and numbers)
+only require 88 non-comment non-blank lines for 7 productions in ANTLR.
+As a comparison, defining simple datums (such as identifiers and numbers)
+using the same notation
 required more lines (109 non-comment non-blank lines)
-and 52 productions.
+and more productions (52).
 <!-- measurement taken on 2013-03-27 using "sweet.g" -->
 </p>
 
@@ -2635,14 +2689,6 @@ It is possible to work without them, but we believe
 without them the notation would be less pleasant to use.
 </p>
 
-<p>
-The specification itself looks more complex, but in part that is a reaction
-to the ambiguities in SRFI-49.
-SRFI-49 left a number of issues underspecified, which could easily lead to
-different interpretations in implementation.
-We have chosen to develop a rigorous BNF to create a more rigorous
-specification.
-</p>
 
 
 <h2 id="whitespace-indentation-comment">Whitespace, indentation, and comment handling</h2>
