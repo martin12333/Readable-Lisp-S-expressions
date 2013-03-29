@@ -484,7 +484,8 @@ Instead, that line is considered a sequence of
 whitespace-separated neoteric-expressions that are each read separately.</li>
 <li>Scheme&#8217;s datum comments (<code>#;</code><i>datum</i>)
 comment out the next neoteric expression,
-not the next sweet expression.
+not the next sweet expression
+(and please don't follow the semicolon with whitespace).
 </li>
 <li>Special comments are non-whitespace sequences
 other than ;-comments that do not return a datum; they include
@@ -1081,7 +1082,6 @@ maps to <samp>(f&nbsp;{...})</samp>.</li>
 whitespace-separated neoteric-expressions).</li>
 </ol>
 
-
 -->
 
 <p>
@@ -1380,7 +1380,8 @@ are completely ignored - even their indentation (if any) is irrelevant.</li>
 where indentation is completely ignored.
 Instead, a sequence of white-space separated neoteric-expressions is read
 until the first end of line.</li>
-<li>Scheme&#8217;s <code>#;</code> datum comment comments out the next neoteric expression,
+<li>Scheme&#8217;s <code>#;</code> datum comment comments
+out the next neoteric expression,
 not the next sweet expression.
 Datum comments ignore intervening whitespace, including spaces, tabs, and newlines.</li>
 <li>Block comments (<samp>#|</samp>...<samp>|#</samp>) are removed.</li>
@@ -1496,6 +1497,8 @@ A sweet-expression reader <em>SHOULD</em> support
 and
 <a href="http://srfi.schemers.org/srfi-62/">SRFI-62
 (S-expression comments)</a> (<tt>#;</tt><var>datum</var>).
+Portable applications <em>SHOULD NOT</em> include whitespace
+after <code>#;</code> for a datum comment.
 A sweet-expression reader <em>SHOULD</em> support
 <a href="http://srfi.schemers.org/srfi-22/">SRFI-22
 (Running Scheme Scripts on Unix)</a> (where <tt>#!</tt>
