@@ -104,9 +104,8 @@ a set of some additional abbreviations.
 Sweet-expressions and traditionally formatted s-expressions
 can be freely mixed, allowing the developer
 to easily transition and maximize readability when laying out code.
-For example, a sweet-expression reader would accept
-<i>either</i> the sweet-expression or s-expression format shown below.
-Here is an example:
+Here is an example of a sweet-expression and its equivalent s-expression
+(a sweet-expression reader would accept <i>either</i> format):
 </p>
 
 <table border="1" cellpadding="4">
@@ -390,13 +389,7 @@ For more details, see
 
 <p>
 Sweet-expressions add the ability to
-deduce parentheses from indentation,
-as well as adding a few additional abbreviations
-to make the notation especially convenient to use.
-Let&#8217;s first examine how parentheses are deduced.
-</p>
-
-<p>
+deduce parentheses from indentation.
 In sweet-expressions, a line with content consists of one or more
 n-expressions, separated by one or more spaces or tabs.
 If a line is indented more than the previous line, that line is
@@ -449,8 +442,9 @@ define gcd(x y)
 </blockquote>
 
 <p>
-An empty line (a line containing only 0+ spaces and tabs)
-ends an expression once one has begun.
+An <a href="#empty-lines">empty line
+(a line containing only 0+ spaces and tabs)
+ends an expression once one has begun</a..
 This makes sweet-expressions easy to use interactively; just press
 &#8220;Enter Enter&#8221; to end an expression.
 Empty lines are ignored before an expression begins.
@@ -464,9 +458,10 @@ Lines after the first line
 need to be <dfn>consistently indented</dfn>, that is,
 the current line&#8217;s indentation, when compared to the
 previous line&#8217;s, are equal or one is a prefix of the other.
-Indentation is ignored inside ( ), [ ], and { },
-whether they are prefixed or not.
-This makes sweet-expressions backwards-compatible with traditional
+<a href="#disabling-indentation-processing-with-paired-characters">Indentation
+is ignored inside ( ), [ ], and { },
+whether they are prefixed or not</a>;
+this makes sweet-expressions backwards-compatible with traditional
 s-expressions, and also provides an easy way to disable indentation
 processing if it&#8217;s inconvenient.
 </p>
@@ -481,16 +476,16 @@ Here are a few clarifications:
 that end at the end of the line.</li>
 <li>Lines with only a ;-comment (preceded by 0 or more indent characters)
 are completely ignored - even their indentation (if any) is irrelevant.</li>
-<li>An expression that starts
-indented enables &#8220;initial-indent&#8221; mode,
+<li>An expression that
+<a href="#disabling-indentation-processing-with-an-initial-indent">starts
+indented enables &#8220;initial-indent&#8221; mode</a>,
 a special compatibility mode where indentation is completely ignored.
 Instead, that line is considered a sequence of
 whitespace-separated neoteric-expressions that are each read separately.</li>
 <li>Scheme&#8217;s datum comments (<code>#;</code><i>datum</i>)
 comment out the next neoteric expression,
 not the next sweet expression.
-Datum comments ignore intervening whitespace,
-including spaces, tabs, and newlines.</li>
+</li>
 <li>Special comments are non-whitespace sequences
 other than ;-comments that do not return a datum; they include
 datum comments (<code>#;</code><i>datum</i>),
@@ -498,9 +493,9 @@ block comments (<code>#|</code>...<code>|#</code>),
 and directives
 (such as <code>#!fold-case</code>, <code>#!no-fold-case</code>,
 <code>#!sweet</code>, and <code>#!curly-infix</code>).
-If a special comment
+<a href="#block-comment-indent-significant">If a special comment
 begins immediately after the indent,
-the indentation of the special comment is used.
+the indentation of the special comment is used</a>.
 </li>
 <li>
 A single delimited period (.) still sets the value of the cdr field of a pair.
@@ -594,8 +589,7 @@ f ; Demo vertical improper list
 <h2><a name="tutorial-advanced-features">Advanced features</a></h2>
 
 <p>
-As mentioned above,
-sweet-expressions add a few additional abbreviations,
+Sweet-expressions also add a few additional abbreviations,
 sometimes called sweet-expression &#8220;advanced features&#8221;,
 that make sweet-expressions even more pleasant to use.
 These involve the marker &#8220;<code>\\</code>&#8221;
@@ -610,7 +604,9 @@ Below is an explanation of each.
 </p>
 
 <p>
-The marker <code>\\</code> is specially interpreted.
+The
+<a href="#grouping-and-splitting">marker <code>\\</code>
+is specially interpreted</a>.
 If any n-expressions precede it on the line, it is called SPLIT, and
 it is interpreted as
 the start of a new line at the current line&#8217;s indentation.
@@ -681,7 +677,8 @@ sin 0 \\ cos 0
 </blockquote>
 
 <p>
-The marker <code>$</code> is called SUBLIST.
+The
+<a href="#sublist">marker <code>$</code> is called SUBLIST</a>.
 If <code>$</code> is preceded by any n-expressions on the line,
 the right-hand-side (including any child lines)
 is the last element of the list described on the left-hand side
@@ -754,9 +751,10 @@ run $ grep |-v| "xx.*zz" &lt;(oldfile) &gt;(newfile)
 </blockquote>
 
 <p>
-A leading traditional abbreviation
+A
+<a href="#traditional-abbreviations">leading traditional abbreviation
 (quote, comma, backquote, or comma-at)
-located after indentation, and followed by space, tab, or the end-of-line,
+located after indentation, and followed by space, tab, or the end-of-line</a>,
 is interpreted as that operator applied to
 the entire sweet-expression that follows.
 Examples:
@@ -786,8 +784,10 @@ Examples:
 </blockquote>
 
 <p>
-The markers &#8220;&lt;*&#8221; and &#8220;*&gt;&#8221; surround a
-<i>collecting list</i>.
+The
+<a href="#collecting-lists">markers &#8220;&lt;*&#8221;
+and &#8220;*&gt;&#8221; surround a
+<i>collecting list</i></a>.
 This represents a list, but unlike (...), indentation processing
 continues to work, the indentation level is temporarily restarted
 at the left edge, and empty lines do not end a collecting list.
@@ -837,7 +837,8 @@ let &lt;* x $ {oldx - 1} \\ y $ {oldy - 1} *&gt;
 
 <p>
 Your Scheme implementation may already provide these capabilities
-if you simply enter the <code>#!sweet</code> directive.
+if you simply enter the
+<a href="#sweet"><code>#!sweet</code> directive</a>.
 If your preferred Scheme implementation does not yet support
 sweet-expressions, encourage them to add it, or
 consider trying out the
@@ -2807,19 +2808,21 @@ processing; in practice this doesn&#8217;t seem to be a problem.</p>
 indentation processing with an initial indent</h3>
 
 <p>Initial indentation also disables indentation processing,
-which also improves backward
+which improves backward
 compatibility and makes it easy to disable indentation processing where
 convenient.</p>
 
-<p>This improves backward compatibility because a program
+<p>This initial indent mode
+improves backward compatibility because a program
 that uses odd formatting with a different meaning for sweet-expressions
 is more likely to have initial indents.
-Even if this is not
-true, it&#8217;s trivially easy to add an initial indent on oddly-formatted
-old files. This provides a trivial escape, making it easy to support
-old files.  Then even if you have ancient code with odd formatting,
-it would be likely to still &#8220;just work&#8221;
-if there is any initial indentation.
+Even when this is not true, it&#8217;s trivially
+easy to add an initial indent to oddly-formatted old files.
+This provides a trivial escape, making it easy to support old files.
+Then, even if you have ancient code with odd formatting,
+it is more likely to still &#8220;just work&#8221;
+if there is any initial indentation... and if necessary,
+it is easy to add.
 We&#8217;d like this reader to be a drop-in replacement for read(),
 so minimizing incompatibilities is important.</p>
 
