@@ -3168,6 +3168,15 @@ to kill CR/LF/CR+LF, which failed completely...&#8221;
 The same problem applies to PS, which is not used in practice.
 </p>
 
+<p>
+CR by itself is obsolescent.
+However, CR by itself has been used on many historical systems,
+so we expect there are older files which still use it.
+Lone CR is permitted by various Scheme specifications,
+and it is easy to implement too.
+Thus, we believe it is worth including in the specification.
+</p>
+
 <!--
 John Cowan posted on 2013-02-28,
 "Take it from the guy at the sharp point of the XML 1.1 mess:
