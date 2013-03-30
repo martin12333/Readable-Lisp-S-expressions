@@ -1662,16 +1662,16 @@ traditional s-expression reader with support for some additional abbreviations.
 <pre>
 define fibfast(n)  ; Typical function notation
   if {n &lt; 2}       ; Indentation, infix {...}
-    n              ; Single expr = no new list
-    fibup n 2 1 0  ; Simple function calls
+     n             ; Single expr = no new list
+     fibup n 2 1 0 ; Simple function calls
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
 (define (fibfast n)
   (if (&lt; n 2)
-    n
-    (fibup n 2 1 0)))
+      n
+      (fibup n 2 1 0)))
 </pre>
 </td>
 </tr>
@@ -1681,16 +1681,16 @@ define fibfast(n)  ; Typical function notation
 <pre>
 define fibup(max count n-1 n-2)
   if {max = count}
-    {n-1 + n-2}
-    fibup max {count + 1} {n-1 + n-2} n-1
+     {n-1 + n-2}
+     fibup max {count + 1} {n-1 + n-2} n-1
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
 (define (fibup max count n-1 n-2)
   (if (= max count)
-    (+ n-1 n-2)
-    (fibup max (+ count 1) (+ n-1 n-2) n-1)))
+      (+ n-1 n-2)
+      (fibup max (+ count 1) (+ n-1 n-2) n-1)))
 </pre>
 </td>
 </tr>
@@ -1700,16 +1700,16 @@ define fibup(max count n-1 n-2)
 <pre>
 define factorial(n)
   if {n &lt;= 1}
-    1
-    {n * factorial{n - 1}}
+     1
+     {n * factorial{n - 1}}
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
 (define (factorial n)
   (if (&lt;= n 1)
-    1
-    (* n (factorial (- n 1)))))
+      1
+      (* n (factorial (- n 1)))))
 </pre>
 </td>
 </tr>
@@ -1720,16 +1720,16 @@ define factorial(n)
 <pre>
 define gcd(x y)
   if {y = 0}
-    x
-    gcd y rem(x y)
+     x
+     gcd y rem(x y)
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
 (define (gcd x y)
   (if (= y 0)
-    x
-    (gcd y (rem x y))))
+      x
+      (gcd y (rem x y))))
 </pre>
 </td>
 </tr>
@@ -3153,14 +3153,14 @@ where that item is itself several lines:
 <pre>
 (define (foo x)
   (if (not (foo-able? x))
-    (error "Cannot foo the " x)
-    (begin
-      (en-bar x)
-      ; quuxing is currently buggy
-      #;(quux
-        (barred-form x)
-        (co-barred-form x)
-        (de-xuuqed x)))))
+      (error "Cannot foo the " x)
+      (begin
+        (en-bar x)
+        ; quuxing is currently buggy
+        #;(quux
+          (barred-form x)
+          (co-barred-form x)
+          (de-xuuqed x)))))
 </pre>
 </li>
 </ol>
@@ -3181,14 +3181,14 @@ In sweet-expression form, using line comments suffices:
 <pre>
 define foo(x)
   if not(foo-able?(x))
-    error "Cannot foo the " x
-    begin
-      en-bar x
-      ; quuxing is currently buggy
-      ;;quux
-      ;;  barred-form x
-      ;;  co-barred-form x
-      ;;  de-xuuqed x
+     error "Cannot foo the " x
+     begin
+       en-bar x
+       ; quuxing is currently buggy
+       ;;quux
+       ;;  barred-form x
+       ;;  co-barred-form x
+       ;;  de-xuuqed x
 </pre>
 <p>
 Thus, the expected use case of datum comments
