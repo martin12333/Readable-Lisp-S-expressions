@@ -484,14 +484,14 @@ processing if it&#8217;s inconvenient.
 Here are a few clarifications:
 </p>
 <ol>
-<li>An unescaped &#8220;;&#8221; not in a string (still) introduces comments
+<li>An unescaped &#8220;;&#8221; not in a string still introduces comments
 that end at the end of the line.</li>
 <li>Lines with only a ;-comment (preceded by 0 or more indent characters)
 are completely ignored - even their indentation (if any) is irrelevant.</li>
 <li>Scheme&#8217;s datum comments (<code>#;</code><i>datum</i>)
 comment out the next neoteric expression,
 not the next sweet expression
-(and please don't follow the semicolon with whitespace).
+(and please don&#8217;t follow the semicolon with whitespace).
 </li>
 <li>Special comments are non-whitespace sequences
 other than ;-comments that do not return a datum; they include
@@ -5652,10 +5652,17 @@ for the reference implementation</a>.
 <h1><a name="acknowledgments">Acknowledgments</a></h1>
 
 <p>We thank all the participants on the &#8220;readable-discuss&#8221;
-and &#8220;SRFI-105&#8221; mailing lists,
-including John Cowan, Shiro Kawai, Per Bothner, Mark H. Weaver,
-Beni Cherniavsky-Paskin, Arne Babenhauserheide, Ben Booth,
-David Vanderson, Jos Koot,
+and &#8220;SRFI-105&#8221; mailing lists, including
+<!-- Sort credits alphabetically by last name -->
+Arne Babenhauserheide,
+Ben Booth,
+Per Bothner,
+Beni Cherniavsky-Paskin,
+John Cowan,
+Shiro Kawai,
+Jos Koot,
+Mark H. Weaver,
+David Vanderson,
 and many others whose names
 should be here but aren&#8217;t.</p>
 
