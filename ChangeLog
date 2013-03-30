@@ -1,21 +1,49 @@
+2013-03-30 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Release of readable software version 0.7.1.
+	  - Allows a collecting list after ".", e.g. "a b . <* c *>".
+	    The draft SRFI specifically gives this as an example,
+	     so it'd be nice if the easily-downloaded version
+	     actually supported it.
+	  - Initial indents now allow "!"
+	  - Adds a new tool, "diff-s-sweet"
+	  - The Scheme implementation detects "*>" without matching "<*".
+	  - Updates the draft SRFI-110.
+
 2013-03-07 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Release of readable software version 0.7.0.
-	  - Includes support for <* ... *>, with both Scheme and
-	    ANTLR implementations of sweet-expressions
+	  - Includes support for <* ... *> collecting lists, with
+	    both Scheme and ANTLR implementations of sweet-expressions
 
+2012-11-25 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Release of readable software version 0.6.0.
+	* Change to $nfx$ and $bracket-apply$ (from nfx and bracket-apply)
+	* Fix reference code to make f{...}(...) be left-to-right
+	   (the {...} pattern was previously handled, incorrectly,
+	   as right-to-left)
+	* SRFI-105: Separate rationale from design rationale
 
-2012-07-31 David A. Wheeler <dwheeler, at, dwheeler.com>
-	* Release of readable software version 0.3.0.
+2012-08-25 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Release of readable software version 0.5.0.
+	  - e{} is now (e)
+	  - {} is now ()
+	  - {e} is now e
+	  - {e1 e2} is now (e1 e2).
 
-2001-08-10 David A. Wheeler
-	* (Release of readable software version 0.3.1?)
+2012-08-10 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Release of readable software version 0.4.0.
+	  - Add initial "$" on a line
 
-2001-08-02 Alan Manuel Gloria
+2012-08-02 Alan Manuel Gloria
 	* Fixed multi-line comment processing
 	* configuration no longer depends on guile-config (simplifies install)
 
-2001-08-01 David A. Wheeler
+2012-08-01 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Release of readable software version 0.3.0.
+	* Did initial autoconfiscation
+	* Set non-whitespace-indent char to simply "!"
+	* SPLIT symbol is now \\ instead of \
 	* Add presentation to distribution
 
-
+2006-07-05 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Initial import
 
