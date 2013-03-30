@@ -245,7 +245,7 @@
                             ((not %load-hook)
                               #f)
                             ((not (procedure? %load-hook))
-                              (error "value of %load-hook is neither procedure nor #f"))
+                              (error "%load-hook must be procedure or #f"))
                             (#t
                               %load-hook))))
                 (cond
@@ -923,7 +923,7 @@
                   ((eqv? (my-peek-char port) #\=)
                     (my-read-char port)
                     (if (my-char-whitespace? (my-peek-char port))
-                        (read-error "#num= must be followed by non-whitespace"))
+                        (read-error "#num= followed by whitespace"))
                     (list (patch-datum-label label (no-indent-read port))))
                   (#t
                     (read-error "Datum label #NUM requires = or #")))))
@@ -1070,7 +1070,9 @@
                     ((pair? rv)
                       (car rv))
                     (#t ; convention violated
-                      (read-error "readable/kernel: ***ERROR IN COMPATIBILITY LAYER parse-hash must return #f '() or `(,a)")))))
+                      ; This is really a bug in implementation, and should
+                      ; be impossible to trigger via user input.
+                      (read-error "parse-hash must return #f '() or `(,a)")))))
               ((char=? c #\.) (process-period port))
               ((or (memv c digits) (char=? c #\+) (char=? c #\-))
                 (let*
@@ -1217,26 +1219,23 @@
           ((eof-object? c) prefix)
           ((char=? c #\( ) ; Implement f(x)
             (my-read-char port)
-            (neoteric-process-tail port
-              (attach-sourceinfo pos
-                (cons prefix (my-read-delimited-list neoteric-read-nocomment #\) port)))))
+            (neoteric-process-tail port (attach-sourceinfo pos (cons prefix
+                  (my-read-delimited-list neoteric-read-nocomment #\) port)))))
           ((char=? c #\[ )  ; Implement f[x]
             (my-read-char port)
-            (neoteric-process-tail port
-                (attach-sourceinfo pos
-                  (cons (attach-sourceinfo pos '$bracket-apply$)
-                    (cons prefix
-                      (my-read-delimited-list neoteric-read-nocomment #\] port))))))
+            (neoteric-process-tail port (attach-sourceinfo pos
+              (cons (attach-sourceinfo pos '$bracket-apply$)
+                (cons prefix
+                  (my-read-delimited-list neoteric-read-nocomment #\] port))))))
           ((char=? c #\{ )  ; Implement f{x}
             (my-read-char port)
-            (neoteric-process-tail port
-              (attach-sourceinfo pos
-                (let
-                  ((tail (process-curly
-                      (my-read-delimited-list neoteric-read-nocomment #\} port))))
-                  (if (eqv? tail '())
-                      (list prefix) ; Map f{} to (f), not (f ()).
-                      (list prefix tail))))))
+            (neoteric-process-tail port (attach-sourceinfo pos
+              (let
+                ((tail (process-curly
+                   (my-read-delimited-list neoteric-read-nocomment #\} port))))
+                (if (eqv? tail '())
+                    (list prefix) ; Map f{} to (f), not (f ()).
+                    (list prefix tail))))))
           (#t prefix))))
 
 
@@ -1360,7 +1359,7 @@
   (define (my-append lhs rhs)
     (if (list? lhs)
         (append lhs rhs)
-        (read-error "Must have a proper list on left-hand-side to append data")))
+        (read-error "Must have proper list on left-hand-side to append data")))
 
   ; Read an n-expression.  Returns ('scomment '()) if it's an scomment,
   ; else returns ('normal n_expr).
@@ -1698,7 +1697,7 @@
                       ((string=? starting_indent new_indent)
                         (if (not (is_initial_comment_eol (my-peek-char port)))
                           (it_expr port new_indent)
-                          (list new_indent (t_expr port)))) ; Restart, no indent
+                          (list new_indent (t_expr port)))) ; Restart
                       (#t
                         (read-error "GROUP_SPLIT EOL DEDENT illegal"))))))
             ((eq? head_stopper 'sublist_marker)
@@ -1716,7 +1715,7 @@
                   (begin
                     (let ((new_indent (comment_eol_read_indent port)))
                       (if (not (indentation>? new_indent starting_indent))
-                          (read-error "Indent required after solo abbreviation"))
+                          (read-error "Indent required after abbreviation"))
                       (let* ((ab_full_results (body port new_indent))
                              (ab_new_indent   (car ab_full_results))
                              (ab_value      (cadr ab_full_results)))
