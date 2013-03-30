@@ -306,11 +306,15 @@ original M-expression notation for Lisp</a>.
 However, nearly all of these past notations fail to be
 general (i.e., the notation is independent of an underlying semantic) or
 homoiconic (i.e., the underlying data structure is clear from the syntax).
-We believe a Lisp-based notation <i>needs</i> to be general and homoiconic.
+We believe
+<a href="#general-and-homoiconic">a Lisp-based notation
+<i>needs</i> to be general and homoiconic</a>.
 For example, Lisp-based languages can trivially create new semantic constructs
 (e.g., with macros) or be used to process other constructs;
-a Lisp notation that is not general will always lag behind and lack
-the &#8220;full&#8221; power of s-expressions.
+a Lisp notation that is not general will typically be unable
+to immediately use those new constructs.
+Thus, notations that are not general will always lag behind and
+lack the &#8220;full&#8221; power of s-expressions.
 </p>
 
 <p>
@@ -396,7 +400,7 @@ For more details, see
 
 <p>
 Sweet-expressions add the ability to
-deduce parentheses from indentation.
+<a href="#why-indent">deduce parentheses from indentation</a>.
 In sweet-expressions, a line with content consists of one or more
 n-expressions, separated by one or more spaces or tabs.
 If a line is indented more than the previous line, that line is
@@ -845,7 +849,7 @@ let &lt;* x sqrt(a) *&gt;
 <tr>
 <td align="left" valign="top">
 <pre>
-let &lt;* x $ getx() \\ y $ gety() *&gt;
+let &lt;* x getx() \\ y gety() *&gt;
 ! {{x * x} + {y * y}}
 </pre>
 </td>
