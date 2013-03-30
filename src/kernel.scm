@@ -661,9 +661,9 @@
          (#t (my-read-char port) (cons c (read-until-delim port delims))))))
 
   (define (read-error message)
-    (display "Error: ")
-    (display message)
-    (newline)
+    (display "Error: " (current-error-port))
+    (display message (current-error-port))
+    (newline (current-error-port))
     ; Guile extension, but many Schemes have exceptions
     (throw 'readable)
     '())
