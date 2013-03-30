@@ -733,7 +733,10 @@
       (gs #x001d)
       (rs #x001e)
       (sp #x0020)
-      (del #x007f)))
+      (del #x007f)
+      ; Other non-guile names.
+      ; rubout noted in: http://docs.racket-lang.org/reference/characters.html
+      (rubout #x007f)))
   
   (define (process-char port)
     ; We've read #\ - returns what it represents.
