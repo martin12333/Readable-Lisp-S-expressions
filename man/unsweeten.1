@@ -118,24 +118,38 @@ nonstandard reader extensions supported by some other readers.
 .PP
 You can use this tool to process files, say, via a makefile. Then you can use sweet-expressions to write your code, and have it quickly translated to s-expressions. The following portable makefile snippet translates all ".sscm" (Sweet Scheme) files into ".scm" (Scheme) files; be sure the first character is TAB on the rule command with $(UNSWEETEN):
 
- UNSWEETEN = unsweeten
- \.sscm\.scm:
-    $(UNSWEETEN) $< > $@
- # You *must* set .SUFFIXES for the suffix rule to work:
- \.SUFFIXES: \.sscm \.scm
+  UNSWEETEN = unsweeten
+  \.sscm\.scm:
+     $(UNSWEETEN) $< > $@
+  # You *must* set .SUFFIXES for the suffix rule to work:
+  \.SUFFIXES: \.sscm \.scm
 
 
 .PP
-You can also use this tool as a front-end for interactive uses. For example,
-you can use it to work with clisp (a Common Lisp implementation)
-interactively just by running:
+You can also use this tool as a front-end for interactive uses.
+For example, you can use it to interact with scsh (Scheme shell):
 
- unsweeten | clisp
+  unsweeten | scsh
 
 .PP
-Unsweeten is currently designed for Scheme, and does not yet have
-a Common Lisp mode.
-In general, it works just fine if you must stick to the notational subset
+Then you can enter Scheme shell commands using sweet-expressions
+(be sure to type Enter Enter to end an expression):
+
+  run $ grep jar README
+
+  exit()
+
+.PP
+You can even use unsweeten to work with other Lisps, such as Common Lisp.
+For example, can use unsweeten interactively with clisp
+(a Common Lisp implementation) just by running:
+
+  unsweeten | clisp
+
+.PP
+Note that unsweeten is currently designed for Scheme,
+and does not yet have a Common Lisp mode.
+In general, it works just fine if you stick to the subset
 common between Scheme and Common Lisp.
 If you use unsweeten to process Common Lisp code, you \fIcan\fR
 use function names that begin with a digit.
@@ -144,7 +158,11 @@ Scheme does not require that symbols beginning with a digit be supported,
 but as an extension, anything
 beginning with a digit, plus, or minus is read until a delimiter;
 it's considered a number if it can be, else it is a symbol.
-In particular, the sequence #' is not supported at this time;
+You can use quote (') without problems.
+However, you can't really use quasiquote, comma, or comma-at; though they
+have similar effects, in Scheme these are simply abbreviations for names,
+but in Common Lisp these manipulate the list itself.
+Also, the sequence #' is not supported at this time;
 currently you must use (function\ name) instead of #'name.
 A future release may add an option to process Common Lisp more like
 Common Lisp (at least to deal with #').
