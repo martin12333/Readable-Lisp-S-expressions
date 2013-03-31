@@ -34,6 +34,12 @@ Block comments and comments inside a datum are never copied.
 
 .PP
 Sweeten creates only one of many possible representations of its input.
+You may choose to tweak the results of
+.I sweeten ;
+if you do, you can choose to use
+.I diff-s-sweet(1)
+to confirm that the resulting tweaked file is
+semantically identical to the original.
 
 .PP
 For more information, see
@@ -51,6 +57,8 @@ None.
 .PP
 This program assumes that the input does not contain any cycles
 (improper lists are okay).
+It can handle input with shared structures (without cycles), but
+the fact that they are shared is lost in the result.
 
 .SH EXAMPLES
 .PP
@@ -73,6 +81,7 @@ Sweeten might choose to represent it this way:
 .SH "SEE ALSO"
 .PP
 .IR unsweeten(1) ,
+.IR diff-s-sweet(1) ,
 .IR sweet-run(1) .
 
 .SH "COPYRIGHT NOTICE"

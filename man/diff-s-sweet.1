@@ -1,0 +1,164 @@
+.TH UNSWEETEN 1 local
+.SH NAME
+diff-s-sweet \- report differences between s-expression and t-expression files
+.SH SYNOPSIS
+.ll +8
+.B diff-s-sweet [-l] [-U n] [-Sk] s-expression-file sweet-expression-file
+.PP
+.B diff-s-sweet -w [-l] [-U n] [-Sk] s-expression-file*
+.ll -8
+.br
+.SH DESCRIPTION
+.PP
+.I diff-s-sweet
+reports semantic differences (if any) of a file written
+in traditional s-expression format, when compared to another
+(possibly-generated) file using sweet-expression (t-expression) notation.
+Sweet-expressions are a way to represent Lisp/Scheme data and programs
+that adds additional abbreviations beyond those in traditional s-expressions.
+Differences in ;-comment lines are not considered semantic differences.
+
+.PP
+By default, this program requires two filenames;
+the first file contains Lisp/Scheme s-expressions, and
+the second file contains sweet-expressions (t-expressions).
+If there are no differences, there is no report, and
+true (0) is returned.
+If there are differences, the differences are reported as
+in unified diff format, and false (non-zero) is returned.
+The comparisons are performed between pretty-printed versions of these
+files, so differences in comments and formatting are ignored.
+The unified diff shows what it would take to turn the pretty-printed
+s-expressions (shown with leading "-") into the pretty-printed
+sweet-expressions (shown with leading "+").
+
+.PP
+If the "well-formatted" (-w) option is used, then all the file(s) are
+presumed to be in s-expression format.
+Each file is examined in turn to report which files are
+not "well-formatted" with respect to sweet-expressions.
+A "well-formatted" s-expression file is interpreted exactly the same way
+(semantically) by a sweet-expression reader.
+Most s-expression files are well-formatted, but in a few cases
+an s-expression will be interpreted differently.
+For example, "a(b)" is interpreted by s-expressions as 2 datums,
+a and (b), while in sweet-expressions this is interpreted as the
+one datum (a b).
+For more details about well-formatted s-expressions, see SRFI-110.
+This comparison is implemented by using "unsweeten" to interpret the
+s-expression file as sweet-expressions (creating a temporary file to
+compare to), and then doing a diff as described above.
+
+.PP
+If "-" is used as the name of an s-expression-file,
+the standard input is read.
+If no filename is used, and the "-w" option is given, the standard input
+("-") is used as the source of the s-expression data.
+
+.PP
+The
+.I diff-s-sweet
+tool
+is designed to be used to help those transitioning to sweet-expressions
+or helping those who are.
+You can use
+.I sweeten
+to transform your current s-expressions, tweak the results
+in the way you want, then use
+.I diff-s-sweet
+to confirm that the tweaked file is semantically identical
+to the original.
+You can also use
+.I diff-s-sweet
+with the "-w" to ensure that various existing files will be
+interpreted identically by a sweet-expression reader.
+You can examine a large collection of s-expression files,
+to see which ones are not well-formatted,
+by using the options -w and -l together.
+
+.PP
+For more information, see
+http://readable.sourceforge.net.
+
+
+.SH OPTIONS
+
+.TP 6
+.BI -k
+Keep intermediate files and report their filenames
+(this can be useful for debugging).
+
+.TP
+.BI -l
+Just report the s-expression filenames that are different
+or not well-formatted; don't show the specific differences.
+
+.TP
+.BI -w
+Report if file not is "well-formatted", and expect a list of
+zero or more files in s-expression format.
+
+.TP
+.BI -P
+Produce progress reports - just before each file is examined,
+print stars, space, and the s-expression filename.
+
+.TP
+.BI -S
+Produce summary statistics at end.  Only useful if option -w is given.
+
+.TP
+.BI -U\  n
+Produce \fIn\fR lines of unified context when showing a difference.
+This is useless if the -l option is given.
+
+.\" .SH "ENVIRONMENT"
+.\" .PP
+
+.SH BUGS
+.PP
+This program assumes that all inputs do not contain any cycles
+(improper lists are okay).
+.PP
+It depends on guile, so most Scheme or Lisp extensions of
+other implementations are not handled.
+As a special case, it does specially ignore the text
+"#lang ATOM" at the beginning of a line (this is a Racket extension),
+but this is an exception.
+.PP
+Because it pretty-prints before comparing files, line numbers
+of differences are unlikely to be the same as the originals.
+To compenste, the default lines of unified context is larger (10 not 3).
+You can use the -U option to change the amount of context.
+
+.SH "SEE ALSO"
+.PP
+.IR sweeten(1) ,
+.IR unsweeten(1) ,
+.IR sweet-run(1) .
+
+.SH "COPYRIGHT NOTICE"
+.PP
+Copyright \(co 2013 David A. Wheeler
+.PP
+This software (including the documentation)
+is released as open source software under the "MIT" license:
+.PP
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+.PP
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+.PP
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+

@@ -72,4 +72,6 @@ b
 ; This BEGINS with an indent
  f(a) g(x)
 
+! a! b
+
 ; Comment at end of file.

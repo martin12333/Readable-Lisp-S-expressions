@@ -74,6 +74,7 @@
         ((char=? c stop-char)
           (read-char port)
           '())
+        ; Char without matching (, [, or {
         ((or (eq? c #\)) (eq? c #\]) (eq? c #\}))
           (read-char port)
           (read-error "Bad closing character"))

@@ -53,8 +53,10 @@ CLEANFILES = readable/kernel.scm
 script_sources = src/sweeten.sscm src/unsweeten \
                  src/curly-guile src/neoteric-guile src/sweet-guile \
                  src/sweet-run src/sweet-scsh \
+                 src/diff-s-sweet \
                  src/kernel.scm \
                  src/srfi-curly-infix.scm
+
 EXTRA_DIST += $(script_sources)
 
 # These scripts are generated at build time, so they're not distributed
@@ -62,12 +64,14 @@ EXTRA_DIST += $(script_sources)
 bin_SCRIPTS  = bin/sweeten bin/unsweeten
 bin_SCRIPTS += bin/curly-guile bin/neoteric-guile bin/sweet-guile
 bin_SCRIPTS += bin/sweet-run bin/sweet-scsh
+bin_SCRIPTS += bin/diff-s-sweet
 CLEANFILES  += $(bin_SCRIPTS)
 
 # These are the local scripts, for testing, and are not installed.
 noinst_SCRIPTS = ./sweeten ./unsweeten \
                  ./curly-guile ./neoteric-guile ./sweet-guile \
-                 ./sweet-scsh ./sweet-run
+                 ./sweet-scsh ./sweet-run ./diff-s-sweet
+
 CLEANFILES += $(noinst_SCRIPTS)
 
 
@@ -131,6 +135,10 @@ bin/sweet-run: src/sweet-run my-subst
 	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
 	chmod a+x $@
 
+bin/diff-s-sweet: src/diff-s-sweet my-subst
+	$(MKDIR_P) bin
+	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
+	chmod a+x $@
 
 ./sweeten: src/sweeten.sscm ./unsweeten my-subst
 	$(RM) -f $@
@@ -178,6 +186,12 @@ bin/sweet-run: src/sweet-run my-subst
 	chmod a+x $@
 	chmod a-w $@
 
+./diff-s-sweet: src/diff-s-sweet my-subst
+	$(RM) -f $@
+	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
+	chmod a+x $@
+	chmod a-w $@
+
 ./sweeten.sscm: src/sweeten.sscm my-subst
 	$(RM) -f $@
 	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
@@ -214,7 +228,8 @@ EXTRA_DIST += \
  examples/README
 
 # Man pages
-dist_man_MANS = man/unsweeten.1 man/sweet-run.1 man/sweeten.1
+dist_man_MANS = man/unsweeten.1 man/sweet-run.1 \
+                man/sweeten.1 man/diff-s-sweet.1
 
 # Distribute some documentation.
 # README is distributed anyway; this just makes it clearer.

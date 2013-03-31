@@ -523,4 +523,22 @@ foo1
   .
   cc1
 
+define x1 . <*
+
+define x2 2
+
+define x3 3
+*>
+
+define x5 . <*
+define x6 2
+
+define x8 3 *>
+
+dog . #| hi |# #| byte |#   cat   #|another|#   
+
+fickle
+  abc def . #|1|# ghi
+  jkl mno . #|2|# pqr #|3|# \\ another . #|4|# line #|5|#
+
 fin

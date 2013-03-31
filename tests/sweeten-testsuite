@@ -78,4 +78,30 @@ $
 
 $$$
 
+(a (b (c (d (e
+(#t
+ (let ((item (unit (car x))))
+  (let ((item-sameline
+         (append
+           '(#\space)
+           group-list
+           '(#\space)
+           item)))
+   item-sameline
+))))))))
+
+(let ((x 5)) (* 2 x) (* 2 x) (* 2 x) (+ x (* 3 x)))
+
+(let ((x 5) (y 7)) (* 2 x) (* 2 x) (* 2 x) (+ x (* 3 x)))
+
+(hello (aaaa bbbb) (cccc dddd) (eeee ffff)
+       (gggg hhhh) (iiii jjjj) (kkkk llll)
+       . impish)
+
+((+ a b))
+
+(let ((x (a b c d e f g h i j k l m n)) (y (a b c d e f g h i)) (z (za zb zc zd ze zf zg))) (+ x x x x) (* x x x x) x)
+
+(let pair ((x 1) (y (cos b))) (+ x y))
+
 ; Comment at end of file.

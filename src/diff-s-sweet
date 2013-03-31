@@ -1,0 +1,178 @@
+#!/bin/sh
+
+# diff-s-sweet: Show differences between s-expressions and sweet-expressions
+# If there's a difference, show the difference and return an error code,
+# else show nothing and return true (0).
+
+# (C) 2013 David A. Wheeler
+# Released under the MIT license
+
+# Set up the defaults.
+export PATH="@PATH_PREFIX@$PATH"
+SWEETEN="sweeten"
+UNSWEETEN="unsweeten"
+well_formatted=0
+list_filenames=0
+unified=10
+invoke_error=99
+keep_temp=0
+summary=0
+files_tested=0
+files_passed=0
+progress_report=0
+
+
+# Process options.
+# The POSIX standard has "getopts" to nicely parse utility options. Sadly,
+# it only portably handles short option names. (You can use "-:" to sort-of
+# get long names, but it's a rather ugly hack.)  It'll do for us.
+
+GETOPTS="hklwPSU:"
+
+usage() {
+  echo "Usage:"
+  echo "  $0 [-l | -U n] [-k] s-expression-filename sweet-expression-filename"
+  echo "  $0 -w [-l | -U n] [-Sk] s-expression-filename*"
+  exit $invoke_error
+}
+
+if [ $# -eq 0 ] ; then
+  usage
+elif [ "$1" == "--help" ] ; then
+  usage
+fi
+
+while getopts "$GETOPTS" optchar ; do
+  case "$optchar" in
+    h) usage ;;
+    k) keep_temp=1 ;;
+    l) list_filenames=1 ;;
+    w) well_formatted=1 ;;
+    P) progress_report=1 ;;
+    S) summary=1 ;;
+    U) unified="$OPTARG" ;;  # Presume it's an integer.
+    \?) usage ;;
+    *) echo "Unimplemented option" ; usage ;;  # "Can't" happen
+  esac
+done
+shift $(($OPTIND - 1))
+
+
+
+# Define functions to do the main work
+
+
+# This is a Scheme s-expression pretty print filter (from stdin to stdout)
+prettyprint() {
+sed -e 's/^#lang  *[-a-zA-Z0-9]*//' |   # Remove Racket-specific extension
+guile -c '
+  (use-modules (ice-9 pretty-print))
+   (do ((x (read) (read)))
+     ((eof-object? x))
+   (pretty-print x))'
+}
+
+
+# Report comparison of s-expression file "$1" with either
+# "$2" (if no -w) or an unsweetened "$1" (if there is a -w).
+# Handle input file "-" specially in $1.
+
+report_comparison() {
+
+  # Determine "s_expr", which contains the name of the s-expression file.
+  oldname="$1"
+  if [ "$oldname" = "-" ] ; then
+    s_expr="$(mktemp)"
+    cat > "$s_expr"
+  else
+    s_expr="$oldname"
+    if [ ! -f "$s_expr" ] ; then
+      echo "Not an existing normal file: $s_expr"
+      exit $invoke_error
+    fi
+  fi
+
+  # Create formatted s-expression and t-expression files to compare
+  fmt_s="$(mktemp)"  # formatted s-expression file
+  fmt_t="$(mktemp)"  # formatted t-expression file
+  if [ "$progress_report" -eq 1 ] ; then
+    echo "**** $oldname"
+  fi
+  if [ "$keep_temp" -eq 1 ] ; then
+    echo "S-expr file '$oldname' to be formatted into $fmt_s"
+    echo "T-expr file to be formatted into $fmt_t"
+    echo
+  fi
+
+  prettyprint < "$s_expr" >> "$fmt_s"
+  if [ "$well_formatted" -eq 1 ] ; then # We have "-w"
+    ${UNSWEETEN} < "$s_expr" | prettyprint >> "$fmt_t"
+    newname="$1.sscm"
+  else
+    if [ ! -f "$2" ] ; then
+      echo "Not an existing normal file (as a t-expression file): $2"
+      exit $invoke_error
+    fi
+    ${UNSWEETEN} < "$2" | prettyprint >> "$fmt_t"
+    newname="$2"
+  fi
+
+  # Always print the filenames on a difference, then optionally the details.
+  # We do it this way because diff only reports the irrelevant *temporary*
+  # filenames unless we use the nonportable GNU extension "--label"
+  files_tested=$(($files_tested + 1))
+  if cmp -s -- "$fmt_s" "$fmt_t" ; then
+    returnvalue=0
+    files_passed=$(($files_passed + 1))
+  else
+    if [ "$list_filenames" -eq 1 ] ; then
+      printf "%s\n" "$oldname"
+    else
+      # Print filenames specially because we compare temporary files instead:
+      printf -- "--- %s\n" "$oldname"
+      printf -- "+++ %s\n" "$newname"
+      diff -U "$unified" -- "$fmt_s" "$fmt_t" | tail -n +3
+      echo
+    fi
+    returnvalue=1
+  fi
+
+  # Remove temporary files
+  if ! [ "$keep_temp" -eq 1 ] ; then
+    rm -f -- "$fmt_s" "$fmt_t"
+    if [ "$1" = "-" ] ; then
+      rm -f -- "$s_expr" # Remove specially-created file
+    fi
+  fi
+  return $returnvalue
+}
+
+
+# Do the work! This is the top level that invokes the rest.
+
+exit_value=0
+if [ "$well_formatted" -eq 1 ] ; then
+  if [ $# -eq 0 ] ; then
+    report_comparison "-"
+    exit_value=$?
+  else
+    for file ; do
+      if ! report_comparison "$file" ; then
+        exit_value=$(($exit_value + 1))
+      fi
+    done
+  fi
+  if [ $summary -eq 1 ] ; then
+    echo "Files passed=$files_passed ; files tested=$files_tested"
+  fi
+else
+  if [ $# -ne 2 ] ; then
+    echo "Must have 2 filenames"
+    exit $invoke_error
+  fi
+  report_comparison "$1" "$2"
+  exit_value=$?
+fi
+
+exit $exit_value
+

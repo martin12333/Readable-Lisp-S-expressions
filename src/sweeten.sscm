@@ -109,6 +109,8 @@ define cuddle-first-parameter '(
   set! do
   setq block typecase)           ; Common Lisp
 
+define let-likes '(let let*)
+
 ; Control what symbol is used for grouping.  This isn't likely to change
 ; now, but it was a subject of long mailing list discussion.
 define group-string "\\\\"
@@ -136,25 +138,27 @@ define punct-chars     list( #\! #\" #\# #\$ #\% #\& #\'
                              #\| #\} #\~ )
 
 ; This program automatically handles various end-of-line situations.
-; An end-of-line is a sequence of two different end-of-line chars,
-; otherwise, it is a single end-of-line char.
-; Thus we handle \n, \r\n, \n\r, \r, and variations of <next line> too.
-; To do this, we need a list of end-of-line characters:
+; An end-of-line if LF, CR, or CRLF; that is, (\n | \r \n?)
 define end-of-line-chars
   list 
     integer->char(#x0a)     ; <linefeed>, aka \n
     integer->char(#x0d)     ; <carriage return>, aka \r
-    integer->char(#x85)     ; <next line>
-    ; If wide chars are supported, add this:
-    ; integer->char(#x2028)   ; <line separator>
 
 ; Returns #f if x has >1 element. Improper lists are #t.
 define multi-element-list?(x)
   {pair?(x) and not(null?(cdr(x)))}
 
 ; Returns #t if x is a list with exactly 1 element.  Improper lists are #f.
-define single-element-list?(x)
+define list1?(x)
   {pair?(x) and null?(cdr(x))}
+
+; Returns #t if x is a list with exactly 2 elements.  Improper lists are #f.
+define list2?(x)
+  {pair?(x) and pair?(cdr(x)) and null?(cddr(x))}
+
+; Returns #t if x is a list or improper list of 3+ elements.
+define list-3-plus?(x)
+  {pair?(x) and pair?(cdr(x)) and pair?(cddr(x))}
 
 ; Does x contain a list of ONLY punctuation characters?
 ; An empty list is considered true.
@@ -318,7 +322,7 @@ define unit-string-tail(x)
   if null?(x)
     '(#\")  ; Return the string's closing double-quote.
     append
-      let ((c car(x)))
+      let <* c $ car x *>
         cond             ; Can't use "case" because of "tab" variable.
           eq?(c #\\)              '(#\\ #\\)
           eq?(c #\")              '(#\\ #\")
@@ -353,7 +357,7 @@ define unit(x)
            represent-as-inline-infix?(x)
              ; Special case, use {...}:
              append LISTLBRACE unit(cadr(x)) infix-tail(unit(car(x)) cddr(x))
-           {single-element-list?(cdr(x)) and pair?(cadr(x)) and
+           {list1?(cdr(x)) and pair?(cadr(x)) and
              represent-as-brace-suffix?(cadr(x))}
              ; Special case, use f{...}:
              append unit(car(x)) as-brace-suffix(cadr(x))
@@ -378,6 +382,23 @@ define exposed-unit(x)
     eq?(x '$$$) string->list("{$$$}")
     #t          unit(x)
 
+; Display a unit (like exposed-unit), but possibly use a collecting list.
+define exposed-unit-collecting(x)
+  cond
+    {list1?(x) and list2?(car(x))}
+      append
+        '(#\< #\* #\space)
+        line-in-collecting car(x)
+        '(#\space #\* #\>)
+    {list2?(x) and list2?(car(x)) and list2?(cadr(x))}
+      append
+        '(#\< #\* #\space)
+        line-in-collecting car(x)
+        '(#\space #\\ #\\ #\space)
+        line-in-collecting cadr(x)
+        '(#\space #\* #\>)
+    #t exposed-unit(x)
+
 ; Return x as a unit, but always represent lists as (a b c):
 define unit-force-list(x)
   if pair?(x)
@@ -399,17 +420,27 @@ define line-tail(x)
 define line(x)
   cond
     not(pair?(x))                  exposed-unit(x)
+    {list1?(x) and represent-as-inline-infix?(car(x))} ; ({a + b}) => $ {a + b}
+      append '(#\$ #\space) unit(car(x))
     represent-as-inline-infix?(x)  unit(x)
     represent-as-abbreviation?(x)
       if multi-element-list?(cadr(x))
         append cadr(assq(car(x) abbreviations)) '(#\space) line(cadr(x))
         exposed-unit(x) ; Show 'ITEM (etc.) if x isn't a multi-item list.
-    single-element-list?(x)  ; Handle 1-datum case specially.
+    list1?(x)  ; Handle 1-datum case specially.
       if symbol?(car(x))
         append exposed-unit(car(x)) LISTLP LISTRP
         append LISTLP unit(car(x)) LISTRP ; This unit is not exposed.
     #t
       append exposed-unit(car(x)) line-tail(cdr(x))
+
+define line-in-collecting(x)
+  if {list2?(x) and symbol?(car(x)) and pair?(cadr(x))}
+    append
+      exposed-unit car(x)
+      '(#\space #\$ #\space)
+      line cadr(x)
+    line x
 
 ; Return list "m" as a list of characters representing
 ; a long and boring split list.  We'll keep track of position inside
@@ -419,13 +450,11 @@ define sweeten-boring-list(x first? pos next-indent)
     null?(x) '(#\newline)
     first?
       ; if first, force its disply, even if that goes beyond width max.
-      let
-        $ item exposed-unit(car(x))
+      let <* item $ exposed-unit car(x) *>
         append item 
           sweeten-boring-list(cdr(x) #f {pos + length(item)} next-indent)
     #t ; Not first.
-      let
-        $ item exposed-unit(car(x))
+      let <* item $ exposed-unit car(x) *>
         let
           $ item-sameline append('(#\space) group-list '(#\space) item)
           if {{pos + length(item-sameline)} < maxwidth}
@@ -459,11 +488,38 @@ define fits-width?(indent-already indent newlen)
 ; This tail handles the body of a list (after its first entry) when
 ; indentation processing is active, each of these is its own initial line.
 define sweeten-body(m indent indent-already)
-  if null?(m)
-    '()
+  cond
+    null?(m)
+      '()
+    not(pair?(m)) ; Improper list
+      append
+        getdent indent-already indent
+        '(#\. #\newline)
+        sweeten-top  m indent indent-already
+    #t
+      append
+        sweeten-top  car(m) indent indent-already
+        sweeten-body cdr(m) indent #f
+
+; Body-like construct, but for variable lists.
+define sweeten-body-varlist(m indent indent-already)
+  if {null?(m) or not(pair?(m))}
+    sweeten-body m indent indent-already
     append
-      sweeten-top  car(m) indent indent-already
-      sweeten-body cdr(m) indent #f
+      cond ; Represent car(m)
+        {list2?(car(m)) and symbol?(caar(m))}
+          let*
+            \\
+              asline $ line-in-collecting car(m)
+              length-asline $ length asline
+            if fits-width?(indent-already indent length-asline)
+              append
+                getdent indent-already indent
+                asline
+                '(#\newline)
+              sweeten-top car(m) indent indent-already
+        #t $ sweeten-top car(m) indent indent-already
+      sweeten-body-varlist cdr(m) indent #f
 
 ; Return list m represented in the typical indent style.
 define sweeten-top-normal-indent(x indent indent-already)
@@ -490,10 +546,15 @@ define sweeten-top-normal-indent(x indent indent-already)
 ; to determine the most pleasing format.
 define sweeten-top-multiline(m indent indent-already)
   if pair?(car(m))  ; Is car a pair?  If so, we may need GROUP.
-    let* (asunit-car(exposed-unit(car(m)))) ; Get representation of car.
-    ! if fits-width?(indent-already indent length(asunit-car))
+    let*
+    ! \\
+    !   asline-car
+    !     if null?(cdr(m)) ; If one-element list, prepend '$'
+    !       append '(#\$ #\space) line(car(m))
+    !       exposed-unit car(m) ; Get representation of car.
+    ! if fits-width?(indent-already indent length(asline-car))
     !   ; We can squeeze the car into the line - don't use GROUP.
-    !   append getdent(indent-already indent) asunit-car '(#\newline)
+    !   append getdent(indent-already indent) asline-car '(#\newline)
     !     sweeten-body cdr(m) deeper(indent) #f
     !   ; We *cannot* squeeze the car into the line - use GROUP
     !   append getdent(indent-already indent)
@@ -528,21 +589,46 @@ define sweeten-top-multiline(m indent indent-already)
     ! !      ; Can't cuddle "defun funcname (params)" - use normal format.
     ! !      sweeten-top-normal-indent m
     ! !        getdent(indent-already indent) \\ #f
-    ! memq(car(m) cuddle-first-parameter)
+    ! {memq(car(m) cuddle-first-parameter) and list-3-plus?(m)}
     ! ! ; We'd like to cuddle the first parameter of this operator,
     ! ! ; if we can... so try to do so.
-    ! ! let* (asline-cuddled(line(list(car(m) cadr(m)))))
-    ! !    if fits-width?(indent-already indent length(asline-cuddled))
-    ! !       ; We can cuddle up on line with one parameter:
-    ! !       append getdent(indent-already indent)
-    ! !         asline-cuddled \\ '(#\newline)
+    ! ! let*
+    ! !   \\
+    ! !     asline-cuddled
+    ! !       append
+    ! !         exposed-unit car(m)
+    ! !         '(#\space)
+    ! !         exposed-unit-collecting cadr(m)
+    ! !     currentdent $ getdent indent-already indent
+    ! !     nextdent    $ deeper indent
+    ! !     next2dent   $ deeper nextdent
+    ! !   if fits-width?(indent-already indent length(asline-cuddled))
+    ! !     ; We can cuddle up on line with one parameter:
+    ! !     append currentdent asline-cuddled '(#\newline)
+    ! !       ; Now figure out what to do with the rest of the parameters:
+    ! !       if {memq(car(m) let-likes) and symbol?(cadr(m))
+                  and pair?(cddr(m)) and list?(caddr(m))}
+    ! !         ; Specially handle let name var-list; use GROUP for var-list 
+    ! !         append
+    ! !           nextdent \\ '(#\\ #\\ #\newline)
+    ! !           sweeten-body-varlist caddr(m) next2dent #f
+    ! !           sweeten-body cdddr(m) nextdent #f
+    ! !         ; Normal case with a cuddled parameter:
     ! !         sweeten-body cddr(m) mark-deeper(indent) #f
-    ! !       ; Can't cuddle with one parameter - use normal format.
-    ! !       sweeten-top-normal-indent m
-    ! !         getdent(indent-already indent) \\ #f
+    ! !     ; Can't cuddle with one parameter:
+    ! !     if {memq(car(m) let-likes) and list?(cadr(m))
+                and not(list1?(cadr(m)))}
+    ! !       ; Specially handle let var-list; use GROUP for var-list 
+    ! !       append currentdent exposed-unit(car(m)) '(#\newline)
+    ! !         nextdent \\ '(#\\ #\\ #\newline)
+    ! !         sweeten-body-varlist cadr(m) next2dent #f
+    ! !         sweeten-body cddr(m) nextdent #f
+    ! !       ; Give up, use normal format.
+    ! !       sweeten-top-normal-indent m indent indent-already
     ! ; Nothing special.  Use normal multi-line format:
     ! #t
     ! ! sweeten-top-normal-indent m indent indent-already
+
 
 ; Input: expression "m" with indentation string "indent".
 ;        indent-already is #f if no indentation has already taken place;
@@ -556,7 +642,7 @@ define sweeten-top(m indent indent-already)
   if not(pair?(m)) ; if not a pair, just print it. () handled here
     append(getdent(indent-already indent) exposed-unit(m) '(#\newline))
     ; We have a pair. Can we represent it as one line of space-sep params?
-    let* (asline(line(m)) length-asline(length(asline)))
+    let* <* asline $ line m \\ length-asline $ length asline *>
       if { {length-asline < max-unit-character-length} and
            fits-width?(indent-already indent length-asline) and
            {not complicated?(m)} and
@@ -583,15 +669,15 @@ define display-skip-last-eol(x)
       display(car(x))
       ; In this program, strings only happen from indents:
       set! column1 #f
-      display-skip-last-eol(cdr(x))
+      display-skip-last-eol cdr(x)
     {char?(car(x)) and null?(cdr(x)) and {car(x) eq? #\newline}}
       #t
     char?(car(x))
-      write-char(car(x))
+      write-char car(x)
       set! column1 #f
-      display-skip-last-eol(cdr(x))
+      display-skip-last-eol cdr(x)
     #t
-      display("BUG!!! in display-skip-last-eof!")
+      display "BUG!!! in display-skip-last-eof!"
 
 ; Display formatted expression "x" using indentation string "indent".
 ; Do NOT display the final end-of-line, due to an interesting subtlety:
@@ -608,20 +694,19 @@ define display-sweeten-format(x)
 ; Consume an end-of-line. This is 2 unequal end-of-line characters,
 ; or a single end-of-line character, whichever is longer.
 define consume-end-of-line()
-  let ( c(peek-char()) )
-    if memq(c end-of-line-chars)
-      begin
+  let <* c $ peek-char() *>
+    cond
+      memq(c end-of-line-chars)
         read-char()
-        let
-          $ next peek-char()
-          if {not{c eq? next} and memq(next end-of-line-chars)}
-            read-char()
+        if eqv?(c carriage-return)
+          let <* c2 $ peek-char() *>
+            if eqv?(c2 #\newline)
+              read-char()
 
 ; Copy one line from stdin to stdout, end on EOF or end-of-line.
 ; Consume the end of line.
 define copy-line(port)
-  let
-    $ c peek-char(port)
+  let <* c $ peek-char port *>
     cond
       eof-object?(c)   c
       memq(c end-of-line-chars)
@@ -635,8 +720,7 @@ define copy-line(port)
 define sweeten-filter()
   if build-on-sweet
     restore-traditional-read()
-  let
-    $ c peek-char(current-input-port())
+  let <* c $ peek-char current-input-port() *>
     cond
       eof-object?(c)
         c
@@ -655,7 +739,7 @@ define sweeten-filter()
         read-char()
         sweeten-filter()
       #t
-        let ((datum read(current-input-port())))
+        let <* datum $ read current-input-port() *>
           if eof-object?(datum)
             datum
             ; We have a datum to format and display - begin the real work:

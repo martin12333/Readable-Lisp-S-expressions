@@ -24,6 +24,16 @@ define fibfast(n)
     n
     fibup(n 2 1 0)
 
+; Fibonacci example, no parens last line.
+(define (fibfast n)
+  (if (< n 2)
+    n
+    (fibup n 2 1 0)))
+define fibfast(n)
+  if {n < 2}
+    n
+    fibup n 2 1 0
+
 (define (fibup max count n-1 n-2)
   (if (= max count)
     (+ n-1 n-2)
@@ -39,11 +49,19 @@ define fibup(max count n-1 n-2)
   (if (<= n 1)
     1
     (* n (factorial (- n 1)))))
-
 define factorial(n)
   if {n <= 1}
     1
     {n * factorial{n - 1}}
+
+(define (gcd x y)
+  (if (= y 0)
+    x
+    (gcd y (rem x y))))
+define gcd(x y)
+  if {y = 0}
+    x
+    gcd y rem(x y)
 
 x
 x
@@ -288,6 +306,17 @@ let
   \\
     x 1
     y 2
+
+(let
+  (
+    (var1 (cos a))
+    (var2 (sin a)))
+  body...)
+let ; Demo GROUP
+  \\
+    var1 cos(a)
+    var2 sin(a)
+  body...
 
 (cond
   ((< y 1) (frob))
@@ -1615,7 +1644,6 @@ foo1
     stream-car
     stream-cdr
     stream-lambda))
-
 <* define-library \\ (srfi 41 primitive)
 export . (
 stream-cons stream-null
@@ -1694,7 +1722,6 @@ ff ; Comments
         (expose (make-e area)))
       (set! now expose)
       (dostuff config expose))))
-
 define init(win area)
   let
     $ style $ get-style win
@@ -1722,9 +1749,298 @@ define represent-as-infix?(x)
     list? x
     {length(x) <= 6}
 
+(define (line-tail x)
+  (cond
+    ((null? x) (quote ()))
+    ((pair? x)
+      (append '(#\space)
+        (exposed-unit (car x))
+        (line-tail (cdr x))))
+    (#t
+      (append LISTSP.SP (exposed-unit x)))))
+define line-tail(x)
+  cond
+    null?(x)  '()
+    pair?(x)
+      append '(#\space)
+        exposed-unit car(x)
+        line-tail cdr(x)
+    #t
+      append LISTSP.SP exposed-unit(x)
+
+(g (factorial 7) (my-pi) (#f) 0-i (- (cos 0)))
+g factorial(7) my-pi() #f() -i -(cos(0))
+
 0-i
 -i
 
 -v
 -v
+
+(myfunction
+  x: xpos
+  y: ypos)
+myfunction ; Demo SPLIT
+  x: \\ xpos
+  y: \\ ypos
+
+(run (grep |-v| "xx.*zz" (< oldfile) (> newfile)))
+run $ grep |-v| "xx.*zz" <(oldfile) >(newfile)
+
+(a b (c d e f g))
+a b $ c d e f $ g
+
+(define (extract c i) (cond
+  ((vector? c) (vector-ref c i))
+  ((string? c) (string-ref c i))
+  ((pair? c) (list-ref c i))
+  (else (error "Not a collection"))))
+define extract(c i) $ cond
+  vector?(c) $ vector-ref c i
+  string?(c) $ string-ref c i
+  pair?(c)   $ list-ref c i
+  else       $ error "Not a collection"
+
+
+(define (merge < as bs) (cond
+  ((null? as) bs)
+  ((null? bs) as)
+  ((< (car as) (car bs)) (cons
+    (car as)
+    (merge < (cdr as) bs)))
+  (else (cons
+    (car bs)
+    (merge < as (cdr bs))))))
+define merge(< as bs) $ cond
+  null?(as)           $ bs
+  null?(bs)           $ as
+  {car(as) < car(bs)} $ cons
+                         car as
+                         merge < cdr(as) bs
+  else                $ cons
+                         car bs
+                         merge < as cdr(bs)
+
+(let ((x (sqrt a)))
+  (g (+ x 1) (- x 1)))
+let <* x sqrt(a) *>
+! g {x + 1} {x - 1}
+
+(let ((x (- oldx 1)) (y (- oldy 1)))
+  (+ (* x x) (* y y)))
+let <* x $ {oldx - 1} \\ y $ {oldy - 1} *>
+! {{x * x} + {y * y}}
+
+(let ((x (cos (f c))))
+  (dostuff x))
+let <* x $ cos $ f c *>
+! dostuff x
+
+(struct: pt ((x : Real) (y : Real)))
+struct: pt ((x : Real) (y : Real))
+
+(: distance (pt pt -> Real))
+{distance : (pt pt -> Real)}
+
+(define (distance p1 p2)
+  (sqrt (+ (sqr (- (pt-x p2) (pt-x p1)))
+           (sqr (- (pt-y p2) (pt-y p1))))))
+define distance(p1 p2)
+  sqrt{sqr{pt-x(p2) - pt-x(p1)} +
+       sqr{pt-y(p2) - pt-y(p1)}}
+
+xyzzy
+xyzzy
+
+(define-library
+  (example grid)
+  (export make rows cols ref each (rename put! set!))
+  (import (scheme base))
+  (begin
+
+    (define (make n m)
+      (let ((grid (make-vector n)))
+        (do ((i 0 (+ i 1)))
+            ((= i n) grid)
+            (let ((v (make-vector m #f alse)))
+              (vector-set! grid i v)))))
+
+    (define (rows grid) (vector-length grid))
+    (define (cols grid)
+      (vector-length (vector-ref grid 0)))
+
+    (define (ref grid n m)
+      (and
+        (< -1 n (rows grid))
+        (< -1 m (cols grid))
+        (vector-ref (vector-ref grid n) m)))
+
+    (define (put! grid n m v)
+      (vector-set! (vector-ref grid n) m v))))
+define-library
+  example grid
+  export make rows cols ref each rename(put! set!)
+  import (scheme base)
+  <* begin
+
+define make(n m)
+  let (grid(make-vector(n)))
+    do <* i 0 {i + 1} *>
+    ! {i = n} grid
+    ! let <* v make-vector(m #f alse) *>
+    !   vector-set! grid i v
+
+define rows(grid) vector-length(grid)
+define cols(grid)
+  vector-length(vector-ref(grid 0))
+
+define ref(grid n m)
+  and
+    {-1 < n < rows(grid)}
+    {-1 < m < cols(grid)}
+    vector-ref vector-ref(grid n) m
+
+define put!(grid n m v)
+  vector-set! vector-ref(grid n) m v
+*>
+
+(aa1 bb1 ((aa2 bb2)) ((aa3 bb3)) ddd (eee fff))
+aa1 bb1 <* aa2 bb2 *> <* aa3 bb3 *> ddd
+  eee fff
+
+
+(define-library
+  (example grid)
+  (export make rows cols ref each (rename put! set!))
+  (import (scheme base))
+  (define (make n m)
+    (let ((grid (make-vector n)))
+      (do ((i 0 (+ i 1)))
+          ((= i n) grid)
+          (let ((v (make-vector m #f alse)))
+            (vector-set! grid i v)))))
+
+  (define (rows grid) (vector-length grid))
+  (define (cols grid)
+    (vector-length (vector-ref grid 0)))
+
+  (define (ref grid n m)
+    (and
+      (< -1 n (rows grid))
+      (< -1 m (cols grid))
+      (vector-ref (vector-ref grid n) m)))
+
+  (define (put! grid n m v)
+    (vector-set! (vector-ref grid n) m v)))
+define-library (example grid) . <*
+
+export make rows cols ref each rename(put! set!)
+import scheme(base)
+
+define make(n m)
+  let (grid(make-vector(n)))
+    do (i(0 {i + 1}))
+    ! {i = n} grid
+    ! let (v(make-vector(m #f alse))) vector-set!(grid i v)
+
+define rows(grid) vector-length(grid)
+define cols(grid) vector-length(vector-ref(grid 0))
+
+define ref(grid n m)
+  and
+    {-1 < n < rows(grid)}
+    {-1 < m < cols(grid)}
+    vector-ref vector-ref(grid n) m
+
+define put!(grid n m v) vector-set!(vector-ref(grid n) m v)
+*>
+
+
+(let ((var1 value1) (var2 let ((x 0)))) (+ var1 var2))
+let <*
+var1 value1
+var2 let <* x 0 *> *>
+  {var1 + var2}
+
+(a (b))
+a $ <* b *>
+
+(foo ((a (b c))) (x (y) z))
+foo
+  <* a $ b c *>
+  x <* y *> z
+
+(foo2 ((a (b c))) (x (y) z))
+foo2
+  <* a $ b c *> \\ x <* y *> z
+
+
+(quote (foo2 ((a (b c))) (x (y) z)))
+' foo2
+  <* a $ b c *> \\ x <* y *> z
+
+(quasiquote (x (unquote y) (a (unquote b))))
+` x ,y $ a ,b
+
+(quasiquote zz)
+` zz
+
+(define x1 (define x2 2) (define x3 3))
+define x1 . <*
+
+define x2 2
+
+define x3 3
+*>
+
+
+(define x5 (define x6 2) (define x7 3))
+define x5 . <*
+define x6 2
+
+define x7 3 *>
+
+
+(define (foo x) (define (bar y) y) (define (baz z) z))
+define foo(x) . <*
+
+define bar(y)
+! y
+
+define baz(z)
+! z
+*>
+
+; This is a lame test, but the test framework makes this hard to really test
+(a b)
+#1=(a b)
+
+#t
+#true
+
+#f
+#false
+
+(combiney1 (a b (xx yy)) (zz1 zz2))
+combiney1
+  a b . <* xx yy *> \\ zz1 zz2
+
+(combiney2 (a b (xx yy) (zz1 zz2)))
+combiney2
+  a b . <* xx yy *> $ zz1 zz2
+
+(inside (x y (a b ((c d)))) qqqq)
+inside
+  x y . <* a b <* c d *> *> \\ qqqq
+
+(a8 b8 . c8)
+#|1|# #|2|# a8 #|3|# #|4|# b8 #|5|# #|6|#  .  #|7|# #|8|# c8 #|9|# #|a|#  
+
+|a!b|
+|a\x21;b|
+
+
+
+7
+7
 

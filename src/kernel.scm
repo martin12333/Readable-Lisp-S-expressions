@@ -68,8 +68,6 @@
 ;   - make-read creates a new procedure that supports your Scheme's reader
 ;     interface.  Usually, this means making a new procedure that accepts
 ;     either 0 or 1 parameters, defaulting to (current-input-port).
-;   - If your Scheme doesn't support unlimited lookahead, you should make
-;     the fake port that supports 2-char lookahead at this point.
 ;   - If your Scheme doesn't keep track of source location information
 ;     automatically with the ports, you may again need to wrap it here.
 ;   - If your Scheme needs a particularly magical incantation to attach
@@ -180,7 +178,7 @@
           (let* ((port (car fake-port))
                  (char (peek-char port)))
             (if (eof-object? char)
-              (set-car! fake-port char))
+                (set-car! fake-port char))
             char)))
     (define (my-read-char fake-port)
       (if (eof-object? (car fake-port))
@@ -188,7 +186,7 @@
           (let* ((port (car fake-port))
                  (char (read-char port)))
             (if (eof-object? char)
-              (set-car! fake-port char))
+                (set-car! fake-port char))
             char)))
 
     (define (make-read f)
@@ -198,8 +196,8 @@
 
     (define (invoke-read read fake-port)
       (if (eof-object? (car fake-port))
-        (car fake-port)
-        (read (car fake-port))))
+          (car fake-port)
+          (read (car fake-port))))
 
     ; create a list with the source information
     (define (get-sourceinfo fake-port)
@@ -247,7 +245,7 @@
                             ((not %load-hook)
                               #f)
                             ((not (procedure? %load-hook))
-                              (error "value of %load-hook is neither procedure nor #f"))
+                              (error "%load-hook must be procedure or #f"))
                             (#t
                               %load-hook))))
                 (cond
@@ -446,8 +444,6 @@
   ; exported procedures
   (; tier read procedures
    curly-infix-read neoteric-read sweet-read
-   ; comparison procedures
-   compare-read-file ; compare-read-string
    ; replacing the reader
    replace-read restore-traditional-read
    enable-curly-infix enable-neoteric enable-sweet)
@@ -511,7 +507,7 @@
         ((eqv? c carriage-return)
           (my-read-char port)
           (if (eqv? (my-peek-char port) linefeed)
-            (my-read-char port)))
+              (my-read-char port)))
         ((eqv? c linefeed)
           (my-read-char port)))))
 
@@ -535,10 +531,6 @@
         (#t
           (my-read-char port)
           (consume-to-whitespace port)))))
-
-  (define (ismember? item lyst)
-    ; Returns true if item is member of lyst, else false.
-    (pair? (member item lyst)))
 
   (define debugger-output #f)
   ; Quick utility for debugging.  Display marker, show data, return data.
@@ -568,11 +560,11 @@
         ((char=? c stop-char)
           (my-read-char port)
           (attach-sourceinfo pos '()))
-        ((ismember? c '(#\) #\] #\}))  (read-error "Bad closing character") c)
+        ((memv c '(#\) #\] #\}))  (read-error "Bad closing character") c)
         (#t
           (let ((datum (my-read port)))
             (cond
-               ((eq? datum period-symbol)
+               ((and (eq? datum period-symbol) (char=? c #\.))
                  (let ((datum2 (my-read port)))
                    (consume-whitespace port)
                    (cond
@@ -665,23 +657,87 @@
     (let ((c (my-peek-char port)))
       (cond
          ((eof-object? c) '())
-         ((ismember? c delims) '())
-         (#t (cons (my-read-char port) (read-until-delim port delims))))))
+         ((memv c delims) '())
+         (#t (my-read-char port) (cons c (read-until-delim port delims))))))
 
   (define (read-error message)
-    (display "Error: ")
-    (display message)
-    (newline)
+    (display "Error: " (current-error-port))
+    (display message (current-error-port))
+    (newline (current-error-port))
     ; Guile extension, but many Schemes have exceptions
     (throw 'readable)
     '())
 
+  ; Return the number by reading from port, and prepending starting-lyst.
+  ; Returns #f if it's not a number.
   (define (read-number port starting-lyst)
     (string->number (list->string
       (append starting-lyst
         (read-until-delim port neoteric-delimiters)))))
 
+  ; Return list of digits read from port; may be empty.
+  (define (read-digits port)
+    (let ((c (my-peek-char port)))
+      (cond
+        ((memv c digits)
+          (cons (my-read-char port) (read-digits port)))
+        (#t '()))))
 
+
+  (define char-name-values
+    ; Includes standard names and guile extensions; see
+    ; http://www.gnu.org/software/guile/manual/html_node/Characters.html
+    '((space #x0020)
+      (newline #x000a)
+      (nl #x000a)
+      (tab #x0009)
+      (nul #x0000)
+      (null #x0000)
+      (alarm #x0007)
+      (backspace #x0008)
+      (linefeed #x000a)
+      (vtab #x000b)
+      (page #x000c)
+      (return #x000d)
+      (esc #x001b)
+      (delete #x007f)
+      ; Additional character names as extensions:
+      (soh #x0001)
+      (stx #x0002)
+      (etx #x0003)
+      (eot #x0004)
+      (enq #x0005)
+      (ack #x0006)
+      (bel #x0007)
+      (bs #x0008)
+      (ht #x0009)
+      (lf #x000a)
+      (vt #x000b)
+      (ff #x000c)
+      (np #x000c) ; new page
+      (cr #x000d)
+      (so #x000e)
+      (si #x000f)
+      (dle #x0010)
+      (dc1 #x0011)
+      (dc2 #x0012)
+      (dc3 #x0013)
+      (dc4 #x0014)
+      (nak #x0015)
+      (syn #x0016)
+      (etb #x0017)
+      (can #x0018)
+      (em #x0019)
+      (sub #x001a)
+      (fs #x001c)
+      (gs #x001d)
+      (rs #x001e)
+      (sp #x0020)
+      (del #x007f)
+      ; Other non-guile names.
+      ; rubout noted in: http://docs.racket-lang.org/reference/characters.html
+      (rubout #x007f)))
+  
   (define (process-char port)
     ; We've read #\ - returns what it represents.
     (cond
@@ -692,29 +748,13 @@
               (rest (read-until-delim port neoteric-delimiters)))
           (cond
             ((null? rest) c) ; only one char after #\ - so that's it!
-            (#t
-              (let ((rest-string (list->string (cons c rest))))
-                (cond
-                  ; Implement R6RS character names, see R6RS section 4.2.6.
-                  ; As an extension, we will ALWAYS accept character names
-                  ; of any case, no matter what the case-folding value is.
-                  ((string-ci=? rest-string "space") #\space)
-                  ((string-ci=? rest-string "newline") #\newline)
-                  ((string-ci=? rest-string "tab") tab)
-                  ((string-ci=? rest-string "nul") (integer->char #x0000))
-                  ((string-ci=? rest-string "alarm") (integer->char #x0007))
-                  ((string-ci=? rest-string "backspace") (integer->char #x0008))
-                  ((string-ci=? rest-string "linefeed") (integer->char #x000A))
-                  ((string-ci=? rest-string "vtab") (integer->char #x000B))
-                  ((string-ci=? rest-string "page") (integer->char #x000C))
-                  ((string-ci=? rest-string "return") (integer->char #x000D))
-                  ((string-ci=? rest-string "esc") (integer->char #x001B))
-                  ((string-ci=? rest-string "delete") (integer->char #x007F))
-                  ; Additional character names as extensions:
-                  ((string-ci=? rest-string "ht") tab)
-                  ((string-ci=? rest-string "cr") (integer->char #x000d))
-                  ((string-ci=? rest-string "bs") (integer->char #x0008))
-                  (#t (read-error "Invalid character name"))))))))))
+            (#t ; More than one char; do a lookup.
+              (let* ((cname (string->symbol
+                       (string-downcase (list->string (cons c rest)))))
+                     (found (assq cname char-name-values)))
+                (if found
+                    (integer->char (cadr found))
+                    (read-error "Invalid character name")))))))))
 
   ; If fold-case is active on this port, return string "s" in folded case.
   ; Otherwise, just return "s".  This is needed to support our
@@ -722,8 +762,8 @@
   ; TODO: Should be port-specific
   (define (fold-case-maybe port s)
     (if is-foldcase
-      (my-string-foldcase s)
-      s))
+        (my-string-foldcase s)
+        s))
 
   (define (process-directive dir)
     (cond
@@ -761,6 +801,64 @@
           '() ) ; Treat as comment.
         (#t (read-error "Unsupported #! combination")))))
 
+  ; A cons cell always has a unique address (as determined by eq?);
+  ; we'll use this special cell to tag unmatched datum label references.
+  ; An unmatched datum label will have the form
+  ; (cons unmatched-datum-label-tag NUMBER)
+  (define unmatched-datum-label-tag
+    (cons 'unmatched-datum-label-tag 'label))
+  (define (is-matching-label-tag? number value)
+    (and
+      (pair? value)
+      (eq?  (car value) unmatched-datum-label-tag)
+      (eqv? (cdr value) number)))
+
+  ; Patch up datum, starting at position,
+  ; so that all labels "number" are replaced
+  ; with the value of "replace".
+  ; Note that this actually OVERWRITES PORTIONS OF A LIST with "set!",
+  ; so that we can maintain "eq?"-ness.  This is really wonky,
+  ; but datum labels are themselves wonky.
+  ; "skip" is a list of locations that don't need (re)processing; it
+  ; should be a hash table but those aren't portable.
+  (define (patch-datum-label-tail number replace position skip)
+    (let ((new-skip (cons position skip)))
+      (cond
+        ((and (pair? position)
+              (not (eq? (car position) unmatched-datum-label-tag))
+              (not (memq position skip)))
+          (if (is-matching-label-tag? number (car position))
+              (set-car! position replace) ; Yes, "set!" !!
+              (patch-datum-label-tail number replace (car position) new-skip))
+          (if (is-matching-label-tag? number (cdr position))
+              (set-cdr! position replace) ; Yes, "set!" !!
+              (patch-datum-label-tail number replace (cdr position) new-skip)))
+        ((vector? position)
+          (do ((len (vector-length position))
+               (k 0 (+ k 1)))
+            ((>= k len) (values))
+            (let ((x (vector-ref position k)))
+              (if (is-matching-label-tag? number x)
+                  (vector-set! position k replace)
+                  (patch-datum-label-tail number replace x new-skip)))))
+        (#t (values)))))
+
+  (define (patch-datum-label number starting-position)
+    (if (is-matching-label-tag? number starting-position)
+        (read-error "Illegal reference as the labelled object itself"))
+    (patch-datum-label-tail number starting-position starting-position '())
+    starting-position)
+
+  ; Gobble up the to-gobble characters from port, and return # ungobbled.
+  (define (gobble-chars port to-gobble)
+    (if (null? to-gobble)
+        0
+        (cond
+          ((char-ci=? (my-peek-char port) (car to-gobble))
+            (my-read-char port)
+            (gobble-chars port (cdr to-gobble)))
+          (#t (length to-gobble)))))
+
   (define (process-sharp no-indent-read port)
     ; We've read a # character.  Returns a list whose car is what it
     ; represents; empty list means "comment".
@@ -773,17 +871,30 @@
         ((eof-object? c) (list c)) ; If eof, return eof.
         (#t
           ; Not EOF. Read in the next character, and start acting on it.
-          (my-read-char port)
           (cond
-            ((char-ci=? c #\t)  '(#t))
-            ((char-ci=? c #\f)  '(#f))
-            ((ismember? c '(#\i #\e #\b #\o #\d #\x
-                            #\I #\E #\B #\O #\D #\X))
-              (list (read-number port (list #\# (char-downcase c)))))
+            ((char-ci=? c #\t)
+              (my-read-char port)
+              (if (memv (gobble-chars port '(#\r #\u #\e)) '(0 3))
+                  '(#t)
+                  (read-error "Incomplete #true")))
+            ((char-ci=? c #\f)
+              (my-read-char port)
+              (if (memv (gobble-chars port '(#\a #\l #\s #\e)) '(0 4))
+                  '(#f)
+                  (read-error "Incomplete #false")))
+            ((memv c '(#\i #\e #\b #\o #\d #\x
+                       #\I #\E #\B #\O #\D #\X))
+              (my-read-char port)
+              (let ((num (read-number port (list #\# (char-downcase c)))))
+                (if num
+                    (list num)
+                    (read-error "Not a number after number-required start"))))
             ((char=? c #\( )  ; Vector.
+              (my-read-char port)
               (list (list->vector
                 (my-read-delimited-list no-indent-read #\) port))))
             ((char=? c #\u )  ; u8 Vector.
+              (my-read-char port)
               (cond
                 ((not (eqv? (my-read-char port) #\8 ))
                   (read-error "#u must be followed by 8"))
@@ -791,18 +902,46 @@
                   (read-error "#u8 must be followed by left paren"))
                 (#t (list (list->u8vector
                       (my-read-delimited-list no-indent-read #\) port))))))
-            ((char=? c #\\) (list (process-char port)))
+            ((char=? c #\\) (my-read-char port) (list (process-char port)))
             ; Handle #; (item comment).
             ((char=? c #\;)
+              (my-read-char port)
               (no-indent-read port)  ; Read the datum to be consumed.
               '()) ; Return comment
             ; handle nested comments
             ((char=? c #\|)
+              (my-read-char port)
               (nest-comment port)
               '()) ; Return comment
             ((char=? c #\!)
+              (my-read-char port)
               (process-sharp-bang port))
+            ((memv c digits) ; Datum label, #num# or #num=...
+              (let* ((my-digits (read-digits port))
+                     (label (string->number (list->string my-digits))))
+                (cond
+                  ((eqv? (my-peek-char port) #\#)
+                    (my-read-char port)
+                    (list (cons unmatched-datum-label-tag label)))
+                  ((eqv? (my-peek-char port) #\=)
+                    (my-read-char port)
+                    (if (my-char-whitespace? (my-peek-char port))
+                        (read-error "#num= followed by whitespace"))
+                    (list (patch-datum-label label (no-indent-read port))))
+                  (#t
+                    (read-error "Datum label #NUM requires = or #")))))
+            ((or (char=? c #\space) (char=? c tab))
+              ; Extension - treat # (space|tab) as a comment to end of line.
+              ; This is not required by SRFI-105 or SRFI-110, but it's
+              ; handy because "# " is a comment-to-EOL in many other
+              ; languages (Bourne shells, Perl, Python, etc.)
+              (consume-to-eol port)
+              '())
+            ((char-line-ending? c)
+              ; Extension - treat # EOL as a comment.
+              '())
             (#t
+              (my-read-char port)
               (let ((rv (parse-hash no-indent-read c port)))
                 (cond
                   ((not rv)
@@ -842,8 +981,11 @@
     (let ((c (my-peek-char port)))
       (cond
         ((eof-object? c) period-symbol) ; period eof; return period.
-        ((ismember? c digits)
-          (read-number port (list #\.)))  ; period digit - it's a number.
+        ((memv c digits) ; period digit - it's a number.
+          (let ((num (read-number port (list #\.))))
+            (if num
+                num
+                (read-error "period digit must be a number"))))
         (#t
           ; At this point, Scheme only requires support for "." or "...".
           ; As an extension we can support them all.
@@ -854,12 +996,13 @@
 
   ; Read an inline hex escape (after \x), return the character it represents
   (define (read-inline-hex-escape port)
-    (let* ((chars (read-until-delim port '(#\;)))
+    (let* ((chars (read-until-delim port (append neoteric-delimiters '(#\;))))
            (n (string->number (list->string chars) 16)))
-      (if (not (eof-object? (my-peek-char port)))
-        (my-read-char port))
+      (if (eqv? #\; (my-peek-char port))
+          (my-read-char port)
+          (read-error "Unfinished inline hex escape"))
       (if (not n)
-        (read-error "Bad inline hex escape"))
+          (read-error "Bad inline hex escape"))
       (integer->char n)))
 
   ; We're inside |...| ; return the list of characters inside.
@@ -892,8 +1035,7 @@
               ((eqv? c2 #\x) ; inline hex escape =  \x hex_scalar_value ;
                 (cons 
                       (read-inline-hex-escape port)
-                      (read-symbol-elements port)))
-          )))
+                      (read-symbol-elements port))))))
         (#t (cons c (read-symbol-elements port))))))
 
   ; This implements a simple Scheme "read" implementation from "port",
@@ -918,8 +1060,6 @@
           ; attach the source information to the item read-in
           (attach-sourceinfo pos
             (cond
-              ((ismember? c digits) ; Initial digit.
-                (read-number port '()))
               ((char=? c #\#)
                 (my-read-char port)
                 (let ((rv (process-sharp no-indent-read port)))
@@ -932,17 +1072,18 @@
                     ((pair? rv)
                       (car rv))
                     (#t ; convention violated
-                      (read-error "readable/kernel: ***ERROR IN COMPATIBILITY LAYER parse-hash must return #f '() or `(,a)")))))
+                      ; This is really a bug in implementation, and should
+                      ; be impossible to trigger via user input.
+                      (read-error "parse-hash must return #f '() or `(,a)")))))
               ((char=? c #\.) (process-period port))
-              ((or (char=? c #\+) (char=? c #\-))  ; Initial + or -
-                (my-read-char port)
+              ((or (memv c digits) (char=? c #\+) (char=? c #\-))
                 (let*
-                  ((maybe-number (list->string (cons c
-                     (read-until-delim port neoteric-delimiters))))
+                  ((maybe-number (list->string
+                     (read-until-delim port neoteric-delimiters)))
                    (as-number (string->number maybe-number)))
                   (if as-number
-                    as-number
-                    (string->symbol (fold-case-maybe port maybe-number)))))
+                      as-number
+                      (string->symbol (fold-case-maybe port maybe-number)))))
               ((char=? c #\')
                 (my-read-char port)
                 (list (attach-sourceinfo pos 'quote)
@@ -1017,8 +1158,8 @@
   ; Return alternating parameters in a list (1st, 3rd, 5th, etc.)
   (define (alternating-parameters lyst)
     (if (or (null? lyst) (null? (cdr lyst)))
-      lyst
-      (cons (car lyst) (alternating-parameters (cddr lyst)))))
+        lyst
+        (cons (car lyst) (alternating-parameters (cddr lyst)))))
 
   ; Not a simple infix list - transform it.  Written as a separate procedure
   ; so that future experiments or SRFIs can easily replace just this piece.
@@ -1080,24 +1221,21 @@
           ((eof-object? c) prefix)
           ((char=? c #\( ) ; Implement f(x)
             (my-read-char port)
-            (neoteric-process-tail port
-              (attach-sourceinfo pos
-                (cons prefix (my-read-delimited-list neoteric-read-nocomment #\) port)))))
+            (neoteric-process-tail port (attach-sourceinfo pos (cons prefix
+                  (my-read-delimited-list neoteric-read-nocomment #\) port)))))
           ((char=? c #\[ )  ; Implement f[x]
             (my-read-char port)
-            (neoteric-process-tail port
-                (attach-sourceinfo pos
-                  (cons (attach-sourceinfo pos '$bracket-apply$)
-                    (cons prefix
-                      (my-read-delimited-list neoteric-read-nocomment #\] port))))))
+            (neoteric-process-tail port (attach-sourceinfo pos
+              (cons (attach-sourceinfo pos '$bracket-apply$)
+                (cons prefix
+                  (my-read-delimited-list neoteric-read-nocomment #\] port))))))
           ((char=? c #\{ )  ; Implement f{x}
             (my-read-char port)
-            (neoteric-process-tail port
-              (attach-sourceinfo pos
-                (let
-                  ((tail (process-curly
-                      (my-read-delimited-list neoteric-read-nocomment #\} port))))
-                  (if (eqv? tail '())
+            (neoteric-process-tail port (attach-sourceinfo pos
+              (let
+                ((tail (process-curly
+                   (my-read-delimited-list neoteric-read-nocomment #\} port))))
+                (if (eqv? tail '())
                     (list prefix) ; Map f{} to (f), not (f ()).
                     (list prefix tail))))))
           (#t prefix))))
@@ -1135,8 +1273,8 @@
              (neoteric-read-real port))
            (#t (underlying-read neoteric-read-nocomment port)))))
       (if (eof-object? result)
-        result
-        (neoteric-process-tail port result))))
+          result
+          (neoteric-process-tail port result))))
 
   (define (neoteric-read-nocomment port)
     (neoteric-read-real port))
@@ -1145,14 +1283,36 @@
 ; Sweet Expressions (this implementation maps to the BNF)
 ; -----------------------------------------------------------------------------
 
+  ; There is no standard Scheme mechanism to unread multiple characters.
+  ; Therefore, the key productions and some of their supporting procedures
+  ; return both the information on what ended their reading process,
+  ; as well the actual value (if any) they read before whatever stopped them.
+  ; That way, procedures can process the value as read, and then pass on
+  ; the ending information to whatever needs it next.  This approach,
+  ; which we call a "non-tokenizing" implementation, implements a tokenizer
+  ; via procedure calls instead of needing a separate tokenizer.
+  ; The ending information can be:
+  ; - "stopper" - this is returned by productions etc. that do NOT
+  ;     read past the of a line (outside of paired characters and strings).
+  ;     It is 'normal if it ended normally (e.g., at end of line); else it's
+  ;     'sublist_marker ($), 'group_split_marker (\\), 'collecting (<*),
+  ;     'collecting_end (*>), 'scomment (special comments like #|...|#), or
+  ;     'abbrevw (initial abbreviation with whitespace after it).
+  ; - "new_indent" - this is returned by productions etc. that DO read
+  ;     past the end of a line.  Such productions typically read the
+  ;     next line's indent to determine if they should return.
+  ;     If they should, they return the new indent so callers can
+  ;     determine what to do next.  A "*>" should return even though its
+  ;     visible indent level is length 0; we handle this by prepending
+  ;     all normal indents with "^", and "*>" generates a length-0 indent
+  ;     (which is thus shorter than even an indent of 0 characters).
+
   (define group_split (string->symbol "\\\\"))
   (define group-split-char #\\ ) ; First character of split symbol.
   (define non-whitespace-indent #\!) ; Non-whitespace-indent char.
   (define sublist (string->symbol "$"))
   (define sublist-char #\$) ; First character of sublist symbol.
   (define period_symbol period-symbol)
-
-; TODO: Further cleanup - remove unnecessary declarations, etc.
 
   (define (indentation>? indentation1 indentation2)
     (let ((len1 (string-length indentation1))
@@ -1196,20 +1356,27 @@
           (my-read-char port)
           (consume-ff-vt port)))))
 
+  ; Do 2-item append, but report read-error if the LHS is not a proper list.
+  ; Don't use this if the lhs *must* be a list (e.g., if we have (list x)).
+  (define (my-append lhs rhs)
+    (if (list? lhs)
+        (append lhs rhs)
+        (read-error "Must have proper list on left-hand-side to append data")))
+
   ; Read an n-expression.  Returns ('scomment '()) if it's an scomment,
   ; else returns ('normal n_expr).
   ; Note: If a *value* begins with #, process any potential neoteric tail,
   ; so constructs like #f() work.
   (define (n_expr_or_scomment port)
     (if (eqv? (my-peek-char port) #\#)
-      (let* ((consumed-sharp (my-read-char port))
-             (result (process-sharp neoteric-read-nocomment port)))
-        (if (null? result)
-          (list 'scomment '())
-          (list 'normal
-            (neoteric-process-tail port
-              (car result)))))
-      (list 'normal (neoteric-read-nocomment port))))
+        (let* ((consumed-sharp (my-read-char port))
+               (result (process-sharp neoteric-read-nocomment port)))
+          (if (null? result)
+            (list 'scomment '())
+            (list 'normal
+              (neoteric-process-tail port
+                (car result)))))
+        (list 'normal (neoteric-read-nocomment port))))
 
   ; Read an n-expression.  Returns ('normal n_expr) in most cases;
   ; if it's a special marker, the car is the marker name instead of 'normal.
@@ -1222,20 +1389,22 @@
            (type (car results))
            (expr (cadr results)))
       (if (eq? (car results) 'scomment)
-        results
-        (cond
-          ((and (eq? expr sublist) (eqv? c sublist-char))
-            (list 'sublist_marker '()))
-          ((and (eq? expr group_split) (eqv? c group-split-char))
-            (list 'group_split_marker '()))
-          ((and (eq? expr '<*) (eqv? c #\<))
-            (list 'collecting '()))
-          ((and (eq? expr '*>) (eqv? c #\*))
-            (list 'collecting_end '()))
-          ((and (eq? expr '$$$) (eqv? c #\$))
-            (read-error "Error - $$$ is reserved"))
-          (#t
-            results)))))
+          results
+          (cond
+            ((and (eq? expr sublist) (eqv? c sublist-char))
+              (list 'sublist_marker '()))
+            ((and (eq? expr group_split) (eqv? c group-split-char))
+              (list 'group_split_marker '()))
+            ((and (eq? expr '<*) (eqv? c #\<))
+              (list 'collecting '()))
+            ((and (eq? expr '*>) (eqv? c #\*))
+              (list 'collecting_end '()))
+            ((and (eq? expr '$$$) (eqv? c #\$))
+              (read-error "Error - $$$ is reserved"))
+            ((and (eq? expr period-symbol) (eqv? c #\.))
+              (list 'period_marker '()))
+            (#t
+              results)))))
 
   ; Check if we have abbrev+whitespace.  If the current peeked character
   ; is one of certain whitespace chars,
@@ -1247,8 +1416,9 @@
   (define (maybe-initial-abbrev port abbrev_procedure)
     (let ((c (my-peek-char port)))
       (if (or (char-hspace? c) (eqv? c carriage-return) (eqv? c linefeed))
-        (list 'abbrevw abbrev_procedure)
-        (list 'normal (list abbrev_procedure (neoteric-read-nocomment port))))))
+          (list 'abbrevw abbrev_procedure)
+          (list 'normal
+            (list abbrev_procedure (neoteric-read-nocomment port))))))
 
   ; Read the first n_expr on a line; handle abbrev+whitespace specially.
   ; Returns ('normal VALUE) in most cases.
@@ -1263,10 +1433,10 @@
       ((#\,) 
         (my-read-char port)
         (if (eqv? (my-peek-char port) #\@)
-          (begin
-            (my-read-char port)
-            (maybe-initial-abbrev port 'unquote-splicing))
-          (maybe-initial-abbrev port 'unquote)))
+            (begin
+              (my-read-char port)
+              (maybe-initial-abbrev port 'unquote-splicing))
+            (maybe-initial-abbrev port 'unquote)))
       (else
         (n_expr port))))
 
@@ -1275,14 +1445,16 @@
   (define (comment_eol_read_indent port)
     (consume-to-eol port)
     (consume-end-of-line port)
-    (let* ((indentation (list->string (cons #\^ (accumulate-ichar port))))
+    (let* ((indentation-as-list (cons #\^ (accumulate-ichar port)))
            (c (my-peek-char port)))
       (cond
         ((eqv? c #\;)  ; A ;-only line, consume and try again.
           (comment_eol_read_indent port))
         ((is_initial_comment_eol c) ; Indent-only line
-          "^")
-        (#t indentation))))
+          (if (memv #\! indentation-as-list)
+              (read-error "Ending indentation-only line must not use '!'")
+              "^"))
+        (#t (list->string indentation-as-list)))))
 
   ; Utility function:
   ; If x is a 1-element list, return (car x), else return x
@@ -1292,7 +1464,8 @@
       ((null? (cdr x)) (car x))
       (#t x)))
 
-  ; Return contents of collecting_tail.
+  ; Return contents (value) of collecting_tail.  It does *not* report a
+  ; stopper or ending indent, because it is *ONLY* stopped by collecting_end
   (define (collecting_tail port)
     (let* ((c (my-peek-char port)))
       (cond
@@ -1303,15 +1476,22 @@
           (consume-end-of-line port)
           (collecting_tail port))
         ((char-ichar? c)
-          (let ((indentation (accumulate-ichar port)))
-            (if (is_initial_comment_eol (my-peek-char port))
-              (collecting_tail port)
-              (read-error "Collecting tail: Only ; or EOL after indent"))))
+          (let* ((indentation (accumulate-ichar port))
+                 (c (my-peek-char port)))
+            (cond
+              ((eqv? c #\;)
+                (collecting_tail port))
+              ((is_initial_comment_eol c)
+                (if (memv #\! indentation)
+                    (read-error "Collecting tail: False empty line with !")
+                    (collecting_tail port)))
+              (#t
+                (read-error "Collecting tail: Only ; after indent")))))
         ((or (eqv? c form-feed) (eqv? c vertical-tab))
           (consume-ff-vt port)
           (if (is_initial_comment_eol (my-peek-char port))
-            (collecting_tail port)
-            (read-error "Collecting tail: FF and VT must be alone on line")))
+              (collecting_tail port)
+              (read-error "Collecting tail: FF and VT must be alone on line")))
         (#t
           (let* ((it_full_results (it_expr port "^"))
                  (it_new_indent   (car it_full_results))
@@ -1324,9 +1504,54 @@
                 ; Directly calling list for a non-null it_value has
                 ; the same effect, but is a lot quicker and simpler.
                 (if (null? it_value)
-                   it_value
-                   (list it_value)))
+                    it_value
+                    (list it_value)))
               (#t (cons it_value (collecting_tail port)))))))))
+
+  ; Skip scomments and error out if we have a normal n_expr;
+  ; Basically implement this BNF:
+  ;    (scomment hspace*)* (n_expr error)?
+  ; This procedure is used after ". value".
+  (define (n_expr_error port full)
+    (if (not (eq? (car full) 'normal))
+        (read-error "BUG! n_expr_error called but stopper not normal"))
+    (if (is_initial_comment_eol (my-peek-char port))
+        full ; All done!
+        (let* ((n_full_results (n_expr port))
+               (n_stopper      (car n_full_results))
+               (n_value        (cadr n_full_results)))
+          (cond
+            ((eq? n_stopper 'scomment) ; Consume scomments.
+              (hspaces port)
+              (n_expr_error port full))
+            ((eq? n_stopper 'normal)
+              (read-error "Illegal second value after ."))
+            (#t ; We found a stopper, return it with the value from "full"
+              (list n_stopper (cadr full)))))))
+
+  ; Returns (stopper value_after_period)
+  (define (post_period port)
+    (if (not (is_initial_comment_eol (my-peek-char port)))
+        (let* ((pn_full_results (n_expr port))
+               (pn_stopper      (car pn_full_results))
+               (pn_value        (cadr pn_full_results)))
+          (cond
+            ((eq? pn_stopper 'scomment)
+              (hspaces port)
+              (post_period port))
+            ((eq? pn_stopper 'normal)
+              (hspaces port)
+              (n_expr_error port pn_full_results))
+            ((eq? pn_stopper 'collecting)
+              (hspaces port)
+              (let ((ct (collecting_tail port)))
+                (hspaces port)
+                (n_expr_error port (list 'normal ct))))
+            ((eq? pn_stopper 'period_marker)
+              (list 'normal period_symbol))
+            (#t ; Different stopper; respond as empty branch with that stopper
+              (list pn_stopper (list period_symbol)))))
+        (list 'normal period_symbol))) ; Empty branch.
 
   ; Returns (stopper computed_value).
   ; The stopper may be 'normal, 'scomment (special comment),
@@ -1341,34 +1566,29 @@
           (let* ((ct_results (collecting_tail port)))
             (hspaces port)
             (if (not (is_initial_comment_eol (my-peek-char port)))
-              (let* ((rr_full_results (rest port))
-                     (rr_stopper      (car rr_full_results))
-                     (rr_value        (cadr rr_full_results)))
-                (list rr_stopper (cons ct_results rr_value)))
-              (list 'normal (list ct_results)))))
-        ((not (eq? basic_special 'normal)) basic_full_results)
-        ((eq? basic_value period_symbol)
+                (let* ((rr_full_results (rest port))
+                       (rr_stopper      (car rr_full_results))
+                       (rr_value        (cadr rr_full_results)))
+                  (list rr_stopper (cons ct_results rr_value)))
+                (list 'normal (list ct_results)))))
+        ((eq? basic_special 'period_marker)
           (if (char-hspace? (my-peek-char port))
-            (begin
-              (hspaces port)
-              (if (not (is_initial_comment_eol (my-peek-char port)))
-                (let* ((pn_full_results (n_expr port))
-                       (pn_stopper      (car pn_full_results))
-                       (pn_value        (cadr pn_full_results)))
-                  (hspaces port)
-                  (if (not (is_initial_comment_eol (my-peek-char port)))
-                    (read-error "Illegal value after . value in head"))
-                  (list pn_stopper pn_value))
-                (list 'normal (list period_symbol))))
-            (list 'normal (list period_symbol))))
+              (begin
+                (hspaces port)
+                (let* ((ct_full_results (post_period port))
+                       (ct_stopper      (car ct_full_results))
+                       (ct_value        (cadr ct_full_results)))
+                  (list ct_stopper (list ct_value))))
+              (list 'normal (list period_symbol))))
+        ((not (eq? basic_special 'normal)) basic_full_results)
         ((char-hspace? (my-peek-char port))
           (hspaces port)
           (if (not (is_initial_comment_eol (my-peek-char port)))
-            (let* ((br_full_results (rest port))
-                   (br_stopper      (car br_full_results))
-                   (br_value        (cadr br_full_results)))
-              (list br_stopper (cons basic_value br_value)))
-            (list 'normal (list basic_value))))
+              (let* ((br_full_results (rest port))
+                     (br_stopper      (car br_full_results))
+                     (br_value        (cadr br_full_results)))
+                (list br_stopper (cons basic_value br_value)))
+              (list 'normal (list basic_value))))
         (#t 
           (list 'normal (list basic_value))))))
 
@@ -1382,46 +1602,33 @@
         ((eq? basic_special 'scomment)
           (hspaces port)
           (if (not (is_initial_comment_eol (my-peek-char port)))
-            (rest port)
-            (list 'normal '())))
+              (rest port)
+              (list 'normal '())))
         ((eq? basic_special 'collecting)
           (hspaces port)
           (let* ((ct_results (collecting_tail port)))
             (hspaces port)
             (if (not (is_initial_comment_eol (my-peek-char port)))
-              (let* ((rr_full_results (rest port))
-                     (rr_stopper      (car rr_full_results))
-                     (rr_value        (cadr rr_full_results)))
-                (list rr_stopper (cons ct_results rr_value)))
-              (list 'normal (list ct_results)))))
-        ((not (eq? basic_special 'normal)) (list basic_special '())) 
-        ((eq? basic_value period_symbol) ; special case: period.
+                (let* ((rr_full_results (rest port))
+                       (rr_stopper      (car rr_full_results))
+                       (rr_value        (cadr rr_full_results)))
+                  (list rr_stopper (cons ct_results rr_value)))
+                (list 'normal (list ct_results)))))
+        ((eq? basic_special 'period_marker)
           (if (char-hspace? (my-peek-char port))
-            (begin
-              (hspaces port)
-              (if (not (is_initial_comment_eol (my-peek-char port)))
-                (let* ((pn_full_results (n_expr port))
-                       (pn_stopper      (car pn_full_results))
-                       (pn_value        (cadr pn_full_results)))
-                  (hspaces port)
-                  (if (not (is_initial_comment_eol (my-peek-char port)))
-                    (let* ((e_full_results (n_expr port))
-                           (e_stopper      (car e_full_results))
-                           (e_value        (cadr e_full_results)))
-                      (if (memq e_stopper '(normal sublist_marker))
-                        (read-error "Illegal value after . value, rest of line")
-                        (list e_stopper pn_value)))
-                    (list pn_stopper pn_value)))
-                (list 'normal (list period_symbol))))
-            (list 'normal (list period_symbol))))
+              (begin
+                (hspaces port)
+                (post_period port))
+              (list 'normal (list period_symbol))))
+        ((not (eq? basic_special 'normal)) (list basic_special '())) 
         ((char-hspace? (my-peek-char port))
           (hspaces port)
           (if (not (is_initial_comment_eol (my-peek-char port)))
-            (let* ((br_full_results (rest port))
-                   (br_stopper      (car br_full_results))
-                   (br_value        (cadr br_full_results)))
-              (list br_stopper (cons basic_value br_value)))
-            (list 'normal (list basic_value))))
+              (let* ((br_full_results (rest port))
+                     (br_stopper      (car br_full_results))
+                     (br_value        (cadr br_full_results)))
+                (list br_stopper (cons basic_value br_value)))
+              (list 'normal (list basic_value))))
         (#t (list 'normal (list basic_value))))))
 
   ; Returns (new_indent computed_value)
@@ -1430,18 +1637,18 @@
            (i_new_indent   (car i_full_results))
            (i_value        (cadr i_full_results)))
       (if (string=? starting_indent i_new_indent)
-        (if (eq? i_value period_symbol)
-          (let* ((f_full_results (it_expr port i_new_indent))
-                 (f_new_indent   (car f_full_results))
-                 (f_value        (cadr f_full_results)))
-            (if (not (indentation>? starting_indent f_new_indent))
-              (read-error "Dedent required after lone . and value line"))
-            (list f_new_indent f_value)) ; final value of improper list
-          (let* ((nxt_full_results (body port i_new_indent))
-                 (nxt_new_indent   (car nxt_full_results))
-                 (nxt_value        (cadr nxt_full_results)))
-            (list nxt_new_indent (cons i_value nxt_value))))
-        (list i_new_indent (list i_value))))) ; dedent - end list.
+          (if (eq? i_value period_symbol)
+              (let* ((f_full_results (it_expr port i_new_indent))
+                     (f_new_indent   (car f_full_results))
+                     (f_value        (cadr f_full_results)))
+                (if (not (indentation>? starting_indent f_new_indent))
+                    (read-error "Dedent required after lone . and value line"))
+                (list f_new_indent f_value)) ; final value of improper list
+              (let* ((nxt_full_results (body port i_new_indent))
+                     (nxt_new_indent   (car nxt_full_results))
+                     (nxt_value        (cadr nxt_full_results)))
+                (list nxt_new_indent (cons i_value nxt_value))))
+          (list i_new_indent (list i_value))))) ; dedent - end list.
 
   ; Returns (new_indent computed_value)
   (define (it_expr_real port starting_indent)
@@ -1449,82 +1656,82 @@
            (head_stopper      (car head_full_results))
            (head_value        (cadr head_full_results)))
       (if (and (not (null? head_value)) (not (eq? head_stopper 'abbrevw)))
-        ; The head... branches:
-        (cond
-          ((eq? head_stopper 'group_split_marker)
-            (hspaces port)
-            (if (is_initial_comment_eol (my-peek-char port))
-              (read-error "Cannot follow split with end of line")
-              (list starting_indent (monify head_value))))
-          ((eq? head_stopper 'sublist_marker)
-            (hspaces port)
-            (if (is_initial_comment_eol (my-peek-char port))
-              (read-error "EOL illegal immediately after sublist"))
-            (let* ((sub_i_full_results (it_expr port starting_indent))
-                   (sub_i_new_indent   (car sub_i_full_results))
-                   (sub_i_value        (cadr sub_i_full_results)))
-              (list sub_i_new_indent
-                (append head_value (list sub_i_value)))))
-          ((eq? head_stopper 'collecting_end)
-            ; Note that indent is "", forcing dedent all the way out.
-            (list "" (monify head_value)))
-          ((is_initial_comment_eol (my-peek-char port))
-            (let ((new_indent (comment_eol_read_indent port)))
-              (if (indentation>? new_indent starting_indent)
-                (let* ((body_full_results (body port new_indent))
-                       (body_new_indent (car body_full_results))
-                       (body_value      (cadr body_full_results)))
-                  (list body_new_indent (append head_value body_value)))
-                (list new_indent (monify head_value)))))
-          (#t
-            (read-error "Must end line with end-of-line sequence")))
-        ; Here, head begins with something special like GROUP_SPLIT:
-        (cond
-          ((or (eq? head_stopper 'group_split_marker)
-               (eq? head_stopper 'scomment))
-            (hspaces port)
-            (if (not (is_initial_comment_eol (my-peek-char port)))
-              (it_expr port starting_indent) ; Skip and try again.
+          ; The head... branches:
+          (cond
+            ((eq? head_stopper 'group_split_marker)
+              (hspaces port)
+              (if (is_initial_comment_eol (my-peek-char port))
+                  (read-error "Cannot follow split with end of line")
+                  (list starting_indent (monify head_value))))
+            ((eq? head_stopper 'sublist_marker)
+              (hspaces port)
+              (if (is_initial_comment_eol (my-peek-char port))
+                  (read-error "EOL illegal immediately after sublist"))
+              (let* ((sub_i_full_results (it_expr port starting_indent))
+                     (sub_i_new_indent   (car sub_i_full_results))
+                     (sub_i_value        (cadr sub_i_full_results)))
+                (list sub_i_new_indent
+                  (my-append head_value (list sub_i_value)))))
+            ((eq? head_stopper 'collecting_end)
+              ; Note that indent is "", forcing dedent all the way out.
+              (list "" (monify head_value)))
+            ((is_initial_comment_eol (my-peek-char port))
               (let ((new_indent (comment_eol_read_indent port)))
-                (cond
-                  ((indentation>? new_indent starting_indent)
-                    (body port new_indent))
-                  ((string=? starting_indent new_indent)
-                    (if (not (is_initial_comment_eol (my-peek-char port)))
-                      (it_expr port new_indent)
-                      (list new_indent (t_expr port)))) ; Restart, no indent.
-                  (#t
-                    (read-error "GROUP_SPLIT EOL DEDENT illegal"))))))
-          ((eq? head_stopper 'sublist_marker)
-            (hspaces port)
-            (if (is_initial_comment_eol (my-peek-char port))
-              (read-error "EOL illegal immediately after solo sublist"))
-            (let* ((is_i_full_results (it_expr port starting_indent))
-                   (is_i_new_indent   (car is_i_full_results))
-                   (is_i_value        (cadr is_i_full_results)))
-              (list is_i_new_indent
-                (list is_i_value))))
-          ((eq? head_stopper 'abbrevw)
-            (hspaces port)
-            (if (is_initial_comment_eol (my-peek-char port))
-              (begin
-                (let ((new_indent (comment_eol_read_indent port)))
-                  (if (not (indentation>? new_indent starting_indent))
-                    (read-error "Indent required after solo abbreviation"))
-                  (let* ((ab_full_results (body port new_indent))
-                         (ab_new_indent   (car ab_full_results))
-                         (ab_value      (cadr ab_full_results)))
-                    (list ab_new_indent
-                      (append (list head_value) ab_value)))))
-              (let* ((ai_full_results (it_expr port starting_indent))
-                     (ai_new_indent (car ai_full_results))
-                     (ai_value    (cadr ai_full_results)))
-                (list ai_new_indent
-                  (list head_value ai_value)))))
-          ((eq? head_stopper 'collecting_end)
-            (list "" head_value))
-          (#t 
-            (read-error "Initial head error"))))))
+                (if (indentation>? new_indent starting_indent)
+                    (let* ((body_full_results (body port new_indent))
+                           (body_new_indent (car body_full_results))
+                           (body_value      (cadr body_full_results)))
+                      (list body_new_indent (my-append head_value body_value)))
+                    (list new_indent (monify head_value)))))
+            (#t
+              (read-error "Must end line with end-of-line sequence")))
+          ; Here, head begins with something special like GROUP_SPLIT:
+          (cond
+            ((or (eq? head_stopper 'group_split_marker)
+                 (eq? head_stopper 'scomment))
+              (hspaces port)
+              (if (not (is_initial_comment_eol (my-peek-char port)))
+                  (it_expr port starting_indent) ; Skip and try again.
+                  (let ((new_indent (comment_eol_read_indent port)))
+                    (cond
+                      ((indentation>? new_indent starting_indent)
+                        (body port new_indent))
+                      ((string=? starting_indent new_indent)
+                        (if (not (is_initial_comment_eol (my-peek-char port)))
+                          (it_expr port new_indent)
+                          (list new_indent (t_expr port)))) ; Restart
+                      (#t
+                        (read-error "GROUP_SPLIT EOL DEDENT illegal"))))))
+            ((eq? head_stopper 'sublist_marker)
+              (hspaces port)
+              (if (is_initial_comment_eol (my-peek-char port))
+                  (read-error "EOL illegal immediately after solo sublist"))
+              (let* ((is_i_full_results (it_expr port starting_indent))
+                     (is_i_new_indent   (car is_i_full_results))
+                     (is_i_value        (cadr is_i_full_results)))
+                (list is_i_new_indent
+                  (list is_i_value))))
+            ((eq? head_stopper 'abbrevw)
+              (hspaces port)
+              (if (is_initial_comment_eol (my-peek-char port))
+                  (begin
+                    (let ((new_indent (comment_eol_read_indent port)))
+                      (if (not (indentation>? new_indent starting_indent))
+                          (read-error "Indent required after abbreviation"))
+                      (let* ((ab_full_results (body port new_indent))
+                             (ab_new_indent   (car ab_full_results))
+                             (ab_value      (cadr ab_full_results)))
+                        (list ab_new_indent
+                          (append (list head_value) ab_value)))))
+                  (let* ((ai_full_results (it_expr port starting_indent))
+                         (ai_new_indent (car ai_full_results))
+                         (ai_value    (cadr ai_full_results)))
+                    (list ai_new_indent
+                      (list head_value ai_value)))))
+            ((eq? head_stopper 'collecting_end)
+              (list "" head_value))
+            (#t 
+              (read-error "Initial head error"))))))
 
   ; Read it_expr.  This is a wrapper that attaches source info
   ; and checks for consistent indentation results.
@@ -1534,38 +1741,45 @@
            (results_indent (car results))
            (results_value (cadr results)))
       (if (indentation>? results_indent starting_indent)
-        (read-error "Inconsistent indentation"))
+          (read-error "Inconsistent indentation"))
       (list results_indent (attach-sourceinfo pos results_value))))
 
   ; Top level - read a sweet-expression (t-expression).  Handle special
   ; cases, such as initial indent; call it_expr for normal case.
-  (define (t_expr_real port)
+  (define (t_expr port)
     (let* ((c (my-peek-char port)))
       (if (eof-object? c) ; Check EOF early (a guile bug consumes EOF on peek)
-        c
-        (cond
-          ((is_initial_comment_eol c)
-            (consume-to-eol port)
-            (consume-end-of-line port)
-            (t_expr port))
-          ((or (eqv? c form-feed) (eqv? c vertical-tab))
-            (consume-ff-vt port))
-          ((char-ichar? c)
-            (let ((indentation-list (cons #\^ (accumulate-ichar port))))
-              (if (memv #\! indentation-list)
-                (read-error "Initial ident must not use '!'")
+          c
+          (cond
+            ((is_initial_comment_eol c)
+              (consume-to-eol port)
+              (consume-end-of-line port)
+              (t_expr port))
+            ((or (eqv? c form-feed) (eqv? c vertical-tab))
+              (consume-ff-vt port)
+              (t_expr port))
+            ((char-ichar? c)
+              (let ((indentation-list (cons #\^ (accumulate-ichar port))))
                 (if (not (memv (my-peek-char port) initial_comment_eol))
-                  (let ((results (n_expr_or_scomment port)))
-                    (if (eq? (car results) 'scomment)
-                      (begin
-                        (hspaces port)
-                        (t_expr port)) ; Consume scomment, try again.
-                      (cadr results))) ; Return one value.
-                  (begin ; Indented comment_eol, consume and try again.
-                    (consume-to-eol port)
-                    (consume-end-of-line port)
-                    (t_expr port))))))
-          (#t (cadr (it_expr port "^")))))))
+                    (let ((results (n_expr_or_scomment port)))
+                      (if (not (eq? (car results) 'scomment))
+                          (cadr results) ; Normal n_expr, return one value.
+                          (begin ; We have an scomment; skip and try again.
+                            (hspaces port)
+                            (t_expr port))))
+                    (begin ; Indented comment_eol, consume and try again.
+                      (if (memv #\! indentation-list)
+                          (read-error "Empty line with '!'"))
+                      (consume-to-eol port)
+                      (consume-end-of-line port)
+                      (t_expr port)))))
+            (#t
+              (let* ((results (it_expr port "^"))
+                     (results_indent (car results))
+                     (results_value (cadr results)))
+                (if (string=? results_indent "")
+                    (read-error "Closing *> without preceding matching <*")
+                    results_value)))))))
 
   (define (read_to_blank_line port)
     (consume-to-eol port)
@@ -1578,16 +1792,14 @@
 
   ; Call on sweet-expression reader - use guile's nonstandard catch/throw
   ; so that errors will force a restart.
-  (define (t_expr port)
+  (define (t_expr_catch port)
+
+    ; Default guile stack size is FAR too small
+    (debug-set! stack 500000)
+
     (catch 'readable
-      (lambda () (t_expr_real port))
-      (lambda (key . args) (read_to_blank_line port) (t_expr port))))
-
-; -----------------------------------------------------------------------------
-; Comparison procedures
-; -----------------------------------------------------------------------------
-
-  (define compare-read-file '()) ; TODO
+      (lambda () (t_expr port))
+      (lambda (key . args) (read_to_blank_line port) (t_expr_catch port))))
 
 ; -----------------------------------------------------------------------------
 ; Exported Interface
@@ -1595,7 +1807,7 @@
 
   (define curly-infix-read (make-read curly-infix-read-nocomment))
   (define neoteric-read (make-read neoteric-read-nocomment))
-  (define sweet-read (make-read t_expr))
+  (define sweet-read (make-read t_expr_catch))
 
   )
 

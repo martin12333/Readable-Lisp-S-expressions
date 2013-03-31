@@ -29,8 +29,7 @@
 // use an empty "same" nonterminal to emphasize their lack of INDENT/DEDENT.
 // Bad indentation emits BADDENT, which is never accepted.
 // If there's an indent when there is NO preceding un-indented line, the
-// preprocessor emits INITIAL_INDENT_NO_BANG (if no "!") or
-// INITIAL_INDENT_WITH_BANG (if "!" is in the indentation); this
+// preprocessor emits INITIAL_INDENT; this
 // does *NOT* change the indent level (this is so initial indents
 // will disable indentation processing, but only on that line).
 
@@ -105,7 +104,7 @@ tokens {
 
   private void process_indent(String indent_text, Token t) {
     if (indents.isEmpty()) indents.push("");
-    if (indents.peek().equals(indent_text)) { // no-op
+    if (indents.peek().equals(indent_text)) { // no-op, aka "same"
     } else if (indentation_greater_than(indent_text, indents.peek())) {
       // System.out.print("Generate INDENT\n");
       t.setType(INDENT);
@@ -132,11 +131,7 @@ tokens {
   }
 
   private void process_initial_indent(String indent_text, Token t) {
-    if (indent_text.contains("!")) {
-      t.setType(INITIAL_INDENT_WITH_BANG);
-    } else {
-      t.setType(INITIAL_INDENT_NO_BANG);
-    }
+    t.setType(INITIAL_INDENT);
     emit(t);
     initial_indent = true;
   }
@@ -489,7 +484,7 @@ SHARP_BANG_FILE : '#!' ('/' | '.') (options {greedy=false;} : .)*
 // These match #!fold-case, #!no-fold-case, #!sweet, and #!curly-infix;
 // it also matches a lone "#!".  The "#!"+space case is handled above,
 // in SRFI_22_COMMENT, overriding this one:
-SHARP_BANG_MARKER : '#!' (('a'..'z'|'A'..'Z'|'_')
+SHARP_BANG_DIRECTIVE : '#!' (('a'..'z'|'A'..'Z'|'_')
                     ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')*)? (SPACE|TAB)* ;
 
 // STOP INCLUDING IN SRFI
@@ -539,8 +534,7 @@ fragment INDENT_CHARS_PLUS : INDENT_CHAR+;
 
 // These are reported as fragments, not tokens, to silence
 // spurious warnings:
-fragment INITIAL_INDENT_NO_BANG: ' ';
-fragment INITIAL_INDENT_WITH_BANG: ' ';
+fragment INITIAL_INDENT: ' ';
 fragment INDENT: ' ';
 fragment DEDENT: ' ';
 
@@ -582,7 +576,7 @@ INITIAL_INDENT_EOL :  {enclosure==0 && initial_indent}? =>
 
 // Generate special initial indents for initial indents
 // not preceded by lines with contents
-INITIAL_INDENT : {(enclosure == 0) && (getCharPositionInLine() == 0) }? =>
+INITIAL_INDENT_INIT : {(enclosure == 0) && (getCharPositionInLine() == 0) }? =>
   i=INDENT_CHARS_PLUS
   {
     process_initial_indent($i.text, $i);
@@ -833,7 +827,8 @@ fragment ERROR: ' ' ;
 
 // Special non-terminals that act essentially as comments.
 // They are used clarify the grammar meaning, as follows:
-empty : ;  // Identifies an empty branch
+// empty : ;  // This used to identify an empty branch
+//            // but doing that interfered with ANTLR debugging info
 same  : ;  // Emphasizes where neither indent nor dedent has occurred
 error : ERROR;  // Specifically identifies an error branch.
 
@@ -849,15 +844,13 @@ error : ERROR;  // Specifically identifies an error branch.
 // These renames are completely unnecessasry, but they are helpful
 // when using the ANTLR debugger.
 
-collecting_end :  COLLECTING_END;
-initial_indent_no_bang : INITIAL_INDENT_NO_BANG;
-initial_indent_with_bang : INITIAL_INDENT_WITH_BANG;
-indent  : INDENT;
-dedent  : DEDENT;
+// collecting_end :  COLLECTING_END;
+// indent  : INDENT;
+// dedent  : DEDENT;
 
 // This BNF uses the following slightly complicated pattern in some places:
-//   from_n_expr ((hspace+ (stuff {action1} | empty {action2} ))
-//                | empty                           {action2} )
+//   from_n_expr ((hspace+ (stuff {action1} | /*empty*/ {action2} ))
+//                | /*empty*/                           {action2} )
 // This is an expanded form of this BNF pattern (sans actions):
 //   from_n_expr (hspace+ stuff?)?
 // Note that this pattern quietly removes horizontal spaces at the
@@ -880,19 +873,19 @@ list_contents_real returns [Object v]
   : n1=n_expr
       (wspace+
         (lc=list_contents_real {$v = cons($n1.v, $lc.v);}
-         | empty  {$v = list($n1.v);})
-       | empty    {$v = list($n1.v);})
+         | /*empty*/  {$v = list($n1.v);})
+       | /*empty*/    {$v = list($n1.v);})
     | PERIOD
        (wspace+
          (n2=n_expr wspace* {$v = $n2.v;}
-          | empty {$v = list(".");})
-       | empty {$v = list(".");})
+          | /*empty*/ {$v = list(".");})
+       | /*empty*/ {$v = list(".");})
     ;
 
 list_contents returns [Object v]
   : wspace*
    (list_contents_real {$v=$list_contents_real.v;}
-    | empty {$v = null;} ) ;
+    | /*empty*/ {$v = null;} ) ;
 
 // The "greedy=true" option here forces n_expr_tail to look at the
 // next character and forceably consume in *this* production if it's
@@ -916,7 +909,7 @@ n_expr_tail[Object prefix] returns [Object v]
       r3=n_expr_tail[nullp($c3.v) ? list(prefix)
                                   : list(prefix, process_curly($c3.v))]
       {$v = $r3.v;}
-    | empty
+    | /*empty*/
       {$v = prefix;}
     ) ;
 
@@ -956,6 +949,11 @@ n_expr_noabbrev returns [Object v]
 
 hspace  : SPACE | TAB ;        // horizontal space
 
+// This is for handling non-first n-expressions in initial indent.
+// An implementation MAY implement this as "(hspace | '!')+"
+// (e.g., to avoid retaining state when returning a value).
+hspaces_maybe_bang: hspace+ ;
+
 // Production "abbrevw" is an abbreviation with a following whitespace:
 abbrevw returns [Object v]
   : APOSW           {$v = "quote";}
@@ -988,9 +986,10 @@ n_expr_first returns [Object v]
   | n_expr_noabbrev            {$v = $n_expr_noabbrev.v;} ;
 
 // Production "scomment" (special comment) defines comments other than ";":
-sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_MARKER ;
+sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE
+                      | SHARP_BANG_DIRECTIVE ;
 scomment : BLOCK_COMMENT
-         | DATUM_COMMENT_START (options : {greedy=true;} hspace)* n_expr
+         | DATUM_COMMENT_START (options {greedy=true;} : hspace)* n_expr
          | sharp_bang_comments ;
 
 // Production "comment_eol" reads an optional ;-comment (if it exists),
@@ -1004,15 +1003,24 @@ comment_eol : LCOMMENT? EOL;
 
 // Production "collecting_tail" returns a collecting list's contents.
 // Precondition: At beginning of line.
-// Postcondition: Consumed the matching collecting_end.
+// Postcondition: Consumed the matching COLLECTING_END.
 // FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
 
 collecting_tail returns [Object v]
   : it_expr more=collecting_tail {$v = cons($it_expr.v, $more.v);}
-  | (initial_indent_no_bang | initial_indent_with_bang)?
-    comment_eol    retry1=collecting_tail {$v = $retry1.v;}
-  | (FF | VT)+ EOL retry2=collecting_tail {$v = $retry2.v;}
-  | collecting_end {$v = null;} ;
+  | comment_eol    retry1=collecting_tail {$v = $retry1.v;}
+  | INITIAL_INDENT /* Initial indent only allowed for lcomment */
+    LCOMMENT EOL   retry2=collecting_tail {$v = $retry2.v;}
+  | (FF | VT)+ EOL retry3=collecting_tail {$v = $retry3.v;}
+  | COLLECTING_END {$v = null;} ;
+
+// Process line after ". hspace+" sequence.  Does not go past current line.
+post_period returns [Object v]
+  : scomment hspace* rpt=post_period {$v = $rpt.v;} // (scomment hspace*)*
+    | pn=n_expr hspace* (scomment hspace*)* (n_expr error)? {$v = $pn.v;}
+    | COLLECTING hspace* pc=collecting_tail hspace*
+      (scomment hspace*)* (n_expr error)? {$v = $pc.v;}
+    | /*empty*/ {$v = ".";} ;
 
 // Production "head" reads 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
@@ -1034,17 +1042,15 @@ collecting_tail returns [Object v]
 
 head returns [Object v]
   : PERIOD /* Leading ".": escape following datum like an n-expression. */
-      (hspace+
-        (pn=n_expr hspace* (n_expr error)? {$v = list($pn.v);}
-         | empty  {$v = list(".");} )
-       | empty    {$v = list(".");} )
+      (hspace+ pp=post_period {$v = list($pp.v);}
+       | /*empty*/    {$v = list(".");} )
   | COLLECTING hspace* collecting_tail hspace*
       (rr=rest            {$v = cons($collecting_tail.v, $rr.v); }
-       | empty            {$v = list($collecting_tail.v); } )
+       | /*empty*/        {$v = list($collecting_tail.v); } )
   | basic=n_expr_first /* Only match n_expr_first */
       ((hspace+ (br=rest  {$v = cons($basic.v, $br.v);}
-                 | empty  {$v = list($basic.v);} ))
-       | empty            {$v = list($basic.v);} ) ;
+                 | /*empty*/  {$v = list($basic.v);} ))
+       | /*empty*/            {$v = list($basic.v);} ) ;
 
 // Production "rest" production reads the rest of the expressions on a line
 // (the "rest of the head"), after the first expression of the line.
@@ -1057,18 +1063,16 @@ head returns [Object v]
 
 rest returns [Object v]
   : PERIOD /* Improper list */
-      (hspace+
-        (pn=n_expr hspace* (n_expr error)? {$v = $pn.v;}
-         | empty {$v = list(".");})
-       | empty   {$v = list(".");})
-  | scomment hspace* (sr=rest {$v = $sr.v;} | empty {$v = null;} )
+      (hspace+  pp=post_period {$v = $pp.v;}
+       | /*empty*/   {$v = list(".");})
+  | scomment hspace* (sr=rest {$v = $sr.v;} | /*empty*/ {$v = null;} )
   | COLLECTING hspace* collecting_tail hspace*
     (rr=rest             {$v = cons($collecting_tail.v, $rr.v);}
-     | empty             {$v = list($collecting_tail.v);} )
+     | /*empty*/             {$v = list($collecting_tail.v);} )
   | basic=n_expr
       ((hspace+ (br=rest {$v = cons($basic.v, $br.v);}
-                 | empty {$v = list($basic.v);} ))
-       | empty           {$v = list($basic.v);} ) ;
+                 | /*empty*/ {$v = list($basic.v);} ))
+       | /*empty*/           {$v = list($basic.v);} ) ;
 
 // Production "body" handles the sequence of 1+ child lines in an it_expr
 // (e.g., after a "head"), each of which is itself an it_expr.
@@ -1081,11 +1085,11 @@ rest returns [Object v]
 body returns [Object v]
   : i=it_expr
      (same
-       ( {isperiodp($i.v)}? => f=it_expr dedent
+       ( {isperiodp($i.v)}? => f=it_expr DEDENT
            {$v = $f.v;} // Improper list final value
        | {! isperiodp($i.v)}? => nxt=body
            {$v = cons($i.v, $nxt.v);} )
-     | dedent {$v = list($i.v);} ) ;
+     | DEDENT {$v = list($i.v);} ) ;
 
 // Production "it_expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
@@ -1093,7 +1097,7 @@ body returns [Object v]
 // Postcondition: it-expr ended by consuming EOL + examining indent
 // Note: This BNF presumes that "*>" generates multiple tokens,
 // "EOL DEDENT* COLLECTING_END", and resets the indentation list.
-// You can change the BNF below to allow "head empty", and handle dedents
+// You can change the BNF below to allow "head /*empty*/", and handle dedents
 // by directly comparing values; then "*>" only needs to generate
 // COLLECTING_END. But this creates a bunch of ambiguities
 // like a 'dangling else', which must all be disambiguated by accepting
@@ -1109,29 +1113,29 @@ it_expr returns [Object v]
         // To allow \\ EOL as line-continuation, instead do:
         //   comment_eol same more=it_expr {$v = append($head.v, $more.v);}
         comment_eol error
-        | empty {$v = monify($head.v);} )
+        | /*empty*/ {$v = monify($head.v);} )
      | SUBLIST hspace* /* head SUBLIST ... case */
        (sub_i=it_expr {$v=append($head.v, list($sub_i.v));}
         | comment_eol error )
      | comment_eol // Normal case, handle child lines if any:
-       (indent children=body {$v = append($head.v, $children.v);}
-        | empty              {$v = monify($head.v);} /* No child lines */ )
+       (INDENT children=body {$v = append($head.v, $children.v);}
+        | /*empty*/          {$v = monify($head.v);} /* No child lines */ )
     // If COLLECTING_END doesn't generate multiple tokens, can do:
-    // | empty               {$v = monify($head.v);}
+    // | /*empty*/           {$v = monify($head.v);}
      ))
   | (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
       (group_i=it_expr {$v = $group_i.v;} /* Ignore initial GROUP/scomment */
        | comment_eol
-         (indent g_body=body {$v = $g_body.v;} /* Normal GROUP use */
+         (INDENT g_body=body {$v = $g_body.v;} /* Normal GROUP use */
           | same ( g_i=it_expr {$v = $g_i.v;} /* Plausible separator */
                    /* Handle #!sweet EOL EOL t_expr */
                    | comment_eol restart=t_expr {$v = $restart.v;} )
-          | dedent error ))
+          | DEDENT error ))
   | SUBLIST hspace* /* "$" first on line */
     (is_i=it_expr {$v=list($is_i.v);}
      | comment_eol error )
   | abbrevw hspace*
-      (comment_eol indent ab=body
+      (comment_eol INDENT ab=body
          {$v = append(list($abbrevw.v), $ab.v);}
        | ai=it_expr
          {$v=list($abbrevw.v, $ai.v);} ) ;
@@ -1152,12 +1156,11 @@ it_expr returns [Object v]
 t_expr returns [Object v]
   : comment_eol    retry1=t_expr {$v=$retry1.v;}
   | (FF | VT)+ EOL retry2=t_expr {$v=$retry2.v;}
-  | (initial_indent_no_bang | hspace+ )
-    (n_expr {$v = $n_expr.v;} /* indent processing disabled */
-     | ((scomment (options {greedy=true;} : hspace)*
-       sretry=t_expr {$v=$sretry.v;}))
+  | (INITIAL_INDENT | hspaces_maybe_bang) /* initial indent */
+    (n_expr {$v = $n_expr.v;}
+     | (scomment (options {greedy=true;} : hspace)*
+       sretry=t_expr {$v=$sretry.v;})
      | comment_eol retry3=t_expr {$v=$retry3.v;} )
-  | initial_indent_with_bang error
   | EOF {generate_eof();} /* End of file */
   | it_expr {$v = $it_expr.v;} /* Normal case */ ;
 
