@@ -1035,8 +1035,7 @@
               ((eqv? c2 #\x) ; inline hex escape =  \x hex_scalar_value ;
                 (cons 
                       (read-inline-hex-escape port)
-                      (read-symbol-elements port)))
-          )))
+                      (read-symbol-elements port))))))
         (#t (cons c (read-symbol-elements port))))))
 
   ; This implements a simple Scheme "read" implementation from "port",
