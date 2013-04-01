@@ -1119,7 +1119,7 @@ not be wrapped into a list):
   (cond
     ((not (pair? x)) x)
     ((null? (cdr x)) (car x))
-    (#t x)))
+    (#t              x)))
 </pre>
 
 
@@ -1654,8 +1654,8 @@ define extract(c i) $ cond
 (define (extract c i) (cond
   ((vector? c) (vector-ref c i))
   ((string? c) (string-ref c i))
-  ((pair? c) (list-ref c i))
-  (else (error "Not a collection"))))
+  ((pair? c)   (list-ref c i))
+  (else        (error "Not a collection"))))
 </pre>
 </td>
 </tr>
@@ -1677,14 +1677,14 @@ define merge(&lt; as bs) $ cond
 <td align="left" valign="top">
 <pre>
 (define (merge &lt; as bs) (cond
-  ((null? as) bs)
-  ((null? bs) as)
+  ((null? as)            bs)
+  ((null? bs)            as)
   ((&lt; (car as) (car bs)) (cons
-    (car as)
-    (merge &lt; (cdr as) bs)))
-  (else (cons
-    (car bs)
-    (merge &lt; as (cdr bs))))))
+                           (car as)
+                           (merge &lt; (cdr as) bs)))
+  (else                  (cons
+                           (car bs)
+                           (merge &lt; as (cdr bs))))))
 </pre>
 </td>
 </tr>
