@@ -500,7 +500,8 @@
   ; Consume an end-of-line sequence, ('\r' '\n'? | '\n'), and nothing else.
   ; Don't try to handle reversed \n\r (LFCR); doing so will make interactive
   ; guile use annoying (EOF won't be correctly detected) due to a guile bug
-  ; (in guile, peek-char incorrectly *consumes* EOF instead of just peeking).
+  ; (in guile before version 2.0.8, peek-char incorrectly
+  ; *consumes* EOF instead of just peeking).
   (define (consume-end-of-line port)
     (let ((c (my-peek-char port)))
       (cond
@@ -1748,7 +1749,8 @@
   ; cases, such as initial indent; call it_expr for normal case.
   (define (t_expr port)
     (let* ((c (my-peek-char port)))
-      (if (eof-object? c) ; Check EOF early (a guile bug consumes EOF on peek)
+      ; Check EOF early (a bug in guile before 2.0.8 consumes EOF on peek)
+      (if (eof-object? c)
           c
           (cond
             ((is_initial_comment_eol c)
