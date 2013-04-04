@@ -325,22 +325,6 @@
           (#t
             #f))))
 
-    ; detect the !#
-    (define (non-nest-comment fake-port)
-      (let ((c (my-read-char fake-port)))
-        (cond
-          ((eof-object? c)
-            (values))
-          ((char=? c #\!)
-            (let ((c2 (my-peek-char fake-port)))
-              (if (char=? c2 #\#)
-                  (begin
-                    (my-read-char fake-port)
-                    (values))
-                  (non-nest-comment fake-port))))
-          (#t
-            (non-nest-comment fake-port)))))
-
   ; Return list of characters inside #{...}#, a guile extension.
   ; presume we've already read the sharp and initial open brace.
   ; On eof we just end.  We could error out instead.
@@ -780,6 +764,22 @@
       ((string-ci=? dir "no-fold-case")
         (set! is-foldcase #f))
       (#t (display "Warning: Unknown process directive"))))
+
+  ; Consume characters until "!#"
+  (define (non-nest-comment port)
+    (let ((c (my-read-char port)))
+      (cond
+        ((eof-object? c)
+          (values))
+        ((char=? c #\!)
+          (let ((c2 (my-peek-char port)))
+            (if (char=? c2 #\#)
+                (begin
+                  (my-read-char port)
+                  (values))
+                (non-nest-comment port))))
+        (#t
+          (non-nest-comment port)))))
 
   (define (process-sharp-bang port)
     (let ((c (my-peek-char port)))
