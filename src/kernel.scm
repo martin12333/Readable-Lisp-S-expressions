@@ -127,10 +127,11 @@
 ;     after it have been read in.
 ;   - The procedure returns one of the following:
 ;       #f  - the hash-character combination is invalid/not supported.
-;       ()  - the hash-character combination introduced a comment;
+;       (scomment ()) - the hash-character combination introduced a comment;
 ;             at the return of this procedure with this value, the
 ;             comment has been removed from the input port.
-;       (a) - the datum read in is the value a
+;             You can use scomment-result, which has this value.
+;       (normal value) - the datum has value "value".
 ;
 ;   hash-pipe-comment-nests?
 ;   - a Boolean value that specifies whether #|...|# comments
@@ -279,51 +280,51 @@
       (setup-primitive-load)
       (set! read f))
 
-    ; On Guile 1.6 and 1.8 the only comments are ; and #! !#
+    ; Below implements some guile extensions, basically as guile 2.0.
+    ; On Guile, #:x is a keyword.  Keywords have symbol syntax.
+    ; On Guile 1.6 and 1.8 the only comments are ; and #!..!#, but
+    ; we'll allow more.
     ; On Guile 2.0, #; (SRFI-62) and #| #| |# |# (SRFI-30) comments exist.
-    ; On Guile 2.0, #' #` #, #,@ have the R6RS meaning; on
-    ; Guile 1.8 and 1.6 there is a #' syntax but I have yet
-    ; to figure out what exactly it does.
-    ; On Guile, #:x is a keyword.  Keywords have symbol
-    ; syntax.
+    ; On Guile 2.0, #' #` #, #,@ have the R6RS meaning; on older
+    ; Guile 1.8 and 1.6 there is a #' syntax but we have yet
+    ; to figure out what exactly they do, and since those are becoming
+    ; obsolete, we'll just use the R6RS meaning.
     (define (parse-hash no-indent-read char fake-port)
-      (let* ((ver (effective-version))
-             (c   (string-ref ver 0))
-             (>=2 (and (not (char=? c #\0)) (not (char=? c #\1)))))
-        (cond
-          ((char=? char #\:)
-            ; On Guile 1.6, #: reads characters until it finds non-symbol
-            ; characters.
-            ; On Guile 1.8 and 2.0, #: reads in a datum, and if the
-            ; datum is not a symbol, throws an error.
-            ; Follow the 1.8/2.0 behavior as it is simpler to implement,
-            ; and even on 1.6 it is unlikely to cause problems.
-            ; NOTE: This behavior means that #:foo(bar) will cause
-            ; problems on neoteric and higher tiers.
-            (let ((s (no-indent-read fake-port)))
-              (if (symbol? s)
-                  `( ,(symbol->keyword s) )
-                  #f)))
-          ; On Guile 2.0 #' #` #, #,@ have the R6RS meaning.
-          ; guard against it here because of differences in
-          ; Guile 1.6 and 1.8.
-          ((and >=2 (char=? char #\'))
-            `( (syntax ,(no-indent-read fake-port)) ))
-          ((and >=2 (char=? char #\`))
-            `( (quasisyntax ,(no-indent-read fake-port)) ))
-          ((and >=2 (char=? char #\,))
-            (let ((c2 (my-peek-char fake-port)))
-              (cond
-                ((char=? c2 #\@)
-                  (my-read-char fake-port)
-                  `( (unsyntax-splicing ,(no-indent-read fake-port)) ))
-                (#t
-                  `( (unsyntax ,(no-indent-read fake-port)) )))))
-          ; #{ }# syntax
-          ((char=? char #\{ )  ; Special symbol, through till ...}#
-            `( ,(list->symbol (special-symbol fake-port))))
-          (#t
-            #f))))
+      ; (let* ((ver (effective-version))
+      ;        (c   (string-ref ver 0))
+      ;        (>=2 (and (not (char=? c #\0)) (not (char=? c #\1))))) ...)
+      (cond
+        ((char=? char #\:)
+          ; On Guile 1.6, #: reads characters until it finds non-symbol
+          ; characters.
+          ; On Guile 1.8 and 2.0, #: reads in a datum, and if the
+          ; datum is not a symbol, throws an error.
+          ; Follow the 1.8/2.0 behavior as it is simpler to implement,
+          ; and even on 1.6 it is unlikely to cause problems.
+          ; NOTE: This behavior means that #:foo(bar) will cause
+          ; problems on neoteric and higher tiers.
+          (let ((s (no-indent-read fake-port)))
+            (if (symbol? s)
+                `(normal ,(symbol->keyword s) )
+                #f)))
+        ; On Guile 2.0 #' #` #, #,@ have the R6RS meaning.
+        ; Guile 1.6 and 1.8 have different meanings, but we'll ignore that.
+        ((char=? char #\')
+          `(normal (syntax ,(no-indent-read fake-port)) ))
+        ((char=? char #\`)
+          `(normal (quasisyntax ,(no-indent-read fake-port)) ))
+        ((char=? char #\,)
+          (let ((c2 (my-peek-char fake-port)))
+            (cond
+              ((char=? c2 #\@)
+                (my-read-char fake-port)
+                `(normal (unsyntax-splicing ,(no-indent-read fake-port)) ))
+              (#t
+                `(normal (unsyntax ,(no-indent-read fake-port)) )))))
+        ; #{ }# syntax
+        ((char=? char #\{ )  ; Special symbol, through till ...}#
+          `(normal ,(list->symbol (special-symbol fake-port))))
+        (#t #f)))
 
   ; Return list of characters inside #{...}#, a guile extension.
   ; presume we've already read the sharp and initial open brace.
@@ -787,19 +788,19 @@
         ((char=? c #\space) ; SRFI-22
           (consume-to-eol port)
           (consume-end-of-line port)
-          '() ) ; Treat as comment.
+          scomment-result) ; Treat as comment.
         ((memv c '(#\/ #\.)) ; Multi-line, non-nesting #!/ ... !# or #!. ...!#
           (non-nest-comment port)
-          '() ) ; Treat as comment.
+          scomment-result) ; Treat as comment.
         ((char-alphabetic? c)  ; #!directive
           (process-directive
             (list->string (read-until-delim port neoteric-delimiters)))
-          '() )
+          scomment-result)
         ((or (eqv? c carriage-return) (eqv? c #\newline))
           ; Extension: Ignore lone #!
           (consume-to-eol port)
           (consume-end-of-line port)
-          '() ) ; Treat as comment.
+          scomment-result) ; Treat as comment.
         (#t (read-error "Unsupported #! combination")))))
 
   ; A cons cell always has a unique address (as determined by eq?);
@@ -860,39 +861,41 @@
             (gobble-chars port (cdr to-gobble)))
           (#t (length to-gobble)))))
 
+  (define scomment-result '(scomment ()))
+
   (define (process-sharp no-indent-read port)
-    ; We've read a # character.  Returns a list whose car is what it
-    ; represents; empty list means "comment".
-    ; Note: Since we have to re-implement process-sharp anyway,
+    ; We've read a # character.  Returns what it represents as
+    ; (stopper value); ('normal value) is value, ('scomment ()) is comment.
+    ; Since we have to re-implement process-sharp anyway,
     ; the vector representation #(...) uses my-read-delimited-list, which in
     ; turn calls no-indent-read.
     ; TODO: Create a readtable for this case.
     (let ((c (my-peek-char port)))
       (cond
-        ((eof-object? c) (list c)) ; If eof, return eof.
+        ((eof-object? c) scomment-result) ; If eof, pretend it's a comment.
         (#t
           ; Not EOF. Read in the next character, and start acting on it.
           (cond
             ((char-ci=? c #\t)
               (my-read-char port)
               (if (memv (gobble-chars port '(#\r #\u #\e)) '(0 3))
-                  '(#t)
+                  '(normal #t)
                   (read-error "Incomplete #true")))
             ((char-ci=? c #\f)
               (my-read-char port)
               (if (memv (gobble-chars port '(#\a #\l #\s #\e)) '(0 4))
-                  '(#f)
+                  '(normal #f)
                   (read-error "Incomplete #false")))
             ((memv c '(#\i #\e #\b #\o #\d #\x
                        #\I #\E #\B #\O #\D #\X))
               (my-read-char port)
               (let ((num (read-number port (list #\# (char-downcase c)))))
                 (if num
-                    (list num)
+                    `(normal ,num)
                     (read-error "Not a number after number-required start"))))
             ((char=? c #\( )  ; Vector.
               (my-read-char port)
-              (list (list->vector
+              (list 'normal (list->vector
                 (my-read-delimited-list no-indent-read #\) port))))
             ((char=? c #\u )  ; u8 Vector.
               (my-read-char port)
@@ -901,19 +904,21 @@
                   (read-error "#u must be followed by 8"))
                 ((not (eqv? (my-read-char port) #\( ))
                   (read-error "#u8 must be followed by left paren"))
-                (#t (list (list->u8vector
+                (#t (list 'normal (list->u8vector
                       (my-read-delimited-list no-indent-read #\) port))))))
-            ((char=? c #\\) (my-read-char port) (list (process-char port)))
+            ((char=? c #\\)
+              (my-read-char port)
+              (list 'normal (process-char port)))
             ; Handle #; (item comment).
             ((char=? c #\;)
               (my-read-char port)
               (no-indent-read port)  ; Read the datum to be consumed.
-              '()) ; Return comment
+              scomment-result) ; Return comment
             ; handle nested comments
             ((char=? c #\|)
               (my-read-char port)
               (nest-comment port)
-              '()) ; Return comment
+              scomment-result) ; Return comment
             ((char=? c #\!)
               (my-read-char port)
               (process-sharp-bang port))
@@ -923,12 +928,13 @@
                 (cond
                   ((eqv? (my-peek-char port) #\#)
                     (my-read-char port)
-                    (list (cons unmatched-datum-label-tag label)))
+                    (list 'normal (cons unmatched-datum-label-tag label)))
                   ((eqv? (my-peek-char port) #\=)
                     (my-read-char port)
                     (if (my-char-whitespace? (my-peek-char port))
                         (read-error "#num= followed by whitespace"))
-                    (list (patch-datum-label label (no-indent-read port))))
+                    (list 'normal
+                      (patch-datum-label label (no-indent-read port))))
                   (#t
                     (read-error "Datum label #NUM requires = or #")))))
             ((or (char=? c #\space) (char=? c tab))
@@ -937,10 +943,10 @@
               ; handy because "# " is a comment-to-EOL in many other
               ; languages (Bourne shells, Perl, Python, etc.)
               (consume-to-eol port)
-              '())
+              scomment-result) ; Return comment
             ((char-line-ending? c)
               ; Extension - treat # EOL as a comment.
-              '())
+              scomment-result) ; Return comment
             (#t
               (my-read-char port)
               (let ((rv (parse-hash no-indent-read c port)))
@@ -1064,18 +1070,10 @@
               ((char=? c #\#)
                 (my-read-char port)
                 (let ((rv (process-sharp no-indent-read port)))
-                  ; process-sharp convention: null? means comment,
-                  ; pair? means object (the object is in its car)
                   (cond
-                    ((null? rv)
-                      ; recurse
-                      (no-indent-read port))
-                    ((pair? rv)
-                      (car rv))
-                    (#t ; convention violated
-                      ; This is really a bug in implementation, and should
-                      ; be impossible to trigger via user input.
-                      (read-error "parse-hash must return #f '() or `(,a)")))))
+                    ((eq? (car rv) 'scomment) (no-indent-read port))
+                    ((eq? (car rv) 'normal) (cadr rv))
+                    (#t   (read-error "Unknown # sequence")))))
               ((char=? c #\.) (process-period port))
               ((or (memv c digits) (char=? c #\+) (char=? c #\-))
                 (let*
@@ -1367,16 +1365,16 @@
   ; Read an n-expression.  Returns ('scomment '()) if it's an scomment,
   ; else returns ('normal n_expr).
   ; Note: If a *value* begins with #, process any potential neoteric tail,
-  ; so constructs like #f() work.
+  ; so weird constructs beginning with "#" like #f() will still work.
   (define (n_expr_or_scomment port)
     (if (eqv? (my-peek-char port) #\#)
         (let* ((consumed-sharp (my-read-char port))
                (result (process-sharp neoteric-read-nocomment port)))
-          (if (null? result)
-            (list 'scomment '())
-            (list 'normal
-              (neoteric-process-tail port
-                (car result)))))
+          (cond
+            ((eq? (car result) 'normal)
+              (list 'normal (neoteric-process-tail port (cadr result))))
+            ((pair? result) result)
+            (#t (read-error "Unsupported hash"))))
         (list 'normal (neoteric-read-nocomment port))))
 
   ; Read an n-expression.  Returns ('normal n_expr) in most cases;
