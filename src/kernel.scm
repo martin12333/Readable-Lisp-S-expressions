@@ -874,78 +874,75 @@
       (cond
         ((eof-object? c) scomment-result) ; If eof, pretend it's a comment.
         ((char-line-ending? c) ; Extension - treat # EOL as a comment.
-          scomment-result)
-        (#t
-          ; Not EOF. Read in the next character, and start acting on it.
+          scomment-result) ; Note this does NOT consume the EOL!
+        (#t ; Try specialized reader.
           (my-read-char port)
-          (cond
-            ((char-ci=? c #\t)
-              (if (memv (gobble-chars port '(#\r #\u #\e)) '(0 3))
-                  '(normal #t)
-                  (read-error "Incomplete #true")))
-            ((char-ci=? c #\f)
-              (if (memv (gobble-chars port '(#\a #\l #\s #\e)) '(0 4))
-                  '(normal #f)
-                  (read-error "Incomplete #false")))
-            ((memv c '(#\i #\e #\b #\o #\d #\x
-                       #\I #\E #\B #\O #\D #\X))
-              (let ((num (read-number port (list #\# (char-downcase c)))))
-                (if num
-                    `(normal ,num)
-                    (read-error "Not a number after number-required start"))))
-            ((char=? c #\( )  ; Vector.
-              (list 'normal (list->vector
-                (my-read-delimited-list no-indent-read #\) port))))
-            ((char=? c #\u )  ; u8 Vector.
-              (cond
-                ((not (eqv? (my-read-char port) #\8 ))
-                  (read-error "#u must be followed by 8"))
-                ((not (eqv? (my-read-char port) #\( ))
-                  (read-error "#u8 must be followed by left paren"))
-                (#t (list 'normal (list->u8vector
-                      (my-read-delimited-list no-indent-read #\) port))))))
-            ((char=? c #\\)
-              (list 'normal (process-char port)))
-            ; Handle #; (item comment).
-            ((char=? c #\;)
-              (no-indent-read port)  ; Read the datum to be consumed.
-              scomment-result) ; Return comment
-            ; handle nested comments
-            ((char=? c #\|)
-              (nest-comment port)
-              scomment-result) ; Return comment
-            ((char=? c #\!)
-              (process-sharp-bang port))
-            ((memv c digits) ; Datum label, #num# or #num=...
-              (let* ((my-digits (read-digits port))
-                     (label (string->number (list->string
-                                               (cons c my-digits)))))
-                (cond
-                  ((eqv? (my-peek-char port) #\#)
-                    (my-read-char port)
-                    (list 'normal (cons unmatched-datum-label-tag label)))
-                  ((eqv? (my-peek-char port) #\=)
-                    (my-read-char port)
-                    (if (my-char-whitespace? (my-peek-char port))
-                        (read-error "#num= followed by whitespace"))
-                    (list 'normal
-                      (patch-datum-label label (no-indent-read port))))
-                  (#t
-                    (read-error "Datum label #NUM requires = or #")))))
-            ((or (char=? c #\space) (char=? c tab))
-              ; Extension - treat # (space|tab) as a comment to end of line.
-              ; This is not required by SRFI-105 or SRFI-110, but it's
-              ; handy because "# " is a comment-to-EOL in many other
-              ; languages (Bourne shells, Perl, Python, etc.)
-              (consume-to-eol port)
-              scomment-result) ; Return comment
-            (#t
-              (let ((rv (parse-hash no-indent-read c port)))
-                (cond
-                  ((not rv)
-                    (read-error "Invalid #-prefixed string"))
-                  (#t
-                    rv)))))))))
+          (let ((rv (parse-hash no-indent-read c port)))
+            (if (pair? rv) ; Do we have an override?
+              rv
+              (cond ; Nothing special - use generic rules
+                ((char-ci=? c #\t)
+                  (if (memv (gobble-chars port '(#\r #\u #\e)) '(0 3))
+                      '(normal #t)
+                      (read-error "Incomplete #true")))
+                ((char-ci=? c #\f)
+                  (if (memv (gobble-chars port '(#\a #\l #\s #\e)) '(0 4))
+                      '(normal #f)
+                      (read-error "Incomplete #false")))
+                ((memv c '(#\i #\e #\b #\o #\d #\x
+                           #\I #\E #\B #\O #\D #\X))
+                  (let ((num (read-number port (list #\# (char-downcase c)))))
+                    (if num
+                        `(normal ,num)
+                        (read-error "Not a number after number start"))))
+                ((char=? c #\( )  ; Vector.
+                  (list 'normal (list->vector
+                    (my-read-delimited-list no-indent-read #\) port))))
+                ((char=? c #\u )  ; u8 Vector.
+                  (cond
+                    ((not (eqv? (my-read-char port) #\8 ))
+                      (read-error "#u must be followed by 8"))
+                    ((not (eqv? (my-read-char port) #\( ))
+                      (read-error "#u8 must be followed by left paren"))
+                    (#t (list 'normal (list->u8vector
+                          (my-read-delimited-list no-indent-read #\) port))))))
+                ((char=? c #\\)
+                  (list 'normal (process-char port)))
+                ; Handle #; (item comment).
+                ((char=? c #\;)
+                  (no-indent-read port)  ; Read the datum to be consumed.
+                  scomment-result) ; Return comment
+                ; handle nested comments
+                ((char=? c #\|)
+                  (nest-comment port)
+                  scomment-result) ; Return comment
+                ((char=? c #\!)
+                  (process-sharp-bang port))
+                ((memv c digits) ; Datum label, #num# or #num=...
+                  (let* ((my-digits (read-digits port))
+                         (label (string->number (list->string
+                                                   (cons c my-digits)))))
+                    (cond
+                      ((eqv? (my-peek-char port) #\#)
+                        (my-read-char port)
+                        (list 'normal (cons unmatched-datum-label-tag label)))
+                      ((eqv? (my-peek-char port) #\=)
+                        (my-read-char port)
+                        (if (my-char-whitespace? (my-peek-char port))
+                            (read-error "#num= followed by whitespace"))
+                        (list 'normal
+                          (patch-datum-label label (no-indent-read port))))
+                      (#t
+                        (read-error "Datum label #NUM requires = or #")))))
+                ((or (char=? c #\space) (char=? c tab))
+                  ; Extension - treat # (space|tab) as a comment to end of line.
+                  ; This is not required by SRFI-105 or SRFI-110, but it's
+                  ; handy because "# " is a comment-to-EOL in many other
+                  ; languages (Bourne shells, Perl, Python, etc.)
+                  (consume-to-eol port)
+                  scomment-result) ; Return comment
+                (#t
+                  (read-error "Invalid #-prefixed string")))))))))
 
   ; detect #| or |#
   (define (nest-comment fake-port)
