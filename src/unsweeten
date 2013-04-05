@@ -80,7 +80,7 @@ fi
 
 ; Define an association list mapping the Lisp function names which have
 ; abbreviations ==> the list of characters in their abbreviation
-(define abbreviations
+(define normal-abbreviations
   '((quote "'")
     (quasiquote "`")
     (unquote ",")
@@ -88,8 +88,13 @@ fi
     ; TODO: This should only work when Common Lisp enabled:
     (+++SHARP-HASH-token+++ "#.")))
 
+; Common Lisp unique abbreviations.
+; There no need translate (function x) back to #', so don't do it.
+(define cl-abbreviations
+    '((+++SHARP-HASH-token+++ "#.")))
+
 ; return #t if we should as a traditional abbreviation, e.g., '
-(define (represent-as-abbreviation? x)
+(define (represent-as-abbreviation? x abbreviations)
   (and
     (pair? x)
     (assq (car x) abbreviations)
@@ -116,11 +121,14 @@ fi
 (define (my-write-body x)
   (cond
     ((pair? x)
-      (if (represent-as-abbreviation? x)
-        (begin
-          (display (cadr (assq (car x) abbreviations)))
+      (cond
+        ((represent-as-abbreviation? x normal-abbreviations)
+          (display (cadr (assq (car x) normal-abbreviations)))
           (my-write-body (cadr x)))
-        (begin
+        ((and common-lisp (represent-as-abbreviation? x cl-abbreviations))
+          (display (cadr (assq (car x) cl-abbreviations)))
+          (my-write-body (cadr x)))
+        (#t
           (display "(")
           (my-write-list-contents x)
           (display ")"))))
