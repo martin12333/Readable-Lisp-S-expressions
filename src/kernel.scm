@@ -873,32 +873,30 @@
     (let ((c (my-peek-char port)))
       (cond
         ((eof-object? c) scomment-result) ; If eof, pretend it's a comment.
+        ((char-line-ending? c) ; Extension - treat # EOL as a comment.
+          scomment-result)
         (#t
           ; Not EOF. Read in the next character, and start acting on it.
+          (my-read-char port)
           (cond
             ((char-ci=? c #\t)
-              (my-read-char port)
               (if (memv (gobble-chars port '(#\r #\u #\e)) '(0 3))
                   '(normal #t)
                   (read-error "Incomplete #true")))
             ((char-ci=? c #\f)
-              (my-read-char port)
               (if (memv (gobble-chars port '(#\a #\l #\s #\e)) '(0 4))
                   '(normal #f)
                   (read-error "Incomplete #false")))
             ((memv c '(#\i #\e #\b #\o #\d #\x
                        #\I #\E #\B #\O #\D #\X))
-              (my-read-char port)
               (let ((num (read-number port (list #\# (char-downcase c)))))
                 (if num
                     `(normal ,num)
                     (read-error "Not a number after number-required start"))))
             ((char=? c #\( )  ; Vector.
-              (my-read-char port)
               (list 'normal (list->vector
                 (my-read-delimited-list no-indent-read #\) port))))
             ((char=? c #\u )  ; u8 Vector.
-              (my-read-char port)
               (cond
                 ((not (eqv? (my-read-char port) #\8 ))
                   (read-error "#u must be followed by 8"))
@@ -907,24 +905,21 @@
                 (#t (list 'normal (list->u8vector
                       (my-read-delimited-list no-indent-read #\) port))))))
             ((char=? c #\\)
-              (my-read-char port)
               (list 'normal (process-char port)))
             ; Handle #; (item comment).
             ((char=? c #\;)
-              (my-read-char port)
               (no-indent-read port)  ; Read the datum to be consumed.
               scomment-result) ; Return comment
             ; handle nested comments
             ((char=? c #\|)
-              (my-read-char port)
               (nest-comment port)
               scomment-result) ; Return comment
             ((char=? c #\!)
-              (my-read-char port)
               (process-sharp-bang port))
             ((memv c digits) ; Datum label, #num# or #num=...
               (let* ((my-digits (read-digits port))
-                     (label (string->number (list->string my-digits))))
+                     (label (string->number (list->string
+                                               (cons c my-digits)))))
                 (cond
                   ((eqv? (my-peek-char port) #\#)
                     (my-read-char port)
@@ -944,11 +939,7 @@
               ; languages (Bourne shells, Perl, Python, etc.)
               (consume-to-eol port)
               scomment-result) ; Return comment
-            ((char-line-ending? c)
-              ; Extension - treat # EOL as a comment.
-              scomment-result) ; Return comment
             (#t
-              (my-read-char port)
               (let ((rv (parse-hash no-indent-read c port)))
                 (cond
                   ((not rv)
