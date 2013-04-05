@@ -2056,3 +2056,6 @@ inside
 (quote (abcd efgh))
 '(abcd efgh)
 
+(quote (#f))
+'#f()
+
