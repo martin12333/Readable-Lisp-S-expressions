@@ -2059,3 +2059,20 @@ inside
 (quote (#f))
 '#f()
 
+(syntax (x))
+#'(x)
+
+(syntax (x a))
+#'x(a)
+
+(syntax x)
+#' x
+
+(syntax (x a))
+#' x a
+
+
+(syntax (q1 q2 (q3 q4)))
+#' q1 q2
+  q3 q4
+

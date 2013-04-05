@@ -924,19 +924,17 @@
                         (read-error "Datum label #NUM requires = or #")))))
                 ; R6RS abbreviations #' #` #, #,@
                 ((char=? c #\')
-                  `(normal (syntax ,(no-indent-read port)) ))
+                  '(abbrev syntax))
                 ((char=? c #\`)
-                  `(normal (quasisyntax ,(no-indent-read port)) ))
+                  '(abbrev quasisyntax))
                 ((char=? c #\,)
                   (let ((c2 (my-peek-char port)))
                     (cond
                       ((char=? c2 #\@)
                         (my-read-char port)
-                        `(normal (unsyntax-splicing
-                                 ,(no-indent-read port)) ))
+                        '(abbrev unsyntax-splicing))
                       (#t
-                        `(normal (unsyntax
-                                 ,(no-indent-read port)) )))))
+                        '(abbrev unsyntax)))))
                 ((or (char=? c #\space) (char=? c tab))
                   ; Extension - treat # (space|tab) as a comment to end of line.
                   ; This is not required by SRFI-105 or SRFI-110, but it's
@@ -1064,6 +1062,8 @@
                   (cond
                     ((eq? (car rv) 'scomment) (no-indent-read port))
                     ((eq? (car rv) 'normal) (cadr rv))
+                    ((eq? (car rv) 'abbrev)
+                      (list (cadr rv) (no-indent-read port)))
                     (#t   (read-error "Unknown # sequence")))))
               ((char=? c #\.) (process-period port))
               ((or (memv c digits) (char=? c #\+) (char=? c #\-))
@@ -1364,6 +1364,9 @@
           (cond
             ((eq? (car result) 'normal)
               (list 'normal (neoteric-process-tail port (cadr result))))
+            ((eq? (car result) 'abbrev)
+              (list 'normal
+                (list (cadr result) (neoteric-read-nocomment port))))
             ((pair? result) result)
             (#t (read-error "Unsupported hash"))))
         (list 'normal (neoteric-read-nocomment port))))
@@ -1427,6 +1430,15 @@
               (my-read-char port)
               (maybe-initial-abbrev port 'unquote-splicing))
             (maybe-initial-abbrev port 'unquote)))
+      ((#\#) 
+        (let* ((consumed-sharp (my-read-char port))
+               (result (process-sharp neoteric-read-nocomment port)))
+          (cond
+            ((eq? (car result) 'normal)
+              (list 'normal (neoteric-process-tail port (cadr result))))
+            ((eq? (car result) 'abbrev)
+              (maybe-initial-abbrev port (cadr result)))
+            (#t result))))
       (else
         (n_expr port))))
 
