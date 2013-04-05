@@ -936,6 +936,11 @@
                         '(abbrev unsyntax-splicing))
                       (#t
                         '(abbrev unsyntax)))))
+                ; TODO: Enable only in "Common Lisp".
+                ; This extension is really for Common Lisp; the "unsweeten" program
+                ; can translate this back:
+                ((char=? c #\.)
+                  '(abbrev +++SHARP-HASH-token+++))
                 ((or (char=? c #\space) (char=? c tab))
                   ; Extension - treat # (space|tab) as a comment to end of line.
                   ; This is not required by SRFI-105 or SRFI-110, but it's

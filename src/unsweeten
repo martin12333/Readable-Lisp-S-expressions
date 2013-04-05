@@ -84,7 +84,9 @@ fi
   '((quote "'")
     (quasiquote "`")
     (unquote ",")
-    (unquote-splicing ",@")))
+    (unquote-splicing ",@")
+    ; TODO: This should only work when Common Lisp enabled:
+    (+++SHARP-HASH-token+++ "#.")))
 
 ; return #t if we should as a traditional abbreviation, e.g., '
 (define (represent-as-abbreviation? x)
