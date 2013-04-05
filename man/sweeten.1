@@ -59,6 +59,16 @@ This program assumes that the input does not contain any cycles
 (improper lists are okay).
 It can handle input with shared structures (without cycles), but
 the fact that they are shared is lost in the result.
+.PP
+This program uses a Scheme reader, not a Common Lisp reader.
+You may need to hand-translate s-expressions that are different
+between Scheme and Common Lisp, in particular,
+some sequences that begin with "#".
+In practice, the main issue is the #'name sequence;
+sweeten process most Common Lisp expressions once you hand-translate
+any #'name sequences into (function\ name).
+If you sending the resulting "sweetened" file to a Common Lisp implementation
+via unsweeten, you should probably use unsweeten's "-C" option.
 
 .SH EXAMPLES
 .PP
