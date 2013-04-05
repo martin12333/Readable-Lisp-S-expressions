@@ -132,6 +132,7 @@
 ;             comment has been removed from the input port.
 ;             You can use scomment-result, which has this value.
 ;       (normal value) - the datum has value "value".
+;       (abbrev value) - this is an abbreviation for value "value"
 ;
 ;   hash-pipe-comment-nests?
 ;   - a Boolean value that specifies whether #|...|# comments
