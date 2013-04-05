@@ -292,6 +292,8 @@ check: readable/kernel.scm
 	@echo "Running unsweeten, showing differences from correct results:"
 	"$(builddir)/unsweeten" < "$(srcdir)/tests/unsweeten-testsuite" | \
 	     diff -b -u - "$(srcdir)/tests/unsweeten-correct"
+	test "`printf '\140(a b c ,d)\n' | \"$(builddir)/unsweeten\" -C`" = \
+	     '`(a b c ,d)'
 	@echo "Running sweeten, showing differences from correct results:"
 	"$(builddir)/sweeten" < "$(srcdir)/tests/sweeten-testsuite" | \
 	     diff -u - "$(srcdir)/tests/sweeten-correct"
