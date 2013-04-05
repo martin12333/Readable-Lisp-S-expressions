@@ -307,21 +307,9 @@
             (if (symbol? s)
                 `(normal ,(symbol->keyword s) )
                 #f)))
-        ; On Guile 2.0 #' #` #, #,@ have the R6RS meaning.
+        ; On Guile 2.0 #' #` #, #,@ have the R6RS meaning, handled in generics.
         ; Guile 1.6 and 1.8 have different meanings, but we'll ignore that.
-        ((char=? char #\')
-          `(normal (syntax ,(no-indent-read fake-port)) ))
-        ((char=? char #\`)
-          `(normal (quasisyntax ,(no-indent-read fake-port)) ))
-        ((char=? char #\,)
-          (let ((c2 (my-peek-char fake-port)))
-            (cond
-              ((char=? c2 #\@)
-                (my-read-char fake-port)
-                `(normal (unsyntax-splicing ,(no-indent-read fake-port)) ))
-              (#t
-                `(normal (unsyntax ,(no-indent-read fake-port)) )))))
-        ; #{ }# syntax
+        ; Guile's #{ }# syntax
         ((char=? char #\{ )  ; Special symbol, through till ...}#
           `(normal ,(list->symbol (special-symbol fake-port))))
         (#t #f)))
@@ -934,6 +922,21 @@
                           (patch-datum-label label (no-indent-read port))))
                       (#t
                         (read-error "Datum label #NUM requires = or #")))))
+                ; R6RS abbreviations #' #` #, #,@
+                ((char=? c #\')
+                  `(normal (syntax ,(no-indent-read port)) ))
+                ((char=? c #\`)
+                  `(normal (quasisyntax ,(no-indent-read port)) ))
+                ((char=? c #\,)
+                  (let ((c2 (my-peek-char port)))
+                    (cond
+                      ((char=? c2 #\@)
+                        (my-read-char port)
+                        `(normal (unsyntax-splicing
+                                 ,(no-indent-read port)) ))
+                      (#t
+                        `(normal (unsyntax
+                                 ,(no-indent-read port)) )))))
                 ((or (char=? c #\space) (char=? c tab))
                   ; Extension - treat # (space|tab) as a comment to end of line.
                   ; This is not required by SRFI-105 or SRFI-110, but it's
