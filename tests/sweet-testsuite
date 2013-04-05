@@ -2053,3 +2053,6 @@ inside
 (qq (syntax (x y)))
 (qq #'(x y))
 
+(quote (abcd efgh))
+'(abcd efgh)
+
