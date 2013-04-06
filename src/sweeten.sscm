@@ -188,6 +188,586 @@ define contains-only-punctuation?(x)
     memq(car(x) punct-chars) contains-only-punctuation?(cdr(x))
     #t                       #f
 
+; Here we have our own reader implementation, in case we want to use that
+; instead of the host system's "read" (currently guile's).
+
+define my-string-foldcase(s) string-downcase(s)
+define hash-pipe-comment-nests? #t
+
+define is-foldcase #f
+define tab integer->char(9)
+define linefeed integer->char(10)
+define carriage-return integer->char(13)
+define line-tab integer->char(13)
+define form-feed integer->char(12)
+define vertical-tab integer->char(11)
+define space '#\space
+define period-symbol string->symbol(".")
+define line-ending-chars list(linefeed carriage-return)
+define whitespace-chars-ascii
+  list
+    tab
+    linefeed
+    line-tab
+    form-feed
+    carriage-return
+    #\space
+
+define whitespace-chars whitespace-chars-ascii
+define char-line-ending?(char) memv(char line-ending-chars)
+define my-char-whitespace?(c)
+  {char-whitespace?(c) or memv(c whitespace-chars)}
+
+define consume-end-of-line(port)
+  let <* c $ peek-char port *>
+    cond
+      eqv?(c carriage-return)
+        read-char port
+        if eqv?(peek-char(port) linefeed) read-char(port)
+      eqv?(c linefeed) read-char(port)
+
+define consume-to-eol(port)
+  let <* c $ peek-char port *>
+    cond
+      {not(eof-object?(c)) and not(char-line-ending?(c))}
+        read-char port
+        consume-to-eol port
+
+define consume-to-whitespace(port)
+  let <* c $ peek-char port *>
+    cond
+      eof-object?(c) c
+      my-char-whitespace?(c) '()
+      #t read-char(port) consume-to-whitespace(port)
+
+define read-error(message)
+  display "Error: " current-error-port()
+  display message current-error-port()
+  newline current-error-port()
+  throw 'readable
+  '()
+
+define get-sourceinfo(port) '()
+define attach-sourceinfo(pos datum) datum
+
+define debugger-output #f
+define debug-show(marker data)
+  cond
+    debugger-output
+      display "DEBUG: "
+      display marker
+      display " = "
+      write data
+      display "\n"
+  data
+
+define my-read-delimited-list(my-read stop-char port)
+  consume-whitespace port
+  let* <* pos $ get-sourceinfo port \\ c $ peek-char port *>
+    cond
+      eof-object?(c) read-error("EOF in middle of list") c
+      char=?(c stop-char)
+        read-char port
+        attach-sourceinfo pos '()
+      memv(c '(#\) #\] #\}))
+        read-error "Bad closing character"
+        c
+      #t
+        let <* datum $ my-read port *>
+        ! cond
+        !   {eq?(datum period-symbol) and char=?(c #\.)}
+        !     let <* datum2 $ my-read port *>
+        !     ! consume-whitespace port
+        !     ! cond
+        !     !   eof-object?(datum2)
+        !     !     read-error "Early eof in (... .)"
+        !     !     '()
+        !     !   not(eqv?(peek-char(port) stop-char))
+        !     !     read-error "Bad closing character after . datum"
+        !     !     datum2
+        !     !   #t read-char(port) datum2
+        !   #t
+        !     attach-sourceinfo
+        !       pos
+        !       cons datum my-read-delimited-list(my-read stop-char port)
+
+define my-delimiters
+  append
+    list
+      #\(
+      #\)
+      #\[
+      #\]
+      #\{
+      #\}
+      #\"
+      #\;
+    whitespace-chars
+
+define consume-whitespace(port)
+  let <* char $ peek-char port *>
+    cond
+      (eof-object?(char))
+      eqv?(char #\;)
+        consume-to-eol port
+        consume-whitespace port
+      my-char-whitespace?(char)
+        read-char port
+        consume-whitespace port
+
+define read-until-delim(port delims)
+  let <* c $ peek-char port *>
+    cond
+      eof-object?(c) '()
+      memv(c delims) '()
+      #t read-char(port) cons(c read-until-delim(port delims))
+
+define read-number(port starting-lyst)
+  string->number
+    list->string
+      append
+        starting-lyst
+        read-until-delim port my-delimiters
+
+define read-digits(port)
+  let <* c $ peek-char port *>
+    cond
+      memv(c digits) cons(read-char(port) read-digits(port))
+      #t '()
+
+define char-name-values
+  ' \\
+    space 32
+    newline 10
+    nl 10
+    tab 9
+    nul 0
+    null 0
+    alarm 7
+    backspace 8
+    linefeed 10
+    vtab 11
+    page 12
+    return 13
+    esc 27
+    delete 127
+    soh 1
+    stx 2
+    etx 3
+    eot 4
+    enq 5
+    ack 6
+    bel 7
+    bs 8
+    ht 9
+    lf 10
+    vt 11
+    ff 12
+    np 12
+    cr 13
+    so 14
+    si 15
+    dle 16
+    dc1 17
+    dc2 18
+    dc3 19
+    dc4 20
+    nak 21
+    syn 22
+    etb 23
+    can 24
+    em 25
+    sub 26
+    fs 28
+    gs 29
+    rs 30
+    sp 32
+    del 127
+    rubout 127
+
+define process-char(port)
+  cond
+    eof-object?(peek-char(port)) peek-char(port)
+    #t
+      let
+        \\
+          c $ read-char port
+          rest $ read-until-delim port my-delimiters
+        cond
+          null?(rest) c
+          #t
+            let*
+              \\
+                cname
+                  string->symbol
+                    string-downcase list->string(cons(c rest))
+                found $ assq cname char-name-values
+              if found
+                integer->char cadr(found)
+                read-error "Invalid character name"
+
+define fold-case-maybe(port s)
+  if is-foldcase my-string-foldcase(s) s
+
+define process-directive(dir)
+  cond
+    string-ci=?(dir "fold-case") set!(is-foldcase #t)
+    string-ci=?(dir "no-fold-case") set!(is-foldcase #f)
+    #t display("Warning: Unknown process directive")
+
+define non-nest-comment(port)
+  let <* c $ read-char port *>
+    cond
+      eof-object?(c) values()
+      char=?(c #\!)
+        let <* c2 $ peek-char port *>
+        ! if char=?(c2 #\#)
+        !   begin read-char(port) values()
+        !   non-nest-comment port
+      #t non-nest-comment(port)
+
+define process-sharp-bang(port)
+  let <* c $ peek-char port *>
+    cond
+      char=?(c #\space)
+        consume-to-eol port
+        consume-end-of-line port
+        scomment-result
+      memv(c '(#\/ #\.)) non-nest-comment(port) scomment-result
+      char-alphabetic?(c)
+        process-directive
+          list->string read-until-delim(port my-delimiters)
+        scomment-result
+      {eqv?(c carriage-return) or eqv?(c #\newline)}
+        consume-to-eol port
+        consume-end-of-line port
+        scomment-result
+      #t read-error("Unsupported #! combination")
+
+define unmatched-datum-label-tag
+  cons 'unmatched-datum-label-tag 'label
+
+define is-matching-label-tag?(number value)
+  and
+    pair? value
+    eq? car(value) unmatched-datum-label-tag
+    eqv? cdr(value) number
+
+define patch-datum-label-tail(number replace position skip)
+  let <* new-skip $ cons position skip *>
+    cond
+      \\
+        and
+          pair? position
+          not eq?(car(position) unmatched-datum-label-tag)
+          not memq(position skip)
+        if is-matching-label-tag?(number car(position))
+        ! set-car! position replace
+        ! patch-datum-label-tail
+        !   number
+        !   replace
+        !   car position
+        !   new-skip
+        if is-matching-label-tag?(number cdr(position))
+        ! set-cdr! position replace
+        ! patch-datum-label-tail
+        !   number
+        !   replace
+        !   cdr position
+        !   new-skip
+      vector?(position)
+        do (len(vector-length(position)) k(0 {k + 1}))
+        ! {k >= len} values()
+        ! let <* x $ vector-ref position k *>
+        !   if is-matching-label-tag?(number x)
+        !   ! vector-set! position k replace
+        !   ! patch-datum-label-tail number replace x new-skip
+      #t values()
+define patch-datum-label(number starting-position)
+  if is-matching-label-tag?(number starting-position)
+    read-error
+      "Illegal reference as the labelled object itself"
+  patch-datum-label-tail
+    number
+    starting-position
+    starting-position
+    '()
+  starting-position
+
+define gobble-chars(port to-gobble)
+  if null?(to-gobble)
+    0
+    cond
+      char-ci=?(peek-char(port) car(to-gobble))
+        read-char port
+        gobble-chars port cdr(to-gobble)
+      #t length(to-gobble)
+
+define scomment-result 'scomment(())
+
+define process-sharp(no-indent-read port)
+  let <* c $ peek-char port *>
+    cond
+      eof-object?(c) scomment-result
+      char-line-ending?(c) scomment-result
+      #t
+        read-char port
+        or
+          and
+            common-lisp
+            parse-cl no-indent-read c port
+          parse-hash no-indent-read c port
+          parse-default no-indent-read c port
+          read-error "Invalid #-prefixed string"
+
+define parse-default(no-indent-read c port)
+  cond
+    char-ci=?(c #\t)
+      if memv(gobble-chars(port '(#\r #\u #\e)) '(0 3))
+      ! ' normal #t
+      ! read-error "Incomplete #true"
+    char-ci=?(c #\f)
+      if memv(gobble-chars(port '(#\a #\l #\s #\e)) '(0 4))
+      ! ' normal #f
+      ! read-error "Incomplete #false"
+    memv(c '(#\i #\e #\b #\o #\d #\x #\I #\E #\B #\O #\D #\X))
+      let <* num $ read-number port list(#\# char-downcase(c)) *>
+      ! if num
+      !   ` normal ,num
+      !   read-error "Not a number after number start"
+    char=?(c #\()
+      list
+        'normal
+        list->vector
+          my-read-delimited-list no-indent-read #\) port
+    char=?(c #\u)
+      cond
+        not(eqv?(read-char(port) #\8))
+          read-error "#u must be followed by 8"
+        not(eqv?(read-char(port) #\())
+          read-error "#u8 must be followed by left paren"
+        #t
+          list
+            'normal
+            list->u8vector
+              my-read-delimited-list no-indent-read #\) port
+    char=?(c #\\) list('normal process-char(port))
+    char=?(c #\;) no-indent-read(port) scomment-result
+    char=?(c #\|) nest-comment(port) scomment-result
+    char=?(c #\!) process-sharp-bang(port)
+    memv(c digits)
+      let*
+        \\
+          my-digits $ read-digits port
+          label $ string->number list->string(cons(c my-digits))
+        cond
+          eqv?(peek-char(port) #\#)
+            read-char port
+            list 'normal cons(unmatched-datum-label-tag label)
+          eqv?(peek-char(port) #\=)
+            read-char port
+            if my-char-whitespace?(peek-char(port))
+            ! read-error "#num= followed by whitespace"
+            list 'normal patch-datum-label(label no-indent-read(port))
+          #t read-error("Datum label #NUM requires = or #")
+    char=?(c #\') 'abbrev(syntax)
+    char=?(c #\`) 'abbrev(quasisyntax)
+    char=?(c #\,)
+      let <* c2 $ peek-char port *>
+      ! cond
+      !   char=?(c2 #\@)
+      !     read-char port
+      !     ' abbrev unsyntax-splicing
+      !   #t 'abbrev(unsyntax)
+    {char=?(c #\space) or char=?(c tab)}
+      consume-to-eol port
+      scomment-result
+    #t #f
+
+define parse-cl(no-indent-read c port)
+  cond
+    char=?(c #\') 'abbrev(function)
+    char=?(c #\:) 'abbrev(+++SHARP-COLON-abbreviation+++)
+    char=?(c #\.) 'abbrev(+++SHARP-DOT-abbreviation+++)
+    char=?(c #\+) 'abbrev(+++SHARP-PLUS-abbreviation+++)
+    char=?(c #\P) 'abbrev(+++SHARP-P-abbreviation+++)
+    #t #f
+
+define parse-hash(no-indent-read c port) #f
+
+define nest-comment(fake-port)
+  let <* c $ read-char fake-port *>
+    cond
+      eof-object?(c) values()
+      char=?(c #\|)
+        let <* c2 $ peek-char fake-port *>
+        ! if char=?(c2 #\#)
+        !   begin read-char(fake-port) values()
+        !   nest-comment fake-port
+      {hash-pipe-comment-nests? and char=?(c #\#)}
+        let <* c2 $ peek-char fake-port *>
+        ! if char=?(c2 #\|)
+        !   begin read-char(fake-port) nest-comment(fake-port)
+        !   values()
+        ! nest-comment fake-port
+      #t nest-comment(fake-port)
+
+define digits
+  ' #\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9
+
+define process-period(port)
+  read-char port
+  let <* c $ peek-char port *>
+    cond
+      eof-object?(c) period-symbol
+      memv(c digits)
+        let <* num $ read-number port list(#\.) *>
+        ! if num num read-error("period digit must be a number")
+      #t
+        string->symbol
+          fold-case-maybe
+            port
+            list->string
+              cons #\. read-until-delim(port my-delimiters)
+
+define read-inline-hex-escape(port)
+  let*
+    \\
+      chars $ read-until-delim port append(my-delimiters '(#\;))
+      n $ string->number list->string(chars) 16
+    if eqv?(#\; peek-char(port))
+      read-char port
+      read-error "Unfinished inline hex escape"
+    if not(n) read-error("Bad inline hex escape")
+    integer->char n
+
+define read-symbol-elements(port)
+  let <* c $ read-char port *>
+    cond
+      eof-object?(c) '()
+      eqv?(c #\|) '()
+      eqv?(c #\\)
+        let <* c2 $ read-char port *>
+        ! cond
+        !   eof-object?(c) '()
+        !   eqv?(c2 #\|) cons(#\| read-symbol-elements(port))
+        !   eqv?(c2 #\\) cons(#\\ read-symbol-elements(port))
+        !   eqv?(c2 #\a)
+        !     cons integer->char(7) read-symbol-elements(port)
+        !   eqv?(c2 #\b)
+        !     cons integer->char(8) read-symbol-elements(port)
+        !   eqv?(c2 #\t)
+        !     cons integer->char(9) read-symbol-elements(port)
+        !   eqv?(c2 #\n)
+        !     cons integer->char(10) read-symbol-elements(port)
+        !   eqv?(c2 #\r)
+        !     cons integer->char(13) read-symbol-elements(port)
+        !   eqv?(c2 #\f)
+        !     cons integer->char(12) read-symbol-elements(port)
+        !   eqv?(c2 #\v)
+        !     cons integer->char(11) read-symbol-elements(port)
+        !   eqv?(c2 #\x)
+        !     cons
+        !       read-inline-hex-escape port
+        !       read-symbol-elements port
+      #t cons(c read-symbol-elements(port))
+
+define underlying-read(no-indent-read port)
+  consume-whitespace port
+  let* <* pos $ get-sourceinfo port \\ c $ peek-char port *>
+    cond
+      eof-object?(c) c
+      char=?(c #\") invoke-read(default-scheme-read port)
+      #t
+        attach-sourceinfo
+          pos
+          cond
+            char=?(c #\#)
+              read-char port
+              let <* rv $ process-sharp no-indent-read port *>
+              ! cond
+              !   eq?(car(rv) 'scomment) no-indent-read(port)
+              !   eq?(car(rv) 'normal) cadr(rv)
+              !   eq?(car(rv) 'abbrev) list(cadr(rv) no-indent-read(port))
+              !   #t read-error("Unknown # sequence")
+            char=?(c #\.) process-period(port)
+            {memv(c digits) or char=?(c #\+) or char=?(c #\-)}
+              let*
+                \\
+                  maybe-number
+                    list->string read-until-delim(port my-delimiters)
+                  as-number $ string->number maybe-number
+                if as-number
+                ! as-number
+                ! string->symbol fold-case-maybe(port maybe-number)
+            char=?(c #\')
+              read-char port
+              list attach-sourceinfo(pos 'quote) no-indent-read(port)
+            char=?(c #\`)
+              read-char port
+              list
+                attach-sourceinfo pos 'quasiquote
+                no-indent-read port
+            char=?(c #\,)
+              read-char port
+              cond
+                char=?(#\@ peek-char(port))
+                  read-char port
+                  list
+                    attach-sourceinfo pos 'unquote-splicing
+                    no-indent-read port
+                #t
+                  list attach-sourceinfo(pos 'unquote) no-indent-read(port)
+            char=?(c #\()
+              read-char port
+              my-read-delimited-list no-indent-read #\) port
+            char=?(c #\))
+              read-char port
+              read-error "Closing parenthesis without opening"
+              underlying-read no-indent-read port
+            char=?(c #\[)
+              read-char port
+              my-read-delimited-list no-indent-read #\] port
+            char=?(c #\])
+              read-char port
+              read-error "Closing bracket without opening"
+              underlying-read no-indent-read port
+            char=?(c #\})
+              read-char port
+              read-error "Closing brace without opening"
+              underlying-read no-indent-read port
+            char=?(c #\|)
+              read-char port
+              string->symbol list->string(read-symbol-elements(port))
+            #t
+              string->symbol
+                fold-case-maybe
+                  port
+                  list->string read-until-delim(port my-delimiters)
+
+define read_to_blank_line(port)
+  consume-to-eol port
+  consume-end-of-line port
+  let* <* c $ peek-char port *>
+    if not{eof-object?(c) or eqv?(c carriage-return) or eqv?(c linefeed)}
+      read_to_blank_line port
+
+define my-read-top(port)
+  catch
+    'readable
+    lambda () underlying-read(read port)
+    lambda key(. args)
+      read_to_blank_line port
+      my-read-top port
+
+
+; End of our own reader implementation.
+
+define choose-read(port)
+  if use-builtin-reader
+    my-read-top port
+    read port
+
 ; Returns #t if x is a symbol that would typically be used in infix position.
 define is-infix-operator?(x)
   cond
@@ -757,7 +1337,7 @@ define sweeten-filter()
         read-char()
         sweeten-filter()
       #t
-        let <* datum $ read current-input-port() *>
+        let <* datum $ choose-read current-input-port() *>
           if eof-object?(datum)
             datum
             ; We have a datum to format and display - begin the real work:
@@ -806,6 +1386,7 @@ define main(args)
       version-wanted $ option-ref options 'version #f
     set! common-lisp option-ref(options 'common-lisp #f)
     set! use-builtin-reader option-ref(options 'builtin-reader #f)
+    ; set! use-builtin-reader #t ; DEBUG - force use of builtin reader
     if common-lisp
       set! use-builtin-reader #t
     if {version-wanted or help-wanted}
@@ -815,5 +1396,9 @@ define main(args)
           display help-text
       sweeten-filter()
 
+; Default guile stack is hideously small, fix that:
+debug-set! stack 500000
+
 main command-line()
 
+; vim: set expandtab shiftwidth=2 :
