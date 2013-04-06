@@ -505,7 +505,7 @@ define gobble-chars(port to-gobble)
 
 define scomment-result 'scomment(())
 
-define process-sharp(no-indent-read port)
+define process-sharp(port)
   let <* c $ peek-char port *>
     cond
       eof-object?(c) scomment-result
@@ -515,12 +515,12 @@ define process-sharp(no-indent-read port)
         or
           and
             common-lisp
-            parse-cl no-indent-read c port
-          parse-hash no-indent-read c port
-          parse-default no-indent-read c port
+            parse-cl c port
+          parse-hash c port
+          parse-default c port
           read-error "Invalid #-prefixed string"
 
-define parse-default(no-indent-read c port)
+define parse-default(c port)
   cond
     char-ci=?(c #\t)
       if memv(gobble-chars(port '(#\r #\u #\e)) '(0 3))
@@ -539,7 +539,7 @@ define parse-default(no-indent-read c port)
       list
         'normal
         list->vector
-          my-read-delimited-list no-indent-read #\) port
+          my-read-delimited-list #\) port
     char=?(c #\u)
       cond
         not(eqv?(read-char(port) #\8))
@@ -550,9 +550,9 @@ define parse-default(no-indent-read c port)
           list
             'normal
             list->u8vector
-              my-read-delimited-list no-indent-read #\) port
+              my-read-delimited-list #\) port
     char=?(c #\\) list('normal process-char(port))
-    char=?(c #\;) no-indent-read(port) scomment-result
+    char=?(c #\;) my-read(port) scomment-result
     char=?(c #\|) nest-comment(port) scomment-result
     char=?(c #\!) process-sharp-bang(port)
     memv(c digits)
@@ -568,7 +568,7 @@ define parse-default(no-indent-read c port)
             read-char port
             if my-char-whitespace?(peek-char(port))
             ! read-error "#num= followed by whitespace"
-            list 'normal patch-datum-label(label no-indent-read(port))
+            list 'normal patch-datum-label(label my-read(port))
           #t read-error("Datum label #NUM requires = or #")
     char=?(c #\') 'abbrev(syntax)
     char=?(c #\`) 'abbrev(quasisyntax)
@@ -584,7 +584,7 @@ define parse-default(no-indent-read c port)
       scomment-result
     #t #f
 
-define parse-cl(no-indent-read c port)
+define parse-cl(c port)
   cond
     char=?(c #\') 'abbrev(function)
     char=?(c #\:) 'abbrev(+++SHARP-COLON-abbreviation+++)
@@ -593,7 +593,14 @@ define parse-cl(no-indent-read c port)
     char=?(c #\P) 'abbrev(+++SHARP-P-abbreviation+++)
     #t #f
 
-define parse-hash(no-indent-read c port) #f
+define map-cl
+    ' \\
+      +++SHARP-COLON-abbreviation+++ "#:"
+      +++SHARP-DOT-abbreviation+++   "#."
+      +++SHARP-PLUS-abbreviation+++  "#+"
+      +++SHARP-P-abbreviation+++     "#P"
+
+define parse-hash(c port) #f
 
 define nest-comment(fake-port)
   let <* c $ read-char fake-port *>
@@ -672,23 +679,25 @@ define read-symbol-elements(port)
         !       read-symbol-elements port
       #t cons(c read-symbol-elements(port))
 
-define underlying-read(no-indent-read port)
+define default-scheme-read read
+
+define my-read(port)
   consume-whitespace port
   let* <* pos $ get-sourceinfo port \\ c $ peek-char port *>
     cond
       eof-object?(c) c
-      char=?(c #\") invoke-read(default-scheme-read port)
+      char=?(c #\") default-scheme-read(port)
       #t
         attach-sourceinfo
           pos
           cond
             char=?(c #\#)
               read-char port
-              let <* rv $ process-sharp no-indent-read port *>
+              let <* rv $ process-sharp port *>
               ! cond
-              !   eq?(car(rv) 'scomment) no-indent-read(port)
+              !   eq?(car(rv) 'scomment) my-read(port)
               !   eq?(car(rv) 'normal) cadr(rv)
-              !   eq?(car(rv) 'abbrev) list(cadr(rv) no-indent-read(port))
+              !   eq?(car(rv) 'abbrev) list(cadr(rv) my-read(port))
               !   #t read-error("Unknown # sequence")
             char=?(c #\.) process-period(port)
             {memv(c digits) or char=?(c #\+) or char=?(c #\-)}
@@ -702,12 +711,12 @@ define underlying-read(no-indent-read port)
                 ! string->symbol fold-case-maybe(port maybe-number)
             char=?(c #\')
               read-char port
-              list attach-sourceinfo(pos 'quote) no-indent-read(port)
+              list attach-sourceinfo(pos 'quote) my-read(port)
             char=?(c #\`)
               read-char port
               list
                 attach-sourceinfo pos 'quasiquote
-                no-indent-read port
+                my-read port
             char=?(c #\,)
               read-char port
               cond
@@ -715,27 +724,25 @@ define underlying-read(no-indent-read port)
                   read-char port
                   list
                     attach-sourceinfo pos 'unquote-splicing
-                    no-indent-read port
+                    my-read port
                 #t
-                  list attach-sourceinfo(pos 'unquote) no-indent-read(port)
+                  list attach-sourceinfo(pos 'unquote) my-read(port)
             char=?(c #\()
               read-char port
-              my-read-delimited-list no-indent-read #\) port
+              my-read-delimited-list my-read #\) port
             char=?(c #\))
               read-char port
               read-error "Closing parenthesis without opening"
-              underlying-read no-indent-read port
+              my-read port
             char=?(c #\[)
               read-char port
-              my-read-delimited-list no-indent-read #\] port
+              my-read-delimited-list #\] port
             char=?(c #\])
               read-char port
               read-error "Closing bracket without opening"
-              underlying-read no-indent-read port
             char=?(c #\})
               read-char port
               read-error "Closing brace without opening"
-              underlying-read no-indent-read port
             char=?(c #\|)
               read-char port
               string->symbol list->string(read-symbol-elements(port))
@@ -755,11 +762,10 @@ define read_to_blank_line(port)
 define my-read-top(port)
   catch
     'readable
-    lambda () underlying-read(read port)
+    lambda () my-read(port)
     lambda key(. args)
       read_to_blank_line port
       my-read-top port
-
 
 ; End of our own reader implementation.
 
