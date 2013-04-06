@@ -261,7 +261,7 @@ define debug-show(marker data)
       display "\n"
   data
 
-define my-read-delimited-list(my-read stop-char port)
+define my-read-delimited-list(stop-char port)
   consume-whitespace port
   let* <* pos $ get-sourceinfo port \\ c $ peek-char port *>
     cond
@@ -289,7 +289,7 @@ define my-read-delimited-list(my-read stop-char port)
         !   #t
         !     attach-sourceinfo
         !       pos
-        !       cons datum my-read-delimited-list(my-read stop-char port)
+        !       cons datum my-read-delimited-list(stop-char port)
 
 define my-delimiters
   append
@@ -729,7 +729,7 @@ define my-read(port)
                   list attach-sourceinfo(pos 'unquote) my-read(port)
             char=?(c #\()
               read-char port
-              my-read-delimited-list my-read #\) port
+              my-read-delimited-list #\) port
             char=?(c #\))
               read-char port
               read-error "Closing parenthesis without opening"
