@@ -87,10 +87,15 @@ fi
     (unquote-splicing ",@")))
 
 ; Common Lisp unique abbreviations.
-; There no need translate (function x) back to #', so don't do it.
+; There's no need translate (function x) back to #', and older versions of
+; guile cannot read it, so don't do that translation.
+; TODO: There are many more #... that are not supported, see:
+; http://www.lispworks.com/documentation/HyperSpec/Body/02_dh.htm
 (define cl-abbreviations
     '((+++SHARP-DOT-abbreviation+++ "#.")
-      (+++SHARP-PLUS-abbreviation+++ "#+")))
+      (+++SHARP-PLUS-abbreviation+++ "#+")
+      (+++SHARP-COLON-abbreviation+++ "#:")
+      (+++SHARP-P-abbreviation+++ "#P")))
 
 ; return #t if we should as a traditional abbreviation, e.g., '
 (define (represent-as-abbreviation? x abbreviations)

@@ -965,10 +965,14 @@
     (cond
       ((char=? c #\')
         '(abbrev function))
+      ((char=? c #\:)
+        '(abbrev +++SHARP-COLON-abbreviation+++))
       ((char=? c #\.)
         '(abbrev +++SHARP-DOT-abbreviation+++))
       ((char=? c #\+)
         '(abbrev +++SHARP-PLUS-abbreviation+++))
+      ((char=? c #\P)
+        '(abbrev +++SHARP-P-abbreviation+++))
       (#t #f)))
                   
 
