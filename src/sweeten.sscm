@@ -78,6 +78,10 @@ if build-on-sweet
   use-modules
     readable kernel
 
+; This guile-specific library does option processing for us.
+use-modules (ice-9 getopt-long)
+
+
 ; Here are settings that control the "look" of the formatted result.
 ; In the future these might be controlled via option flags.
 ; Note that maxwidth may be violated if, at a current indent, there is a
@@ -126,6 +130,11 @@ define let-likes '(let let*)
 define group-string "\\\\"
 define group-list string->list(group-string)
 define group-string-newline string-append(group-string "\n")
+
+; Control how to read input. If use-builtin-reader is #f, then
+; we'll just call "read" to read a datum.
+define common-lisp #f
+define use-builtin-reader #f
 
 ; Other special characters and lists of characters.
 define tab             integer->char(#x09)
@@ -774,4 +783,37 @@ define sweeten-filter()
 ; And run:
 ;    guile sweeten.scm
 
-sweeten-filter()
+
+define help-text "
+  sweeten [options]
+    -v, --version         Display version
+    -h, --help            Display this help
+    -b, --builtin-reader  Use special built-in reader, not guile's reader
+    -C, --common-lisp     Process Common Lisp (forces -b)
+"
+
+define main(args)
+  let*
+    \\
+      option-spec
+        ' \\
+          help single-char(#\h) value(#f)
+          version single-char(#\v) value(#f)
+          builtin-reader single-char(#\b) value(#f)
+          common-lisp single-char(#\C) value(#f)
+      options $ getopt-long args option-spec
+      help-wanted $ option-ref options 'help #f
+      version-wanted $ option-ref options 'version #f
+    set! common-lisp option-ref(options 'common-lisp #f)
+    set! use-builtin-reader option-ref(options 'builtin-reader #f)
+    if common-lisp
+      set! use-builtin-reader #t
+    if {version-wanted or help-wanted}
+      begin
+        if version-wanted display("sweeten version 0.7\n")
+        if help-wanted
+          display help-text
+      sweeten-filter()
+
+main command-line()
+
