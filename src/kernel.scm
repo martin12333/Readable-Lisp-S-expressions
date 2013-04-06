@@ -719,6 +719,7 @@
       (del #x007f)
       ; Other non-guile names.
       ; rubout noted in: http://docs.racket-lang.org/reference/characters.html
+      ; It's also required by the Common Lisp spec.
       (rubout #x007f)))
   
   (define (process-char port)

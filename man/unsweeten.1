@@ -27,7 +27,16 @@ Sweet-expressions are defined in SRFI-110, and are
 actually the top tier of three tiers of notation:
 
 .IP 1. 4
-\fICurly-infix-expressions\fR (\fIc-expressions\fR): Curly braces {...} contain an \fIinfix list\fR. A \fIsimple infix list\fR has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  The empty {} maps to (), escaping {e} maps to e, unary-op {e1 e2} maps to (e1 e2), and curly-infix lists beginning with the symbol "." are unspecified.  Other infix lists map to "($nfx$ parameters)".   By intent, there is no precedence and you \fImust\fR use another {...} for an embedded infix list.  Inside a curly-infix-expression is a list of neoteric-expressions (below).
+\fICurly-infix-expressions\fR (\fIc-expressions\fR):
+Curly braces {...} contain an \fIinfix list\fR. A \fIsimple infix list\fR has
+(1) an odd number of parameters, (2) at least 3 parameters, and (3)
+all even parameters are the same symbol; it maps to "(even-parameter
+odd-parameters)".  The empty {} maps to (), escaping {e} maps to e,
+unary-op {e1 e2} maps to (e1 e2), and curly-infix lists beginning
+with the symbol "." are unspecified.  Other infix lists map to "($nfx$
+parameters)".   By intent, there is no precedence and you \fImust\fR use
+another {...} for an embedded infix list.  Inside a curly-infix-expression
+is a list of neoteric-expressions (below).
 .RS 6
 .IP \(bu 2
 Example: {n <= 2} maps to (<= n 2)
@@ -105,21 +114,104 @@ None.
 .\" .SH "ENVIRONMENT"
 .\" .PP
 
-.SH BUGS
-.PP
-Unsweeten is primarily designed to read Scheme-formatted expressions.
-The -C (Common Lisp) option invokes some changes that make it work
-with many Common Lisp expressions, but with limitations.
-.PP
-It can be used for other Lisp-based languages
-if the input is limited to the notation in common between them.
+.SH BUGS/LIMITATIONS
 .PP
 Unsweeten implements its own reader, so it does not support some of the
 nonstandard reader extensions supported by some other readers.
 
+.PP
+Unsweeten is primarily designed to read Scheme-formatted expressions.
+The -C (Common Lisp) option invokes some changes that make it work
+with many Common Lisp expressions, but with limitations.
+Note that:
+.RS 6
+.IP \(bu 2
+It works just fine when you use the (large) notational subset
+common between Scheme and Common Lisp, including lists, improper lists,
+integers, most floating point numbers, characters constants (#\\...),
+and strings without escaped characters.
+.IP \(bu 2
+In practice, most symbols just work.
+Any symbol that meets both Scheme and Common Lisp requirements
+will, of course, work just fine.
+As an extension, in unsweeten anything
+beginning with a digit, plus, or minus is read until a delimiter;
+it's then considered a number if it can be by Scheme, else it is a symbol.
+As a result, you \fIcan\fR use symbols that begin with a digit like "1+",
+as well as symbols that begin with a minus like "-v".
+However, as a special case, the sequences +i and -i are
+numbers (these are positive and negative square root of -1).
+.IP \(bu 2
+You can use quote ('), quasiquote (\`), comma (,),
+and comma-at (,@).
+Internally unsweeten represents them the same way as Scheme does,
+but it then prints them back out in a way
+that Common Lisp accepts, so this generally works just fine.
+Note: If you create a two-element list where the first element is
+one of those symbols (quote, quasiquote, command, and comma-at),
+it will be unfortunately printed as these abbreviations.
+In practice this does not seem to be a problem.
+.IP \(bu 2
+The sequence #'name for (function\ name) is supported.
+Also, the sequences #.datum and #+datum are passed through.
+.IP \(bu 2
+Many other sequences beginning with # (sharpsign)
+are not supported; check those carefully.
+See the Common Lisp hyperspec
+http://www.lispworks.com/documentation/HyperSpec/Body/02_dh.htm
+if you are not sure what they do.
+.RE
+
+.PP
+It can be used for other Lisp-based languages
+if the input is limited to the notation in common between them.
+
 .SH EXAMPLES
 .PP
-You can use this tool to process files, say, via a makefile. Then you can use sweet-expressions to write your code, and have it quickly translated to s-expressions. The following portable makefile snippet translates all ".sscm" (Sweet Scheme) files into ".scm" (Scheme) files; be sure the first character is TAB on the rule command with $(UNSWEETEN):
+Here is an example of the kind of data that can be sent into unsweeten:
+
+.PP
+define fibfast(n)   ; Typical function notation
+  if {n < 2}        ; Indentation, infix {...}
+     n              ; Single expr = no new list
+     fibup n 2 1 0  ; Simple function calls
+
+.PP
+The unsweeten tool will translate that input into this traditional
+s-expression (which is a valid Scheme program):
+
+.PP
+(define (fibfast n)
+  (if (< n 2)
+      n
+      (fibup n 2 1 0)))
+
+
+.PP
+Here's another example of a t-expression:
+
+.PP
+define factorial(n)
+  if {n <= 1}
+     1
+     {n * factorial{n - 1}}
+
+.PP
+Here's an example of what it might translate to:
+.PP
+(define (factorial n)
+  (if (<= n 1)
+      1
+      (* n (factorial (- n 1)))))
+
+
+
+.PP
+You can use this tool to process files, say, via a makefile. Then you can
+use sweet-expressions to write your code, and have it quickly translated
+to s-expressions. The following portable makefile snippet translates all
+".sscm" (Sweet Scheme) files into ".scm" (Scheme) files; be sure the
+first character is TAB on the rule command with $(UNSWEETEN):
 
   UNSWEETEN = unsweeten
   \.sscm\.scm:
@@ -143,51 +235,30 @@ Then you can enter Scheme shell commands using sweet-expressions
   exit()
 
 .PP
-You can even use unsweeten to work with other Lisps, such as Common Lisp,
-and the "-C" option helps make this work.
+You can even use unsweeten to work with other Lisps, such as Common Lisp.
+The "-C" (--common-lisp) option helps make this work much better
+(but see the BUGS/LIMITATIONS section!).
 For example, can use unsweeten interactively with clisp
 (a Common Lisp implementation) just by running:
 
   unsweeten -C | clisp
 
 .PP
-This works just fine if you stick to the notational subset
-common between Scheme and Common Lisp.
-If you use unsweeten to process Common Lisp code, you \fIcan\fR
-use function names that begin with a digit.
-For example, "1+" will be considered a symbol, not a number.
-(Scheme does not require that symbols beginning with a digit be supported,
-but as an extension, anything
-beginning with a digit, plus, or minus is read until a delimiter;
-it's considered a number if it can be, else it is a symbol.)
-You can use quote ('), quasiquote (\`), comma (,),
-and comma-at (,@); what happens is that unsweeten internally represents
-them as Scheme does, but it then prints them back out in a way
-Common Lisp accepts, so this generally works just fine.
-If you create two-element lists where the first element is
-one of those symbols, it will be printed as these abbreviations;
-in practice this does not seem to be a problem.
-The sequence #'name for (function\ name) is not supported at this time;
-currently you must use (function\ name) instead of #'name.
-A future release may add support for #'.
-
+Here's an example of what the Common Lisp example of the factorial
+in sweet-expressions would look like:
 .PP
-Here is an example of the kind of data that can be sent into unsweeten:
-.PP
-define factorial(n)
+defun factorial (n)
   if {n <= 1}
      1
      {n * factorial{n - 1}}
 
 .PP
-The unsweeten tool will translate that input into this traditional
-s-expression (which is a valid Scheme program):
+Here's an example of what it might translate to:
 .PP
-(define (factorial n)
+(defun factorial (n)
   (if (<= n 1)
       1
       (* n (factorial (- n 1)))))
-
 
 .SH "SEE ALSO"
 .PP
