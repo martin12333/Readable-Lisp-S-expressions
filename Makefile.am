@@ -271,6 +271,8 @@ EXTRA_DIST += \
  tests/sweeten-correct \
  tests/unsweeten-testsuite \
  tests/unsweeten-correct \
+ tests/unsweeten-cl-testsuite \
+ tests/unsweeten-cl-correct \
  tests/curly-infix-correct2 \
  tests/curly-infix-testsuite2
 
@@ -294,6 +296,8 @@ check: readable/kernel.scm
 	     diff -b -u - "$(srcdir)/tests/unsweeten-correct"
 	test "`printf '\140(a b c ,d)\n' | \"$(builddir)/unsweeten\" -C`" = \
 	     '`(a b c ,d)'
+	"$(builddir)/unsweeten" -C < "$(srcdir)/tests/unsweeten-cl-testsuite" \
+             | diff -b -u - "$(srcdir)/tests/unsweeten-cl-correct"
 	@echo "Running sweeten, showing differences from correct results:"
 	"$(builddir)/sweeten" < "$(srcdir)/tests/sweeten-testsuite" | \
 	     diff -u - "$(srcdir)/tests/sweeten-correct"
