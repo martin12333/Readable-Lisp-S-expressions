@@ -962,6 +962,8 @@
     ; These are for Common Lisp; the "unsweeten" program
     ; can deal with the +++ ones.
     (cond
+      ((char=? c #\')
+        '(abbrev function))
       ((char=? c #\.)
         '(abbrev +++SHARP-DOT-abbreviation+++))
       ((char=? c #\+)

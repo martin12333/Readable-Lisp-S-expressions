@@ -193,7 +193,10 @@ fi
          (version-wanted (option-ref options 'version #f)))
     (set! common-lisp (option-ref options 'common-lisp #f))
     (set! use-my-write (option-ref options 'write #f))
-    (if common-lisp (set! use-my-write #t))
+    (if common-lisp
+      (begin
+        (set! use-my-write #t)
+        (set-read-mode 'common-lisp (current-input-port))))
     (if (not load-pretty-print) (set! use-my-write #t))
     (if (or version-wanted help-wanted)
         (begin
