@@ -691,8 +691,7 @@ define display-sweeten-format(x)
     begin newline() set!(column1 #t)
   display-skip-last-eol sweeten-top(x string->list("") #f)
 
-; Consume an end-of-line. This is 2 unequal end-of-line characters,
-; or a single end-of-line character, whichever is longer.
+; Consume an end-of-line, which is LF | (CR LF?)
 define consume-end-of-line()
   let <* c $ peek-char() *>
     cond
