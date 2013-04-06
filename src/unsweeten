@@ -84,14 +84,13 @@ fi
   '((quote "'")
     (quasiquote "`")
     (unquote ",")
-    (unquote-splicing ",@")
-    ; TODO: This should only work when Common Lisp enabled:
-    (+++SHARP-HASH-token+++ "#.")))
+    (unquote-splicing ",@")))
 
 ; Common Lisp unique abbreviations.
 ; There no need translate (function x) back to #', so don't do it.
 (define cl-abbreviations
-    '((+++SHARP-HASH-token+++ "#.")))
+    '((+++SHARP-DOT-abbreviation+++ "#.")
+      (+++SHARP-PLUS-abbreviation+++ "#+")))
 
 ; return #t if we should as a traditional abbreviation, e.g., '
 (define (represent-as-abbreviation? x abbreviations)
