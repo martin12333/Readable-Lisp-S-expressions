@@ -61,14 +61,17 @@ It can handle input with shared structures (without cycles), but
 the fact that they are shared is lost in the result.
 .PP
 This program uses a Scheme reader, not a Common Lisp reader.
-You may need to hand-translate s-expressions that are different
+Thus, you may need to hand-translate s-expressions that are different
 between Scheme and Common Lisp, in particular,
 some sequences that begin with "#".
 In practice, the main issue is the #'name sequence;
-sweeten process most Common Lisp expressions once you hand-translate
-any #'name sequences into (function\ name).
-If you sending the resulting "sweetened" file to a Common Lisp implementation
-via unsweeten, you should probably use unsweeten's "-C" option.
+you should replace all sequences of the form \fI#'name\fR
+with the sequence \fI(function\ name)\fR.
+The sweeten program can handle
+most Common Lisp expressions once you hand-translate the #'name sequence.
+Note: If you later use unsweeten to process
+a "sweetened" Common Lisp file,
+you should probably use unsweeten's "-C" (Common Lisp) option.
 
 .SH EXAMPLES
 .PP
