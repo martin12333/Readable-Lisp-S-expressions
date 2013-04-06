@@ -418,6 +418,8 @@
   ; exported procedures
   (; tier read procedures
    curly-infix-read neoteric-read sweet-read
+   ; set read mode
+   set-read-mode
    ; replacing the reader
    replace-read restore-traditional-read
    enable-curly-infix enable-neoteric enable-sweet)
@@ -558,7 +560,7 @@
                      (my-read-delimited-list my-read stop-char port))))))))))
 
 ; -----------------------------------------------------------------------------
-; Read Preservation and Replacement
+; Read preservation, replacement, and mode setting
 ; -----------------------------------------------------------------------------
 
   (define default-scheme-read read)
@@ -578,6 +580,12 @@
 
   (define (enable-sweet)
     (replace-read sweet-read))
+
+  (define current-read-mode #f)
+  
+  (define (set-read-mode mode port)
+    ; TODO: Should be per-port
+    (set! current-read-mode mode))
 
 ; -----------------------------------------------------------------------------
 ; Scheme Reader re-implementation
@@ -864,11 +872,16 @@
         ((eof-object? c) scomment-result) ; If eof, pretend it's a comment.
         ((char-line-ending? c) ; Extension - treat # EOL as a comment.
           scomment-result) ; Note this does NOT consume the EOL!
-        (#t ; Try specialized reader.
+        (#t ; Try out different readers until we find a match.
           (my-read-char port)
-          (let ((rv (parse-hash no-indent-read c port)))
-            (if (pair? rv) ; Do we have an override?
-              rv
+          (or
+            (and (eq? current-read-mode 'common-lisp) 
+                 (parse-cl no-indent-read c port))
+            (parse-hash no-indent-read c port)
+            (parse-default no-indent-read c port)
+            (read-error "Invalid #-prefixed string"))))))
+
+  (define (parse-default no-indent-read c port)
               (cond ; Nothing special - use generic rules
                 ((char-ci=? c #\t)
                   (if (memv (gobble-chars port '(#\r #\u #\e)) '(0 3))
@@ -936,13 +949,6 @@
                         '(abbrev unsyntax-splicing))
                       (#t
                         '(abbrev unsyntax)))))
-                ; TODO: Enable only in "Common Lisp".
-                ; This extension is really for Common Lisp; the "unsweeten" program
-                ; can translate this back:
-                ((char=? c #\.)
-                  '(abbrev +++SHARP-DOT-abbreviation+++))
-                ((char=? c #\+)
-                  '(abbrev +++SHARP-PLUS-abbreviation+++))
                 ((or (char=? c #\space) (char=? c tab))
                   ; Extension - treat # (space|tab) as a comment to end of line.
                   ; This is not required by SRFI-105 or SRFI-110, but it's
@@ -950,8 +956,18 @@
                   ; languages (Bourne shells, Perl, Python, etc.)
                   (consume-to-eol port)
                   scomment-result) ; Return comment
-                (#t
-                  (read-error "Invalid #-prefixed string")))))))))
+                (#t #f)))
+
+  (define (parse-cl no-indent-read c port)
+    ; These are for Common Lisp; the "unsweeten" program
+    ; can deal with the +++ ones.
+    (cond
+      ((char=? c #\.)
+        '(abbrev +++SHARP-DOT-abbreviation+++))
+      ((char=? c #\+)
+        '(abbrev +++SHARP-PLUS-abbreviation+++))
+      (#t #f)))
+                  
 
   ; detect #| or |#
   (define (nest-comment fake-port)
