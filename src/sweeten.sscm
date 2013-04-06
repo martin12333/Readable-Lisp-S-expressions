@@ -774,6 +774,11 @@ define choose-read(port)
     my-read-top port
     read port
 
+define cl-abbreviation?(x)
+  if not(common-lisp)
+    #f
+    {list2?(x) and assq(car(x) map-cl)}
+
 ; Returns #t if x is a symbol that would typically be used in infix position.
 define is-infix-operator?(x)
   cond
@@ -951,6 +956,10 @@ define unit(x)
     boolean?(x)  if(x '(#\# #\t) '(#\# #\f))
     symbol?(x)   string->list(symbol->string(x))
     string?(x)   append('(#\") unit-string-tail(string->list(x)))
+    cl-abbreviation?(x) ; Handle Common Lisp constructs like "#+".
+      append
+        string->list $ cadr $ assq car(x) map-cl
+        unit cadr(x)
     pair?(x)
      cond
        represent-as-abbreviation?(x)
@@ -1025,6 +1034,7 @@ define line-tail(x)
 define line(x)
   cond
     not(pair?(x))                  exposed-unit(x)
+    cl-abbreviation?(x)            exposed-unit(x)
     {list1?(x) and represent-as-inline-infix?(car(x))} ; ({a + b}) => $ {a + b}
       append '(#\$ #\space) unit(car(x))
     represent-as-inline-infix?(x)  unit(x)
