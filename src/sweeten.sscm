@@ -1,8 +1,18 @@
 ;_#!/bin/sh
+;_OPTIONS=""
+;_while true ; do
+;_  if [ "$#" -eq 0 ] ; then
+;_    break
+;_  fi
+;_  case "$1" in
+;_    -*) OPTIONS="$OPTIONS $1" ; shift ;;
+;_    *) break ;;
+;_  esac
+;_done
 ;_if test "$#" = "0"; then
-;_  exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0"
+;_  exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0" $OPTIONS
 ;_else
-;_  cat "$@" | /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0"
+;_  cat "$@" | /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0" $OPTIONS
 ;_  exit $?
 ;_fi
 ;_
@@ -12,7 +22,7 @@
 ; sweeten.sscm
 ; Filter to read S-expressions and output indented sweet-expressions.
 ;
-; Copyright (C) 2006-2012 David A. Wheeler.
+; Copyright (C) 2006-2013 David A. Wheeler.
 ;
 ; This software is released as open source software under the "MIT" license:
 ;
