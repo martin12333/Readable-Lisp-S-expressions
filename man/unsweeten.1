@@ -3,14 +3,17 @@
 unsweeten \- filter to translate Lisp/Scheme sweet-expressions to s-expressions
 .SH SYNOPSIS
 .ll +8
-.B unsweeten [-C | --common-lisp]
+.B unsweeten [-C | --common-lisp] [file]...
 .ll -8
 .br
 .SH DESCRIPTION
 .PP
 .I unsweeten
 translates Lisp/Scheme sweet-expressions (t-expressions) into s-expressions.
-It takes input from standard input, and outputs to standard output.
+Without a filename it takes input from standard input
+and outputs to standard output.
+If a list of one or more files is provided,
+those files are processed in order, sending all results to standard output.
 .PP
 Sweet-expressions are a way to represent Lisp/Scheme data and programs
 that adds additional abbreviations beyond those in traditional s-expressions.
