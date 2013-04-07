@@ -31,6 +31,7 @@ By defaul the "sweeten" and "unsweeten" tools process Scheme;
 if you have Common Lisp, provide the "-C" (Common Lisp) option as documented.
 
 
+
 License
 =======
 
@@ -145,7 +146,12 @@ Executables:
     in "makefiles" so that you can write files using sweet-expressions.
     MIT license.
 *   sweeten: A filter that reads in s-expressions (Scheme format) from
-    standard in, and generates sweet-expressions on standard out.  MIT license.
+    standard in, and generates sweet-expressions on standard out.
+    This makes it much easier to transition to sweet-expressions.
+    MIT license.
+*   diff-s-sweet: A program that tells you if 2 files are semantically
+    different.  When transitioning to sweet-expressions, run "sweeten" and
+    then this tool if you want to confirm that everything's okay. MIT license.
 *   neoteric-guile: Start up guile, but use neoteric-expressions to
     interact with it. MIT license.
 *   sweet-guile: Start up guile, but use sweet-expressions to interact
