@@ -138,6 +138,7 @@ define group-string-newline string-append(group-string "\n")
 define common-lisp #f
 define use-builtin-reader #f
 
+
 ; Other special characters and lists of characters.
 define tab             integer->char(#x09)
 define carriage-return integer->char(#x0d)
@@ -1388,6 +1389,7 @@ define help-text "
     -h, --help            Display this help
     -b, --builtin-reader  Use special built-in reader, not guile's reader
     -C, --common-lisp     Process Common Lisp (forces -b)
+    -n  --no-bang         Do NOT use exclamation points in indentation
 "
 
 define main(args)
@@ -1399,14 +1401,18 @@ define main(args)
           version single-char(#\v) value(#f)
           builtin-reader single-char(#\b) value(#f)
           common-lisp single-char(#\C) value(#f)
+          no-bang single-char(#\n) value(#f)
       options $ getopt-long args option-spec
       help-wanted $ option-ref options 'help #f
       version-wanted $ option-ref options 'version #f
-    set! common-lisp option-ref(options 'common-lisp #f)
+      no-bang $ option-ref options 'no-bang #f
     set! use-builtin-reader option-ref(options 'builtin-reader #f)
+    set! common-lisp option-ref(options 'common-lisp #f)
     ; set! use-builtin-reader #t ; DEBUG - force use of builtin reader
     if common-lisp
       set! use-builtin-reader #t
+    if no-bang
+      set! marked-indent-increment indent-increment
     if {version-wanted or help-wanted}
       begin
         if version-wanted display("sweeten version 0.7\n")
