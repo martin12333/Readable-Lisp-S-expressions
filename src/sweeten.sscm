@@ -121,7 +121,9 @@ define cuddle-first-parameter '(
   let-syntax letcrec-syntax
   define-syntax syntax-rules
   set! do
-  setq block typecase)           ; Common Lisp
+  setq block typecase            ; Common Lisp
+  defvar defconstant
+  defparameter)
 
 define let-likes '(let let*)
 
