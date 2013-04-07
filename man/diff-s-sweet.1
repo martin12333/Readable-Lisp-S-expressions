@@ -3,9 +3,9 @@
 diff-s-sweet \- report differences between s-expression and t-expression files
 .SH SYNOPSIS
 .ll +8
-.B diff-s-sweet [-l] [-U n] [-Sk] s-expression-file sweet-expression-file
+.B diff-s-sweet [-l] [-U n] [-SkC] s-expression-file sweet-expression-file
 .PP
-.B diff-s-sweet -w [-l] [-U n] [-Sk] s-expression-file*
+.B diff-s-sweet -w [-l] [-U n] [-SkC] s-expression-file*
 .ll -8
 .br
 .SH DESCRIPTION
@@ -97,6 +97,12 @@ or not well-formatted; don't show the specific differences.
 .BI -w
 Report if file not is "well-formatted", and expect a list of
 zero or more files in s-expression format.
+
+.TP
+.BI -C
+Process input as Common Lisp, not as Scheme.
+This option requires that clisp (a Common Lisp implementation)
+be installed.
 
 .TP
 .BI -P
