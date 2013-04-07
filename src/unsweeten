@@ -95,7 +95,11 @@ fi
     '((+++SHARP-DOT-abbreviation+++ "#.")
       (+++SHARP-PLUS-abbreviation+++ "#+")
       (+++SHARP-COLON-abbreviation+++ "#:")
-      (+++SHARP-P-abbreviation+++ "#P")))
+      (+++SHARP-P-abbreviation+++ "#P")
+      (+++SHARP-QUOTE-abbreviation+++ "#'")
+      (+++CL-QUASIQUOTE-abbreviation+++ "`")
+      (+++CL-UNQUOTE-abbreviation+++ ",")
+      (+++CL-UNQUOTE-SPLICING-abbreviation+++ ",@")))
 
 ; return #t if we should as a traditional abbreviation, e.g., '
 (define (represent-as-abbreviation? x abbreviations)
@@ -136,7 +140,10 @@ fi
           (display "(")
           (my-write-list-contents x)
           (display ")"))))
-    (#t (write x))))
+    (#t
+      (if (and common-lisp (assq x cl-abbreviations))
+          (display (cadr (assq x cl-abbreviations)))
+          (write x)))))
 
 (define (my-write x)
   (my-write-body x)

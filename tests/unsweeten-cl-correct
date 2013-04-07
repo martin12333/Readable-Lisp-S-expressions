@@ -100,7 +100,7 @@ b
 
 
 ; Now we begin Common Lisp specific things.
-(function factorial)
+#'factorial
 
 `(1 2 ,(+ a b))
 

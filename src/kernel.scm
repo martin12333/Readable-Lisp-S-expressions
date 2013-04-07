@@ -466,6 +466,9 @@
   ; Note that we are NOT trying to support all Unicode whitespace chars.
   (define whitespace-chars whitespace-chars-ascii)
 
+  ; If #t, handle some constructs so we can read and print as Common Lisp.
+  (define common-lisp #f)
+
   ; Returns a true value (not necessarily #t)
   (define (char-line-ending? char) (memv char line-ending-chars))
 
@@ -585,7 +588,9 @@
   
   (define (set-read-mode mode port)
     ; TODO: Should be per-port
-    (set! current-read-mode mode))
+    (cond
+      ((eq? mode 'common-lisp)
+        (set! common-lisp #t))))
 
 ; -----------------------------------------------------------------------------
 ; Scheme Reader re-implementation
@@ -876,7 +881,7 @@
         (#t ; Try out different readers until we find a match.
           (my-read-char port)
           (or
-            (and (eq? current-read-mode 'common-lisp) 
+            (and common-lisp
                  (parse-cl no-indent-read c port))
             (parse-hash no-indent-read c port)
             (parse-default no-indent-read c port)
@@ -963,8 +968,10 @@
     ; These are for Common Lisp; the "unsweeten" program
     ; can deal with the +++ ones.
     (cond
+      ; In theory we could just abbreviate this as "function".
+      ; However, this won't work in expressions like (a . #'b).
       ((char=? c #\')
-        '(abbrev function))
+        '(abbrev +++SHARP-QUOTE-abbreviation+++))
       ((char=? c #\:)
         '(abbrev +++SHARP-COLON-abbreviation+++))
       ((char=? c #\.)
@@ -974,8 +981,18 @@
       ((char=? c #\P)
         '(abbrev +++SHARP-P-abbreviation+++))
       (#t #f)))
-                  
 
+  ; Translate "x" to Common Lisp representation if we're printing CL.
+  ; Basically we use a very unusual representation, and then translate it back
+  (define (translate-cl x)
+    (if common-lisp
+      (case x
+        ((quasiquote)       '+++CL-QUASIQUOTE-abbreviation+++)
+        ((unquote)          '+++CL-UNQUOTE-abbreviation+++)
+        ((unquote-splicing) '+++CL-UNQUOTE-SPLICING-abbreviation+++)
+        (else x))
+      x))
+                  
   ; detect #| or |#
   (define (nest-comment fake-port)
     (let ((c (my-read-char fake-port)))
@@ -1111,17 +1128,18 @@
                   (no-indent-read port)))
               ((char=? c #\`)
                 (my-read-char port)
-                (list (attach-sourceinfo pos 'quasiquote)
+                (list (attach-sourceinfo pos (translate-cl 'quasiquote))
                   (no-indent-read port)))
               ((char=? c #\,)
                 (my-read-char port)
                   (cond
                     ((char=? #\@ (my-peek-char port))
                       (my-read-char port)
-                      (list (attach-sourceinfo pos 'unquote-splicing)
+                      (list (attach-sourceinfo pos
+                               (translate-cl 'unquote-splicing))
                        (no-indent-read port)))
                    (#t
-                    (list (attach-sourceinfo pos 'unquote)
+                    (list (attach-sourceinfo pos (translate-cl 'unquote))
                       (no-indent-read port)))))
               ((char=? c #\( )
                   (my-read-char port)
@@ -1453,14 +1471,14 @@
         (maybe-initial-abbrev port 'quote))
       ((#\`) 
         (my-read-char port)
-        (maybe-initial-abbrev port 'quasiquote))
+        (maybe-initial-abbrev port (translate-cl 'quasiquote)))
       ((#\,) 
         (my-read-char port)
         (if (eqv? (my-peek-char port) #\@)
             (begin
               (my-read-char port)
-              (maybe-initial-abbrev port 'unquote-splicing))
-            (maybe-initial-abbrev port 'unquote)))
+              (maybe-initial-abbrev port (translate-cl 'unquote-splicing)))
+            (maybe-initial-abbrev port (translate-cl 'unquote))))
       ((#\#) 
         (let* ((consumed-sharp (my-read-char port))
                (result (process-sharp neoteric-read-nocomment port)))
