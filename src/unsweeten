@@ -142,7 +142,7 @@ fi
           (display ")"))))
     (#t
       (if (and common-lisp (assq x cl-abbreviations))
-          (display (cadr (assq x cl-abbreviations)))
+          (begin (display " . ") (display (cadr (assq x cl-abbreviations))))
           (write x)))))
 
 (define (my-write x)
