@@ -3,7 +3,7 @@
 sweeten \- filter to translate Lisp/Scheme s-expressions to sweet-expressions
 .SH SYNOPSIS
 .ll +8
-.B unsweeten [file]...
+.B sweeten [-b | --builtin-reader] [-C | --common-list] [file]...
 .ll -8
 .br
 .SH DESCRIPTION
@@ -45,13 +45,25 @@ to confirm that the resulting tweaked file is
 semantically identical to the original.
 
 .PP
+By default it uses the reader of the underlying implementation (guile).
+
+.PP
 For more information, see
 http://readable.sourceforge.net.
 
 
 .SH OPTIONS
-.PP
-None.
+
+.TP 6
+.BI -b
+Use a built-in reader (instead of the guile read routine);
+this may work better for your input.
+
+.TP
+.BI -C
+Use a modified built-in reader (instead of the guile read routine)
+designed to read Common Lisp.
+
 
 .\" .SH "ENVIRONMENT"
 .\" .PP
@@ -63,18 +75,12 @@ This program assumes that the input does not contain any cycles
 It can handle input with shared structures (without cycles), but
 the fact that they are shared is lost in the result.
 .PP
-This program uses a Scheme reader, not a Common Lisp reader.
-Thus, you may need to hand-translate s-expressions that are different
-between Scheme and Common Lisp, in particular,
-some sequences that begin with "#".
-In practice, the main issue is the #'name sequence;
-you should replace all sequences of the form \fI#'name\fR
-with the sequence \fI(function\ name)\fR.
-The sweeten program can handle
-most Common Lisp expressions once you hand-translate the #'name sequence.
-Note: If you later use unsweeten to process
-a "sweetened" Common Lisp file,
-you should probably use unsweeten's "-C" (Common Lisp) option.
+The Common Lisp reader (invoked with -C)
+has not been as well tested.
+It should work just fine for readings s-expressions that are
+legal in both Scheme and Common Lisp.
+It can also handle #\'name as an abbreviation for (function\ name),
+as well as a few Common Lisp capabilities like #:, #., #+, and #P.
 
 .SH EXAMPLES
 .PP
