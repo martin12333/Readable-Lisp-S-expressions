@@ -3,7 +3,7 @@
 sweeten \- filter to translate Lisp/Scheme s-expressions to sweet-expressions
 .SH SYNOPSIS
 .ll +8
-.B sweeten [-b | --builtin-reader] [-C | --common-list] [file]...
+.B sweeten [-b | --builtin-reader] [-C | --common-list] [-n] [file]...
 .ll -8
 .br
 .SH DESCRIPTION
@@ -63,6 +63,10 @@ this may work better for your input.
 .BI -C
 Use a modified built-in reader (instead of the guile read routine)
 designed to read Common Lisp.
+
+.TP
+.BI -n
+Do not use "!" as an indentation character.
 
 
 .\" .SH "ENVIRONMENT"
