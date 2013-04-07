@@ -37,10 +37,13 @@ Maturity
 This code is *mature* and *production-ready* for Scheme, especially
 guile Scheme.  It's been extensively tested, and comes with
 a large regression test suite, and is based on a specially-analyzed grammar.
+The intent is for Scheme implementations to use this code as a starting
+point to embed the reader into their code... but the code can also be used
+as a pre-processor so that you can use these notations today.
 
 The code is *prototype-level* and *less mature* for Common Lisp.
 If you're careful to stay within its limitations, it works, but the
-Common Lisp capabilities are nowhere near as mature as the Scheme portions.
+Common Lisp capabilities are not as mature as Scheme.
 Please contact us if you're interested in helping us mature
 the Common Lisp implementation.
 
