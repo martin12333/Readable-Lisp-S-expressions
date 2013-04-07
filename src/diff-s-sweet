@@ -71,7 +71,10 @@ prettyprint() {
 if [ "$common_lisp" = 1 ] ; then
   prog_file="$(mktemp)"
   # TODO: Handle EOF cleanly.
-  echo '(ignore-errors (loop (pprint (read)) (format t "~%")))' >> "$prog_file"
+  echo '
+    (loop for datum = (ignore-errors (read *standard-input* nil :eof-token))
+      until (eq datum :eof-token)
+      do (pprint datum) (format t "~%"))' >> "$prog_file"
   clisp -modern "$prog_file" || exit 0
   rm -f "$progfile"
 else
