@@ -122,7 +122,7 @@ define cuddle-first-parameter '(
   define-syntax syntax-rules
   set! do
   setq block typecase            ; Common Lisp
-  defvar defconstant
+  defvar defconstant defstruct
   defparameter)
 
 define let-likes '(let let*)
