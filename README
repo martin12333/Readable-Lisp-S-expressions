@@ -26,6 +26,10 @@ Scheme (including guile), Emacs Lisp, Clojure, Arc, BitC, ACL2,
 SUO-KIF, the GCC MiddleEndLispTranslator (MELT),
 Satisfiability Modulo Theories Library (SMT-LIB), NewLisp, and ISLisp.
 
+The tools provided here primarily handle Scheme and Common Lisp.
+By defaul the "sweeten" and "unsweeten" tools process Scheme;
+if you have Common Lisp, provide the "-C" (Common Lisp) option as documented.
+
 
 License
 =======
@@ -161,6 +165,7 @@ Documentation:
 *   sweeten.sscm: An example of code written using sweet-expressions.
     This is the original source code for "sweeten", which reads
     traditional s-expressions and writes sweet-expression versions of them.
+*   "man pages"
 
 The spec-* files need to be updated (volunteers welcome).  For now, see
 "solution.md" for the real specification.
