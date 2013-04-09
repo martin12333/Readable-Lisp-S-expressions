@@ -1025,6 +1025,7 @@
     (let ((c (my-peek-char port)))
       (cond
         ((eof-object? c) period-symbol) ; period eof; return period.
+        ((memv c '(#\' #\` #\, #\#)) period-symbol) ; End, for some CL code
         ((memv c digits) ; period digit - it's a number.
           (let ((num (read-number port (list #\.))))
             (if num
