@@ -223,6 +223,7 @@ fi
        -C, --common-lisp Process Common Lisp (forces -w)
      ")))
         (begin
+          (set-read-mode 'literal-barred-symbol (current-input-port))
           (sweet-filter (current-input-port))))))
 
 (main (command-line))

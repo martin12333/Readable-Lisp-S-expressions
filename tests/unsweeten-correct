@@ -102,4 +102,6 @@ b
 ; Non-Common Lisp
 (syntax (a b))
 
+|.|
+
 ; Comment at end of file.

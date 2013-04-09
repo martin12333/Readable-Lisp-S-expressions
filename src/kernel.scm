@@ -486,6 +486,9 @@
   ; If #t, handle some constructs so we can read and print as Common Lisp.
   (define common-lisp #f)
 
+  ; If #t, return |...| symbols as-is, including the vertical bars.
+  (define literal-barred-symbol #f)
+
   ; Returns a true value (not necessarily #t)
   (define (char-line-ending? char) (memv char line-ending-chars))
 
@@ -607,7 +610,14 @@
     ; TODO: Should be per-port
     (cond
       ((eq? mode 'common-lisp)
-        (set! common-lisp #t))))
+        (set! common-lisp #t) #t)
+      ((eq? mode 'literal-barred-symbol)
+        (set! literal-barred-symbol #t) #t)
+      ((eq? 'fold-case)
+        (set! is-foldcase #t) #t)
+      ((eq? 'no-fold-case)
+        (set! is-foldcase #f) #t)
+      (#t (display "Warning: Unknown mode") #f)))
 
 ; -----------------------------------------------------------------------------
 ; Scheme Reader re-implementation
@@ -1100,6 +1110,29 @@
                       (read-symbol-elements port))))))
         (#t (cons c (read-symbol-elements port))))))
 
+  ; Extension: When reading |...|, *include* the bars in the symbol, so that
+  ; when we print it out later we know that there were bars there originally.
+  (define (read-literal-symbol port)
+    (let ((c (my-read-char port)))
+      (cond
+        ((eof-object? c) (read-error "EOF inside literal symbol"))
+        ((eqv? c #\|)    '(#\|)) ; Expected end of symbol elements
+        ((eqv? c #\\)
+          (let ((c2 (my-read-char port)))
+            (if (eof-object? c)
+              (read-error "EOF after \\ in literal symbol")
+              (cons c (cons c2 (read-literal-symbol port))))))
+        (#t (cons c (read-literal-symbol port))))))
+
+  ; Read |...| symbol (like Common Lisp)
+  ; This is present in R7RS draft 9.
+  (define (get-barred-symbol port)
+    (my-read-char port) ; Consume the initial vertical bar.
+    (string->symbol (list->string
+      (if literal-barred-symbol
+        (cons #\| (read-literal-symbol port))
+        (read-symbol-elements port)))))
+
   ; This implements a simple Scheme "read" implementation from "port",
   ; but if it must recurse to read, it will invoke "no-indent-read"
   ; (a reader that is NOT indentation-sensitive).
@@ -1178,10 +1211,8 @@
                 (read-error "Closing brace without opening")
                 (underlying-read no-indent-read port))
               ((char=? c #\| )
-                ; Read |...| symbol (like Common Lisp)
-                ; This is present in R7RS draft 9.
-                (my-read-char port) ; Consume the initial vertical bar.
-                (string->symbol (list->string (read-symbol-elements port))))
+                ; Read |...| symbol (like Common Lisp and R7RS draft 9)
+                (get-barred-symbol port))
               (#t ; Nothing else.  Must be a symbol start.
                 (string->symbol (fold-case-maybe port
                   (list->string
