@@ -1,30 +1,47 @@
-; kernel.scm
-; Implementation of the sweet-expressions project by readable mailinglist.
-;
-; Copyright (C) 2005-2013 by David A. Wheeler and Alan Manuel K. Gloria
-;
-; This software is released as open source software under the "MIT" license:
-;
-; Permission is hereby granted, free of charge, to any person obtaining a
-; copy of this software and associated documentation files (the "Software"),
-; to deal in the Software without restriction, including without limitation
-; the rights to use, copy, modify, merge, publish, distribute, sublicense,
-; and/or sell copies of the Software, and to permit persons to whom the
-; Software is furnished to do so, subject to the following conditions:
-;
-; The above copyright notice and this permission notice shall be included
-; in all copies or substantial portions of the Software.
-;
-; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-; OTHER DEALINGS IN THE SOFTWARE.
+;;; kernel.scm
+;;; Implementation of the sweet-expressions project by readable mailinglist.
+;;;
+;;; Copyright (C) 2005-2013 by David A. Wheeler and Alan Manuel K. Gloria
+;;;
+;;; This software is released as open source software under the "MIT" license:
+;;;
+;;; Permission is hereby granted, free of charge, to any person obtaining a
+;;; copy of this software and associated documentation files (the "Software"),
+;;; to deal in the Software without restriction, including without limitation
+;;; the rights to use, copy, modify, merge, publish, distribute, sublicense,
+;;; and/or sell copies of the Software, and to permit persons to whom the
+;;; Software is furnished to do so, subject to the following conditions:
+;;;
+;;; The above copyright notice and this permission notice shall be included
+;;; in all copies or substantial portions of the Software.
+;;;
+;;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+;;; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+;;; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+;;; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+;;; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+;;; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+;;; OTHER DEALINGS IN THE SOFTWARE.
 
-; Warning: For portability use eqv?/memv (not eq?/memq) to compare characters.
-; A "case" is okay since it uses "eqv?".
+;;; Warning: For portability use eqv?/memv (not eq?/memq) to compare characters.
+;;; A "case" is okay since it uses "eqv?".
+
+;;; This file includes:
+;;; - Compatibility layer - macros etc. to try to make it easier to port
+;;;   this code to different Scheme implementations (to deal with different
+;;;   module systems, how to override read, getting position info, etc.)
+;;; - Re-implementation of "read", beginning with its support procedures.
+;;;   There is no standard Scheme mechanism to override just *portions*
+;;;   of read, and we MUST make {} delimiters, so we have to re-implement read.
+;;;   We also need to get control over # so we know which ones are comments.
+;;;   If you're modifying a Scheme implementation, just use that instead.
+;;; - Curly Infix (c-expression) implementation
+;;; - Neoteric expression (n-expression) implementation
+;;; - Sweet-expression (t-expression) implementation
+;;; Note that most of the code is in the compatibility layer and
+;;; re-implementation of "read"; implementing the new expression languages
+;;; is actually pretty easy.
+
 
 ; -----------------------------------------------------------------------------
 ; Compatibility Layer
@@ -1360,8 +1377,9 @@
       (and (> len1 len2)
              (string=? indentation2 (substring indentation1 0 len2)))))
 
+  ; Does character "c" begin a line comment (;) or end-of-line?
   (define initial_comment_eol (list #\; #\newline carriage-return))
-  (define (is_initial_comment_eol c)
+  (define (lcomment_eol? c)
     (or
        (eof-object? c)
        (memv c initial_comment_eol)))
@@ -1494,15 +1512,15 @@
 
   ; Consume ;-comment (if there), consume EOL, and return new indent.
   ; Skip ;-comment-only lines; a following indent-only line is empty.
-  (define (comment_eol_read_indent port)
+  (define (get_next_indent port)
     (consume-to-eol port)
     (consume-end-of-line port)
     (let* ((indentation-as-list (cons #\^ (accumulate-ichar port)))
            (c (my-peek-char port)))
       (cond
         ((eqv? c #\;)  ; A ;-only line, consume and try again.
-          (comment_eol_read_indent port))
-        ((is_initial_comment_eol c) ; Indent-only line
+          (get_next_indent port))
+        ((lcomment_eol? c) ; Indent-only line
           (if (memv #\! indentation-as-list)
               (read-error "Ending indentation-only line must not use '!'")
               "^"))
@@ -1523,7 +1541,7 @@
       (cond
         ((eof-object? c)
          (read-error "Collecting tail: EOF before collecting list ended"))
-        ((is_initial_comment_eol c)
+        ((lcomment_eol? c)
           (consume-to-eol port)
           (consume-end-of-line port)
           (collecting_tail port))
@@ -1533,7 +1551,7 @@
             (cond
               ((eqv? c #\;)
                 (collecting_tail port))
-              ((is_initial_comment_eol c)
+              ((lcomment_eol? c)
                 (if (memv #\! indentation)
                     (read-error "Collecting tail: False empty line with !")
                     (collecting_tail port)))
@@ -1541,7 +1559,7 @@
                 (read-error "Collecting tail: Only ; after indent")))))
         ((or (eqv? c form-feed) (eqv? c vertical-tab))
           (consume-ff-vt port)
-          (if (is_initial_comment_eol (my-peek-char port))
+          (if (lcomment_eol? (my-peek-char port))
               (collecting_tail port)
               (read-error "Collecting tail: FF and VT must be alone on line")))
         (#t
@@ -1567,7 +1585,7 @@
   (define (n_expr_error port full)
     (if (not (eq? (car full) 'normal))
         (read-error "BUG! n_expr_error called but stopper not normal"))
-    (if (is_initial_comment_eol (my-peek-char port))
+    (if (lcomment_eol? (my-peek-char port))
         full ; All done!
         (let* ((n_full_results (n_expr port))
                (n_stopper      (car n_full_results))
@@ -1583,7 +1601,7 @@
 
   ; Returns (stopper value_after_period)
   (define (post_period port)
-    (if (not (is_initial_comment_eol (my-peek-char port)))
+    (if (not (lcomment_eol? (my-peek-char port)))
         (let* ((pn_full_results (n_expr port))
                (pn_stopper      (car pn_full_results))
                (pn_value        (cadr pn_full_results)))
@@ -1617,7 +1635,7 @@
           (hspaces port)
           (let* ((ct_results (collecting_tail port)))
             (hspaces port)
-            (if (not (is_initial_comment_eol (my-peek-char port)))
+            (if (not (lcomment_eol? (my-peek-char port)))
                 (let* ((rr_full_results (rest port))
                        (rr_stopper      (car rr_full_results))
                        (rr_value        (cadr rr_full_results)))
@@ -1635,7 +1653,7 @@
         ((not (eq? basic_special 'normal)) basic_full_results)
         ((char-hspace? (my-peek-char port))
           (hspaces port)
-          (if (not (is_initial_comment_eol (my-peek-char port)))
+          (if (not (lcomment_eol? (my-peek-char port)))
               (let* ((br_full_results (rest port))
                      (br_stopper      (car br_full_results))
                      (br_value        (cadr br_full_results)))
@@ -1653,14 +1671,14 @@
       (cond
         ((eq? basic_special 'scomment)
           (hspaces port)
-          (if (not (is_initial_comment_eol (my-peek-char port)))
+          (if (not (lcomment_eol? (my-peek-char port)))
               (rest port)
               (list 'normal '())))
         ((eq? basic_special 'collecting)
           (hspaces port)
           (let* ((ct_results (collecting_tail port)))
             (hspaces port)
-            (if (not (is_initial_comment_eol (my-peek-char port)))
+            (if (not (lcomment_eol? (my-peek-char port)))
                 (let* ((rr_full_results (rest port))
                        (rr_stopper      (car rr_full_results))
                        (rr_value        (cadr rr_full_results)))
@@ -1675,7 +1693,7 @@
         ((not (eq? basic_special 'normal)) (list basic_special '())) 
         ((char-hspace? (my-peek-char port))
           (hspaces port)
-          (if (not (is_initial_comment_eol (my-peek-char port)))
+          (if (not (lcomment_eol? (my-peek-char port)))
               (let* ((br_full_results (rest port))
                      (br_stopper      (car br_full_results))
                      (br_value        (cadr br_full_results)))
@@ -1712,12 +1730,12 @@
           (cond
             ((eq? head_stopper 'group_split_marker)
               (hspaces port)
-              (if (is_initial_comment_eol (my-peek-char port))
+              (if (lcomment_eol? (my-peek-char port))
                   (read-error "Cannot follow split with end of line")
                   (list starting_indent (monify head_value))))
             ((eq? head_stopper 'sublist_marker)
               (hspaces port)
-              (if (is_initial_comment_eol (my-peek-char port))
+              (if (lcomment_eol? (my-peek-char port))
                   (read-error "EOL illegal immediately after sublist"))
               (let* ((sub_i_full_results (it_expr port starting_indent))
                      (sub_i_new_indent   (car sub_i_full_results))
@@ -1727,8 +1745,8 @@
             ((eq? head_stopper 'collecting_end)
               ; Note that indent is "", forcing dedent all the way out.
               (list "" (monify head_value)))
-            ((is_initial_comment_eol (my-peek-char port))
-              (let ((new_indent (comment_eol_read_indent port)))
+            ((lcomment_eol? (my-peek-char port))
+              (let ((new_indent (get_next_indent port)))
                 (if (indentation>? new_indent starting_indent)
                     (let* ((body_full_results (body port new_indent))
                            (body_new_indent (car body_full_results))
@@ -1742,21 +1760,21 @@
             ((or (eq? head_stopper 'group_split_marker)
                  (eq? head_stopper 'scomment))
               (hspaces port)
-              (if (not (is_initial_comment_eol (my-peek-char port)))
+              (if (not (lcomment_eol? (my-peek-char port)))
                   (it_expr port starting_indent) ; Skip and try again.
-                  (let ((new_indent (comment_eol_read_indent port)))
+                  (let ((new_indent (get_next_indent port)))
                     (cond
                       ((indentation>? new_indent starting_indent)
                         (body port new_indent))
                       ((string=? starting_indent new_indent)
-                        (if (not (is_initial_comment_eol (my-peek-char port)))
+                        (if (not (lcomment_eol? (my-peek-char port)))
                           (it_expr port new_indent)
                           (list new_indent (t_expr port)))) ; Restart
                       (#t
                         (read-error "GROUP_SPLIT EOL DEDENT illegal"))))))
             ((eq? head_stopper 'sublist_marker)
               (hspaces port)
-              (if (is_initial_comment_eol (my-peek-char port))
+              (if (lcomment_eol? (my-peek-char port))
                   (read-error "EOL illegal immediately after solo sublist"))
               (let* ((is_i_full_results (it_expr port starting_indent))
                      (is_i_new_indent   (car is_i_full_results))
@@ -1765,9 +1783,9 @@
                   (list is_i_value))))
             ((eq? head_stopper 'abbrevw)
               (hspaces port)
-              (if (is_initial_comment_eol (my-peek-char port))
+              (if (lcomment_eol? (my-peek-char port))
                   (begin
-                    (let ((new_indent (comment_eol_read_indent port)))
+                    (let ((new_indent (get_next_indent port)))
                       (if (not (indentation>? new_indent starting_indent))
                           (read-error "Indent required after abbreviation"))
                       (let* ((ab_full_results (body port new_indent))
@@ -1804,7 +1822,7 @@
       (if (eof-object? c)
           c
           (cond
-            ((is_initial_comment_eol c)
+            ((lcomment_eol? c)
               (consume-to-eol port)
               (consume-end-of-line port)
               (t_expr port))
@@ -1834,13 +1852,13 @@
                     (read-error "Closing *> without preceding matching <*")
                     results_value)))))))
 
+  ; Skip until we find a completely empty line (not even initial space/tab).
+  ; We use this after read error to resync to good input.
   (define (read_to_blank_line port)
     (consume-to-eol port)
     (consume-end-of-line port)
     (let* ((c (my-peek-char port)))
-      (if (not (or (eof-object? c)
-                   (eqv? c carriage-return)
-                   (eqv? c linefeed)))
+      (if (not (or (eof-object? c) (char-line-ending? c)))
         (read_to_blank_line port))))
 
   ; Call on sweet-expression reader - use guile's nonstandard catch/throw
