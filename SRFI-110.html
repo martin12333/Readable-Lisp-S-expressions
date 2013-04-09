@@ -189,6 +189,7 @@ define fibfast(n)   ; Typical function notation
   </li>
   <li><a href="#specific-constructs">Other specific sweet-expression constructs</a>
   <ul>
+  <li><a href="#singleton">Singleton expression represents itself</a></li>
   <li><a href="#sweet">The #!sweet marker</a></li>
   <li><a href="#grouping-and-splitting">Grouping and splitting (\\)</a></li>
   <li><a href="#initial-group-mean-nothing">Why does initial \\ mean nothing if there are datums afterwards on the same line?</a></li>
@@ -2514,12 +2515,12 @@ we have tried to strike a balance.
 The specification itself looks more complex, but that is because
 we have chosen to develop a rigorous specification using an exacting BNF.
 This was in response to lessons learned with SRFI-49;
-SRFI-49 was simpler but left a number of issues underspecified,
-and thus it easily led to different interpretations.
+the SRFI-49 specification was simpler but left a number of issues
+underspecified, and thus it easily led to different interpretations.
 The key BNF definitions for sweet-expressions
 only require 88 non-comment non-blank lines for 7 productions in ANTLR.
-As a comparison, defining simple datums (such as identifiers and numbers)
-using the same notation
+As a comparison, defining Scheme simple datums
+(such as identifiers and numbers) using the same notation
 required more lines (109 non-comment non-blank lines)
 and more productions (52).
 <!-- measurement taken on 2013-03-27 using "sweet.g" -->
@@ -3185,6 +3186,37 @@ These rules are based on the <i>unsweeten</i> tool.
 The following subsections describe other specific
 sweet-expression constructs, including why they are defined the
 way they are.
+</p>
+
+<h3 id="singleton">Singleton expression represents itself</h3>
+
+<p>
+Just like SRFI-49, a single neoteric expression on a line with no child
+lines (a <i>singleton</i>) represents itself.
+In contrast, if there are multiple expressions (on a line or via a child),
+they are wrapped into a list.
+An alternative would be to <i>always</i> wrap a line into a list,
+and then require some special marker to indicate that a singleton
+should <i>not</i> be wrapped in a list.
+</p>
+
+<p>
+We believe the SRFI-49 approach is the better alternative.
+It is common to wind down to some specific value such as a
+specific number, constant construct, or variable value to be returned.
+It seems far simpler to simply state the value to be returned instead of
+requiring a special marker to indicate that a value just means itself.
+Singleton values on a line representing themselves are
+far more common than a single item in a list, so it makes sense to make
+the more-common case easier to represent.
+Finally, we believe this approach produces a more familiar result.
+In many cases a list with only one element
+is a procedure call passing no values; in this case,
+the format &#8220;name()&#8221; is extremely familiar
+because it is the same format used in many other programming languages.
+In rare cases where it truly is a list with one element,
+but not a procedure call, the alternative format
+&#8220;(element-value)&#8221; also seems quite clear.
 </p>
 
 <h3 id="sweet">The #!sweet marker</h3>
