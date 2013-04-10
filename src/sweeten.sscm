@@ -137,6 +137,7 @@ define group-string-newline string-append(group-string "\n")
 ; we'll just call "read" to read a datum.
 define common-lisp #f
 define use-builtin-reader #f
+define literal-barred-symbol #t
 
 
 ; Other special characters and lists of characters.
@@ -587,21 +588,39 @@ define parse-default(c port)
       scomment-result
     #t #f
 
+; Given character "c" after #, what does it parse as (if anything)?
 define parse-cl(c port)
   cond
-    char=?(c #\') 'abbrev(function)
+    ; In theory we could just abbreviate #' as "function".
+    ; However, this won't work in expressions like (a . #'b).
+    char=?(c #\') 'abbrev(+++SHARP-QUOTE-abbreviation+++)
     char=?(c #\:) 'abbrev(+++SHARP-COLON-abbreviation+++)
     char=?(c #\.) 'abbrev(+++SHARP-DOT-abbreviation+++)
     char=?(c #\+) 'abbrev(+++SHARP-PLUS-abbreviation+++)
     char=?(c #\P) 'abbrev(+++SHARP-P-abbreviation+++)
     #t #f
 
+; Given Scheme symbol x, should we translate it for CL (and if so, to what)?
+define translate-cl(x)
+  if common-lisp
+     case x
+       (quasiquote)       '+++CL-QUASIQUOTE-abbreviation+++
+       (unquote)          '+++CL-UNQUOTE-abbreviation+++
+       (unquote-splicing) '+++CL-UNQUOTE-SPLICING-abbreviation+++
+       else x
+     x
+
+; Reverse map from CL back to display
 define map-cl
     ' \\
+      +++SHARP-QUOTE-abbreviation+++ "#'"
       +++SHARP-COLON-abbreviation+++ "#:"
       +++SHARP-DOT-abbreviation+++   "#."
       +++SHARP-PLUS-abbreviation+++  "#+"
       +++SHARP-P-abbreviation+++     "#P"
+      +++CL-QUASIQUOTE-abbreviation+++ "`"
+      +++CL-UNQUOTE-abbreviation+++  ","
+      +++CL-UNQUOTE-SPLICING-abbreviation+++ ",@"
 
 define parse-hash(c port) #f
 
@@ -629,7 +648,8 @@ define process-period(port)
   read-char port
   let <* c $ peek-char port *>
     cond
-      eof-object?(c) period-symbol
+      eof-object?(c)               period-symbol
+      memv(c '(#\' #\` #\, #\#))   period-symbol ; End, for some CL code
       memv(c digits)
         let <* num $ read-number port list(#\.) *>
         ! if num num read-error("period digit must be a number")
@@ -682,6 +702,33 @@ define read-symbol-elements(port)
         !       read-symbol-elements port
       #t cons(c read-symbol-elements(port))
 
+
+; Extension: When reading |...|, *include* the bars in the symbol, so that
+; when we print it out later we know that there were bars there originally.
+define read-literal-symbol(port)
+  let <* c $ read-char port *>
+    cond
+      eof-object?(c) read-error("EOF inside literal symbol")
+      eqv?(c #\|) '(#\|)
+      eqv?(c #\\)
+        let <* c2 $ read-char port *>
+        ! if eof-object?(c)
+        !   read-error "EOF after \\ in literal symbol"
+        !   cons c cons(c2 read-literal-symbol(port))
+      #t cons(c read-literal-symbol(port))
+
+; Read |...| symbol (like Common Lisp)
+; This is present in R7RS draft 9.
+define get-barred-symbol(port)
+  read-char port
+  string->symbol
+    list->string
+      if literal-barred-symbol
+        cons #\| read-literal-symbol(port)
+        read-symbol-elements port
+
+
+
 define default-scheme-read read
 
 define my-read(port)
@@ -718,7 +765,7 @@ define my-read(port)
             char=?(c #\`)
               read-char port
               list
-                attach-sourceinfo pos 'quasiquote
+                attach-sourceinfo pos translate-cl('quasiquote)
                 my-read port
             char=?(c #\,)
               read-char port
@@ -726,10 +773,12 @@ define my-read(port)
                 char=?(#\@ peek-char(port))
                   read-char port
                   list
-                    attach-sourceinfo pos 'unquote-splicing
+                    attach-sourceinfo pos translate-cl('unquote-splicing)
                     my-read port
                 #t
-                  list attach-sourceinfo(pos 'unquote) my-read(port)
+                  list
+                    attach-sourceinfo pos translate-cl('unquote)
+                    my-read(port)
             char=?(c #\()
               read-char port
               my-read-delimited-list #\) port
@@ -747,8 +796,8 @@ define my-read(port)
               read-char port
               read-error "Closing brace without opening"
             char=?(c #\|)
-              read-char port
-              string->symbol list->string(read-symbol-elements(port))
+              ; Read |...| symbol (like Common Lisp and R7RS draft 9)
+              get-barred-symbol port
             #t
               string->symbol
                 fold-case-maybe
@@ -957,12 +1006,16 @@ define unit(x)
     null?(x)     string->list("()")
     number?(x)   string->list(number->string(x))
     boolean?(x)  if(x '(#\# #\t) '(#\# #\f))
-    symbol?(x)   string->list(symbol->string(x))
     string?(x)   append('(#\") unit-string-tail(string->list(x)))
     cl-abbreviation?(x) ; Handle Common Lisp constructs like "#+".
       append
         string->list $ cadr $ assq car(x) map-cl
         unit cadr(x)
+    {common-lisp and symbol?(x) and assq(x map-cl)} ; Handle CL (a . #'b)
+      append
+        '(#\space #\. #\space)
+        string->list $ cadr $ assq x map-cl
+    symbol?(x)   string->list(symbol->string(x))
     pair?(x)
      cond
        represent-as-abbreviation?(x)
@@ -1309,17 +1362,6 @@ define display-sweeten-format(x)
     begin newline() set!(column1 #t)
   display-skip-last-eol sweeten-top(x string->list("") #f)
 
-; Consume an end-of-line, which is LF | (CR LF?)
-define consume-end-of-line()
-  let <* c $ peek-char() *>
-    cond
-      memq(c end-of-line-chars)
-        read-char()
-        if eqv?(c carriage-return)
-          let <* c2 $ peek-char() *>
-            if eqv?(c2 #\newline)
-              read-char()
-
 ; Copy one line from stdin to stdout, end on EOF or end-of-line.
 ; Consume the end of line.
 define copy-line(port)
@@ -1327,7 +1369,7 @@ define copy-line(port)
     cond
       eof-object?(c)   c
       memq(c end-of-line-chars)
-        consume-end-of-line()
+        consume-end-of-line port
         newline()
         set! column1 #t
       #t write-char(read-char(port)) set!(column1 #f) copy-line(port)
@@ -1342,7 +1384,7 @@ define sweeten-filter()
       eof-object?(c)
         c
       memq(c end-of-line-chars)
-        consume-end-of-line()
+        consume-end-of-line current-input-port()
         newline()
         set! column1 #t
         sweeten-filter()

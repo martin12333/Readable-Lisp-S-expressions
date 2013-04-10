@@ -104,4 +104,6 @@ $$$
 
 (let pair ((x 1) (y (cos b))) (+ x y))
 
+(aa |.| bb)
+
 ; Comment at end of file.
