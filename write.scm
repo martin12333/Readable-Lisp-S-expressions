@@ -1,3 +1,5 @@
+#!guile -s
+!#
 ;;; write.scm
 ;;; Write expressions as c-expressions and n-expressions.
 
@@ -74,7 +76,6 @@
          (contains-only-punctuation? (cdr x)))
         (#t #f)))
 
-
 ; Returns #t if x is a symbol that would typically be used in infix position.
 (define (is-infix-operator? x)
   (cond ((not (symbol? x)) #f)
@@ -89,15 +90,14 @@
         ((pair? (car x)) #f)
         (#t (boring? (cdr x)))))
 
-; A list is long and boring if it's a list, its length is at least
+; A possibly-improper list is long and boring if its length is at least
 ; the boring-length, and it's boring.
 ; A long-and-boring list is almost certainly NOT a function call or a
 ; body of some executable sequence - it's almost certainly a long
 ; boring list of data instead. If it is, we want to display it differently.
 (define (long-and-boring? x)
   (cond ((not (pair? x)) #f)
-        ((not (list? x)) #f)
-        ((< (length x) boring-length) #f)
+        ((< (general-length x) boring-length) #f)
         (#t (boring? x))))
 
 ; Support general-length-inner - help count length of possibly-improper list.
@@ -126,133 +126,207 @@
 (define (represent-as-brace-suffix? x)
   (and (represent-as-infix? x) (>= (length x) 2)))
 
-; Define an association list mapping the Lisp function names which have
+; Define an association list mapping the Scheme procedure names which have
 ; abbreviations ==> the list of characters in their abbreviation
 (define abbreviations
   '((quote (#\'))
     (quasiquote (#\`))
     (unquote (#\,))
-    (unquote-splicing (#\, #\@))))
+    (unquote-splicing (#\, #\@))
+    ; Scheme syntax-rules. Note that this will abbreviate any 2-element
+    ; list whose car is "syntax", whether you want that or not!
+    (syntax  (#\# #\'))
+    (quasisyntax (#\# #\`))
+    (unsyntax-splicing (#\# #\, #\@)
+    (unsyntax (#\# #\,)))))
 
 ; return #t if we should as a traditional abbreviation, e.g., '
 (define (represent-as-abbreviation? x)
-  (and (pair? x)
-       (assq (car x) abbreviations)
-       (pair? (cdr x))
-       (null? (cddr x))))
+  (and (list2? x)
+       (assq (car x) abbreviations)))
 
 ; Return list x's *contents* represented as a list of characters.
 ; Each one must use neoteric-expressions, space-separated;
 ; it will be surrounded by (...) so no indentation processing is relevant.
-(define (neoteric-write-unit-list x)
+(define (n-write-list-contents x port)
   (cond
     ((null? x) (values))
     ((pair? x)
-      (neoteric-write-simple (car x))
+      (n-write-simple (car x) port)
       (cond ((not (null? (cdr x)))
-        (display " ")
-        (neoteric-write-unit-list (cdr x)))))
+        (display " " port)
+        (n-write-list-contents (cdr x) port))))
     (#t
-      (display ". ")
-      (neoteric-write-simple x))))
+      (display ". " port)
+      (n-write-simple x port))))
+
+(define (c-write-list-contents x port)
+  (cond
+    ((null? x) (values))
+    ((pair? x)
+      (c-write-simple (car x) port)
+      (cond ((not (null? (cdr x)))
+        (display " " port)
+        (c-write-list-contents (cdr x) port))))
+    (#t
+      (display ". " port)
+      (c-write-simple x port))))
 
 ; Return tail of an infix expression, as list of chars
 ; The "op" is the infix operator represented as a list of chars.
-(define (infix-tail op x)
+(define (infix-tail op x port)
   (cond
-    ((null? x) (display "}"))
+    ((null? x) (display "}" port))
     ((pair? x)
-      (display " ")
-      (neoteric-write-simple op)
-      (display " ")
-      (neoteric-write-simple (car x))
-      (infix-tail op (cdr x)))
+      (display " " port)
+      (n-write-simple op port)
+      (display " " port)
+      (n-write-simple (car x) port)
+      (infix-tail op (cdr x) port))
     (#t
-      (display " ")
-      (neoteric-write-simple x)
-      (display "}"))))
+      (display " " port)
+      (n-write-simple x port)
+      (display "}" port))))
 
 ; Return "x" as a list of characters, surrounded by {...}, for use as f{...}.
-(define (as-brace-suffix x)
-  (display "{")
-  (if (< (general-length x) 3)
+(define (as-brace-suffix x port)
+  (display "{" port)
+  (if (list2? x)
     (begin
-      (neoteric-write-unit-list x)
-      (display "}"))
+      (n-write-list-contents x port)
+      (display "}" port))
     (begin
-      (neoteric-write-simple (cadr x))
-      (infix-tail (car x) (cddr x)))))
+      (n-write-simple (cadr x) port)
+      (infix-tail (car x) (cddr x) port))))
 
-
-; Return x represented as a neoteric-expression unit,
-; as a list of characters that are part of one line.
-; Indentation processing *may* be active, but the character sequence
-; returned must not depend on that.
-; This is widely-used. If speed's a problem, memoize this;
-; you can erase the memoized information once display-sweeten-format() has
-; displayed the result.
-(define (neoteric-write-simple x)
+(define (n-write-simple x port)
   (cond
     ((pair? x)
       (cond
         ((represent-as-abbreviation? x)              ; Format 'x
-          (display (list->string (cadr (assq (car x) abbreviations))))
-          (neoteric-write-simple (cadr x)))
-        ((or (long-and-boring? x) (not (list? x)))
-          (display "(")                              ; Format (a b c ...)
-          (neoteric-write-unit-list x)
-          (display ")"))
+          (for-each (lambda (c) (display c port))
+            (cadr (assq (car x) abbreviations)))
+          (n-write-simple (cadr x) port))
+        ((long-and-boring? x)                        ; Format (a b c ...)
+          (display "(" port)
+          (n-write-list-contents x port)
+          (display ")" port))
         ((symbol? (car x))
           (cond
             ((represent-as-inline-infix? x)          ; Format {a + b}
-              (display "{")
-              (neoteric-write-simple (cadr x))
-              (infix-tail (car x) (cddr x)))
+              (display "{" port)
+              (n-write-simple (cadr x) port)
+              (infix-tail (car x) (cddr x) port))
             ((and (list1? (cdr x))
               (pair? (cadr x))
               (represent-as-brace-suffix? (cadr x))) ; Format f{...}
-                (neoteric-write-simple (car x))
-                (as-brace-suffix (cadr x)))
+                (n-write-simple (car x) port)
+                (as-brace-suffix (cadr x) port))
             (#t                                      ; Format f(...)
-              (neoteric-write-simple (car x))
-              (display "(")
-              (neoteric-write-unit-list (cdr x))
-              (display ")"))))
+              (n-write-simple (car x) port)
+              (display "(" port)
+              (n-write-list-contents (cdr x) port)
+              (display ")" port))))
         (#t                                          ; Format (1 2 3 ...)
-          (display "(")
-          (neoteric-write-unit-list x)
-          (display ")"))))
-    (#t (write x))))                                 ; Everything else.
+          (display "(" port)
+          (n-write-list-contents x port)
+          (display ")" port))))
+    ((vector? x)
+      (display "#( " port) ; Surround with spaces, easier to implement.
+      (for-each (lambda (v) (n-write-simple v port) (display " " port))
+        (vector->list x))
+      (display ")" port))
+    (#t (write x port))))                            ; Default format.
+
+
+(define (c-write-simple x port)
+  (cond
+    ((pair? x)
+      (cond
+        ((represent-as-abbreviation? x)              ; Format 'x
+          (for-each (lambda (c) (display c port))
+            (cadr (assq (car x) abbreviations)))
+          (c-write-simple (cadr x) port))
+        ((represent-as-inline-infix? x)              ; Format {a + b}
+          (display "{" port)
+          (n-write-simple (cadr x) port)
+          (infix-tail (car x) (cddr x) port))
+        (#t                                          ; Format (1 2 3 ...)
+          (display "(" port)
+          (c-write-list-contents x port)
+          (display ")" port))))
+    ((vector? x)
+      (display "#( " port) ; Surround with spaces, easier to implement.
+      (for-each (lambda (v) (c-write-simple v port) (display " " port))
+        (vector->list x))
+      (display ")" port))
+    (#t (write x port))))                            ; Default format.
+
+
+; Front entry - Use default port if none provided.
+(define (neoteric-write-simple x . rest)
+  (if (null? rest)
+      (n-write-simple x (current-output-port))
+      (n-write-simple x (car rest))))
+
+; Front entry - Use default port if none provided.
+(define (curly-write-simple x . rest)
+  (if (null? rest)
+      (c-write-simple x (current-output-port))
+      (c-write-simple x (car rest))))
 
 
 
-; Tests.
-; TODO: Clean up.
 
-(neoteric-write-simple '(quote x))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; TEST SUITE
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(define basic-tests
+  '(
+    (quote x)
+    (a b c d e f g h i j k l m n o p q r s t u v w x y z)
+    (a b c d e f g h i j k l m n o p q r s t u v w x y z . 2)
+    (+ a b)
+    (+ a b c)
+    (+ a b c . improper)
+    (sin (- theta))
+    (fact (- n 1))
+    (calculate (pi))
+    (between current min max)
+    (my-write . rest)
+    (sin x)
+    (- x)
+    (-)
+    (function +)
+    (map + '(2 4 6))
+    (current-time)
+    (1 2 3)
+    (4 5 . 6)
+    5
+    boring-symbol
+    (+ (sqrt x) (sqrt y))
+    `(1 2 ,@(+ a b))
+    (syntax (a b c))
+    #(v1 v2 (+ 2 3) (sin x))
+    (define (is-infix-operator? x)
+      (cond ((not (symbol? x)) #f)
+            ((memq x special-infix-operators) #t)
+            (#t
+             (contains-only-punctuation?
+               (string->list (symbol->string x))))))
+    fin))
+
+
+(for-each (lambda (v) (curly-write-simple v) (newline)) basic-tests)
+
 (newline)
-(neoteric-write-simple '(a b c d e f g h i j k l m n o p q r s t u v w x y z))
-(newline)
-(neoteric-write-simple '(+ a b))
-(newline)
-(neoteric-write-simple '(+ a b c))
-(newline)
-(neoteric-write-simple '(sin (- theta)))
-(newline)
-(neoteric-write-simple '(fact (- n 1)))
-(newline)
-(neoteric-write-simple '(between current min max))
-(newline)
-(neoteric-write-simple '(sin x))
-(newline)
-(neoteric-write-simple '(current-time))
-(newline)
-(neoteric-write-simple '(1 2 3))
-(newline)
-(neoteric-write-simple 5)
-(newline)
-(neoteric-write-simple 'boring-symbol)
 (newline)
 
-(neoteric-write-simple '(+ (sqrt x) (sqrt y)))
+(for-each (lambda (v) (neoteric-write-simple v) (newline)) basic-tests)
+
 (newline)
+
