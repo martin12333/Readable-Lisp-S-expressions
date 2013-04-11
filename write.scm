@@ -41,6 +41,8 @@
   data)
 
 
+; A list with more than this length and no pairs is considered "boring",
+; and thus is presumed to NOT be a procedure call or execution sequence.
 (define boring-length 16)
 
 (define special-infix-operators
@@ -51,10 +53,6 @@
         #\.  #\/ #\: #\; #\< #\= #\> #\? #\@ #\[ #\\ #\] #\^
         #\_ #\` #\{ #\| #\} #\~))
 
-; Returns #f if x has >1 element. Improper lists are #t.
-; (define (multi-element-list? x)
-;   (and (pair? x) (pair? (cdr x))))
-
 ; Returns #t if x is a list with exactly 1 element.  Improper lists are #f.
 (define (list1? x)
   (and (pair? x) (null? (cdr x))))
@@ -62,10 +60,6 @@
 ; Returns #t if x is a list with exactly 2 elements.  Improper lists are #f.
 (define (list2? x)
   (and (pair? x) (pair? (cdr x)) (null? (cddr x))))
-
-; Returns #t if x is a list or improper list of 3+ elements.
-; (define (list-3-plus? x)
-;   (and (pair? x) (pair? (cdr x)) (pair? (cddr x))))
 
 ; Does x contain a list of ONLY punctuation characters?
 ; An empty list is considered true.
@@ -85,21 +79,18 @@
            (string->list (symbol->string x))))))
 
 ; A possibly-improper list is long and boring if its length is at least
-; the boring-length, and it's boring (it contains no pairs up to that length).
+; num-to-go long and it's boring (it contains no pairs up to that length).
 ; A long-and-boring list is almost certainly NOT a function call or a
 ; body of some executable sequence - it's almost certainly a long
 ; boring list of data instead. If it is, we want to display it differently.
 ; This doesn't get stuck on circular lists; it always terminates after
 ; num-to-go iterations.
-(define (long-and-boring-tail? x num-to-go)
+(define (long-and-boring? x num-to-go)
   (cond
     ((pair? (car x)) #f)
     ((not (pair? (cdr x))) #f)
     ((<= num-to-go 1) #t)
-    (#t (long-and-boring-tail? (cdr x) (- num-to-go 1)))))
-(define (long-and-boring? x)
-  (cond ((not (pair? x)) #f)
-        (#t (long-and-boring-tail? x boring-length))))
+    (#t (long-and-boring? (cdr x) (- num-to-go 1)))))
 
 (define (list-no-longer-than? x num-to-go)
   (cond
@@ -117,7 +108,7 @@
        (list-no-longer-than? x 6)))
 
 (define (represent-as-inline-infix? x)
-  (and (represent-as-infix? x) (not (list2? x))))
+  (and (represent-as-infix? x) (not (list2? x)))) ; Must be 3+ elements
 
 ; Return #t if x should be represented as a brace suffix
 (define (represent-as-brace-suffix? x)
@@ -209,7 +200,7 @@
         ((represent-as-abbreviation? x)              ; Format 'x
           (write-abbreviation x port)
           (n-write-simple (cadr x) port))
-        ((long-and-boring? x)                        ; Format (a b c ...)
+        ((long-and-boring? x boring-length)          ; Format (a b c ...)
           (display "(" port)
           (n-write-list-contents x port)
           (display ")" port))
@@ -291,6 +282,8 @@
     (quote x)
     (a b c d e f g h i j k l m n o p q r s t u v w x y z)
     (a b c d e f g h i j k l m n o p q r s t u v w x y z . 2)
+    (a 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)
+    (a 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17)
     (+ a b)
     (+ a b c)
     (+ a b c . improper)
