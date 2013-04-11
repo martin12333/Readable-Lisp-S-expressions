@@ -52,8 +52,8 @@
         #\_ #\` #\{ #\| #\} #\~))
 
 ; Returns #f if x has >1 element. Improper lists are #t.
-(define (multi-element-list? x)
-  (and (pair? x) (not (null? (cdr x)))))
+; (define (multi-element-list? x)
+;   (and (pair? x) (pair? (cdr x))))
 
 ; Returns #t if x is a list with exactly 1 element.  Improper lists are #f.
 (define (list1? x)
@@ -64,8 +64,8 @@
   (and (pair? x) (pair? (cdr x)) (null? (cddr x))))
 
 ; Returns #t if x is a list or improper list of 3+ elements.
-(define (list-3-plus? x)
-  (and (pair? x) (pair? (cdr x)) (pair? (cddr x))))
+; (define (list-3-plus? x)
+;   (and (pair? x) (pair? (cdr x)) (pair? (cddr x))))
 
 ; Does x contain a list of ONLY punctuation characters?
 ; An empty list is considered true.
@@ -84,37 +84,27 @@
          (contains-only-punctuation?
            (string->list (symbol->string x))))))
 
-; An x is boring if it's not a list, or it's a list with ONLY non-pair members.
-(define (boring? x)
-  (cond ((not (pair? x)) #t)
-        ((pair? (car x)) #f)
-        (#t (boring? (cdr x)))))
-
 ; A possibly-improper list is long and boring if its length is at least
-; the boring-length, and it's boring.
+; the boring-length, and it's boring (it contains no pairs up to that length).
 ; A long-and-boring list is almost certainly NOT a function call or a
 ; body of some executable sequence - it's almost certainly a long
 ; boring list of data instead. If it is, we want to display it differently.
+; This doesn't get stuck on circular lists; it always terminates after
+; num-to-go iterations.
+(define (long-and-boring-tail? x num-to-go)
+  (cond
+    ((pair? (car x)) #f)
+    ((not (pair? (cdr x))) #f)
+    ((<= num-to-go 1) #t)
+    (#t (long-and-boring-tail? (cdr x) (- num-to-go 1)))))
 (define (long-and-boring? x)
   (cond ((not (pair? x)) #f)
-        ((< (general-length x) boring-length) #f)
-        (#t (boring? x))))
-
-; Support general-length-inner - help count length of possibly-improper list.
-(define (general-length-inner x count-so-far)
-  (cond ((null? x) count-so-far)
-        ((not (pair? x)) (+ count-so-far 1))
-        (#t
-         (general-length-inner (cdr x) (+ count-so-far 1)))))
-
-; Return length of x, which may be an improper list.
-; If improper, count the two sides as two, so "(a . b)" is length 2.
-(define (general-length x)
-  (general-length-inner x 0))
+        (#t (long-and-boring-tail? x boring-length))))
 
 ; Return #t if x should be represented using curly-infix notation {...}.
 (define (represent-as-infix? x)
   (and (pair? x)
+       (pair? (cdr x))                ; At least 2 elements.
        (is-infix-operator? (car x))
        (list? x)
        (<= (length x) 6)))
@@ -124,7 +114,7 @@
 
 ; Return #t if x should be represented as a brace suffix
 (define (represent-as-brace-suffix? x)
-  (and (represent-as-infix? x) (>= (length x) 2)))
+  (represent-as-infix? x))
 
 ; Define an association list mapping the Scheme procedure names which have
 ; abbreviations ==> the list of characters in their abbreviation
@@ -144,6 +134,12 @@
 (define (represent-as-abbreviation? x)
   (and (list2? x)
        (assq (car x) abbreviations)))
+
+; The car(x) is the symbol for an abbreviation; write the abbreviation.
+(define (write-abbreviation x port)
+  (for-each (lambda (c) (display c port))
+    (cadr (assq (car x) abbreviations))))
+
 
 ; Return list x's *contents* represented as a list of characters.
 ; Each one must use neoteric-expressions, space-separated;
@@ -204,8 +200,7 @@
     ((pair? x)
       (cond
         ((represent-as-abbreviation? x)              ; Format 'x
-          (for-each (lambda (c) (display c port))
-            (cadr (assq (car x) abbreviations)))
+          (write-abbreviation x port)
           (n-write-simple (cadr x) port))
         ((long-and-boring? x)                        ; Format (a b c ...)
           (display "(" port)
@@ -217,9 +212,9 @@
               (display "{" port)
               (n-write-simple (cadr x) port)
               (infix-tail (car x) (cddr x) port))
-            ((and (list1? (cdr x))
+            ((and (list1? (cdr x))                   ; Format f{...}
               (pair? (cadr x))
-              (represent-as-brace-suffix? (cadr x))) ; Format f{...}
+              (represent-as-infix? (cadr x)))
                 (n-write-simple (car x) port)
                 (as-brace-suffix (cadr x) port))
             (#t                                      ; Format f(...)
@@ -244,8 +239,7 @@
     ((pair? x)
       (cond
         ((represent-as-abbreviation? x)              ; Format 'x
-          (for-each (lambda (c) (display c port))
-            (cadr (assq (car x) abbreviations)))
+          (write-abbreviation x port)
           (c-write-simple (cadr x) port))
         ((represent-as-inline-infix? x)              ; Format {a + b}
           (display "{" port)
@@ -265,15 +259,15 @@
 
 ; Front entry - Use default port if none provided.
 (define (neoteric-write-simple x . rest)
-  (if (null? rest)
-      (n-write-simple x (current-output-port))
-      (n-write-simple x (car rest))))
+  (if (pair? rest)
+      (n-write-simple x (car rest))
+      (n-write-simple x (current-output-port))))
 
 ; Front entry - Use default port if none provided.
 (define (curly-write-simple x . rest)
-  (if (null? rest)
-      (c-write-simple x (current-output-port))
-      (c-write-simple x (car rest))))
+  (if (pair? rest)
+      (c-write-simple x (car rest))
+      (c-write-simple x (current-output-port))))
 
 
 
