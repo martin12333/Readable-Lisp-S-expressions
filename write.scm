@@ -101,16 +101,23 @@
   (cond ((not (pair? x)) #f)
         (#t (long-and-boring-tail? x boring-length))))
 
+(define (list-no-longer-than? x num-to-go)
+  (cond
+    ((not (pair? x)) #f)
+    ((null? (cdr x)) #t) ; This is the last one!
+    ((not (pair? (cdr x))) #f)
+    ((<= num-to-go 0) #f)
+    (#t (list-no-longer-than? (cdr x) (- num-to-go 1)))))
+
 ; Return #t if x should be represented using curly-infix notation {...}.
 (define (represent-as-infix? x)
   (and (pair? x)
        (pair? (cdr x))                ; At least 2 elements.
        (is-infix-operator? (car x))
-       (list? x)
-       (<= (length x) 6)))
+       (list-no-longer-than? x 6)))
 
 (define (represent-as-inline-infix? x)
-  (and (represent-as-infix? x) (>= (length x) 3)))
+  (and (represent-as-infix? x) (not (list2? x))))
 
 ; Return #t if x should be represented as a brace suffix
 (define (represent-as-brace-suffix? x)
@@ -287,6 +294,9 @@
     (+ a b)
     (+ a b c)
     (+ a b c . improper)
+    (+ 1 2 3 4 5)
+    (+ 1 2 3 4 5 6)
+    (+ 1 2 3 4 5 6 7)
     (sin (- theta))
     (fact (- n 1))
     (calculate (pi))
