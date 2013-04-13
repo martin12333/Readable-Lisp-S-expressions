@@ -332,7 +332,7 @@
        (lambda (k v) (if (> v 1) (hash-table-set! res k #t))))
       res)))
 
-(define (advanced-write-with-shared-structure x out cyclic-only? neoteric?)
+(define (advanced-write-with-shared-structure x port cyclic-only? neoteric?)
   (let ((shared (extract-shared-objects x cyclic-only?))
         (count 0))
     ; Returns #t if this part is shared.
@@ -343,16 +343,16 @@
     (define (check-shared x prefix cont)
       (let ((index (hash-table-ref/default shared x #f)))
         (cond ((integer? index)
-               (display prefix out)
-               (display "#" out)
-               (write index out)
-               (display "#" out))
+               (display prefix port)
+               (display "#" port)
+               (write index port)
+               (display "#" port))
               (else
                (cond (index
-                      (display prefix out)
-                      (display "#" out)
-                      (write count out)
-                      (display "=" out)
+                      (display prefix port)
+                      (display "#" port)
+                      (write count port)
+                      (display "=" port)
                       (hash-table-set! shared x count)
                       (set! count (+ count 1))))
                (cont x index)))))
@@ -364,7 +364,7 @@
          (cond
           ; NOTE: Insert special formats here.
           ((pair? x)
-           (display "(" out)
+           (display "(" port)
            (wr (car x))
            (let lp ((ls (cdr x)))
              (check-shared
@@ -375,36 +375,36 @@
                       ((pair? ls)
                        (cond
                         (shared?
-                         (display "(" out)
+                         (display "(" port)
                          (wr (car ls))
                          (check-shared
                           (cdr ls)
                           " . "
                           (lambda (ls shared?) (lp ls)))
-                         (display ")" out))
+                         (display ")" port))
                         (else
-                         (display " " out)
+                         (display " " port)
                          (wr (car ls))
                          (lp (cdr ls)))))
                       (else
-                       (display " . " out)
+                       (display " . " port)
                        (wr ls))))))
-           (display ")" out))
+           (display ")" port))
           ((vector? x)
-           (display "#(" out)
+           (display "#(" port)
            (let ((len (vector-length x)))
              (cond ((> len 0)
                     (wr (vector-ref x 0))
                     (do ((i 1 (+ i 1)))
                         ((= i len))
-                      (display " " out)
+                      (display " " port)
                       (wr (vector-ref x i))))))
-           (display ")" out))
+           (display ")" port))
           ((let ((type (type-of x)))
              (and (type? type) (type-printer type)))
-           => (lambda (printer) (printer x wr out)))
+           => (lambda (printer) (printer x wr port)))
           (else
-           (write x out))))))))
+           (write x port))))))))
 
 ; Removed read-related routines
 
