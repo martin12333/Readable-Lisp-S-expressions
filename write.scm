@@ -362,6 +362,7 @@
        ""
        (lambda (x shared?)
          (cond
+          ; NOTE: Insert special formats here.
           ((pair? x)
            (display "(" out)
            (wr (car x))
