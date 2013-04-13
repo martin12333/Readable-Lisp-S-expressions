@@ -332,11 +332,14 @@
        (lambda (k v) (if (> v 1) (hash-table-set! res k #t))))
       res)))
 
-(define (write-with-shared-structure x . o)
-  (let ((out (if (pair? o) (car o) (current-output-port)))
-        (shared
-         (extract-shared-objects x (and (pair? o) (pair? (cdr o)) (cadr o))))
+(define (advanced-write-with-shared-structure x out cyclic-only? neoteric?)
+  (let ((shared (extract-shared-objects x cyclic-only?))
         (count 0))
+    ; Returns #t if this part is shared.
+    (define (shared? x)
+      (let ((index (hash-table-ref/default shared x #f)))
+        (not index)))
+    ; Check-shared prints #n# or #n= as appropriate.
     (define (check-shared x prefix cont)
       (let ((index (hash-table-ref/default shared x #f)))
         (cond ((integer? index)
@@ -402,14 +405,17 @@
           (else
            (write x out))))))))
 
-(define write-shared write-with-shared-structure)
-
 ; Removed read-related routines
 
-(define (write-cyclic x . o)
-  (write-with-shared-structure x
+(define (write-shared x . o)
+  (advanced-write-with-shared-structure x
     (if (pair? o) (car o) (current-output-port))
-    #t))
+    #f #t))
+
+(define (write-cyclic x . o)
+  (advanced-write-with-shared-structure x
+    (if (pair? o) (car o) (current-output-port))
+    #t #t))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -474,11 +480,11 @@
 (define demo2 '(first . last))
 (set-cdr! demo2 demo2)
 
-(write-with-shared-structure '(a b c))
+(write-shared '(a b c))
 (newline)
-(write-with-shared-structure demo1)
+(write-shared demo1)
 (newline)
-(write-with-shared-structure demo2)
+(write-shared demo2)
 (newline)
 
 
