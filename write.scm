@@ -336,9 +336,12 @@
   (let ((shared (extract-shared-objects x cyclic-only?))
         (count 0))
     ; Returns #t if this part is shared.
-    (define (shared? x)
-      (let ((index (hash-table-ref/default shared x #f)))
-        (not index)))
+    (define (shared-object? x)
+      (let ((type (type-of x)))
+        (if (or (pair? x) (vector? x) (and type (type-printer type)))
+          (let ((index (hash-table-ref/default shared x #f)))
+            (not index))
+          #f)))
     ; Check-shared prints #n# or #n= as appropriate.
     (define (check-shared x prefix cont)
       (let ((index (hash-table-ref/default shared x #f)))
@@ -356,16 +359,20 @@
                       (hash-table-set! shared x count)
                       (set! count (+ count 1))))
                (cont x index)))))
-    (let wr ((x x))
+    (let wr ((x x) (neoteric? neoteric?))
       (check-shared
        x
        ""
        (lambda (x shared?)
          (cond
           ; NOTE: Insert special formats here.
+          ((and (represent-as-abbreviation? x) (not (shared-object? (cadr x))))
+            ; Format 'x
+            (write-abbreviation x port)
+            (n-write-simple (cadr x) port))
           ((pair? x)
            (display "(" port)
-           (wr (car x))
+           (wr (car x) neoteric?)
            (let lp ((ls (cdr x)))
              (check-shared
               ls
@@ -376,7 +383,7 @@
                        (cond
                         (shared?
                          (display "(" port)
-                         (wr (car ls))
+                         (wr (car ls) neoteric?)
                          (check-shared
                           (cdr ls)
                           " . "
@@ -384,21 +391,21 @@
                          (display ")" port))
                         (else
                          (display " " port)
-                         (wr (car ls))
+                         (wr (car ls) neoteric?)
                          (lp (cdr ls)))))
                       (else
                        (display " . " port)
-                       (wr ls))))))
+                       (wr ls neoteric?))))))
            (display ")" port))
           ((vector? x)
            (display "#(" port)
            (let ((len (vector-length x)))
              (cond ((> len 0)
-                    (wr (vector-ref x 0))
+                    (wr (vector-ref x 0) neoteric?)
                     (do ((i 1 (+ i 1)))
                         ((= i len))
                       (display " " port)
-                      (wr (vector-ref x i))))))
+                      (wr (vector-ref x i) neoteric?)))))
            (display ")" port))
           ((let ((type (type-of x)))
              (and (type? type) (type-printer type)))
@@ -408,12 +415,12 @@
 
 ; Removed read-related routines
 
-(define (write-shared x . o)
+(define (neoteric-write-shared x . o)
   (advanced-write-with-shared-structure x
     (if (pair? o) (car o) (current-output-port))
     #f #t))
 
-(define (write-cyclic x . o)
+(define (neoteric-write-cyclic x . o)
   (advanced-write-with-shared-structure x
     (if (pair? o) (car o) (current-output-port))
     #t #t))
@@ -466,13 +473,13 @@
 
 
 (for-each (lambda (v) (curly-write-simple v) (newline)) basic-tests)
-
 (newline)
 (newline)
 
 (for-each (lambda (v) (neoteric-write-simple v) (newline)) basic-tests)
-
 (newline)
+(newline)
+
 
 (define part '(a b))
 
@@ -481,18 +488,29 @@
 (define demo2 '(first . last))
 (set-cdr! demo2 demo2)
 
-(write-shared '(a b c))
+(define nasty-quote '(quote x))
+(set-cdr! nasty-quote nasty-quote)
+
+(set! basic-tests
+  (append basic-tests (list '(a b) demo1 demo2 nasty-quote)))
+
+(neoteric-write-shared '(a b c))
 (newline)
-(write-shared demo1)
+(neoteric-write-shared demo1)
 (newline)
-(write-shared demo2)
+(neoteric-write-shared demo2)
 (newline)
 
+(neoteric-write-cyclic '(a b c))
+(newline)
+(neoteric-write-cyclic demo1)
+(newline)
+(neoteric-write-cyclic demo2)
+(newline)
 
-(write-cyclic '(a b c))
+(for-each (lambda (v) (neoteric-write-shared v) (newline)) basic-tests)
 (newline)
-(write-cyclic demo1)
-(newline)
-(write-cyclic demo2)
+
+(for-each (lambda (v) (neoteric-write-cyclic v) (newline)) basic-tests)
 (newline)
 
