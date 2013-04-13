@@ -9,6 +9,7 @@
 ;;; This may be moved into kernel.scm.
 
 ;;; Copyright (C) 2006-2013 David A. Wheeler.
+;;; Portions of the write routines by Alex Shinn, public domain.
 ;;;
 ;;; This software is released as open source software under the "MIT" license:
 ;;;
@@ -268,8 +269,147 @@
       (c-write-simple x (current-output-port))))
 
 
+;; Write routines for cyclic and shared structures, based on srfi-38.
+;; The original code was written by Alex Shinn in 2009 and placed in the
+;; Public Domain.  All warranties are disclaimed.
+;; Extracted from Chibi Scheme 0.6.1.
 
 
+; We need hash tables for an efficient implementation.
+; John Cowan on 10 April 2013 said:
+; "... though not part of R7RS-small,
+; SRFI 69 hash tables are fairly pervasive, because they are
+; simple, have a reference implementation, and can be built on top of
+; R6RS hashtables (which are standard). The only reason they aren't in
+; more Schemes is that as SRFIs go, 69 is a fairly recent one. I wouldn't
+; hesitate to use them."
+
+; Here's how to import SRFI-69 in guile (for hash tables):
+(use-modules (srfi srfi-69))
+
+; There's no portable way to walk through other collections like records.
+; Chibi has a "type" "type" procedure but isn't portable
+; (and it's not in guile 1.8 at least).
+; We'll leave it in, but stub it out; you can replace this with
+; what your Scheme supports.  Perhaps the "large" R7RS can add support
+; for walking through arbitrary collections.
+(define (type-of x) #f)
+(define (type? x) #f)
+
+(define (extract-shared-objects x cyclic-only?)
+  (let ((seen (make-hash-table eq?)))
+    ;; find shared references
+    (let find ((x x))
+      (let ((type (type-of x)))
+        (cond ;; only interested in pairs, vectors and records
+         ((or (pair? x) (vector? x) (and type (type-printer type)))
+          ;; increment the count
+          (hash-table-update!/default seen x (lambda (n) (+ n 1)) 0)
+          ;; walk if this is the first time
+          (cond
+           ((> (hash-table-ref seen x) 1))
+           ((pair? x)
+            (find (car x))
+            (find (cdr x)))
+           ((vector? x)
+            (do ((i 0 (+ i 1)))
+                ((= i (vector-length x)))
+              (find (vector-ref x i))))
+           (else
+            (let ((num-slots (type-num-slots type)))
+              (let lp ((i 0))
+                (cond ((< i num-slots)
+                       (find (slot-ref type x i))
+                       (lp (+ i 1))))))))
+          ;; delete if this shouldn't count as a shared reference
+          (if (and cyclic-only?
+                   (<= (hash-table-ref/default seen x 0) 1))
+              (hash-table-delete! seen x))))))
+    ;; extract shared references
+    (let ((res (make-hash-table eq?)))
+      (hash-table-walk
+       seen
+       (lambda (k v) (if (> v 1) (hash-table-set! res k #t))))
+      res)))
+
+(define (write-with-shared-structure x . o)
+  (let ((out (if (pair? o) (car o) (current-output-port)))
+        (shared
+         (extract-shared-objects x (and (pair? o) (pair? (cdr o)) (cadr o))))
+        (count 0))
+    (define (check-shared x prefix cont)
+      (let ((index (hash-table-ref/default shared x #f)))
+        (cond ((integer? index)
+               (display prefix out)
+               (display "#" out)
+               (write index out)
+               (display "#" out))
+              (else
+               (cond (index
+                      (display prefix out)
+                      (display "#" out)
+                      (write count out)
+                      (display "=" out)
+                      (hash-table-set! shared x count)
+                      (set! count (+ count 1))))
+               (cont x index)))))
+    (let wr ((x x))
+      (check-shared
+       x
+       ""
+       (lambda (x shared?)
+         (cond
+          ((pair? x)
+           (display "(" out)
+           (wr (car x))
+           (let lp ((ls (cdr x)))
+             (check-shared
+              ls
+              " . "
+              (lambda (ls shared?)
+                (cond ((null? ls))
+                      ((pair? ls)
+                       (cond
+                        (shared?
+                         (display "(" out)
+                         (wr (car ls))
+                         (check-shared
+                          (cdr ls)
+                          " . "
+                          (lambda (ls shared?) (lp ls)))
+                         (display ")" out))
+                        (else
+                         (display " " out)
+                         (wr (car ls))
+                         (lp (cdr ls)))))
+                      (else
+                       (display " . " out)
+                       (wr ls))))))
+           (display ")" out))
+          ((vector? x)
+           (display "#(" out)
+           (let ((len (vector-length x)))
+             (cond ((> len 0)
+                    (wr (vector-ref x 0))
+                    (do ((i 1 (+ i 1)))
+                        ((= i len))
+                      (display " " out)
+                      (wr (vector-ref x i))))))
+           (display ")" out))
+          ((let ((type (type-of x)))
+             (and (type? type) (type-printer type)))
+           => (lambda (printer) (printer x wr out)))
+          (else
+           (write x out))))))))
+
+(define write-shared write-with-shared-structure)
+
+; Removed read-related routines
+
+(define (write-cyclic x . o)
+  (write-with-shared-structure x
+    (if (pair? o) (car o) (current-output-port))
+    #t))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -325,5 +465,27 @@
 
 (for-each (lambda (v) (neoteric-write-simple v) (newline)) basic-tests)
 
+(newline)
+
+(define part '(a b))
+
+(define demo1 (list 'begin part part 'end))
+
+(define demo2 '(first . last))
+(set-cdr! demo2 demo2)
+
+(write-with-shared-structure '(a b c))
+(newline)
+(write-with-shared-structure demo1)
+(newline)
+(write-with-shared-structure demo2)
+(newline)
+
+
+(write-cyclic '(a b c))
+(newline)
+(write-cyclic demo1)
+(newline)
+(write-cyclic demo2)
 (newline)
 
