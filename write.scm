@@ -381,7 +381,7 @@
        ""
        (lambda (x shared?)
          (cond
-          ; NOTE: Insert special formats here.
+          ; Check for special formats first.
           ((and (represent-as-abbreviation? x) (not (shared-object? (cadr x))))
             ; Format 'x
             (write-abbreviation x port)
@@ -397,14 +397,6 @@
             (not (shared-object? (cadr x)))
             (not (any shared-object? (cadr x))))
             ; Format f{...}
-
-            ; ???
-            ; (display "DEBUG: f{} : ") (write (cdr x)) (display " ")
-            ; (write (shared-object? (cdr x))) (display " ")
-            ; (write (shared-object? (cadr x))) (display " ")
-            ; (write (hash-table-ref/default shared (cdr x) #f)) (display " ")
-            ; (write (hash-table-ref/default shared (cadr x) #f)) (display "\n")
-
             (wr (car x) neoteric?)
             (let ((expr (cadr x)))
               (if (list2? expr)
@@ -417,17 +409,23 @@
                 (begin
                   (wr expr neoteric?)))))
           ((pair? x)
+           ; Some format ending with closing paren - which one is it?
            (cond
-             ((and neoteric? (symbol? (car x)))
+             ((and neoteric? (symbol? (car x))
+               (not (long-and-boring? x boring-length))
+               (not (shared-object? (cdr x)))) ; I don't like the way it looks
+               ; Neoteric format a(b c ...)
                (wr (car x) neoteric?)
                (display "(" port)) ; )
              (#t
+               ; Default format, (a b c ...)
                (display "(" port) ; )
-               (wr (car x) neoteric?)))
+               (wr (car x) neoteric?)
+               (if (not (null? (cdr x))) (display " " port))))
            (let lp ((ls (cdr x)))
              (check-shared
               ls
-              " . "
+              ". "
               (lambda (ls shared?)
                 (cond ((null? ls))
                       ((pair? ls)
@@ -437,15 +435,17 @@
                          (wr (car ls) neoteric?)
                          (check-shared
                           (cdr ls)
-                          " . "
-                          (lambda (ls shared?) (lp ls)))
+                          ". "
+                          (lambda (ls shared?)
+                            (if (not (null? ls)) (display " " port))
+                            (lp ls)))
                          (display ")" port))
                         (else
-                         (display " " port)
                          (wr (car ls) neoteric?)
+                         (if (not (null? (cdr ls))) (display " " port))
                          (lp (cdr ls)))))
                       (else
-                       (display " . " port)
+                       (display ". " port)
                        (wr ls neoteric?))))))
            (display ")" port))
           ((vector? x)
@@ -464,7 +464,6 @@
           (else
            (write x port))))))))
 
-; Removed read-related routines
 
 (define (curly-write-shared x . o)
   (advanced-write-with-shared-structure x
@@ -485,6 +484,10 @@
   (advanced-write-with-shared-structure x
     (if (pair? o) (car o) (current-output-port))
     #t #t))
+
+(define neoteric-write neoteric-write-cyclic)
+
+(define curly-write curly-write-cyclic)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -555,22 +558,13 @@
 (define nasty-quote '(quote x))
 (set-cdr! nasty-quote nasty-quote)
 
-(set! basic-tests
-  (append basic-tests (list '(a b) demo1 demo2 nasty-quote)))
+(define demo3 '(dosomething (a1 a2) (b1 b2) (c1 c2)))
+(set-car! (cdr demo3) (cadddr demo3))
 
-;(neoteric-write-shared '(a b c))
-;(newline)
-;(neoteric-write-shared demo1)
-;(newline)
-;(neoteric-write-shared demo2)
-;(newline)
-;
-;(neoteric-write-cyclic '(a b c))
-;(newline)
-;(neoteric-write-cyclic demo1)
-;(newline)
-;(neoteric-write-cyclic demo2)
-;(newline)
+(set! basic-tests
+  (append basic-tests (list '(a b) demo1 demo2 demo3 nasty-quote)))
+
+
 
 (display "curly-write-shared\n")
 (for-each (lambda (v) (curly-write-shared v) (newline)) basic-tests)
