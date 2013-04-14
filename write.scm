@@ -343,7 +343,7 @@
       (let ((type (type-of x)))
         (if (or (pair? x) (vector? x) (and type (type-printer type)))
           (let ((index (hash-table-ref/default shared x #f)))
-            (not index))
+            (not (not index)))
           #f)))
     ; Check-shared prints #n# or #n= as appropriate.
     (define (check-shared x prefix cont)
@@ -368,9 +368,9 @@
           ((null? x) (display "}" port))
           ((pair? x)
             (display " " port)
-            (wr op port)
+            (wr op #t)
             (display " " port)
-            (wr (car x) port)
+            (wr (car x) #t) ; Always neoteric inside infix list.
             (infix-tail/ss op (cdr x) port))
           (#t
             (display " .  " port)
@@ -385,15 +385,45 @@
           ((and (represent-as-abbreviation? x) (not (shared-object? (cadr x))))
             ; Format 'x
             (write-abbreviation x port)
-            (n-write-simple (cadr x) port))
+            (wr (cadr x) neoteric?))
           ((and (represent-as-inline-infix? x) (not (any shared-object? x)))
             ; Format {a + b}
             (display "{" port)
-            (display (cadr x) port)
+            (wr (cadr x) #t) ; Always neoteric inside {...}
             (infix-tail/ss (car x) (cddr x) port))
+          ((and neoteric? (pair? x) (symbol? (car x)) (list1? (cdr x))
+            (represent-as-infix? (cadr x))
+            (not (shared-object? (cdr x)))
+            (not (shared-object? (cadr x)))
+            (not (any shared-object? (cadr x))))
+            ; Format f{...}
+
+            ; ???
+            ; (display "DEBUG: f{} : ") (write (cdr x)) (display " ")
+            ; (write (shared-object? (cdr x))) (display " ")
+            ; (write (shared-object? (cadr x))) (display " ")
+            ; (write (hash-table-ref/default shared (cdr x) #f)) (display " ")
+            ; (write (hash-table-ref/default shared (cadr x) #f)) (display "\n")
+
+            (wr (car x) neoteric?)
+            (let ((expr (cadr x)))
+              (if (list2? expr)
+                (begin
+                  (display "{" port)
+                  (wr (car expr) neoteric?)
+                  (display " " port)
+                  (wr (cadr expr) neoteric?)
+                  (display "}" port))
+                (begin
+                  (wr expr neoteric?)))))
           ((pair? x)
-           (display "(" port)
-           (wr (car x) neoteric?)
+           (cond
+             ((and neoteric? (symbol? (car x)))
+               (wr (car x) neoteric?)
+               (display "(" port)) ; )
+             (#t
+               (display "(" port) ; )
+               (wr (car x) neoteric?)))
            (let lp ((ls (cdr x)))
              (check-shared
               ls
@@ -435,6 +465,16 @@
            (write x port))))))))
 
 ; Removed read-related routines
+
+(define (curly-write-shared x . o)
+  (advanced-write-with-shared-structure x
+    (if (pair? o) (car o) (current-output-port))
+    #f #f))
+
+(define (curly-write-cyclic x . o)
+  (advanced-write-with-shared-structure x
+    (if (pair? o) (car o) (current-output-port))
+    #t #f))
 
 (define (neoteric-write-shared x . o)
   (advanced-write-with-shared-structure x
@@ -494,10 +534,12 @@
     fin))
 
 
+(display "curly-write-simple\n")
 (for-each (lambda (v) (curly-write-simple v) (newline)) basic-tests)
 (newline)
 (newline)
 
+(display "neoteric-write-simple\n")
 (for-each (lambda (v) (neoteric-write-simple v) (newline)) basic-tests)
 (newline)
 (newline)
@@ -530,9 +572,19 @@
 ;(neoteric-write-cyclic demo2)
 ;(newline)
 
+(display "curly-write-shared\n")
+(for-each (lambda (v) (curly-write-shared v) (newline)) basic-tests)
+(newline)
+
+(display "curly-write-cyclic\n")
+(for-each (lambda (v) (curly-write-cyclic v) (newline)) basic-tests)
+(newline)
+
+(display "neoteric-write-shared\n")
 (for-each (lambda (v) (neoteric-write-shared v) (newline)) basic-tests)
 (newline)
 
+(display "neoteric-write-cyclic\n")
 (for-each (lambda (v) (neoteric-write-cyclic v) (newline)) basic-tests)
 (newline)
 
