@@ -287,6 +287,9 @@
 ; Here's how to import SRFI-69 in guile (for hash tables):
 (use-modules (srfi srfi-69))
 
+; For "any"
+(use-modules (srfi srfi-1))
+
 ; There's no portable way to walk through other collections like records.
 ; Chibi has a "type" "type" procedure but isn't portable
 ; (and it's not in guile 1.8 at least).
@@ -360,6 +363,19 @@
                       (set! count (+ count 1))))
                (cont x index)))))
     (let wr ((x x) (neoteric? neoteric?))
+      (define (infix-tail/ss op x port)
+        (cond
+          ((null? x) (display "}" port))
+          ((pair? x)
+            (display " " port)
+            (wr op port)
+            (display " " port)
+            (wr (car x) port)
+            (infix-tail/ss op (cdr x) port))
+          (#t
+            (display " .  " port)
+            (n-write-simple x port)
+            (display "}" port))))
       (check-shared
        x
        ""
@@ -370,6 +386,11 @@
             ; Format 'x
             (write-abbreviation x port)
             (n-write-simple (cadr x) port))
+          ((and (represent-as-inline-infix? x) (not (any shared-object? x)))
+            ; Format {a + b}
+            (display "{" port)
+            (display (cadr x) port)
+            (infix-tail/ss (car x) (cddr x) port))
           ((pair? x)
            (display "(" port)
            (wr (car x) neoteric?)
@@ -433,6 +454,7 @@
 
 (define basic-tests
   '(
+    (+ 4 5)
     (quote x)
     (a b c d e f g h i j k l m n o p q r s t u v w x y z)
     (a b c d e f g h i j k l m n o p q r s t u v w x y z . 2)
@@ -494,19 +516,19 @@
 (set! basic-tests
   (append basic-tests (list '(a b) demo1 demo2 nasty-quote)))
 
-(neoteric-write-shared '(a b c))
-(newline)
-(neoteric-write-shared demo1)
-(newline)
-(neoteric-write-shared demo2)
-(newline)
-
-(neoteric-write-cyclic '(a b c))
-(newline)
-(neoteric-write-cyclic demo1)
-(newline)
-(neoteric-write-cyclic demo2)
-(newline)
+;(neoteric-write-shared '(a b c))
+;(newline)
+;(neoteric-write-shared demo1)
+;(newline)
+;(neoteric-write-shared demo2)
+;(newline)
+;
+;(neoteric-write-cyclic '(a b c))
+;(newline)
+;(neoteric-write-cyclic demo1)
+;(newline)
+;(neoteric-write-cyclic demo2)
+;(newline)
 
 (for-each (lambda (v) (neoteric-write-shared v) (newline)) basic-tests)
 (newline)
