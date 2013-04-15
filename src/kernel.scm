@@ -439,7 +439,12 @@
    set-read-mode
    ; replacing the reader
    replace-read restore-traditional-read
-   enable-curly-infix enable-neoteric enable-sweet)
+   enable-curly-infix enable-neoteric enable-sweet
+   ; Various writers.
+   curly-write-simple neoteric-write-simple
+   curly-write curly-write-cyclic curly-write-shared
+   neoteric-write neoteric-write-cyclic neoteric-write-shared)
+
 
   ; Should we fold case of symbols by default?
   ; #f means case-sensitive (R6RS); #t means case-insensitive (R5RS).
@@ -2359,8 +2364,8 @@
       (if (pair? o) (car o) (current-output-port))
       #t #t))
 
+  ; Since we have "cyclic" versions, the -write forms use them:
   (define neoteric-write neoteric-write-cyclic)
-
   (define curly-write curly-write-cyclic)
 
 
