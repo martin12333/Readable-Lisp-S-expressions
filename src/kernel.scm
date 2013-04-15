@@ -355,6 +355,37 @@
 
     (define (my-string-foldcase s)
       (string-downcase s))
+
+  ; Here's how to import SRFI-69 in guile (for hash tables);
+  ; we have to invoke weird magic becuase guile will
+  ; complain about merely importing a normal SRFI like this
+  ; (which I think is a big mistake, but can't fix guile 1.8):
+  ; WARNING: (guile-user): imported module (srfi srfi-69)
+  ;                        overrides core binding `make-hash-table'
+  ; WARNING: (guile-user): imported module (srfi srfi-69)
+  ;                         overrides core binding `hash-table?'
+  (use-modules ((srfi srfi-69)
+               #:select ((make-hash-table . srfi-69-make-hash-table)
+                         (hash-table? . srfi-69-hash-table?)
+                         hash-table-set!
+                         hash-table-update!/default
+                         hash-table-ref
+                         hash-table-ref/default
+                         hash-table-walk
+                         hash-table-delete! )))
+
+  ; For "any"
+  (use-modules (srfi srfi-1))
+
+  ; There's no portable way to walk through other collections like records.
+  ; Chibi has a "type" "type" procedure but isn't portable
+  ; (and it's not in guile 1.8 at least).
+  ; We'll leave it in, but stub it out; you can replace this with
+  ; what your Scheme supports.  Perhaps the "large" R7RS can add support
+  ; for walking through arbitrary collections.
+  (define (type-of x) #f)
+  (define (type? x) #f)
+
     )
 ; -----------------------------------------------------------------------------
 ; R5RS Compatibility
@@ -424,6 +455,8 @@
     ; string-downcase:
     (define (my-string-foldcase s)
       (string-downcase s))
+
+    ; Somehow get SRFI-69 and SRFI-1
     ))
 
 
@@ -2153,36 +2186,6 @@
   ; R6RS hashtables (which are standard). The only reason they aren't in
   ; more Schemes is that as SRFIs go, 69 is a fairly recent one. I wouldn't
   ; hesitate to use them."
-
-  ; Here's how to import SRFI-69 in guile (for hash tables);
-  ; we have to invoke weird magic becuase guile will
-  ; complain about merely importing a normal SRFI like this
-  ; (which I think is a big mistake, but can't fix guile 1.8):
-  ; WARNING: (guile-user): imported module (srfi srfi-69)
-  ;                        overrides core binding `make-hash-table'
-  ; WARNING: (guile-user): imported module (srfi srfi-69)
-  ;                         overrides core binding `hash-table?'
-  (use-modules ((srfi srfi-69)
-               #:select ((make-hash-table . srfi-69-make-hash-table)
-                         (hash-table? . srfi-69-hash-table?)
-                         hash-table-set!
-                         hash-table-update!/default
-                         hash-table-ref
-                         hash-table-ref/default
-                         hash-table-walk
-                         hash-table-delete! )))
-
-  ; For "any"
-  (use-modules (srfi srfi-1))
-
-  ; There's no portable way to walk through other collections like records.
-  ; Chibi has a "type" "type" procedure but isn't portable
-  ; (and it's not in guile 1.8 at least).
-  ; We'll leave it in, but stub it out; you can replace this with
-  ; what your Scheme supports.  Perhaps the "large" R7RS can add support
-  ; for walking through arbitrary collections.
-  (define (type-of x) #f)
-  (define (type? x) #f)
 
   (define (extract-shared-objects x cyclic-only?)
     (let ((seen (srfi-69-make-hash-table eq?)))
