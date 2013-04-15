@@ -2381,30 +2381,14 @@ the two separate datums <tt>f</tt> and <tt>(x)</tt>.
 This SRFI includes a requirement to implement
 <var>curly-write</var> and <var>neoteric-write</var>.
 It could be argued that these really belong in SRFI-105.
-However, it was not proposed at when SRFI-105 was created.
-Also, SRFI-105 was specifically designed to require as little implementation
-effort as possible; in many cases it only requires adding a few
-more lines in the reader.
+However, SRFI-105 was designed to require little implementation effort;
+it often requires only adding a few lines to the reader.
 In contrast, implementing a writer that picks good formats, and
-handles cycles, is more complex.
+handles cycles or shared structures, is more complex.
+Since reading sweet-expressions takes more code, and such users
+are likely to want a writer for c-expressions and n-expressions,
+they have been placed here.
 </p>
-
-<p>An obvious question
-is, &#8220;how do you write them out?&#8221;
-After all, with these notations there is
-more than one way to present expressions.</p>
-
-<p>But no Lisp guarantees
-that what it writes out is the same sequence of characters that was
-written.  For example, <tt>(quote&nbsp;x)</tt>
-when read might be written back
-as <tt>'x</tt>, while on others, reading
-<tt>'y</tt> might be printed as <tt>(quote&nbsp;y)</tt>.
-Similarly, if you enter <tt>(a&nbsp;.&nbsp;(b&nbsp;.&nbsp;()))</tt>,
-many Lisps will write that back as &#8220;(a&nbsp;b)&#8221;.
-Nothing has fundamentally changed;
-as always, you should implement your Lisp expression writer so that
-it presents a format convenient to both human and machine readers.</p>
 
 <p>
 This SRFI does not require a <var>sweet-write</var> procedure, for
@@ -2413,6 +2397,37 @@ and thus is probably better specified separately.
 Those who are interested in tools to write sweet-expressions should
 look at the code available in the
 <a href="http://readable.sourceforge.net">readable project</a>.
+</p>
+
+<p>
+In these notations there is
+more than one way to present expressions, but
+this is not a change.
+Even with traditional s-expressions
+no Lisp guarantees that what it writes out is
+the same sequence of characters that was written.
+For example, <tt>(quote&nbsp;x)</tt>
+when read might be written back
+as <tt>'x</tt>, while on others, reading
+<tt>'y</tt> might be printed as <tt>(quote&nbsp;y)</tt>.
+Similarly, if you enter <tt>(a&nbsp;.&nbsp;(b&nbsp;.&nbsp;()))</tt>,
+many Lisps will write that back as &#8220;(a&nbsp;b)&#8221;.
+As always, you should implement your Lisp expression writer so that
+it presents a format convenient to both human and machine readers.
+</p>
+
+<p>
+The specification does not require any specific formatting for
+c-expressions or n-expressions when written out;
+this is left as a quality-of-implementation issue.
+Nevertheless, there is an expectation that these procedures will
+usefully take advantage of the additional notational capabilities.
+The reference implementation demonstrates one way this can be done.
+For example, the reference implementation chooses the
+unprefixed infix notation for a list
+if the first element is a symbol, the symbol is all punctuation
+characters or a special symbol (<var>and</var>, <var>or</var>, or
+<var>xor</var>), and there are 3-6 elements in the (proper) list.
 </p>
 
 <h3 id="backwards-compatibility">Backwards compatibility (well-formatted s-expressions)</h3>
