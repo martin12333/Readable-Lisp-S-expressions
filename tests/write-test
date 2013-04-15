@@ -1,8 +1,8 @@
-#!guile -s
+#!/usr/bin/env guile
 !#
-;;; write.scm
-;;; Write expressions as c-expressions and n-expressions.
 
+;;; write-test
+;;; Test writing expressions as c-expressions and n-expressions.
 ;;; Copyright (C) 2006-2013 David A. Wheeler.
 ;;; Portions of the write routines by Alex Shinn, public domain.
 ;;;
@@ -25,6 +25,19 @@
 ;;; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 ;;; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ;;; OTHER DEALINGS IN THE SOFTWARE.
+
+
+; We assume that GUILE_LOAD_PATH is set correctly, so we don't need to do:
+; (cond-expand
+;   (guile-2
+;     (eval-when (compile load eval)
+;       (set! %load-path (append %load-path '("..")))))
+;   (guile
+;     (set! %load-path (append %load-path '("..")))))
+
+
+(use-modules (readable kernel))
+
 
 (define debugger-output #f)
 (define (debug-show marker data)

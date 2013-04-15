@@ -1,0 +1,232 @@
+curly-write-simple
+{4 + 5}
+'x
+(a b c d e f g h i j k l m n o p q r s t u v w x y z)
+(a b c d e f g h i j k l m n o p q r s t u v w x y z . 2)
+(a 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)
+(a 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17)
+{a + b}
+{a + b + c}
+(+ a b c . improper)
+{1 + 2 + 3 + 4 + 5}
+{1 + 2 + 3 + 4 + 5 + 6}
+(+ 1 2 3 4 5 6 7)
+(sin (- theta))
+(fact {n - 1})
+(calculate (pi))
+(between current min max)
+(my-write . rest)
+(sin x)
+(- x)
+(-)
+(function +)
+(map + '(2 4 6))
+(current-time)
+(1 2 3)
+(4 5 . 6)
+5
+boring-symbol
+{sqrt(x) + sqrt(y)}
+`(1 2 ,@{a + b})
+#'(a b c)
+#( v1 v2 {2 + 3} (sin x) )
+(define (is-infix-operator? x) (cond ((not (symbol? x)) #f) ((memq x special-infix-operators) #t) (#t (contains-only-punctuation? (string->list (symbol->string x))))))
+fin
+
+
+neoteric-write-simple
+{4 + 5}
+'x
+(a b c d e f g h i j k l m n o p q r s t u v w x y z)
+(a b c d e f g h i j k l m n o p q r s t u v w x y z . 2)
+a(2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)
+(a 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17)
+{a + b}
+{a + b + c}
++(a b c . improper)
+{1 + 2 + 3 + 4 + 5}
+{1 + 2 + 3 + 4 + 5 + 6}
++(1 2 3 4 5 6 7)
+sin{- theta}
+fact{n - 1}
+calculate(pi())
+between(current min max)
+my-write(. rest)
+sin(x)
+-(x)
+-()
+function(+)
+map(+ '(2 4 6))
+current-time()
+(1 2 3)
+(4 5 . 6)
+5
+boring-symbol
+{sqrt(x) + sqrt(y)}
+`(1 2 ,@{a + b})
+#'a(b c)
+#( v1 v2 {2 + 3} sin(x) )
+define(is-infix-operator?(x) cond((not(symbol?(x)) #f) (memq(x special-infix-operators) #t) (#t contains-only-punctuation?(string->list(symbol->string(x))))))
+fin
+
+
+curly-write-shared
+{4 + 5}
+'x
+(a b c d e f g h i j k l m n o p q r s t u v w x y z)
+(a b c d e f g h i j k l m n o p q r s t u v w x y z . 2)
+(a 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)
+(a 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17)
+{a + b}
+{a + b + c}
+(+ a b c . improper)
+{1 + 2 + 3 + 4 + 5}
+{1 + 2 + 3 + 4 + 5 + 6}
+(+ 1 2 3 4 5 6 7)
+(sin (- theta))
+(fact {n - 1})
+(calculate (pi))
+(between current min max)
+(my-write . rest)
+(sin x)
+(- x)
+(-)
+(function +)
+(map + '(2 4 6))
+(current-time)
+(1 2 3)
+(4 5 . 6)
+5
+boring-symbol
+{sqrt(x) + sqrt(y)}
+`(1 2 ,@{a + b})
+#'(a b c)
+#(v1 v2 {2 + 3} (sin x))
+(define (is-infix-operator? x) (cond ((not (symbol? x)) #f) ((memq x special-infix-operators) #t) (#t (contains-only-punctuation? (string->list (symbol->string x))))))
+fin
+(a b)
+(begin #0=(a b) #0# end)
+#0=(first . #0#)
+(dosomething #0=(c1 c2) (b1 b2) #0#)
+#0=(quote . #0#)
+
+curly-write-cyclic
+{4 + 5}
+'x
+(a b c d e f g h i j k l m n o p q r s t u v w x y z)
+(a b c d e f g h i j k l m n o p q r s t u v w x y z . 2)
+(a 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)
+(a 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17)
+{a + b}
+{a + b + c}
+(+ a b c . improper)
+{1 + 2 + 3 + 4 + 5}
+{1 + 2 + 3 + 4 + 5 + 6}
+(+ 1 2 3 4 5 6 7)
+(sin (- theta))
+(fact {n - 1})
+(calculate (pi))
+(between current min max)
+(my-write . rest)
+(sin x)
+(- x)
+(-)
+(function +)
+(map + '(2 4 6))
+(current-time)
+(1 2 3)
+(4 5 . 6)
+5
+boring-symbol
+{sqrt(x) + sqrt(y)}
+`(1 2 ,@{a + b})
+#'(a b c)
+#(v1 v2 {2 + 3} (sin x))
+(define (is-infix-operator? x) (cond ((not (symbol? x)) #f) ((memq x special-infix-operators) #t) (#t (contains-only-punctuation? (string->list (symbol->string x))))))
+fin
+(a b)
+(begin (a b) (a b) end)
+#0=(first . #0#)
+(dosomething (c1 c2) (b1 b2) (c1 c2))
+#0=(quote . #0#)
+
+neoteric-write-shared
+{4 + 5}
+'x
+(a b c d e f g h i j k l m n o p q r s t u v w x y z)
+(a b c d e f g h i j k l m n o p q r s t u v w x y z . 2)
+a(2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)
+(a 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17)
+{a + b}
+{a + b + c}
++(a b c . improper)
+{1 + 2 + 3 + 4 + 5}
+{1 + 2 + 3 + 4 + 5 + 6}
++(1 2 3 4 5 6 7)
+sin{- theta}
+fact{n - 1}
+calculate(pi())
+between(current min max)
+my-write(. rest)
+sin(x)
+-(x)
+-()
+function(+)
+map(+ '(2 4 6))
+current-time()
+(1 2 3)
+(4 5 . 6)
+5
+boring-symbol
+{sqrt(x) + sqrt(y)}
+`(1 2 ,@{a + b})
+#'a(b c)
+#(v1 v2 {2 + 3} sin(x))
+define(is-infix-operator?(x) cond((not(symbol?(x)) #f) (memq(x special-infix-operators) #t) (#t contains-only-punctuation?(string->list(symbol->string(x))))))
+fin
+a(b)
+begin(#0=a(b) #0# end)
+#0=(first . #0#)
+dosomething(#0=c1(c2) b1(b2) #0#)
+#0=(quote . #0#)
+
+neoteric-write-cyclic
+{4 + 5}
+'x
+(a b c d e f g h i j k l m n o p q r s t u v w x y z)
+(a b c d e f g h i j k l m n o p q r s t u v w x y z . 2)
+a(2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)
+(a 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17)
+{a + b}
+{a + b + c}
++(a b c . improper)
+{1 + 2 + 3 + 4 + 5}
+{1 + 2 + 3 + 4 + 5 + 6}
++(1 2 3 4 5 6 7)
+sin{- theta}
+fact{n - 1}
+calculate(pi())
+between(current min max)
+my-write(. rest)
+sin(x)
+-(x)
+-()
+function(+)
+map(+ '(2 4 6))
+current-time()
+(1 2 3)
+(4 5 . 6)
+5
+boring-symbol
+{sqrt(x) + sqrt(y)}
+`(1 2 ,@{a + b})
+#'a(b c)
+#(v1 v2 {2 + 3} sin(x))
+define(is-infix-operator?(x) cond((not(symbol?(x)) #f) (memq(x special-infix-operators) #t) (#t contains-only-punctuation?(string->list(symbol->string(x))))))
+fin
+a(b)
+begin(a(b) a(b) end)
+#0=(first . #0#)
+dosomething(c1(c2) b1(b2) c1(c2))
+#0=(quote . #0#)
+

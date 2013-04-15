@@ -274,7 +274,9 @@ EXTRA_DIST += \
  tests/unsweeten-cl-testsuite \
  tests/unsweeten-cl-correct \
  tests/curly-infix-correct2 \
- tests/curly-infix-testsuite2
+ tests/curly-infix-testsuite2 \
+ tests/write-test \
+ tests/write-test-correct
 
 # TODO: Improve test harness & integration into overall system.
 
@@ -282,10 +284,15 @@ check: readable/kernel.scm
 	CURLYFILE="$(srcdir)/readable.cl" $(srcdir)/tests/curly-infix-test-cl
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/curly-infix-test-scm \
 	            < $(srcdir)/tests/curly-infix-testsuite-scm
+	@echo "About to run neoteric-testsuite"
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/neoteric-test \
 	            < $(srcdir)/tests/neoteric-testsuite
+	@echo "About to run sweet-testsuite"
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/sweet-test \
 	            < $(srcdir)/tests/sweet-testsuite
+	@echo "About to run write-test"
+	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/write-test \
+             | diff -b -u - "$(srcdir)/tests/write-test-correct"
 	@echo "Running srfi-curly-infix, showing diffs from correct results:"
 	GUILE_LOAD_PATH="$(builddir)" guile \
 	            $(srcdir)/src/srfi-curly-infix.scm < \

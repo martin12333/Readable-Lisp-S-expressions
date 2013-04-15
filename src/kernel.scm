@@ -2164,7 +2164,13 @@
   ;                         overrides core binding `hash-table?'
   (use-modules ((srfi srfi-69)
                #:select ((make-hash-table . srfi-69-make-hash-table)
-                         (hash-table? . srfi-69-hash-table?))))
+                         (hash-table? . srfi-69-hash-table?)
+                         hash-table-set!
+                         hash-table-update!/default
+                         hash-table-ref
+                         hash-table-ref/default
+                         hash-table-walk
+                         hash-table-delete! )))
 
   ; For "any"
   (use-modules (srfi srfi-1))
