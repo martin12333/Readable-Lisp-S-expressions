@@ -1447,6 +1447,28 @@ filename extension &#8220;.sscm&#8221;
 when writing portable Scheme programs using sweet-expressions.
 </p>
 
+<p>
+Implementations <em>MUST</em> provide the procedures
+<var>curly-write</var> and <var>neoteric-write</var>
+as writers that can write c-expressions and n-expressions respectively.
+If provided, these procedures <em>MUST</em>
+at least take a parameter (the object to write)
+and an optional second parameter (the port).
+Implementations that provide R7RS semantics
+(<var>write</var> with cycle detection,
+<var>write-shared</var> that identifies shared structures,
+and <var>write-simple</var> with no guarantee of
+cycle detection or shared structure identification)
+<em>SHOULD</em> appropriate variants of these.
+That is,
+<var>curly-write</var> and <var>neoteric-write</var>
+that perform cycle detection,
+<var>curly-write-shared</var> and <var>neoteric-write-shared</var>
+identify shared structures, and
+<var>curly-write-simple</var> and <var>neoteric-write-simple</var>
+guarantee neither.
+</p>
+
 <p>Note that, by definition, this SRFI modifies lexical syntax.</p>
 
 
@@ -2352,7 +2374,21 @@ want indentation to have a syntactic meaning
 or want to ensure that <tt>f(x)</tt> is interpreted as
 the two separate datums <tt>f</tt> and <tt>(x)</tt>.
 </p>
+
 <h3 id="writing-out-results">Writing out results</h3>
+
+<p>
+This SRFI includes a requirement to implement
+<var>curly-write</var> and <var>neoteric-write</var>.
+It could be argued that these really belong in SRFI-105.
+However, it was not proposed at when SRFI-105 was created.
+Also, SRFI-105 was specifically designed to require as little implementation
+effort as possible; in many cases it only requires adding a few
+more lines in the reader.
+In contrast, implementing a writer that picks good formats, and
+handles cycles, is more complex.
+</p>
+
 <p>An obvious question
 is, &#8220;how do you write them out?&#8221;
 After all, with these notations there is
@@ -2369,6 +2405,15 @@ many Lisps will write that back as &#8220;(a&nbsp;b)&#8221;.
 Nothing has fundamentally changed;
 as always, you should implement your Lisp expression writer so that
 it presents a format convenient to both human and machine readers.</p>
+
+<p>
+This SRFI does not require a <var>sweet-write</var> procedure, for
+the simple reason that this procedure is essentially a pretty-printer...
+and thus is probably better specified separately.
+Those who are interested in tools to write sweet-expressions should
+look at the code available in the
+<a href="http://readable.sourceforge.net">readable project</a>.
+</p>
 
 <h3 id="backwards-compatibility">Backwards compatibility (well-formatted s-expressions)</h3>
 
