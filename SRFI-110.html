@@ -4883,15 +4883,26 @@ by the authors of this SRFI</a>.
 
 <p>
 Based on feedback on the readable-discuss mailing list,
-Arne Babenhauserheide refined his initial approach and developed
+Arne Babenhauserheide refined his <a href="#arne">initial approach</a>
+and developed
 &#8220;Whitespace to Lisp&#8221; (wisp).
 You can learn more about wisp at the
 <a href="http://draketo.de/light/english/wisp-lisp-indentation-preprocessor">wisp: Whitespace to Lisp web page</a>.
 </p>
 
 <p>
-In wisp, the main change is that the
-sublist with inline &#8220;:&#8221; always ends at the end of the line
+As with the <a href="#arne">initial approach</a>,
+wisp includes indentation-means-subitem (as is true for sweet-expressions).
+Like the initial approach but unlike sweet-expressions,
+every line is a new list unless prefixed with "." after the indentation,
+and blank lines do not terminate the expression.
+</p>
+
+<p>
+The main change in wisp compared to the
+<a href="#arne">Arne's initial approach</a>
+is that sublist with inline (&#8220;:&#8221; in wisp notation)
+<i>always</i> ends at the end of the line
 (thanks to feedback from Alan Manuel K. Gloria).
 This completely eliminates the width-of-characters problem of the
 initial proposal (see below).
@@ -5001,11 +5012,27 @@ class example:
 </pre>
 
 <p>
-This suggests that in wisp, expressions need not end on
-blank lines, which could cause problems in interactive use.
+In wisp, expressions do not end on blank lines, and
+this could cause significant problems in interactive use.
+Wisp's creator said on 2013-04-16,
+"Not breaking at an empty line is a design choice,
+because I tend to often use empty lines
+in python-code to separate logical parts of a function.
+But this actually creates problems when pasting a python
+script file into an interactive shell, so I see the point.
+Note, though, that there is no interactive wisp shell (yet).
+I think I would end a statement at 2 empty lines,
+which would mean that you <i>should not</i> use
+2 consecutive empty lines in a script (but you could)."
+Using two empty lines is a plausible alternative, but note that this makes
+interactive use less appealing; users would actually have to press
+Enter three times (once to end a line, and twice more to create
+two blank lines).
 </p>
 <p>
-This approach does raise some concerns.
+Wisp does not have a mechanism to restart at the left-hand-side
+for long stretches of code, as sweet-expressions does, and this omission
+raises some concerns.
 Alan Manuel Gloria notes,
 &#8220;In Scheme, usually you just put a bunch of definitions (unindented)
 in a file, then load them in your favorite Scheme system.
@@ -5032,7 +5059,7 @@ different segments of their users - including patches.
 By keeping their published code unindented,
 such a maintainer could apply the same patch, from say
 a primarily-Guile user, to both the official Guile and MzScheme code.&#8221;
-Wisp has no mechanism to do this.
+Again, Wisp has no mechanism to do this.
 </p>
 
 <p>
@@ -5121,20 +5148,28 @@ In the wist approach, it may also indicate a normal list element,
 which is potentially confusing. You may even have sequences of lines
 leading with &#8220;.&#8221;, with a completely different meaning from
 traditional Lisp.
-E.g.:
+For example, here is a wisp expression:
 <blockquote>
 <pre>
-  if condition?
+  if condition? ; wisp
     . #t
     . #f
+</pre>
+</blockquote>
+The same could be expressed using sweet-expressions as:
+<blockquote>
+<pre>
+  if condition? ; sweet-expressions
+    #t
+    #f
 </pre>
 </blockquote>
 </li>
 <li>
 <i>It is more familiar to non-Lisp developers</i>.
 Developers who have never even seen Scheme can correctly
-guess what &#8220;newline()&#8221; means, while &#8220;. 1&#8221; will almost certainly
-be confusing.
+guess what &#8220;newline()&#8221; means,
+while &#8220;. 1&#8221; will require explanation.
 </li>
 <li>
 <i>It is less error-prone</i>.
@@ -5143,15 +5178,42 @@ write the wrong code and miss errors with the wisp formulation.
 This is especially because &#8220;.&#8221; has another meaning
 (it sets the cdr of a list).
 Also, a &#8220;.&#8221; in front of an integer looks
-too much like a floating point number with initial period.
+very much like a floating point number with initial period, again
+inviting error.
 </li>
 </ol>
 
 <p>
+Wisp emphasizes a simple notation, but this can make certain constructs
+more complicated (and less readable) compared to sweet-expressions.
+E.G., this sweet-expression:
+</p>
+
+<pre>
+  define me()
+    you now \\ others now \\ others past
+</pre>
+  
+<p>
+This could be written in wisp, but it would have to be written using
+a longer format such as:
+</p>
+
+<pre>
+  define : me
+    you now
+    others now
+    others past
+</pre>
+  
+</p>
+
+<p>
 A minor problem with wisp is that it uses &#8220;:&#8221; as an operator.
-While &#8220;$&#8221; is relatively uncommon as an operator, &#8220;:&#8221; is more common
+While &#8220;$&#8221; is relatively uncommon as an operator,
+&#8220;:&#8221; is more common
 (e.g., for type declarations in typed Racket).
-It could be escaped, but ideally the notation should only rarely
+It can be escaped, but ideally the notation should only rarely
 require escaping; in notations like typed Racket, type declarations
 are common.
 </p>
@@ -5175,29 +5237,30 @@ checked (by ANTLR).
 
 <p>
 Both wisp and sweet-expressions are designed to create a more readable Lisp.
-Also, both are homoiconic, generic, and backwards-compatible.
+Both are homoiconic, generic, and backwards-compatible.
 Indeed, this is very friendly competition;
 Arne Babenhauserheide has provided helpful commentary on sweet-expressions,
-and Arne Babenhauserheide has reported that feedback from
-Alan Manuel K. Gloria has been helpful too.
+and Arne Babenhauserheide reported that feedback has been very helpful:
+"Without the discussions here,
+there would be no wisp implementation" (2013-04-16).
 </p>
 
 <p>
-Perhaps the biggest difference is a difference of emphasis.
+Perhaps the strongest distinguishing factor is a difference of emphasis.
 The design of wisp focuses on having a simple definition as the most
 important factor.
 The design of sweet-expressions focuses on having simpler and clearer code
 when <i>using</i> the notation, even for large code sizes,
 at the cost of having have a slightly more complex definition
-(due to additional abbreviations).
+(because it includes additional abbreviations).
 Several of the sweet-expression BNF branches were specifically added so
 that the notation would &#8220;do what people expect&#8221;, and capabilities
 like collecting lists are designed to handle large structures
 (e.g., long module definitions).
 We believe that since developers must routinely read and write a lot
 of code, and that some programs will be large systems with many modules,
-it&#8217;s worth having a notation with additional capabilities
-to support them.
+it&#8217;s worth having a slightly larger notation with
+additional capabilities to support them.
 </p>
 
 <h3 id="closing-sublist-unmatched-dedent">Closing SUBLIST by unmatched dedent (&#8220;Beni Formulation of SUBLIST&#8221)</h3>
