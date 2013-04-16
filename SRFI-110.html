@@ -208,7 +208,8 @@ define fibfast(n)   ; Typical function notation
   <li><a href="#p4p">Comparison to P4P</a></li>
   <li><a href="#z">Comparison to Z</a></li>
   <li><a href="#genyris">Comparison to Genyris</a></li>
-  <li><a href="#arne">Comparison to &#8220;Arne formulation&#8221;</a></li>
+  <li><a href="#arne">Comparison to &#8220;Initial Arne formulation&#8221;</a></li>
+  <li><a href="#wisp">Comparison to &#8220;Whitespace to Lisp&#8221; (wisp)</a></li>
   <li><a href="#closing-sublist-unmatched-dedent">Closing SUBLIST by unmatched dedent (&#8220;Beni Formulation of SUBLIST&#8221)</a></li>
   <li><a href="#closing-ending-sublist-results">Variation: Closing end-of-line SUBLIST by unmatched dedent (&#8220;Beni-Lite&#8221;)</a></li>
   </ul>
@@ -4460,7 +4461,8 @@ s-expressions, in particular, it makes it more
 difficult to notate simple atoms.
 </p>
 
-<h3 id="arne">Comparison to the &#8220;Arne formulation&#8221;</h3>
+<h3 id="arne">Comparison to the &#8220;Initial Arne formulation&#8221;</h3>
+
 <p>On <a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg01047.html">
 2013-02-08, Arne Babenhauserheide made an alternative indentation proposal</a>
 and posted it on the readable-discuss mailing list.
@@ -4872,12 +4874,330 @@ R6RS mandates that support.
 </p>
 
 <p>
-You can learn more about this alternative approach at the
-<a href="http://draketo.de/light/english/wisp-lisp-indentation-preprocessor">wisp: Whitespace to Lisp</a>
-web page.
 After a long discussion,
 <a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg01097.html">this proposal was turned down
 by the authors of this SRFI</a>.
+</p>
+
+<h3 id="wisp">Comparison to &#8220;Whitespace to Lisp&#8221; (wisp)</h3>
+
+<p>
+Based on feedback on the readable-discuss mailing list,
+Arne Babenhauserheide refined his initial approach and developed
+&#8220;Whitespace to Lisp&#8221; (wisp).
+You can learn more about wisp at the
+<a href="http://draketo.de/light/english/wisp-lisp-indentation-preprocessor">wisp: Whitespace to Lisp web page</a>.
+</p>
+
+<p>
+In wisp, the main change is that the
+sublist with inline &#8220;:&#8221; always ends at the end of the line
+(thanks to feedback from Alan Manuel K. Gloria).
+This completely eliminates the width-of-characters problem of the
+initial proposal (see below).
+At the time of this writing,
+inconsistent dedents produce broken code in the wisp implementation
+(they <i>should</i> throw an error instead).
+However, this is an implementation issue and not fundamental to the notation.
+</p>
+
+<p>
+This means that some examples change.
+As Arne Babenhauserheide explains, first, you should not
+use double colons, so instead of:
+</p>
+<pre>
+  let : : x : compute 'x
+        : y : compute 'y
+      use x y
+</pre>
+
+<p>
+In wisp this would be:
+</p>
+
+<pre>
+  let 
+    : 
+      x : compute 'x
+      y : compute 'y
+    use x y
+</pre>
+
+<p>
+In comparing to SUBLIST, you could write it this way:
+</p>
+
+<pre>
+  begin
+    . (display "Welcome, ") (display player) (display ", to Chicago!") (newline)
+</pre>
+
+<p>
+Alan Manuel K. Gloria believes you might indeed write it that way.
+In contrast, Arne believes it would be more likely be written this way:
+</p>
+
+<pre>
+  begin
+    display "Welcome, "
+    display player
+    display ", to Chicago!"
+    newline
+</pre>
+
+<p>
+Or like this, if you want more complex expressions (note that in wisp,
+newline is not followed by () as it would be in sweet-expressions):
+</p>
+
+<pre>
+  begin
+    display 
+      concat "Welcome, " player 
+           . ", to Chicago!"
+    newline
+</pre>
+
+<p>
+Arne states,
+&#8220;This uses more vertical space - and I don&#8217;t mind (so it is a design
+choice not to try very hard to minimize vertical space).&#8221;
+For the single gigantic top-level datum, you just indent the rest
+(as in class definitions in Python):
+</p>
+
+<pre>
+library : example
+  import : scheme base
+  export . 
+    example-init example-open example-close
+  begin
+    define : example-init
+      whatever ...
+      ...
+
+    define : example-open x
+      whatever ...
+      ...
+
+    define : example-close y
+      whatever ...
+      ...
+</pre>
+
+<p>
+Note the similarity to the similar Python syntax:
+</p>
+
+<pre>
+class example:
+  def __init__():
+    import base
+    print base.stuff
+    def localfunc():
+      whatever ...
+      ...
+</pre>
+
+<p>
+This suggests that in wisp, expressions need not end on
+blank lines, which could cause problems in interactive use.
+</p>
+<p>
+This approach does raise some concerns.
+Alan Manuel Gloria notes,
+&#8220;In Scheme, usually you just put a bunch of definitions (unindented)
+in a file, then load them in your favorite Scheme system.
+After you&#8217;ve hacked on the definitions on the file a bit,
+<i>then</i> you put the module annotations.
+This is largely the rationale for (include ...) in R7RS
+(define-library ...) forms: the expected Scheme workflow is to start with a
+bunch of top-level, non-module definitions, hack on them until they work,
+then put them in a module.  Hence, support for a bunch of unindented
+definitions inside a module would be nice.
+This is largely due to history:
+Scheme did not have cross-system standard modules.
+Most coders will have two or so Scheme systems they work in, and
+they might want to hack on their code first on one, then on the other(s).
+A flat file of definitions would usually work portably across Scheme systems.
+So Schemers generally have the habit of putting module
+annotations as the last step just prior to publishing their code.
+Those interested in cross-Scheme compatibility for their published code might
+very well keep the definitions unindented - some Schemes require modules to
+be a single large datum (MzScheme, R6RS, R7RS) others require module
+annotations as a separate datum(s) before definitions (Guile), and a
+Schemer maintaining a cross-platform library might get bug reports from
+different segments of their users - including patches.
+By keeping their published code unindented,
+such a maintainer could apply the same patch, from say
+a primarily-Guile user, to both the official Guile and MzScheme code.&#8221;
+Wisp has no mechanism to do this.
+</p>
+
+<p>
+Arne clarifies about the wisp notation:
+&#8220;Just to also state it explicitely: By making inline : close at the end
+of the line, the width-of-characters problem disappears: The only
+thing which can come before a colon that defines an indentation level
+which is relevant to later lines are spaces and space-equivalents
+(blocks of underscores starting at the beginning of the line).
+I did not see a drop in readability due to limiting inline : to the
+present line - rather the opposite, as it prompts me to do more tail
+calls. And clarity definitely increased. Just compare those two:&#8221;
+</p>
+
+<pre>
+  let : : x : compute 'x  ; First block
+        : y : compute 'y
+      use x y
+
+  let                     ; Second block
+    : 
+      x : compute 'x
+      y : compute 'y
+    use x y
+</pre>
+
+<p>
+Arne stated,
+&#8220;I would not be sure at first glance myself what the first block does.
+For the second it&#8217;s clear to me.&#8221;
+</p>
+
+<p>
+As noted, the wisp approach
+has no problems dealing with character widths and encodings
+(including double width characters), due to the change in : semantics.
+This removes a major objection to the initial Arne formulation.
+</p>
+
+<p>
+However, the wisp approach prevents the shorter let syntax
+which requires the &#8220;: keeps track of column&#8221; semantics.
+In sweet-expressions, &lt;*...*&gt; makes it easy to handle short let syntax
+(which occurs often in Scheme and other Lisp code) and
+very long module definitions; no similar mechanism exists in wisp.
+</p>
+
+<p>
+Another distinction between wisp and sweet-expressions is in
+how they handle singletons:
+</p>
+<ol>
+<li>
+In wisp, every line normally creates a new list.
+You must use initial &#8220;.&#8221; to identify singleton values.
+</li>
+<li>
+In sweet-expressions and SRFI-49, a line with just its 
+value and no child lines represents itself.
+You must surrounding or append the value with parentheses
+to create a list with a singleton value.
+</ol>
+
+<p>
+David A. Wheeler, the creator of sweet-expressions,
+believes that the sweet-expression/SRFI-49 approach
+(where singletons without children mean themselves) is the better approach,
+because he believes that:
+</p>
+<ol>
+<li>
+<i>It produces simpler code</i>.
+Common cases should be simpler than less-common cases.
+Many procedures involve case/cond statements that break a problem into
+components, eventually leading to simple base cases.
+These base cases are often simple expressions (e.g., a number, the empty list,
+and so on) that are <i>not</i> in a list.
+Lists with single elements occur, e.g., &#8220;(newline)&#8221;, but they are less common.
+Wheeler believes we should optimize for the more common case.
+</li>
+<li>
+<i>It is more familiar to Lisp developers</i>.
+A &#8220;.&#8221; in a list traditionally means that the following item
+is the cdr of a list, potentially creating an improper list.
+In the wist approach, it may also indicate a normal list element,
+which is potentially confusing. You may even have sequences of lines
+leading with &#8220;.&#8221;, with a completely different meaning from
+traditional Lisp.
+E.g.:
+<blockquote>
+<pre>
+  if condition?
+    . #t
+    . #f
+</pre>
+</blockquote>
+</li>
+<li>
+<i>It is more familiar to non-Lisp developers</i>.
+Developers who have never even seen Scheme can correctly
+guess what &#8220;newline()&#8221; means, while &#8220;. 1&#8221; will almost certainly
+be confusing.
+</li>
+<li>
+<i>It is less error-prone</i>.
+Because it looks less familiar, developers are more likely to
+write the wrong code and miss errors with the wisp formulation.
+This is especially because &#8220;.&#8221; has another meaning
+(it sets the cdr of a list).
+Also, a &#8220;.&#8221; in front of an integer looks
+too much like a floating point number with initial period.
+</li>
+</ol>
+
+<p>
+A minor problem with wisp is that it uses &#8220;:&#8221; as an operator.
+While &#8220;$&#8221; is relatively uncommon as an operator, &#8220;:&#8221; is more common
+(e.g., for type declarations in typed Racket).
+It could be escaped, but ideally the notation should only rarely
+require escaping; in notations like typed Racket, type declarations
+are common.
+</p>
+
+<p>
+It should also be noted that, at the time of this writing,
+there is much less experience with wisp.
+No program has been written with wisp,
+and there is only one implementation of the wisp notation (in Python).
+In contrast, at least two programs
+have been written using sweet-expressions (sweeten and letterfall),
+and a large number of smaller expressions have been written
+for a variety of Lisp variants.
+Sweet-expressions have also been implemented at least three times
+(original implementation in Scheme, ANTLR implementation, and
+the reference SRFI implementation in Scheme).
+There is also no format BNF of wisp notation at this time;
+in contrast, sweet-expressions has a BNF that has been automatically
+checked (by ANTLR).
+</p>
+
+<p>
+Both wisp and sweet-expressions are designed to create a more readable Lisp.
+Also, both are homoiconic, generic, and backwards-compatible.
+Indeed, this is very friendly competition;
+Arne Babenhauserheide has provided helpful commentary on sweet-expressions,
+and Arne Babenhauserheide has reported that feedback from
+Alan Manuel K. Gloria has been helpful too.
+</p>
+
+<p>
+Perhaps the biggest difference is a difference of emphasis.
+The design of wisp focuses on having a simple definition as the most
+important factor.
+The design of sweet-expressions focuses on having simpler and clearer code
+when <i>using</i> the notation, even for large code sizes,
+at the cost of having have a slightly more complex definition
+(due to additional abbreviations).
+Several of the sweet-expression BNF branches were specifically added so
+that the notation would &#8220;do what people expect&#8221;, and capabilities
+like collecting lists are designed to handle large structures
+(e.g., long module definitions).
+We believe that since developers must routinely read and write a lot
+of code, and that some programs will be large systems with many modules,
+it&#8217;s worth having a notation with additional capabilities
+to support them.
 </p>
 
 <h3 id="closing-sublist-unmatched-dedent">Closing SUBLIST by unmatched dedent (&#8220;Beni Formulation of SUBLIST&#8221)</h3>
