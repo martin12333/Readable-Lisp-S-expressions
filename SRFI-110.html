@@ -4894,13 +4894,13 @@ You can learn more about wisp at the
 As with the <a href="#arne">initial approach</a>,
 wisp includes indentation-means-subitem (as is true for sweet-expressions).
 Like the initial approach but unlike sweet-expressions,
-every line is a new list unless prefixed with "." after the indentation,
+every line is a new list unless prefixed with &#8220;.&#8221; after the indentation,
 and blank lines do not terminate the expression.
 </p>
 
 <p>
 The main change in wisp compared to the
-<a href="#arne">Arne's initial approach</a>
+<a href="#arne">Arne&#8217;s initial approach</a>
 is that sublist with inline (&#8220;:&#8221; in wisp notation)
 <i>always</i> ends at the end of the line
 (thanks to feedback from Alan Manuel K. Gloria).
@@ -5014,8 +5014,8 @@ class example:
 <p>
 In wisp, expressions do not end on blank lines, and
 this could cause significant problems in interactive use.
-Wisp's creator said on 2013-04-16,
-"Not breaking at an empty line is a design choice,
+Wisp&#8217;s creator said on 2013-04-16,
+&#8220;Not breaking at an empty line is a design choice,
 because I tend to often use empty lines
 in python-code to separate logical parts of a function.
 But this actually creates problems when pasting a python
@@ -5023,7 +5023,7 @@ script file into an interactive shell, so I see the point.
 Note, though, that there is no interactive wisp shell (yet).
 I think I would end a statement at 2 empty lines,
 which would mean that you <i>should not</i> use
-2 consecutive empty lines in a script (but you could)."
+2 consecutive empty lines in a script (but you could).&#8221;
 Using two empty lines is a plausible alternative, but note that this makes
 interactive use less appealing; users would actually have to press
 Enter three times (once to end a line, and twice more to create
@@ -5056,6 +5056,22 @@ be a single large datum (MzScheme, R6RS, R7RS) others require module
 annotations as a separate datum(s) before definitions (Guile), and a
 Schemer maintaining a cross-platform library might get bug reports from
 different segments of their users - including patches.
+</p>
+
+<p>
+The maintainer could use the
+&#8220;ignore whitespace change&#8221; options to patch, but this would
+&#8220;mess up the indentation afterwards if you
+applied an indented patch into an
+unindented source (entirely new lines in the code would be indented more
+than their surroundings) or vice versa.
+So it&#8217;s less ideal for the maintainer,
+since applying patches becomes more complex.
+[It is] simpler to just start all defines at indent 0,
+and for code in a module-is-one-datum system,
+just wrap all the defines in the module annotation without
+disturbing their indentations.&#8221;
+<!-- 2013-04-16 posting by Alan K. Manuel -->
 By keeping their published code unindented,
 such a maintainer could apply the same patch, from say
 a primarily-Guile user, to both the official Guile and MzScheme code.&#8221;
@@ -5241,8 +5257,8 @@ Both are homoiconic, generic, and backwards-compatible.
 Indeed, this is very friendly competition;
 Arne Babenhauserheide has provided helpful commentary on sweet-expressions,
 and Arne Babenhauserheide reported that feedback has been very helpful:
-"Without the discussions here,
-there would be no wisp implementation" (2013-04-16).
+&#8220;Without the discussions here,
+there would be no wisp implementation&#8221; (2013-04-16).
 </p>
 
 <p>
