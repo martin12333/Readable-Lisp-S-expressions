@@ -38,7 +38,10 @@
 ;;; - Curly Infix (c-expression) implementation
 ;;; - Neoteric expression (n-expression) implementation
 ;;; - Sweet-expression (t-expression) implementation
-;;; Note that most of the code is in the compatibility layer and
+;;; - Implementation of writers for curly-infix and neoteric expressions -
+;;;   a "-simple" implementation, and a separate -shared/-cyclic version.
+;;;   The "-simple" one is separate so that you can use just it.
+;;; Note that a lot of the code is in the compatibility layer and
 ;;; re-implementation of "read"; implementing the new expression languages
 ;;; is actually pretty easy.
 
