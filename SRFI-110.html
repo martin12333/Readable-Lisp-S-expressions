@@ -1403,7 +1403,7 @@ a datum reader <em>MAY</em> reject it.
 A reader <em>MAY</em> also accept a datum label
 that is an initial expression of a <i>head</i> production (see the BNF),
 with a trailing space or tab,
-as labelling the rest of the sweet-expression.
+as labeling the rest of the sweet-expression.
 </p>
 
 <p>
@@ -1811,7 +1811,7 @@ define make(n m)
   let (grid(make-vector(n)))
     do &lt;* i 0 {i + 1} *&gt;
     ! {i = n} grid
-    ! let &lt;* v make-vector(m #f alse) *&gt;
+    ! let &lt;* v make-vector(m #false) *&gt;
     !   vector-set! grid i v
 
 define rows(grid) vector-length(grid)
@@ -1841,7 +1841,7 @@ define put!(grid n m v)
       (let ((grid (make-vector n)))
         (do ((i 0 (+ i 1)))
             ((= i n) grid)
-            (let ((v (make-vector m #f alse)))
+            (let ((v (make-vector m #false)))
               (vector-set! grid i v)))))
 
     (define (rows grid) (vector-length grid))
@@ -2651,7 +2651,7 @@ will be until it is done, so this does not help enough.
 <p>
 In contrast, pressing Enter twice is quite easy (since the user&#8217;s
 finger is already on Enter to press it the first time).
-Thus, the emtpy line rule is intentionally chosen to help interactive users,
+Thus, the empty line rule is intentionally chosen to help interactive users,
 at a mild cost to non-interactive users (who then cannot use empty lines
 without ending the expression).
 </p>
@@ -2836,7 +2836,7 @@ to change the &#8220;read&#8221;
 interface and we&#8217;re not assuming arbitrary amounts of unread-char.
 Scheme R5RS, for example, doesn&#8217;t have a standard unread-char at all.
 Now imagine that the implementation tries to support
-arbitrary indentatation for the initial line of an expression
+arbitrary indentation for the initial line of an expression
 (instead of requiring that expressions normally start at the left edge).
 Let&#8217;s say you are trying to read the following:</p>
 <pre>
@@ -3761,7 +3761,7 @@ define-library
       let (grid(make-vector(n)))
         do (i(0 {i + 1}))
         ! {i = n} grid
-        ! let (v(make-vector(m #f alse))) vector-set!(grid i v)
+        ! let (v(make-vector(m #false))) vector-set!(grid i v)
     define rows(grid) vector-length(grid)
     define cols(grid) vector-length(vector-ref(grid 0))
 
@@ -3809,7 +3809,7 @@ define make(n m)
   let (grid(make-vector(n)))
     do (i(0 {i + 1}))
     ! {i = n} grid
-    ! let (v(make-vector(m #f alse))) vector-set!(grid i v)
+    ! let (v(make-vector(m #false))) vector-set!(grid i v)
 
 define rows(grid) vector-length(grid)
 define cols(grid) vector-length(vector-ref(grid 0))
@@ -3886,7 +3886,7 @@ define make(n m)
   let (grid(make-vector(n)))
     do (i(0 {i + 1}))
     ! {i = n} grid
-    ! let (v(make-vector(m #f alse))) vector-set!(grid i v)
+    ! let (v(make-vector(m #false))) vector-set!(grid i v)
 
 define rows(grid) vector-length(grid)
 define cols(grid) vector-length(vector-ref(grid 0))
@@ -5080,7 +5080,7 @@ Again, Wisp has no mechanism to do this.
 
 <p>
 Arne clarifies about the wisp notation:
-&#8220;Just to also state it explicitely: By making inline : close at the end
+&#8220;Just to also state it explicitly: By making inline : close at the end
 of the line, the width-of-characters problem disappears: The only
 thing which can come before a colon that defines an indentation level
 which is relevant to later lines are spaces and space-equivalents
@@ -5246,7 +5246,7 @@ for a variety of Lisp variants.
 Sweet-expressions have also been implemented at least three times
 (original implementation in Scheme, ANTLR implementation, and
 the reference SRFI implementation in Scheme).
-There is also no format BNF of wisp notation at this time;
+There is also no BNF of wisp notation at this time;
 in contrast, sweet-expressions has a BNF that has been automatically
 checked (by ANTLR).
 </p>
