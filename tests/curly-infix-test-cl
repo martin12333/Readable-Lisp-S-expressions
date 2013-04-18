@@ -51,6 +51,7 @@
 (mytest '{(- x) / 2} '(/ (- x) 2))
 (mytest '{x = 3 * 4} '($nfx$ x = 3 * 4))
 (mytest '{x = 3} '(= x 3))
+(mytest '{x (function f) y (function f) z} '((function f) x y z))
 
 ; Demo its use:
 

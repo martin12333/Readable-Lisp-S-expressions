@@ -100,13 +100,13 @@
 ; ones are "op".  Used to determine if a longer lyst is infix.
 ; Otherwise it returns NIL (False).
 ; If passed empty list, returns true (so recursion works correctly).
-(defun even-and-op-prefix (op lyst)
+(defun even-and-op-prefixp (op lyst)
    (cond
      ((null lyst) t)
      ((not (consp lyst)) nil) ; Not a list.
-     ((not (eq op (car lyst))) nil) ; fail - operators not all equal.
-     ((null (cdr lyst)) nil) ; fail - odd # of parameters in lyst.
-     (t (even-and-op-prefix op (cddr lyst))))) ; recurse.
+     ((not (equal op (car lyst))) nil) ; fail - operators not all equal.
+     ((not (consp (cdr lyst))) nil) ; fail - odd # of parameters or improper
+     (t (even-and-op-prefixp op (cddr lyst))))) ; recurse.
 
 ; Return True if the lyst is in simple infix format (and should be converted
 ; at read time).  Else returns NIL.
@@ -116,8 +116,7 @@
     (consp (cdr lyst))     ; Must have a second argument.
     (consp (cddr lyst))    ; Must have a third argument (we check it
                            ; this way for performance)
-    (symbolp (cadr lyst))  ; 2nd parameter must be a symbol.
-    (even-and-op-prefix (cadr lyst) (cdr lyst)))) ; even parameters equal?
+    (even-and-op-prefixp (cadr lyst) (cdr lyst)))) ; even parameters equal?
 
 ; Return alternating parameters in a lyst (1st, 3rd, 5th, etc.)
 (defun alternating-parameters (lyst)
@@ -126,7 +125,7 @@
     (cons (car lyst) (alternating-parameters (cddr lyst)))))
 
 ; Transform not-simple infix list.  Written as a separate function so that
-; future versions/specifications can easily replace just this pieces.
+; future versions/specifications can easily replace just this piece.
 (defun transform-mixed-infix (lyst)
   (cons '$nfx$ lyst))
 
