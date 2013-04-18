@@ -293,6 +293,7 @@ EXTRA_DIST += \
 
 check: readable/kernel.scm
 	CURLYFILE="$(srcdir)/readable.cl" $(srcdir)/tests/curly-infix-test-cl
+	CURLYFILE="$(srcdir)/basic-curly.cl" $(srcdir)/tests/curly-infix-test-cl
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/curly-infix-test-scm \
 	            < $(srcdir)/tests/curly-infix-testsuite-scm
 	@echo "About to run neoteric-testsuite"
