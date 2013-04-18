@@ -48,6 +48,17 @@ readable/kernel.scm: src/kernel.scm
 CLEANFILES = readable/kernel.scm
 
 
+# Common Lisp files.  We'll install source code in conventional places,
+# and let the usual Common Lisp mechanisms (e.g., asdf) handle compiling
+# as needed.
+
+common_lispdir = $(datadir)/common-lisp
+common_lisp_sourcedir = $(common_lispdir)/source
+common_lisp_source_pkgdir = $(common_lisp_sourcedir)/readable
+
+dist_common_lisp_source_pkg_DATA = basic-curly.cl
+
+
 # Scripts
 
 script_sources = src/sweeten.sscm src/unsweeten \
