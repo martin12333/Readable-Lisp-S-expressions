@@ -29,6 +29,7 @@
 (if (not (load (getenv "CURLYFILE") :if-does-not-exist t))
   (exit 1))
 
+(enable-basic-curly)
 
 (defun mytest (input correct)
   (cond

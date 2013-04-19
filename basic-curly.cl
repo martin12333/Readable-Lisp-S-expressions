@@ -103,15 +103,13 @@
   (let ((result (read-delimited-list #\} stream t)))
     (process-curly result)))
 
-; The following install the {...} reader.
-; See "Common Lisp: The Language" by Guy L. Steele, 2nd edition,
-; pp. 542-548 and pp. 571-572.
-; Invoke curly-brace-infix-reader when "{" is read in:
-(set-macro-character #\{ #'curly-brace-infix-reader)
-; This is necessary, else a cuddled } will be part of an atom:
-(set-macro-character #\} (get-macro-character #\) nil))
-
-; This is a no-op; we enable curly-infix on load.
-; But for consistency, we'll provide the function anyway.
-(defun enable-basic-curly-infix ())
+(defun enable-basic-curly ()
+  ; The following install the {...} reader.
+  ; See "Common Lisp: The Language" by Guy L. Steele, 2nd edition,
+  ; pp. 542-548 and pp. 571-572.
+  ; Invoke curly-brace-infix-reader when opening curly brace is read in:
+  (set-macro-character #\{ #'curly-brace-infix-reader)
+  ; This is necessary, else a cuddled closing brace will be part of an atom:
+  (set-macro-character #\} (get-macro-character #\) nil))
+  nil)
 
