@@ -1,0 +1,18 @@
+#!/usr/bin/env expect
+# By David A. Wheeler. Start up clisp in "neoteric-expression" reading mode,
+# so you can try it out.
+
+# Generated automatically by my-subst, DO NOT EDIT!
+
+# *Must* have slash afterwards. Should be pwd.
+
+set env(CL_SOURCE_REGISTRY) $env(PWD)
+
+spawn -noecho "/usr/bin/clisp" -lp $env(PWD)
+
+send "(load \"tests/my-asdf.lisp\")\n"
+send "(asdf:load-system :readable)\n"
+send "(readable:enable-basic-curly)\n"
+
+interact
+
