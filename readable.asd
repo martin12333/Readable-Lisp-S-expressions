@@ -5,10 +5,12 @@
 ; http://www.xach.com/lisp/asdf-tutorial/
 ; http://common-lisp.net/project/asdf/
 
+(in-package #:cl-user)
+
 (defpackage #:readable-asd
   (:use :cl :asdf))
 
-(in-package :readable-asd)
+(in-package #:readable-asd)
 
 (defsystem readable
   :name "readable"
