@@ -236,7 +236,7 @@ bin/diff-s-sweet: src/diff-s-sweet my-subst
 
 # Eventually we'll package this, but for now, just distribute
 # the Common Lisp implementation.
-EXTRA_DIST += readable.cl
+EXTRA_DIST += readable.lisp
 
 # Implementation and test cases for ANTLR implementation
 # of sweet-expressions.  Again, don't install.
