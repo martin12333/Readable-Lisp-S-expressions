@@ -1,7 +1,7 @@
 ; neoteric.cl
 ; Implements neoteric-expressions from the "readable" approach for Lisp.
 
-; Copyright (C) 2007-2012 by David A. Wheeler
+; Copyright (C) 2007-2013 by David A. Wheeler
 ;
 ; This software is released as open source software under the "MIT" license:
 ;
@@ -33,9 +33,9 @@
 (defun enable-neoteric ()
   nil)
 
-;   ; Nonsense marker for eof
-;   (defvar neoteric-eof-marker (cons 'eof '()))
-;   
+; Nonsense marker for eof
+(defvar neoteric-eof-marker (cons 'eof '()))
+
 ;   (defun my-read-delimited-list (stop-char input-stream)
 ;    (handler-case
 ;     (let*
@@ -68,40 +68,40 @@
 ;                (t
 ;                    (cons datum
 ;                      (my-read-delimited-list stop-char input-stream))))))))))
-;   
-;   
-;   ; Implement neoteric-expression's prefixed (), [], and {}.
-;   ; At this point, we have just finished reading some expression, which
-;   ; MIGHT be a prefix of some longer expression.  Examine the next
-;   ; character to be consumed; if it's an opening paren, bracket, or brace,
-;   ; then the expression "prefix" is actually a prefix.
-;   ; Otherwise, just return the prefix and do not consume that next char.
-;   ; This recurses, to handle formats like f(x)(y).
-;   (defun neoteric-process-tail (input-stream prefix)
-;       (let* ((c (peek-char nil input-stream)))
-;         (cond
-;           ((eq c neoteric-eof-marker) prefix)
-;           ((eql c #\( ) ; Implement f(x).
-;             (read-char input-stream nil nil t) ; consume opening char
-;             (neoteric-process-tail input-stream
-;                 (cons prefix (my-read-delimited-list #\) input-stream))))
-;           ((eql c #\[ )  ; Implement f[x]
-;             (read-char input-stream nil nil t) ; consume opening char
-;             (neoteric-process-tail input-stream
-;                   (cons '$bracket-apply$
-;                     (cons prefix
-;                       (my-read-delimited-list #\] input-stream)))))
-;           ((eql c #\{ )  ; Implement f{x}.
-;             (read-char input-stream nil nil t) ; consume opening char
-;             (neoteric-process-tail input-stream
-;               (let ((tail (process-curly
-;                             (my-read-delimited-list #\} input-stream))))
-;                 (if (null tail)
-;                   (list prefix) ; Map f{} to (f), not (f ()).
-;                   (list prefix tail)))))
-;           (t prefix))))
-;   
-;   
+
+
+; Implement neoteric-expression's prefixed (), [], and {}.
+; At this point, we have just finished reading some expression, which
+; MIGHT be a prefix of some longer expression.  Examine the next
+; character to be consumed; if it's an opening paren, bracket, or brace,
+; then the expression "prefix" is actually a prefix.
+; Otherwise, just return the prefix and do not consume that next char.
+; This recurses, to handle formats like f(x)(y).
+(defun neoteric-process-tail (input-stream prefix)
+    (let* ((c (peek-char nil input-stream)))
+      (cond
+        ((eq c neoteric-eof-marker) prefix)
+        ((eql c #\( ) ; Implement f(x).
+          (read-char input-stream nil nil t) ; consume opening char
+          (neoteric-process-tail input-stream
+              (cons prefix (my-read-delimited-list #\) input-stream))))
+        ((eql c #\[ )  ; Implement f[x]
+          (read-char input-stream nil nil t) ; consume opening char
+          (neoteric-process-tail input-stream
+                (cons '$bracket-apply$
+                  (cons prefix
+                    (my-read-delimited-list #\] input-stream)))))
+        ((eql c #\{ )  ; Implement f{x}.
+          (read-char input-stream nil nil t) ; consume opening char
+          (neoteric-process-tail input-stream
+            (let ((tail (process-curly
+                          (my-read-delimited-list #\} input-stream))))
+              (if (null tail)
+                (list prefix) ; Map f{} to (f), not (f ()).
+                (list prefix tail)))))
+        (t prefix))))
+
+
 ;   ; Read, then process it through neoteric-tail to manage suffixes.
 ;   ; Unlike Scheme, in Common Lisp we can force the reader to consider
 ;   ; {} and [] as delimiters, so we don't have to re-implement some parts of
