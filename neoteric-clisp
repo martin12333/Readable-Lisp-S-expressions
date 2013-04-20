@@ -12,7 +12,7 @@ spawn -noecho "/usr/bin/clisp" -lp $env(PWD)
 
 send "(load \"tests/my-asdf.lisp\")\n"
 send "(asdf:load-system :readable)\n"
-send "(readable:enable-basic-curly)\n"
+send "(readable:enable-neoteric)\n"
 
 interact
 

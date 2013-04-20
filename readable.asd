@@ -12,7 +12,7 @@
 
 (defpackage #:readable
   (:use :cl)
-  (:export #:enable-basic-curly #:$nfx$))
+  (:export #:enable-basic-curly #:$nfx$ #:enable-neoteric))
 
 (in-package #:readable-asd)
 
