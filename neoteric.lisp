@@ -23,24 +23,10 @@
 ; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ; OTHER DEALINGS IN THE SOFTWARE.
 
-
 ; Neoteric-expressions themselves are easy, but since we can't portably
 ; overide "read" directly, we have to manipulate the readtable.
 
-; Transform not-simple infix list.  Written as a separate function so that
-; future versions/specifications can easily replace just this piece.
-(defun transform-mixed-infix (lyst)
-  (cons '$nfx$ lyst))
-
-; The following install the {...} reader.
-; See "Common Lisp: The Language" by Guy L. Steele, 2nd edition,
-; pp. 542-548 and pp. 571-572.
-
-; Read until }, then process list as infix list.
-; This shouldn't be invoked once we use neoteric-read; it takes precedence.
-(defun curly-brace-infix-reader (stream char)
-  (let ((result (read-delimited-list #\} stream t)))
-    (process-curly result)))
+(cl:in-package :readable)
 
 ; Nonsense marker for eof
 (defvar neoteric-eof-marker (cons 'eof '()))
@@ -253,4 +239,14 @@
   (set-macro-character #\[ (get-macro-character #\( nil))
   (set-macro-character #\] (get-macro-character #\) nil))
   nil)
+
+; The following install the {...} reader.
+; See "Common Lisp: The Language" by Guy L. Steele, 2nd edition,
+; pp. 542-548 and pp. 571-572.
+
+; Read until }, then process list as infix list.
+; This shouldn't be invoked once we use neoteric-read; it takes precedence.
+(defun curly-brace-infix-reader (stream char)
+  (let ((result (read-delimited-list #\} stream t)))
+    (process-curly result)))
 
