@@ -27,7 +27,7 @@ SUO-KIF, the GCC MiddleEndLispTranslator (MELT),
 Satisfiability Modulo Theories Library (SMT-LIB), NewLisp, and ISLisp.
 
 The tools provided here primarily handle Scheme and Common Lisp.
-By default the "sweeten" and "unsweeten" tools process Schemet;
+By default the "sweeten" and "unsweeten" tools process Scheme;
 If you have Common Lisp, provide the "-C" (Common Lisp) option as documented.
 
 
@@ -114,7 +114,36 @@ But it's often more convenient to install.  Do this with:
 
     make install
 
-The usual conventions all work (DESTDIR, VPATH builds, etc.).
+Scheme
+======
+
+See the tutorial for how to use it.
+
+Common Lisp
+===========
+
+The Common Lisp implementation creates a package :readable
+and uses the usual ASDF system.  Use "make install" to install the files;
+by default they'll go in the usual global directory
+$PREFIX/share/common-lisp/source (where $PREFIX is /usr/local by default).
+
+If you don't have ASDF installed and configured (why?),
+the "tests/" directory has an ASDF version 3 "my-asdf.lisp" you can use.
+Configure ASDF so it knows what directories to look at, e.g.,
+put this in file "/etc/common-lisp/source-registry.conf":
+(:source-registry
+  (:tree (:home "cl")) ;; will expand to e.g. "/home/joeluser/cl/"
+  (:tree "/usr/share/common-lisp/source/")
+  :inherit-configuration)
+
+Now fire up a Common Lisp (e.g., "clisp") and run:
+(load "tests/my-asdf.lisp")
+(asdf:load-system :readable)
+(use-package :readable)
+(enable-basic-curly)
+
+; now you can do:
+{3 + 4}
 
 
 ANTLR-based grammar
