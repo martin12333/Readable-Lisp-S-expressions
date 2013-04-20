@@ -48,6 +48,7 @@
 ;   {2 + {4 * 5}} => (+ 2 (* 4 5))
 ;   {{- x} / 2}   => {(- x) / 2}   => (/ (- x) 2)
 
+(cl:in-package :readable)
 
 ; Utility functions to implement the simple infix system:
 

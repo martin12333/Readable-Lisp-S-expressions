@@ -307,11 +307,18 @@ EXTRA_DIST += \
  tests/write-test \
  tests/write-test-correct
 
+# We'll include our own copy of asdf (version 3).  Clisp on Cygwin doesn't
+# provide it, and in any case, this creates a known test environment.
+EXTRA_DIST += tests/my-asdf.lisp
+
 # TODO: Improve test harness & integration into overall system.
 
 check: readable/kernel.scm
-	CURLYFILE="$(srcdir)/readable.lisp" $(srcdir)/tests/curly-infix-test-cl
-	CURLYFILE="$(srcdir)/basic-curly.lisp" $(srcdir)/tests/curly-infix-test-cl
+	@echo "Starting tests"
+	CL_SOURCE_REGISTRY="`realpath $(srcdir)`"/ \
+	  clisp -lp "`realpath $(srcdir)`/tests/" \
+	        $(srcdir)/tests/curly-infix-test-cl
+	@echo "About to run guile curly-infix tests"
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/curly-infix-test-scm \
 	            < $(srcdir)/tests/curly-infix-testsuite-scm
 	@echo "About to run neoteric-testsuite"
