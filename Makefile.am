@@ -41,6 +41,7 @@ readable_libdir = $(GUILE_SITE)/readable
 
 readable_lib_DATA = readable/kernel.scm
 
+# "Local" version so we can test things without installing them.
 readable/kernel.scm: src/kernel.scm
 	$(MKDIR_P) readable
 	cp -p "$(srcdir)/src/kernel.scm" readable/kernel.scm
@@ -56,7 +57,14 @@ common_lispdir = $(datadir)/common-lisp
 common_lisp_sourcedir = $(common_lispdir)/source
 common_lisp_source_pkgdir = $(common_lisp_sourcedir)/readable
 
-dist_common_lisp_source_pkg_DATA = basic-curly.cl
+dist_common_lisp_source_pkg_DATA = basic-curly.lisp
+dist_common_lisp_source_pkg_DATA += readable.asd
+
+# TODO: Something like:
+# cd %{buildroot}%{_datadir}/common-lisp/source/@NAME@
+# for asd in *.asd; do
+#   ln -s %{_datadir}/common-lisp/source/@NAME@/$asd ../../systems;
+# done
 
 
 # Scripts
@@ -292,8 +300,8 @@ EXTRA_DIST += \
 # TODO: Improve test harness & integration into overall system.
 
 check: readable/kernel.scm
-	CURLYFILE="$(srcdir)/readable.cl" $(srcdir)/tests/curly-infix-test-cl
-	CURLYFILE="$(srcdir)/basic-curly.cl" $(srcdir)/tests/curly-infix-test-cl
+	CURLYFILE="$(srcdir)/readable.lisp" $(srcdir)/tests/curly-infix-test-cl
+	CURLYFILE="$(srcdir)/basic-curly.lisp" $(srcdir)/tests/curly-infix-test-cl
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/curly-infix-test-scm \
 	            < $(srcdir)/tests/curly-infix-testsuite-scm
 	@echo "About to run neoteric-testsuite"

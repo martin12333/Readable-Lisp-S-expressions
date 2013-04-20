@@ -19,5 +19,5 @@
   :description "Support 'readable' Lisp formats"
   :long-description "Common Lisp implementation of 'readable' Lisp formats - curly-infix-expressions, neoteric-expressions, and sweet-expressions, per http://readable.sourceforge.net."
   :serial t ;; the dependencies are linear.
-  :components ((:file "basic-curly.cl")))
+  :components ((:file "basic-curly")))
 
