@@ -49,6 +49,9 @@ AC_SUBST([GUILE_READLINE_AVAILABLE])
 # Perhaps check for: (more) programs, libraries, header files, types,
 # structures, compiler characteristics, library functions, system services.
 
+# We'll use LN_S to install Common Lisp ASDF files:
+AC_PROG_LN_S
+
 # Do final output.
 AC_OUTPUT
 

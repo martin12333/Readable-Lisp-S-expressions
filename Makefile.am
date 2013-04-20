@@ -56,15 +56,25 @@ CLEANFILES = readable/kernel.scm
 common_lispdir = $(datadir)/common-lisp
 common_lisp_sourcedir = $(common_lispdir)/source
 common_lisp_source_pkgdir = $(common_lisp_sourcedir)/readable
+common_lisp_systemsdir = $(common_lispdir)/systems
+
+pkg_asd_file=readable.asd
 
 dist_common_lisp_source_pkg_DATA = basic-curly.lisp
-dist_common_lisp_source_pkg_DATA += readable.asd
+dist_common_lisp_source_pkg_DATA += $(pkg_asd_file)
 
-# TODO: Something like:
-# cd %{buildroot}%{_datadir}/common-lisp/source/@NAME@
-# for asd in *.asd; do
-#   ln -s %{_datadir}/common-lisp/source/@NAME@/$asd ../../systems;
-# done
+# Install symlink so asdf can find these files. See:
+# http://www.gnu.org/software/automake/manual/html_node/Extending.html
+# Note that the LN_S does *not* use DESTDIR.
+
+install-exec-hook-cl:
+	$(MKDIR_P) "$(DESTDIR)$(common_lisp_source_pkgdir)"
+	$(MKDIR_P) "$(DESTDIR)$(common_lisp_systemsdir)"
+	$(RM) -f "$(common_lisp_systemsdir)/$(pkg_asd_file)"
+	cd "$(DESTDIR)$(common_lisp_source_pkgdir)" && \
+	  $(LN_S) "$(common_lisp_source_pkgdir)/$(pkg_asd_file)" ../../systems
+
+install-exec-hook: install-exec-hook-cl
 
 
 # Scripts
