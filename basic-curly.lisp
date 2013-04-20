@@ -100,6 +100,7 @@
 
 ; Read until }, then process list as infix list.
 (defun curly-brace-infix-reader (stream char)
+  (declare (ignore char))
   (let ((result (read-delimited-list #\} stream t)))
     (process-curly result)))
 
