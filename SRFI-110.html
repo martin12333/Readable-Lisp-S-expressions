@@ -3498,11 +3498,14 @@ e.g., <samp>first(second(third(fourth)))</samp>,
 and based on Haskell experience,
 suggested being able to write them as
 <samp>first $ second $ third(fourth)</samp>.
-Again, the idea is that this is an abbreviation for a common-enough
-practice.</p>
+David A. Wheeler later found that, in the Quicklisp Common Lisp archives,
+there is an "infix dollar reader" by SUZUKI Shingo
+specifically to implement an infix "$" in Common Lisp.
+</p>
 
 <p>This is another example (like GROUP/SPLIT) of a
 construct that, when you need it, is incredibly useful.
+It is simply an abbreviation for very common practice.
 It&#8217;s not
 all that unusual to have a few processing or cleanup functions that
 take a single argument, and for all the &#8220;real work&#8221; to be nested
