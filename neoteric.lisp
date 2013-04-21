@@ -32,14 +32,22 @@
     (setq *readtable* readable::*original-readtable*)
     (unread-char char stream)
     (let ((atom (read stream t nil t)))
+      (write "DEBUG ") (write atom) (terpri) ; prints AAA
       (setq *readtable* saved-readtable)
+      (write "DEBUG2 ") (write atom) (terpri) ; prints |AAA|
       (readable::neoteric-process-tail stream atom))))
+
+(defun readable::neoteric-process-tail (input-stream prefix)
+  (declare (ignore input-stream))
+  (write "DEBUG3 ") (write prefix) (terpri)
+  prefix)
 
 (cl:in-package :readable)
 
 (defun enable-neoteric ()
-  ; Start from known state.
-  (setq *readtable* (copy-readtable *original-readtable*))
+  ; Start from known state. ???
+  ; (setq *readtable* (copy-readtable *original-readtable*))
+  (setq *readtable* (copy-readtable))
   ; TODO: Eventually wrap all constituents.
   (set-macro-character #\A #'wrap-constituent t)
   (set-macro-character #\a #'wrap-constituent t)
@@ -92,7 +100,7 @@
 ; then the expression "prefix" is actually a prefix.
 ; Otherwise, just return the prefix and do not consume that next char.
 ; This recurses, to handle formats like f(x)(y).
-(defun neoteric-process-tail (input-stream prefix)
+(defun neoteric-process-tail-1 (input-stream prefix)
     (let* ((c (peek-char nil input-stream)))
       (cond
         ((eq c neoteric-eof-marker) prefix)
