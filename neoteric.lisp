@@ -28,12 +28,27 @@
 
 (cl:in-package :readable)
 
+(defun wrap-constituent (stream char)
+  (let ((saved-readtable *readtable*))
+    (setq *readtable* *original-readtable*)
+    (unread-char char stream)
+    (let ((result (neoteric-process-tail stream (read stream t nil t))))
+      (setq *readtable* saved-readtable)
+      result)))
+
 (defun enable-neoteric ()
-  (setq *readtable* *original-readtable*) ; Start from known state.
+  ; Start from known state.
+  (setq *readtable* (copy-readtable *original-readtable*))
+  ; TODO: Eventually wrap all constituents.
+  (set-macro-character #\A #'wrap-constituent t)
+  (set-macro-character #\a #'wrap-constituent t)
   nil)
 
 ; Nonsense marker for eof
 (defvar neoteric-eof-marker (cons 'eof '()))
+
+(defun my-read-delimited-list (stop-char input-stream)
+  (read-delimited-list stop-char input-stream))
 
 ;   (defun my-read-delimited-list (stop-char input-stream)
 ;    (handler-case

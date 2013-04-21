@@ -51,7 +51,7 @@
 
 (cl:in-package :readable)
 
-(defvar *original-readtable* (copy-readtable *readtable*) "Saved readtable")
+(defvar *original-readtable* *readtable* "Saved readtable")
 
 ; Utility functions to implement the simple infix system:
 
@@ -111,7 +111,7 @@
 (defun enable-basic-curly ()
   ; This starts from a known state.  You can omit this if there's
   ; no way to transition between different expression reading formats:
-  (setq *readtable* *original-readtable*) ; Start from known state.
+  (setq *readtable* (copy-readtable *original-readtable*))
   ; The following install the {...} reader.
   ; See "Common Lisp: The Language" by Guy L. Steele, 2nd edition,
   ; pp. 542-548 and pp. 571-572.
