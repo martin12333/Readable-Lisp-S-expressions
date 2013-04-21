@@ -26,15 +26,16 @@
 ; Neoteric-expressions themselves are easy, but since we can't portably
 ; overide "read" directly, we have to manipulate the readtable.
 
-(cl:in-package :readable)
 
-(defun wrap-constituent (stream char)
+(defun readable::wrap-constituent (stream char)
   (let ((saved-readtable *readtable*))
-    (setq *readtable* *original-readtable*)
+    (setq *readtable* readable::*original-readtable*)
     (unread-char char stream)
-    (let ((result (neoteric-process-tail stream (read stream t nil t))))
+    (let ((atom (read stream t nil t)))
       (setq *readtable* saved-readtable)
-      result)))
+      (readable::neoteric-process-tail stream atom))))
+
+(cl:in-package :readable)
 
 (defun enable-neoteric ()
   ; Start from known state.
