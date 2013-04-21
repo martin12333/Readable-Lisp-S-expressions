@@ -2,6 +2,7 @@
 ; This implements "basic curly-infix-expressions" for Common Lisp.
 ; This is an easy-to-use infix notation that works
 ; well with other Common Lisp capabilities (e.g., quasiquoting and macros).
+; Basically, {a op b op c ...} => (op a b c ....).
 ; It's homoiconic (you can see where lists start and end) and doesn't require
 ; registration of operators before use. For more information, see:
 ;   http://readable.sourceforge.net.
@@ -49,6 +50,8 @@
 ;   {{- x} / 2}   => {(- x) / 2}   => (/ (- x) 2)
 
 (cl:in-package :readable)
+
+(defvar *original-readtable* (copy-readtable *readtable*) "Saved readtable")
 
 ; Utility functions to implement the simple infix system:
 
@@ -106,6 +109,9 @@
     (process-curly result)))
 
 (defun enable-basic-curly ()
+  ; This starts from a known state.  You can omit this if there's
+  ; no way to transition between different expression reading formats:
+  (setq *readtable* *original-readtable*) ; Start from known state.
   ; The following install the {...} reader.
   ; See "Common Lisp: The Language" by Guy L. Steele, 2nd edition,
   ; pp. 542-548 and pp. 571-572.

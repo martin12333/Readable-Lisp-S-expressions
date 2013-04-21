@@ -28,9 +28,8 @@
 
 (cl:in-package :readable)
 
-(defvar *original-readtable* *readtable* "Saved original readtable")
-
 (defun enable-neoteric ()
+  (setq *readtable* *original-readtable*) ; Start from known state.
   nil)
 
 ; Nonsense marker for eof
