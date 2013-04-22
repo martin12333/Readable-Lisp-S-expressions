@@ -27,37 +27,70 @@
 ; overide "read" directly, we have to manipulate the readtable.
 
 
+
 (defun readable::wrap-constituent (stream char)
   (let ((saved-readtable *readtable*))
-    (setq *readtable* readable::*original-readtable*)
+    (setq *readtable* readable::*neoteric-underlying-readtable*)
     (unread-char char stream)
     (let ((atom (read stream t nil t)))
-      (write "DEBUG ") (write atom) (terpri) ; prints AAA
       (setq *readtable* saved-readtable)
-      (write "DEBUG2 ") (write atom) (terpri) ; prints |AAA|
       (readable::neoteric-process-tail stream atom))))
 
-(defun readable::neoteric-process-tail (input-stream prefix)
-  (declare (ignore input-stream))
-  (write "DEBUG3 ") (write prefix) (terpri)
-  prefix)
+(defun readable::wrap-continue (stream char)
+  ; Call routine from original readtable, without removing, and
+  ; invoke neoteric-process-tail.
+  (readable::neoteric-process-tail stream
+    (funcall
+      (get-macro-character char readable::*neoteric-underlying-readtable*)
+      stream char)))
 
 (cl:in-package :readable)
 
+(defvar *neoteric-underlying-readtable* *readtable* "Call for neoteric atoms")
+
+; Read until }, then process list as infix list.
+(defun neoteric-curly-brace (stream char)
+  (declare (ignore char)) ; {
+  (let ((result (my-read-delimited-list #\} stream)))
+    (readable::neoteric-process-tail stream
+      (process-curly result))))
+
+(defun my-read-delimited-list (stop-char input-stream)
+  (read-delimited-list stop-char input-stream))
+
+(defun wrap-paren (stream char)
+  (declare (ignore char))
+  (neoteric-process-tail stream ; (
+    (my-read-delimited-list #\) stream)))
+
 (defun enable-neoteric ()
-  ; Start from known state. ???
   ; (setq *readtable* (copy-readtable *original-readtable*))
+  (setq *neoteric-underlying-readtable* (copy-readtable))
+  (set-macro-character #\{ #'neoteric-curly-brace nil
+    readable::*neoteric-underlying-readtable*) ; (
+  (set-macro-character #\} (get-macro-character #\)) nil
+    readable::*neoteric-underlying-readtable*)
+
   (setq *readtable* (copy-readtable))
-  ; TODO: Eventually wrap all constituents.
-  (set-macro-character #\A #'wrap-constituent t)
-  (set-macro-character #\a #'wrap-constituent t)
+  ; Don't wrap {} or [] this way
+  ; Wrap all constituents.  Presume ASCII for now.
+  (dolist (c
+    '(#\! #\$ #\% #\& #\* #\+ #\- #\. #\/
+      #\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9
+      #\: #\< #\= #\> #\? #\@
+      #\A #\B #\C #\D #\E #\F #\G #\H #\I #\J #\K #\L #\M
+      #\N #\O #\P #\Q #\R #\S #\T #\U #\V #\W #\X #\Y #\Z
+      #\^ #\_
+      #\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m
+      #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z #\~))
+    (set-macro-character c #'wrap-constituent t))
+  (set-macro-character #\( #'wrap-paren nil) ; )
+  (set-macro-character #\{ #'neoteric-curly-brace nil) ; (
+  (set-macro-character #\} (get-macro-character #\) ) nil)
   nil)
 
 ; Nonsense marker for eof
 (defvar neoteric-eof-marker (cons 'eof '()))
-
-(defun my-read-delimited-list (stop-char input-stream)
-  (read-delimited-list stop-char input-stream))
 
 ;   (defun my-read-delimited-list (stop-char input-stream)
 ;    (handler-case
@@ -100,7 +133,7 @@
 ; then the expression "prefix" is actually a prefix.
 ; Otherwise, just return the prefix and do not consume that next char.
 ; This recurses, to handle formats like f(x)(y).
-(defun neoteric-process-tail-1 (input-stream prefix)
+(defun neoteric-process-tail (input-stream prefix)
     (let* ((c (peek-char nil input-stream)))
       (cond
         ((eq c neoteric-eof-marker) prefix)
