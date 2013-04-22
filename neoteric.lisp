@@ -1,6 +1,11 @@
 ; neoteric.cl
 ; Implements neoteric-expressions from the "readable" approach for Lisp.
 
+; WARNING: THIS IS NOT READY FOR PRODUCTION USE YET.
+; For Common Lisp, use the "basic-curly-infix" mode (which is more mature),
+; or the Scheme implementation (which has a Common Lisp mode)
+; at this time.  In the meantime, we'd love help finishing this!
+
 ; Copyright (C) 2007-2013 by David A. Wheeler
 ;
 ; This software is released as open source software under the "MIT" license:
@@ -27,49 +32,57 @@
 ; overide "read" directly, we have to manipulate the readtable.
 
 
-
-(defun readable::wrap-constituent (stream char)
-  (let ((saved-readtable *readtable*))
-    (setq *readtable* readable::*neoteric-underlying-readtable*)
-    (unread-char char stream)
-    (let ((atom (read stream t nil t)))
-      (setq *readtable* saved-readtable)
-      (readable::neoteric-process-tail stream atom))))
-
-(defun readable::wrap-continue (stream char)
-  ; Call routine from original readtable, without removing, and
-  ; invoke neoteric-process-tail.
-  (readable::neoteric-process-tail stream
-    (funcall
-      (get-macro-character char readable::*neoteric-underlying-readtable*)
-      stream char)))
-
 (cl:in-package :readable)
 
 (defvar *neoteric-underlying-readtable* *readtable* "Call for neoteric atoms")
+
+; TODO: We need to re-implement constituent handling so that
+; trailing whitespace is NEVER consumed.  Otherwise
+; '{a + {b * c}} will incorrectly become
+; (|A| (|+| (|*| |B| |C|)))
+; because the whitespace after "+" will incorrectly be consumed, leading
+; to it being interpreted as '{a +{b * c}} instead.
+
+(defun wrap-constituent (stream char)
+  (let ((saved-readtable *readtable*))
+    (setq *readtable* *neoteric-underlying-readtable*)
+    (unread-char char stream)
+    (let ((atom (read-preserving-whitespace stream t nil t)))
+      (setq *readtable* saved-readtable)
+      (princ "DEBUG atom=") (write atom) (terpri)
+      (princ "DEBUG peek-char=") (write (peek-char t stream)) (terpri)
+      (neoteric-process-tail stream atom))))
+
+(defun wrap-continue (stream char)
+  ; Call routine from original readtable, without removing, and
+  ; invoke neoteric-process-tail.
+  (neoteric-process-tail stream
+    (funcall
+      (get-macro-character char *neoteric-underlying-readtable*)
+      stream char)))
 
 ; Read until }, then process list as infix list.
 (defun neoteric-curly-brace (stream char)
   (declare (ignore char)) ; {
   (let ((result (my-read-delimited-list #\} stream)))
-    (readable::neoteric-process-tail stream
-      (process-curly result))))
+    (neoteric-process-tail stream (process-curly result))))
 
-(defun my-read-delimited-list (stop-char input-stream)
-  (read-delimited-list stop-char input-stream))
+; (defun my-read-delimited-list (stop-char input-stream)
+;  (read-delimited-list stop-char input-stream))
 
 (defun wrap-paren (stream char)
   (declare (ignore char))
   (neoteric-process-tail stream ; (
     (my-read-delimited-list #\) stream)))
 
+; TODO: Handle [], other non-constituents, macro chars beginning with "#".
 (defun enable-neoteric ()
   ; (setq *readtable* (copy-readtable *original-readtable*))
   (setq *neoteric-underlying-readtable* (copy-readtable))
   (set-macro-character #\{ #'neoteric-curly-brace nil
-    readable::*neoteric-underlying-readtable*) ; (
+    *neoteric-underlying-readtable*) ; (
   (set-macro-character #\} (get-macro-character #\)) nil
-    readable::*neoteric-underlying-readtable*)
+    *neoteric-underlying-readtable*)
 
   (setq *readtable* (copy-readtable))
   ; Don't wrap {} or [] this way
@@ -92,38 +105,41 @@
 ; Nonsense marker for eof
 (defvar neoteric-eof-marker (cons 'eof '()))
 
-;   (defun my-read-delimited-list (stop-char input-stream)
-;    (handler-case
-;     (let*
-;       ((c (peek-char t input-stream)))
-;       (cond
-;         ; TODO:
-;         ; ((eof-object? c) (read-error "EOF in middle of list") '())
-;         ((eql c stop-char)
-;           (read-char input-stream)
-;           '())
-;         ; Balance ([{
-;         ((or (eql c #\)) (eql c #\]) (eql c #\}))
-;           (read-char input-stream)
-;           (read-error "Bad closing character"))
-;         (t
-;           (let ((datum (neoteric-read input-stream)))
-;             (cond
-;                ((eql datum '|.|)
-;                  (let ((datum2 (neoteric-read input-stream)))
-;                    (consume-whitespace input-stream)
-;                    (cond
-;                      ; ((eof-object? datum2)
-;                      ; (read-error "Early eof in (... .)\n")
-;                      ; '())
-;                      ((not (eql (peek-char nil input-stream) stop-char))
-;                       (read-error "Bad closing character after . datum"))
-;                      (t
-;                        (read-char nil input-stream)
-;                        datum2))))
-;                (t
-;                    (cons datum
-;                      (my-read-delimited-list stop-char input-stream))))))))))
+; TODO: Ensure "a(. b)" and "(. x)" correctly handled.
+
+(defun my-read-delimited-list (stop-char input-stream)
+ (handler-case
+  (let*
+    ((c (peek-char t input-stream)))
+    (cond
+      ; TODO:
+      ; ((eof-object? c) (read-error "EOF in middle of list") '())
+      ((eql c stop-char)
+        (read-char input-stream)
+        '())
+      ; Balance ([{
+      ((or (eql c #\)) (eql c #\]) (eql c #\}))
+        (read-char input-stream)
+        (read-error "Bad closing character"))
+      (t
+        (let ((datum (read-preserving-whitespace input-stream t nil t)))
+          (cond
+             ; Note: "." only counts as cdr-setting if it begins with "."
+             ((and (eql datum '|.|) (eql c #\.))
+               (let ((datum2 (read-preserving-whitespace input-stream t nil t)))
+                 ; (consume-whitespace input-stream)
+                 (cond
+                   ; ((eof-object? datum2)
+                   ; (read-error "Early eof in (... .)\n")
+                   ; '())
+                   ((not (eql (peek-char nil input-stream) stop-char))
+                    (read-error "Bad closing character after . datum"))
+                   (t
+                     (read-char nil input-stream)
+                     datum2))))
+             (t
+                 (cons datum
+                   (my-read-delimited-list stop-char input-stream))))))))))
 
 
 ; Implement neoteric-expression's prefixed (), [], and {}.
@@ -148,6 +164,7 @@
                   (cons prefix
                     (my-read-delimited-list #\] input-stream)))))
         ((eql c #\{ )  ; Implement f{x}.
+          (princ "DEBUG {} tail") (terpri)
           (read-char input-stream nil nil t) ; consume opening char
           (neoteric-process-tail input-stream
             (let ((tail (process-curly
@@ -157,6 +174,9 @@
                 (list prefix tail)))))
         (t prefix))))
 
+
+; OLD JUNK:
+; (Will delete once the new system is implemented.)
 
 ;   ; Read, then process it through neoteric-tail to manage suffixes.
 ;   ; Unlike Scheme, in Common Lisp we can force the reader to consider
