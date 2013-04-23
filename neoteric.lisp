@@ -44,10 +44,12 @@
 ; to it being interpreted as '{a +{b * c}} instead.
 
 (defun wrap-constituent (stream char)
+  (unread-char char stream)
   (let ((saved-readtable *readtable*))
-    (unread-char char stream)
     (setq *readtable* *neoteric-underlying-readtable*)
-    (let ((atom (read-preserving-whitespace stream t nil t)))
+    ; Do NOT make recursive, or spaces after atoms will be consumed,
+    ; which is bad if it's followed by an opening char pair like (...).
+    (let ((atom (read-preserving-whitespace stream t nil)))
       (setq *readtable* saved-readtable)
       (princ "DEBUG atom=") (write atom) (terpri)
       (princ "DEBUG peek-char=") (write (peek-char t stream)) (terpri)
@@ -96,7 +98,7 @@
       #\^ #\_
       #\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m
       #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z #\~))
-    (set-macro-character c #'wrap-constituent t))
+    (set-macro-character c #'wrap-constituent nil))
   (set-macro-character #\( #'wrap-paren nil) ; )
   (set-macro-character #\{ #'neoteric-curly-brace nil) ; (
   (set-macro-character #\} (get-macro-character #\) ) nil)
@@ -115,10 +117,16 @@
 ; ;   undefined function: READABLE::READ-ERROR
 ;
 
+; TODO
+(defun read-error (message)
+  (declare (ignore message))
+  nil)
+
 (defun my-read-delimited-list (stop-char input-stream)
  (handler-case
   (let*
     ((c (peek-char t input-stream)))
+    (princ "DEBUG enter my-read-delimited-list peek=") (write c) (terpri)
     (cond
       ; TODO:
       ; ((eof-object? c) (read-error "EOF in middle of list") '())
@@ -130,11 +138,15 @@
         (read-char input-stream)
         (read-error "Bad closing character"))
       (t
-        (let ((datum (read-preserving-whitespace input-stream t nil t)))
+        ; Must preserve whitespace so "a ()" isn't read as "a()"
+        (let ((datum (read-preserving-whitespace input-stream t nil)))
+          (princ "DEBUG enter my-read-delimited-list post-datum peek=")
+             (write (peek-char t input-stream))
+             (princ " datum=") (write datum) (terpri)
           (cond
              ; Note: "." only counts as cdr-setting if it begins with "."
              ((and (eql datum '|.|) (eql c #\.))
-               (let ((datum2 (read-preserving-whitespace input-stream t nil t)))
+               (let ((datum2 (read-preserving-whitespace input-stream t nil)))
                  ; (consume-whitespace input-stream)
                  (cond
                    ; ((eof-object? datum2)
