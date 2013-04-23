@@ -127,6 +127,8 @@ and uses the usual ASDF system.  Use "make install" to install the files;
 by default they'll go in the usual global directory
 $PREFIX/share/common-lisp/source (where $PREFIX is /usr/local by default).
 
+If you have asdf, just run (require 'asdf).
+
 If you don't have ASDF installed and configured (why?),
 the "tests/" directory has an ASDF version 3 "my-asdf.lisp" you can use.
 Configure ASDF so it knows what directories to look at, e.g.,
@@ -135,15 +137,19 @@ put this in file "/etc/common-lisp/source-registry.conf":
   (:tree (:home "cl")) ;; will expand to e.g. "/home/joeluser/cl/"
   (:tree "/usr/share/common-lisp/source/")
   :inherit-configuration)
+Alternatively, you can set the environment variable CL_SOURCE_REGISTRY, e.g.,
+to set the environment variable to the current directory and run sbcl:
+CL_SOURCE_REGISTRY="`realpath .`" sbcl
 
 Now fire up a Common Lisp (e.g., "clisp") and run:
-(load "tests/my-asdf.lisp")
+(load "tests/my-asdf.lisp") ; or (require 'asdf)
 (asdf:load-system :readable)
 (use-package :readable)
 (enable-basic-curly)
 
 ; now you can do:
 {3 + 4}
+
 
 
 ANTLR-based grammar
