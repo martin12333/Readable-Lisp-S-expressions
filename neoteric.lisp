@@ -45,8 +45,8 @@
 
 (defun wrap-constituent (stream char)
   (let ((saved-readtable *readtable*))
-    (setq *readtable* *neoteric-underlying-readtable*)
     (unread-char char stream)
+    (setq *readtable* *neoteric-underlying-readtable*)
     (let ((atom (read-preserving-whitespace stream t nil t)))
       (setq *readtable* saved-readtable)
       (princ "DEBUG atom=") (write atom) (terpri)
