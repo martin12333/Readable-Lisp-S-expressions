@@ -107,6 +107,14 @@
 
 ; TODO: Ensure "a(. b)" and "(. x)" correctly handled.
 
+; TODO: sbcl reports the following error:
+; ; file: /home/dwheeler/readable-code/neoteric.lisp
+; ; in: DEFUN READABLE::MY-READ-DELIMITED-LIST
+; ;     (READABLE::READ-ERROR "Bad closing character")
+; ; caught STYLE-WARNING:
+; ;   undefined function: READABLE::READ-ERROR
+;
+
 (defun my-read-delimited-list (stop-char input-stream)
  (handler-case
   (let*
