@@ -36,6 +36,10 @@
 
 (defvar *neoteric-underlying-readtable* *readtable* "Call for neoteric atoms")
 
+; TODO: If possible, make it so clisp doesn't keep responding with |...|
+; around all tokens.  It's legal, but ugly.  This seems to happen because
+; we set the alphanumeric letters to be macros.
+
 ; NOTE: clisp's "peek-char" has a serious bug; it defaults to CONSUME
 ; a following whitespace, contravening the Common Lisp spec:
 ;    http://www.lispworks.com/documentation/HyperSpec/Body/f_peek_c.htm
@@ -111,9 +115,11 @@
   (set-macro-character #\} (get-macro-character #\)) nil
     *neoteric-underlying-readtable*)
 
-  (setq *readtable* (copy-readtable))
+  ; (setq *readtable* (copy-readtable))
   ; Don't wrap {} or [] this way
   ; Wrap all constituents.  Presume ASCII for now.
+  ; TODO: Handle non-ASCII chars if platform supports them.
+  ; TODO: Don't wrap if they aren't constituents any more.
   (dolist (c
     '(#\! #\$ #\% #\& #\* #\+ #\- #\. #\/
       #\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9
@@ -147,6 +153,7 @@
   (declare (ignore message))
   nil)
 
+; TODO: Must be able to handle ".", e.g., "a(. b)" and "a(b . c)".
 (defun my-read-delimited-list (stop-char input-stream)
  (handler-case
   (let*
