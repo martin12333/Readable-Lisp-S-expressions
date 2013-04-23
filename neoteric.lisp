@@ -36,23 +36,48 @@
 
 (defvar *neoteric-underlying-readtable* *readtable* "Call for neoteric atoms")
 
-; TODO: We need to re-implement constituent handling so that
+; NOTE: clisp's "peek-char" has a serious bug; it defaults to CONSUME
+; a following whitespace, contravening the Common Lisp spec:
+;    http://www.lispworks.com/documentation/HyperSpec/Body/f_peek_c.htm
+; We work around this by ALWAYS providing peek-char with 2 parameters
+; ("nil" and the stream name) when don't want to skip whitespace.
+
+; Also: CL "read" really wants to consume trailing whitespace, which is bad.
+; If we naively pass down "recursive" as "t" in all places, it'll consume
+; the trailing whitespace. Thus, we have to be careful about calling read or
+; calling any reads with recursive=t.
+
+; Test to ensure that peek-char (as we use it) works.
+(with-input-from-string (test-input "Q56 T78")
+  (progn
+    ; Read "Q56"; this should NOT consume the space after it.
+    (read-preserving-whitespace test-input t nil)
+    (let ((c (peek-char nil test-input)))
+      (when (not (eql c #\space))
+        (terpri) (terpri) (terpri)
+        (princ "*** WARNING WARNING WARNING ***")
+        (princ "Your Common Lisp implementation has a serious defect.")
+        (princ "Procedure read-preserving-whitespace or peek-char")
+        (princ "FAIL to preserve whitespace following expressions.")
+        (princ "*** WARNING WARNING WARNING ***")
+        (terpri) (terpri) (terpri)))))
+
+; We need to be careful reading consituents to ensure that
 ; trailing whitespace is NEVER consumed.  Otherwise
-; '{a + {b * c}} will incorrectly become
-; (|A| (|+| (|*| |B| |C|)))
-; because the whitespace after "+" will incorrectly be consumed, leading
-; to it being interpreted as '{a +{b * c}} instead.
+; '{a + {b * c}} will incorrectly be interpreted as (A (+ (* B C)))
+; instead of the correct (+ A (* B C)).
+; That's because if the whitespace after "+" is (incorrectly)
+; consumed, it will be interpreted as '{a +{b * c}}.
 
 (defun wrap-constituent (stream char)
   (unread-char char stream)
   (let ((saved-readtable *readtable*))
     (setq *readtable* *neoteric-underlying-readtable*)
-    ; Do NOT make recursive, or spaces after atoms will be consumed,
-    ; which is bad if it's followed by an opening char pair like (...).
+    ; Do NOT make recursive, or spaces after atoms will be consumed.
     (let ((atom (read-preserving-whitespace stream t nil)))
       (setq *readtable* saved-readtable)
-      (princ "DEBUG atom=") (write atom) (terpri)
-      (princ "DEBUG peek-char=") (write (peek-char t stream)) (terpri)
+      ; (princ "DEBUG atom=") (write atom) (terpri)
+      ; (princ "DEBUG peek-char=") (write (peek-char nil stream)) (terpri)
       (neoteric-process-tail stream atom))))
 
 (defun wrap-continue (stream char)
@@ -125,8 +150,8 @@
 (defun my-read-delimited-list (stop-char input-stream)
  (handler-case
   (let*
-    ((c (peek-char t input-stream)))
-    (princ "DEBUG enter my-read-delimited-list peek=") (write c) (terpri)
+    ((c (peek-char t input-stream))) ; Consume leading whitespace
+    ; (princ "DEBUG enter my-read-delimited-list peek=") (write c) (terpri)
     (cond
       ; TODO:
       ; ((eof-object? c) (read-error "EOF in middle of list") '())
@@ -140,9 +165,9 @@
       (t
         ; Must preserve whitespace so "a ()" isn't read as "a()"
         (let ((datum (read-preserving-whitespace input-stream t nil)))
-          (princ "DEBUG enter my-read-delimited-list post-datum peek=")
-             (write (peek-char t input-stream))
-             (princ " datum=") (write datum) (terpri)
+          ; (princ "DEBUG enter my-read-delimited-list post-datum peek=")
+          ; (write (peek-char nil input-stream))
+          ; (princ " datum=") (write datum) (terpri)
           (cond
              ; Note: "." only counts as cdr-setting if it begins with "."
              ((and (eql datum '|.|) (eql c #\.))
@@ -184,7 +209,7 @@
                   (cons prefix
                     (my-read-delimited-list #\] input-stream)))))
         ((eql c #\{ )  ; Implement f{x}.
-          (princ "DEBUG {} tail") (terpri)
+          ; (princ "DEBUG {} tail") (terpri)
           (read-char input-stream nil nil t) ; consume opening char
           (neoteric-process-tail input-stream
             (let ((tail (process-curly
