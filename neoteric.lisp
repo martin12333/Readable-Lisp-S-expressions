@@ -132,7 +132,8 @@
       #\N #\O #\P #\Q #\R #\S #\T #\U #\V #\W #\X #\Y #\Z
       #\^ #\_
       #\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m
-      #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z #\~))
+      #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z #\~
+      #\rubout )) ; Rubout, really?!?  Yup, it's in the spec.
     (set-macro-character c #'wrap-constituent nil))
 
   ; Wrap character pairs.
