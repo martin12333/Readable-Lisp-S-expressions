@@ -44,7 +44,7 @@
 ; a following whitespace, contravening the Common Lisp spec:
 ;    http://www.lispworks.com/documentation/HyperSpec/Body/f_peek_c.htm
 ; We work around this by ALWAYS providing peek-char with 2 parameters
-; ("nil" and the stream name) when don't want to skip whitespace.
+; ("nil" and the stream name) when we don't want to skip whitespace.
 
 ; Also: CL "read" really wants to consume trailing whitespace, which is bad.
 ; If we naively pass down "recursive" as "t" in all places, it'll consume
@@ -102,11 +102,12 @@
 ;  (read-delimited-list stop-char input-stream))
 
 (defun wrap-paren (stream char)
-  (declare (ignore char))
-  (neoteric-process-tail stream ; (
-    (my-read-delimited-list #\) stream)))
+  (neoteric-process-tail stream
+    (my-read-delimited-list ; (
+      (if (eql char #\[) #\] #\) )
+      stream)))
 
-; TODO: Handle [], other non-constituents, macro chars beginning with "#".
+; TODO: Handle other non-constituents, macro chars beginning with "#".
 (defun enable-neoteric ()
   ; (setq *readtable* (copy-readtable *original-readtable*))
   (setq *neoteric-underlying-readtable* (copy-readtable))
@@ -114,6 +115,12 @@
     *neoteric-underlying-readtable*) ; (
   (set-macro-character #\} (get-macro-character #\)) nil
     *neoteric-underlying-readtable*)
+  (unless (get-macro-character #\[ )
+    (set-macro-character #\[ #'wrap-paren nil
+      *neoteric-underlying-readtable*))
+  (unless (get-macro-character #\] ) ; (
+    (set-macro-character #\] (get-macro-character #\) ) nil
+      *neoteric-underlying-readtable*))
 
   ; (setq *readtable* (copy-readtable))
   ; Don't wrap {} or [] this way
@@ -133,7 +140,11 @@
   (set-macro-character #\( #'wrap-paren nil) ; )
   (set-macro-character #\{ #'neoteric-curly-brace nil) ; (
   (set-macro-character #\} (get-macro-character #\) ) nil)
-  nil)
+  (unless (get-macro-character #\[ )
+    (set-macro-character #\[ #'wrap-paren nil)) ; (
+  (unless (get-macro-character #\] )
+    (set-macro-character #\] (get-macro-character #\) ) nil))
+  t) ; Return "t" meaning "it worked".
 
 ; Nonsense marker for eof
 (defvar neoteric-eof-marker (cons 'eof '()))
