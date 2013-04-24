@@ -176,6 +176,19 @@
 ; TODO: Must be able to handle ".", e.g., "a(. b)" and "a(b . c)".
 ; Use format (concatenate 'string "hi" (string #\q))
 
+(defun my-read-to-delimiter (input-stream)
+  (let*
+    ((clist
+      (loop
+        until (find (peek-char nil input-stream) neoteric-delimiters)
+        collect (read-char input-stream)))
+     (my-string (concatenate 'string clist)))
+    (princ "DEBUG: clist=") (write clist) (terpri) (princ "my-string=") (write my-string) (terpri)
+    ; (princ "DEBUG: read-from-string=") (write (read-from-string my-string))
+    (if (string= my-string ".")
+        '|.|
+        (read-from-string my-string))))
+
 (defun my-read-datum (input-stream)
  (princ "DEBUG: entering my-read-datum") (terpri)
   (let* ((c (peek-char t input-stream))) ; Consume leading whitespace
@@ -185,9 +198,10 @@
         ; TODO: Read chars and determine what it is.
         ; (read-preserving-whitespace input-stream t nil) ; TODO
         ; For now, assume that leading "." is just "."
-        (read-char input-stream) ; Consume "."
-        (princ "DEBUG: Returning from finding leading .") (terpri)
-        '|.|)
+        ; (read-char input-stream) ; Consume "."
+        ; (princ "DEBUG: Returning from finding leading .") (terpri)
+        ; '|.|
+        (my-read-to-delimiter input-stream))
       (t (read-preserving-whitespace input-stream t nil)))))
 
 
