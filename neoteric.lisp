@@ -151,8 +151,6 @@
 
 ; TODO: Handle eof as directed by "read".  Not currently consistent.
 
-; TODO: Ensure "a(. b)" and "(. x)" correctly handled.
-
 ; TODO: sbcl reports the following error:
 ; ; file: /home/dwheeler/readable-code/neoteric.lisp
 ; ; in: DEFUN READABLE::MY-READ-DELIMITED-LIST
@@ -172,14 +170,31 @@
   '(#\( #\) #\[ #\] #\{ #\} #\space #\tab #\newline #\return #\#
     #\' #\` #\,))
 
+
+
+; TODO: Ensure "a(. b)" and "(. x)" correctly handled.
 ; TODO: Must be able to handle ".", e.g., "a(. b)" and "a(b . c)".
 ; Use format (concatenate 'string "hi" (string #\q))
 
+(defun my-read-datum (input-stream)
+ (princ "DEBUG: entering my-read-datum") (terpri)
+  (let* ((c (peek-char t input-stream))) ; Consume leading whitespace
+    (cond
+      ((eql c #\.)
+        (princ "DEBUG: Found leading .") (terpri)
+        ; TODO: Read chars and determine what it is.
+        ; (read-preserving-whitespace input-stream t nil) ; TODO
+        ; For now, assume that leading "." is just "."
+        (read-char input-stream) ; Consume "."
+        (princ "DEBUG: Returning from finding leading .") (terpri)
+        '|.|)
+      (t (read-preserving-whitespace input-stream t nil)))))
+
 
 (defun my-read-delimited-list (stop-char input-stream)
+ (princ "DEBUG: entering my-read-deliminated-list") (terpri)
  (handler-case
-  (let*
-    ((c (peek-char t input-stream))) ; First consume leading whitespace
+  (let* ((c (peek-char t input-stream))) ; First consume leading whitespace
     ; (princ "DEBUG enter my-read-delimited-list peek=") (write c) (terpri)
     (cond
       ; TODO:
@@ -193,13 +208,14 @@
         (read-error "Bad closing character"))
       (t
         ; Must preserve whitespace so "a ()" isn't read as "a()"
-        (let ((datum (read-preserving-whitespace input-stream t nil)))
+        (let ((datum (my-read-datum input-stream)))
           ; (princ "DEBUG enter my-read-delimited-list post-datum peek=")
           ; (write (peek-char nil input-stream))
           ; (princ " datum=") (write datum) (terpri)
           (cond
              ; Note: "." only counts as cdr-setting if it begins with "."
-             ((and (eql datum '|.|) (eql c #\.))
+             ((and (eq datum '|.|) (eql c #\.))
+               (princ "DEBUG found '.' operator") (terpri)
                (let ((datum2 (read-preserving-whitespace input-stream t nil)))
                  ; (consume-whitespace input-stream)
                  (cond
@@ -211,7 +227,7 @@
                    ((not (eql (peek-char t input-stream) stop-char))
                     (read-error "Bad closing character after . datum"))
                    (t
-                     (read-char nil input-stream)
+                     (read-char input-stream)
                      datum2))))
              (t
                  (cons datum
