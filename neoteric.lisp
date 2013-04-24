@@ -149,6 +149,8 @@
 ; Nonsense marker for eof
 (defconstant neoteric-eof-marker (cons 'eof '()))
 
+; TODO: Handle eof as directed by "read".  Not currently consistent.
+
 ; TODO: Ensure "a(. b)" and "(. x)" correctly handled.
 
 ; TODO: sbcl reports the following error:
