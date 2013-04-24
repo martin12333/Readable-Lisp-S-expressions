@@ -106,7 +106,7 @@
       (if (eql char #\[) #\] #\) )
       stream)))
 
-; TODO: Handle other non-constituents, macro chars beginning with "#".
+; TODO: Handle non-terminating macro (beginning with "#").
 (defun enable-neoteric ()
   (setq *original-readtable* (copy-readtable))
   (setq *neoteric-underlying-readtable* (copy-readtable))
@@ -135,6 +135,11 @@
       #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z #\~
       #\rubout )) ; Rubout, really?!?  Yup, it's in the spec.
     (set-macro-character c #'wrap-constituent nil))
+
+  ; These aren't constituents, but it still works, and we need to do this
+  ; so symbols starting with an escape will work:
+  (set-macro-character #\\ #'wrap-constituent nil)
+  (set-macro-character #\| #'wrap-constituent nil)
 
   ; Wrap character pairs.
   (set-macro-character #\( #'wrap-paren nil) ; )
