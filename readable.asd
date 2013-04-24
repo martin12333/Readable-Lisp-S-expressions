@@ -12,7 +12,9 @@
 
 (defpackage #:readable
   (:use :cl)
-  (:export #:enable-basic-curly #:$nfx$ #:$bracket-apply$ #:enable-neoteric))
+  (:export #:enable-basic-curly #:enable-neoteric
+           #:disable-readable
+           #:$nfx$ #:$bracket-apply$))
 
 (in-package #:readable-asd)
 

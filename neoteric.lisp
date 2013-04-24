@@ -34,7 +34,8 @@
 
 (cl:in-package :readable)
 
-(defvar *neoteric-underlying-readtable* *readtable* "Call for neoteric atoms")
+(defvar *neoteric-underlying-readtable* (copy-readtable)
+        "Use this table when reading neoteric atoms")
 
 ; TODO: If possible, make it so clisp doesn't keep responding with |...|
 ; around all tokens.  It's legal, but ugly.  This seems to happen because
@@ -107,7 +108,7 @@
 
 ; TODO: Handle other non-constituents, macro chars beginning with "#".
 (defun enable-neoteric ()
-  ; (setq *readtable* (copy-readtable *original-readtable*))
+  (setq *original-readtable* (copy-readtable))
   (setq *neoteric-underlying-readtable* (copy-readtable))
   (set-macro-character #\{ #'neoteric-curly-brace nil
     *neoteric-underlying-readtable*) ; (
@@ -120,8 +121,6 @@
     (set-macro-character #\] (get-macro-character #\) ) nil
       *neoteric-underlying-readtable*))
 
-  ; (setq *readtable* (copy-readtable))
-  ; Don't wrap {} or [] this way
   ; Wrap all constituents.  Presume ASCII for now.
   ; TODO: Handle non-ASCII chars if platform supports them.
   ; TODO: Don't wrap if they aren't constituents any more.
@@ -135,6 +134,8 @@
       #\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m
       #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z #\~))
     (set-macro-character c #'wrap-constituent nil))
+
+  ; Wrap character pairs.
   (set-macro-character #\( #'wrap-paren nil) ; )
   (set-macro-character #\{ #'neoteric-curly-brace nil) ; (
   (set-macro-character #\} (get-macro-character #\) ) nil)
@@ -142,6 +143,7 @@
     (set-macro-character #\[ #'wrap-paren nil)) ; (
   (unless (get-macro-character #\] )
     (set-macro-character #\] (get-macro-character #\) ) nil))
+
   t) ; Return "t" meaning "it worked".
 
 ; Nonsense marker for eof
