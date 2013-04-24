@@ -147,7 +147,7 @@
   t) ; Return "t" meaning "it worked".
 
 ; Nonsense marker for eof
-(defvar neoteric-eof-marker (cons 'eof '()))
+(defconstant neoteric-eof-marker (cons 'eof '()))
 
 ; TODO: Ensure "a(. b)" and "(. x)" correctly handled.
 
@@ -164,11 +164,20 @@
   (declare (ignore message))
   nil)
 
+
+; Stop reading characters after "." when you see one of these.
+(defconstant neoteric-delimiters
+  '(#\( #\) #\[ #\] #\{ #\} #\space #\tab #\newline #\return #\#
+    #\' #\` #\,))
+
 ; TODO: Must be able to handle ".", e.g., "a(. b)" and "a(b . c)".
+; Use format (concatenate 'string "hi" (string #\q))
+
+
 (defun my-read-delimited-list (stop-char input-stream)
  (handler-case
   (let*
-    ((c (peek-char t input-stream))) ; Consume leading whitespace
+    ((c (peek-char t input-stream))) ; First consume leading whitespace
     ; (princ "DEBUG enter my-read-delimited-list peek=") (write c) (terpri)
     (cond
       ; TODO:
@@ -195,7 +204,9 @@
                    ; ((eof-object? datum2)
                    ; (read-error "Early eof in (... .)\n")
                    ; '())
-                   ((not (eql (peek-char nil input-stream) stop-char))
+                   ; The following peek-char has side-effect of skipping
+                   ; whitespace after last datum, so "(a . b )" works.
+                   ((not (eql (peek-char t input-stream) stop-char))
                     (read-error "Bad closing character after . datum"))
                    (t
                      (read-char nil input-stream)
