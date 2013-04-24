@@ -146,6 +146,30 @@
 
   t) ; Return "t" meaning "it worked".
 
+
+; Read until }, then process list as infix list.
+; TODO: Make more efficient by rm copy-readtable.
+(defun full-curly-brace-infix-reader (stream char)
+  (declare (ignore char))
+  (let* ((saved-original-readtable (copy-readtable *original-readtable*))
+         (saved-readtable (copy-readtable *readtable*))
+         (enabled (enable-neoteric))
+         (result (my-read-delimited-list #\} stream))
+         (processed-result (process-curly result)))
+    (declare (ignore enabled))
+    (setq *original-readtable* saved-original-readtable)
+    (setq *readtable* saved-readtable)
+    processed-result))
+
+(defun enable-full-curly-infix ()
+  (setq *original-readtable* (copy-readtable))
+  ; Invoke curly-brace-infix-reader when opening curly brace is read in:
+  (set-macro-character #\{ #'full-curly-brace-infix-reader) ; (
+  ; This is necessary, else a cuddled closing brace will be part of an atom:
+  (set-macro-character #\} (get-macro-character #\) nil))
+  nil)
+
+
 ; Nonsense marker for eof
 (defconstant neoteric-eof-marker (cons 'eof '()))
 
