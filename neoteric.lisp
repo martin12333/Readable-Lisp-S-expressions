@@ -178,7 +178,8 @@
 
 (defun my-read-to-delimiter (input-stream)
   (let*
-    ((clist
+    ((*readtable* *neoteric-underlying-readtable*) ; Temporary switch
+     (clist
       (loop
         until (find (peek-char nil input-stream) neoteric-delimiters)
         collect (read-char input-stream)))
