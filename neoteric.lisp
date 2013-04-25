@@ -199,6 +199,31 @@
   ;   #X,#x   = hexadecimal rational
 
   (set-dispatch-macro-character #\# #\\ #'wrap-dispatch-disabled-tail)
+  ; TODO: For now, use wrap-dispatch-disabled-tail for almost everything.
+  ; This is probably wrong, but isn't a bad placeholder.
+  (set-dispatch-macro-character #\# #\* #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\, #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\: #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\= #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\+ #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\- #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\. #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\A #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\a #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\B #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\b #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\C #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\c #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\O #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\o #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\P #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\p #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\R #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\r #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\S #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\s #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\X #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\x #'wrap-dispatch-disabled-tail)
 
   t) ; Return "t" meaning "it worked".
 
