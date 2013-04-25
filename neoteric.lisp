@@ -87,14 +87,14 @@
 ; TODO: Make "..." illegal, and maybe anything with just multiple ".".
 
 ; Read a datum and ALLOW "." as a possible value:
-(defun my-read-to-delimiter (input-stream)
+(defun my-read-to-delimiter (input-stream start)
   (let*
     ((*readtable* *neoteric-underlying-readtable*) ; Temporary switch
      (clist
       (loop
         until (find (peek-char nil input-stream) neoteric-delimiters)
         collect (read-char input-stream)))
-     (my-string (concatenate 'string clist)))
+     (my-string (concatenate 'string start clist)))
     (if (string= my-string ".")
         '|.|
         (read-from-string my-string))))
@@ -103,7 +103,7 @@
   (let* ((c (peek-char t input-stream))) ; Consume leading whitespace
     (cond
       ((eql c #\.) ; Use specialized reader if starts with "."
-        (my-read-to-delimiter input-stream))
+        (my-read-to-delimiter input-stream ""))
       (t (read-preserving-whitespace input-stream t nil)))))
 
 (defun my-read-delimited-list (stop-char input-stream)
@@ -217,12 +217,23 @@
 (defun wrap-dispatch-disabled-tail (stream sub-char int)
   ; Call routine from original readtable and disable temporarily our
   ; readtable.  Then invoke neoteric-process-tail.
+  ; TODO: There's no obvious way to *prevent* this from consuming
+  ; trailing whitespace if the top-level routine consumed trailing whitespace.
   (neoteric-process-tail stream
     (let ((*readtable* *neoteric-underlying-readtable*)) ; temporary switch.
       (funcall
         (get-dispatch-macro-character #\# sub-char
                                       *neoteric-underlying-readtable*)
         stream sub-char int))))
+
+(defun wrap-dispatch-special-read-tail (stream sub-char int)
+  ; Get chars until a delimiter, then read it by disabling temporarily our
+  ; readtable.  Then invoke neoteric-process-tail.
+  (declare (ignore int))
+  (unread-char sub-char stream)
+  (neoteric-process-tail stream
+    (let ((*readtable* *neoteric-underlying-readtable*)) ; temporary switch.
+      (my-read-to-delimiter stream "#"))))
 
 (defun wrap-paren (stream char)
   (neoteric-process-tail stream
@@ -305,7 +316,7 @@
   ;   #S,#s   = structure
   ;   #X,#x   = hexadecimal rational
 
-  (set-dispatch-macro-character #\# #\\ #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\\ #'wrap-dispatch-special-read-tail)
 
   ; TODO: For now, use wrap-dispatch-disabled-tail for almost everything.
   ; This is probably wrong, but isn't a bad placeholder.
