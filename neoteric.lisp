@@ -356,7 +356,7 @@
   (set-macro-character #\{ #'full-curly-brace-infix-reader) ; (
   ; This is necessary, else a cuddled closing brace will be part of an atom:
   (set-macro-character #\} (get-macro-character #\) nil))
-  nil)
+  t) ; Meaning "Did it"
 
 
 ; TODO: sbcl reports the following error:
