@@ -126,7 +126,6 @@
       (if (eql char #\[) #\] #\) )
       stream)))
 
-; TODO: Handle non-terminating macro (beginning with "#").
 (defun enable-neoteric ()
   (setq *original-readtable* (copy-readtable))
   (setq *neoteric-underlying-readtable* (copy-readtable))
@@ -199,6 +198,7 @@
   ;   #X,#x   = hexadecimal rational
 
   (set-dispatch-macro-character #\# #\\ #'wrap-dispatch-disabled-tail)
+
   ; TODO: For now, use wrap-dispatch-disabled-tail for almost everything.
   ; This is probably wrong, but isn't a bad placeholder.
   (set-dispatch-macro-character #\# #\* #'wrap-dispatch-disabled-tail)
