@@ -122,5 +122,6 @@
   t)
 
 (defun disable-readable ()
-  (setq *readtable* *original-readtable*))
+  (setq *readtable* *original-readtable*)
+  t)
 
