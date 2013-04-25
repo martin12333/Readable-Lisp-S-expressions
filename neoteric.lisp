@@ -150,6 +150,33 @@
   (unless (get-macro-character #\] )
     (set-macro-character #\] (get-macro-character #\) ) nil))
 
+  ; Now deal with dispatch macro char; we'll just deal with default "#".
+  ; set-dispatch-macro-character disp-char sub-char function
+  ;                              &optional readtable 
+  ; get-dispatch-macro-character disp-char sub-char &optional readtable
+  ; See: http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node191.html
+  ;
+  ; No need to wrap "undefined" and "signals error" syntaxes.
+  ; No need to wrap: ##  #'  #|...|#  #0..#9
+  ; Investigate:
+  ;   #( #)   = vector
+  ;   #*      = bit-vector  
+  ;   #,      = load-time eval
+  ;   #:      = uninterned symbol
+  ;   #=      = label following object
+  ;   #\char  = character object
+  ;   #+      = read-time conditional
+  ;   #-      = read-time conditional
+  ;   #.      = evaluation
+  ;   #A,#a   = array
+  ;   #B,#b   = binary rational
+  ;   #C,#c   = complex number
+  ;   #O,#o   = octal rational
+  ;   #P,#p   = pathname
+  ;   #R,#r   = radix-n rational
+  ;   #S,#s   = structure
+  ;   #X,#x   = hexadecimal rational
+
   t) ; Return "t" meaning "it worked".
 
 
