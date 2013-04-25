@@ -1,6 +1,12 @@
-; readable.asd - Common Lisp package definition.
+;;;; -*- Mode: Lisp; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 
-; See:
+;;;; readable.asd - Common Lisp package for "readable" Lisp notations.
+;;;; See http://readable.sourceforge.net for information on these notations:
+;;;; - curly-infix: Add infix in {...}, so {a op b op c...} => (op a b c...)
+;;;; - neoteric: Add suffix support, so f(...) => (f ...), f{...} => (f {...})
+;;;; - sweet: Indentation implies parentheses
+
+; For ASDF information, see:
 ; http://common-lisp.net/~mmommer/asdf-howto.shtml
 ; http://www.xach.com/lisp/asdf-tutorial/
 ; http://common-lisp.net/project/asdf/
@@ -13,7 +19,7 @@
 (defpackage #:readable
   (:use :cl)
   (:export #:enable-basic-curly #:enable-full-curly-infix
-           #:enable-neoteric
+           #:enable-neoteric #:enable-sweet
            #:disable-readable
            #:$nfx$ #:$bracket-apply$))
 
@@ -30,5 +36,6 @@
   :serial t ;; the dependencies are linear.
   :components
     ((:file "basic-curly")
-     (:file "neoteric")))
+     (:file "neoteric")
+     (:file "sweet")))
 
