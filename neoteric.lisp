@@ -226,6 +226,17 @@
                                       *neoteric-underlying-readtable*)
         stream sub-char int))))
 
+(defun wrap-dispatch-disabled-notail (stream sub-char int)
+  ; Call routine from original readtable and disable temporarily our
+  ; readtable.  Do NOT invoke neoteric-process-tail.
+  ; There's no obvious way to *prevent* this from consuming
+  ; trailing whitespace if the top-level routine consumed trailing whitespace.
+    (let ((*readtable* *neoteric-underlying-readtable*)) ; temporary switch.
+      (funcall
+        (get-dispatch-macro-character #\# sub-char
+                                      *neoteric-underlying-readtable*)
+        stream sub-char int)))
+
 (defun wrap-dispatch-special-read-tail (stream sub-char int)
   ; Get chars until a delimiter, then read it by disabling temporarily our
   ; readtable.  Then invoke neoteric-process-tail.
@@ -304,8 +315,8 @@
   ;   #:      = uninterned symbol
   ;   #=      = label following object
   ;   #\char  = character object         - Wrapped
-  ;   #+      = read-time conditional
-  ;   #-      = read-time conditional
+  ;   #+      = read-time conditional    - wrapped
+  ;   #-      = read-time conditional    - wrapped
   ;   #.      = evaluation
   ;   #A,#a   = array
   ;   #B,#b   = binary rational
@@ -324,8 +335,6 @@
   (set-dispatch-macro-character #\# #\, #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\: #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\= #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\+ #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\- #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\. #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\A #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\a #'wrap-dispatch-disabled-tail)
@@ -343,6 +352,11 @@
   (set-dispatch-macro-character #\# #\s #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\X #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\x #'wrap-dispatch-disabled-tail)
+  ; This is definitely wrong for feature expressions, but sometimes
+  ; this will work anyway:
+  (set-dispatch-macro-character #\# #\+ #'wrap-dispatch-disabled-notail)
+  (set-dispatch-macro-character #\# #\- #'wrap-dispatch-disabled-notail)
+
 
   t) ; Return "t" meaning "it worked".
 
