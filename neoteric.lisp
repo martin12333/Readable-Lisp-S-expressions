@@ -91,6 +91,26 @@
       (get-macro-character char *neoteric-underlying-readtable*)
       stream char)))
 
+
+(defun wrap-dispatch-tail (stream sub-char int)
+  ; Call routine from original readtable, but leave our readtable in place,
+  ; and invoke neoteric-process-tail.
+  (neoteric-process-tail stream
+    (funcall
+      (get-dispatch-macro-character #\# sub-char
+                                    *neoteric-underlying-readtable*)
+      stream sub-char int)))
+
+(defun wrap-dispatch-disabled-tail (stream sub-char int)
+  ; Call routine from original readtable and disable temporarily our
+  ; readtable.  Then invoke neoteric-process-tail.
+  (neoteric-process-tail stream
+    (let ((*readtable* *neoteric-underlying-readtable*)) ; temporary switch.
+      (funcall
+        (get-dispatch-macro-character #\# sub-char
+                                      *neoteric-underlying-readtable*)
+        stream sub-char int))))
+
 ; Read until }, then process list as infix list.
 (defun neoteric-curly-brace (stream char)
   (declare (ignore char)) ; {
@@ -159,13 +179,13 @@
   ;
   ; No need to wrap "undefined" and "signals error" syntaxes.
   ; No need to wrap: ##  #'  #|...|#  #0..#9
-  ; Investigate:
+  ; Status (TODO unless otherwise noted):
   ;   #( #)   = vector
   ;   #*      = bit-vector  
   ;   #,      = load-time eval
   ;   #:      = uninterned symbol
   ;   #=      = label following object
-  ;   #\char  = character object
+  ;   #\char  = character object         - Wrapped
   ;   #+      = read-time conditional
   ;   #-      = read-time conditional
   ;   #.      = evaluation
@@ -177,6 +197,8 @@
   ;   #R,#r   = radix-n rational
   ;   #S,#s   = structure
   ;   #X,#x   = hexadecimal rational
+
+  (set-dispatch-macro-character #\# #\\ #'wrap-dispatch-disabled-tail)
 
   t) ; Return "t" meaning "it worked".
 
