@@ -153,6 +153,7 @@
   ; Now deal with dispatch macro char; we'll just deal with default "#".
   ; set-dispatch-macro-character disp-char sub-char function
   ;                              &optional readtable 
+  ;    Where "function" takes parameters (stream char arg).
   ; get-dispatch-macro-character disp-char sub-char &optional readtable
   ; See: http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node191.html
   ;
