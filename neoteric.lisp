@@ -34,8 +34,22 @@
 
 (cl:in-package :readable)
 
+; Stop reading characters after "." when you see one of these.
+(defconstant neoteric-delimiters
+  '(#\( #\) #\[ #\] #\{ #\} #\space #\tab #\newline #\return #\#
+    #\' #\` #\,))
+
+; Nonsense marker for eof - TODO - remove
+(defconstant neoteric-eof-marker (cons 'eof '()))
+
 (defvar *neoteric-underlying-readtable* (copy-readtable)
         "Use this table when reading neoteric atoms")
+
+; TODO: Handle eof as directed by "read".  Not currently consistent.
+; TODO: Rationalize error signaling/handling.
+(defun read-error (message)
+  (declare (ignore message))
+  nil)
 
 ; TODO: If possible, make it so clisp doesn't keep responding with |...|
 ; around all tokens.  It's legal, but ugly.  This seems to happen because
@@ -67,7 +81,107 @@
         (princ "*** WARNING WARNING WARNING ***")
         (terpri) (terpri) (terpri)))))
 
-; We need to be careful reading consituents to ensure that
+
+;;; Key procedures to implement neoteric-expressions
+
+; TODO: Make "..." illegal, and maybe anything with just multiple ".".
+
+; Read a datum and ALLOW "." as a possible value:
+(defun my-read-to-delimiter (input-stream)
+  (let*
+    ((*readtable* *neoteric-underlying-readtable*) ; Temporary switch
+     (clist
+      (loop
+        until (find (peek-char nil input-stream) neoteric-delimiters)
+        collect (read-char input-stream)))
+     (my-string (concatenate 'string clist)))
+    (if (string= my-string ".")
+        '|.|
+        (read-from-string my-string))))
+
+(defun my-read-datum (input-stream)
+  (let* ((c (peek-char t input-stream))) ; Consume leading whitespace
+    (cond
+      ((eql c #\.) ; Use specialized reader if starts with "."
+        (my-read-to-delimiter input-stream))
+      (t (read-preserving-whitespace input-stream t nil)))))
+
+(defun my-read-delimited-list (stop-char input-stream)
+ (handler-case
+  (let* ((c (peek-char t input-stream))) ; First consume leading whitespace
+    (cond
+      ((eql c stop-char)
+        (read-char input-stream)
+        '())
+      ; Balance ([{
+      ((or (eql c #\)) (eql c #\]) (eql c #\}))
+        (read-char input-stream)
+        (read-error "Bad closing character"))
+      (t
+        ; Must preserve whitespace so "a ()" isn't read as "a()"
+        (let ((datum (my-read-datum input-stream)))
+          (cond
+             ; Note: "." only counts as cdr-setting if it begins with "."
+             ((and (eq datum '|.|) (eql c #\.))
+               (let ((datum2 (read-preserving-whitespace input-stream t nil)))
+                 ; (consume-whitespace input-stream)
+                 (cond
+                   ; ((eof-object? datum2)
+                   ; (read-error "Early eof in (... .)\n")
+                   ; '())
+                   ; The following peek-char has side-effect of skipping
+                   ; whitespace after last datum, so "(a . b )" works.
+                   ((not (eql (peek-char t input-stream) stop-char))
+                    (read-error "Bad closing character after . datum"))
+                   (t
+                     (read-char input-stream)
+                     datum2))))
+             (t
+                 (cons datum
+                   (my-read-delimited-list stop-char input-stream))))))))))
+
+
+; Implement neoteric-expression's prefixed (), [], and {}.
+; At this point, we have just finished reading some expression, which
+; MIGHT be a prefix of some longer expression.  Examine the next
+; character to be consumed; if it's an opening paren, bracket, or brace,
+; then the expression "prefix" is actually a prefix.
+; Otherwise, just return the prefix and do not consume that next char.
+; This recurses, to handle formats like f(x)(y).
+(defun neoteric-process-tail (input-stream prefix)
+    (let* ((c (peek-char nil input-stream)))
+      (cond
+        ((eq c neoteric-eof-marker) prefix) ; TODO
+        ((eql c #\( ) ; Implement f(x).
+          (read-char input-stream nil nil t) ; consume opening char
+          (neoteric-process-tail input-stream
+              (cons prefix (my-read-delimited-list #\) input-stream))))
+        ((eql c #\[ )  ; Implement f[x]
+          (read-char input-stream nil nil t) ; consume opening char
+          (neoteric-process-tail input-stream
+                (cons '$bracket-apply$
+                  (cons prefix
+                    (my-read-delimited-list #\] input-stream)))))
+        ((eql c #\{ )  ; Implement f{x}.
+          (read-char input-stream nil nil t) ; consume opening char
+          (neoteric-process-tail input-stream
+            (let ((tail (process-curly
+                          (my-read-delimited-list #\} input-stream))))
+              (if (null tail)
+                (list prefix) ; Map f{} to (f), not (f ()).
+                (list prefix tail)))))
+        (t prefix))))
+
+
+;;; Dispatch procedures.
+
+; Read until }, then process list as infix list.
+(defun neoteric-curly-brace (stream char)
+  (declare (ignore char)) ; {
+  (let ((result (my-read-delimited-list #\} stream)))
+    (neoteric-process-tail stream (process-curly result))))
+
+; Read constituents. We need to be careful reading consituents to ensure that
 ; trailing whitespace is NEVER consumed.  Otherwise
 ; '{a + {b * c}} will incorrectly be interpreted as (A (+ (* B C)))
 ; instead of the correct (+ A (* B C)).
@@ -91,7 +205,6 @@
       (get-macro-character char *neoteric-underlying-readtable*)
       stream char)))
 
-
 (defun wrap-dispatch-tail (stream sub-char int)
   ; Call routine from original readtable, but leave our readtable in place,
   ; and invoke neoteric-process-tail.
@@ -111,20 +224,15 @@
                                       *neoteric-underlying-readtable*)
         stream sub-char int))))
 
-; Read until }, then process list as infix list.
-(defun neoteric-curly-brace (stream char)
-  (declare (ignore char)) ; {
-  (let ((result (my-read-delimited-list #\} stream)))
-    (neoteric-process-tail stream (process-curly result))))
-
-; (defun my-read-delimited-list (stop-char input-stream)
-;  (read-delimited-list stop-char input-stream))
-
 (defun wrap-paren (stream char)
   (neoteric-process-tail stream
     (my-read-delimited-list ; (
       (if (eql char #\[) #\] #\) )
       stream)))
+
+
+;;; Enablers
+
 
 (defun enable-neoteric ()
   (setq *original-readtable* (copy-readtable))
@@ -251,117 +359,12 @@
   nil)
 
 
-; Nonsense marker for eof
-(defconstant neoteric-eof-marker (cons 'eof '()))
-
 ; TODO: sbcl reports the following error:
 ; ; file: /home/dwheeler/readable-code/neoteric.lisp
 ; ; in: DEFUN READABLE::MY-READ-DELIMITED-LIST
 ; ;     (READABLE::READ-ERROR "Bad closing character")
 ; ; caught STYLE-WARNING:
 ; ;   undefined function: READABLE::READ-ERROR
-
-; TODO: Handle eof as directed by "read".  Not currently consistent.
-(defun read-error (message)
-  (declare (ignore message))
-  nil)
-
-
-; Stop reading characters after "." when you see one of these.
-(defconstant neoteric-delimiters
-  '(#\( #\) #\[ #\] #\{ #\} #\space #\tab #\newline #\return #\#
-    #\' #\` #\,))
-
-
-; TODO: Make "..." illegal, and maybe anything with just multiple ".".
-
-; Read a datum and ALLOW "." as a possible value:
-(defun my-read-to-delimiter (input-stream)
-  (let*
-    ((*readtable* *neoteric-underlying-readtable*) ; Temporary switch
-     (clist
-      (loop
-        until (find (peek-char nil input-stream) neoteric-delimiters)
-        collect (read-char input-stream)))
-     (my-string (concatenate 'string clist)))
-    (if (string= my-string ".")
-        '|.|
-        (read-from-string my-string))))
-
-(defun my-read-datum (input-stream)
-  (let* ((c (peek-char t input-stream))) ; Consume leading whitespace
-    (cond
-      ((eql c #\.) ; Use specialized reader if starts with "."
-        (my-read-to-delimiter input-stream))
-      (t (read-preserving-whitespace input-stream t nil)))))
-
-
-(defun my-read-delimited-list (stop-char input-stream)
- (handler-case
-  (let* ((c (peek-char t input-stream))) ; First consume leading whitespace
-    (cond
-      ((eql c stop-char)
-        (read-char input-stream)
-        '())
-      ; Balance ([{
-      ((or (eql c #\)) (eql c #\]) (eql c #\}))
-        (read-char input-stream)
-        (read-error "Bad closing character"))
-      (t
-        ; Must preserve whitespace so "a ()" isn't read as "a()"
-        (let ((datum (my-read-datum input-stream)))
-          (cond
-             ; Note: "." only counts as cdr-setting if it begins with "."
-             ((and (eq datum '|.|) (eql c #\.))
-               (let ((datum2 (read-preserving-whitespace input-stream t nil)))
-                 ; (consume-whitespace input-stream)
-                 (cond
-                   ; ((eof-object? datum2)
-                   ; (read-error "Early eof in (... .)\n")
-                   ; '())
-                   ; The following peek-char has side-effect of skipping
-                   ; whitespace after last datum, so "(a . b )" works.
-                   ((not (eql (peek-char t input-stream) stop-char))
-                    (read-error "Bad closing character after . datum"))
-                   (t
-                     (read-char input-stream)
-                     datum2))))
-             (t
-                 (cons datum
-                   (my-read-delimited-list stop-char input-stream))))))))))
-
-
-; Implement neoteric-expression's prefixed (), [], and {}.
-; At this point, we have just finished reading some expression, which
-; MIGHT be a prefix of some longer expression.  Examine the next
-; character to be consumed; if it's an opening paren, bracket, or brace,
-; then the expression "prefix" is actually a prefix.
-; Otherwise, just return the prefix and do not consume that next char.
-; This recurses, to handle formats like f(x)(y).
-(defun neoteric-process-tail (input-stream prefix)
-    (let* ((c (peek-char nil input-stream)))
-      (cond
-        ((eq c neoteric-eof-marker) prefix)
-        ((eql c #\( ) ; Implement f(x).
-          (read-char input-stream nil nil t) ; consume opening char
-          (neoteric-process-tail input-stream
-              (cons prefix (my-read-delimited-list #\) input-stream))))
-        ((eql c #\[ )  ; Implement f[x]
-          (read-char input-stream nil nil t) ; consume opening char
-          (neoteric-process-tail input-stream
-                (cons '$bracket-apply$
-                  (cons prefix
-                    (my-read-delimited-list #\] input-stream)))))
-        ((eql c #\{ )  ; Implement f{x}.
-          (read-char input-stream nil nil t) ; consume opening char
-          (neoteric-process-tail input-stream
-            (let ((tail (process-curly
-                          (my-read-delimited-list #\} input-stream))))
-              (if (null tail)
-                (list prefix) ; Map f{} to (f), not (f ()).
-                (list prefix tail)))))
-        (t prefix))))
-
 
 
 ;   (defun neoteric-filter ()
@@ -379,19 +382,7 @@
 ;         (nil nil)
 ;         (eval result)))
 ;     (end-of-file () )))
-;   
-;   ; Likely things to do from here:
-;   
-;   ; (enable-neoteric)
-;   ; (write (neoteric-read))
-;   
-;   ; (do ((result (read) (read)))
-;   ;   (nil nil)
-;   ;   (write result)
-;   ;   (terpri))
-;   
-;   
 
-; TODO: Support enabling full curly-infix without neoteric-expressions
-; outside {...}.
+
+; TODO: Add writers, e.g., neoteric-write.
 
