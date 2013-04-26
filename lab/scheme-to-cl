@@ -1,0 +1,77 @@
+#!/usr/bin/perl
+# Quick start translator Scheme => Common Lisp
+
+# (C) 2013 David A. Wheeler
+# Released under the "MIT" license.
+
+# Uses info from http://hyperpolyglot.org/lisp
+# http://www.cs.utexas.edu/~novak/schemevscl.html
+
+# For a more heavyweight and full translator, see:
+# http://www.ccs.neu.edu/home/dorai/scmxlate/index.html
+
+# Common Lisp "member" uses "eql" by default.
+# In CL you must use (member x y :test #'eq) etc. for a different test, or use
+# (defun memq (item stuff) (member item stuff :test #'eq))
+
+while (<>) {
+  s!\(define ([a-z])!(setq $1!g;
+  s!\(define \(([^ ]+) ([^\)]+)\)!(defun $1 ($2)!g;
+  s!\(null\? !(null !g;
+  s!\(symbol\? !(symbolp !g;
+  s!\(pair\? !(consp !g;
+  s!\(list\? !(listp !g;
+  s!\(number\? !(numberp !g;
+  s!\(char\? !(characterp !g;
+  s!\(string\? !(stringp !g;
+  s!\(subset\? !(subsetp !g;
+
+  s!\(memv\b!(member!g;
+
+  s!\(char-ci=\?!(char-equal!g;
+
+  s!\(list->string\b!(concatenate 'string!g;
+  s!\(integer->char\b!(code-char!g;
+  s!\(char->integer\b!(char-code!g;
+  s!\(string->symbol\b!(intern!g;
+  s!\(symbol->string\b!(symbol-name!g;
+
+  s!\(set\! !setq!;
+  s!\(map\b!(mapcar!g;
+  s!\(for-each\b!(mapc!g;
+  s!\(vector-ref\b!(aref!g;
+
+  s!\(set-car\!!rplaca!g;
+  s!\(set-cdr\!!rplacd!g;
+
+  s!#t\b!t!g;
+  s!#f\b!nil!g;
+
+  s!\(eq\? !(eq !g;
+  s!\(eqv\? !(eql !g;
+  s!\(equal\? !(equal !g;
+
+  s!\(length !(string-length !g;
+  s!\(string=\? !(string= !g;
+  s!\(string<\? !(string< !g;
+  s!\(string>\? !(string> !g;
+  s!\(string<=\? !(string<= !g;
+  s!\(string>=\? !(string>= !g;
+
+  s!\(display\b!(princ!g;
+  s!\(begin\b!(progn!g;
+  s!\(newline\b!(terpri!g;
+  s!\(memv\b!(member!g;
+
+  # A weak hack, but useful:
+  s!\(not \(consp ([-A-Za-z0-9]+)\)\)!(atom $1)!g;
+
+  s!\bport\b!stream!g;
+  s!\? !p !g;
+  s!\?\)!p)!g;
+
+  s!_!-!g;
+
+  print;
+}
+
