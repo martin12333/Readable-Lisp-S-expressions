@@ -38,6 +38,9 @@
 (defvar *sweet-redirect-readtable*
   "This table redirects any input to sweet-expression processing")
 
+(defconstant line-ending-chars (list #\linefeed #\return))
+(defun char-line-endingp (char) (member char line-ending-chars))
+
 ; Does character "c" begin a line comment (;) or end-of-line?
 (defconstant initial-comment-eol (list #\; #\linefeed #\return))
 (defun lcomment-eolp (c)
@@ -100,14 +103,14 @@
 ;;        ((eql c #\linefeed)
 ;;          (my-read-char stream)))))
 ;;  
-;;  (defun consume-to-eol (stream)
-;;    ; Consume every non-eol character in the current line.
-;;    ; End on EOF or end-of-line char.
-;;    ; Do NOT consume the end-of-line character(s).
-;;    (let ((c (my-peek-char stream)))
-;;      (when (not (char-line-endingp c))
-;;          (my-read-char stream)
-;;          (consume-to-eol stream)))))
+(defun consume-to-eol (stream)
+  ; Consume every non-eol character in the current line.
+  ; End on EOF or end-of-line char.
+  ; Do NOT consume the end-of-line character(s).
+  (let ((c (my-peek-char stream)))
+    (when (not (char-line-endingp c))
+        (my-read-char stream)
+        (consume-to-eol stream))))
 
 (defun t-expr (stream)
   (let* ((c (my-peek-char stream)))
