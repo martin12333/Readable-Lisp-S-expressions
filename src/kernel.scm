@@ -1463,7 +1463,7 @@
 
   ; Consume 0+ spaces or tabs
   (define (hspaces port)
-    (cond
+    (cond ; Use "cond" as "when" for portability.
       ((char-hspace? (my-peek-char port))
         (my-read-char port)
         (hspaces port))))
