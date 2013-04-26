@@ -45,6 +45,9 @@
 (defvar *neoteric-underlying-readtable* (copy-readtable)
         "Use this table when reading neoteric atoms")
 
+(defvar *neoteric-readtable* (copy-readtable)
+        "Use this table when about to read a neoteric expression")
+
 ; TODO: Handle eof as directed by "read".  Not currently consistent.
 ; TODO: Rationalize error signaling/handling.
 (defun read-error (message)
@@ -357,6 +360,7 @@
   (set-dispatch-macro-character #\# #\+ #'wrap-dispatch-disabled-notail)
   (set-dispatch-macro-character #\# #\- #'wrap-dispatch-disabled-notail)
 
+  (setq *neoteric-readtable* *readtable*)
 
   t) ; Return "t" meaning "it worked".
 

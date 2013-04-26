@@ -38,27 +38,104 @@
 (defvar *sweet-redirect-readtable*
   "This table redirects any input to sweet-expression processing")
 
-(defun t_expr_entry (stream char)
-  (unread-char char stream)
-  ; (setq *readtable* *sweet-redirect-readtable*)
-  (setq *readtable* *original-readtable*)
-  (princ "DEBUG: t_expr_entry received: ") (write char) (terpri)
-)
+; Does character "c" begin a line comment (;) or end-of-line?
+(defconstant initial-comment-eol (list #\; #\linefeed #\return))
+(defun lcomment-eolp (c)
+  (member c initial-comment-eol))
 
+(defun my-peek-char (stream) (peek-char nil stream))
+(defun my-read-char (stream) (read-char nil stream))
+
+;    ; Top level - read a sweet-expression (t-expression).  Handle special
+;    ; cases, such as initial indent; call it-expr for normal case.
+;    (defun t-expr (stream)
+;      (let* ((c (my-peek-char stream)))
+;        ; Check EOF early (a bug in guile before 2.0.8 consumes EOF on peek)
+;        (if (eof-objectp c)
+;            c
+;            (cond
+;              ((lcomment-eolp c)
+;                (consume-to-eol stream)
+;                (consume-end-of-line stream)
+;                (t-expr stream))
+;              ((or (eql c form-feed) (eql c vertical-tab))
+;                (consume-ff-vt stream)
+;                (t-expr stream))
+;              ((char-icharp c)
+;                (let ((indentation-list (cons #\^ (accumulate-ichar stream))))
+;                  (if (not (member (my-peek-char stream) initial-comment-eol))
+;                      (let ((results (n-expr-or-scomment stream)))
+;                        (if (not (eq (car results) 'scomment))
+;                            (cadr results) ; Normal n-expr, return one value.
+;                            (progn ; We have an scomment; skip and try again.
+;                              (hspaces stream)
+;                              (t-expr stream))))
+;                      (progn ; Indented comment-eol, consume and try again.
+;                        (if (member #\! indentation-list)
+;                            (read-error "Empty line with '!'"))
+;                        (consume-to-eol stream)
+;                        (consume-end-of-line stream)
+;                        (t-expr stream)))))
+;              (t
+;                (let* ((results (it-expr stream "^"))
+;                       (results-indent (car results))
+;                       (results-value (cadr results)))
+;                  (if (string= results-indent "")
+;                      (read-error "Closing *> without preceding matching <*")
+;                      results-value)))))))
+
+
+;;  ; Consume an end-of-line sequence, ('\r' '\n'? | '\n'), and nothing else.
+;;  ; Don't try to handle reversed \n\r (LFCR); doing so will make interactive
+;;  ; guile use annoying (EOF won't be correctly detected) due to a guile bug
+;;  ; (in guile before version 2.0.8, peek-char incorrectly
+;;  ; *consumes* EOF instead of just peeking).
+;;  (defun consume-end-of-line (stream)
+;;    (let ((c (my-peek-char stream)))
+;;      (cond
+;;        ((eql c #\return)
+;;          (my-read-char stream)
+;;          (if (eql (my-peek-char stream) #\linefeed)
+;;              (my-read-char stream)))
+;;        ((eql c #\linefeed)
+;;          (my-read-char stream)))))
+;;  
+;;  (defun consume-to-eol (stream)
+;;    ; Consume every non-eol character in the current line.
+;;    ; End on EOF or end-of-line char.
+;;    ; Do NOT consume the end-of-line character(s).
+;;    (let ((c (my-peek-char stream)))
+;;      (when (not (char-line-endingp c))
+;;          (my-read-char stream)
+;;          (consume-to-eol stream)))))
+
+(defun t-expr (stream)
+  (let* ((c (my-peek-char stream)))
+    (cond
+;      ((lcomment-eolp c)
+;        (consume-to-eol stream)
+;        (consume-end-of-line stream)
+;        (t-expr stream))
+      (t (read stream)))))
+
+
+(defun t-expr-entry (stream char)
+  (unread-char char stream)
+  (princ "DEBUG entry: ") (write char) (terpri)
+  (let ((*readtable* *neoteric-readtable*))
+    (t-expr stream)))
+
+; Set up a readtable that'll redirect everything.
 (defun compute-sweet-redirect-readtable ()
   (setq *sweet-redirect-readtable*
     (let ((new (copy-readtable nil)))
       (set-syntax-from-char #\# #\' new) ; force # to not be dispatching char.
       (loop for ci from 0 upto 255 ; TODO: char-code-limit
-         do (set-macro-character (character ci) #'t_expr_entry nil new))
+         do (set-macro-character (character ci) #'t-expr-entry nil new))
       new)))
 
 (defun enable-sweet ()
-  (setq *original-readtable* (copy-readtable))
-  ; Invoke curly-brace-infix-reader when opening curly brace is read in:
-  ; (set-macro-character #\{ #'full-curly-brace-infix-reader) ; (
-  ; This is necessary, else a cuddled closing brace will be part of an atom:
-  ; (set-macro-character #\} (get-macro-character #\) nil))
+  (enable-neoteric)
   (compute-sweet-redirect-readtable)
   (setq *readtable* *sweet-redirect-readtable*)
   t) ; Meaning "Did it"
@@ -75,7 +152,7 @@
 ;   ; implementation so other implementations don't balk at it.
 ;   (setq period-symbol (intern "."))
 ; 
-;   (setq line-ending-chars (list linefeed carriage-return))
+;   (setq line-ending-chars (list #\linefeed #\carriage-return))
 ; 
 ;   ; This definition of whitespace chars is derived from R6RS section 4.2.1.
 ;   ; R6RS doesn't explicitly list the #\space character, be sure to include!
@@ -97,30 +174,6 @@
 ;   (defun my-char-whitespacep (c)
 ;     (or (char-whitespacep c) (member c whitespace-chars)))
 ; 
-;   ; Consume an end-of-line sequence, ('\r' '\n'p | '\n'), and nothing else.
-;   ; Don't try to handle reversed \n\r (LFCR); doing so will make interactive
-;   ; guile use annoying (EOF won't be correctly detected) due to a guile bug
-;   ; (in guile before version 2.0.8, peek-char incorrectly
-;   ; *consumes* EOF instead of just peeking).
-;   (defun consume-end-of-line (stream)
-;     (let ((c (my-peek-char stream)))
-;       (cond
-;         ((eql c carriage-return)
-;           (my-read-char stream)
-;           (if (eql (my-peek-char stream) linefeed)
-;               (my-read-char stream)))
-;         ((eql c linefeed)
-;           (my-read-char stream)))))
-; 
-;   (defun consume-to-eol (stream)
-;     ; Consume every non-eol character in the current line.
-;     ; End on EOF or end-of-line char.
-;     ; Do NOT consume the end-of-line character(s).
-;     (let ((c (my-peek-char stream)))
-;       (cond
-;         ((and (not (eof-objectp c)) (not (char-line-endingp c)))
-;           (my-read-char stream)
-;           (consume-to-eol stream)))))
 ; 
 ;   (defun consume-to-whitespace (stream)
 ;     ; Consume to whitespace
@@ -277,7 +330,7 @@
 ;           (process-directive
 ;             (concatenate 'string (read-until-delim stream neoteric-delimiters)))
 ;           scomment-result)
-;         ((or (eql c carriage-return) (eql c #\newline))
+;         ((or (eql c carriage-return) (eql c #\linefeed))
 ;           ; Extension: Ignore lone #!
 ;           (consume-to-eol stream)
 ;           (consume-end-of-line stream)
@@ -859,12 +912,6 @@
 ;       (and (> len1 len2)
 ;              (string= indentation2 (substring indentation1 0 len2)))))
 ; 
-;   ; Does character "c" begin a line comment (;) or end-of-line?
-;   (setq initial-comment-eol (list #\; #\newline carriage-return))
-;   (defun lcomment-eolp (c)
-;     (or
-;        (eof-objectp c)
-;        (member c initial-comment-eol)))
 ; 
 ;   ; Return t if char is space or tab.
 ;   (defun char-hspacep (char)
