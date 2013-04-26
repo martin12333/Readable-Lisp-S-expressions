@@ -215,13 +215,7 @@ Documentation:
     See the project website for the current version of this.
 *   tutorial.md: A tutorial.  See the project website for a
     current version of this.
-*   spec-indent.txt: Detailed specification information on I-expressions,
-    the basis of sweet-expressions.
-*   spec-almkglor.txt: A not-so-updated specification for the
-    entire sweet-expression spec, created by Alan Manuel K. Gloria.
-*   sweeten.sscm: An example of code written using sweet-expressions.
-    This is the original source code for "sweeten", which reads
-    traditional s-expressions and writes sweet-expression versions of them.
+*   src/sweeten.sscm: An example of code written using sweet-expressions.
 *   "man pages"
 
 The spec-* files need to be updated (volunteers welcome).  For now, see

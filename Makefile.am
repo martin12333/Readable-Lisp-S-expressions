@@ -274,10 +274,8 @@ dist_doc_DATA += readable-s-expressions.odp
 # Include SRFI specifications as documentation:
 dist_doc_DATA += SRFI-105.html SRFI-110.html
 
-# Distribute the specs.  They're not up-to-date, but they
-# are referred to in the README, so distribute them too
-# as users may be puzzled if they're not there.
-dist_doc_DATA += spec-indent.txt spec-almkglor.txt
+# We no longer distribute these obsolete specs (see git if you want them).
+# dist_doc_DATA += spec-indent.txt spec-almkglor.txt
 
 # This is an odd case.  Since we're distributing a tool for developers,
 # it's useful to have worked examples.  So here we install the
