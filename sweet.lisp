@@ -38,16 +38,21 @@
 (defvar *sweet-redirect-readtable*
   "This table redirects any input to sweet-expression processing")
 
-(defconstant line-ending-chars (list #\linefeed #\return))
+(defconstant line-ending-chars (list #\newline #\linefeed #\return))
 (defun char-line-endingp (char) (member char line-ending-chars))
 
 ; Does character "c" begin a line comment (;) or end-of-line?
-(defconstant initial-comment-eol (list #\; #\linefeed #\return))
+(defconstant initial-comment-eol '(#\; #\newline #\linefeed #\return))
 (defun lcomment-eolp (c)
   (member c initial-comment-eol))
 
-(defun my-peek-char (stream) (peek-char nil stream))
-(defun my-read-char (stream) (read-char nil stream))
+; (defun my-peek-char (stream) (peek-char nil stream))
+
+(defun my-peek-char (stream)
+  (let ((c (peek-char nil stream t nil nil)))
+    (princ "DEBUG: my-peek-char returned=") (write c) (terpri)
+    c))
+(defun my-read-char (stream) (read-char stream t nil nil))
 
 ;    ; Top level - read a sweet-expression (t-expression).  Handle special
 ;    ; cases, such as initial indent; call it-expr for normal case.
@@ -88,25 +93,21 @@
 ;                      results-value)))))))
 
 
-;;  ; Consume an end-of-line sequence, ('\r' '\n'? | '\n'), and nothing else.
-;;  ; Don't try to handle reversed \n\r (LFCR); doing so will make interactive
-;;  ; guile use annoying (EOF won't be correctly detected) due to a guile bug
-;;  ; (in guile before version 2.0.8, peek-char incorrectly
-;;  ; *consumes* EOF instead of just peeking).
-;;  (defun consume-end-of-line (stream)
-;;    (let ((c (my-peek-char stream)))
-;;      (cond
-;;        ((eql c #\return)
-;;          (my-read-char stream)
-;;          (if (eql (my-peek-char stream) #\linefeed)
-;;              (my-read-char stream)))
-;;        ((eql c #\linefeed)
-;;          (my-read-char stream)))))
-;;  
+; Consume an end-of-line sequence, ('\r' '\n'? | '\n')
+(defun consume-end-of-line (stream)
+  (let ((c (my-peek-char stream)))
+    (cond
+      ((eql c #\return)
+        (my-read-char stream)
+        (if (eql (my-peek-char stream) #\linefeed)
+            (my-read-char stream)))
+      ((or (eql c #\linefeed) (eql c #\newline))
+        (my-read-char stream)))))
+
+; Consume every non-eol character in the current line.
+; End on EOF or end-of-line char.
+; Do NOT consume the end-of-line character(s).
 (defun consume-to-eol (stream)
-  ; Consume every non-eol character in the current line.
-  ; End on EOF or end-of-line char.
-  ; Do NOT consume the end-of-line character(s).
   (let ((c (my-peek-char stream)))
     (when (not (char-line-endingp c))
         (my-read-char stream)
@@ -115,12 +116,13 @@
 (defun t-expr (stream)
   (let* ((c (my-peek-char stream)))
     (cond
-;      ((lcomment-eolp c)
-;        (consume-to-eol stream)
-;        (consume-end-of-line stream)
-;        (t-expr stream))
+      ((lcomment-eolp c)
+        (princ "DEBUG: Got lcomment-eolp, consuming char=") (write c) (terpri)
+        (consume-to-eol stream)
+        (consume-end-of-line stream)
+        (princ "DEBUG: Done consuming it, try again.") (terpri)
+        (t-expr stream))
       (t (read stream)))))
-
 
 (defun t-expr-entry (stream char)
   (unread-char char stream)
