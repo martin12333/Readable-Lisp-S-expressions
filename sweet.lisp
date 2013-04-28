@@ -76,11 +76,8 @@
 (defconstant vertical-tab (code-char 11)) ; VT is decimal 11.
 (defconstant form-feed #\page)            ; FF is decimal 12.
 
-; TODO
-; (defconstant whitespace-chars
-;    (list tab linefeed line-tab form-feed carriage-return #\space))
 (defconstant whitespace-chars
-   (list #\space #\linefeed #\newline #\return))
+   (list #\space #\tab #\linefeed #\newline #\return vertical-tab form-feed))
 
 ; If t, return |...| symbols as-is, including the vertical bars.
 (defvar literal-barred-symbol nil)
@@ -900,10 +897,9 @@
             (consume-to-eol stream)
             (consume-end-of-line stream)
             (t-expr stream))
-          ; TODO
-          ; ((or (eql c form-feed) (eql c vertical-tab))
-          ;   (consume-ff-vt stream)
-          ;   (t-expr stream))
+          ((or (eql c form-feed) (eql c vertical-tab))
+            (consume-ff-vt stream)
+            (t-expr stream))
           ((char-icharp c)
             (let ((indentation-list (cons #\^ (accumulate-ichar stream))))
               (if (not (member (my-peek-char stream) initial-comment-eol))
