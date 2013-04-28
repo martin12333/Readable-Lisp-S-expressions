@@ -64,6 +64,8 @@
 
 (defconstant period-symbol '|.|)
 
+(defconstant scomment-result '(scomment ()))
+
 ; Marker for empty values.
 ; Several Common Lisp readtable constructs return nothing using (values),
 ; but unfortunately when that happens the build-in Common Lisp reader
@@ -231,18 +233,6 @@
 ;           scomment-result) ; Treat as comment.
 ;         (t (read-error "Unsupported #! combination")))))
 ; 
-;   ; A cons cell always has a unique address (as determined by eqp);
-;   ; we'll use this special cell to tag unmatched datum label references.
-;   ; An unmatched datum label will have the form
-;   ; (cons unmatched-datum-label-tag NUMBER)
-;   (setq unmatched-datum-label-tag
-;     (cons 'unmatched-datum-label-tag 'label))
-;   (defun is-matching-label-tagp (number value)
-;     (and
-;       (consp value)
-;       (eq  (car value) unmatched-datum-label-tag)
-;       (eql (cdr value) number)))
-; 
 ;   ; Gobble up the to-gobble characters from stream, and return # ungobbled.
 ;   (defun gobble-chars (stream to-gobble)
 ;     (if (null to-gobble)
@@ -253,7 +243,6 @@
 ;             (gobble-chars stream (cdr to-gobble)))
 ;           (t (string-length to-gobble)))))
 ; 
-;   (setq scomment-result '(scomment ()))
 ; 
 ;   (defun process-sharp (no-indent-read stream)
 ;     ; We've read a # character.  Returns what it represents as
@@ -515,7 +504,7 @@
 (defun n-expr-or-scomment (stream)
   (let ((result (read-preserving-whitespace stream t nil)))
     (if (eq result empty-values)
-      (list 'scomment ())
+      scomment-result
       (list 'normal result))))
 
 (defun neoteric-read-nocomment (stream)
