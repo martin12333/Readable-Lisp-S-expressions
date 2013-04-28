@@ -39,7 +39,7 @@
   '(#\( #\) #\[ #\] #\{ #\} #\space #\tab #\newline #\return #\#
     #\' #\` #\,))
 
-; Nonsense marker for eof - TODO - remove
+; Marker for eof
 (defconstant my-eof-marker (cons 'my-eof-marker '()))
 
 (defvar *neoteric-underlying-readtable* (copy-readtable)
@@ -373,18 +373,14 @@
 
 
 ; Read until }, then process list as infix list.
-; TODO: Make more efficient by rm copy-readtable.
 (defun full-curly-brace-infix-reader (stream char)
   (declare (ignore char))
-  (let* ((saved-original-readtable (copy-readtable *original-readtable*))
-         (saved-readtable (copy-readtable *readtable*))
-         (enabled (enable-neoteric))
-         (result (my-read-delimited-list #\} stream))
-         (processed-result (process-curly result)))
-    (declare (ignore enabled))
-    (setq *original-readtable* saved-original-readtable)
-    (setq *readtable* saved-readtable)
-    processed-result))
+  (let ((*readtable* *readtable*) ; Setup to restore on return.
+        (*readable-active* *readable-active*))
+    (enable-neoteric)
+    (let* ((result (my-read-delimited-list #\} stream))
+           (processed-result (process-curly result)))
+      processed-result)))
 
 (defun enable-full-curly-infix ()
   (setup-enable)
