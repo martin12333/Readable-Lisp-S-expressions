@@ -3,8 +3,8 @@
 ; This is an easy-to-use infix notation that works
 ; well with other Common Lisp capabilities (e.g., quasiquoting and macros).
 ; Basically, {a op b op c ...} => (op a b c ....).
-; It's homoiconic (you can see where lists start and end) and doesn't require
-; registration of operators before use. For more information, see:
+; It's homoiconic (you can see where lists start and end) and easy to use
+; (e.g., no need to register operators).  For more information, see:
 ;   http://readable.sourceforge.net.
 ;
 ; Copyright (C) 2007-2013 by David A. Wheeler
@@ -28,8 +28,8 @@
 ; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 ; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ; OTHER DEALINGS IN THE SOFTWARE.
-;
-;
+
+
 ; This implements an basic-curly-infix reader, an extension of s-expressions
 ; that can read "basic curly-infix lists".  A basic curly-infix list
 ; is surrounded by {...} instead (...), and the reader maps it as follows:
@@ -52,12 +52,13 @@
 (cl:in-package :readable)
 
 (defvar *original-readtable* (copy-readtable) "Saved readtable")
+(defvar *readable-active* nil)
 
 ; Utility functions to implement the simple infix system:
 
 ; Return true if lyst has an even # of parameters, and the (alternating) first
 ; ones are "op".  Used to determine if a longer lyst is infix.
-; Otherwise it returns NIL (False).
+; Otherwise it returns nil (false).
 ; If passed empty list, returns true (so recursion works correctly).
 (defun even-and-op-prefixp (op lyst)
    (cond
@@ -67,8 +68,8 @@
      ((not (consp (cdr lyst))) nil) ; fail - wrong # or improper list.
      (t (even-and-op-prefixp op (cddr lyst))))) ; recurse.
 
-; Return True if the lyst is in simple infix format (and should be converted
-; at read time).  Else returns NIL.
+; Return true if the lyst is in simple infix format (and should be converted
+; at read time).  Else returns nil.
 (defun simple-infix-listp (lyst)
   (and
     (consp lyst)           ; Must have cons;  '() doesn't count.
@@ -108,10 +109,19 @@
   (let ((result (read-delimited-list #\} stream t)))
     (process-curly result)))
 
+(defun setup-enable ()
+  (cond
+    ((not *readable-active*)
+      (setq *original-readtable* *readtable*)
+      (setq *readtable* (copy-readtable))
+      (setq *readable-active* t))
+    (t
+      (setq *readtable* (copy-readtable *original-readtable*))))
+  (values))
+
 (defun enable-basic-curly ()
-  ; This starts from a known state.  You can omit this if there's
-  ; no way to transition between different expression reading formats:
-  (setq *original-readtable* (copy-readtable))
+  ; Save old readtable:
+  (setup-enable)
   ; The following install the {...} reader.
   ; See "Common Lisp: The Language" by Guy L. Steele, 2nd edition,
   ; pp. 542-548 and pp. 571-572.
@@ -119,9 +129,11 @@
   (set-macro-character #\{ #'curly-brace-infix-reader)
   ; Necessary, else a cuddled closing brace will be part of an atom. ; (
   (set-macro-character #\} (get-macro-character #\) nil))
-  t)
+  (values))
 
 (defun disable-readable ()
-  (setq *readtable* *original-readtable*)
-  t)
+  (when *readable-active*
+    (setq *readtable* *original-readtable*)
+    (setq *readable-active* nil))
+  (values))
 

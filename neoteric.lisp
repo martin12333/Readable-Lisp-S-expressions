@@ -260,7 +260,7 @@
 
 
 (defun enable-neoteric ()
-  (setq *original-readtable* (copy-readtable))
+  (setup-enable)
   (setq *neoteric-underlying-readtable* (copy-readtable))
   (set-macro-character #\{ #'neoteric-curly-brace nil
     *neoteric-underlying-readtable*) ; (
@@ -362,7 +362,7 @@
 
   (setq *neoteric-readtable* *readtable*)
 
-  t) ; Return "t" meaning "it worked".
+  (values))
 
 
 ; Read until }, then process list as infix list.
@@ -380,12 +380,12 @@
     processed-result))
 
 (defun enable-full-curly-infix ()
-  (setq *original-readtable* (copy-readtable))
+  (setup-enable)
   ; Invoke curly-brace-infix-reader when opening curly brace is read in:
   (set-macro-character #\{ #'full-curly-brace-infix-reader) ; (
   ; This is necessary, else a cuddled closing brace will be part of an atom:
   (set-macro-character #\} (get-macro-character #\) nil))
-  t) ; Meaning "Did it"
+  (values)) ; Meaning "Did it"
 
 
 ; TODO: sbcl reports the following error:

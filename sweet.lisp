@@ -955,6 +955,6 @@
   (enable-neoteric)
   (compute-sweet-redirect-readtable)
   (setq *readtable* *sweet-redirect-readtable*)
-  t) ; Meaning "Did it"
+  (values))
 
 
