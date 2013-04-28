@@ -391,7 +391,7 @@
 (defun enable-curly-infix ()
   (enable-full-curly-infix))
 
-(defun neoteric-read (&optional (stream *standard-input*))
+(defun curly-infix-read (&optional (stream *standard-input*))
   (let ((*readtable* *readtable*) ; Setup to restore on return.
         (*readable-active* *readable-active*))
     (enable-full-curly-infix)
