@@ -479,6 +479,13 @@
 ;             (t (read-error "Unsupported hash"))))
 ;         (list 'normal (neoteric-read-nocomment stream))))
 
+
+; TODO: Need to implement a slightly different underlying reader that
+; reads #|...|# and #;datum, but instead of returning (values) - which
+; causes the reader to instantly recurse outside our control and do the
+; wrong thing - it should return a distinctive cons value, which we will
+; recognize as an scomment.
+
 ; TODO: Stubs.
 (defun n-expr-or-scomment (stream)
   ; (princ "DEBUG: Got to n-expr-or-comment") (terpri)
