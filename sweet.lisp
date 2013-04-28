@@ -54,6 +54,9 @@
 
 (defconstant period-symbol '|.|)
 
+; TODO: Marker for empty values.
+(defconstant empty-values (cons 'empty-values-cons nil))
+
 ; TODO:
 (defconstant form-feed #\page)
 (defconstant vertical-tab #\page)
@@ -336,30 +339,33 @@
 ;                   scomment-result) ; Return comment
 ;                 (t nil)))
 ; 
-;   ; detect #| or |#
-;   (defun nest-comment (fake-stream)
-;     (let ((c (my-read-char fake-stream)))
-;       (cond
-;         ((eof-objectp c)
-;           (values))
-;         ((char=p c #\|)
-;           (let ((c2 (my-peek-char fake-stream)))
-;             (if (char=p c2 #\#)
-;                 (progn
-;                   (my-read-char fake-stream)
-;                   (values))
-;                 (nest-comment fake-stream))))
-;         ((and hash-pipe-comment-nestsp (char=p c #\#))
-;           (let ((c2 (my-peek-char fake-stream)))
-;             (if (char=p c2 #\|)
-;                 (progn
-;                   (my-read-char fake-stream)
-;                   (nest-comment fake-stream))
-;                 (values))
-;             (nest-comment fake-stream)))
-;         (t
-;           (nest-comment fake-stream)))))
-; 
+
+; detect #| or |#
+(defconstant hash-pipe-comment-nestsp t)
+(defun nest-comment (stream)
+  (let ((c (my-read-char stream)))
+    (cond
+      ((eof-objectp c)
+        empty-values)
+      ((char= c #\|)
+        (let ((c2 (my-peek-char stream)))
+          (if (char= c2 #\#)
+              (progn
+                (my-read-char stream)
+                empty-values)
+              (nest-comment stream))))
+      ((and hash-pipe-comment-nestsp (char= c #\#))
+        (let ((c2 (my-peek-char stream)))
+          (if (char= c2 #\|)
+              (progn
+                (my-read-char stream)
+                (nest-comment stream))
+              empty-values)
+          (nest-comment stream)))
+      (t
+        (nest-comment stream)))))
+
+
 ;   (setq digits '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
 ; 
 ;   (defun process-period (stream)
