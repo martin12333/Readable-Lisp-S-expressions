@@ -137,3 +137,12 @@
     (setq *readable-active* nil))
   (values))
 
+
+(defun basic-curly-read (&optional (stream *standard-input*))
+  (let ((saved-readtable *readtable*))
+    (enable-basic-curly)
+    (let ((result (read stream)))
+      (setq *readtable* saved-readtable)
+      result)))
+
+

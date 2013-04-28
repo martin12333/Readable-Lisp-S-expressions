@@ -18,8 +18,11 @@
 
 (defpackage #:readable
   (:use :cl)
-  (:export #:enable-basic-curly #:enable-full-curly-infix
-           #:enable-neoteric #:enable-sweet
+  (:export #:enable-basic-curly #:basic-curly-read
+           #:enable-full-curly-infix #:enable-curly-infix
+           #:curly-infix-read
+           #:enable-neoteric #:neoteric-read
+           #:enable-sweet #:sweet-read
            #:disable-readable
            #:$nfx$ #:$bracket-apply$))
 

@@ -388,6 +388,23 @@
   (set-macro-character #\} (get-macro-character #\) nil))
   (values)) ; Meaning "Did it"
 
+(defun enable-curly-infix ()
+  (enable-full-curly-infix))
+
+
+(defun curly-infix-read (&optional (stream *standard-input*))
+  (let ((saved-readtable *readtable*))
+    (enable-full-curly-infix)
+    (let ((result (read stream)))
+      (setq *readtable* saved-readtable)
+      result)))
+
+(defun neoteric-read (&optional (stream *standard-input*))
+  (let ((saved-readtable *readtable*))
+    (enable-neoteric)
+    (let ((result (read stream)))
+      (setq *readtable* saved-readtable)
+      result)))
 
 ; TODO: sbcl reports the following error:
 ; ; file: /home/dwheeler/readable-code/neoteric.lisp

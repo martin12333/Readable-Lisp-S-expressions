@@ -971,3 +971,10 @@
   (setq *readtable* *sweet-redirect-readtable*)
   (values))
 
+(defun sweet-read (&optional (stream *standard-input*))
+  (let ((saved-readtable *readtable*))
+    (enable-sweet)
+    (let ((result (read stream)))
+      (setq *readtable* saved-readtable)
+      result)))
+
