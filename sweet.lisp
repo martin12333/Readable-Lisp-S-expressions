@@ -131,62 +131,6 @@
 ;         (princ "\n")))
 ;     data)
 ; 
-;   (defun my-read-delimited-list (my-read stop-char stream)
-;     ; Read the "inside" of a list until its matching stop-char, returning list.
-;     ; stop-char needs to be closing paren, closing bracket, or closing brace.
-;     ; This is like read-delimited-list of Common Lisp, but it
-;     ; calls the specified reader instead.
-;     ; This implements a useful extension: (. b) returns b. This is
-;     ; important as an escape for indented expressions, e.g., (. \\)
-;     (consume-whitespace stream)
-;     (let*
-;       ((pos (get-sourceinfo stream))
-;        (c   (my-peek-char stream)))
-;       (cond
-;         ((eof-objectp c) (read-error "EOF in middle of list") c)
-;         ((char=p c stop-char)
-;           (my-read-char stream)
-;           (attach-sourceinfo pos '()))
-;         ((member c '(#\) #\] #\}))  (read-error "Bad closing character") c)
-;         (t
-;           (let ((datum (my-read stream)))
-;             (cond
-;                ((and (eq datum period-symbol) (char=p c #\.))
-;                  (let ((datum2 (my-read stream)))
-;                    (consume-whitespace stream)
-;                    (cond
-;                      ((eof-objectp datum2)
-;                       (read-error "Early eof in (... .)")
-;                       '())
-;                      ((not (eql (my-peek-char stream) stop-char))
-;                       (read-error "Bad closing character after . datum")
-;                       datum2)
-;                      (t
-;                        (my-read-char stream)
-;                        datum2))))
-;                (t
-;                  (attach-sourceinfo pos
-;                    (cons datum
-;                      (my-read-delimited-list my-read stop-char stream))))))))))
-; 
-;   ; Identifying the list of delimiter characters is harder than you'd think.
-;   ; This list is based on R6RS section 4.2.1, while adding [] and {},
-;   ; but removing "#" from the delimiter set.
-;   ; NOTE: R6RS has "#" has a delimiter.  However, R5RS does not, and
-;   ; R7RS probably will not - http://trac.sacrideo.us/wg/wiki/WG1Ballot3Results
-;   ; shows a strong vote AGAINST "#" being a delimiter.
-;   ; Having the "#" as a delimiter means that you cannot have "#" embedded
-;   ; in a symbol name, which hurts backwards compatibility, and it also
-;   ; breaks implementations like Chicken (has many such identifiers) and
-;   ; Gambit (which uses this as a namespace separator).
-;   ; Thus, this list does NOT have "#" as a delimiter, contravening R6RS
-;   ; (but consistent with R5RS, probably R7RS, and several implementations).
-;   ; Also - R7RS draft 6 has "|" as delimiter, but we currently don't.
-;   (setq neoteric-delimiters
-;      (append (list #\( #\) #\[ #\] #\{ #\}  ; Add [] {}
-;                    #\" #\;)                 ; Could add #\# or #\|
-;              whitespace-chars))
-; 
 ;   (defun consume-whitespace (stream)
 ;     (let ((char (my-peek-char stream)))
 ;       (cond
@@ -281,42 +225,6 @@
 ;       (consp value)
 ;       (eq  (car value) unmatched-datum-label-tag)
 ;       (eql (cdr value) number)))
-; 
-;   ; Patch up datum, starting at position,
-;   ; so that all labels "number" are replaced
-;   ; with the value of "replace".
-;   ; Note that this actually OVERWRITES PORTIONS OF A LIST with "set!",
-;   ; so that we can maintain "eq?"-ness.  This is really wonky,
-;   ; but datum labels are themselves wonky.
-;   ; "skip" is a list of locations that don't need (re)processing; it
-;   ; should be a hash table but those aren't portable.
-;   (defun patch-datum-label-tail (number replace position skip)
-;     (let ((new-skip (cons position skip)))
-;       (cond
-;         ((and (consp position)
-;               (not (eq (car position) unmatched-datum-label-tag))
-;               (not (memq position skip)))
-;           (if (is-matching-label-tagp number (car position))
-;               rplaca position replace) ; Yes, "set!" !!
-;               (patch-datum-label-tail number replace (car position) new-skip))
-;           (if (is-matching-label-tagp number (cdr position))
-;               rplacd position replace) ; Yes, "set!" !!
-;               (patch-datum-label-tail number replace (cdr position) new-skip)))
-;         ((vectorp position)
-;           (do ((len (vector-length position))
-;                (k 0 (+ k 1)))
-;             ((>= k len) (values))
-;             (let ((x (aref position k)))
-;               (if (is-matching-label-tagp number x)
-;                   (vector-set! position k replace)
-;                   (patch-datum-label-tail number replace x new-skip)))))
-;         (t (values)))))
-; 
-;   (defun patch-datum-label (number starting-position)
-;     (if (is-matching-label-tagp number starting-position)
-;         (read-error "Illegal reference as the labelled object itself"))
-;     (patch-datum-label-tail number starting-position starting-position '())
-;     starting-position)
 ; 
 ;   ; Gobble up the to-gobble characters from stream, and return # ungobbled.
 ;   (defun gobble-chars (stream to-gobble)
@@ -473,35 +381,32 @@
 ;             (fold-case-maybe stream
 ;               (concatenate 'string (cons #\.
 ;                 (read-until-delim stream neoteric-delimiters)))))))))
-; 
-; 
-; ; -----------------------------------------------------------------------------
-; ; Sweet Expressions (this implementation maps to the BNF)
-; ; -----------------------------------------------------------------------------
-; 
-;   ; There is no standard Scheme mechanism to unread multiple characters.
-;   ; Therefore, the key productions and some of their supporting procedures
-;   ; return both the information on what ended their reading process,
-;   ; as well the actual value (if any) they read before whatever stopped them.
-;   ; That way, procedures can process the value as read, and then pass on
-;   ; the ending information to whatever needs it next.  This approach,
-;   ; which we call a "non-tokenizing" implementation, implements a tokenizer
-;   ; via procedure calls instead of needing a separate tokenizer.
-;   ; The ending information can be:
-;   ; - "stopper" - this is returned by productions etc. that do NOT
-;   ;     read past the of a line (outside of paired characters and strings).
-;   ;     It is 'normal if it ended normally (e.g., at end of line); else it's
-;   ;     'sublist-marker ($), 'group-split-marker (\\), 'collecting (<*),
-;   ;     'collecting-end (*>), 'scomment (special comments like #|...|#), or
-;   ;     'abbrevw (initial abbreviation with whitespace after it).
-;   ; - "new-indent" - this is returned by productions etc. that DO read
-;   ;     past the end of a line.  Such productions typically read the
-;   ;     next line's indent to determine if they should return.
-;   ;     If they should, they return the new indent so callers can
-;   ;     determine what to do next.  A "*>" should return even though its
-;   ;     visible indent level is length 0; we handle this by prepending
-;   ;     all normal indents with "^", and "*>" generates a length-0 indent
-;   ;     (which is thus shorter than even an indent of 0 characters).
+
+
+
+; There is no standard mechanism to unread multiple characters.
+; Therefore, the key productions and some of their supporting procedures
+; return both the information on what ended their reading process,
+; as well the actual value (if any) they read before whatever stopped them.
+; That way, procedures can process the value as read, and then pass on
+; the ending information to whatever needs it next.  This approach,
+; which we call a "non-tokenizing" implementation, implements a tokenizer
+; via procedure calls instead of needing a separate tokenizer.
+; The ending information can be:
+; - "stopper" - this is returned by productions etc. that do NOT
+;     read past the of a line (outside of paired characters and strings).
+;     It is 'normal if it ended normally (e.g., at end of line); else it's
+;     'sublist-marker ($), 'group-split-marker (\\), 'collecting (<*),
+;     'collecting-end (*>), 'scomment (special comments like #|...|#), or
+;     'abbrevw (initial abbreviation with whitespace after it).
+; - "new-indent" - this is returned by productions etc. that DO read
+;     past the end of a line.  Such productions typically read the
+;     next line's indent to determine if they should return.
+;     If they should, they return the new indent so callers can
+;     determine what to do next.  A "*>" should return even though its
+;     visible indent level is length 0; we handle this by prepending
+;     all normal indents with "^", and "*>" generates a length-0 indent
+;     (which is thus shorter than even an indent of 0 characters).
 
 
 (defconstant group-split (intern "\\\\"))
