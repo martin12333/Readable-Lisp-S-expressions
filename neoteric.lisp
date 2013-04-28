@@ -391,20 +391,18 @@
 (defun enable-curly-infix ()
   (enable-full-curly-infix))
 
-
-(defun curly-infix-read (&optional (stream *standard-input*))
-  (let ((saved-readtable *readtable*))
+(defun neoteric-read (&optional (stream *standard-input*))
+  (let ((*readtable* *readtable*) ; Setup to restore on return.
+        (*readable-active* *readable-active*))
     (enable-full-curly-infix)
-    (let ((result (read stream)))
-      (setq *readtable* saved-readtable)
-      result)))
+    (read stream)))
 
 (defun neoteric-read (&optional (stream *standard-input*))
-  (let ((saved-readtable *readtable*))
+  (let ((*readtable* *readtable*) ; Setup to restore on return.
+        (*readable-active* *readable-active*))
     (enable-neoteric)
-    (let ((result (read stream)))
-      (setq *readtable* saved-readtable)
-      result)))
+    (read stream)))
+
 
 ; TODO: sbcl reports the following error:
 ; ; file: /home/dwheeler/readable-code/neoteric.lisp

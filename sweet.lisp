@@ -972,9 +972,8 @@
   (values))
 
 (defun sweet-read (&optional (stream *standard-input*))
-  (let ((saved-readtable *readtable*))
+  (let ((*readtable* *readtable*) ; Setup to restore on return.
+        (*readable-active* *readable-active*))
     (enable-sweet)
-    (let ((result (read stream)))
-      (setq *readtable* saved-readtable)
-      result)))
+    (read stream)))
 

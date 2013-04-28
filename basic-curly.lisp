@@ -139,10 +139,7 @@
 
 
 (defun basic-curly-read (&optional (stream *standard-input*))
-  (let ((saved-readtable *readtable*))
+  (let ((*readtable* *readtable*) ; Setup to restore on return.
+        (*readable-active* *readable-active*))
     (enable-basic-curly)
-    (let ((result (read stream)))
-      (setq *readtable* saved-readtable)
-      result)))
-
-
+    (read stream)))
