@@ -250,7 +250,6 @@
 ;     ; Since we have to re-implement process-sharp anyway,
 ;     ; the vector representation #(...) uses my-read-delimited-list, which in
 ;     ; turn calls no-indent-read.
-;     ; TODO: Create a readtable for this case.
 ;     (let ((c (my-peek-char stream)))
 ;       (cond
 ;         ((eof-objectp c) scomment-result) ; If eof, pretend it's a comment.
@@ -581,16 +580,6 @@
             (my-read-char stream)
             (maybe-initial-abbrev stream 'unquote-splicing))
           (maybe-initial-abbrev stream 'unquote)))
-; TODO
-;    ((#\#) 
-;      (let* ((consumed-sharp (my-read-char stream))
-;             (result (process-sharp neoteric-read-nocomment stream)))
-;        (cond
-;          ((eq (car result) 'normal)
-;            (list 'normal (neoteric-process-tail stream (cadr result))))
-;          ((eq (car result) 'abbrev)
-;            (maybe-initial-abbrev stream (cadr result)))
-;          (t result))))
     (t
       (n-expr stream))))
 
