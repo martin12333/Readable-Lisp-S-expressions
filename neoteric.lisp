@@ -106,6 +106,8 @@
         (read-from-string my-string))))
 
 
+; This will raise an error on EOF.  That's okay, because we're in the middle
+; of trying to read a delimited list.
 (defun my-read-datum (input-stream)
   (let* ((c (peek-char t input-stream))) ; Consume leading whitespace
     (cond
