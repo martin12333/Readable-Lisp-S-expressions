@@ -1441,7 +1441,6 @@
   (define non-whitespace-indent #\!) ; Non-whitespace-indent char.
   (define sublist (string->symbol "$"))
   (define sublist-char #\$) ; First character of sublist symbol.
-  (define period-symbol period-symbol)
 
   (define (indentation>? indentation1 indentation2)
     (let ((len1 (string-length indentation1))
