@@ -38,6 +38,22 @@
 (defvar *sweet-redirect-readtable*
   "This table redirects any input to sweet-expression processing")
 
+
+(defconstant period-symbol '|.|)
+
+; TODO
+; (defconstant whitespace-chars
+;    (list tab linefeed line-tab form-feed carriage-return #\space))
+(defconstant whitespace-chars
+   (list #\space #\linefeed #\newline #\return))
+
+
+; If t, return |...| symbols as-is, including the vertical bars.
+(defvar literal-barred-symbol nil)
+
+(defun my-char-whitespacep (c)
+  (member c whitespace-chars))
+
 (defconstant line-ending-chars (list #\newline #\linefeed #\return))
 (defun char-line-endingp (char) (member char line-ending-chars))
 
@@ -53,44 +69,6 @@
     (princ "DEBUG: my-peek-char returned=") (write c) (terpri)
     c))
 (defun my-read-char (stream) (read-char stream t nil nil))
-
-;    ; Top level - read a sweet-expression (t-expression).  Handle special
-;    ; cases, such as initial indent; call it-expr for normal case.
-;    (defun t-expr (stream)
-;      (let* ((c (my-peek-char stream)))
-;        ; Check EOF early (a bug in guile before 2.0.8 consumes EOF on peek)
-;        (if (eof-objectp c)
-;            c
-;            (cond
-;              ((lcomment-eolp c)
-;                (consume-to-eol stream)
-;                (consume-end-of-line stream)
-;                (t-expr stream))
-;              ((or (eql c form-feed) (eql c vertical-tab))
-;                (consume-ff-vt stream)
-;                (t-expr stream))
-;              ((char-icharp c)
-;                (let ((indentation-list (cons #\^ (accumulate-ichar stream))))
-;                  (if (not (member (my-peek-char stream) initial-comment-eol))
-;                      (let ((results (n-expr-or-scomment stream)))
-;                        (if (not (eq (car results) 'scomment))
-;                            (cadr results) ; Normal n-expr, return one value.
-;                            (progn ; We have an scomment; skip and try again.
-;                              (hspaces stream)
-;                              (t-expr stream))))
-;                      (progn ; Indented comment-eol, consume and try again.
-;                        (if (member #\! indentation-list)
-;                            (read-error "Empty line with '!'"))
-;                        (consume-to-eol stream)
-;                        (consume-end-of-line stream)
-;                        (t-expr stream)))))
-;              (t
-;                (let* ((results (it-expr stream "^"))
-;                       (results-indent (car results))
-;                       (results-value (cadr results)))
-;                  (if (string= results-indent "")
-;                      (read-error "Closing *> without preceding matching <*")
-;                      results-value)))))))
 
 
 ; Consume an end-of-line sequence, ('\r' '\n'? | '\n')
@@ -113,73 +91,7 @@
         (my-read-char stream)
         (consume-to-eol stream))))
 
-(defun t-expr (stream)
-  (let* ((c (my-peek-char stream)))
-    (cond
-      ((lcomment-eolp c)
-        (princ "DEBUG: Got lcomment-eolp, consuming char=") (write c) (terpri)
-        (consume-to-eol stream)
-        (consume-end-of-line stream)
-        (princ "DEBUG: Done consuming it, try again.") (terpri)
-        (t-expr stream))
-      (t (read stream)))))
 
-(defun t-expr-entry (stream char)
-  (unread-char char stream)
-  (princ "DEBUG entry: ") (write char) (terpri)
-  (let ((*readtable* *neoteric-readtable*))
-    (t-expr stream)))
-
-; Set up a readtable that'll redirect everything.
-(defun compute-sweet-redirect-readtable ()
-  (setq *sweet-redirect-readtable*
-    (let ((new (copy-readtable nil)))
-      (set-syntax-from-char #\# #\' new) ; force # to not be dispatching char.
-      (loop for ci from 0 upto 255 ; TODO: char-code-limit
-         do (set-macro-character (character ci) #'t-expr-entry nil new))
-      new)))
-
-(defun enable-sweet ()
-  (enable-neoteric)
-  (compute-sweet-redirect-readtable)
-  (setq *readtable* *sweet-redirect-readtable*)
-  t) ; Meaning "Did it"
-
-
-;   ; Period symbol.  A symbol starting with "." is not
-;   ; validly readable in R5RS, R6RS, R7RS (except for
-;   ; the peculiar identifier "..."); with the
-;   ; R6RS and R7RS the print representation of
-;   ; string->symbol(".") should be |.| .  However, as an extension, this
-;   ; Scheme reader accepts "." as a valid identifier initial character,
-;   ; in part because guile permits it.
-;   ; For portability, use this formulation instead of '. in this
-;   ; implementation so other implementations don't balk at it.
-;   (setq period-symbol (intern "."))
-; 
-;   (setq line-ending-chars (list #\linefeed #\carriage-return))
-; 
-;   ; This definition of whitespace chars is derived from R6RS section 4.2.1.
-;   ; R6RS doesn't explicitly list the #\space character, be sure to include!
-;   (setq whitespace-chars-ascii
-;      (list tab linefeed line-tab form-feed carriage-return #\space))
-;   ; Note that we are NOT trying to support all Unicode whitespace chars.
-;   (setq whitespace-chars whitespace-chars-ascii)
-; 
-;   ; If t, handle some constructs so we can read and print as Common Lisp.
-;   (setq common-lisp nil)
-; 
-;   ; If t, return |...| symbols as-is, including the vertical bars.
-;   (setq literal-barred-symbol nil)
-; 
-;   ; Returns a true value (not necessarily t)
-;   (defun char-line-endingp (char) (member char line-ending-chars))
-; 
-;   ; Create own version, in case underlying implementation omits some.
-;   (defun my-char-whitespacep (c)
-;     (or (char-whitespacep c) (member c whitespace-chars)))
-; 
-; 
 ;   (defun consume-to-whitespace (stream)
 ;     ; Consume to whitespace
 ;     (let ((c (my-peek-char stream)))
@@ -500,35 +412,6 @@
 ;                   scomment-result) ; Return comment
 ;                 (t nil)))
 ; 
-;   (defun parse-cl (no-indent-read c stream)
-;     ; These are for Common Lisp; the "unsweeten" program
-;     ; can deal with the +++ ones.
-;     (cond
-;       ; In theory we could just abbreviate this as "function".
-;       ; However, this won't work in expressions like (a . #'b).
-;       ((char=p c #\')
-;         '(abbrev +++SHARP-QUOTE-abbreviation+++))
-;       ((char=p c #\:)
-;         '(abbrev +++SHARP-COLON-abbreviation+++))
-;       ((char=p c #\.)
-;         '(abbrev +++SHARP-DOT-abbreviation+++))
-;       ((char=p c #\+)
-;         '(abbrev +++SHARP-PLUS-abbreviation+++))
-;       ((char=p c #\P)
-;         '(abbrev +++SHARP-P-abbreviation+++))
-;       (t nil)))
-; 
-;   ; Translate "x" to Common Lisp representation if we're printing CL.
-;   ; Basically we use a very unusual representation, and then translate it back
-;   (defun translate-cl (x)
-;     (if common-lisp
-;       (case x
-;         ((quasiquote)       '+++CL-QUASIQUOTE-abbreviation+++)
-;         ((unquote)          '+++CL-UNQUOTE-abbreviation+++)
-;         ((unquote-splicing) '+++CL-UNQUOTE-SPLICING-abbreviation+++)
-;         (else x))
-;       x))
-;                   
 ;   ; detect #| or |#
 ;   (defun nest-comment (fake-stream)
 ;     (let ((c (my-read-char fake-stream)))
@@ -575,306 +458,6 @@
 ;               (concatenate 'string (cons #\.
 ;                 (read-until-delim stream neoteric-delimiters)))))))))
 ; 
-;   ; Read an inline hex escape (after \x), return the character it represents
-;   (defun read-inline-hex-escape (stream)
-;     (let* ((chars (read-until-delim stream (append neoteric-delimiters '(#\;))))
-;            (n (string->number (concatenate 'string chars) 16)))
-;       (if (eql #\; (my-peek-char stream))
-;           (my-read-char stream)
-;           (read-error "Unfinished inline hex escape"))
-;       (if (not n)
-;           (read-error "Bad inline hex escape"))
-;       (code-char n)))
-; 
-;   ; We're inside |...| ; return the list of characters inside.
-;   ; Do NOT call fold-case-maybe, because we always use literal values here.
-;   (defun read-symbol-elements (stream)
-;     (let ((c (my-read-char stream)))
-;       (cond
-;         ((eof-objectp c) '())
-;         ((eql c #\|)    '()) ; Expected end of symbol elements
-;         ((eql c #\\)
-;           (let ((c2 (my-read-char stream)))
-;             (cond
-;               ((eof-objectp c) '())
-;               ((eql c2 #\|)   (cons #\| (read-symbol-elements stream)))
-;               ((eql c2 #\\)   (cons #\\ (read-symbol-elements stream)))
-;               ((eql c2 #\a)   (cons (code-char #x0007)
-;                                      (read-symbol-elements stream)))
-;               ((eql c2 #\b)   (cons (code-char #x0008)
-;                                      (read-symbol-elements stream)))
-;               ((eql c2 #\t)   (cons (code-char #x0009)
-;                                      (read-symbol-elements stream)))
-;               ((eql c2 #\n)   (cons (code-char #x000a)
-;                                      (read-symbol-elements stream)))
-;               ((eql c2 #\r)   (cons (code-char #x000d)
-;                                      (read-symbol-elements stream)))
-;               ((eql c2 #\f)   (cons (code-char #x000c) ; extension
-;                                      (read-symbol-elements stream)))
-;               ((eql c2 #\v)   (cons (code-char #x000b) ; extension
-;                                      (read-symbol-elements stream)))
-;               ((eql c2 #\x) ; inline hex escape =  \x hex-scalar-value ;
-;                 (cons 
-;                       (read-inline-hex-escape stream)
-;                       (read-symbol-elements stream))))))
-;         (t (cons c (read-symbol-elements stream))))))
-; 
-;   ; Extension: When reading |...|, *include* the bars in the symbol, so that
-;   ; when we print it out later we know that there were bars there originally.
-;   (defun read-literal-symbol (stream)
-;     (let ((c (my-read-char stream)))
-;       (cond
-;         ((eof-objectp c) (read-error "EOF inside literal symbol"))
-;         ((eql c #\|)    '(#\|)) ; Expected end of symbol elements
-;         ((eql c #\\)
-;           (let ((c2 (my-read-char stream)))
-;             (if (eof-objectp c)
-;               (read-error "EOF after \\ in literal symbol")
-;               (cons c (cons c2 (read-literal-symbol stream))))))
-;         (t (cons c (read-literal-symbol stream))))))
-; 
-;   ; Read |...| symbol (like Common Lisp)
-;   ; This is present in R7RS draft 9.
-;   (defun get-barred-symbol (stream)
-;     (my-read-char stream) ; Consume the initial vertical bar.
-;     (intern (concatenate 'string
-;       (if literal-barred-symbol
-;         (cons #\| (read-literal-symbol stream))
-;         (read-symbol-elements stream)))))
-; 
-;   ; This implements a simple Scheme "read" implementation from "stream",
-;   ; but if it must recurse to read, it will invoke "no-indent-read"
-;   ; (a reader that is NOT indentation-sensitive).
-;   ; This additional parameter lets us easily implement additional semantics,
-;   ; and then call down to this underlying-read procedure when basic reader
-;   ; procedureality (implemented here) is needed.
-;   ; This lets us implement both a curly-infix-ONLY-read
-;   ; as well as a neoteric-read, without duplicating code.
-;   (defun underlying-read (no-indent-read stream)
-;     (consume-whitespace stream)
-;     (let* ((pos (get-sourceinfo stream))
-;            (c   (my-peek-char stream)))
-;       (cond
-;         ((eof-objectp c) c)
-;         ((char=p c #\")
-;           ; old readers tend to read strings okay, call it.
-;           ; (guile 1.8 and gauche/gosh 1.8.11 are fine)
-;           (invoke-read default-scheme-read stream))
-;         (t
-;           ; attach the source information to the item read-in
-;           (attach-sourceinfo pos
-;             (cond
-;               ((char=p c #\#)
-;                 (my-read-char stream)
-;                 (let ((rv (process-sharp no-indent-read stream)))
-;                   (cond
-;                     ((eq (car rv) 'scomment) (no-indent-read stream))
-;                     ((eq (car rv) 'normal) (cadr rv))
-;                     ((eq (car rv) 'abbrev)
-;                       (list (cadr rv) (no-indent-read stream)))
-;                     (t   (read-error "Unknown # sequence")))))
-;               ((char=p c #\.) (process-period stream))
-;               ((or (member c digits) (char=p c #\+) (char=p c #\-))
-;                 (let*
-;                   ((maybe-number (concatenate 'string
-;                      (read-until-delim stream neoteric-delimiters)))
-;                    (as-number (string->number maybe-number)))
-;                   (if as-number
-;                       as-number
-;                       (intern (fold-case-maybe stream maybe-number)))))
-;               ((char=p c #\')
-;                 (my-read-char stream)
-;                 (list (attach-sourceinfo pos 'quote)
-;                   (no-indent-read stream)))
-;               ((char=p c #\`)
-;                 (my-read-char stream)
-;                 (list (attach-sourceinfo pos (translate-cl 'quasiquote))
-;                   (no-indent-read stream)))
-;               ((char=p c #\,)
-;                 (my-read-char stream)
-;                   (cond
-;                     ((char=p #\@ (my-peek-char stream))
-;                       (my-read-char stream)
-;                       (list (attach-sourceinfo pos
-;                                (translate-cl 'unquote-splicing))
-;                        (no-indent-read stream)))
-;                    (t
-;                     (list (attach-sourceinfo pos (translate-cl 'unquote))
-;                       (no-indent-read stream)))))
-;               ((char=p c #\( )
-;                   (my-read-char stream)
-;                   (my-read-delimited-list no-indent-read #\) stream))
-;               ((char=p c #\) )
-;                 (my-read-char stream)
-;                 (read-error "Closing parenthesis without opening")
-;                 (underlying-read no-indent-read stream))
-;               ((char=p c #\[ )
-;                   (my-read-char stream)
-;                   (my-read-delimited-list no-indent-read #\] stream))
-;               ((char=p c #\] )
-;                 (my-read-char stream)
-;                 (read-error "Closing bracket without opening")
-;                 (underlying-read no-indent-read stream))
-;               ((char=p c #\} )
-;                 (my-read-char stream)
-;                 (read-error "Closing brace without opening")
-;                 (underlying-read no-indent-read stream))
-;               ((char=p c #\| )
-;                 ; Read |...| symbol (like Common Lisp and R7RS draft 9)
-;                 (get-barred-symbol stream))
-;               (t ; Nothing else.  Must be a symbol start.
-;                 (intern (fold-case-maybe stream
-;                   (concatenate 'string
-;                     (read-until-delim stream neoteric-delimiters)))))))))))
-; 
-; ; -----------------------------------------------------------------------------
-; ; Curly Infix
-; ; -----------------------------------------------------------------------------
-; 
-;   ; Return true if lyst has an even # of parameters, and the (alternating)
-;   ; first parameters are "op".  Used to determine if a longer lyst is infix.
-;   ; If passed empty list, returns true (so recursion works correctly).
-;   (defun even-and-op-prefixp (op lyst)
-;     (cond
-;       ((null lyst) t)
-;       ((atom lyst) nil)
-;       ((not (equal op (car lyst))) nil) ; fail - operators not the same
-;       ((not (consp (cdr lyst)))  nil) ; Wrong # of parameters or improper
-;       (t   (even-and-op-prefixp op (cddr lyst))))) ; recurse.
-; 
-;   ; Return true if the lyst is in simple infix format
-;   ; (and thus should be reordered at read time).
-;   (defun simple-infix-listp (lyst)
-;     (and
-;       (consp lyst)           ; Must have list;  '() doesn't count.
-;       (consp (cdr lyst))     ; Must have a second argument.
-;       (consp (cddr lyst))    ; Must have a third argument (we check it
-;                              ; this way for performance)
-;       (even-and-op-prefixp (cadr lyst) (cdr lyst)))) ; true if rest is simple
-; 
-;   ; Return alternating parameters in a list (1st, 3rd, 5th, etc.)
-;   (defun alternating-parameters (lyst)
-;     (if (or (null lyst) (null (cdr lyst)))
-;         lyst
-;         (cons (car lyst) (alternating-parameters (cddr lyst)))))
-; 
-;   ; Not a simple infix list - transform it.  Written as a separate procedure
-;   ; so that future experiments or SRFIs can easily replace just this piece.
-;   (defun transform-mixed-infix (lyst)
-;      (cons '$nfx$ lyst))
-; 
-;   ; Given curly-infix lyst, map it to its final internal format.
-;   (defun process-curly (lyst)
-;     (cond
-;      ((atom lyst) lyst) ; E.G., map {} to ().
-;      ((null (cdr lyst)) ; Map {a} to a.
-;        (car lyst))
-;      ((and (consp (cdr lyst)) (null (cddr lyst))) ; Map {a b} to (a b).
-;        lyst)
-;      ((simple-infix-listp lyst) ; Map {a OP b [OP c...]} to (OP a b [c...])
-;        (cons (cadr lyst) (alternating-parameters lyst)))
-;      (t  (transform-mixed-infix lyst))))
-; 
-; 
-;   (defun curly-infix-read-real (no-indent-read stream)
-;     (let* ((pos (get-sourceinfo stream))
-;             (c   (my-peek-char stream)))
-;       (cond
-;         ((eof-objectp c) c)
-;         ((eql c #\;)
-;           (consume-to-eol stream)
-;           (curly-infix-read-real no-indent-read stream))
-;         ((my-char-whitespacep c)
-;           (my-read-char stream)
-;           (curly-infix-read-real no-indent-read stream))
-;         ((eql c #\{)
-;           (my-read-char stream)
-;           ; read in as infix
-;           (attach-sourceinfo pos
-;             (process-curly
-;               (my-read-delimited-list neoteric-read-real #\} stream))))
-;         (t
-;           (underlying-read no-indent-read stream)))))
-; 
-;   ; Read using curly-infix-read-real
-;   (defun curly-infix-read-nocomment (stream)
-;     (curly-infix-read-real curly-infix-read-nocomment stream))
-; 
-; ; -----------------------------------------------------------------------------
-; ; Neoteric Expressions
-; ; -----------------------------------------------------------------------------
-; 
-;   ; Implement neoteric-expression's prefixed (), [], and {}.
-;   ; At this point, we have just finished reading some expression, which
-;   ; MIGHT be a prefix of some longer expression.  Examine the next
-;   ; character to be consumed; if it's an opening paren, bracket, or brace,
-;   ; then the expression "prefix" is actually a prefix.
-;   ; Otherwise, just return the prefix and do not consume that next char.
-;   ; This recurses, to handle formats like f(x)(y).
-;   (defun neoteric-process-tail (stream prefix)
-;       (let* ((pos (get-sourceinfo stream))
-;              (c   (my-peek-char stream)))
-;         (cond
-;           ((eof-objectp c) prefix)
-;           ((char=p c #\( ) ; Implement f(x)
-;             (my-read-char stream)
-;             (neoteric-process-tail stream (attach-sourceinfo pos (cons prefix
-;                   (my-read-delimited-list neoteric-read-nocomment #\) stream)))))
-;           ((char=p c #\[ )  ; Implement f[x]
-;             (my-read-char stream)
-;             (neoteric-process-tail stream (attach-sourceinfo pos
-;               (cons (attach-sourceinfo pos '$bracket-apply$)
-;                 (cons prefix
-;                   (my-read-delimited-list neoteric-read-nocomment #\] stream))))))
-;           ((char=p c #\{ )  ; Implement f{x}
-;             (my-read-char stream)
-;             (neoteric-process-tail stream (attach-sourceinfo pos
-;               (let
-;                 ((tail (process-curly
-;                    (my-read-delimited-list neoteric-read-nocomment #\} stream))))
-;                 (if (eql tail '())
-;                     (list prefix) ; Map f{} to (f), not (f ()).
-;                     (list prefix tail))))))
-;           (t prefix))))
-; 
-; 
-;   ; This is the "real" implementation of neoteric-read.
-;   ; It directly implements unprefixed (), [], and {} so we retain control;
-;   ; it calls neoteric-process-tail so f(), f[], and f{} are implemented.
-;   ;  (if (eof-objectp (my-peek-char stream))
-;   (defun neoteric-read-real (stream)
-;     (let*
-;       ((pos (get-sourceinfo stream))
-;        (c   (my-peek-char stream))
-;        (result
-;          (cond
-;            ((eof-objectp c) c)
-;            ((char=p c #\( )
-;              (my-read-char stream)
-;              (attach-sourceinfo pos
-;                (my-read-delimited-list neoteric-read-nocomment #\) stream)))
-;            ((char=p c #\[ )
-;              (my-read-char stream)
-;              (attach-sourceinfo pos
-;                (my-read-delimited-list neoteric-read-nocomment #\] stream)))
-;            ((char=p c #\{ )
-;              (my-read-char stream)
-;              (attach-sourceinfo pos
-;                (process-curly
-;                  (my-read-delimited-list neoteric-read-nocomment #\} stream))))
-;            ((my-char-whitespacep c)
-;              (my-read-char stream)
-;              (neoteric-read-real stream))
-;            ((eql c #\;)
-;              (consume-to-eol stream)
-;              (neoteric-read-real stream))
-;            (t (underlying-read neoteric-read-nocomment stream)))))
-;       (if (eof-objectp result)
-;           result
-;           (neoteric-process-tail stream result))))
-; 
-;   (defun neoteric-read-nocomment (stream)
-;     (neoteric-read-real stream))
 ; 
 ; ; -----------------------------------------------------------------------------
 ; ; Sweet Expressions (this implementation maps to the BNF)
@@ -906,7 +489,9 @@
 ; 
 ;   (setq group-split (intern "\\\\"))
 ;   (setq group-split-char #\\ ) ; First character of split symbol.
-;   (setq non-whitespace-indent #\!) ; Non-whitespace-indent char.
+
+(defvar non-whitespace-indent #\!) ; Non-whitespace-indent char.
+
 ;   (setq sublist (intern "$"))
 ;   (setq sublist-char #\$) ; First character of sublist symbol.
 ;   (setq period-symbol period-symbol)
@@ -916,31 +501,31 @@
 ;             (len2 (string-length indentation2)))
 ;       (and (> len1 len2)
 ;              (string= indentation2 (substring indentation1 0 len2)))))
-; 
-; 
-;   ; Return t if char is space or tab.
-;   (defun char-hspacep (char)
-;     (or (eql char #\space)
-;         (eql char tab)))
-; 
-;   ; Consume 0+ spaces or tabs
-;   (defun hspaces (stream)
-;     (cond ; Use "cond" as "when" for portability.
-;       ((char-hspacep (my-peek-char stream))
-;         (my-read-char stream)
-;         (hspaces stream))))
-; 
-;   ; Return t if char is space, tab, or !
-;   (defun char-icharp (char)
-;     (or (eql char #\space)
-;         (eql char tab)
-;         (eql char non-whitespace-indent)))
-; 
-;   (defun accumulate-ichar (stream)
-;     (if (char-icharp (my-peek-char stream))
-;         (cons (my-read-char stream) (accumulate-ichar stream))
-;         '()))
-; 
+
+
+; Return t if char is space or tab.
+(defun char-hspacep (char)
+  (or (eql char #\space)
+      (eql char #\tab)))
+
+; Consume 0+ spaces or tabs
+(defun hspaces (stream)
+  (cond ; Use "cond" as "when" for portability.
+    ((char-hspacep (my-peek-char stream))
+      (my-read-char stream)
+      (hspaces stream))))
+
+; Return t if char is space, tab, or !
+(defun char-icharp (char)
+  (or (eql char #\space)
+      (eql char #\tab)
+      (eql char non-whitespace-indent)))
+
+(defun accumulate-ichar (stream)
+  (if (char-icharp (my-peek-char stream))
+      (cons (my-read-char stream) (accumulate-ichar stream))
+      '()))
+
 ;   (defun consume-ff-vt (stream)
 ;     (let ((c (my-peek-char stream)))
 ;       (cond
@@ -972,6 +557,11 @@
 ;             ((consp result) result)
 ;             (t (read-error "Unsupported hash"))))
 ;         (list 'normal (neoteric-read-nocomment stream))))
+
+; TODO: Stub.
+(defun n-expr-or-scomment (stream)
+  (list 'normal (read-preserving-whitespace stream t nil)))
+
 ; 
 ;   ; Read an n-expression.  Returns ('normal n-expr) in most cases;
 ;   ; if it's a special marker, the car is the marker name instead of 'normal.
@@ -1348,44 +938,51 @@
 ;           (read-error "Inconsistent indentation"))
 ;       (list results-indent (attach-sourceinfo pos results-value))))
 ; 
-;   ; Top level - read a sweet-expression (t-expression).  Handle special
-;   ; cases, such as initial indent; call it-expr for normal case.
-;   (defun t-expr (stream)
-;     (let* ((c (my-peek-char stream)))
-;       ; Check EOF early (a bug in guile before 2.0.8 consumes EOF on peek)
-;       (if (eof-objectp c)
-;           c
-;           (cond
-;             ((lcomment-eolp c)
-;               (consume-to-eol stream)
-;               (consume-end-of-line stream)
-;               (t-expr stream))
-;             ((or (eql c form-feed) (eql c vertical-tab))
-;               (consume-ff-vt stream)
-;               (t-expr stream))
-;             ((char-icharp c)
-;               (let ((indentation-list (cons #\^ (accumulate-ichar stream))))
-;                 (if (not (member (my-peek-char stream) initial-comment-eol))
-;                     (let ((results (n-expr-or-scomment stream)))
-;                       (if (not (eq (car results) 'scomment))
-;                           (cadr results) ; Normal n-expr, return one value.
-;                           (progn ; We have an scomment; skip and try again.
-;                             (hspaces stream)
-;                             (t-expr stream))))
-;                     (progn ; Indented comment-eol, consume and try again.
-;                       (if (member #\! indentation-list)
-;                           (read-error "Empty line with '!'"))
-;                       (consume-to-eol stream)
-;                       (consume-end-of-line stream)
-;                       (t-expr stream)))))
-;             (t
-;               (let* ((results (it-expr stream "^"))
-;                      (results-indent (car results))
-;                      (results-value (cadr results)))
-;                 (if (string= results-indent "")
-;                     (read-error "Closing *> without preceding matching <*")
-;                     results-value)))))))
 ; 
+
+(defun it-expr (stream starting-indent)
+  (declare (ignore starting-indent))
+  (let ((result (list "^" (read stream))))
+    (princ "DEBUG: it-expr to return=") (write result) (terpri)
+    result
+))
+
+; Top level - read a sweet-expression (t-expression).  Handle special
+; cases, such as initial indent; call it-expr for normal case.
+(defun t-expr (stream)
+  (let* ((c (my-peek-char stream)))
+        (cond
+          ((lcomment-eolp c)
+            (consume-to-eol stream)
+            (consume-end-of-line stream)
+            (t-expr stream))
+          ; TODO
+          ; ((or (eql c form-feed) (eql c vertical-tab))
+          ;   (consume-ff-vt stream)
+          ;   (t-expr stream))
+          ((char-icharp c)
+            (let ((indentation-list (cons #\^ (accumulate-ichar stream))))
+              (if (not (member (my-peek-char stream) initial-comment-eol))
+                  (let ((results (n-expr-or-scomment stream)))
+                    (if (not (eq (car results) 'scomment))
+                        (cadr results) ; Normal n-expr, return one value.
+                        (progn ; We have an scomment; skip and try again.
+                          (hspaces stream)
+                          (t-expr stream))))
+                  (progn ; Indented comment-eol, consume and try again.
+                    (if (member #\! indentation-list)
+                        (read-error "Empty line with '!'"))
+                    (consume-to-eol stream)
+                    (consume-end-of-line stream)
+                    (t-expr stream)))))
+          (t
+            (let* ((results (it-expr stream "^"))
+                   (results-indent (car results))
+                   (results-value (cadr results)))
+              (if (string= results-indent "")
+                  (read-error "Closing *> without preceding matching <*")
+                  results-value))))))
+
 ;   ; Skip until we find a completely empty line (not even initial space/tab).
 ;   ; We use this after read error to resync to good input.
 ;   (defun read-to-blank-line (stream)
@@ -1405,3 +1002,26 @@
 ;     (catch 'readable
 ;       (lambda () (t-expr stream))
 ;       (lambda (key . args) (read-to-blank-line stream) (t-expr-catch stream))))
+
+(defun t-expr-entry (stream char)
+  (unread-char char stream)
+  (princ "DEBUG entry: ") (write char) (terpri)
+  (let ((*readtable* *neoteric-readtable*))
+    (t-expr stream)))
+
+; Set up a readtable that'll redirect everything.
+(defun compute-sweet-redirect-readtable ()
+  (setq *sweet-redirect-readtable*
+    (let ((new (copy-readtable nil)))
+      (set-syntax-from-char #\# #\' new) ; force # to not be dispatching char.
+      (loop for ci from 0 upto 255 ; TODO: char-code-limit
+         do (set-macro-character (character ci) #'t-expr-entry nil new))
+      new)))
+
+(defun enable-sweet ()
+  (enable-neoteric)
+  (compute-sweet-redirect-readtable)
+  (setq *readtable* *sweet-redirect-readtable*)
+  t) ; Meaning "Did it"
+
+
