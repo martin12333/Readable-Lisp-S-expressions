@@ -409,12 +409,12 @@
 ;     (which is thus shorter than even an indent of 0 characters).
 
 
-(defconstant group-split (intern "\\\\"))
+(defconstant group-split '\\)
 (defconstant group-split-char #\\ ) ; First character of split symbol.
 
 (defvar non-whitespace-indent #\!) ; Non-whitespace-indent char.
 
-(defconstant sublist (intern "$"))
+(defconstant sublist '$)
 (defconstant sublist-char #\$) ; First character of sublist symbol.
 
 
@@ -499,20 +499,22 @@
          (type (car results))
          (expr (cadr results)))
     (declare (ignore type))
+    ; (princ "DEBUG: n-expr, results=") (write results) (terpri)
     (if (eq (car results) 'scomment)
         results
         (cond
-          ((and (eq expr sublist) (eql c sublist-char))
+          ; TODO: Improve Workaround for symbol packaging:
+          ((and (eql c sublist-char) (string= (symbol-name expr) "$"))
             (list 'sublist-marker '()))
-          ((and (eq expr group-split) (eql c group-split-char))
+          ((and (eql c group-split-char) (string= (symbol-name expr) "\\"))
             (list 'group-split-marker '()))
-          ((and (eq expr '<*) (eql c #\<))
+          ((and (eql c #\<) (string= (symbol-name expr) "<*"))
             (list 'collecting '()))
-          ((and (eq expr '*>) (eql c #\*))
+          ((and (eql c #\*) (string= (symbol-name expr) "*>"))
             (list 'collecting-end '()))
-          ((and (eq expr '$$$) (eql c #\$))
+          ((and (eql c #\$) (string= (symbol-name expr) "$$$"))
             (read-error "Error - $$$ is reserved"))
-          ((and (eq expr period-symbol) (eql c #\.))
+          ((and (eql c #\.) (string= (symbol-name expr) "."))
             (list 'period-marker '()))
           (t
             results)))))
