@@ -73,9 +73,8 @@
 ; returns with this instead, so that we can override the reader.
 (defconstant empty-values (cons 'empty-values-cons nil))
 
-; TODO:
-(defconstant form-feed #\page)
-(defconstant vertical-tab #\page)
+(defconstant vertical-tab (code-char 11)) ; VT is decimal 11.
+(defconstant form-feed #\page)            ; FF is decimal 12.
 
 ; TODO
 ; (defconstant whitespace-chars
