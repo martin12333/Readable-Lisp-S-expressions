@@ -341,7 +341,7 @@
 ;                   (consume-to-eol stream)
 ;                   scomment-result) ; Return comment
 ;                 (t nil)))
-; 
+
 
 ; detect #| or |#
 (defconstant hash-pipe-comment-nestsp t)
@@ -376,10 +376,11 @@
 ; Implement #;datum
 (defun wrap-comment-datum (stream sub-char int)
   (declare (ignore sub-char int))
-  (let ((junk (neoteric-read-nocomment stream)))
-    (declare (ignore junk))
-    empty-values))
-
+  (if (my-char-whitespacep (my-peek-char stream))
+    (read-error "#; must not be followed by whitespace")
+    (let ((junk (neoteric-read-nocomment stream)))
+      (declare (ignore junk))
+      empty-values)))
 
 ;   (setq digits '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
 ; 
@@ -507,12 +508,11 @@
       scomment-result
       (list 'normal result))))
 
+; Do a neoteric-read, skipping comments. 
 (defun neoteric-read-nocomment (stream)
-  ; (princ "DEBUG: Got to neoteric-read-nocomment") (terpri)
-  (let ((result (read-preserving-whitespace stream t nil)))
-    (if (eq result empty-values)
-      (neoteric-read-nocomment stream) ; Recurse and try again.
-      (list 'normal result))))
+  (let* ((*readtable* *neoteric-readtable*)
+         (result (read-preserving-whitespace stream t nil)))
+    result))
 
 ; Read an n-expression.  Returns ('normal n-expr) in most cases;
 ; if it's a special marker, the car is the marker name instead of 'normal.
