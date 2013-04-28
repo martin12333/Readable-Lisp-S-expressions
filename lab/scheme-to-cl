@@ -57,6 +57,7 @@ while (<>) {
   s!\(string>\? !(string> !g;
   s!\(string<=\? !(string<= !g;
   s!\(string>=\? !(string>= !g;
+  s!\(substring !(subseq !g;
 
   s!\(display\b!(princ!g;
   s!\(begin\b!(progn!g;
@@ -74,4 +75,7 @@ while (<>) {
 
   print;
 }
+
+
+
 
