@@ -360,6 +360,7 @@
   (set-dispatch-macro-character #\# #\+ #'wrap-dispatch-disabled-notail)
   (set-dispatch-macro-character #\# #\- #'wrap-dispatch-disabled-notail)
 
+  ; Save in separate variable, so "sweet" can just create its own if needed
   (setq *neoteric-readtable* *readtable*)
 
   (values))

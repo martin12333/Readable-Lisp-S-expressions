@@ -38,8 +38,13 @@
 (defvar *sweet-redirect-readtable*
   "This table redirects any input to sweet-expression processing")
 
-; This is neoteric's readtable, but items that would return (values)
-; will instead return "empty-values".
+; The underlying readtable is mostly a neoteric reader.  However,
+; we must implement a slightly different underlying reader that
+; reads #|...|# and #;datum. The problem is that if the underlying reader
+; return no values, e.g., "(values)" - as is usual - the Common Lisp
+; "read" will instantly recurse outside of our control and do the
+; wrong thing. Thus, we'll specially wrap such cases and return a
+; distinctive cons value "empty-values", to represent "no value" case.
 (defvar *underlying-sweet-readtable*
   "This table is basically neoteric-expressions but some tweaks")
 
@@ -374,6 +379,18 @@
       (t
         (nest-comment stream)))))
 
+; Implement #|...|#
+(defun wrap-comment-block (stream sub-char int)
+  (declare (ignore sub-char int))
+  (nest-comment stream))
+
+; Implement #;datum
+(defun wrap-comment-datum (stream sub-char int)
+  (declare (ignore sub-char int))
+  (let ((junk (neoteric-read-nocomment stream)))
+    (declare (ignore junk))
+    empty-values))
+
 
 ;   (setq digits '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
 ; 
@@ -476,8 +493,6 @@
       (append lhs rhs)
       (read-error "Must have proper list on left-hand-side to append data")))
 
-;   ; Read an n-expression.  Returns ('scomment '()) if it's an scomment,
-;   ; else returns ('normal n-expr).
 ;   ; Note: If a *value* begins with #, process any potential neoteric tail,
 ;   ; so weird constructs beginning with "#" like nil() will still work.
 ;   (defun n-expr-or-scomment (stream)
@@ -495,20 +510,20 @@
 ;         (list 'normal (neoteric-read-nocomment stream))))
 
 
-; TODO: Need to implement a slightly different underlying reader that
-; reads #|...|# and #;datum, but instead of returning (values) - which
-; causes the reader to instantly recurse outside our control and do the
-; wrong thing - it should return a distinctive cons value, which we will
-; recognize as an scomment.
-
-; TODO: Stubs.
+; Read an n-expression.  Returns ('scomment '()) if it's an scomment,
+; else returns ('normal n-expr).
 (defun n-expr-or-scomment (stream)
-  ; (princ "DEBUG: Got to n-expr-or-comment") (terpri)
-  (list 'normal (read-preserving-whitespace stream t nil)))
+  (let ((result (read-preserving-whitespace stream t nil)))
+    (if (eq result empty-values)
+      (list 'scomment ())
+      (list 'normal result))))
 
 (defun neoteric-read-nocomment (stream)
   ; (princ "DEBUG: Got to neoteric-read-nocomment") (terpri)
-  (read-preserving-whitespace stream t nil))
+  (let ((result (read-preserving-whitespace stream t nil)))
+    (if (eq result empty-values)
+      (neoteric-read-nocomment stream) ; Recurse and try again.
+      (list 'normal result))))
 
 ; Read an n-expression.  Returns ('normal n-expr) in most cases;
 ; if it's a special marker, the car is the marker name instead of 'normal.
@@ -522,6 +537,8 @@
          (expr (cadr results)))
     (declare (ignore type))
     ; (princ "DEBUG: n-expr, results=") (write results) (terpri)
+    ; (princ "DEBUG: n-expr, car results=") (write (car results)) (terpri)
+    ; (princ "DEBUG: n-expr, car results scomment=") (write (eq (car results) 'scomment)) (terpri)
     (if (eq (car results) 'scomment)
         results
         (cond
@@ -536,6 +553,7 @@
             (list 'collecting-end '()))
           ((and (eql c #\$) (string= (symbol-name expr) "$$$"))
             (read-error "Error - $$$ is reserved"))
+          ; TODO: Fix so "." can be on line by itself.
           ((and (eql c #\.) (string= (symbol-name expr) "."))
             (list 'period-marker '()))
           (t
@@ -709,6 +727,7 @@
   (let* ((basic-full-results (n-expr-first stream))
          (basic-special      (car basic-full-results))
          (basic-value        (cadr basic-full-results)))
+    ; (princ "DEBUG: head=") (write basic-full-results) (terpri)
     (cond
       ((eq basic-special 'collecting)
         (hspaces stream)
@@ -805,7 +824,7 @@
   (let* ((head-full-results (head stream))
          (head-stopper      (car head-full-results))
          (head-value        (cadr head-full-results)))
-    ; (princ "DEBUG: it-expr-real: head result=") (write head-full-results) (terpri)
+; (princ "DEBUG: it-expr-real: head result=") (write head-full-results) (terpri)
     (if (and (not (null head-value)) (not (eq head-stopper 'abbrevw)))
         ; The head... branches:
         (cond
@@ -969,8 +988,12 @@
 (defun enable-sweet ()
   (enable-neoteric)
   (setq *readtable* (copy-readtable *readtable*))
-  ; TODO: Set #|..|#
+
+  ; Handle #|...|# and #; specially
+  (set-dispatch-macro-character #\# #\| #'wrap-comment-block)
+  (set-dispatch-macro-character #\# #\; #'wrap-comment-datum)
   (setq *underlying-sweet-readtable* *readtable*)
+
   (compute-sweet-redirect-readtable)
   (setq *readtable* *sweet-redirect-readtable*)
   (values))
