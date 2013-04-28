@@ -29,6 +29,7 @@ while (<>) {
   s!\(memv\b!(member!g;
 
   s!\(char-ci=\?!(char-equal!g;
+  s!\(char=\? !(char=! g;
 
   s!\(list->string\b!(concatenate 'string!g;
   s!\(integer->char\b!(code-char!g;
