@@ -645,6 +645,7 @@
       (let* ((n-full-results (n-expr stream))
              (n-stopper      (car n-full-results))
              (n-value        (cadr n-full-results)))
+        (declare (ignore n-value))
         (cond
           ((eq n-stopper 'scomment) ; Consume scomments.
             (hspaces stream)
@@ -660,6 +661,7 @@
       (let* ((pn-full-results (n-expr stream))
              (pn-stopper      (car pn-full-results))
              (pn-value        (cadr pn-full-results)))
+        (declare (ignore pn-value))
         (cond
           ((eq pn-stopper 'scomment)
             (hspaces stream)
