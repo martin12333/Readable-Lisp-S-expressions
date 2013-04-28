@@ -38,6 +38,11 @@
 (defvar *sweet-redirect-readtable*
   "This table redirects any input to sweet-expression processing")
 
+; This is neoteric's readtable, but items that would return (values)
+; will instead return "empty-values".
+(defvar *underlying-sweet-readtable*
+  "This table is basically neoteric-expressions but some tweaks")
+
 ; These stubs could be used to attach position info
 (defun attach-sourceinfo (pos value)
   (declare (ignore pos))
@@ -54,7 +59,11 @@
 
 (defconstant period-symbol '|.|)
 
-; TODO: Marker for empty values.
+; Marker for empty values.
+; Several Common Lisp readtable constructs return nothing using (values),
+; but unfortunately when that happens the build-in Common Lisp reader
+; performs actions that we can't intercept.  So we'll override the "empty"
+; returns with this instead, so that we can override the reader.
 (defconstant empty-values (cons 'empty-values-cons nil))
 
 ; TODO:
@@ -945,7 +954,7 @@
 (defun t-expr-entry (stream char)
   (unread-char char stream)
   ; (princ "DEBUG entry: ") (write char) (terpri)
-  (let ((*readtable* *neoteric-readtable*))
+  (let ((*readtable* *underlying-sweet-readtable*))
     (t-expr stream)))
 
 ; Set up a readtable that'll redirect everything.
@@ -959,8 +968,10 @@
 
 (defun enable-sweet ()
   (enable-neoteric)
+  (setq *readtable* (copy-readtable *readtable*))
+  ; TODO: Set #|..|#
+  (setq *underlying-sweet-readtable* *readtable*)
   (compute-sweet-redirect-readtable)
   (setq *readtable* *sweet-redirect-readtable*)
   (values))
-
 
