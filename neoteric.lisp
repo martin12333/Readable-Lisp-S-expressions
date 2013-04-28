@@ -40,7 +40,7 @@
     #\' #\` #\,))
 
 ; Nonsense marker for eof - TODO - remove
-(defconstant neoteric-eof-marker (cons 'eof '()))
+(defconstant my-eof-marker (cons 'my-eof-marker '()))
 
 (defvar *neoteric-underlying-readtable* (copy-readtable)
         "Use this table when reading neoteric atoms")
@@ -95,12 +95,16 @@
     ((*readtable* *neoteric-underlying-readtable*) ; Temporary switch
      (clist
       (loop
-        until (find (peek-char nil input-stream) neoteric-delimiters)
+        until
+          (let* ((c (peek-char nil input-stream nil my-eof-marker)))
+            (or (eq c my-eof-marker) (find c neoteric-delimiters)))
+        ; TODO: Cleanly handle EOF without delimiter first.
         collect (read-char input-stream)))
      (my-string (concatenate 'string start clist)))
     (if (string= my-string ".")
         '|.|
         (read-from-string my-string))))
+
 
 (defun my-read-datum (input-stream)
   (let* ((c (peek-char t input-stream))) ; Consume leading whitespace
@@ -152,9 +156,9 @@
 ; Otherwise, just return the prefix and do not consume that next char.
 ; This recurses, to handle formats like f(x)(y).
 (defun neoteric-process-tail (input-stream prefix)
-    (let* ((c (peek-char nil input-stream)))
+    (let* ((c (peek-char nil input-stream nil my-eof-marker)))
       (cond
-        ((eq c neoteric-eof-marker) prefix) ; TODO
+        ((eq c my-eof-marker) prefix)
         ((eql c #\( ) ; Implement f(x).
           (read-char input-stream nil nil t) ; consume opening char
           (neoteric-process-tail input-stream
