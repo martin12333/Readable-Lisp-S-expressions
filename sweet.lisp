@@ -56,6 +56,10 @@
   (declare (ignore stream))
   nil)
 
+; We'll shadow this with a special variable if we want to 
+; pass an overriding indent value (e.g., for backquote/comma processing)
+(defvar override-indent nil)
+
 ; TODO: Handle EOF
 (defconstant eof-object (cons 'eof-objectp-special '()))
 (defun eof-objectp (c) (eq c eof-object))
@@ -501,6 +505,7 @@
 ;             (t (read-error "Unsupported hash"))))
 ;         (list 'normal (neoteric-read-nocomment stream))))
 
+; TODO: Add support for "." as datum, so can read ' a b . c
 
 ; Read an n-expression.  Returns ('scomment '()) if it's an scomment,
 ; else returns ('normal n-expr).
