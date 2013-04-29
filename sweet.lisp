@@ -505,20 +505,19 @@
 ;             (t (read-error "Unsupported hash"))))
 ;         (list 'normal (neoteric-read-nocomment stream))))
 
-; TODO: Add support for "." as datum, so can read ' a b . c
-
 ; Read an n-expression.  Returns ('scomment '()) if it's an scomment,
 ; else returns ('normal n-expr).
 (defun n-expr-or-scomment (stream)
-  (let ((result (read-preserving-whitespace stream t nil)))
+  (let ((result (my-read-datum stream))) ; Make it possible to return ".".
     (if (eq result empty-values)
       scomment-result
       (list 'normal result))))
 
-; Do a neoteric-read, skipping comments. 
+; Do a neoteric-read, skipping comments.   The underlying neoteric reader
+; skips comments anyway, so let's use it directly.
 (defun neoteric-read-nocomment (stream)
   (let* ((*readtable* *neoteric-readtable*)
-         (result (read-preserving-whitespace stream t nil)))
+         (result (my-read-datum stream))) ; Make it possible to return ".".
     result))
 
 ; Read an n-expression.  Returns ('normal n-expr) in most cases;

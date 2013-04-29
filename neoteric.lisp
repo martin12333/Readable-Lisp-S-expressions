@@ -105,8 +105,11 @@
         (read-from-string my-string))))
 
 
-; This will raise an error on EOF.  That's okay, because we're in the middle
-; of trying to read a delimited list.
+; TODO: Handle EOF without intervening whitespace.
+; In neoteric-expressions it'll become an error anyway (because we're in the
+; middle of reading a delimited list), but the sweet-expression reader uses
+; this procedure to read top-level items... so an EOF *could* happen, though
+; technically we don't *have* support such malformed input.
 (defun my-read-datum (input-stream)
   (let* ((c (peek-char t input-stream))) ; Consume leading whitespace
     (cond
