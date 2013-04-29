@@ -513,12 +513,23 @@
       scomment-result
       (list 'normal result))))
 
+; Read a straight-up n-expression.  Skip scomments.
+(defun neoteric-read-nocomment (stream)
+  (let ((result (my-read-datum stream))) ; Make it possible to return ".".
+  (if (eq result empty-values)
+      (neoteric-read-nocomment stream)
+      result)))
+
+; TODO: Remove this.
+; Old version - this one no longer works because we're specially implementing
+; backquotes/commas, and if we call the undelrying neoteric-readtable it
+; won't implement our special version of backquotes and commas.
 ; Do a neoteric-read, skipping comments.   The underlying neoteric reader
 ; skips comments anyway, so let's use it directly.
-(defun neoteric-read-nocomment (stream)
-  (let* ((*readtable* *neoteric-readtable*)
-         (result (my-read-datum stream))) ; Make it possible to return ".".
-    result))
+; (defun neoteric-read-nocomment (stream)
+;   (let* ((*readtable* *neoteric-readtable*)  ; neoteric-readtable
+;          (result (my-read-datum stream))) ; Make it possible to return ".".
+;     result))
 
 ; Read an n-expression.  Returns ('normal n-expr) in most cases;
 ; if it's a special marker, the car is the marker name instead of 'normal.
