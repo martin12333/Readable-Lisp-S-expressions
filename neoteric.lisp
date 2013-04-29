@@ -49,10 +49,9 @@
         "Use this table when about to read a neoteric expression")
 
 ; TODO: Handle eof as directed by "read".  Not currently consistent.
-; TODO: Rationalize error signaling/handling.
+
 (defun read-error (message)
-  (declare (ignore message))
-  nil)
+  (error message))
 
 ; TODO: If possible, make it so clisp doesn't keep responding with |...|
 ; around all tokens.  It's legal, but ugly.  This seems to happen because
