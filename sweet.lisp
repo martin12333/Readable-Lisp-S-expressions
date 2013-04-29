@@ -377,6 +377,13 @@
       (declare (ignore junk))
       empty-values)))
 
+;   ; WON'T WORK: Implement backquote
+;   (defun wrap-backquote (stream char)
+;     (declare (ignore char))
+;     (if (my-char-whitespacep (my-peek-char stream))
+;       'todo ; read as sweet-expression
+;       (neoteric-read-nocomment stream)))
+;   
 ;   (setq digits '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
 ; 
 ;   (defun process-period (stream)
