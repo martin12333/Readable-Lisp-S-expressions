@@ -40,5 +40,6 @@
   :components
     ((:file "basic-curly")
      (:file "neoteric")
+     (:file "backquote") ; Re-implements backquote (needed by sweet)
      (:file "sweet")))
 

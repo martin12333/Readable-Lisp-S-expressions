@@ -60,7 +60,11 @@ common_lisp_systemsdir = $(common_lispdir)/systems
 
 pkg_asd_file=readable.asd
 
-dist_common_lisp_source_pkg_DATA = basic-curly.lisp
+dist_common_lisp_source_pkg_DATA = \
+ basic-curly.lisp neoteric.lisp backquote.lisp sweet.lisp
+
+# Once did: EXTRA_DIST += neoteric.lisp backquote.lisp sweet.lisp
+
 dist_common_lisp_source_pkg_DATA += $(pkg_asd_file)
 
 # Install symlink so asdf can find these files. See:
@@ -233,10 +237,6 @@ bin/diff-s-sweet: src/diff-s-sweet my-subst
 	$(RM) -f $@
 	$(UNSWEETEN) $< > $@
 	chmod a-w $@
-
-# Eventually we'll package this, but for now, just distribute
-# the Common Lisp implementation.
-EXTRA_DIST += neoteric.lisp sweet.lisp
 
 # Implementation and test cases for ANTLR implementation
 # of sweet-expressions.  Again, don't install.
