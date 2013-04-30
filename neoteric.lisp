@@ -104,7 +104,6 @@
         '|.|
         (read-from-string my-string))))
 
-
 ; TODO: Handle EOF without intervening whitespace.
 ; In neoteric-expressions it'll become an error anyway (because we're in the
 ; middle of reading a delimited list), but the sweet-expression reader uses
@@ -229,7 +228,14 @@
   ; Call routine from original readtable and disable temporarily our
   ; readtable.  Then invoke neoteric-process-tail.
   ; TODO: There's no obvious way to *prevent* this from consuming
-  ; trailing whitespace if the top-level routine consumed trailing whitespace.
+  ; trailing whitespace at the top level
+  ; if the top-level routine consumed trailing whitespace, which means
+  ; that outside a list trailing whitespace will be consumed, then the
+  ; tail will be considered, giving the wrong result.
+  ; E.G., the neoteric expression:
+  ;   '#B101 (quote x)
+  ; will evaluate to the incorrect: (5 |QUOTE| |X|)
+  ; instead of the correct 5 followed by x.
   (neoteric-process-tail stream
     (let ((*readtable* *neoteric-underlying-readtable*)) ; temporary switch.
       (funcall
