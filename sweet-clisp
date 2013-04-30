@@ -1,18 +1,16 @@
-#!/usr/bin/env expect
+#!/bin/sh
+
 # By David A. Wheeler. Start up clisp in "sweet-expression" reading mode,
 # so you can try it out.
 
-# Generated automatically by my-subst, DO NOT EDIT!
-
-# *Must* have slash afterwards. Should be pwd.
-
-set env(CL_SOURCE_REGISTRY) $env(PWD)
-
-spawn -noecho "/usr/bin/clisp" -lp $env(PWD)
-
-send "(load \"tests/my-asdf.lisp\")\n"
-send "(asdf:load-system :readable)\n"
-send "(readable:enable-sweet)\n"
-
-interact
+(
+cat << COMMAND_SET
+(load "tests/my-asdf.lisp")
+(asdf:load-system :readable)
+(readable:enable-sweet)
+COMMAND_SET
+cat -
+printf "\n\n"  # Ensure it ends on newlines.
+) | \
+ CL_SOURCE_REGISTRY="$PWD" "/usr/bin/clisp" -lp "$PWD"
 
