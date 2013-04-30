@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# By David A. Wheeler. Start up clisp in "sweet-expression" reading mode,
+# so you can try it out.
+
+(
+cat << COMMAND_SET
+(require "asdf")
+(asdf:load-system :readable)
+(readable:enable-sweet)
+COMMAND_SET
+
+if which stdbuf > /dev/null 2> /dev/null ; then
+  stdbuf -oL cat "$@"
+else
+  cat "$@"
+fi
+
+printf "\n\n"  # Ensure it ends on newlines.
+) | \
+ CL_SOURCE_REGISTRY="$PWD" "sbcl" -lp "$PWD"
+
+# -lp "$PWD"
+
