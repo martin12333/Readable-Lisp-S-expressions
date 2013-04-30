@@ -1,33 +1,33 @@
-; basic-curly.cl
-; This implements "basic curly-infix-expressions" for Common Lisp.
-; This is an easy-to-use infix notation that works
-; well with other Common Lisp capabilities (e.g., quasiquoting and macros).
-; Basically, {a op b op c ...} => (op a b c ....).
-; It's homoiconic (you can see where lists start and end) and easy to use
-; (e.g., no need to register operators).  For more information, see:
-;   http://readable.sourceforge.net.
-;
-; Copyright (C) 2007-2013 by David A. Wheeler
-;
-; This software is released as open source software under the "MIT" license:
-;
-; Permission is hereby granted, free of charge, to any person obtaining a
-; copy of this software and associated documentation files (the "Software"),
-; to deal in the Software without restriction, including without limitation
-; the rights to use, copy, modify, merge, publish, distribute, sublicense,
-; and/or sell copies of the Software, and to permit persons to whom the
-; Software is furnished to do so, subject to the following conditions:
-;
-; The above copyright notice and this permission notice shall be included
-; in all copies or substantial portions of the Software.
-;
-; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-; OTHER DEALINGS IN THE SOFTWARE.
+;;; basic-curly.cl
+;;; This implements "basic curly-infix-expressions" for Common Lisp.
+;;; This is an easy-to-use infix notation that works
+;;; well with other Common Lisp capabilities (e.g., quasiquoting and macros).
+;;; Basically, {a op b op c ...} => (op a b c ....).
+;;; It's homoiconic (you can see where lists start and end) and easy to use
+;;; (e.g., no need to register operators).  For more information, see:
+;;;   http://readable.sourceforge.net.
+;;;
+;;; Copyright (C) 2007-2013 by David A. Wheeler
+;;;
+;;; This software is released as open source software under the "MIT" license:
+;;;
+;;; Permission is hereby granted, free of charge, to any person obtaining a
+;;; copy of this software and associated documentation files (the "Software"),
+;;; to deal in the Software without restriction, including without limitation
+;;; the rights to use, copy, modify, merge, publish, distribute, sublicense,
+;;; and/or sell copies of the Software, and to permit persons to whom the
+;;; Software is furnished to do so, subject to the following conditions:
+;;;
+;;; The above copyright notice and this permission notice shall be included
+;;; in all copies or substantial portions of the Software.
+;;;
+;;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+;;; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+;;; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+;;; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+;;; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+;;; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+;;; OTHER DEALINGS IN THE SOFTWARE.
 
 
 ; This implements an basic-curly-infix reader, an extension of s-expressions
