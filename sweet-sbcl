@@ -18,7 +18,7 @@ fi
 
 printf "\n\n"  # Ensure it ends on newlines.
 ) | \
- CL_SOURCE_REGISTRY="$PWD" "sbcl" -lp "$PWD"
+ CL_SOURCE_REGISTRY="$PWD" "sbcl"
 
 # -lp "$PWD"
 
