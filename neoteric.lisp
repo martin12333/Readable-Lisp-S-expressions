@@ -30,12 +30,12 @@
 (cl:in-package :readable)
 
 ; Stop reading characters after "." when you see one of these.
-(defconstant neoteric-delimiters
+(defvar neoteric-delimiters
   '(#\( #\) #\[ #\] #\{ #\} #\space #\tab #\newline #\return #\#
     #\' #\` #\,))
 
 ; Marker for eof
-(defconstant my-eof-marker (cons 'my-eof-marker '()))
+(defvar my-eof-marker (cons 'my-eof-marker '()))
 
 (defvar *neoteric-underlying-readtable* (copy-readtable)
         "Use this table when reading neoteric atoms")

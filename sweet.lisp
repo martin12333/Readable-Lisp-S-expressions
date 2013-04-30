@@ -43,6 +43,13 @@
 (defvar *underlying-sweet-readtable*
   "This table is basically neoteric-expressions but some tweaks")
 
+; Work around SBCL nonsense that makes its "defconstant" useless.
+; See: http://www.sbcl.org/manual/Defining-Constants.html
+
+(defmacro define-constant (name value &optional doc)
+  `(defconstant ,name (if (boundp ',name) (symbol-value ',name) ,value)
+                      ,@(when doc (list doc))))
+
 ; These stubs could be used to attach position info
 (defun attach-sourceinfo (pos value)
   (declare (ignore pos))
@@ -56,26 +63,26 @@
 (defvar override-indent nil)
 
 ; TODO: Handle EOF
-(defconstant eof-object (cons 'eof-objectp-special '()))
+(define-constant eof-object (cons 'eof-objectp-special '()))
 (defun eof-objectp (c) (eq c eof-object))
 
 (defun string-length (s) (length s))
 
-(defconstant period-symbol '|.|)
+(define-constant period-symbol '|.|)
 
-(defconstant scomment-result '(scomment ()))
+(define-constant scomment-result '(scomment ()))
 
 ; Marker for empty values.
 ; Several Common Lisp readtable constructs return nothing using (values),
 ; but unfortunately when that happens the build-in Common Lisp reader
 ; performs actions that we can't intercept.  So we'll override the "empty"
 ; returns with this instead, so that we can override the reader.
-(defconstant empty-values (cons 'empty-values-cons nil))
+(define-constant empty-values (cons 'empty-values-cons nil))
 
-(defconstant vertical-tab (code-char 11)) ; VT is decimal 11.
-(defconstant form-feed #\page)            ; FF is decimal 12.
+(define-constant vertical-tab (code-char 11)) ; VT is decimal 11.
+(define-constant form-feed #\page)            ; FF is decimal 12.
 
-(defconstant whitespace-chars
+(define-constant whitespace-chars
    (list #\space #\tab #\linefeed #\newline #\return vertical-tab form-feed))
 
 ; If t, return |...| symbols as-is, including the vertical bars.
@@ -84,11 +91,11 @@
 (defun my-char-whitespacep (c)
   (member c whitespace-chars))
 
-(defconstant line-ending-chars (list #\newline #\linefeed #\return))
+(define-constant line-ending-chars (list #\newline #\linefeed #\return))
 (defun char-line-endingp (char) (member char line-ending-chars))
 
 ; Does character "c" begin a line comment (;) or end-of-line?
-(defconstant initial-comment-eol '(#\; #\newline #\linefeed #\return))
+(define-constant initial-comment-eol '(#\; #\newline #\linefeed #\return))
 (defun lcomment-eolp (c)
   (member c initial-comment-eol))
 
@@ -338,7 +345,7 @@
 
 
 ; detect #| or |#
-(defconstant hash-pipe-comment-nestsp t)
+(define-constant hash-pipe-comment-nestsp t)
 (defun nest-comment (stream)
   (let ((c (my-read-char stream)))
     (cond
@@ -432,13 +439,13 @@
 ;     (which is thus shorter than even an indent of 0 characters).
 
 
-(defconstant group-split '\\)
-(defconstant group-split-char #\\ ) ; First character of split symbol.
+(define-constant group-split '\\)
+(define-constant group-split-char #\\ ) ; First character of split symbol.
 
 (defvar non-whitespace-indent #\!) ; Non-whitespace-indent char.
 
-(defconstant sublist '$)
-(defconstant sublist-char #\$) ; First character of sublist symbol.
+(define-constant sublist '$)
+(define-constant sublist-char #\$) ; First character of sublist symbol.
 
 
 (defun indentation>p (indentation1 indentation2)
