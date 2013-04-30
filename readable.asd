@@ -38,10 +38,10 @@
   :license "MIT"
   :description "Support 'readable' Lisp formats"
   :long-description "Common Lisp implementation of 'readable' Lisp formats - curly-infix-expressions, neoteric-expressions, and sweet-expressions, per http://readable.sourceforge.net."
-  :serial t ;; the dependencies are linear.
+  ; :serial t ;; the dependencies are (no longer) linear.
   :components
     ((:file "basic-curly")
-     (:file "neoteric")
-     (:file "backquote") ; Re-implements backquote (needed by sweet)
-     (:file "sweet")))
+     (:file "neoteric" :depends-on ("basic-curly"))
+     (:file "backquote") ; Re-implements backquote, as needed by sweet
+     (:file "sweet" :depends-on ("basic-curly" "neoteric" "backquote"))))
 
