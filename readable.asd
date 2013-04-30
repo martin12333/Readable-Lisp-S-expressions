@@ -14,9 +14,11 @@
 (in-package #:cl-user)
 
 (defpackage #:readable-asd
+  #+clisp (:modern t)
   (:use :cl :asdf))
 
 (defpackage #:readable
+  #+clisp (:modern t)
   (:use :cl)
   (:export #:enable-basic-curly #:basic-curly-read
            #:enable-full-curly-infix #:enable-curly-infix

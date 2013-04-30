@@ -13,5 +13,5 @@ COMMAND_SET
 cat -- "$@"
 printf "\n\n"  # Ensure it ends on newlines.
 ) | \
- CL_SOURCE_REGISTRY="$PWD" "/usr/bin/clisp" -lp "$PWD"
+ CL_SOURCE_REGISTRY="$PWD" "/usr/bin/clisp" -lp "$PWD" -modern
 
