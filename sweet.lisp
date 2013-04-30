@@ -970,7 +970,7 @@
     (let ((new (copy-readtable nil)))
       (set-syntax-from-char #\# #\' new) ; force # to not be dispatching char.
       (loop for ci from 0 upto 255 ; TODO: char-code-limit
-         do (set-macro-character (character ci) #'t-expr-entry nil new))
+         do (set-macro-character (code-char ci) #'t-expr-entry nil new))
       new)))
 
 (defun enable-sweet ()
