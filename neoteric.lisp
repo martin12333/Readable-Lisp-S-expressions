@@ -1,11 +1,6 @@
 ; neoteric.cl
 ; Implements neoteric-expressions from the "readable" approach for Lisp.
 
-; WARNING: THIS IS NOT READY FOR PRODUCTION USE YET.
-; For Common Lisp, use the "basic-curly-infix" mode (which is more mature),
-; or the Scheme implementation (which has a Common Lisp mode)
-; at this time.  In the meantime, we'd love help finishing this!
-
 ; Copyright (C) 2007-2013 by David A. Wheeler
 ;
 ; This software is released as open source software under the "MIT" license:
