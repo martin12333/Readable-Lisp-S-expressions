@@ -331,55 +331,57 @@
   ; See: http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node191.html
   ;
   ; No need to wrap "undefined" and "signals error" syntaxes.
-  ; No need to wrap: ##  #'  #|...|#  #0..#9
+  ; No need to wrap: ##  #'  #|...|#  #0..#9 #:
   ; Status (TODO unless otherwise noted):
   ;   #( #)   = vector
-  ;   #*      = bit-vector  
+  ;   #*      = bit-vector               - Wrapped
   ;   #,      = load-time eval
-  ;   #:      = uninterned symbol
+  ;   #:      = uninterned symbol        - Intentionally not wrapped
   ;   #=      = label following object
   ;   #\char  = character object         - Wrapped
-  ;   #+      = read-time conditional    - wrapped
-  ;   #-      = read-time conditional    - wrapped
+  ;   #+      = read-time conditional
+  ;   #-      = read-time conditional
   ;   #.      = evaluation
   ;   #A,#a   = array
-  ;   #B,#b   = binary rational
+  ;   #B,#b   = binary rational          - Wrapped
   ;   #C,#c   = complex number
-  ;   #O,#o   = octal rational
+  ;   #O,#o   = octal rational           - Wrapped
   ;   #P,#p   = pathname
   ;   #R,#r   = radix-n rational
   ;   #S,#s   = structure
-  ;   #X,#x   = hexadecimal rational
+  ;   #X,#x   = hexadecimal rational     - Wrapped
 
+  (set-dispatch-macro-character #\# #\* #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\\ #'wrap-dispatch-special-read-tail)
+  (set-dispatch-macro-character #\# #\B #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\b #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\O #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\o #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\X #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\x #'wrap-dispatch-disabled-tail)
 
   ; TODO: For now, use wrap-dispatch-disabled-tail for almost everything.
   ; This is probably wrong, but isn't a bad placeholder.
-  (set-dispatch-macro-character #\# #\* #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\, #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\: #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\= #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\. #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\A #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\a #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\B #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\b #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\C #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\c #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\O #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\o #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\P #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\p #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\R #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\r #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\S #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\s #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\X #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\x #'wrap-dispatch-disabled-tail)
+
+  ; (set-dispatch-macro-character #\# #\P #'wrap-dispatch-disabled-tail)
+  ; (set-dispatch-macro-character #\# #\p #'wrap-dispatch-disabled-tail)
+
   ; This is definitely wrong for feature expressions, but sometimes
-  ; this will work anyway:
-  (set-dispatch-macro-character #\# #\+ #'wrap-dispatch-disabled-notail)
-  (set-dispatch-macro-character #\# #\- #'wrap-dispatch-disabled-notail)
+  ; this will work anyway.  On reflection, disabled as that's a better
+  ; starting point.
+  ; (set-dispatch-macro-character #\# #\+ #'wrap-dispatch-disabled-notail)
+  ; (set-dispatch-macro-character #\# #\- #'wrap-dispatch-disabled-notail)
 
   ; Save in separate variable, so "sweet" can just create its own if needed
   (setq *neoteric-readtable* *readtable*)
