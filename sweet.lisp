@@ -515,17 +515,6 @@
       (neoteric-read-nocomment stream)
       result)))
 
-; TODO: Remove this.
-; Old version - this one no longer works because we're specially implementing
-; backquotes/commas, and if we call the undelrying neoteric-readtable it
-; won't implement our special version of backquotes and commas.
-; Do a neoteric-read, skipping comments.   The underlying neoteric reader
-; skips comments anyway, so let's use it directly.
-; (defun neoteric-read-nocomment (stream)
-;   (let* ((*readtable* *neoteric-readtable*)  ; neoteric-readtable
-;          (result (my-read-datum stream))) ; Make it possible to return ".".
-;     result))
-
 ; Read an n-expression.  Returns ('normal n-expr) in most cases;
 ; if it's a special marker, the car is the marker name instead of 'normal.
 ; Markers only have special meaning if their first character is
@@ -554,7 +543,6 @@
             (list 'collecting-end '()))
           ((and (eql c #\$) (string= (symbol-name expr) "$$$"))
             (read-error "Error - $$$ is reserved"))
-          ; TODO: Fix so "." can be on line by itself.
           ((and (eql c #\.) (string= (symbol-name expr) "."))
             (list 'period-marker '()))
           (t
