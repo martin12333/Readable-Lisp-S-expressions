@@ -86,20 +86,20 @@
 
 ;;; Key procedures to implement neoteric-expressions
 
+; Return list of characters up to, but not including, a delimiter.
+(defun chars-before-delimiter (input-stream)
+  (let* ((c (peek-char nil input-stream nil my-eof-marker)))
+    (if (or (eq c my-eof-marker) (find c neoteric-delimiters))
+      '()
+      (cons (read-char input-stream) (chars-before-delimiter input-stream)))))
+
 ; TODO: Make "..." illegal, and maybe anything with just multiple ".".
 
 ; Read a datum and ALLOW "." as a possible value:
 (defun my-read-to-delimiter (input-stream start)
-  (let*
-    ((*readtable* *neoteric-underlying-readtable*) ; Temporary switch
-     (clist
-      (loop
-        until
-          (let* ((c (peek-char nil input-stream nil my-eof-marker)))
-            (or (eq c my-eof-marker) (find c neoteric-delimiters)))
-        ; TODO: Cleanly handle EOF without delimiter first.
-        collect (read-char input-stream)))
-     (my-string (concatenate 'string start clist)))
+  (let* ((*readtable* *neoteric-underlying-readtable*) ; Temporary switch
+         (clist (chars-before-delimiter input-stream))
+         (my-string (concatenate 'string start clist)))
     (if (string= my-string ".")
         '|.|
         (read-from-string my-string))))
@@ -227,21 +227,28 @@
 (defun wrap-dispatch-disabled-tail (stream sub-char int)
   ; Call routine from original readtable and disable temporarily our
   ; readtable.  Then invoke neoteric-process-tail.
-  ; TODO: There's no obvious way to *prevent* this from consuming
-  ; trailing whitespace at the top level
-  ; if the top-level routine consumed trailing whitespace, which means
-  ; that outside a list trailing whitespace will be consumed, then the
-  ; tail will be considered, giving the wrong result.
+
+  ; This is more convoluted than you'd expect, because
+  ; Common Lisp's "read" provides no simple way to *prevent*
+  ; consuming trailing whitespace if the read is at the top level.
+  ; When that happens, trailing whitespace will be consumed *BEFORE* the
+  ; neoteric-tail check is performed.  If, after the whitespace, there's
+  ; something that looks like a tail, the wrong result will occur.
   ; E.G., the neoteric expression:
   ;   '#B101 (quote x)
-  ; will evaluate to the incorrect: (5 |QUOTE| |X|)
+  ; would in the "obvious" implementation be the incorrect: (5 |QUOTE| |X|)
   ; instead of the correct 5 followed by x.
+  ; To deal with this, we collect all the characters before a delimiter,
+  ; put them into a string, and read from the string instead.
   (neoteric-process-tail stream
-    (let ((*readtable* *neoteric-underlying-readtable*)) ; temporary switch.
-      (funcall
-        (get-dispatch-macro-character #\# sub-char
+    (let* ((chars (chars-before-delimiter stream))
+           (ctext (concatenate 'string chars))
+           (*readtable* *neoteric-underlying-readtable*)) ; temporary switch.
+      (with-input-from-string (string-stream ctext)
+        (funcall
+          (get-dispatch-macro-character #\# sub-char
                                       *neoteric-underlying-readtable*)
-        stream sub-char int))))
+          string-stream sub-char int)))))
 
 (defun wrap-dispatch-disabled-notail (stream sub-char int)
   ; Call routine from original readtable and disable temporarily our
