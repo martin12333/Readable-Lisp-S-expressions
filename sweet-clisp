@@ -9,7 +9,7 @@ cat << COMMAND_SET
 (asdf:load-system :readable)
 (readable:enable-sweet)
 COMMAND_SET
-cat -
+cat "$@"
 printf "\n\n"  # Ensure it ends on newlines.
 ) | \
  CL_SOURCE_REGISTRY="$PWD" "/usr/bin/clisp" -lp "$PWD"
