@@ -10,13 +10,13 @@ cat << COMMAND_SET
 (readable:enable-sweet)
 COMMAND_SET
 
-if which stdbuf 2> /dev/null ; then
+if which stdbuf > /dev/null 2> /dev/null ; then
   STDBUF=stdbuf -oL
 else
   STDBUF=""
 fi
 
-$STDBUF cat "$@"
+${STDBUF} cat "$@"
 printf "\n\n"  # Ensure it ends on newlines.
 ) | \
  CL_SOURCE_REGISTRY="$PWD" "/usr/bin/clisp" -lp "$PWD" -modern
