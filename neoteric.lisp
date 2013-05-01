@@ -383,13 +383,13 @@
   ;   #B,#b   = binary rational          - Special-meaning, wrapped
   (set-dispatch-macro-character #\# #\B #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\b #'wrap-dispatch-disabled-tail)
-  ;   #C,#c   = complex number           - Intentionally not wrapped.
+  ;   #C,#c   = complex number           - Not currently wrapped (debatable).
   ;             Complex numbers, because of their format, are tricky to wrap,
   ;             and there's no compelling reason to do so.
   ;   #O,#o   = octal rational           - Special-meaning, wrapped
   (set-dispatch-macro-character #\# #\O #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\o #'wrap-dispatch-disabled-tail)
-  ;   #P,#p   = pathname                 - Not wrapped currently.
+  ;   #P,#p   = pathname                 - Not wrapped currently (debatable).
   ;             In the future this might be wrapped for #p"hi"(5), but
   ;             it's not obvious it would ever be used that way.
   ;   #R,#r   = radix-n rational         - Special-meaning, wrapped
