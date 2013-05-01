@@ -339,56 +339,57 @@
   ; get-dispatch-macro-character disp-char sub-char &optional readtable
   ; See: http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node191.html
   ;
-  ; No need to wrap "undefined" and "signals error" syntaxes.
-  ; No need to wrap: ##  #'  #|...|#  #0..#9 #:
-  ; Status (TODO unless otherwise noted):
-  ;   #( #)   = vector
-  ;   #*      = bit-vector               - Wrapped
-  ;   #,      = load-time eval
-  ;   #:      = uninterned symbol        - Intentionally not wrapped
-  ;   #=      = label following object
-  ;   #\char  = character object         - Wrapped
-  ;   #+      = read-time conditional
-  ;   #-      = read-time conditional
-  ;   #.      = evaluation
-  ;   #A,#a   = array
-  ;   #B,#b   = binary rational          - Wrapped
-  ;   #C,#c   = complex number
-  ;   #O,#o   = octal rational           - Wrapped
-  ;   #P,#p   = pathname
-  ;   #R,#r   = radix-n rational
-  ;   #S,#s   = structure
-  ;   #X,#x   = hexadecimal rational     - Wrapped
+  ; How we wrap it depends on what will follow the macro char construct:
+  ; - Datums-to-follow like #;.  No change; the default
+  ;   neoteric readtable already handles datums.
+  ; - Undefined or "signals error" - no change.
+  ; - "Number-likes" like #x.  These aren't followed by a datum, but instead,
+  ;   this is a sequence of characters that represents some special value.
+  ;   These characters (including the characters that started them)
+  ;   are read until a delimiter, put in a string, and read from the string.
+  ;   The result is then processed specially to look for
+  ;   a neoteric tail.  That way, constructs like "#xa(#xb)" work and are
+  ;   distinguished from  "#xa (#xb)". Use #'wrap-dispatch-disabled-tail.
+  ;
+  ; See Common Lisp hyperspec section 2.4.8
+  ; http://www.lispworks.com/documentation/HyperSpec/Body/02_dh.htm
+  ; Below is every standard # macro character syntax (except undefined
+  ; and signals error), in order:
 
+  ;   ##      = reference to #= label    - Intentionally not wrapped
+  ;   #'      = function abbreviation    - Intentionally not wrapped
+  ;   #(...)  = vector                   - TODO
+  ;   #*      = bit-vector               - Number-like, wrapped
   (set-dispatch-macro-character #\# #\* #'wrap-dispatch-disabled-tail)
+  ;   #,      = load-time eval           - TODO
+  ;   #0..9   = used for infix arguments - Can't really wrap anyway.
+  ;   #:      = uninterned symbol        - Intentionally not wrapped
+  ;   #;      = datum comment (extension)- Intentionally not wrapped
+  ;   #=      = label following object   - TODO
+  ;   #\char  = character object         - Number-like, wrapped
   (set-dispatch-macro-character #\# #\\ #'wrap-dispatch-special-read-tail)
+  ;   #|...|# = balanced comment         - Intentionally not wrapped
+  ;   #+      = read-time conditional    - TODO
+  ;   #-      = read-time conditional    - TODO
+  ;   #.      = read-time evaluation     - TODO
+  ;   #A,#a   = array                    - TODO
+  ;   #B,#b   = binary rational          - Number-like, wrapped
   (set-dispatch-macro-character #\# #\B #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\b #'wrap-dispatch-disabled-tail)
+  ;   #C,#c   = complex number           - TODO
+  ;   #O,#o   = octal rational           - Number-like, wrapped
   (set-dispatch-macro-character #\# #\O #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\o #'wrap-dispatch-disabled-tail)
+  ;   #P,#p   = pathname                 - TODO
+  ;   #R,#r   = radix-n rational         - TODO
+  (set-dispatch-macro-character #\# #\R #'wrap-dispatch-disabled-tail)
+  (set-dispatch-macro-character #\# #\r #'wrap-dispatch-disabled-tail)
+  ;   #S,#s   = structure                - TODO
+  ;   #X,#x   = hexadecimal rational     - Number-like, wrapped
   (set-dispatch-macro-character #\# #\X #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\x #'wrap-dispatch-disabled-tail)
 
-  ; TODO: For now, use wrap-dispatch-disabled-tail for almost everything.
-  ; This is probably wrong, but isn't a bad placeholder.
-  (set-dispatch-macro-character #\# #\, #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\= #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\. #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\A #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\a #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\C #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\c #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\R #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\r #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\S #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\s #'wrap-dispatch-disabled-tail)
-
-  ; (set-dispatch-macro-character #\# #\P #'wrap-dispatch-disabled-tail)
-  ; (set-dispatch-macro-character #\# #\p #'wrap-dispatch-disabled-tail)
-
-  ; This is definitely wrong for feature expressions, but sometimes
-  ; this will work anyway.  On reflection, disabled as that's a better
-  ; starting point.
+  ; TODO: Should we do something like this?
   ; (set-dispatch-macro-character #\# #\+ #'wrap-dispatch-disabled-notail)
   ; (set-dispatch-macro-character #\# #\- #'wrap-dispatch-disabled-notail)
 
