@@ -62,12 +62,6 @@
 (defun read-error (message)
   (error message))
 
-; These delimiting characters stop reading of symbols or non-datums
-; (e.g., after ".")
-(defvar neoteric-delimiters
-  '(#\( #\) #\[ #\] #\{ #\} #\space #\tab #\newline #\return #\#
-    #\' #\` #\,))
-
 ; TODO: If possible, make it so clisp doesn't keep responding with |...|
 ; around all tokens.  It's legal, but ugly.  This seems to happen because
 ; we set the alphanumeric letters to be macros.
@@ -94,6 +88,12 @@
         (error "peek-char BUG")))))
 
 ;;; Key procedures to implement neoteric-expressions
+
+; These delimiting characters stop reading of symbols or non-datums
+; (e.g., after ".")
+(defvar neoteric-delimiters
+  '(#\( #\) #\[ #\] #\{ #\} #\space #\tab #\newline #\return #\#
+    #\' #\` #\,))
 
 ; Return list of characters up to, but not including, a delimiter.
 (defun chars-before-delimiter (input-stream)
