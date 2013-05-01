@@ -332,8 +332,6 @@
   (unless (get-macro-character #\] )
     (set-macro-character #\] (get-macro-character #\) ) nil))
 
-  ; TODO: Should we wrap "...", so "hi"(x) works?
-
   ; Now deal with dispatch macro char; we'll just deal with default "#".
   ; set-dispatch-macro-character disp-char sub-char function
   ;                              &optional readtable 
