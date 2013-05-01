@@ -200,14 +200,16 @@
   (let ((result (my-read-delimited-list #\} stream)))
     (neoteric-process-tail stream (process-curly result))))
 
-; Read constituents. We need to be careful reading consituents to ensure that
-; trailing whitespace is NEVER consumed.  Otherwise
-; '{a + {b * c}} will incorrectly be interpreted as (A (+ (* B C)))
-; instead of the correct (+ A (* B C)).
+; Read preserving whitespace using the underlying readtable, then
+; apply a neoteric tail if necessary.  This is necessary for handling
+; various situations (including constituent characters) 
+; to ensure that trailing whitespace is NEVER consumed before looking for
+; the tail.  Otherwise '{a + {b * c}} will be incorrectly
+; interpreted as (A (+ (* B C))) instead of the correct (+ A (* B C)).
 ; That's because if the whitespace after "+" is (incorrectly)
 ; consumed, it will be interpreted as '{a +{b * c}}.
 
-(defun wrap-constituent (stream char)
+(defun wrap-read-n-tail (stream char)
   (unread-char char stream)
   (let ((saved-readtable *readtable*))
     (setq *readtable* *neoteric-underlying-readtable*)
@@ -316,12 +318,14 @@
       #\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m
       #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z #\~
       #\rubout )) ; Rubout, really?!?  Yup, it's in the spec.
-    (set-macro-character c #'wrap-constituent nil))
+    (set-macro-character c #'wrap-read-n-tail nil))
 
-  ; These aren't constituents, but it still works, and we need to do this
-  ; so symbols starting with an escape will work:
-  (set-macro-character #\\ #'wrap-constituent nil)
-  (set-macro-character #\| #'wrap-constituent nil)
+  ; We need to do this so symbols starting with an escape will work:
+  (set-macro-character #\\ #'wrap-read-n-tail nil)
+  (set-macro-character #\| #'wrap-read-n-tail nil)
+
+  ; This ensures that "hi"(5) => ("hi" 5)
+  (set-macro-character #\" #'wrap-read-n-tail nil)
 
   ; Wrap character pairs.
   (set-macro-character #\( #'wrap-paren nil) ; )
