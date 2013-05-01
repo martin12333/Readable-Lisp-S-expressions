@@ -343,7 +343,7 @@
   ; - Datums-to-follow like #;.  No change; the default
   ;   neoteric readtable already handles datums.
   ; - Undefined or "signals error" - no change.
-  ; - "Number-likes" like #x.  These aren't followed by a datum, but instead,
+  ; - "Special-meaning" like #x.  These aren't followed by a datum. Instead,
   ;   this is a sequence of characters that represents some special value.
   ;   These characters (including the characters that started them)
   ;   are read until a delimiter, put in a string, and read from the string.
@@ -358,34 +358,35 @@
 
   ;   ##      = reference to #= label    - Intentionally not wrapped
   ;   #'      = function abbreviation    - Intentionally not wrapped
-  ;   #(...)  = vector                   - TODO
-  ;   #*      = bit-vector               - Number-like, wrapped
+  ;   #(...)  = vector                   - Intentionally not wrapped
+  ;   #*      = bit-vector               - Special-meaning, wrapped
   (set-dispatch-macro-character #\# #\* #'wrap-dispatch-disabled-tail)
-  ;   #,      = load-time eval           - TODO
+  ;   #,      = (was) load-time eval [Steele] - Intentionally not wrapped
   ;   #0..9   = used for infix arguments - Can't really wrap anyway.
-  ;   #:      = uninterned symbol        - Intentionally not wrapped
+  ;   #:      = uninterned symbol        - Special-meaning, wrapped
+  (set-dispatch-macro-character #\# #\* #'wrap-dispatch-disabled-tail)
   ;   #;      = datum comment (extension)- Intentionally not wrapped
-  ;   #=      = label following object   - TODO
-  ;   #\char  = character object         - Number-like, wrapped
+  ;   #=      = label following object   - Intentionally not wrapped
+  ;   #\char  = character object         - Special-meaning, wrapped
   (set-dispatch-macro-character #\# #\\ #'wrap-dispatch-special-read-tail)
   ;   #|...|# = balanced comment         - Intentionally not wrapped
   ;   #+      = read-time conditional    - TODO
   ;   #-      = read-time conditional    - TODO
   ;   #.      = read-time evaluation     - TODO
   ;   #A,#a   = array                    - TODO
-  ;   #B,#b   = binary rational          - Number-like, wrapped
+  ;   #B,#b   = binary rational          - Special-meaning, wrapped
   (set-dispatch-macro-character #\# #\B #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\b #'wrap-dispatch-disabled-tail)
   ;   #C,#c   = complex number           - TODO
-  ;   #O,#o   = octal rational           - Number-like, wrapped
+  ;   #O,#o   = octal rational           - Special-meaning, wrapped
   (set-dispatch-macro-character #\# #\O #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\o #'wrap-dispatch-disabled-tail)
   ;   #P,#p   = pathname                 - TODO
-  ;   #R,#r   = radix-n rational         - TODO
+  ;   #R,#r   = radix-n rational         - Special-meaning, wrapped
   (set-dispatch-macro-character #\# #\R #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\r #'wrap-dispatch-disabled-tail)
   ;   #S,#s   = structure                - TODO
-  ;   #X,#x   = hexadecimal rational     - Number-like, wrapped
+  ;   #X,#x   = hexadecimal rational     - Special-meaning, wrapped
   (set-dispatch-macro-character #\# #\X #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\x #'wrap-dispatch-disabled-tail)
 
