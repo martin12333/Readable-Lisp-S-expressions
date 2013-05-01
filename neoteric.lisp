@@ -23,19 +23,31 @@
 ;;; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ;;; OTHER DEALINGS IN THE SOFTWARE.
 
-;;; Neoteric-expressions themselves are easy, but since we can't portably
-;;; overide "read" directly, we have to manipulate the readtable.
+;;; Neoteric-expressions themselves are a very simple notation and their
+;;; basic implementation is also simple.
+;;; Unfortunately, some quirks in Common Lisp (CL) mean that we have to do
+;;; some work-arounds as compared to other Lisps like Scheme:
+;;; 1. CL "read" by default consumes trailing whitespace, even if the
+;;;    the whitespace is NOT part of the datum being read at all.
+;;;    This is an unfortunate quirk, and in my view, a bug.  As a result,
+;;;    if you just do a "read", a later datum may look
+;;;    like a neoteric tail.  E.G., given: "x (y)", a simple read of "x"
+;;;    will consume the space after "x"; naively checking for a "tail"
+;;;    would them make it look like "x(y)" instead, wrongly producing "(x y").
+;;;    For example, if we naively pass down "recursive" as "t" in
+;;;    all places, it'll use this default and consume trailing whitespace.
+;;;    Thus, we have to be careful about calling read or calling any
+;;;    reads with recursive=t. Instead, we'll typically call
+;;;    "read-preserving-whitespace", call with recursive=nil, or specially
+;;;    extract characters into a string for reading.
+;;; 2. There's no portable way to directly replace the "read" procedure,
+;;;    so we must manipulate the readtable to do what we want.
+;;;    We end up wrapping all constituents so that we can prevent consuming
+;;;    trailing whitespace, to distinguish "x(y)" from "x (y)".
+
 
 
 (cl:in-package :readable)
-
-; Stop reading characters after "." when you see one of these.
-(defvar neoteric-delimiters
-  '(#\( #\) #\[ #\] #\{ #\} #\space #\tab #\newline #\return #\#
-    #\' #\` #\,))
-
-; Marker for eof
-(defvar my-eof-marker (cons 'my-eof-marker '()))
 
 (defvar *neoteric-underlying-readtable* (copy-readtable)
         "Use this table when reading neoteric atoms")
@@ -44,9 +56,17 @@
         "Use this table when about to read a neoteric expression")
 
 ; TODO: Handle eof as directed by "read".  Not currently consistent.
+; Marker for eof
+(defvar my-eof-marker (cons 'my-eof-marker '()))
 
 (defun read-error (message)
   (error message))
+
+; These delimiting characters stop reading of symbols or non-datums
+; (e.g., after ".")
+(defvar neoteric-delimiters
+  '(#\( #\) #\[ #\] #\{ #\} #\space #\tab #\newline #\return #\#
+    #\' #\` #\,))
 
 ; TODO: If possible, make it so clisp doesn't keep responding with |...|
 ; around all tokens.  It's legal, but ugly.  This seems to happen because
@@ -57,11 +77,6 @@
 ;    http://www.lispworks.com/documentation/HyperSpec/Body/f_peek_c.htm
 ; We work around this by ALWAYS providing peek-char with 2 parameters
 ; ("nil" and the stream name) when we don't want to skip whitespace.
-
-; Also: CL "read" really wants to consume trailing whitespace, which is bad.
-; If we naively pass down "recursive" as "t" in all places, it'll consume
-; the trailing whitespace. Thus, we have to be careful about calling read or
-; calling any reads with recursive=t.
 
 ; Test to ensure that peek-char (as we use it) works.
 (with-input-from-string (test-input "Q56 T78")
