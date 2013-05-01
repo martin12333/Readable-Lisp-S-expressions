@@ -332,6 +332,8 @@
   (unless (get-macro-character #\] )
     (set-macro-character #\] (get-macro-character #\) ) nil))
 
+  ; TODO: Should we wrap "...", so "hi"(x) works?
+
   ; Now deal with dispatch macro char; we'll just deal with default "#".
   ; set-dispatch-macro-character disp-char sub-char function
   ;                              &optional readtable 
@@ -340,7 +342,7 @@
   ; See: http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node191.html
   ;
   ; How we wrap it depends on what will follow the macro char construct:
-  ; - Datums-to-follow like #;.  No change; the default
+  ; - Datums-to-follow like #+ and #;.  No change; the default
   ;   neoteric readtable already handles datums.
   ; - Undefined or "signals error" - no change.
   ; - "Special-meaning" like #x.  These aren't followed by a datum. Instead,
@@ -354,7 +356,7 @@
   ; See Common Lisp hyperspec section 2.4.8
   ; http://www.lispworks.com/documentation/HyperSpec/Body/02_dh.htm
   ; Below is every standard # macro character syntax (except undefined
-  ; and signals error), in order:
+  ; and signals error), in order (note the "debatable" ones):
 
   ;   ##      = reference to #= label    - Intentionally not wrapped
   ;   #'      = function abbreviation    - Intentionally not wrapped
@@ -370,10 +372,10 @@
   ;   #\char  = character object         - Special-meaning, wrapped
   (set-dispatch-macro-character #\# #\\ #'wrap-dispatch-special-read-tail)
   ;   #|...|# = balanced comment         - Intentionally not wrapped
-  ;   #+      = read-time conditional    - TODO
-  ;   #-      = read-time conditional    - TODO
-  ;   #.      = read-time evaluation     - TODO
-  ;   #A,#a   = array                    - TODO
+  ;   #+      = read-time conditional    - Intentionally not wrapped
+  ;   #-      = read-time conditional    - Intentionally not wrapped
+  ;   #.      = read-time evaluation     - Intentionally not wrapped
+  ;   #A,#a   = array                    - Not currently wrapped (debatable).
   ;   #B,#b   = binary rational          - Special-meaning, wrapped
   (set-dispatch-macro-character #\# #\B #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\b #'wrap-dispatch-disabled-tail)
@@ -383,18 +385,16 @@
   ;   #O,#o   = octal rational           - Special-meaning, wrapped
   (set-dispatch-macro-character #\# #\O #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\o #'wrap-dispatch-disabled-tail)
-  ;   #P,#p   = pathname                 - TODO
+  ;   #P,#p   = pathname                 - Not wrapped currently.
+  ;             In the future this might be wrapped for #p"hi"(5), but
+  ;             it's not obvious it would ever be used that way.
   ;   #R,#r   = radix-n rational         - Special-meaning, wrapped
   (set-dispatch-macro-character #\# #\R #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\r #'wrap-dispatch-disabled-tail)
-  ;   #S,#s   = structure                - TODO
+  ;   #S,#s   = structure                - Not currently wrapped (debatable).
   ;   #X,#x   = hexadecimal rational     - Special-meaning, wrapped
   (set-dispatch-macro-character #\# #\X #'wrap-dispatch-disabled-tail)
   (set-dispatch-macro-character #\# #\x #'wrap-dispatch-disabled-tail)
-
-  ; TODO: Should we do something like this?
-  ; (set-dispatch-macro-character #\# #\+ #'wrap-dispatch-disabled-notail)
-  ; (set-dispatch-macro-character #\# #\- #'wrap-dispatch-disabled-notail)
 
   ; Save in separate variable, so "sweet" can just create its own if needed
   (setq *neoteric-readtable* *readtable*)
