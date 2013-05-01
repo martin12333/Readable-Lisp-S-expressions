@@ -102,7 +102,8 @@
       '()
       (cons (read-char input-stream) (chars-before-delimiter input-stream)))))
 
-; TODO: Make "..." illegal, and maybe anything with just multiple ".".
+; Note: In traditional Common Lisp, symbols with just multiple "."
+; are illegal, especially "...".  For the moment we'll allow it.
 
 ; Read a datum and ALLOW "." as a possible value:
 (defun my-read-to-delimiter (input-stream start)
@@ -113,11 +114,6 @@
         '|.|
         (read-from-string my-string))))
 
-; TODO: Handle EOF without intervening whitespace.
-; In neoteric-expressions it'll become an error anyway (because we're in the
-; middle of reading a delimited list), but the sweet-expression reader uses
-; this procedure to read top-level items... so an EOF *could* happen, though
-; technically we don't *have* support such malformed input.
 (defun my-read-datum (input-stream)
   (let* ((c (peek-char t input-stream))) ; Consume leading whitespace
     (cond
