@@ -86,13 +86,12 @@
     (let ((c (peek-char nil test-input)))
       (when (not (eql c #\space))
         (terpri) (terpri) (terpri)
-        (princ "*** WARNING WARNING WARNING ***")
-        (princ "Your Common Lisp implementation has a serious defect.")
-        (princ "Procedure read-preserving-whitespace or peek-char")
-        (princ "FAIL to preserve whitespace following expressions.")
-        (princ "*** WARNING WARNING WARNING ***")
-        (terpri) (terpri) (terpri)))))
-
+        (princ "*** WARNING WARNING WARNING ***") (terpri)
+        (princ "Procedure read-preserving-whitespace or peek-char") (terpri)
+        (princ "FAIL to preserve whitespace following expressions.") (terpri)
+        (princ "*** WARNING WARNING WARNING ***") (terpri)
+        (terpri) (terpri) (terpri)
+        (error "peek-char BUG")))))
 
 ;;; Key procedures to implement neoteric-expressions
 
