@@ -28,24 +28,27 @@
 (cl:in-package :readable)
 
 ; We can't portably overide "read" directly, we have to manipulate
-; the readtable.  Here we redirect EVERY character to a procedure,
-; effectively taking over "read".
-(defvar *sweet-redirect-readtable*
+; the readtable to implement sweet-expressions.
+; This readtable basically redirects EVERY character to a specific procedure,
+; effectively taking over "read":
+(defvar *sweet-readtable*
   "This table redirects any input to sweet-expression processing")
 
 ; The underlying readtable is mostly a neoteric reader.  However,
 ; we must implement a slightly different underlying reader that
 ; reads #|...|# and #;datum. The problem is that if the underlying reader
-; return no values, e.g., "(values)" - as is usual - the Common Lisp
-; "read" will instantly recurse outside of our control and do the
-; wrong thing. Thus, we'll specially wrap such cases and return a
-; distinctive cons value "empty-values", to represent "no value" case.
+; return no values, e.g., "(values)" - the Common Lisp
+; "read" will instantly recurse *outside* of our control to read the next
+; datum.  That's the wrong thing to do, because that no-values item might
+; be the only thing on the line, and in that case it should
+; operate as a placeholder for that indentation position.
+; Thus, we'll specially wrap such cases and return a
+; distinctive cons value "empty-values", to represent the "no value" case.
 (defvar *underlying-sweet-readtable*
-  "This table is basically neoteric-expressions but some tweaks")
+  "This table is basically neoteric-expressions with some tweaks")
 
 ; Work around SBCL nonsense that makes its "defconstant" useless.
 ; See: http://www.sbcl.org/manual/Defining-Constants.html
-
 (defmacro define-constant (name value &optional doc)
   `(defconstant ,name (if (boundp ',name) (symbol-value ',name) ,value)
                       ,@(when doc (list doc))))
@@ -57,10 +60,6 @@
 (defun get-sourceinfo (stream)
   (declare (ignore stream))
   nil)
-
-; We'll shadow this with a special variable if we want to 
-; pass an overriding indent value (e.g., for backquote/comma processing)
-(defvar override-indent nil)
 
 ; TODO: Handle EOF
 (define-constant eof-object (cons 'eof-objectp-special '()))
@@ -966,7 +965,7 @@
 
 ; Set up a readtable that'll redirect everything.
 (defun compute-sweet-redirect-readtable ()
-  (setq *sweet-redirect-readtable*
+  (setq *sweet-readtable*
     (let ((new (copy-readtable nil)))
       (set-syntax-from-char #\# #\' new) ; force # to not be dispatching char.
       (loop for ci from 0 upto 255 ; TODO: char-code-limit
@@ -1004,7 +1003,7 @@
   ; which process the indentation, and they'll call other procedures that
   ; in turn will invoke *underlying-sweet-readtable*.
   (compute-sweet-redirect-readtable)
-  (setq *readtable* *sweet-redirect-readtable*)
+  (setq *readtable* *sweet-readtable*)
   (values))
 
 (defun sweet-read (&optional (stream *standard-input*))
