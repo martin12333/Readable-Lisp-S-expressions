@@ -342,7 +342,8 @@ Unfortunately,
 <a href="#srfi-49">SRFI-49 had some awkward usage issues</a>,
 and by itself it lacks
 support for infix notation (e.g., <samp>{a&nbsp;+&nbsp;b}</samp>)
-and prefix formats (e.g., <samp>f(x)</samp>).
+and prefix formats (e.g., <samp>f(x)</samp>) that
+<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a> provides.
 Sweet-expressions build on and refine SRFI-49 by addressing these issues.
 Real programs by different authors have been written using sweet-expressions,
 demonstrating that sweet-expressions are a practical notation.
@@ -490,7 +491,8 @@ Here are a few clarifications:
 <li>An unescaped &#8220;;&#8221; not in a string still introduces comments
 that end at the end of the line.</li>
 <li>Lines with only a ;-comment (preceded by 0 or more indent characters)
-are completely ignored - even their indentation (if any) is irrelevant.</li>
+are completely ignored - their indentation (if any) is irrelevant,
+and they do not end an expression.</li>
 <li>Scheme&#8217;s datum comments (<code>#;</code><i>datum</i>)
 comment out the next neoteric expression,
 not the next sweet expression
@@ -748,6 +750,7 @@ a b $ c d e f $ g
 <td align="left" valign="top">
 <pre>
 (a b (c d e f g))
+; Not (a b (c d e f (g)))
 </pre>
 </td>
 </tr>
@@ -866,6 +869,13 @@ let &lt;* x getx() \\ y gety() *&gt;
 </tr>
 </table>
 </blockquote>
+
+<p>
+Note that if you want to use markers as ordinary symbols
+just surround them with curly braces.
+A <code>{$}</code> always means the symbol <code>$</code>, not the
+special marker.
+</p>
 
 <h2><a name="tutorial-implementation">Getting an implementation</a></h2>
 
@@ -1460,7 +1470,7 @@ Implementations that provide R7RS semantics
 <var>write-shared</var> that identifies shared structures,
 and <var>write-simple</var> with no guarantee of
 cycle detection or shared structure identification)
-<em>SHOULD</em> appropriate variants of these.
+<em>SHOULD</em> include appropriate variants of these.
 That is,
 <var>curly-write</var> and <var>neoteric-write</var>
 that perform cycle detection,
