@@ -243,104 +243,6 @@
 ;             (my-read-char stream)
 ;             (gobble-chars stream (cdr to-gobble)))
 ;           (t (string-length to-gobble)))))
-; 
-; 
-;   (defun process-sharp (no-indent-read stream)
-;     ; We've read a # character.  Returns what it represents as
-;     ; (stopper value); ('normal value) is value, ('scomment ()) is comment.
-;     ; Since we have to re-implement process-sharp anyway,
-;     ; the vector representation #(...) uses my-read-delimited-list, which in
-;     ; turn calls no-indent-read.
-;     (let ((c (my-peek-char stream)))
-;       (cond
-;         ((eof-objectp c) scomment-result) ; If eof, pretend it's a comment.
-;         ((char-line-endingp c) ; Extension - treat # EOL as a comment.
-;           scomment-result) ; Note this does NOT consume the EOL!
-;         (t ; Try out different readers until we find a match.
-;           (my-read-char stream)
-;           (or
-;             (and common-lisp
-;                  (parse-cl no-indent-read c stream))
-;             (parse-hash no-indent-read c stream)
-;             (parse-default no-indent-read c stream)
-;             (read-error "Invalid #-prefixed string"))))))
-; 
-;   (defun parse-default (no-indent-read c stream)
-;               (cond ; Nothing special - use generic rules
-;                 ((char-equal c #\t)
-;                   (if (member (gobble-chars stream '(#\r #\u #\e)) '(0 3))
-;                       '(normal t)
-;                       (read-error "Incomplete #true")))
-;                 ((char-equal c #\f)
-;                   (if (member (gobble-chars stream '(#\a #\l #\s #\e)) '(0 4))
-;                       '(normal nil)
-;                       (read-error "Incomplete #false")))
-;                 ((member c '(#\i #\e #\b #\o #\d #\x
-;                            #\I #\E #\B #\O #\D #\X))
-;                   (let ((num (read-number stream (list #\# (char-downcase c)))))
-;                     (if num
-;                         `(normal ,num)
-;                         (read-error "Not a number after number start"))))
-;                 ((char=p c #\( )  ; Vector.
-;                   (list 'normal (list->vector
-;                     (my-read-delimited-list no-indent-read #\) stream))))
-;                 ((char=p c #\u )  ; u8 Vector.
-;                   (cond
-;                     ((not (eql (my-read-char stream) #\8 ))
-;                       (read-error "#u must be followed by 8"))
-;                     ((not (eql (my-read-char stream) #\( ))
-;                       (read-error "#u8 must be followed by left paren"))
-;                     (t (list 'normal (list->u8vector
-;                           (my-read-delimited-list no-indent-read #\) stream))))))
-;                 ((char=p c #\\)
-;                   (list 'normal (process-char stream)))
-;                 ; Handle #; (item comment).
-;                 ((char=p c #\;)
-;                   (no-indent-read stream)  ; Read the datum to be consumed.
-;                   scomment-result) ; Return comment
-;                 ; handle nested comments
-;                 ((char=p c #\|)
-;                   (nest-comment stream)
-;                   scomment-result) ; Return comment
-;                 ((char=p c #\!)
-;                   (process-sharp-bang stream))
-;                 ((member c digits) ; Datum label, #num# or #num=...
-;                   (let* ((my-digits (read-digits stream))
-;                          (label (string->number (concatenate 'string
-;                                                    (cons c my-digits)))))
-;                     (cond
-;                       ((eql (my-peek-char stream) #\#)
-;                         (my-read-char stream)
-;                         (list 'normal (cons unmatched-datum-label-tag label)))
-;                       ((eql (my-peek-char stream) #\=)
-;                         (my-read-char stream)
-;                         (if (my-char-whitespacep (my-peek-char stream))
-;                             (read-error "#num= followed by whitespace"))
-;                         (list 'normal
-;                           (patch-datum-label label (no-indent-read stream))))
-;                       (t
-;                         (read-error "Datum label #NUM requires = or #")))))
-;                 ; R6RS abbreviations #' #` #, #,@
-;                 ((char=p c #\')
-;                   '(abbrev syntax))
-;                 ((char=p c #\`)
-;                   '(abbrev quasisyntax))
-;                 ((char=p c #\,)
-;                   (let ((c2 (my-peek-char stream)))
-;                     (cond
-;                       ((char=p c2 #\@)
-;                         (my-read-char stream)
-;                         '(abbrev unsyntax-splicing))
-;                       (t
-;                         '(abbrev unsyntax)))))
-;                 ((or (char=p c #\space) (char=p c tab))
-;                   ; Extension - treat # (space|tab) as a comment to end of line.
-;                   ; This is not required by SRFI-105 or SRFI-110, but it's
-;                   ; handy because "# " is a comment-to-EOL in many other
-;                   ; languages (Bourne shells, Perl, Python, etc.)
-;                   (consume-to-eol stream)
-;                   scomment-result) ; Return comment
-;                 (t nil)))
 
 
 ; detect #| or |#
@@ -381,37 +283,6 @@
     (let ((junk (neoteric-read-nocomment stream)))
       (declare (ignore junk))
       empty-values)))
-
-;   ; WON'T WORK: Implement backquote
-;   (defun wrap-backquote (stream char)
-;     (declare (ignore char))
-;     (if (my-char-whitespacep (my-peek-char stream))
-;       'todo ; read as sweet-expression
-;       (neoteric-read-nocomment stream)))
-;   
-;   (setq digits '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
-; 
-;   (defun process-period (stream)
-;     ; We've peeked a period character.  Returns what it represents.
-;     (my-read-char stream) ; Remove .
-;     (let ((c (my-peek-char stream)))
-;       (cond
-;         ((eof-objectp c) period-symbol) ; period eof; return period.
-;         ((member c '(#\' #\` #\, #\#)) period-symbol) ; End, for some CL code
-;         ((member c digits) ; period digit - it's a number.
-;           (let ((num (read-number stream (list #\.))))
-;             (if num
-;                 num
-;                 (read-error "period digit must be a number"))))
-;         (t
-;           ; At this point, Scheme only requires support for "." or "...".
-;           ; As an extension we can support them all.
-;           (intern
-;             (fold-case-maybe stream
-;               (concatenate 'string (cons #\.
-;                 (read-until-delim stream neoteric-delimiters)))))))))
-
-
 
 ; There is no standard mechanism to unread multiple characters.
 ; Therefore, the key productions and some of their supporting procedures
@@ -489,22 +360,6 @@
   (if (listp lhs)
       (append lhs rhs)
       (read-error "Must have proper list on left-hand-side to append data")))
-
-;   ; Note: If a *value* begins with #, process any potential neoteric tail,
-;   ; so weird constructs beginning with "#" like nil() will still work.
-;   (defun n-expr-or-scomment (stream)
-;     (if (eql (my-peek-char stream) #\#)
-;         (let* ((consumed-sharp (my-read-char stream))
-;                (result (process-sharp neoteric-read-nocomment stream)))
-;           (cond
-;             ((eq (car result) 'normal)
-;               (list 'normal (neoteric-process-tail stream (cadr result))))
-;             ((eq (car result) 'abbrev)
-;               (list 'normal
-;                 (list (cadr result) (neoteric-read-nocomment stream))))
-;             ((consp result) result)
-;             (t (read-error "Unsupported hash"))))
-;         (list 'normal (neoteric-read-nocomment stream))))
 
 ; Read an n-expression.  Returns ('scomment '()) if it's an scomment,
 ; else returns ('normal n-expr).
