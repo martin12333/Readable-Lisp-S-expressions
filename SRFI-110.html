@@ -101,18 +101,19 @@ Unlike nearly all past efforts to improve s-expression readability,
 sweet-expressions are
 general (the notation is independent from any underlying semantic)
 and homoiconic (the underlying data structure is clear from the syntax).
-Sweet-expressions can be used both for program and data input.
 This notation was developed by the
-&#8220;<a href="http://readable.sourceforge.net/">Readable Lisp S-expressions Project</a>&#8221;.
+&#8220;<a href="http://readable.sourceforge.net/">Readable Lisp S-expressions Project</a>&#8221; and
+can be used for both programs and data.
 </p>
 <p>
-Sweet-expressions can be considered simply
-a set of some additional abbreviations.
+Sweet-expressions can be considered
+a set of additional abbreviations, just as <tt>'x</tt> already abbreviates
+<tt>(quote&nbsp;x)</tt>.
 Sweet-expressions and traditionally formatted s-expressions
-can be freely mixed, allowing the developer
-to easily transition and maximize readability when laying out code.
+can be freely mixed; this provides backwards compatibility,
+simplifies transition, and enables developers to maximize readability.
 Here is an example of a sweet-expression and its equivalent s-expression
-(a sweet-expression reader would accept <i>either</i> format):
+(note that a sweet-expression reader would accept <i>either</i> format):
 </p>
 
 <table border="1" cellpadding="4">
@@ -332,7 +333,8 @@ reasonable indentation by others.
 Unfortunately, the Python syntax uses special constructs
 for the various semantic
 constructs of the language, and the syntaxes of file input and
-interactive input differ slightly.
+interactive input differ slightly (so cutting-and-pasting of code from
+a file may be interpreted differently by its REPL).
 </p>
 
 <p>
@@ -500,11 +502,8 @@ not the next sweet expression
 </li>
 <li>Special comments are non-whitespace sequences
 other than ;-comments that do not return a datum; they include
-datum comments (<code>#;</code><i>datum</i>),
-block comments (<code>#|</code>...<code>|#</code>),
-and directives
-(such as <code>#!fold-case</code>, <code>#!no-fold-case</code>,
-<code>#!sweet</code>, and <code>#!curly-infix</code>).
+datum comments (<code>#;</code><i>datum</i>) and
+block comments (<code>#|</code>...<code>|#</code>).
 <a href="#block-comment-indent-significant">If a special comment
 begins immediately after the indent,
 the indentation of the special comment is used</a>.
