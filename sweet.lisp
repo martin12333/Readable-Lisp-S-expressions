@@ -460,7 +460,7 @@
         (get-next-indent stream))
       ((lcomment-eolp c) ; Indent-only line
         (if (member #\! indentation-as-list)
-            (read-error "Ending indentation-only line must not use '!'")
+            (get-next-indent stream)
             "^"))
       (t (concatenate 'string indentation-as-list)))))
 
@@ -771,6 +771,7 @@
             (t-expr stream))
           ((char-icharp c)
             (let ((indentation-list (cons #\^ (accumulate-ichar stream))))
+              (declare (ignore indentation-list))
               (if (not (member (my-peek-char stream) initial-comment-eol))
                   (let ((results (n-expr-or-scomment stream)))
                     (if (not (eq (car results) 'scomment))
@@ -779,8 +780,6 @@
                           (hspaces stream)
                           (t-expr stream))))
                   (progn ; Indented comment-eol, consume and try again.
-                    (if (member #\! indentation-list)
-                        (read-error "Empty line with '!'"))
                     (consume-to-eol stream)
                     (consume-end-of-line stream)
                     (t-expr stream)))))
