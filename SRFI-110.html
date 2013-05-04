@@ -1014,8 +1014,9 @@ value of the top of the indentation stack):
 <li>If an end-of-line sequence immediately follows the indentation
 and the indentation length is nonzero:
 <ol>
-<li type="a">If the indentation contains &#8220;!&#8221;, it is an error;
-an implementation <em>SHOULD</em> reject it.</li>
+<li type="a">If the indentation contains &#8220;!&#8221;, it is ignored;
+an implementation <em>MUST</em> consume the end-of-line sequence and
+start applying these rules again, from the beginning, with the next line.</li>
 <li type="a">If the indentation does not contain &#8220;!&#8221;,
 it is considered a line with no characters
 (thus indentation has zero length)
@@ -2687,7 +2688,7 @@ the notation stays consistent.</p>
 
 <p>Of course, people sometimes want to have something like
 an empty line in the middle of an s-expression.
-The solution is that comment-only lines using &#8220;;&#8221;
+The recommended solution is that comment-only lines using &#8220;;&#8221;
 (indented or not) are completely ignored and not even considered empty lines.
 That means you can use comment-only lines for the purpose
 of separating sections in a single datum.
@@ -2695,11 +2696,13 @@ The indentation of comment-only lines is intentionally ignored;
 that way, you don&#8217;t have to worry about
 making sure that comment indentation matches its surroundings.
 We&#8217;ve found that in practice this works very well.
+You can also use a line with at least one exclamation point, and nothing
+else other than possibly whitespace; this has the same effect.
 In very long expressions (e.g., for a set of definitions in a library),
 a collecting list can typically be used.
 </p>
 
-<p>Since a line with only indentation may look exactly identical to an
+<p>Since a line with only spaces or tabs may look exactly identical to an
 empty line, we decided to clearly state that
 line with only spaces and tabs is an empty line.
 This eliminates some nasty usability problems that
@@ -2758,6 +2761,81 @@ Eventually the &#8220;!&#8221; was selected instead; it
 practically never begins a line, and if you need it, {!...} will work.
 The exclamation point is much easier to implement as an indent character,
 and it is also a great character for highlighting indented groups.</p>
+
+
+<p>
+The rule for lines with only indentation, and at least one &#8220;!&#8221;,
+is due to much discussion.
+First, let&#8217;s review the rules for indentation-only lines in other cases.
+A line with ONLY spaces and tabs is considered to be the
+same as a blank line, for the straightforward reason that
+in many circumstances you can&#8217;t see the difference.
+Treating &#8220;no character&#8221; lines and &#8220;tabs+spaces only&#8221; lines
+differently could lead to subtle, hard-to-understand bugs.
+</p>
+
+<p>
+This then leads to the question, what would a line mean if it has only
+indentation characters and includes a &#8220;!&#8221; ?
+Originally it meant the same thing (&#8220;blank line&#8221;),
+because it was a line with only indent characters.
+However, that interpretation seemed odd, because you
+<i>can</i> see a difference compared to a line with no characters.
+That semantic was confusing, so Wheeler changed this to
+being illegal.
+</p>
+
+<p>
+On May 1, 2013, Beni Cherniavsky-Paskin
+questioned this semantic on the SRFI-110 discussion list, saying,
+&#8220;Once you prefix a block with !, it seems to me there is no reason to
+additionally require a comment â€&#8221; &#8220;! ;&#8221; (or other workarounds) â€&#8221; to express
+ignored vertical whitespace.
+Isn&#8217;t this the cleanest thing possible:&#8221;
+<pre>
+  define long-func(x)
+  let ((foo bar(x)))
+  ! do stuff
+  ! ...
+  !
+  ! more stuff
+  ! ...
+</pre>
+</p>
+
+<p>
+On May 2, 2013, David Vanderson said he was for allowing &#8220;!&#8221;
+in an indentation-character-only line, but noted
+that there were good reasons to <i>not</i> enforce indentation matching.
+He gave this code example:
+</p>
+<pre>
+define long-func(x)
+let outer ((foo bar(x)))
+! let inner ((y z))
+! ! do stuff
+! ! ...
+!
+! ! more stuff
+! ! ...
+</pre>
+
+<p>
+David Vanderson then asked,
+&#8220;In this case, is &#8216;more stuff&#8217; a child of &#8216;inner&#8217; or &#8216;outer&#8217; ?
+Even in the first example, having a space after
+the ! on the blank line would
+throw off the indentation, right?
+I think I&#8217;ve convinced myself that indentation should NOT be enforced.&#8221;
+</p>
+<p>
+No one identified a hole in David Vanderson&#8217;s argument.
+As a result, lines with only indentation characters, and at least one
+&#8220;!&#8221;, are now completely ignored.
+</p>
+
+
+
 
 <h3 id="disabling-indentation-processing-with-paired-characters">Disabling
 indentation processing with paired characters</h3>
