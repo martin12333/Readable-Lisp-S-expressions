@@ -1360,10 +1360,13 @@ t_expr returns [Object v]
 
 <p>
 An implementation of this SRFI <em>MUST</em> accept
-the directive <code>#!sweet</code> followed by a whitespace character
+a line beginning with the un-indented
+directive <code>#!sweet</code> followed by a newline
 in its standard datum readers (e.g., <code>read</code> and, if applicable,
 the default implementation REPL).
-This directive <em>MUST</em> be consumed and considered whitespace.
+An implementation <em>MAY</em> signal an error if this directive is not
+at the beginning of a line or cannot terminate all sweet-expressions
+(e.g., because it is inside parentheses or a collecting list).
 After reading this directive, the reader <em>MUST</em> accept
 sweet-expressions in subsequent datums read from the same port,
 until some other conflicting directive is given.
@@ -1379,6 +1382,9 @@ A <code>#!no-sweet</code>
 <em>SHOULD</em> cause the current port to
 disable sweet-expression indentation processing and
 <em>MAY</em> also disable curly-infix expression processing.
+An implementation <em>MAY</em> signal an error if the directives
+<code>#!curly-infix</code> or <code>#!no-sweet</code>
+are not at the beginning of a line or cannot terminate all sweet-expressions.
 </p>
 
 <p>
@@ -3308,6 +3314,17 @@ to similar markers, such as
 (R6RS and R7RS),
 <code>#!r6rs</code> (R6RS), and
 <code>#!curly-infix</code> (SRFI-105).
+</p>
+
+<p>
+Implementations are only required to support these directives if
+they are at the beginning of a line and they can end a sweet-expression
+(e.g., they are not in the middle of a pair of parentheses or
+a collecting list).
+It is not hard to <i>parse</i> the directive (indeed, the BNF
+describes how to do so), but many implementations may have difficulty
+switching modes in the middle of processing a sweet-expression, and
+there is no strong reason to require this functionality.
 </p>
 
 <p>
