@@ -117,10 +117,12 @@ But it's often more convenient to install.  Do this with:
 Scheme
 ======
 
-See the tutorial for how to use it.
+See the tutorial (scheme-tutorial.md) for how to use it.
 
 Common Lisp
 ===========
+
+See the Common Lisp tutorial (common-lisp-tutorial.md) for how to use it.
 
 The Common Lisp implementation creates a package :readable
 and uses the usual ASDF system.  Use "make install" to install the files;
@@ -213,8 +215,10 @@ Documentation:
 *   README: This file.
 *   solution.md: A description of the notations this project implements.
     See the project website for the current version of this.
-*   tutorial.md: A tutorial.  See the project website for a
-    current version of this.
+*   scheme-tutorial.md: A tutorial (Scheme-focused).
+    See the project website for a current version of this.
+*   common-lisp-tutorial.md: A tutorial (Common-Lisp-focused).
+    See the project website for a current version of this.
 *   src/sweeten.sscm: An example of code written using sweet-expressions.
 *   "man pages"
 

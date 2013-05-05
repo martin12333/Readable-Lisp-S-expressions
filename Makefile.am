@@ -266,7 +266,10 @@ dist_man_MANS = man/unsweeten.1 man/sweet-run.1 \
 # in markdown format.  The website has the updated version, but for
 # those who just have this file, it'd be useful to have SOME useful
 # information on what this code is trying to do and how to use it.
-dist_doc_DATA = README COPYING AUTHORS ChangeLog solution.md tutorial.md
+dist_doc_DATA = README COPYING AUTHORS ChangeLog
+
+dist_doc_DATA += solution.md
+dist_doc_DATA += scheme-tutorial.md common-lisp-tutorial.md
 
 # Presentation in Open Document Format (.odp) about these formats:
 dist_doc_DATA += readable-s-expressions.odp
