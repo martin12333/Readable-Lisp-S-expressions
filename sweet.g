@@ -525,9 +525,11 @@ LCOMMENT_LINE :  {(getCharPositionInLine() == 0)}? =>
 // After reading it, we'll need to read in any following indent characters
 // (if indent processing is active) to determine if have an INDENT or DEDENTs.
 // As part of tokenizing, we'll consume any following lines that
-// are ;-only lines, and treat indent-only lines equivalent to blank lines.
+// are ;-only lines, and treat tab/space-only lines equivalent to blank lines.
 fragment SPECIAL_IGNORED_LINE
-   : (' ' | '\t' | '!' )* ';' NOT_EOL_CHARS EOL_SEQUENCE ;
+   : ( ((' ' | '\t' | '!' )* ';' NOT_EOL_CHARS )
+     | ((' ' | '\t' )* '!' (' ' | '\t' | '!')* ))
+      EOL_SEQUENCE ;
 fragment INDENT_CHAR : (' ' | '\t' | '!');
 fragment INDENT_CHARS : INDENT_CHAR*;
 fragment INDENT_CHARS_PLUS : INDENT_CHAR+;
