@@ -2721,13 +2721,24 @@ is ignored
 </p>
 
 <h3 id="indentation-characters">Indentation characters (! as indent)</h3>
-<p>Some
-like to use spaces to indent; others like tabs.  Python allows either,
+<p>
+Some like to use spaces to indent; others like tabs.  Python allows either,
 and SRFI-49 allows either as well - you just have to be consistent.
 Sweet-expressions continues this tradition, and
 is defined so that people can use what they like.
 The only rule is that they must be consistent; if a line is indented with
-eight spaces, the next line cannot be indented with a tab.</p>
+eight spaces, the next line cannot be indented with a tab.
+</p>
+
+<p>
+One challenge with tabs is that systems vary how they are displayed.
+On some systems, a tab moves to the next 8th character position,
+but this is not universal.
+In sweet-expressions, tabs (as with any indentation characters)
+must be used consistently.
+This simple rule completely eliminates the problems caused by variances
+in how they are displayed.
+</p>
 
 <p>One objection that people raise about mandatory indentation
 is that horizontal whitespace can get lost in many transports
@@ -2771,8 +2782,8 @@ First, let&#8217;s review the rules for indentation-only lines in other cases.
 A line with ONLY spaces and tabs is considered to be the
 same as a blank line, for the straightforward reason that
 in many circumstances you can&#8217;t see the difference.
-Treating &#8220;no character&#8221; lines and &#8220;tabs+spaces only&#8221; lines
-differently could lead to subtle, hard-to-understand bugs.
+Treating &#8220;no character&#8221; lines and &#8220;tabs+spaces only&#8221;
+lines differently could lead to subtle, hard-to-understand bugs.
 </p>
 
 <p>
@@ -2790,7 +2801,7 @@ being illegal.
 On May 1, 2013, Beni Cherniavsky-Paskin
 questioned this semantic on the SRFI-110 discussion list, saying,
 &#8220;Once you prefix a block with !, it seems to me there is no reason to
-additionally require a comment â€&#8221; &#8220;! ;&#8221; (or other workarounds) â€&#8221; to express
+additionally require a comment ... to express
 ignored vertical whitespace.
 Isn&#8217;t this the cleanest thing possible:&#8221;
 <pre>
@@ -2825,9 +2836,9 @@ let outer ((foo bar(x)))
 David Vanderson then asked,
 &#8220;In this case, is &#8216;more stuff&#8217; a child of &#8216;inner&#8217; or &#8216;outer&#8217; ?
 Even in the first example, having a space after
-the ! on the blank line would
-throw off the indentation, right?
-I think I&#8217;ve convinced myself that indentation should NOT be enforced.&#8221;
+the ! on the blank line would throw off the indentation, right?
+I think I&#8217;ve convinced myself that indentation
+should NOT be enforced.&#8221;
 </p>
 <p>
 No one identified a hole in David Vanderson&#8217;s argument.
