@@ -53,6 +53,11 @@
   `(defconstant ,name (if (boundp ',name) (symbol-value ',name) ,value)
                       ,@(when doc (list doc))))
 
+; Wrapping all character codes up to char-code-limit doesn't really work
+; correctly.  This is the max char code that will be wrapped by readable's
+; front readtable.
+(defvar my-char-code-limit 255)
+
 ; These stubs could be used to attach position info
 (defun attach-sourceinfo (pos value)
   (declare (ignore pos))
@@ -822,7 +827,7 @@
   (setq *sweet-readtable*
     (let ((new (copy-readtable nil)))
       (set-syntax-from-char #\# #\' new) ; force # to not be dispatching char.
-      (loop for ci from 0 upto 255 ; TODO: char-code-limit
+      (loop for ci from 0 upto my-char-code-limit
          do (set-macro-character (code-char ci) #'t-expr-entry nil new))
       new)))
 

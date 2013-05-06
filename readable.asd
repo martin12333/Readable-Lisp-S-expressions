@@ -24,6 +24,7 @@
            #:enable-full-curly-infix #:enable-curly-infix #:curly-infix-read
            #:enable-neoteric #:neoteric-read
            #:enable-sweet #:sweet-read
+           #:my-char-code-limit
            #:disable-readable
            #:$nfx$ #:$bracket-apply$))
 
