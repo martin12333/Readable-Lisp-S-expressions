@@ -290,6 +290,7 @@ EXTRA_DIST += \
  tests/curly-infix-test-cl \
  tests/curly-infix-testsuite-scm \
  tests/curly-infix-test-scm \
+ tests/full-test-cl \
  tests/neoteric-test \
  tests/neoteric-testsuite \
  tests/sweet-test \
@@ -319,6 +320,9 @@ check: readable/kernel.scm
 	CL_SOURCE_REGISTRY="`realpath $(srcdir)`"/ \
 	  clisp -lp "`realpath $(srcdir)`/tests/" \
 	        $(srcdir)/tests/curly-infix-test-cl
+	CL_SOURCE_REGISTRY="`realpath $(srcdir)`"/ \
+	  clisp -lp "`realpath $(srcdir)`/tests/" \
+	        $(srcdir)/tests/full-test-cl
 	@echo "About to run guile curly-infix tests"
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/curly-infix-test-scm \
 	            < $(srcdir)/tests/curly-infix-testsuite-scm
