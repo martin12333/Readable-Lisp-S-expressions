@@ -62,9 +62,11 @@
 (defun read-error (message)
   (error message))
 
-; TODO: If possible, make it so clisp doesn't keep responding with |...|
-; around all tokens.  It's legal, but ugly.  This seems to happen because
-; we set the alphanumeric letters to be macros.
+; Unfortuntely, clisp will write all symbols with |...| around them
+; when neoteric- or sweet-expressions are enabled.
+; The issue is in clisp file "src/io.d" function "pr_symbol_part".
+; We hope to be able to modify clisp in the future so it can be disabled,
+; but for now, just carry one.
 
 ; NOTE: clisp's "peek-char" has a serious bug; it defaults to CONSUME
 ; a following whitespace, contravening the Common Lisp spec:
