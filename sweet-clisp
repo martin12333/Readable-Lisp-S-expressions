@@ -1,12 +1,14 @@
 #!/bin/sh
 
 # By David A. Wheeler. Start up clisp in "sweet-expression" reading mode,
-# so you can try it out.
+# so you can try it out.  Setting *print-escape* isn't ideal, but
+# in most circumstances it works out.
 
 (
 cat << COMMAND_SET
 (load "tests/my-asdf.lisp")
 (asdf:load-system :readable)
+(setq *print-escape* nil)
 (readable:enable-sweet)
 COMMAND_SET
 
