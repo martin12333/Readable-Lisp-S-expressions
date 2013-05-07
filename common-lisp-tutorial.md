@@ -35,19 +35,39 @@ To solve this, we've developed three tiers of notation, each building on the pre
 
 For more details, see [Solution].
 
-For example, here's some traditionally-formatted code:
+Here are some examples:
 
-    (define (factorial n)
+<table>
+<tr><th>S-expressions</th><th>Sweet-expressions</th></tr>
+<tr>
+<td>
+<pre>
+    (defun fibfast (n)
+      (if (&lt; n 2)
+          n
+          (fibup n 2 1 0)))
+
+    (defun factorial (n)
       (if (<= n 1)
         1
         (* n (factorial (- n 1)))))
+</pre>
+</td>
+<td>
+<pre>
+    defun fibfast (n)
+      if {n &lt; 2}        ; Indentation, infix {...}
+         n              ; Single expr = no new list
+         fibup n 2 1 0  ; Simple function calls
 
-And the same thing with sweet-expressions:
-
-    define factorial(n)
+    defun factorial (n)
       if {n <= 1}
         1
         {n * factorial{n - 1}}
+</pre>
+</td>
+</tr>
+</table>
 
 You can see many more examples in [Examples].
 
@@ -265,6 +285,23 @@ To end this part of the demo, disable our changed notation:
     (readable:disable-readable)
 
 
+
+Quick note about clisp
+======================
+
+If you use clisp, a widely-used Common Lisp implementation, then symbols will always be written with |...| around them when neoteric-expressions or sweet-expressions are active.  This behavior is peculiar to clisp.  It happens because the clisp "write" varies what it writes based on the contents of the current readtable.
+
+We hope that this will not happen in a future version of clisp.  The problem is that clisp needs more flexible symbol writing code (the issue is in clisp source file "src/io.d" function "pr_symbol_part").   On 2013-05-06 David A. Wheeler raised the issue of adding such flexibility to clisp.  If clisp were more flexible, then the readable library could use that flexibility to inhibit these extraneous vertical bars.
+
+If you really don't like the vertical bars, you can set \*print-escape\*, like this:
+
+    (setq *print-escape* nil)
+
+The problem with setting *print-escape* is that this completely disables printing vertical bars, even when the vertical bar characters *do* need to be there.  If you use the clisp "-modern" mode this isn't too bad; "-modern" mode makes all text entry case-sensitive, and forces all built-in lisp functions to lower case, eliminating a common reason for needing the |...| escapes.  But if you write symbols that need to be escaped (which is especially likely if you do not use "-modern" mode), turning off *print-escape* may disable more than you'd like.
+
+For now, clisp users will have to see a lot of vertical bars while neoteric-expressions or sweet-expressions are active, or live without automated printing of escapes.  Note that after running "(readable:disable-readable)" the extra vertical bars disappear, since this restores the default readtable (and thus the default behavior).
+
+
 Using Sweet-expressions (t-expressions) 
 =======================================
 
@@ -432,7 +469,7 @@ If you have small items that need to be at the same list level, you can combine 
 
     (foo :amount 100 :from ocean)
 
-But what if you actually want to refer to "\\\\"?  No problem, just use the expression "(. \\\\)".  Exactly what this means will depend on whether or not your Lisp uses "slashification" (e.g., if "\" followed by any character means that character is part of a symbol).  If it doesn't use slashification, \\\\ means the symbol with a two-character name \\\\.  If it uses slashification, \\\\ means the symbol with the one-character name \\.  The good news is that you can use the marker \\\\ on practically any Lisp system, so you don't need to constantly change notation if you use different ones.
+But what if you actually want to refer to "\\\\"?  No problem, just use the expression "{\\\\}".  Common Lisp, and some other lisps, supports "slashification" (e.g., if "\" followed by any character means that character is part of a symbol).  But this symbol \\\\ is chosen so that it can be written in any Lisp.  If that Lisp doesn't use slashification, \\\\ means the symbol with a two-character name \\\\.  If it uses slashification, \\\\ means the symbol with the one-character name \\.  The good news is that you can use the marker \\\\ on practically any Lisp system, so you don't need to constantly change notation if you use different ones.
 
 Sublist
 -------
