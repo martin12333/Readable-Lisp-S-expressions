@@ -66,9 +66,7 @@
   (declare (ignore stream))
   nil)
 
-; TODO: Handle EOF
-(define-constant eof-object (cons 'eof-objectp-special '()))
-(defun eof-objectp (c) (eq c eof-object))
+(defun eof-objectp (c) (eq c my-eof-marker))
 
 (defun string-length (s) (length s))
 
@@ -96,7 +94,10 @@
   (member c whitespace-chars))
 
 (define-constant line-ending-chars (list #\newline #\linefeed #\return))
-(defun char-line-endingp (char) (member char line-ending-chars))
+(defun char-line-endingp (char)
+  (or
+    (eof-objectp char)
+    (member char line-ending-chars)))
 
 ; Does character "c" begin a line comment (;) or end-of-line?
 (define-constant initial-comment-eol '(#\; #\newline #\linefeed #\return))
@@ -106,7 +107,7 @@
 ; (defun my-peek-char (stream) (peek-char nil stream))
 
 (defun my-peek-char (stream)
-  (let ((c (peek-char nil stream t nil nil)))
+  (let ((c (peek-char nil stream t nil my-eof-marker)))
     ; (princ "DEBUG: my-peek-char returned=") (write c) (terpri)
     c))
 (defun my-read-char (stream) (read-char stream t nil nil))
@@ -116,6 +117,7 @@
 (defun consume-end-of-line (stream)
   (let ((c (my-peek-char stream)))
     (cond
+      ((eof-objectp c) (values))
       ((eql c #\return)
         (my-read-char stream)
         (if (eql (my-peek-char stream) #\linefeed)
@@ -259,14 +261,14 @@
         empty-values)
       ((char= c #\|)
         (let ((c2 (my-peek-char stream)))
-          (if (char= c2 #\#)
+          (if (and (not (eof-objectp c2)) (char= c2 #\#))
               (progn
                 (my-read-char stream)
                 empty-values)
               (nest-comment stream))))
       ((and hash-pipe-comment-nestsp (char= c #\#))
         (let ((c2 (my-peek-char stream)))
-          (if (char= c2 #\|)
+          (if (and (not (eof-objectp c2)) (char= c2 #\|))
               (progn
                 (my-read-char stream)
                 (nest-comment stream))
@@ -336,10 +338,9 @@
 
 ; Consume 0+ spaces or tabs
 (defun hspaces (stream)
-  (cond ; Use "cond" as "when" for portability.
-    ((char-hspacep (my-peek-char stream))
+  (when (char-hspacep (my-peek-char stream))
       (my-read-char stream)
-      (hspaces stream))))
+      (hspaces stream)))
 
 ; Return t if char is space, tab, or !
 (defun char-icharp (char)
@@ -461,6 +462,7 @@
   (let* ((indentation-as-list (cons #\^ (accumulate-ichar stream)))
          (c (my-peek-char stream)))
     (cond
+      ((eof-objectp c) "^") ; EOF ; end any existing expression.
       ((eql c #\;)  ; A ;-only line, consume and try again.
         (get-next-indent stream))
       ((lcomment-eolp c) ; Indent-only line

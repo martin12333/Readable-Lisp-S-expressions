@@ -55,9 +55,8 @@
 (defvar *neoteric-readtable* (copy-readtable)
         "Use this table when about to read a neoteric expression")
 
-; TODO: Handle eof as directed by "read".  Not currently consistent.
 ; Marker for eof
-(defvar my-eof-marker (cons 'my-eof-marker '()))
+(defvar my-eof-marker (make-symbol "my-eof-marker"))
 
 (defun read-error (message)
   (error message))
