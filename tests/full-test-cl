@@ -186,6 +186,19 @@ mytest
       {10 + 11}
   '(a b 7 x1 21)
 
+mytest
+  ` q
+    ,@ cdr('(x y z))
+  '(q y z)
+
+mytest
+  ' defun fact (n)
+  ! if {n <= 1}
+  !   1
+  !   {n * fact{n - 1}}
+  '(defun fact (n) (if (<= n 1) 1 (* n (fact (- n 1)))))
+
+
 (disable-readable)
 (princ "Tests complete!")
 (exit 0)
