@@ -44,6 +44,12 @@
       (print correct)
       (exit 1))))
 
+; Special test values:
+(setq fab '(f a b))
+(setq g5qx '(g #b101 (quote x)))
+(setq gp5qx '(g (#b101 quote x)))
+(setq hnn7 '(h () () 7))
+
 (enable-full-curly-infix)
 
 (mytest '{cos(x) + sin(x)} '(+ (cos x) (sin x)))
@@ -52,6 +58,17 @@
 (mytest '{f()} '(f))
 (mytest '{f(a b) (c d)} '((f a b) (c d)))
 
+(mytest '(f a b) fab)
+(mytest '{f(a b)} fab)
+
+(mytest '(g #b101 (quote x)) g5qx)
+(mytest '{g(#b101 (quote x))} g5qx)
+
+(mytest '(g (#b101 quote x)) gp5qx)
+(mytest '{g(#b101(quote x))} gp5qx)
+
+(mytest '(h () () 7) hnn7)
+(mytest '{h(() () 7)} hnn7)
 
 (disable-readable)
 (enable-neoteric)
@@ -60,12 +77,49 @@
 (mytest 'g() '(g))
 (mytest '{f(a b) (c d)} '((f a b) (c d)))
 
+(mytest '(f a b) fab)
+(mytest '{f(a b)} fab)
+
+(mytest '(g #b101 (quote x)) g5qx)
+(mytest '{g(#b101 (quote x))} g5qx)
+
+(mytest '(g (#b101 quote x)) gp5qx)
+(mytest '{g(#b101(quote x))} gp5qx)
+
+(mytest '(h () () 7) hnn7)
+(mytest '{h(() () 7)} hnn7)
+
 (disable-readable)
 (enable-sweet)
 
 mytest
   ' f 1 2
   '(f 1 2)
+
+(mytest '(f a b) fab)
+(mytest '{f(a b)} fab)
+mytest
+  ' f a b
+  fab
+
+(mytest '(g #b101 (quote x)) g5qx)
+(mytest '{g(#b101 (quote x))} g5qx)
+mytest
+  ' g #b101 (quote x)
+  g5qx
+
+(mytest '(g (#b101 quote x)) gp5qx)
+(mytest '{g(#b101(quote x))} gp5qx)
+mytest
+  ' g #b101(quote x)
+  gp5qx
+
+(mytest '(h () () 7) hnn7)
+(mytest '{h(() () 7)} hnn7)
+mytest
+  ' h () () 7
+  hnn7
+
 
 (disable-readable)
 (princ "Tests complete!")
