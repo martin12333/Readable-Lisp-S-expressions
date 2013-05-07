@@ -94,6 +94,24 @@
         (terpri) (terpri) (terpri)
         (error "peek-char BUG")))))
 
+; Set of constituents - these will be overridden.
+; We should support arbitrary UTF-8 characters, but it can be complicated
+; to do so portably.  For now, we'll define this as a variable so it
+; can be overridden.
+(defvar *constituents*
+    '(#\! #\$ #\% #\& #\* #\+ #\- #\. #\/
+      #\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9
+      #\: #\< #\= #\> #\? #\@
+      #\A #\B #\C #\D #\E #\F #\G #\H #\I #\J #\K #\L #\M
+      #\N #\O #\P #\Q #\R #\S #\T #\U #\V #\W #\X #\Y #\Z
+      #\^ #\_
+      #\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m
+      #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z #\~
+      #\rubout )) ; Rubout, really?!?  Yup, it's in the spec.
+
+; TODO: Add UTF-8 constituents to *constituents* if the underlying
+; system supports them in the readtable.
+
 ;;; Key procedures to implement neoteric-expressions
 
 ; These delimiting characters stop reading of symbols or non-datums
@@ -294,7 +312,6 @@
 
 ;;; Enablers
 
-
 (defun enable-neoteric ()
   (setup-enable)
   (setq *neoteric-underlying-readtable* (copy-readtable))
@@ -310,18 +327,8 @@
       *neoteric-underlying-readtable*))
 
   ; Wrap all constituents.  Presume ASCII for now.
-  ; TODO: Handle non-ASCII chars if platform supports them.
   ; TODO: Don't wrap if they aren't constituents any more.
-  (dolist (c
-    '(#\! #\$ #\% #\& #\* #\+ #\- #\. #\/
-      #\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9
-      #\: #\< #\= #\> #\? #\@
-      #\A #\B #\C #\D #\E #\F #\G #\H #\I #\J #\K #\L #\M
-      #\N #\O #\P #\Q #\R #\S #\T #\U #\V #\W #\X #\Y #\Z
-      #\^ #\_
-      #\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m
-      #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z #\~
-      #\rubout )) ; Rubout, really?!?  Yup, it's in the spec.
+  (dolist (c *constituents*)
     (set-macro-character c #'wrap-read-n-tail nil))
 
   ; We need to do this so symbols starting with an escape will work:
