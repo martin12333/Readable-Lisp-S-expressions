@@ -120,6 +120,71 @@ mytest
   ' h () () 7
   hnn7
 
+mytest
+  ' foo k() m(1) n(2 3) m(3 4 5)
+  '(foo (k) (m 1) (n 2 3) (m 3 4 5))
+
+mytest
+  ' foo
+    a b \\ c d \\ e \\ f g h
+    j k $ l m $ n
+  '(foo (a b) (c d) e (f g h)
+    (j k (l m n)))
+
+mytest
+  ' \\
+    a b
+    c d
+  '((a b) (c d))
+
+mytest
+  ' let <* x $ 0 \\ y $ cos theta *>
+    {{x ** 2} + {y ** 2}}
+  '(let ((x 0) (y (cos theta))) (+ (** x 2) (** y 2)))
+
+mytest
+  ' let <*
+
+x 0
+
+y $ cos theta
+
+*>
+    {{x ** 2} + {y ** 2}}
+  '(let ((x 0) (y (cos theta))) (+ (** x 2) (** y 2)))
+
+mytest
+  ' foo1
+    a
+    .
+    b
+  '(foo1 a . b)
+
+
+mytest
+  ' foo2 a . b
+  '(foo2 a . b)
+
+mytest
+  ' foo3
+    a
+    #| comment |#
+      b1 b2
+        q1 q2
+      c1 c2
+    d
+  '(foo3 a ((b1 b2 (q1 q2)) (c1 c2)) d)
+
+mytest
+  ' h #| ignored |# j k
+  '(h j k)
+
+mytest
+  ` a b ,{3 + 4}
+    x1
+    ,
+      {10 + 11}
+  '(a b 7 x1 21)
 
 (disable-readable)
 (princ "Tests complete!")
