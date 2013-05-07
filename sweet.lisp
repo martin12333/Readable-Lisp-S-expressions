@@ -47,12 +47,6 @@
 (defvar *underlying-sweet-readtable*
   "This table is basically neoteric-expressions with some tweaks")
 
-; Work around SBCL nonsense that makes its "defconstant" useless.
-; See: http://www.sbcl.org/manual/Defining-Constants.html
-(defmacro define-constant (name value &optional doc)
-  `(defconstant ,name (if (boundp ',name) (symbol-value ',name) ,value)
-                      ,@(when doc (list doc))))
-
 ; Wrapping all character codes up to char-code-limit doesn't really work
 ; correctly.  This is the max char code that will be wrapped by readable's
 ; front readtable.
@@ -70,6 +64,8 @@
 
 (defun string-length (s) (length s))
 
+; Note: Use define-constant to work around SBCL problem.
+
 (define-constant period-symbol '|.|)
 
 (define-constant scomment-result '(scomment ()))
@@ -78,17 +74,15 @@
 ; Several Common Lisp readtable constructs return nothing using (values),
 ; but unfortunately when that happens the build-in Common Lisp reader
 ; performs actions that we can't intercept.  So we'll override the "empty"
-; returns with this instead, so that we can override the reader.
-(define-constant empty-values (cons 'empty-values-cons nil))
+; returns with this instead, so that they will get passed back to us
+; and allow us to override the reader.
+(define-constant empty-values (make-symbol "empty-values"))
 
 (define-constant vertical-tab (code-char 11)) ; VT is decimal 11.
 (define-constant form-feed #\page)            ; FF is decimal 12.
 
 (define-constant whitespace-chars
    (list #\space #\tab #\linefeed #\newline #\return vertical-tab form-feed))
-
-; If t, return |...| symbols as-is, including the vertical bars.
-(defvar literal-barred-symbol nil)
 
 (defun my-char-whitespacep (c)
   (member c whitespace-chars))
@@ -103,8 +97,6 @@
 (define-constant initial-comment-eol '(#\; #\newline #\linefeed #\return))
 (defun lcomment-eolp (c)
   (member c initial-comment-eol))
-
-; (defun my-peek-char (stream) (peek-char nil stream))
 
 (defun my-peek-char (stream)
   (let ((c (peek-char nil stream t nil my-eof-marker)))

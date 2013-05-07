@@ -55,8 +55,14 @@
 (defvar *neoteric-readtable* (copy-readtable)
         "Use this table when about to read a neoteric expression")
 
+; Work around SBCL nonsense that makes its "defconstant" useless.
+; See: http://www.sbcl.org/manual/Defining-Constants.html
+(defmacro define-constant (name value &optional doc)
+  `(defconstant ,name (if (boundp ',name) (symbol-value ',name) ,value)
+                      ,@(when doc (list doc))))
+
 ; Marker for eof
-(defvar my-eof-marker (make-symbol "my-eof-marker"))
+(define-constant my-eof-marker (make-symbol "my-eof-marker"))
 
 (defun read-error (message)
   (error message))
@@ -91,7 +97,8 @@
 ;;; Key procedures to implement neoteric-expressions
 
 ; These delimiting characters stop reading of symbols or non-datums
-; (e.g., after ".")
+; (e.g., after ".").  We'll define these as a "variable" so that other
+; routines can reach in and change them, if truly necessary.
 (defvar neoteric-delimiters
   '(#\( #\) #\[ #\] #\{ #\} #\space #\tab #\newline #\return #\#
     #\' #\` #\,))
