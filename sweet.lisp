@@ -278,7 +278,7 @@
 (defun wrap-comment-datum (stream sub-char int)
   (declare (ignore sub-char int))
   (if (my-char-whitespacep (my-peek-char stream))
-    (read-error "#; must not be followed by whitespace")
+    (read-error "Sequence #; must not be followed by whitespace.")
     (let ((junk (neoteric-read-nocomment stream)))
       (declare (ignore junk))
       empty-values)))
@@ -357,7 +357,7 @@
 (defun my-append (lhs rhs)
   (if (listp lhs)
       (append lhs rhs)
-      (read-error "Must have proper list on left-hand-side to append data")))
+      (read-error "Must have proper list on left-hand-side to append data.")))
 
 ; Read an n-expression.  Returns ('scomment '()) if it's an scomment,
 ; else returns ('normal n-expr).
@@ -401,7 +401,7 @@
           ((and (eql c #\*) (string= (symbol-name expr) "*>"))
             (list 'collecting-end '()))
           ((and (eql c #\$) (string= (symbol-name expr) "$$$"))
-            (read-error "Error - $$$ is reserved"))
+            (read-error "$$$ is reserved."))
           ((and (eql c #\.) (string= (symbol-name expr) "."))
             (list 'period-marker '()))
           (t
@@ -477,7 +477,7 @@
   (let* ((c (my-peek-char stream)))
     (cond
       ((eof-objectp c)
-       (read-error "Collecting tail: EOF before collecting list ended"))
+       (read-error "Collecting tail: EOF before collecting list ended."))
       ((lcomment-eolp c)
         (consume-to-eol stream)
         (consume-end-of-line stream)
@@ -490,15 +490,15 @@
               (collecting-tail stream))
             ((lcomment-eolp c)
               (if (member #\! indentation)
-                  (read-error "Collecting tail: False empty line with !")
+                  (read-error "Collecting tail: False empty line with !.")
                   (collecting-tail stream)))
             (t
-              (read-error "Collecting tail: Only ; after indent")))))
+              (read-error "Collecting tail: Only ; after indent.")))))
       ((or (eql c form-feed) (eql c vertical-tab))
         (consume-ff-vt stream)
         (if (lcomment-eolp (my-peek-char stream))
             (collecting-tail stream)
-            (read-error "Collecting tail: FF and VT must be alone on line")))
+            (read-error "Collecting tail: FF and VT must be alone on line.")))
       (t
         (let* ((it-full-results (it-expr stream "^"))
                (it-new-indent   (car it-full-results))
@@ -521,7 +521,7 @@
 ; This procedure is used after ". value".
 (defun n-expr-error (stream full)
   (if (not (eq (car full) 'normal))
-      (read-error "BUG! n-expr-error called but stopper not normal"))
+      (read-error "BUG! n-expr-error called but stopper not normal."))
   (if (lcomment-eolp (my-peek-char stream))
       full ; All done!
       (let* ((n-full-results (n-expr stream))
@@ -533,7 +533,7 @@
             (hspaces stream)
             (n-expr-error stream full))
           ((eq n-stopper 'normal)
-            (read-error "Illegal second value after ."))
+            (read-error "Illegal second value after '.'."))
           (t ; We found a stopper, return it with the value from "full"
             (list n-stopper (cadr full)))))))
 
@@ -653,7 +653,7 @@
                    (f-new-indent   (car f-full-results))
                    (f-value        (cadr f-full-results)))
               (if (not (indentation>p starting-indent f-new-indent))
-                  (read-error "Dedent required after lone . and value line"))
+                  (read-error "Dedent required after lone . and value line."))
               (list f-new-indent f-value)) ; final value of improper list
             (let* ((nxt-full-results (body stream i-new-indent))
                    (nxt-new-indent   (car nxt-full-results))
@@ -673,12 +673,12 @@
           ((eq head-stopper 'group-split-marker)
             (hspaces stream)
             (if (lcomment-eolp (my-peek-char stream))
-                (read-error "Cannot follow split with end of line")
+                (read-error "Cannot follow split with end of line.")
                 (list starting-indent (monify head-value))))
           ((eq head-stopper 'sublist-marker)
             (hspaces stream)
             (if (lcomment-eolp (my-peek-char stream))
-                (read-error "EOL illegal immediately after sublist"))
+                (read-error "EOL illegal immediately after sublist."))
             (let* ((sub-i-full-results (it-expr stream starting-indent))
                    (sub-i-new-indent   (car sub-i-full-results))
                    (sub-i-value        (cadr sub-i-full-results)))
@@ -696,7 +696,7 @@
                     (list body-new-indent (my-append head-value body-value)))
                   (list new-indent (monify head-value)))))
           (t
-            (read-error "Must end line with end-of-line sequence")))
+            (read-error "Must end line with end-of-line sequence.")))
         ; Here, head begins with something special like GROUP-SPLIT:
         (cond
           ((or (eq head-stopper 'group-split-marker)
@@ -713,11 +713,11 @@
                         (it-expr stream new-indent)
                         (list new-indent (t-expr stream)))) ; Restart
                     (t
-                      (read-error "GROUP-SPLIT EOL DEDENT illegal"))))))
+                      (read-error "GROUP-SPLIT EOL DEDENT illegal."))))))
           ((eq head-stopper 'sublist-marker)
             (hspaces stream)
             (if (lcomment-eolp (my-peek-char stream))
-                (read-error "EOL illegal immediately after solo sublist"))
+                (read-error "EOL illegal immediately after solo sublist."))
             (let* ((is-i-full-results (it-expr stream starting-indent))
                    (is-i-new-indent   (car is-i-full-results))
                    (is-i-value        (cadr is-i-full-results)))
@@ -729,7 +729,7 @@
                 (progn
                   (let ((new-indent (get-next-indent stream)))
                     (if (not (indentation>p new-indent starting-indent))
-                        (read-error "Indent required after abbreviation"))
+                        (read-error "Indent required after abbreviation."))
                     (let* ((ab-full-results (body stream new-indent))
                            (ab-new-indent   (car ab-full-results))
                            (ab-value      (cadr ab-full-results)))
@@ -743,7 +743,7 @@
           ((eq head-stopper 'collecting-end)
             (list "" head-value))
           (t 
-            (read-error "Initial head error"))))))
+            (read-error "Initial head error."))))))
 
 ; Read it-expr.  This is a wrapper that attaches source info
 ; and checks for consistent indentation results.
@@ -753,7 +753,7 @@
          (results-indent (car results))
          (results-value (cadr results)))
     (if (indentation>p results-indent starting-indent)
-        (read-error "Inconsistent indentation"))
+        (read-error "Inconsistent indentation."))
     (list results-indent (attach-sourceinfo pos results-value))))
 
 ; Top level - read a sweet-expression (t-expression).  Handle special
@@ -787,7 +787,7 @@
                    (results-indent (car results))
                    (results-value (cadr results)))
               (if (string= results-indent "")
-                  (read-error "Closing *> without preceding matching <*")
+                  (read-error "Closing *> without preceding matching <*.")
                   results-value))))))
 
 ;   ; Skip until we find a completely empty line (not even initial space/tab).

@@ -157,7 +157,7 @@
       ; Balance ([{
       ((or (eql c #\)) (eql c #\]) (eql c #\}))
         (read-char input-stream)
-        (read-error "Bad closing character"))
+        (read-error "Bad closing character."))
       (t
         ; Must preserve whitespace so "a ()" isn't read as "a()"
         (let ((datum (my-read-datum input-stream)))
@@ -168,12 +168,12 @@
                  ; (consume-whitespace input-stream)
                  (cond
                    ; ((eof-object? datum2)
-                   ; (read-error "Early eof in (... .)\n")
+                   ; (read-error "Early eof in (... .).")
                    ; '())
                    ; The following peek-char has side-effect of skipping
                    ; whitespace after last datum, so "(a . b )" works.
                    ((not (eql (peek-char t input-stream) stop-char))
-                    (read-error "Bad closing character after . datum"))
+                    (read-error "Bad closing character after . datum."))
                    (t
                      (read-char input-stream)
                      datum2))))
