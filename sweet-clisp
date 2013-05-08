@@ -4,6 +4,14 @@
 # so you can try it out.  Setting *print-escape* isn't ideal, but
 # in most circumstances it works out.
 
+# NOTE: For now, this assumes that the current directory has the
+# readable library *.lisp and *.asd files, and that tests/my-asdf.lisp
+# has a valid asdf implementation.  That way, we can ensure that we
+# run the current developmental version, not what's installed (if anything).
+
+# This uses "cat", so readline won't work properly.  In compensation,
+# you can redirect files into this and have it execute.
+
 (
 cat << COMMAND_SET
 (load "tests/my-asdf.lisp")
