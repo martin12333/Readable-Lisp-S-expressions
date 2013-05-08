@@ -63,9 +63,11 @@ pkg_asd_file=readable.asd
 dist_common_lisp_source_pkg_DATA = \
  basic-curly.lisp neoteric.lisp backquote.lisp sweet.lisp
 
-# Once did: EXTRA_DIST += neoteric.lisp backquote.lisp sweet.lisp
-
 dist_common_lisp_source_pkg_DATA += $(pkg_asd_file)
+
+# For now, install sweet-clisp specially, because it cannot currently
+# be "installed" and work as expected... but it's still useful for testing.
+EXTRA_DIST += sweet-clisp
 
 # Install symlink so asdf can find these files. See:
 # http://www.gnu.org/software/automake/manual/html_node/Extending.html
