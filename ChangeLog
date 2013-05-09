@@ -1,7 +1,15 @@
+2013-05-09 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Release of readable software version 0.9.0
+	  - Adds a Common Lisp implementation (which was transliterated
+	    from the Scheme implementation)
+	  - Lines with at least one "!", and otherwise only indent chars,
+	    are ignored, per SRFI-110 discussion
+	  - Includes a draft of SRFI-110
+
 2013-03-30 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Release of readable software version 0.7.1.
 	  - Allows a collecting list after ".", e.g. "a b . <* c *>".
-	    The draft SRFI specifically gives this as an example,
+	    The draft SRFI-110 specifically gives this as an example,
 	     so it'd be nice if the easily-downloaded version
 	     actually supported it.
 	  - Initial indents now allow "!"
