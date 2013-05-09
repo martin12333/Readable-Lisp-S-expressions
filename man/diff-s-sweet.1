@@ -3,9 +3,9 @@
 diff-s-sweet \- report differences between s-expression and t-expression files
 .SH SYNOPSIS
 .ll +8
-.B diff-s-sweet [-l] [-U n] [-Sk] s-expression-file sweet-expression-file
+.B diff-s-sweet [-l] [-U n] [-SkC] s-expression-file sweet-expression-file
 .PP
-.B diff-s-sweet -w [-l] [-U n] [-Sk] s-expression-file*
+.B diff-s-sweet -w [-l] [-U n] [-SkC] s-expression-file*
 .ll -8
 .br
 .SH DESCRIPTION
@@ -59,22 +59,48 @@ If no filename is used, and the "-w" option is given, the standard input
 The
 .I diff-s-sweet
 tool
-is designed to be used to help those transitioning to sweet-expressions
-or helping those who are.
-You can use
+can be used to help transition to sweet-expressions.
+First use
 .I sweeten
-to transform your current s-expressions, tweak the results
-in the way you want, then use
+to transform a current file in s-expression format and
+tweak the results in the way you want.
+Then use
 .I diff-s-sweet
-to confirm that the tweaked file is semantically identical
-to the original.
+(without the "-w" option)
+to confirm that original s-expression file and newly-created tweaked file
+are semantically identical by entering:
+.TP 6
+diff-s-sweet \fIoldfile-s-expressions\fR \fInewfile-t-expressions\fR
+
+.PP
 You can also use
 .I diff-s-sweet
-with the "-w" to ensure that various existing files will be
+with the "-w" to ensure that various existing s-expression files will be
 interpreted identically by a sweet-expression reader.
 You can examine a large collection of s-expression files,
 to see which ones are not well-formatted,
-by using the options -w and -l together.
+by using the options -w and -l together like this
+(this checks all filenames in the current directory ending in .scm):
+.TP 6
+diff-s-sweet -w -l *.scm
+
+.PP
+If you \fIdo\fR find a problem using diff-s-sweet with the "-w"
+option, but do not want to convert the file to sweet-expressions,
+then in nearly all cases there are two causes that are easily fixed:
+
+.IP \(bu
+You have an expression followed by an open parenthesis without an
+intervening space, e.g., f(x).
+In traditional s-expression this is two datums, f and (x), but
+in sweet-expressions this means (f x).
+To solve this, just put a space before those opening parentheses.
+
+.IP \(bu
+You have multiple top-level datums on a line.
+In this case, put a space or tab at the beginning of the line,
+or split them into multiple lines.
+
 
 .PP
 For more information, see
@@ -97,6 +123,12 @@ or not well-formatted; don't show the specific differences.
 .BI -w
 Report if file not is "well-formatted", and expect a list of
 zero or more files in s-expression format.
+
+.TP
+.BI -C
+Process input as Common Lisp, not as Scheme.
+This option requires that clisp (a Common Lisp implementation)
+be installed.
 
 .TP
 .BI -P

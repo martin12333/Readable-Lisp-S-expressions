@@ -26,6 +26,27 @@ Scheme (including guile), Emacs Lisp, Clojure, Arc, BitC, ACL2,
 SUO-KIF, the GCC MiddleEndLispTranslator (MELT),
 Satisfiability Modulo Theories Library (SMT-LIB), NewLisp, and ISLisp.
 
+The tools provided here primarily handle Scheme and Common Lisp.
+By default the "sweeten" and "unsweeten" tools process Scheme;
+If you have Common Lisp, provide the "-C" (Common Lisp) option as documented.
+
+
+Maturity
+=======================
+
+This code is *mature* and *production-ready* for Scheme, especially
+guile Scheme.  It's been extensively tested, and comes with
+a large regression test suite, and is based on a specially-analyzed grammar.
+The intent is for Scheme implementations to use this code as a starting
+point to embed the reader into their code... but the code can also be used
+as a pre-processor so that you can use these notations today.
+
+The code is *prototype-level* and *less mature* for Common Lisp.
+If you're careful to stay within its limitations, it works, but the
+Common Lisp capabilities are not as mature as Scheme.
+Please contact us if you're interested in helping us mature
+the Common Lisp implementation.
+
 
 License
 =======
@@ -93,7 +114,44 @@ But it's often more convenient to install.  Do this with:
 
     make install
 
-The usual conventions all work (DESTDIR, VPATH builds, etc.).
+Scheme
+======
+
+See the tutorial (scheme-tutorial.md) for how to use it.
+
+Common Lisp
+===========
+
+See the Common Lisp tutorial (common-lisp-tutorial.md) for how to use it.
+
+The Common Lisp implementation creates a package :readable
+and uses the usual ASDF system.  Use "make install" to install the files;
+by default they'll go in the usual global directory
+$PREFIX/share/common-lisp/source (where $PREFIX is /usr/local by default).
+
+If you have asdf, just run (require 'asdf).
+
+If you don't have ASDF installed and configured (why?),
+the "tests/" directory has an ASDF version 3 "my-asdf.lisp" you can use.
+Configure ASDF so it knows what directories to look at, e.g.,
+put this in file "/etc/common-lisp/source-registry.conf":
+(:source-registry
+  (:tree (:home "cl")) ;; will expand to e.g. "/home/joeluser/cl/"
+  (:tree "/usr/share/common-lisp/source/")
+  :inherit-configuration)
+Alternatively, you can set the environment variable CL_SOURCE_REGISTRY, e.g.,
+to set the environment variable to the current directory and run sbcl:
+CL_SOURCE_REGISTRY="`realpath .`" sbcl
+
+Now fire up a Common Lisp (e.g., "clisp") and run:
+(load "tests/my-asdf.lisp") ; or (require 'asdf)
+(asdf:load-system :readable)
+(use-package :readable)
+(enable-basic-curly)
+
+; now you can do:
+{3 + 4}
+
 
 
 ANTLR-based grammar
@@ -141,7 +199,12 @@ Executables:
     in "makefiles" so that you can write files using sweet-expressions.
     MIT license.
 *   sweeten: A filter that reads in s-expressions (Scheme format) from
-    standard in, and generates sweet-expressions on standard out.  MIT license.
+    standard in, and generates sweet-expressions on standard out.
+    This makes it much easier to transition to sweet-expressions.
+    MIT license.
+*   diff-s-sweet: A program that tells you if 2 files are semantically
+    different.  When transitioning to sweet-expressions, run "sweeten" and
+    then this tool if you want to confirm that everything's okay. MIT license.
 *   neoteric-guile: Start up guile, but use neoteric-expressions to
     interact with it. MIT license.
 *   sweet-guile: Start up guile, but use sweet-expressions to interact
@@ -152,15 +215,12 @@ Documentation:
 *   README: This file.
 *   solution.md: A description of the notations this project implements.
     See the project website for the current version of this.
-*   tutorial.md: A tutorial.  See the project website for a
-    current version of this.
-*   spec-indent.txt: Detailed specification information on I-expressions,
-    the basis of sweet-expressions.
-*   spec-almkglor.txt: A not-so-updated specification for the
-    entire sweet-expression spec, created by Alan Manuel K. Gloria.
-*   sweeten.sscm: An example of code written using sweet-expressions.
-    This is the original source code for "sweeten", which reads
-    traditional s-expressions and writes sweet-expression versions of them.
+*   scheme-tutorial.md: A tutorial (Scheme-focused).
+    See the project website for a current version of this.
+*   common-lisp-tutorial.md: A tutorial (Common-Lisp-focused).
+    See the project website for a current version of this.
+*   src/sweeten.sscm: An example of code written using sweet-expressions.
+*   "man pages"
 
 The spec-* files need to be updated (volunteers welcome).  For now, see
 "solution.md" for the real specification.

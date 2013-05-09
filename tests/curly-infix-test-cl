@@ -1,5 +1,3 @@
-#!/usr/bin/env clisp
-
 ; Test curly-infix.cl.  Also has demo of its use.
 
 ; Run this file on a Unix-like system to test curly-infix.cl.
@@ -26,8 +24,13 @@
 ; OTHER DEALINGS IN THE SOFTWARE.
 
 
-(if (not (load (getenv "CURLYFILE") :if-does-not-exist t))
-  (exit 1))
+; Assume ASDL is set up, e.g., by setting environment var CL_SOURCE_REGISTRY
+; to the name of the directory of the .asd file, followed by "/".
+
+(load "my-asdf.lisp")
+(asdf:load-system :readable)
+(use-package :readable)
+(enable-basic-curly)
 
 
 (defun mytest (input correct)
@@ -51,6 +54,7 @@
 (mytest '{(- x) / 2} '(/ (- x) 2))
 (mytest '{x = 3 * 4} '($nfx$ x = 3 * 4))
 (mytest '{x = 3} '(= x 3))
+(mytest '{x (function f) y (function f) z} '((function f) x y z))
 
 ; Demo its use:
 

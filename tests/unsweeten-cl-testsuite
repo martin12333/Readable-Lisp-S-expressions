@@ -74,9 +74,15 @@ b
 
 ! a! b
 
-; Non-Common Lisp
-#'(a b)
+; Now we begin Common Lisp specific things.
+#'factorial
 
-|.|
+`(1 2 ,(+ a b))
+
+`(a b c ,d)
+
+#.x
+
+#+UNICODE
 
 ; Comment at end of file.

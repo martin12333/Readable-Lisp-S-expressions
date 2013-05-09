@@ -3,7 +3,7 @@
 # For autotools info, see: http://www.dwheeler.com/autotools
 
 # Initialize, but use more options.  Note parameters brackets and whitespace:
-AC_INIT([readable], [0.7.1], [dwheeler@dwheeler.com],
+AC_INIT([readable], [0.9.0], [dwheeler@dwheeler.com],
         [readable], [http://readable.sourceforge.net/])
 # Force autoconf to be more recent.
 AC_PREREQ([2.67])
@@ -48,6 +48,9 @@ AC_SUBST([GUILE_READLINE_AVAILABLE])
 
 # Perhaps check for: (more) programs, libraries, header files, types,
 # structures, compiler characteristics, library functions, system services.
+
+# We'll use LN_S to install Common Lisp ASDF files:
+AC_PROG_LN_S
 
 # Do final output.
 AC_OUTPUT

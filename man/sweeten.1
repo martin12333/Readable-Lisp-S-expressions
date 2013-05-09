@@ -3,14 +3,17 @@
 sweeten \- filter to translate Lisp/Scheme s-expressions to sweet-expressions
 .SH SYNOPSIS
 .ll +8
-.B unsweeten
+.B sweeten [-b | --builtin-reader] [-C | --common-lisp] [-n] [file]...
 .ll -8
 .br
 .SH DESCRIPTION
 .PP
 .I sweeten
 translates Lisp/Scheme s-expressions to sweet-expressions.
-It takes input from standard input, and outputs to standard output.
+If no file is listed, it takes input from standard input,
+and results are sent to standard output.
+If one or more files are listed, they are processed in order,
+with results sent to standard output.
 .PP
 Sweet-expressions are a way to represent Lisp/Scheme data and programs
 that adds additional abbreviations beyond those in traditional s-expressions.
@@ -35,11 +38,14 @@ Block comments and comments inside a datum are never copied.
 .PP
 Sweeten creates only one of many possible representations of its input.
 You may choose to tweak the results of
-.I sweeten ;
+.IR sweeten ;
 if you do, you can choose to use
 .I diff-s-sweet(1)
 to confirm that the resulting tweaked file is
 semantically identical to the original.
+
+.PP
+By default it uses the reader of the underlying implementation (guile).
 
 .PP
 For more information, see
@@ -47,8 +53,21 @@ http://readable.sourceforge.net.
 
 
 .SH OPTIONS
-.PP
-None.
+
+.TP 6
+.BI -b
+Use a built-in reader (instead of the guile read routine);
+this may work better for your input.
+
+.TP
+.BI -C
+Use a modified built-in reader (instead of the guile read routine)
+designed to read Common Lisp.
+
+.TP
+.BI -n
+Do not use "!" as an indentation character.
+
 
 .\" .SH "ENVIRONMENT"
 .\" .PP
@@ -59,6 +78,13 @@ This program assumes that the input does not contain any cycles
 (improper lists are okay).
 It can handle input with shared structures (without cycles), but
 the fact that they are shared is lost in the result.
+.PP
+The Common Lisp reader (invoked with -C)
+has not been as well tested.
+It should work just fine for readings s-expressions that are
+legal in both Scheme and Common Lisp.
+It can also handle #\'name as an abbreviation for (function\ name),
+as well as a few Common Lisp capabilities like #:, #., #+, and #P.
 
 .SH EXAMPLES
 .PP

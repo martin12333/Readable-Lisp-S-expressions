@@ -20,6 +20,8 @@ summary=0
 files_tested=0
 files_passed=0
 progress_report=0
+common_lisp=0
+common_lisp_option=""
 
 
 # Process options.
@@ -27,12 +29,12 @@ progress_report=0
 # it only portably handles short option names. (You can use "-:" to sort-of
 # get long names, but it's a rather ugly hack.)  It'll do for us.
 
-GETOPTS="hklwPSU:"
+GETOPTS="hklwCPSU:"
 
 usage() {
   echo "Usage:"
-  echo "  $0 [-l | -U n] [-k] s-expression-filename sweet-expression-filename"
-  echo "  $0 -w [-l | -U n] [-Sk] s-expression-filename*"
+  echo "  $0 [-l | -U n] [-kC] s-expression-filename sweet-expression-filename"
+  echo "  $0 -w [-l | -U n] [-SkC] s-expression-filename*"
   exit $invoke_error
 }
 
@@ -48,6 +50,8 @@ while getopts "$GETOPTS" optchar ; do
     k) keep_temp=1 ;;
     l) list_filenames=1 ;;
     w) well_formatted=1 ;;
+    C) common_lisp=1
+       common_lisp_option="-C" ;;
     P) progress_report=1 ;;
     S) summary=1 ;;
     U) unified="$OPTARG" ;;  # Presume it's an integer.
@@ -64,12 +68,23 @@ shift $(($OPTIND - 1))
 
 # This is a Scheme s-expression pretty print filter (from stdin to stdout)
 prettyprint() {
-sed -e 's/^#lang  *[-a-zA-Z0-9]*//' |   # Remove Racket-specific extension
-guile -c '
-  (use-modules (ice-9 pretty-print))
-   (do ((x (read) (read)))
-     ((eof-object? x))
-   (pretty-print x))'
+if [ "$common_lisp" = 1 ] ; then
+  prog_file="$(mktemp)"
+  # TODO: Handle EOF cleanly.
+  echo '
+    (loop for datum = (ignore-errors (read *standard-input* nil :eof-token))
+      until (eq datum :eof-token)
+      do (pprint datum) (format t "~%"))' >> "$prog_file"
+  clisp -modern "$prog_file" || exit 0
+  rm -f "$progfile"
+else
+  sed -e 's/^#lang  *[-a-zA-Z0-9]*//' |   # Remove Racket-specific extension
+  guile -c '
+    (use-modules (ice-9 pretty-print))
+     (do ((x (read) (read)))
+       ((eof-object? x))
+     (pretty-print x))'
+fi
 }
 
 
@@ -106,14 +121,14 @@ report_comparison() {
 
   prettyprint < "$s_expr" >> "$fmt_s"
   if [ "$well_formatted" -eq 1 ] ; then # We have "-w"
-    ${UNSWEETEN} < "$s_expr" | prettyprint >> "$fmt_t"
+    ${UNSWEETEN} $common_lisp_option < "$s_expr" | prettyprint >> "$fmt_t"
     newname="$1.sscm"
   else
     if [ ! -f "$2" ] ; then
       echo "Not an existing normal file (as a t-expression file): $2"
       exit $invoke_error
     fi
-    ${UNSWEETEN} < "$2" | prettyprint >> "$fmt_t"
+    ${UNSWEETEN} $common_lisp_option < "$2" | prettyprint >> "$fmt_t"
     newname="$2"
   fi
 

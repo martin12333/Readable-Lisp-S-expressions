@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# By David A. Wheeler. Start up clisp in "sweet-expression" reading mode,
+# so you can try it out.  Setting *print-escape* isn't ideal, but
+# in most circumstances it works out.
+
+# NOTE: For now, this assumes that the current directory has the
+# readable library *.lisp and *.asd files, and that tests/my-asdf.lisp
+# has a valid asdf implementation.  That way, we can ensure that we
+# run the current developmental version, not what's installed (if anything).
+
+# This uses "cat", so readline won't work properly.  In compensation,
+# you can redirect files into this and have it execute.
+
+(
+cat << COMMAND_SET
+(load "tests/my-asdf.lisp")
+(asdf:load-system :readable)
+(setq *print-escape* nil)
+(readable:enable-sweet)
+COMMAND_SET
+
+if which stdbuf > /dev/null 2> /dev/null ; then
+  stdbuf -oL cat "$@"
+else
+  cat "$@"
+fi
+
+printf "\n\n"  # Ensure it ends on newlines.
+) | \
+ CL_SOURCE_REGISTRY="$PWD" "/usr/bin/clisp" -lp "$PWD" -modern
+

@@ -1,65 +1,75 @@
 ;_#!/bin/sh
+;_OPTIONS=""
+;_while true ; do
+;_  if [ "$#" -eq 0 ] ; then
+;_    break
+;_  fi
+;_  case "$1" in
+;_    -*) OPTIONS="$OPTIONS $1" ; shift ;;
+;_    *) break ;;
+;_  esac
+;_done
 ;_if test "$#" = "0"; then
-;_  exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0"
+;_  exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0" $OPTIONS
 ;_else
-;_  cat "$@" | /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0"
+;_  cat "$@" | /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0" $OPTIONS
 ;_  exit $?
 ;_fi
 ;_
 ;_# @WARNING_MESSAGE@
 ;_
 ;_!#
-; sweeten.sscm
-; Filter to read S-expressions and output indented sweet-expressions.
-;
-; Copyright (C) 2006-2012 David A. Wheeler.
-;
-; This software is released as open source software under the "MIT" license:
-;
-; Permission is hereby granted, free of charge, to any person obtaining a
-; copy of this software and associated documentation files (the "Software"),
-; to deal in the Software without restriction, including without limitation
-; the rights to use, copy, modify, merge, publish, distribute, sublicense,
-; and/or sell copies of the Software, and to permit persons to whom the
-; Software is furnished to do so, subject to the following conditions:
-;
-; The above copyright notice and this permission notice shall be included
-; in all copies or substantial portions of the Software.
-;
-; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-; OTHER DEALINGS IN THE SOFTWARE.
-
-; This reformats standard input from s-expressions into sweet-expressions.
-; Internally, many functions develop possible representations as a list
-; of characters; various alternatives are tried out and the "best" is used.
-; For example, a "boring" list (with only non-pairs and a length of at
-; least boring-length) is probably data and is represented differently.
-;
-; Key functions include:
-; sweeten-top(): Returns a list-of-characters representation of an
-;   expression; it may generate multiple lines with indentation.
-;   Indentation must be active at the start of the line.
-; line(): Return a list-of-characters representation of *one* line
-;   of space-separated neoteric-expression units.
-;   The generated result may be rejected, e.g., if it's too long.
-;   Indentation must be active at the start of the line.
-; unit(): Return a list-of-characters representation of some unit.
-;   Indentation processing *may* be active, but the character sequence
-;   returned must not depend on that; it returns a list without newline.
-;
-; For debugging, add "--debug" after the two @ GUILE @ statements at the
-; beginning of the file; this will enable very useful backtraces.
-
-; Set build-on-top to #t if you want to run while invoking the
-; sweet module directly.
-; We need to explicitly *disable* the sweet-reader if it's active so that we
-; get the "old" reader format on read; this is important for handling
-; badly-formatted old files.   In the standard build this is unnecessary.
+;;; sweeten.sscm
+;;; Filter to read S-expressions and output indented sweet-expressions.
+;;;
+;;; Copyright (C) 2006-2013 David A. Wheeler.
+;;;
+;;; This software is released as open source software under the "MIT" license:
+;;;
+;;; Permission is hereby granted, free of charge, to any person obtaining a
+;;; copy of this software and associated documentation files (the "Software"),
+;;; to deal in the Software without restriction, including without limitation
+;;; the rights to use, copy, modify, merge, publish, distribute, sublicense,
+;;; and/or sell copies of the Software, and to permit persons to whom the
+;;; Software is furnished to do so, subject to the following conditions:
+;;;
+;;; The above copyright notice and this permission notice shall be included
+;;; in all copies or substantial portions of the Software.
+;;;
+;;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+;;; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+;;; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+;;; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+;;; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+;;; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+;;; OTHER DEALINGS IN THE SOFTWARE.
+;;
+;;; This reformats standard input from s-expressions into sweet-expressions.
+;;; Internally, many functions develop possible representations as a list
+;;; of characters; various alternatives are tried out and the "best" is used.
+;;; For example, a "boring" list (with only non-pairs and a length of at
+;;; least boring-length) is probably data and is represented differently.
+;;;
+;;; Key functions include:
+;;; sweeten-top(): Returns a list-of-characters representation of an
+;;;   expression; it may generate multiple lines with indentation.
+;;;   Indentation must be active at the start of the line.
+;;; line(): Return a list-of-characters representation of *one* line
+;;;   of space-separated neoteric-expression units.
+;;;   The generated result may be rejected, e.g., if it's too long.
+;;;   Indentation must be active at the start of the line.
+;;; unit(): Return a list-of-characters representation of some unit.
+;;;   Indentation processing *may* be active, but the character sequence
+;;;   returned must not depend on that; it returns a list without newline.
+;;;
+;;; For debugging, add "--debug" after the two @ GUILE @ statements at the
+;;; beginning of the file; this will enable very useful backtraces.
+;;
+;;; Set build-on-top to #t if you want to run while invoking the
+;;; sweet module directly.
+;;; We need to explicitly *disable* the sweet-reader if it's active so that we
+;;; get the "old" reader format on read; this is important for handling
+;;; badly-formatted old files.   In the standard build this is unnecessary.
 
 #!sweet
 
@@ -67,6 +77,10 @@ define build-on-sweet #f
 if build-on-sweet
   use-modules
     readable kernel
+
+; This guile-specific library does option processing for us.
+use-modules (ice-9 getopt-long)
+
 
 ; Here are settings that control the "look" of the formatted result.
 ; In the future these might be controlled via option flags.
@@ -107,7 +121,9 @@ define cuddle-first-parameter '(
   let-syntax letcrec-syntax
   define-syntax syntax-rules
   set! do
-  setq block typecase)           ; Common Lisp
+  setq block typecase            ; Common Lisp
+  defvar defconstant defstruct
+  defparameter)
 
 define let-likes '(let let*)
 
@@ -116,6 +132,13 @@ define let-likes '(let let*)
 define group-string "\\\\"
 define group-list string->list(group-string)
 define group-string-newline string-append(group-string "\n")
+
+; Control how to read input. If use-builtin-reader is #f, then
+; we'll just call "read" to read a datum.
+define common-lisp #f
+define use-builtin-reader #f
+define literal-barred-symbol #t
+
 
 ; Other special characters and lists of characters.
 define tab             integer->char(#x09)
@@ -168,6 +191,645 @@ define contains-only-punctuation?(x)
     not(pair?(x))            #f ; Check this before evaluating car(x)!
     memq(car(x) punct-chars) contains-only-punctuation?(cdr(x))
     #t                       #f
+
+; Here we have our own reader implementation, in case we want to use that
+; instead of the host system's "read" (currently guile's).
+
+define my-string-foldcase(s) string-downcase(s)
+define hash-pipe-comment-nests? #t
+
+define is-foldcase #f
+define tab integer->char(9)
+define linefeed integer->char(10)
+define carriage-return integer->char(13)
+define line-tab integer->char(13)
+define form-feed integer->char(12)
+define vertical-tab integer->char(11)
+define space '#\space
+define period-symbol string->symbol(".")
+define line-ending-chars list(linefeed carriage-return)
+define whitespace-chars-ascii
+  list
+    tab
+    linefeed
+    line-tab
+    form-feed
+    carriage-return
+    #\space
+
+define whitespace-chars whitespace-chars-ascii
+define char-line-ending?(char) memv(char line-ending-chars)
+define my-char-whitespace?(c)
+  {char-whitespace?(c) or memv(c whitespace-chars)}
+
+define consume-end-of-line(port)
+  let <* c $ peek-char port *>
+    cond
+      eqv?(c carriage-return)
+        read-char port
+        if eqv?(peek-char(port) linefeed) read-char(port)
+      eqv?(c linefeed) read-char(port)
+
+define consume-to-eol(port)
+  let <* c $ peek-char port *>
+    cond
+      {not(eof-object?(c)) and not(char-line-ending?(c))}
+        read-char port
+        consume-to-eol port
+
+define consume-to-whitespace(port)
+  let <* c $ peek-char port *>
+    cond
+      eof-object?(c) c
+      my-char-whitespace?(c) '()
+      #t read-char(port) consume-to-whitespace(port)
+
+define read-error(message)
+  display "Error: " current-error-port()
+  display message current-error-port()
+  newline current-error-port()
+  throw 'readable
+  '()
+
+define get-sourceinfo(port) '()
+define attach-sourceinfo(pos datum) datum
+
+define debugger-output #f
+define debug-show(marker data)
+  cond
+    debugger-output
+      display "DEBUG: "
+      display marker
+      display " = "
+      write data
+      display "\n"
+  data
+
+define my-read-delimited-list(stop-char port)
+  consume-whitespace port
+  let* <* pos $ get-sourceinfo port \\ c $ peek-char port *>
+    cond
+      eof-object?(c) read-error("EOF in middle of list") c
+      char=?(c stop-char)
+        read-char port
+        attach-sourceinfo pos '()
+      memv(c '(#\) #\] #\}))
+        read-error "Bad closing character"
+        c
+      #t
+        let <* datum $ my-read port *>
+        ! cond
+        !   {eq?(datum period-symbol) and char=?(c #\.)}
+        !     let <* datum2 $ my-read port *>
+        !     ! consume-whitespace port
+        !     ! cond
+        !     !   eof-object?(datum2)
+        !     !     read-error "Early eof in (... .)"
+        !     !     '()
+        !     !   not(eqv?(peek-char(port) stop-char))
+        !     !     read-error "Bad closing character after . datum"
+        !     !     datum2
+        !     !   #t read-char(port) datum2
+        !   #t
+        !     attach-sourceinfo
+        !       pos
+        !       cons datum my-read-delimited-list(stop-char port)
+
+define my-delimiters
+  append
+    list
+      #\(
+      #\)
+      #\[
+      #\]
+      #\{
+      #\}
+      #\"
+      #\;
+    whitespace-chars
+
+define consume-whitespace(port)
+  let <* char $ peek-char port *>
+    cond
+      (eof-object?(char))
+      eqv?(char #\;)
+        consume-to-eol port
+        consume-whitespace port
+      my-char-whitespace?(char)
+        read-char port
+        consume-whitespace port
+
+define read-until-delim(port delims)
+  let <* c $ peek-char port *>
+    cond
+      eof-object?(c) '()
+      memv(c delims) '()
+      #t read-char(port) cons(c read-until-delim(port delims))
+
+define read-number(port starting-lyst)
+  string->number
+    list->string
+      append
+        starting-lyst
+        read-until-delim port my-delimiters
+
+define read-digits(port)
+  let <* c $ peek-char port *>
+    cond
+      memv(c digits) cons(read-char(port) read-digits(port))
+      #t '()
+
+define char-name-values
+  ' \\
+    space 32
+    newline 10
+    nl 10
+    tab 9
+    nul 0
+    null 0
+    alarm 7
+    backspace 8
+    linefeed 10
+    vtab 11
+    page 12
+    return 13
+    esc 27
+    delete 127
+    soh 1
+    stx 2
+    etx 3
+    eot 4
+    enq 5
+    ack 6
+    bel 7
+    bs 8
+    ht 9
+    lf 10
+    vt 11
+    ff 12
+    np 12
+    cr 13
+    so 14
+    si 15
+    dle 16
+    dc1 17
+    dc2 18
+    dc3 19
+    dc4 20
+    nak 21
+    syn 22
+    etb 23
+    can 24
+    em 25
+    sub 26
+    fs 28
+    gs 29
+    rs 30
+    sp 32
+    del 127
+    rubout 127
+
+define process-char(port)
+  cond
+    eof-object?(peek-char(port)) peek-char(port)
+    #t
+      let
+        \\
+          c $ read-char port
+          rest $ read-until-delim port my-delimiters
+        cond
+          null?(rest) c
+          #t
+            let*
+              \\
+                cname
+                  string->symbol
+                    string-downcase list->string(cons(c rest))
+                found $ assq cname char-name-values
+              if found
+                integer->char cadr(found)
+                read-error "Invalid character name"
+
+define fold-case-maybe(port s)
+  if is-foldcase my-string-foldcase(s) s
+
+define process-directive(dir)
+  cond
+    string-ci=?(dir "fold-case") set!(is-foldcase #t)
+    string-ci=?(dir "no-fold-case") set!(is-foldcase #f)
+    #t display("Warning: Unknown process directive")
+
+define non-nest-comment(port)
+  let <* c $ read-char port *>
+    cond
+      eof-object?(c) values()
+      char=?(c #\!)
+        let <* c2 $ peek-char port *>
+        ! if char=?(c2 #\#)
+        !   begin read-char(port) values()
+        !   non-nest-comment port
+      #t non-nest-comment(port)
+
+define process-sharp-bang(port)
+  let <* c $ peek-char port *>
+    cond
+      char=?(c #\space)
+        consume-to-eol port
+        consume-end-of-line port
+        scomment-result
+      memv(c '(#\/ #\.)) non-nest-comment(port) scomment-result
+      char-alphabetic?(c)
+        process-directive
+          list->string read-until-delim(port my-delimiters)
+        scomment-result
+      {eqv?(c carriage-return) or eqv?(c #\newline)}
+        consume-to-eol port
+        consume-end-of-line port
+        scomment-result
+      #t read-error("Unsupported #! combination")
+
+define unmatched-datum-label-tag
+  cons 'unmatched-datum-label-tag 'label
+
+define is-matching-label-tag?(number value)
+  and
+    pair? value
+    eq? car(value) unmatched-datum-label-tag
+    eqv? cdr(value) number
+
+define patch-datum-label-tail(number replace position skip)
+  let <* new-skip $ cons position skip *>
+    cond
+      \\
+        and
+          pair? position
+          not eq?(car(position) unmatched-datum-label-tag)
+          not memq(position skip)
+        if is-matching-label-tag?(number car(position))
+        ! set-car! position replace
+        ! patch-datum-label-tail
+        !   number
+        !   replace
+        !   car position
+        !   new-skip
+        if is-matching-label-tag?(number cdr(position))
+        ! set-cdr! position replace
+        ! patch-datum-label-tail
+        !   number
+        !   replace
+        !   cdr position
+        !   new-skip
+      vector?(position)
+        do (len(vector-length(position)) k(0 {k + 1}))
+        ! {k >= len} values()
+        ! let <* x $ vector-ref position k *>
+        !   if is-matching-label-tag?(number x)
+        !   ! vector-set! position k replace
+        !   ! patch-datum-label-tail number replace x new-skip
+      #t values()
+define patch-datum-label(number starting-position)
+  if is-matching-label-tag?(number starting-position)
+    read-error
+      "Illegal reference as the labelled object itself"
+  patch-datum-label-tail
+    number
+    starting-position
+    starting-position
+    '()
+  starting-position
+
+define gobble-chars(port to-gobble)
+  if null?(to-gobble)
+    0
+    cond
+      char-ci=?(peek-char(port) car(to-gobble))
+        read-char port
+        gobble-chars port cdr(to-gobble)
+      #t length(to-gobble)
+
+define scomment-result 'scomment(())
+
+define process-sharp(port)
+  let <* c $ peek-char port *>
+    cond
+      eof-object?(c) scomment-result
+      char-line-ending?(c) scomment-result
+      #t
+        read-char port
+        or
+          and
+            common-lisp
+            parse-cl c port
+          parse-hash c port
+          parse-default c port
+          read-error "Invalid #-prefixed string"
+
+define parse-default(c port)
+  cond
+    char-ci=?(c #\t)
+      if memv(gobble-chars(port '(#\r #\u #\e)) '(0 3))
+      ! ' normal #t
+      ! read-error "Incomplete #true"
+    char-ci=?(c #\f)
+      if memv(gobble-chars(port '(#\a #\l #\s #\e)) '(0 4))
+      ! ' normal #f
+      ! read-error "Incomplete #false"
+    memv(c '(#\i #\e #\b #\o #\d #\x #\I #\E #\B #\O #\D #\X))
+      let <* num $ read-number port list(#\# char-downcase(c)) *>
+      ! if num
+      !   ` normal ,num
+      !   read-error "Not a number after number start"
+    char=?(c #\()
+      list
+        'normal
+        list->vector
+          my-read-delimited-list #\) port
+    char=?(c #\u)
+      cond
+        not(eqv?(read-char(port) #\8))
+          read-error "#u must be followed by 8"
+        not(eqv?(read-char(port) #\())
+          read-error "#u8 must be followed by left paren"
+        #t
+          list
+            'normal
+            list->u8vector
+              my-read-delimited-list #\) port
+    char=?(c #\\) list('normal process-char(port))
+    char=?(c #\;) my-read(port) scomment-result
+    char=?(c #\|) nest-comment(port) scomment-result
+    char=?(c #\!) process-sharp-bang(port)
+    memv(c digits)
+      let*
+        \\
+          my-digits $ read-digits port
+          label $ string->number list->string(cons(c my-digits))
+        cond
+          eqv?(peek-char(port) #\#)
+            read-char port
+            list 'normal cons(unmatched-datum-label-tag label)
+          eqv?(peek-char(port) #\=)
+            read-char port
+            if my-char-whitespace?(peek-char(port))
+            ! read-error "#num= followed by whitespace"
+            list 'normal patch-datum-label(label my-read(port))
+          #t read-error("Datum label #NUM requires = or #")
+    char=?(c #\') 'abbrev(syntax)
+    char=?(c #\`) 'abbrev(quasisyntax)
+    char=?(c #\,)
+      let <* c2 $ peek-char port *>
+      ! cond
+      !   char=?(c2 #\@)
+      !     read-char port
+      !     ' abbrev unsyntax-splicing
+      !   #t 'abbrev(unsyntax)
+    {char=?(c #\space) or char=?(c tab)}
+      consume-to-eol port
+      scomment-result
+    #t #f
+
+; Given character "c" after #, what does it parse as (if anything)?
+define parse-cl(c port)
+  cond
+    ; In theory we could just abbreviate #' as "function".
+    ; However, this won't work in expressions like (a . #'b).
+    char=?(c #\') 'abbrev(+++SHARP-QUOTE-abbreviation+++)
+    char=?(c #\:) 'abbrev(+++SHARP-COLON-abbreviation+++)
+    char=?(c #\.) 'abbrev(+++SHARP-DOT-abbreviation+++)
+    char=?(c #\+) 'abbrev(+++SHARP-PLUS-abbreviation+++)
+    char=?(c #\P) 'abbrev(+++SHARP-P-abbreviation+++)
+    #t #f
+
+; Given Scheme symbol x, should we translate it for CL (and if so, to what)?
+define translate-cl(x)
+  if common-lisp
+     case x
+       (quasiquote)       '+++CL-QUASIQUOTE-abbreviation+++
+       (unquote)          '+++CL-UNQUOTE-abbreviation+++
+       (unquote-splicing) '+++CL-UNQUOTE-SPLICING-abbreviation+++
+       else x
+     x
+
+; Reverse map from CL back to display
+define map-cl
+    ' \\
+      +++SHARP-QUOTE-abbreviation+++ "#'"
+      +++SHARP-COLON-abbreviation+++ "#:"
+      +++SHARP-DOT-abbreviation+++   "#."
+      +++SHARP-PLUS-abbreviation+++  "#+"
+      +++SHARP-P-abbreviation+++     "#P"
+      +++CL-QUASIQUOTE-abbreviation+++ "`"
+      +++CL-UNQUOTE-abbreviation+++  ","
+      +++CL-UNQUOTE-SPLICING-abbreviation+++ ",@"
+
+define parse-hash(c port) #f
+
+define nest-comment(fake-port)
+  let <* c $ read-char fake-port *>
+    cond
+      eof-object?(c) values()
+      char=?(c #\|)
+        let <* c2 $ peek-char fake-port *>
+        ! if char=?(c2 #\#)
+        !   begin read-char(fake-port) values()
+        !   nest-comment fake-port
+      {hash-pipe-comment-nests? and char=?(c #\#)}
+        let <* c2 $ peek-char fake-port *>
+        ! if char=?(c2 #\|)
+        !   begin read-char(fake-port) nest-comment(fake-port)
+        !   values()
+        ! nest-comment fake-port
+      #t nest-comment(fake-port)
+
+define digits
+  ' #\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9
+
+define process-period(port)
+  read-char port
+  let <* c $ peek-char port *>
+    cond
+      eof-object?(c)               period-symbol
+      memv(c '(#\' #\` #\, #\#))   period-symbol ; End, for some CL code
+      memv(c digits)
+        let <* num $ read-number port list(#\.) *>
+        ! if num num read-error("period digit must be a number")
+      #t
+        string->symbol
+          fold-case-maybe
+            port
+            list->string
+              cons #\. read-until-delim(port my-delimiters)
+
+define read-inline-hex-escape(port)
+  let*
+    \\
+      chars $ read-until-delim port append(my-delimiters '(#\;))
+      n $ string->number list->string(chars) 16
+    if eqv?(#\; peek-char(port))
+      read-char port
+      read-error "Unfinished inline hex escape"
+    if not(n) read-error("Bad inline hex escape")
+    integer->char n
+
+define read-symbol-elements(port)
+  let <* c $ read-char port *>
+    cond
+      eof-object?(c) '()
+      eqv?(c #\|) '()
+      eqv?(c #\\)
+        let <* c2 $ read-char port *>
+        ! cond
+        !   eof-object?(c) '()
+        !   eqv?(c2 #\|) cons(#\| read-symbol-elements(port))
+        !   eqv?(c2 #\\) cons(#\\ read-symbol-elements(port))
+        !   eqv?(c2 #\a)
+        !     cons integer->char(7) read-symbol-elements(port)
+        !   eqv?(c2 #\b)
+        !     cons integer->char(8) read-symbol-elements(port)
+        !   eqv?(c2 #\t)
+        !     cons integer->char(9) read-symbol-elements(port)
+        !   eqv?(c2 #\n)
+        !     cons integer->char(10) read-symbol-elements(port)
+        !   eqv?(c2 #\r)
+        !     cons integer->char(13) read-symbol-elements(port)
+        !   eqv?(c2 #\f)
+        !     cons integer->char(12) read-symbol-elements(port)
+        !   eqv?(c2 #\v)
+        !     cons integer->char(11) read-symbol-elements(port)
+        !   eqv?(c2 #\x)
+        !     cons
+        !       read-inline-hex-escape port
+        !       read-symbol-elements port
+      #t cons(c read-symbol-elements(port))
+
+
+; Extension: When reading |...|, *include* the bars in the symbol, so that
+; when we print it out later we know that there were bars there originally.
+define read-literal-symbol(port)
+  let <* c $ read-char port *>
+    cond
+      eof-object?(c) read-error("EOF inside literal symbol")
+      eqv?(c #\|) '(#\|)
+      eqv?(c #\\)
+        let <* c2 $ read-char port *>
+        ! if eof-object?(c)
+        !   read-error "EOF after \\ in literal symbol"
+        !   cons c cons(c2 read-literal-symbol(port))
+      #t cons(c read-literal-symbol(port))
+
+; Read |...| symbol (like Common Lisp)
+; This is present in R7RS draft 9.
+define get-barred-symbol(port)
+  read-char port
+  string->symbol
+    list->string
+      if literal-barred-symbol
+        cons #\| read-literal-symbol(port)
+        read-symbol-elements port
+
+
+
+define default-scheme-read read
+
+define my-read(port)
+  consume-whitespace port
+  let* <* pos $ get-sourceinfo port \\ c $ peek-char port *>
+    cond
+      eof-object?(c) c
+      char=?(c #\") default-scheme-read(port)
+      #t
+        attach-sourceinfo
+          pos
+          cond
+            char=?(c #\#)
+              read-char port
+              let <* rv $ process-sharp port *>
+              ! cond
+              !   eq?(car(rv) 'scomment) my-read(port)
+              !   eq?(car(rv) 'normal) cadr(rv)
+              !   eq?(car(rv) 'abbrev) list(cadr(rv) my-read(port))
+              !   #t read-error("Unknown # sequence")
+            char=?(c #\.) process-period(port)
+            {memv(c digits) or char=?(c #\+) or char=?(c #\-)}
+              let*
+                \\
+                  maybe-number
+                    list->string read-until-delim(port my-delimiters)
+                  as-number $ string->number maybe-number
+                if as-number
+                ! as-number
+                ! string->symbol fold-case-maybe(port maybe-number)
+            char=?(c #\')
+              read-char port
+              list attach-sourceinfo(pos 'quote) my-read(port)
+            char=?(c #\`)
+              read-char port
+              list
+                attach-sourceinfo pos translate-cl('quasiquote)
+                my-read port
+            char=?(c #\,)
+              read-char port
+              cond
+                char=?(#\@ peek-char(port))
+                  read-char port
+                  list
+                    attach-sourceinfo pos translate-cl('unquote-splicing)
+                    my-read port
+                #t
+                  list
+                    attach-sourceinfo pos translate-cl('unquote)
+                    my-read(port)
+            char=?(c #\()
+              read-char port
+              my-read-delimited-list #\) port
+            char=?(c #\))
+              read-char port
+              read-error "Closing parenthesis without opening"
+              my-read port
+            char=?(c #\[)
+              read-char port
+              my-read-delimited-list #\] port
+            char=?(c #\])
+              read-char port
+              read-error "Closing bracket without opening"
+            char=?(c #\})
+              read-char port
+              read-error "Closing brace without opening"
+            char=?(c #\|)
+              ; Read |...| symbol (like Common Lisp and R7RS draft 9)
+              get-barred-symbol port
+            #t
+              string->symbol
+                fold-case-maybe
+                  port
+                  list->string read-until-delim(port my-delimiters)
+
+define read_to_blank_line(port)
+  consume-to-eol port
+  consume-end-of-line port
+  let* <* c $ peek-char port *>
+    if not{eof-object?(c) or eqv?(c carriage-return) or eqv?(c linefeed)}
+      read_to_blank_line port
+
+define my-read-top(port)
+  catch
+    'readable
+    lambda () my-read(port)
+    lambda key(. args)
+      read_to_blank_line port
+      my-read-top port
+
+; End of our own reader implementation.
+
+define choose-read(port)
+  if use-builtin-reader
+    my-read-top port
+    read port
+
+define cl-abbreviation?(x)
+  if not(common-lisp)
+    #f
+    {list2?(x) and assq(car(x) map-cl)}
 
 ; Returns #t if x is a symbol that would typically be used in infix position.
 define is-infix-operator?(x)
@@ -344,8 +1006,16 @@ define unit(x)
     null?(x)     string->list("()")
     number?(x)   string->list(number->string(x))
     boolean?(x)  if(x '(#\# #\t) '(#\# #\f))
-    symbol?(x)   string->list(symbol->string(x))
     string?(x)   append('(#\") unit-string-tail(string->list(x)))
+    cl-abbreviation?(x) ; Handle Common Lisp constructs like "#+".
+      append
+        string->list $ cadr $ assq car(x) map-cl
+        unit cadr(x)
+    {common-lisp and symbol?(x) and assq(x map-cl)} ; Handle CL (a . #'b)
+      append
+        '(#\space #\. #\space)
+        string->list $ cadr $ assq x map-cl
+    symbol?(x)   string->list(symbol->string(x))
     pair?(x)
      cond
        represent-as-abbreviation?(x)
@@ -420,6 +1090,7 @@ define line-tail(x)
 define line(x)
   cond
     not(pair?(x))                  exposed-unit(x)
+    cl-abbreviation?(x)            exposed-unit(x)
     {list1?(x) and represent-as-inline-infix?(car(x))} ; ({a + b}) => $ {a + b}
       append '(#\$ #\space) unit(car(x))
     represent-as-inline-infix?(x)  unit(x)
@@ -691,18 +1362,6 @@ define display-sweeten-format(x)
     begin newline() set!(column1 #t)
   display-skip-last-eol sweeten-top(x string->list("") #f)
 
-; Consume an end-of-line. This is 2 unequal end-of-line characters,
-; or a single end-of-line character, whichever is longer.
-define consume-end-of-line()
-  let <* c $ peek-char() *>
-    cond
-      memq(c end-of-line-chars)
-        read-char()
-        if eqv?(c carriage-return)
-          let <* c2 $ peek-char() *>
-            if eqv?(c2 #\newline)
-              read-char()
-
 ; Copy one line from stdin to stdout, end on EOF or end-of-line.
 ; Consume the end of line.
 define copy-line(port)
@@ -710,7 +1369,7 @@ define copy-line(port)
     cond
       eof-object?(c)   c
       memq(c end-of-line-chars)
-        consume-end-of-line()
+        consume-end-of-line port
         newline()
         set! column1 #t
       #t write-char(read-char(port)) set!(column1 #f) copy-line(port)
@@ -725,7 +1384,7 @@ define sweeten-filter()
       eof-object?(c)
         c
       memq(c end-of-line-chars)
-        consume-end-of-line()
+        consume-end-of-line current-input-port()
         newline()
         set! column1 #t
         sweeten-filter()
@@ -739,7 +1398,7 @@ define sweeten-filter()
         read-char()
         sweeten-filter()
       #t
-        let <* datum $ read current-input-port() *>
+        let <* datum $ choose-read current-input-port() *>
           if eof-object?(datum)
             datum
             ; We have a datum to format and display - begin the real work:
@@ -765,4 +1424,47 @@ define sweeten-filter()
 ; And run:
 ;    guile sweeten.scm
 
-sweeten-filter()
+
+define help-text "
+  sweeten [options]
+    -v, --version         Display version
+    -h, --help            Display this help
+    -b, --builtin-reader  Use special built-in reader, not guile's reader
+    -C, --common-lisp     Process Common Lisp (forces -b)
+    -n  --no-bang         Do NOT use exclamation points in indentation
+"
+
+define main(args)
+  let*
+    \\
+      option-spec
+        ' \\
+          help single-char(#\h) value(#f)
+          version single-char(#\v) value(#f)
+          builtin-reader single-char(#\b) value(#f)
+          common-lisp single-char(#\C) value(#f)
+          no-bang single-char(#\n) value(#f)
+      options $ getopt-long args option-spec
+      help-wanted $ option-ref options 'help #f
+      version-wanted $ option-ref options 'version #f
+      no-bang $ option-ref options 'no-bang #f
+    set! use-builtin-reader option-ref(options 'builtin-reader #f)
+    set! common-lisp option-ref(options 'common-lisp #f)
+    ; set! use-builtin-reader #t ; DEBUG - force use of builtin reader
+    if common-lisp
+      set! use-builtin-reader #t
+    if no-bang
+      set! marked-indent-increment indent-increment
+    if {version-wanted or help-wanted}
+      begin
+        if version-wanted display("sweeten version 0.9\n")
+        if help-wanted
+          display help-text
+      sweeten-filter()
+
+; Default guile stack is hideously small, fix that:
+debug-set! stack 500000
+
+main command-line()
+
+; vim: set expandtab shiftwidth=2 :

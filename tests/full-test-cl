@@ -1,0 +1,206 @@
+; Test Common Lisp library. Also has demo of its use.
+
+; Run this file on a Unix-like system to test curly-infix.cl.
+; You must have clisp.
+
+; Copyright (C) 2007-2012 by David A. Wheeler.
+; Released under the "MIT license":
+; Permission is hereby granted, free of charge, to any person obtaining a
+; copy of this software and associated documentation files (the "Software"),
+; to deal in the Software without restriction, including without limitation
+; the rights to use, copy, modify, merge, publish, distribute, sublicense,
+; and/or sell copies of the Software, and to permit persons to whom the
+; Software is furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included
+; in all copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+; OTHER DEALINGS IN THE SOFTWARE.
+
+
+; Assume ASDL is set up, e.g., by setting environment var CL_SOURCE_REGISTRY
+; to the name of the directory of the .asd file, followed by "/".
+
+(load "my-asdf.lisp")
+(asdf:load-system :readable)
+(use-package :readable)
+
+
+(defun mytest (input correct)
+  (cond
+    ((equal input correct)
+      (princ "Success with: ")
+      (prin1 input)
+      (format t "~%"))
+    (t
+      (princ "FAIL!!!")
+      (print input)
+      (print correct)
+      (exit 1))))
+
+; Special test values:
+(setq fab '(f a b))
+(setq g5qx '(g #b101 (quote x)))
+(setq gp5qx '(g (#b101 quote x)))
+(setq hnn7 '(h () () 7))
+
+(enable-full-curly-infix)
+
+(mytest '{cos(x) + sin(x)} '(+ (cos x) (sin x)))
+(mytest '{fibup(n 0 1)} '(fibup n 0 1))
+(mytest '{- x} '(- x))
+(mytest '{f()} '(f))
+(mytest '{f(a b) (c d)} '((f a b) (c d)))
+
+(mytest '(f a b) fab)
+(mytest '{f(a b)} fab)
+
+(mytest '(g #b101 (quote x)) g5qx)
+(mytest '{g(#b101 (quote x))} g5qx)
+
+(mytest '(g (#b101 quote x)) gp5qx)
+(mytest '{g(#b101(quote x))} gp5qx)
+
+(mytest '(h () () 7) hnn7)
+(mytest '{h(() () 7)} hnn7)
+
+(disable-readable)
+(enable-neoteric)
+
+(mytest 'f(a b) '(f a b))
+(mytest 'g() '(g))
+(mytest '{f(a b) (c d)} '((f a b) (c d)))
+
+(mytest '(f a b) fab)
+(mytest '{f(a b)} fab)
+
+(mytest '(g #b101 (quote x)) g5qx)
+(mytest '{g(#b101 (quote x))} g5qx)
+
+(mytest '(g (#b101 quote x)) gp5qx)
+(mytest '{g(#b101(quote x))} gp5qx)
+
+(mytest '(h () () 7) hnn7)
+(mytest '{h(() () 7)} hnn7)
+
+(disable-readable)
+(enable-sweet)
+
+mytest
+  ' f 1 2
+  '(f 1 2)
+
+(mytest '(f a b) fab)
+(mytest '{f(a b)} fab)
+mytest
+  ' f a b
+  fab
+
+(mytest '(g #b101 (quote x)) g5qx)
+(mytest '{g(#b101 (quote x))} g5qx)
+mytest
+  ' g #b101 (quote x)
+  g5qx
+
+(mytest '(g (#b101 quote x)) gp5qx)
+(mytest '{g(#b101(quote x))} gp5qx)
+mytest
+  ' g #b101(quote x)
+  gp5qx
+
+(mytest '(h () () 7) hnn7)
+(mytest '{h(() () 7)} hnn7)
+mytest
+  ' h () () 7
+  hnn7
+
+mytest
+  ' foo k() m(1) n(2 3) m(3 4 5)
+  '(foo (k) (m 1) (n 2 3) (m 3 4 5))
+
+mytest
+  ' foo
+    a b \\ c d \\ e \\ f g h
+    j k $ l m $ n
+  '(foo (a b) (c d) e (f g h)
+    (j k (l m n)))
+
+mytest
+  ' \\
+    a b
+    c d
+  '((a b) (c d))
+
+mytest
+  ' let <* x $ 0 \\ y $ cos theta *>
+    {{x ** 2} + {y ** 2}}
+  '(let ((x 0) (y (cos theta))) (+ (** x 2) (** y 2)))
+
+mytest
+  ' let <*
+
+x 0
+
+y $ cos theta
+
+*>
+    {{x ** 2} + {y ** 2}}
+  '(let ((x 0) (y (cos theta))) (+ (** x 2) (** y 2)))
+
+mytest
+  ' foo1
+    a
+    .
+    b
+  '(foo1 a . b)
+
+
+mytest
+  ' foo2 a . b
+  '(foo2 a . b)
+
+mytest
+  ' foo3
+    a
+    #| comment |#
+      b1 b2
+        q1 q2
+      c1 c2
+    d
+  '(foo3 a ((b1 b2 (q1 q2)) (c1 c2)) d)
+
+mytest
+  ' h #| ignored |# j k
+  '(h j k)
+
+mytest
+  ` a b ,{3 + 4}
+    x1
+    ,
+      {10 + 11}
+  '(a b 7 x1 21)
+
+mytest
+  ` q
+    ,@ cdr('(x y z))
+  '(q y z)
+
+mytest
+  ' defun fact (n)
+  ! if {n <= 1}
+  !   1
+  !   {n * fact{n - 1}}
+  '(defun fact (n) (if (<= n 1) 1 (* n (fact (- n 1)))))
+
+
+(disable-readable)
+(princ "Tests complete!")
+(exit 0)
+(quit)
+

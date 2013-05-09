@@ -41,11 +41,46 @@ readable_libdir = $(GUILE_SITE)/readable
 
 readable_lib_DATA = readable/kernel.scm
 
+# "Local" version so we can test things without installing them.
 readable/kernel.scm: src/kernel.scm
 	$(MKDIR_P) readable
 	cp -p "$(srcdir)/src/kernel.scm" readable/kernel.scm
 
 CLEANFILES = readable/kernel.scm
+
+
+# Common Lisp files.  We'll install source code in conventional places,
+# and let the usual Common Lisp mechanisms (e.g., asdf) handle compiling
+# as needed.
+
+common_lispdir = $(datadir)/common-lisp
+common_lisp_sourcedir = $(common_lispdir)/source
+common_lisp_source_pkgdir = $(common_lisp_sourcedir)/readable
+common_lisp_systemsdir = $(common_lispdir)/systems
+
+pkg_asd_file=readable.asd
+
+dist_common_lisp_source_pkg_DATA = \
+ basic-curly.lisp neoteric.lisp backquote.lisp sweet.lisp
+
+dist_common_lisp_source_pkg_DATA += $(pkg_asd_file)
+
+# For now, install sweet-clisp specially, because it cannot currently
+# be "installed" and work as expected... but it's still useful for testing.
+EXTRA_DIST += sweet-clisp
+
+# Install symlink so asdf can find these files. See:
+# http://www.gnu.org/software/automake/manual/html_node/Extending.html
+# Note that the LN_S does *not* use DESTDIR.
+
+install-exec-hook-cl:
+	$(MKDIR_P) "$(DESTDIR)$(common_lisp_source_pkgdir)"
+	$(MKDIR_P) "$(DESTDIR)$(common_lisp_systemsdir)"
+	$(RM) -f "$(common_lisp_systemsdir)/$(pkg_asd_file)"
+	cd "$(DESTDIR)$(common_lisp_source_pkgdir)" && \
+	  $(LN_S) "$(common_lisp_source_pkgdir)/$(pkg_asd_file)" ../../systems
+
+install-exec-hook: install-exec-hook-cl
 
 
 # Scripts
@@ -205,10 +240,6 @@ bin/diff-s-sweet: src/diff-s-sweet my-subst
 	$(UNSWEETEN) $< > $@
 	chmod a-w $@
 
-# Eventually we'll package this, but for now, just distribute
-# the Common Lisp implementation.
-EXTRA_DIST += readable.cl
-
 # Implementation and test cases for ANTLR implementation
 # of sweet-expressions.  Again, don't install.
 EXTRA_DIST += sweet.g
@@ -237,7 +268,10 @@ dist_man_MANS = man/unsweeten.1 man/sweet-run.1 \
 # in markdown format.  The website has the updated version, but for
 # those who just have this file, it'd be useful to have SOME useful
 # information on what this code is trying to do and how to use it.
-dist_doc_DATA = README COPYING AUTHORS ChangeLog solution.md tutorial.md
+dist_doc_DATA = README COPYING AUTHORS ChangeLog
+
+dist_doc_DATA += solution.md
+dist_doc_DATA += scheme-tutorial.md common-lisp-tutorial.md
 
 # Presentation in Open Document Format (.odp) about these formats:
 dist_doc_DATA += readable-s-expressions.odp
@@ -245,10 +279,8 @@ dist_doc_DATA += readable-s-expressions.odp
 # Include SRFI specifications as documentation:
 dist_doc_DATA += SRFI-105.html SRFI-110.html
 
-# Distribute the specs.  They're not up-to-date, but they
-# are referred to in the README, so distribute them too
-# as users may be puzzled if they're not there.
-dist_doc_DATA += spec-indent.txt spec-almkglor.txt
+# We no longer distribute these obsolete specs (see git if you want them).
+# dist_doc_DATA += spec-indent.txt spec-almkglor.txt
 
 # This is an odd case.  Since we're distributing a tool for developers,
 # it's useful to have worked examples.  So here we install the
@@ -260,6 +292,7 @@ EXTRA_DIST += \
  tests/curly-infix-test-cl \
  tests/curly-infix-testsuite-scm \
  tests/curly-infix-test-scm \
+ tests/full-test-cl \
  tests/neoteric-test \
  tests/neoteric-testsuite \
  tests/sweet-test \
@@ -271,19 +304,39 @@ EXTRA_DIST += \
  tests/sweeten-correct \
  tests/unsweeten-testsuite \
  tests/unsweeten-correct \
+ tests/unsweeten-cl-testsuite \
+ tests/unsweeten-cl-correct \
  tests/curly-infix-correct2 \
- tests/curly-infix-testsuite2
+ tests/curly-infix-testsuite2 \
+ tests/write-test \
+ tests/write-test-correct
+
+# We'll include our own copy of asdf (version 3).  Clisp on Cygwin doesn't
+# provide it, and in any case, this creates a known test environment.
+EXTRA_DIST += tests/my-asdf.lisp
 
 # TODO: Improve test harness & integration into overall system.
 
 check: readable/kernel.scm
-	CURLYFILE="$(srcdir)/readable.cl" $(srcdir)/tests/curly-infix-test-cl
+	@echo "Starting tests"
+	CL_SOURCE_REGISTRY="`realpath $(srcdir)`"/ \
+	  clisp -lp "`realpath $(srcdir)`/tests/" \
+	        $(srcdir)/tests/curly-infix-test-cl
+	CL_SOURCE_REGISTRY="`realpath $(srcdir)`"/ \
+	  clisp -lp "`realpath $(srcdir)`/tests/" \
+	        $(srcdir)/tests/full-test-cl
+	@echo "About to run guile curly-infix tests"
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/curly-infix-test-scm \
 	            < $(srcdir)/tests/curly-infix-testsuite-scm
+	@echo "About to run neoteric-testsuite"
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/neoteric-test \
 	            < $(srcdir)/tests/neoteric-testsuite
+	@echo "About to run sweet-testsuite"
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/sweet-test \
 	            < $(srcdir)/tests/sweet-testsuite
+	@echo "About to run write-test"
+	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/write-test \
+             | diff -b -u - "$(srcdir)/tests/write-test-correct"
 	@echo "Running srfi-curly-infix, showing diffs from correct results:"
 	GUILE_LOAD_PATH="$(builddir)" guile \
 	            $(srcdir)/src/srfi-curly-infix.scm < \
@@ -292,6 +345,10 @@ check: readable/kernel.scm
 	@echo "Running unsweeten, showing differences from correct results:"
 	"$(builddir)/unsweeten" < "$(srcdir)/tests/unsweeten-testsuite" | \
 	     diff -b -u - "$(srcdir)/tests/unsweeten-correct"
+	test "`printf '\140(a b c ,d)\n' | \"$(builddir)/unsweeten\" -C`" = \
+	     '`(a b c ,d)'
+	"$(builddir)/unsweeten" -C < "$(srcdir)/tests/unsweeten-cl-testsuite" \
+             | diff -b -u - "$(srcdir)/tests/unsweeten-cl-correct"
 	@echo "Running sweeten, showing differences from correct results:"
 	"$(builddir)/sweeten" < "$(srcdir)/tests/sweeten-testsuite" | \
 	     diff -u - "$(srcdir)/tests/sweeten-correct"

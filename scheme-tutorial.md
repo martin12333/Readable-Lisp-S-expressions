@@ -1,6 +1,8 @@
 This tutorial briefly describes our approach to making Lisp s-expressions more readable, and shows how to download and use free-libre/open source software that implements them.
 
-Our approach is not tied to any particular Lisp system, and can do everything traditional s-expressions can do. You don't need to be familiar with Lisp-like languages to understand this tutorial, though it helps.
+Our approach is not tied to any particular Lisp system, and can do everything traditional s-expressions can do. But it's easier to try it out focusing on some specific Lisp; this tutorial focuses on the Scheme family (you can also look at the [Common-lisp-tutorial]).
+
+You don't need to be familiar with Lisp-like languages to understand this tutorial, though it helps.
 
 But first, let's briefly describe the problem and the proposed solution (feel free to skip these sections if you already know this).
 
@@ -20,14 +22,15 @@ Proposed solution
 
 To solve this, we've developed three tiers of notation, each building on the previous. These are simply new abbreviations for common cases; you can continue to use normally-formatted s-expressions wherever you want to. These new notations/abbreviations are, in summary:
 
-1.   *Curly-infix-expressions* (*c-expressions*): Curly braces {...} contain an *infix list*. A *simple infix list* has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  By intent, there is no precedence and you *must* use another {...} for an embedded infix list. For example, {n <= 2} maps to (<= n 2).  The items in an infix list are neoteric expressions.
+1.   *Curly-infix-expressions* (*c-expressions*): Curly braces {...} contain an *infix list*. A *simple infix list* has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol; it maps to "(even-parameter odd-parameters)".  By intent, there is no precedence and you *must* use another {...} for an embedded infix list. For example, {n <= 2} maps to (<= n 2).  In "full" c-expressions, the items in an infix list are neoteric expressions.
 2.   *Neoteric-expressions* (*n-expressions*): This includes curly-infix-expressions, and adds special meanings to some prefixed symbols. An e(...) maps to (e ...), and an e{...} maps to (e {...}). There must be no whitespace between e and the opening character.  For example, f(1 2) maps to (f 1 2)
 3.   *Sweet-expressions* (*t-expressions*): Includes neoteric-expressions, and deduces parentheses from indentation. Basic rules:
 
-    - An indented line is a parameter of its parent.
-    - Later terms on a line are parameters of the first term.
-    - A line with exactly one term, and no child lines, is simply that term; multiple terms are wrapped into a list.
-    - An empty line ends the expression; empty lines *before* expressions are ignored.
+    - A line with content consists of one or more n-expressions, separated by one or more spaces or tabs.
+    - If a line is indented more than the previous line, that line is a child line, and the previous line is a parent to that child.
+    - Later lines with the same indentation as the child are also children of that parent, until there is an intervening line with the parent’s indentation or less.
+    - A line with only one n-expression, and no child lines, represents itself. Otherwise, the line represents a list; each n-expression on the line is an element of the list, and each of its child lines represents an element of the list (in order).
+    - An empty line (possibly with spaces or tabs) ends the expression; empty lines *before* expressions are ignored.
     - Indentation processing does not occur inside ( ), [ ], and { }, whether they are prefixed or not; they're just neoteric-expressions.
 
 For more details, see [Solution].
@@ -65,7 +68,7 @@ If you plan to use the development (not stable) version, you'll also need:
 *   autoconf and automake (to build it)
 *   guile development libraries (e.g., "guile-devel" on Fedora and Cygwin)
 
-We have a draft Common Lisp implementation.  We test it with clisp, but it doesn't really matter (sbcl is known to work).
+We have a draft Common Lisp implementation.  We test it with clisp, but it should port to any Common Lisp implementation.
 
 You should be running on a POSIX system; if you use Windows, you may need to install Cygwin first. Any modern GNU/Linux system will do nicely.
 
@@ -261,12 +264,12 @@ Here's a more substantial example, one we've seen earlier:
     define fibfast(n)  ; Typical function notation
       if {n < 2}       ; Indentation, infix {...}
         n              ; Single expr = no new list
-        fibup(n 2 1 0) ; Simple function calls
+        fibup n 2 1 0  ; Simple function calls
     
     define fibup(max count n1 n2)
       if {max = count}
         {n1 + n2}
-        fibup(max {count + 1} {n1 + n2} n1)
+        fibup max {count + 1} {n1 + n2} n1
 
 If you're not sure what something means, you can "quote" it so it won't execute.  If you type ' followed by space, the indentation processing continues (starting at the ' mark indentation) but the whole thing will be quoted.  That way you can try things out!  (Another way to try out what things mean is the unsweeten command described below).  For example:
 
@@ -386,8 +389,8 @@ You can also run it interactively, but you may find that you want to press an ex
 
 Sweeten reads Scheme (or more specifically, Guile) S-expression syntax.  However, you can use it for other Lisp-like languages if you stick to the syntax that is common between them.  There is also a limitation of the sweeten implementation: Comments inside any parentheses will not be produced in the output.  (This is because it uses the underlying system "read" function, which throws this information away.) Still, it's a useful tool.
 
-Readable library
-================
+Readable library (Scheme)
+=========================
 
 These new notations are implemented in a Scheme library module.  They're written to easily port to other Scheme systems, and even non-Scheme systems, but guile is what we primarily use right now.
 
@@ -469,7 +472,7 @@ If you have small items that need to be at the same list level, you can combine 
 
     (foo :amount 100 :from ocean)
 
-But what if you actually want to refer to "\\\\"?  No problem, just use the expression "(. \\\\)".  Exactly what this means will depend on whether or not your Lisp uses "slashification" (e.g., if "\" followed by any character means that character is part of a symbol).  If it doesn't use slashification, \\\\ means the symbol with a two-character name \\\\.  If it uses slashification, \\\\ means the symbol with the one-character name \\.  The good news is that you can use the marker \\\\ on practically any Lisp system, so you don't need to constantly change notation if you use different ones.
+But what if you actually want to refer to "\\\\"?  No problem, just use the expression "{\\\\}".  Exactly what this means will depend on whether or not your Lisp uses "slashification" (e.g., if "\" followed by any character means that character is part of a symbol).  If it doesn't use slashification, \\\\ means the symbol with a two-character name \\\\.  If it uses slashification, \\\\ means the symbol with the one-character name \\.  The good news is that you can use the marker \\\\ on practically any Lisp system, so you don't need to constantly change notation if you use different ones.
 
 Sublist
 -------
@@ -492,9 +495,9 @@ The reason is that this (1) makes interactive use pleasant, and (2) we don't wan
 Collecting lists
 ----------------
 
-When indentation is active, you can use &lt;* and *&gt; as essentially parentheses, but indentation processing is still active, and inside the indent starts again at the edge.  This is useful for short expressions after a "let", as well as for creating long module definitions. E.G.:
+When indentation is active, you can use <\* and \*\> as essentially parentheses, but indentation processing is still active, and inside the indent starts again at the edge.  This is useful for short expressions after a "let", as well as for creating long module definitions. E.G.:
 
-    let* &lt;* x cos(a) *&gt;
+    let <* x cos(a) *>
         {2 * x}
 
 which becomes:
@@ -515,5 +518,7 @@ Closing Remarks
 ===============
 
 These notations can take a few minutes to learn how to use, just like anything else new, but they are worth it.
+
+You can see more Scheme-specific information about sweet-expressions in SRFI-110.
 
 Although we used some specific implementations, note that these notations could be used with any Lisp-based system.
