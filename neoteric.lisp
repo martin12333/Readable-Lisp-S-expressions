@@ -55,6 +55,10 @@
 (defvar *neoteric-readtable* (copy-readtable)
         "Use this table when about to read a neoteric expression")
 
+
+(defvar *noisy* t
+        "If true, a parse error prints an error message to standard out")
+
 ; Work around SBCL nonsense that makes its "defconstant" useless.
 ; See: http://www.sbcl.org/manual/Defining-Constants.html
 (defmacro define-constant (name value &optional doc)
@@ -64,8 +68,16 @@
 ; Marker for eof
 (define-constant my-eof-marker (make-symbol "my-eof-marker"))
 
+(define-condition readable-parse-error (parse-error)
+  ((text :initarg :text :reader text)))
+
 (defun read-error (message)
-  (error message))
+  (when *noisy*
+    (terpri *standard-output*)
+    (princ "Error: " *standard-output*)
+    (princ message *standard-output*)
+    (terpri *standard-output*))
+  (error 'readable-parse-error :text message))
 
 ; Unfortuntely, clisp will write all symbols with |...| around them
 ; when neoteric- or sweet-expressions are enabled.

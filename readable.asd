@@ -26,6 +26,7 @@
            #:enable-sweet #:sweet-read
            #:my-char-code-limit
            #:disable-readable
+           #:readable-parse-error #:*noisy*
            #:$nfx$ #:$bracket-apply$))
 
 (in-package #:readable-asd)
