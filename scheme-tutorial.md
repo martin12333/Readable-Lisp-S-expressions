@@ -472,7 +472,7 @@ If you have small items that need to be at the same list level, you can combine 
 
     (foo :amount 100 :from ocean)
 
-But what if you actually want to refer to "\\\\"?  No problem, just use the expression "(. \\\\)".  Exactly what this means will depend on whether or not your Lisp uses "slashification" (e.g., if "\" followed by any character means that character is part of a symbol).  If it doesn't use slashification, \\\\ means the symbol with a two-character name \\\\.  If it uses slashification, \\\\ means the symbol with the one-character name \\.  The good news is that you can use the marker \\\\ on practically any Lisp system, so you don't need to constantly change notation if you use different ones.
+But what if you actually want to refer to "\\\\"?  No problem, just use the expression "{\\\\}".  Exactly what this means will depend on whether or not your Lisp uses "slashification" (e.g., if "\" followed by any character means that character is part of a symbol).  If it doesn't use slashification, \\\\ means the symbol with a two-character name \\\\.  If it uses slashification, \\\\ means the symbol with the one-character name \\.  The good news is that you can use the marker \\\\ on practically any Lisp system, so you don't need to constantly change notation if you use different ones.
 
 Sublist
 -------
@@ -518,5 +518,7 @@ Closing Remarks
 ===============
 
 These notations can take a few minutes to learn how to use, just like anything else new, but they are worth it.
+
+You can see more Scheme-specific information about sweet-expressions in SRFI-110.
 
 Although we used some specific implementations, note that these notations could be used with any Lisp-based system.
