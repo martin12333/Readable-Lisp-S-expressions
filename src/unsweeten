@@ -213,7 +213,7 @@ fi
     (if (or version-wanted help-wanted)
         (begin
           (if version-wanted
-            (display "unsweeten version 0.7\n"))
+            (display "unsweeten version 0.9\n"))
           (if help-wanted
                    (display "\
      unsweeten [options]

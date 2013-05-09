@@ -1457,7 +1457,7 @@ define main(args)
       set! marked-indent-increment indent-increment
     if {version-wanted or help-wanted}
       begin
-        if version-wanted display("sweeten version 0.7\n")
+        if version-wanted display("sweeten version 0.9\n")
         if help-wanted
           display help-text
       sweeten-filter()

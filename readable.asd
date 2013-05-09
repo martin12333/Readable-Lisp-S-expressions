@@ -33,7 +33,7 @@
 
 (defsystem readable
   :name "readable"
-  :version "0.7.1"
+  :version "0.9.0"
   :maintainer "David A. Wheeler"
   :author "David A. Wheeler"
   :license "MIT"
