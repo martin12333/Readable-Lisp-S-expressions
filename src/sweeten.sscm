@@ -700,6 +700,7 @@ define read-symbol-elements(port)
         !     cons
         !       read-inline-hex-escape port
         !       read-symbol-elements port
+        !   #t cons(c2 read-symbol-elements(port)) ; Use c2 for unknown.
       #t cons(c read-symbol-elements(port))
 
 
