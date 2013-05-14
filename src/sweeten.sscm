@@ -735,9 +735,23 @@ define read-cl-string-as-list(port)
     eqv?(c #\")
       '()  ; Done reading string.
     eqv?(c #\\)
-      let <* c2 $ read-char port *>
-        if eof-object?(c2)
+      let <* c2 $ read-char port *> $ cond
+        eof-object?(c2)
           read-error "EOF after \\ in string"
+        ; The following intentionally do NOT follow the Common Lisp spec,
+        ; under the theory that someone who writes "\n" in a CL string
+        ; almost certainly means "newline" and not the character n.
+        ; After all, "n" doesn't need escaping in the fist place.
+        ; We could greatly extend this, if appropriate. However,
+        ; since every extension disobeys the spec, I've only added a few
+        ; extensions that are most likely to be used.
+        eqv?(c2 #\t)
+          cons integer->char(9) read-cl-string-as-list(port)
+        eqv?(c2 #\n)
+          cons integer->char(10) read-cl-string-as-list(port)
+        eqv?(c2 #\r)
+          cons integer->char(13) read-cl-string-as-list(port)
+        #t
           cons c2 read-cl-string-as-list(port)
     #t
       cons c read-cl-string-as-list(port)
