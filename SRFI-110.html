@@ -5010,6 +5010,18 @@ You can learn more about wisp at the
 </p>
 
 <p>
+The key distinguishing factor between wisp and sweet-expressions
+is a difference of emphasis.
+The design of wisp focuses on having a simple <i>definition</i> as the most
+important factor.
+The design of sweet-expressions focuses on having simpler and clearer
+<i>code</i> that <i>uses</i> the notation
+(having &#8220;readable&#8221; code), even for large code sizes,
+at the cost of having have a slightly more complex definition.
+Below is a more detailed discussion of these differences.
+</p>
+
+<p>
 As with the <a href="#arne">initial approach</a>,
 wisp includes indentation-means-subitem (as is true for sweet-expressions).
 Like the initial approach but unlike sweet-expressions,
@@ -5312,6 +5324,14 @@ Because it looks less familiar, developers are more likely to
 write the wrong code and miss errors with the wisp formulation.
 This is especially because &#8220;.&#8221; has another meaning
 (it sets the cdr of a list).
+Even Arne, developer of wisp, agreed on 2013-05-05 on the SRFI-110
+mailing list that
+having to prefix singletons with &#8220;.&#8221; (as wisp requires) is
+&#8220;a trap: It&#8217;s easy to forget the . for a return value...
+Not adding brackets for a single item also has the advantage,
+that you can copy-paste lisp-code into readable.
+If you do the same in wisp, you have to prepend every
+top-level bracket with a dot. 
 Also, a &#8220;.&#8221; in front of an integer looks
 very much like a floating point number with initial period, again
 inviting error.
