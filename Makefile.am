@@ -270,6 +270,7 @@ dist_man_MANS = man/unsweeten.1 man/sweet-run.1 \
 # information on what this code is trying to do and how to use it.
 dist_doc_DATA = README COPYING AUTHORS ChangeLog
 
+dist_doc_DATA += README-ANTLR
 dist_doc_DATA += solution.md
 dist_doc_DATA += scheme-tutorial.md common-lisp-tutorial.md
 
