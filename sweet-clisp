@@ -9,8 +9,19 @@
 # has a valid asdf implementation.  That way, we can ensure that we
 # run the current developmental version, not what's installed (if anything).
 
-# This uses "cat", so readline won't work properly.  In compensation,
-# you can redirect files into this and have it execute.
+while [ $# -gt 0 ] ; do
+  case "$1" in
+    (--*) shift ; break ;;
+    (-) break ;;
+    (-*)
+      echo "Option not supported." 1>&2
+      exit 1
+  esac
+done
+
+if [ $# -gt 0 ] ; then
+
+# Have files.  "cat" the file contents.
 
 (
 cat << COMMAND_SET
@@ -20,13 +31,33 @@ cat << COMMAND_SET
 (readable:enable-sweet)
 COMMAND_SET
 
-if which stdbuf > /dev/null 2> /dev/null ; then
-  stdbuf -oL cat "$@"
-else
-  cat "$@"
-fi
+cat -- "$@"
 
 printf "\n\n"  # Ensure it ends on newlines.
 ) | \
  CL_SOURCE_REGISTRY="$PWD" "/usr/bin/clisp" -lp "$PWD" -modern
+
+else
+
+# No files listed.  Use "expect" so readline will work interactively.
+#       set login $spawn_id
+#                 spawn tip modem
+#                 # dial back out to user
+#                 # connect user to login
+#                 interact -u $login
+
+# set interpreter \$spawn_id
+
+CL_SOURCE_REGISTRY="$PWD" \
+expect -c "
+ spawn -noecho \"/usr/bin/clisp\" \"-lp\" \"$PWD\" -modern
+ send \"
+  (load \\\"tests/my-asdf.lisp\\\")
+  (asdf:load-system :readable)
+  (setq *print-escape* nil)
+  (readable:enable-sweet)\n\n\"
+ interact
+ "
+
+fi
 
