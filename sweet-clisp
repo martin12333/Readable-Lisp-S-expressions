@@ -35,7 +35,7 @@ cat -- "$@"
 
 printf "\n\n"  # Ensure it ends on newlines.
 ) | \
- CL_SOURCE_REGISTRY="$PWD" "/usr/bin/clisp" -lp "$PWD" -modern
+ CL_SOURCE_REGISTRY="$PWD" "clisp" --quiet --quiet -lp "$PWD" -modern
 
 else
 
