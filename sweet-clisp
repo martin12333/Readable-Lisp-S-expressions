@@ -9,54 +9,50 @@
 # has a valid asdf implementation.  That way, we can ensure that we
 # run the current developmental version, not what's installed (if anything).
 
-while [ $# -gt 0 ] ; do
-  case "$1" in
-    (--*) shift ; break ;;
-    (-) break ;;
-    (-*)
-      echo "Option not supported." 1>&2
-      exit 1
-  esac
-done
+
 
 if [ $# -gt 0 ] ; then
 
-# Have files.  "cat" the file contents.
+  shift
 
-(
-cat << COMMAND_SET
+  commandfile="$(mktemp)"
+  cat > "$commandfile" << COMMAND_SET
 (load "tests/my-asdf.lisp")
 (asdf:load-system :readable)
 (setq *print-escape* nil)
 (readable:enable-sweet)
 COMMAND_SET
+  cat >> "$commandfile"
 
-cat -- "$@"
+  # May need to add:
+  # (eval-when (:compile-toplevel :load-toplevel :execute)
+  # ...)
 
-printf "\n\n"  # Ensure it ends on newlines.
-) | \
- CL_SOURCE_REGISTRY="$PWD" "clisp" --quiet --quiet -lp "$PWD" -modern
+  CL_SOURCE_REGISTRY="$PWD" "clisp" --quiet --quiet -lp "$PWD" -modern \
+                                    "$commandfile" "$@"
+
+  # Clean up.
+  rm -fr "$commandfile"
 
 else
 
-# No files listed.  Use "expect" so readline will work interactively.
-#       set login $spawn_id
-#                 spawn tip modem
-#                 # dial back out to user
-#                 # connect user to login
-#                 interact -u $login
-
-# set interpreter \$spawn_id
-
-CL_SOURCE_REGISTRY="$PWD" \
-expect -c "
- spawn -noecho \"/usr/bin/clisp\" \"-lp\" \"$PWD\" -modern
- send \"
-  (load \\\"tests/my-asdf.lisp\\\")
-  (asdf:load-system :readable)
-  (setq *print-escape* nil)
-  (readable:enable-sweet)\n\n\"
- interact
+  # No files listed.  Use "expect" so readline will work interactively.
+  #       set login $spawn_id
+  #                 spawn tip modem
+  #                 # dial back out to user
+  #                 # connect user to login
+  #                 interact -u $login
+  
+  # set interpreter \$spawn_id
+  
+  CL_SOURCE_REGISTRY="$PWD" expect -c "
+    spawn -noecho clisp \"-lp\" \"$PWD\" -modern
+    send \"
+      (load \\\"tests/my-asdf.lisp\\\")
+      (asdf:load-system :readable)
+      (setq *print-escape* nil)
+      (readable:enable-sweet)\n\n\"
+    interact
  "
 
 fi
