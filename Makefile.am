@@ -69,6 +69,9 @@ dist_common_lisp_source_pkg_DATA += $(pkg_asd_file)
 # be "installed" and work as expected... but it's still useful for testing.
 EXTRA_DIST += sweet-clisp
 
+# Trivial example of a Common Lisp program.
+EXTRA_DIST += factorial.lisp
+
 # Install symlink so asdf can find these files. See:
 # http://www.gnu.org/software/automake/manual/html_node/Extending.html
 # Note that the LN_S does *not* use DESTDIR.
@@ -311,10 +314,6 @@ EXTRA_DIST += \
  tests/curly-infix-testsuite2 \
  tests/write-test \
  tests/write-test-correct
-
-# We'll include our own copy of asdf (version 3).  Clisp on Cygwin doesn't
-# provide it, and in any case, this creates a known test environment.
-EXTRA_DIST += tests/my-asdf.lisp
 
 # TODO: Improve test harness & integration into overall system.
 
