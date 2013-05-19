@@ -814,7 +814,9 @@
   (unread-char char stream)
   ; (princ "DEBUG entry: ") (write char) (terpri)
   (let ((*readtable* *underlying-sweet-readtable*))
-    (t-expr stream)))
+    (handler-case (t-expr stream)
+      ; Specially handle EOF so the underlying reader will see it.
+      (end-of-file () (values)))))
 
 ; Set up a readtable that'll redirect everything.
 (defun compute-sweet-redirect-readtable ()
