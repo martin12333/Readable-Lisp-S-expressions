@@ -14,3 +14,4 @@ defun fact (x)
 
 princ fact(5)
 
+(readable:disable-readable)
