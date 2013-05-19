@@ -86,12 +86,28 @@ If you plan to use the development (not stable) version, you'll also need:
 
 You should be running on a POSIX system; if you use Windows, you may need to install Cygwin first. Any modern GNU/Linux system will do nicely.
 
+ASDF
+----
+
+You'll need Another System Definition Facility (asdf), which is usually included in your Common Lisp implementation.  If you don't already have it, you can download it here:  http://common-lisp.net/project/asdf/
+
+The clisp of Cygwin does not (as of this writing) include asdf.  For that, download the asdf.lisp file, then install asdf on clisp for this user by doing:
+
+    mkdir -p ~/lisp/asdf
+    cp asdf.lisp ~/lisp/asdf
+    clisp
+    (load (compile-file "asdf.lisp"))
+    (exit)
+
+After this point '(require "asdf")' will work.
+
+
 Download and prepare to configure
 -----------------------------------
 
 First, download the latest version of the demo and related files and get them ready to configure.
 
-At the time of this writing, the "stable" version doesn't strongly support Common Lisp.  Eventually it will.  To get the current "stable" version, browse http://readable.sourceforge.net - click on "download files" - and download the current version.  Then uncompress and cd into them, e.g., at the command line:
+To get the current "stable" version, browse http://readable.sourceforge.net - click on "download files" - and download the current version.  Then uncompress and cd into them, e.g., at the command line:
 
      tar xvzf readable-*.tar.gz
      cd readable-*
