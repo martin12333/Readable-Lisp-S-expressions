@@ -27,7 +27,7 @@
 ; Assume ASDL is set up, e.g., by setting environment var CL_SOURCE_REGISTRY
 ; to the name of the directory of the .asd file, followed by "/".
 
-(load "my-asdf.lisp")
+(require "asdf")
 (asdf:load-system :readable)
 (use-package :readable)
 (enable-basic-curly)

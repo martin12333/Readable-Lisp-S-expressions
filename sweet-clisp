@@ -17,7 +17,7 @@ if [ $# -gt 0 ] ; then
 
   commandfile="$(mktemp)"
   cat > "$commandfile" << COMMAND_SET
-(load "tests/my-asdf.lisp")
+(require "asdf")
 (asdf:load-system :readable)
 (setq *print-escape* nil)
 (readable:enable-sweet)
@@ -48,7 +48,7 @@ else
   CL_SOURCE_REGISTRY="$PWD" expect -c "
     spawn -noecho clisp \"-lp\" \"$PWD\" -modern
     send \"
-      (load \\\"tests/my-asdf.lisp\\\")
+      (require \\\"asdf\\\")
       (asdf:load-system :readable)
       (setq *print-escape* nil)
       (readable:enable-sweet)\n\n\"
