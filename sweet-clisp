@@ -8,6 +8,7 @@
 
 # If you want to use local un-installed file, use this as:
 #    CL_SOURCE_REGISTRY="$PWD" sweet-clisp ...
+# where you can replace "$PWD" with the readable .lisp files' directory.
 
 if [ $# -gt 0 ] ; then
 
@@ -23,10 +24,6 @@ if [ $# -gt 0 ] ; then
 COMMAND_SET
   cat -- "$origfile" >> "$commandfile"
 
-  # May need to add:
-  # (eval-when (:compile-toplevel :load-toplevel :execute)
-  # ...)
-
   clisp --quiet --quiet -modern "$commandfile"
 
   # Clean up.
@@ -34,15 +31,6 @@ COMMAND_SET
 
 else
 
-  # No files listed.  Use "expect" so readline will work interactively.
-  #       set login $spawn_id
-  #                 spawn tip modem
-  #                 # dial back out to user
-  #                 # connect user to login
-  #                 interact -u $login
-  
-  # set interpreter \$spawn_id
-  
   expect -c "
     spawn -noecho clisp --quiet --quiet -modern
     send \"
