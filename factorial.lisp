@@ -1,5 +1,8 @@
 ; Trivial sweet-expression Common Lisp demo.  Run as:
-;        clisp -q -q factorial.lisp
+;     clisp -q -q factorial.lisp
+
+; To run the NOT installed readable version, prepend that with:
+;     CL_SOURCE_REGISTRY="$PWD" 
 
 (require "asdf")
 (asdf:load-system :readable)
