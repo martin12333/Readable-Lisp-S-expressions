@@ -266,7 +266,8 @@ EXTRA_DIST += \
 
 # Man pages
 dist_man_MANS = man/unsweeten.1 man/sweet-run.1 \
-                man/sweeten.1 man/diff-s-sweet.1
+                man/sweeten.1 man/diff-s-sweet.1 \
+                man/sweet-clisp.1
 
 # Distribute some documentation.
 # README is distributed anyway; this just makes it clearer.
