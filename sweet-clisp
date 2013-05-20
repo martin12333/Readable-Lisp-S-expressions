@@ -1,18 +1,17 @@
 #!/bin/sh
+# sweet-clisp [FILE]
 
 # By David A. Wheeler. Start up clisp in "sweet-expression" reading mode,
 # so you can try it out.  Setting *print-escape* isn't ideal, but
-# in most circumstances it works out.
+# in most circumstances it works well, and clisp has no better way
+# of disabling unnecessary escapes.
 
-# NOTE: For now, this assumes that the current directory has the
-# readable library *.lisp and *.asd files, and that tests/my-asdf.lisp
-# has a valid asdf implementation.  That way, we can ensure that we
-# run the current developmental version, not what's installed (if anything).
-
-
+# If you want to use local un-installed file, use this as:
+#    CL_SOURCE_REGISTRY="$PWD" sweet-clisp ...
 
 if [ $# -gt 0 ] ; then
 
+  origfile="$1"
   shift
 
   commandfile="$(mktemp)"
@@ -22,14 +21,13 @@ if [ $# -gt 0 ] ; then
 (setq *print-escape* nil)
 (readable:enable-sweet)
 COMMAND_SET
-  cat >> "$commandfile"
+  cat -- "$origfile" >> "$commandfile"
 
   # May need to add:
   # (eval-when (:compile-toplevel :load-toplevel :execute)
   # ...)
 
-  CL_SOURCE_REGISTRY="$PWD" "clisp" --quiet --quiet -lp "$PWD" -modern \
-                                    "$commandfile" "$@"
+  clisp --quiet --quiet -modern "$commandfile"
 
   # Clean up.
   rm -fr "$commandfile"
@@ -45,8 +43,8 @@ else
   
   # set interpreter \$spawn_id
   
-  CL_SOURCE_REGISTRY="$PWD" expect -c "
-    spawn -noecho clisp \"-lp\" \"$PWD\" -modern
+  expect -c "
+    spawn -noecho clisp --quiet --quiet -modern
     send \"
       (require \\\"asdf\\\")
       (asdf:load-system :readable)
