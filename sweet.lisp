@@ -828,37 +828,38 @@
       new)))
 
 (defun enable-sweet ()
-  (enable-neoteric)
+  (when (setup-enable 'sweet)
+    (enable-neoteric)
 
-  ; Now create the underlying sweet readtable by tweaking neoteric readtable.
-  ; This underlying table is called to read specific expressions.
-  (setq *readtable* (copy-readtable *readtable*))
-  ; Handle #|...|# and #; specially:
-  (set-dispatch-macro-character #\# #\| #'wrap-comment-block)
-  (set-dispatch-macro-character #\# #\; #'wrap-comment-datum)
-  ; Re-implement backquote and comma, so indentation can happen inside them;
-  ; Notice that (read stream t nil t) is replaced with (my-read-datum stream):
-  (set-macro-character #\`
-    #'(lambda (stream char)
-        (declare (ignore char))
-        (list 'backquote (my-read-datum stream))))
-  (set-macro-character #\,
-    #'(lambda (stream char)
-        (declare (ignore char))
-          (case (my-peek-char stream)
-            (#\@ (my-read-char stream)
-                 (list *comma-atsign* (my-read-datum stream)))
-            (#\. (read-char stream t nil t)
-                 (list *comma-dot* (my-read-datum stream)))
-            (otherwise (list *comma* (my-read-datum stream))))))
-  (setq *underlying-sweet-readtable* *readtable*)
+    ; Now create the underlying sweet readtable by tweaking neoteric readtable.
+    ; This underlying table is called to read specific expressions.
+    (setq *readtable* (copy-readtable *readtable*))
+    ; Handle #|...|# and #; specially:
+    (set-dispatch-macro-character #\# #\| #'wrap-comment-block)
+    (set-dispatch-macro-character #\# #\; #'wrap-comment-datum)
+    ; Re-implement backquote and comma, so indentation can happen inside them;
+    ; Notice that (read stream t nil t) is replaced with (my-read-datum stream):
+    (set-macro-character #\`
+      #'(lambda (stream char)
+          (declare (ignore char))
+          (list 'backquote (my-read-datum stream))))
+    (set-macro-character #\,
+      #'(lambda (stream char)
+          (declare (ignore char))
+            (case (my-peek-char stream)
+              (#\@ (my-read-char stream)
+                   (list *comma-atsign* (my-read-datum stream)))
+              (#\. (read-char stream t nil t)
+                   (list *comma-dot* (my-read-datum stream)))
+              (otherwise (list *comma* (my-read-datum stream))))))
+    (setq *underlying-sweet-readtable* *readtable*)
 
-  ; Now create the redirecting readtable.  The idea is that ANY input
-  ; will be redirected (through this table) eventually to t-expr and it-expr,
-  ; which process the indentation, and they'll call other procedures that
-  ; in turn will invoke *underlying-sweet-readtable*.
-  (compute-sweet-redirect-readtable)
-  (setq *readtable* *sweet-readtable*)
+    ; Now create the redirecting readtable.  The idea is that ANY input
+    ; will be redirected (through this table) eventually to t-expr and it-expr,
+    ; which process the indentation, and they'll call other procedures that
+    ; in turn will invoke *underlying-sweet-readtable*.
+    (compute-sweet-redirect-readtable)
+    (setq *readtable* *sweet-readtable*))
   (values))
 
 (defun sweet-read (&optional (stream *standard-input*))

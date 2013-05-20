@@ -52,7 +52,7 @@
 (cl:in-package :readable)
 
 (defvar *original-readtable* (copy-readtable) "Saved readtable")
-(defvar *readable-active* nil)
+(defvar *readable-active* nil "Value of the active readable notation")
 
 ; Utility functions to implement the simple infix system:
 
@@ -109,26 +109,31 @@
   (let ((result (read-delimited-list #\} stream t)))
     (process-curly result)))
 
-(defun setup-enable ()
+; Enable setup to transition into "into":
+; If we're already in mode "into" return false (nil) and do nothing.
+; Otherwise, get it ready to transition to the new mode and return true.
+(defun setup-enable (into)
   (cond
-    ((not *readable-active*)
+    ((eq *readable-active* into) nil) ; Do nothing.
+    ((not *readable-active*) ; In no mode at all, start with THIS readtable
       (setq *original-readtable* *readtable*)
       (setq *readtable* (copy-readtable))
-      (setq *readable-active* t))
-    (t
-      (setq *readtable* (copy-readtable *original-readtable*))))
-  (values))
+      (setq *readable-active* t)
+      t)
+    (t ; We are changing from one readable mode to another; recover readtable
+      (setq *readtable* (copy-readtable *original-readtable*))
+      t)))
 
 (defun enable-basic-curly ()
   ; Save old readtable:
-  (setup-enable)
-  ; The following install the {...} reader.
-  ; See "Common Lisp: The Language" by Guy L. Steele, 2nd edition,
-  ; pp. 542-548 and pp. 571-572.
-  ; Invoke curly-brace-infix-reader when opening curly brace is read in:
-  (set-macro-character #\{ #'curly-brace-infix-reader)
-  ; Necessary, else a cuddled closing brace will be part of an atom. ; (
-  (set-macro-character #\} (get-macro-character #\) nil))
+  (when (setup-enable 'basic-curly-infix)
+    ; The following install the {...} reader.
+    ; See "Common Lisp: The Language" by Guy L. Steele, 2nd edition,
+    ; pp. 542-548 and pp. 571-572.
+    ; Invoke curly-brace-infix-reader when opening curly brace is read in:
+    (set-macro-character #\{ #'curly-brace-infix-reader)
+    ; Necessary, else a cuddled closing brace will be part of an atom. ; (
+    (set-macro-character #\} (get-macro-character #\) nil)))
   (values))
 
 (defun disable-readable ()
@@ -143,3 +148,4 @@
         (*readable-active* *readable-active*))
     (enable-basic-curly)
     (read stream)))
+

@@ -6,9 +6,9 @@
 # in most circumstances it works well, and clisp has no better way
 # of disabling unnecessary escapes.
 
-# If you want to use local un-installed file, use this as:
-#    CL_SOURCE_REGISTRY="$PWD" sweet-clisp ...
-# where you can replace "$PWD" with the readable .lisp files' directory.
+# If you want to use local un-installed file, cd to dir with .lisp files and:
+#    CL_SOURCE_REGISTRY="$PWD" ./sweet-clisp ...
+# you can also replace "$PWD" with the readable .lisp files' directory.
 
 if [ $# -gt 0 ] ; then
 
