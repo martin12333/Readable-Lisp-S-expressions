@@ -34,6 +34,22 @@ This command requires clisp, and it also requires
 that asdf be set up properly for clisp.
 The interactive mode also requires a properly-installed "expect" command.
 .PP
+The
+.I sweet-clisp
+program is primarily intended for interactive use.
+If you're writing Common Lisp code in files, it is more portable
+to instead create ordinary ".lisp" files, and begin them early with:
+
+  (require "asdf")
+  (asdf:load-system :readable)
+  (readable:enable-sweet)
+
+.PP
+For maximum portability, you should also end each such file with:
+
+  (readable:disable-readable)
+
+.PP
 For more information, see
 http://readable.sourceforge.net.
 
@@ -52,10 +68,10 @@ None.
 .PP
 An example use might be the following:
 
-  sweet-clisp f.lisp
+  sweet-clisp f.slisp
 
 .PP
-The file f.lisp would be executed; it might contain:
+The file f.slisp would be executed; it might contain:
 
   defun fact (x)
     if {x < 1}
@@ -64,7 +80,7 @@ The file f.lisp would be executed; it might contain:
   princ fact(5)
 
 .PP
-If f.lisp does, thenn "120" should be displayed.
+If f.slisp does contain this, then "120" should be displayed.
 
 .SH "SEE ALSO"
 .PP
