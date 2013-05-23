@@ -148,7 +148,11 @@ You actually don't have to install it to use it, if you just want to play with i
 
     make install
 
-This will probably require privileges, so you may need to run "su" first or use sudo ("sudo make install") to get those privileges.
+If your system uses the "common-lisp-controller" (including Debian, Ubunutu, and Fedora), then run during *final* installation:
+
+    register-common-lisp-source readable
+
+Both of these commands will probably require privileges, so you may need to run "su" first or use sudo ("sudo make install") to get those privileges.
 
 It's a lot easier to use if you install it, but if you have not (or can't), the text below will explain how to work around that.
 
