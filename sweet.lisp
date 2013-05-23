@@ -99,7 +99,7 @@
   (member c initial-comment-eol))
 
 (defun my-peek-char (stream)
-  (let ((c (peek-char nil stream t nil my-eof-marker)))
+  (let ((c (peek-char nil stream nil my-eof-marker)))
     ; (princ "DEBUG: my-peek-char returned=") (write c) (terpri)
     c))
 (defun my-read-char (stream) (read-char stream t nil nil))
