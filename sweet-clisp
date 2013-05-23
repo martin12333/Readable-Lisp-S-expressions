@@ -24,7 +24,7 @@ if [ $# -gt 0 ] ; then
 COMMAND_SET
   cat -- "$origfile" >> "$commandfile"
 
-  clisp --quiet --quiet -v -v -modern "$commandfile"
+  clisp --quiet --quiet -modern "$commandfile"
 
   # Clean up.
   rm -fr "$commandfile"
