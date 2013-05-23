@@ -6,7 +6,7 @@
 # in most circumstances it works well, and clisp has no better way
 # of disabling unnecessary escapes.
 
-# If you want to use local un-installed file, cd to dir with .lisp files and:
+# If you want to use local un-installed file, cd to dir with .slisp files and:
 #    CL_SOURCE_REGISTRY="$PWD" ./sweet-clisp ...
 # you can also replace "$PWD" with the readable .lisp files' directory.
 
@@ -24,7 +24,7 @@ if [ $# -gt 0 ] ; then
 COMMAND_SET
   cat -- "$origfile" >> "$commandfile"
 
-  clisp --quiet --quiet -modern "$commandfile"
+  clisp --quiet --quiet -v -v -modern "$commandfile"
 
   # Clean up.
   rm -fr "$commandfile"
