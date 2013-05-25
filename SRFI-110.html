@@ -986,7 +986,7 @@ optionally followed by linefeed (U+000A), or a linefeed (U+000A)
 This is EOL_SEQUENCE in the BNF.
 Implementations <em>MAY</em>
 also recognize other end of line characters or sequences.</li>
-<li>line: A sequence of non-eol characters terminated by an eol sequence.
+<li>line: A sequence of 0+ non-eol characters terminated by an eol sequence.
 A sweet-expression reader <em>MAY</em> also support a final line without
 an eol sequence.
 The line terminator is not considered part of the line contents.</li>
@@ -2252,12 +2252,27 @@ a bigger effect than, say, Hindley-Milner type inference.
 </blockquote>
 
 <p>Other languages,
-including Python, Haskell, Occam, and Icon, use indentation to indicate
-structure, so this is a proven idea.  Other recently-developed languages
+including Python, Haskell, Occam, and F#, use syntactically-relevant
+indentation to indicate structure, so this is a proven idea.
+Other recently-developed languages
 like <a href="http://cobralang.com/docs/python/" rel="nofollow">Cobra</a>
 (a variant of Python with strong compile-time typechecking) have
 decided to use indentation too, so clearly indentation-sensitive
 languages are considered useful by many.</p>
+
+<!-- Icon was originally in this list, but it should not have been.
+"Icon does feature syntactically significant whitespace, in that
+newline can be used as alternative statement terminator,
+in place of a semicolon...
+But indentation is _never_ used for _grouping_ in Icon, which has
+the usual repertoire of braces, brackets, and parentheses and uses them
+pretty much as they are used in C. Indeed, as the Griswolds say on page 33
+of _The Icon programming language_ (third edition), "Even if braces are not
+necessary [because, as in C, they are optional when they enclose a single
+statement], using them helps avoid errors that may result from unexpected
+groupings in complicated expressions. Using braces to delimit expressions
+also can make programs easier to read - it is difficult for human beings
+to parse nested expressions." -->
 
 <p>
 One problem with indentation as syntactically relevant is that some
@@ -2282,7 +2297,7 @@ href="http://en.wikipedia.org/wiki/RTML" rel="nofollow">RTML</a> is
 implemented using Lisp, but uses indentation instead of parentheses to
 define structure.  RTML is a proprietary programming language that at
 least <em>was</em> used by Yahoo!&#8217;s Yahoo! Store and Yahoo! Site
-hosting products (though Yahoo may have transitioning away from it).
+hosting products (though Yahoo may have transitioned away from it).
 See <a href="http://lib.store.yahoo.net/lib/paulgraham/bbnexcerpts.txt">Paul
 Graham&#8217;s comments
 about the RTML language design</a> and <a
@@ -3286,8 +3301,8 @@ The same problem applies to PS, which is not used in practice.
 <p>
 CR by itself is obsolescent.
 However, CR by itself has been used on many historical systems,
-so we expect there are older files which still use it.
-Lone CR is permitted by various Scheme specifications,
+so we expect that there are older files which still use it.
+Lone CR <i>is</i> permitted by various Scheme specifications,
 and it is easy to implement too.
 Thus, we believe it is worth including in the specification.
 </p>
@@ -3303,7 +3318,7 @@ to kill CR/LF/CR+LF, which failed completely..."
 -->
 
 <p>
-Reversed LFCR does not happen in practice, and attempting to
+Reversed LFCR almost never happens in practice, and attempting to
 detect it triggers a bug in many versions of the
 guile implementation of Scheme.
 In many versions of guile, peek-char consumes (instead of just peeking)
@@ -3678,34 +3693,69 @@ This would require several levels of indentation
 without sublist, but they are easily handled with sublist.
 </p>
 <p>
-An example is
-scsh, which has functions like &#8220;run&#8221; that are applied to
-another list.
+This may be easiest to see with an example.
+The Scheme shell (scsh) has functions
+like &#8220;run&#8221; that take one parameter (another list) and
+apply them specially.
 With sublist, this is easily expressed.
-For example, here&#8217;s a sweet-expression using scsh:
+You can even try this out by using the &#8220;unsweeten&#8221; tool
+developed by the readable project and entering this
+(which allows sweet-expressions can be directly used
+to control the Scheme shell scsh):
 </p>
 <pre>
-  run $ grep |-v| "xx.*zz" &lt;(oldfile) &gt;(newfile)
+  unsweeten | scsh
+</pre>
+<p>
+For example, here&#8217;s a sweet-expression that could be typed into
+this and then executed using scsh:
+</p>
+<pre>
+  run $ grep -v "xx.*zz" &lt;(oldfile) &gt;(newfile)
 </pre>
 
 <p>
-(Oh, and a brief aside:
-For full Scheme standards compliance, you should escape any symbol
-beginning with &#8220;-&#8221; by surrounding it with |...|.
-One problem is that RnRS does not require support for <i>any</i>
-symbols that start with &#8220;-&#8221;,
-as they are not in the set of defined <code>&lt;initial&gt;</code>.
-Many actual Schemes in practice do support such symbols,
-including the sample implementation, but such code is not portable.
-Another problem is that
-&#8220;-i&#8221; is the negated square root of 1, so
-that specific option is especially awkward.
-The sample implementation supports |...|, so |-v| would work
-and comply with the latest standards.
-Note, however, that scsh does not yet directly support |...|.
+Oh, and a brief aside:
+There are some complications when combining symbols beginning with
+&#8220;-&#8221;, especially with older Scheme specifications.
 These issues have nothing to do with sweet-expressions,
-but we thought you should know about that.)
+but we thought you should know about them since they impact using
+Scheme as a shell (and sweet-expressions do make such uses easier):
 </p>
+<ol>
+<li>One specific problem is that
+&#8220;-i&#8221; is the negated square root of 1 in later versions of
+Scheme, so the
+specific option &#8220;-i&#8221; is awkward to portably refer to.
+</li>
+<li>
+The sample implementation, R6RS, and R7RS all support escaping
+symbol identifiers with |...|, so |-v| would work
+and comply with the later standards.
+However, R5RS does not require support for |...|, and scsh version 0.6.7
+does not provide support for |...|.
+(In scsh, -i is a symbol, not a number.)
+</li>
+<li>
+R5RS and R6RS do not require support for <i>any</i>
+symbols that directly start with &#8220;-&#8221;,
+other than &#8220;-&#8221; itself
+(as they are not in the set of defined <code>&lt;initial&gt;</code>).
+If you want full compliance with the R6RS Scheme standard,
+you should escape any multi-character symbol
+beginning with &#8220;-&#8221; by surrounding it with |...|.
+The R7RS specification does allow symbols to be directly written
+in most cases beginning with &#8220;-&#8221;
+(e.g., if followed by a letter or a dash), with the exception of
+&#8220;-i&#8221;, so in most cases options do not require escaping
+to be portable in R7RS.
+In fact, many actual Schemes in practice do support such symbols,
+even if they do not claim to implement R7RS.
+Note that the sample implementation permit symbols beginning with
+&#8220;-&#8221;; if the sequence of characters is not a number, it is
+considered a symbol.
+</li>
+</ol>
 
 <p>SUBLIST also makes certain idioms possible.
 For instance,
