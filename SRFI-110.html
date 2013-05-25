@@ -199,6 +199,7 @@ define fibfast(n)   ; Typical function notation
   <li><a href="#single-item-sublist">Why is <code>a $ b</code> equivalent to <code>(a b)</code> rather than <code>(a (b))</code>?</a></li>
   <li><a href="#collecting-lists">Collecting lists (&lt;* ... *&gt;)</a></li>
   <li><a href="#reserved">Reserved marker ($$$)</a></li>
+  <li><a href="#line-continuation">Line Continuation</a></li>
   </ul>
   </li>
   <li><a href="#comparisons">Comparisons to other notations</a>
@@ -4198,6 +4199,47 @@ must be escaped (e.g., using {...}) if it is used in an
 indentation-processing context.
 </p>
 
+<h3 id="line-continuation">Line Continuation</h3>
+<p>
+Sweet-expressions do not, at this time, include a line continuation
+mechanism.
+</p>
+
+<p>
+One could be easily added.
+One approach would be to consider &#8220;.&#8221; at the beginning
+of a line, with expressions after it,
+as meaning &#8220;this continues the previous line&#8221;.
+Another approach would be to interpret &#8220;\\&#8221; at the
+end of a line (after at least one n-expression)
+as a line continuation; we even
+have a draft BNF construction that would do that:
+</p>
+<pre>
+...
+it_expr returns [Object v]
+  : head
+    (options {greedy=true;} : (
+     GROUP_SPLIT hspace* /* Not initial; interpret as split */
+      (options {greedy=true;} :
+        // To allow \\ EOL as line-continuation, instead do:
+        //   comment_eol same more=it_expr {$v = (append $head $more)}
+        comment_eol error
+</pre>
+
+<p>
+However,
+we&#8217;ve tried to <i>minimize</i> the number of mechanisms in the notation,
+and there didn&#8217;t seem to be a strong use case for line continutations.
+If the sub-components have structure you can just use
+indentation as intended,
+and if it&#8217;s just a long list of items, using
+parentheses to surround a list works just fine.
+There were also concerns by some
+that &#8220;\\&#8221; at the end of a line would be confusing.
+It would be easy to add &#8220;\\&#8221; as a line continuation in some future
+version if it proves to be necessary.
+</p>
 
 <h2 id="comparisons">Comparisons to other notations</h2>
 <p>
