@@ -2204,7 +2204,7 @@ see s-expressions as long-winded, and advocate for the use of
 underlying s-expression notation.
 Sweet-expressions take this approach.
 </p>
-<h3 id="why-indent">Why should indentation be syntactically relevant?</h3>
+<h3 id="why-indent">Why should indentation be syntactically meaningful?</h3>
 
 <p>
 Making indentation syntactically meaningful eliminates many
@@ -2239,27 +2239,96 @@ If you need special
 tools to work around problems with the notation, then the notation itself
 is a problem.</p>
 
-<p>A solution, of course, is to make the indentation
-actually matter: Now you don&#8217;t need an endless march of parentheses, and
-indentation can&#8217;t be confusing because it is actually used.</p>
+<p>
+A solution, of course, is to make the indentation actually matter.
+Then you don&#8217;t need an endless march of parentheses, and
+indentation can&#8217;t be confusing because it is actually used.
+In this SRFI we will call this approach
+"syntactically-meaningful indentation".
+A related term is the
+"<a href="https://en.wikipedia.org/wiki/Off-side_rule">off-side rule</a>"
+(from
+<a href="http://web.archive.org/web/20070417180907/http://www.cs.utah.edu/~eeide/compilers/old/papers/p157-landin.pdf">
+"The Next 700 Programming Languages" by P. J. Landin,
+<i>Communications of the ACM</i>,
+Volume 9 / Number 3, March 1966</a>,
+describing the ISWIM (If you See What I Mean) language family).
+The original definition of the off-side rule,
+per Landin's paper,
+is a very specific form of syntactically-meaningful indentation:
+"southeast quadrant that just contains the
+phrase's first symbol must contain the entire
+phrase, except possibly for bracketed subsegments."
+However, the term "off-side rule"
+is often used today a broader meaning,
+e.g., that a block is expressed by indentation.
+We'll use the term
+"syntactically-meaningful indentation"
+to avoid confusion.
+</p>
 
 <p>&#8220;In
 praise of mandatory indentation...&#8221; notes that it can be <em>helpful</em>
 to have mandatory indentation:</p>
-<blockquote> <p>It hurts me to say
+<blockquote>
+<p>It hurts me to say
 that something so shallow as requiring a few extra spaces can have
 a bigger effect than, say, Hindley-Milner type inference.
 - <a href="http://okasaki.blogspot.com/2008/02/in-praise-of-mandatory-indentation-for.html">Chris Okasaki</a></p>
 </blockquote>
 
-<p>Other languages,
-including Python, Haskell, Occam, and F#, use syntactically-relevant
-indentation to indicate structure, so this is a proven idea.
-Other recently-developed languages
-like <a href="http://cobralang.com/docs/python/" rel="nofollow">Cobra</a>
-(a variant of Python with strong compile-time typechecking) have
-decided to use indentation too, so clearly indentation-sensitive
-languages are considered useful by many.</p>
+<p>
+Using syntactically-meaningful indentation is a proven idea.
+Programming languages that use syntactically-meaningful indentation include
+<a href="http://www.python.org/">Python</a>
+(the <a href="http://www.tiobe.com/index.php/tiobe_index">
+eighth most popular programming language in the May 2013 TIOBE index</a>),
+<a href="http://www.haskell.org">Haskell</a>,
+Occam, F#, and
+<a href="http://cobralang.com/docs/python/" rel="nofollow">Cobra</a>
+(a variant of Python with strong compile-time typechecking).
+Notations for data and documents that use syntactically-meaningful
+indentation include <a href="http://www.yaml.org/">YAML</a>,
+the lists and quotations of
+<a href="http://daringfireball.net/projects/markdown/">Markdown</a> and
+<a href="http://docutils.sourceforge.net/rst.html">reStructuredText</a>.
+The triumvirate preprocessors of
+<a href="http://haml.info/">HAML</a> (to generate HTML),
+<a href="http://sass-lang.com/">Sass</a> (to generate CSS),
+and
+<a href="http://coffeescript.org/">Coffeescript</a>
+(to generate JavaScript)
+also use syntactically-meaningful indentation.
+The Wikipedia article
+<a href="https://en.wikipedia.org/wiki/Off-side_rule">off-side rule</a>
+lists additional notations with
+syntactically-meaningful indentation.
+</p>
+
+<p>
+The StructuredText markup notation also has syntactically-meaningful
+notation, and potentially serves as a cautionary tale that
+mechanisms other than indentation are needed in a practical notation.
+As noted in
+<a href="http://docutils.sourceforge.net/docs/dev/rst/problems.html">
+"Problems With StructuredText" </a>,
+"The original StructuredText and StructuredTextNG require that
+section structure be indicated through indentation,
+as 'inspired by Python'.
+For certain structures with a very limited,
+local extent (such as lists, block quotes, and literal blocks),
+indentation naturally indicates structure or hierarchy.
+For sections (which may have a very large extent),
+structure via indentation is unnecessary, unnatural and ambiguous."
+However, the authors of that commentary did not abandon
+syntactically-meaningful notation.
+Instead, when they created reStructuredText, they 
+retained syntactically-meaningful notation
+but added a different special notation for sections.
+Sweet-expressions is also a syntactically-meaningful notation, but
+its collecting list notation enables users to
+avoid having indentations with very long extents.
+</p>
 
 <!-- Icon was originally in this list, but it should not have been.
 John David Stone:
@@ -2277,11 +2346,12 @@ also can make programs easier to read - it is difficult for human beings
 to parse nested expressions." -->
 
 <p>
-One problem with indentation as syntactically relevant is that some
+Another historical
+problem with indentation as syntactically relevant is that some
 transports drop leading space and tab characters.
 As discussed in the
 <a href="#indentation-characters">indentation characters</a> section,
-we have solved this as well.
+we have solved this by adding "!" as an indentation character.
 </p>
 
 <p>There&#8217;s a lot of
