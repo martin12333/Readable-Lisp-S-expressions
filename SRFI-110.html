@@ -2225,23 +2225,12 @@ nearly all programming languages have grouping symbols.
 For example, languages with C-like syntax often use {...} to surround
 statement groups, and (...) are widely used to group infix operators
 in expressions.
-</p>
-
-<p>
 The problem with Lisp s-expression notation is that parentheses
 (and possibly other paired characters)
 are the <i>only</i> way to group constructs,
 <i>and</i> that almost <i>every</i> construct requires a grouping construct.
-This repeated use of pairs can make it difficult for humans
-to visually tell when different constructs end.
-People can visually match 2, or maybe 3 pairs, but not 10 or 12.
-The problem is not primarily when every expression is closed;
-the problem is primarily when some but not all expressions are closed.
-For example, a human reader must often determine
-which expression a given datum is part of;
-this is difficult if it is preceded by 7 closing parentheses
-with 5 more parentheses still to be closed
-(should it have been 8 and 4 instead of 7 and 5?).
+As a result, Lisp programs have a large number of parentheses,
+far more than many developers prefer.
 </p>
 
 <p>
@@ -2259,9 +2248,13 @@ indenting to follow the parens, I want the parens to follow the indenting.
 The indenting I can see, and can see is correct.&#8221;</p>
 
 <p>An IDE can help keep the
-indentation consistent with the parentheses, but
+indentation consistent with the parentheses,
+and editing modes are certainly helpful when reading and modifying
+Lisp programs.
+But
 <a href="http://www.recursivity.com/blog/2012/10/28/ides-are-a-language-smell/">needing IDEs to use a language</a>
 is considered by some a language smell.
+After all, a good IDE can support a good notation too.
 If you need special tools to work around problems
 with the notation, then the notation itself is a problem.
 </p>
