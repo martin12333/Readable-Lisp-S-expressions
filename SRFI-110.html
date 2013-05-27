@@ -2214,8 +2214,8 @@ Sweet-expressions take this approach.
 <p>
 Current Lisp syntax is widely mocked in the software development community;
 as noted above, lisp is sometimes called
-"lots of irritating superflous parentheses".
-Even Lisp's creator, John McCarthy,
+&#8220;lots of irritating superflous parentheses&#8221;.
+Even Lisp&#8217;s creator, John McCarthy,
 did not intend for s-expressions to be used directly by developers.
 </p>
 
@@ -2267,7 +2267,7 @@ with the notation, then the notation itself is a problem.
 </p>
 
 <p>
-Some obvious "solutions" do not work well enough:
+Some obvious &#8220;solutions&#8221; do not work well enough:
 </p>
 <ol>
 <li>
@@ -2278,21 +2278,21 @@ But in practice this does not seem to work well;
 relatively few people use these alternatives in practice, and no one
 claims that the result is as readable as other languages (e.g., Python).
 Part of the problem may be that (), [], and {}
-aren't visually distinct enough.
-It's worth noting that R7RS-small drops supporting [...]
+aren&#8217;t visually distinct enough.
+It&#8217;s worth noting that R7RS-small drops supporting [...]
 as a requirement, so clearly
-there's no groundswell of support for [...] as a synonym for (...).
+there&#8217;s no groundswell of support for [...] as a synonym for (...).
 </li>
 <li>
 We could define a fixed syntax that is tailored to fixed language semantics.
-That is the "usual way" this problem is solved
+That is the &#8220;usual way&#8221; this problem is solved
 in other languages,
 and when these languages are used in their anticipated domain,
 this works well.
 But Lisps are often used for symbol manipulation,
 where symbols may actually be for a domain-specific language
 and where you can easily create new meanings (via macros).
-So this "usual solution" doesn't well work for Lisps
+So this &#8220;usual solution&#8221; doesn&#8217;t well work for Lisps
 (without giving up some of the reasons for using a Lisp in the first place).
 </li>
 </ol>
