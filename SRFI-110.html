@@ -2237,11 +2237,11 @@ to visually tell when different constructs end.
 People can visually match 2, or maybe 3 pairs, but not 10 or 12.
 The problem is not primarily when every expression is closed;
 the problem is primarily when some but not all expressions are closed.
-For example,
-it can be difficult for a reader to determine
-which expression a datum is part of when there are 7 closing
-parentheses but 5 more outstanding (should it have been 8 and 4 instead
-of 7 and 5?).
+For example, a human reader must often determine
+which expression a given datum is part of;
+this is difficult if it is preceded by 7 closing parentheses
+with 5 more parentheses still to be closed
+(should it have been 8 and 4 instead of 7 and 5?).
 </p>
 
 <p>
@@ -2326,6 +2326,10 @@ the computers) in sync.
 By making the indentation (which humans depend on)
 actually used by the computer as well,
 they are automatically kept in sync.
+Syntactically-meaningful indentation complements parentheses nicely;
+we find that people naturally use indentation to show
+the larger structure of an expression, and then use a few
+parentheses to show its &#8220;leaves&#8221;.
 </p>
 
 <p>
