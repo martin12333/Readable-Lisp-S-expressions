@@ -2208,18 +2208,41 @@ see s-expressions as long-winded, and advocate for the use of
 underlying s-expression notation.
 Sweet-expressions take this approach.
 </p>
+
 <h3 id="why-indent">Why should indentation be syntactically meaningful?</h3>
 
 <p>
-Making indentation syntactically meaningful eliminates many
-parentheses, eliminating the need for humans to keep track of them.
-Real Lisp programs are already indented anyway;
-currently tools (like editors and pretty-printers) are used to try to
-keep the indentation (used by humans) and parentheses (used by
-the computers) in sync.
-By making the indentation (which humans depend on)
-actually used by the computer as well,
-they are automatically kept in sync.</p>
+Current Lisp syntax is widely mocked in the software development community;
+as noted above, lisp is sometimes called
+"lots of irritating superflous parentheses".
+Even Lisp's creator, John McCarthy,
+did not intend for s-expressions to be used directly by developers.
+</p>
+
+<p>
+The problem is not the existence of grouping symbols;
+nearly all programming languages have grouping symbols.
+For example, languages with C-like syntax often use {...} to surround
+statement groups, and (...) are widely used to group infix operators
+in expressions.
+</p>
+
+<p>
+The problem with Lisp s-expression notation is that parentheses
+(and possibly other paired characters)
+are the <i>only</i> way to group constructs,
+<i>and</i> that almost <i>every</i> construct requires a grouping construct.
+This repeated use of pairs can make it difficult for humans
+to visually tell when different constructs end.
+People can visually match 2, or maybe 3 pairs, but not 10 or 12.
+The problem is not primarily when every expression is closed;
+the problem is primarily when some but not all expressions are closed.
+For example,
+it can be difficult for a reader to determine
+which expression a datum is part of when there are 7 closing
+parentheses but 5 more outstanding (should it have been 8 and 4 instead
+7 and 5?).
+</p>
 
 <p>
 <a href="http://www.gregslepak.com/on-lisps-readability">On
@@ -2239,14 +2262,73 @@ The indenting I can see, and can see is correct.&#8221;</p>
 indentation consistent with the parentheses, but
 <a href="http://www.recursivity.com/blog/2012/10/28/ides-are-a-language-smell/">needing IDEs to use a language</a>
 is considered by some a language smell.
-If you need special
-tools to work around problems with the notation, then the notation itself
-is a problem.</p>
+If you need special tools to work around problems
+with the notation, then the notation itself is a problem.
+</p>
 
 <p>
-A solution, of course, is to make the indentation actually matter.
-Then you don&#8217;t need an endless march of parentheses, and
-indentation can&#8217;t be confusing because it is actually used.
+Some obvious "solutions" do not work well enough:
+</p>
+<ol>
+<li>
+We can add another character pair.
+Scheme R6RS did this by adding [...].
+Some implementations also allow {...}.
+But in practice this does not seem to work well;
+relatively few people use these alternatives in practice, and no one
+claims that the result is as readable as other languages (e.g., Python).
+Part of the problem may be that (), [], and {}
+aren't visually distinct enough.
+It's worth noting that R7RS-small drops supporting [...]
+as a requirement, so clearly
+there's no groundswell of support for [...] as a synonym for (...).
+</li>
+<li>
+We could define a fixed syntax that is tailored to fixed language semantics.
+That is the "usual way" this problem is solved
+in other languages,
+and when these languages are used in their anticipated domain,
+this works well.
+But Lisps are often used for symbol manipulation,
+where symbols may actually be for a domain-specific language
+and where you can easily create new meanings (via macros).
+So this "usual solution" doesn't well work for Lisps
+(without giving up some of the reasons for using a Lisp in the first place).
+</li>
+</ol>
+
+<p>
+Thankfully, making indentation syntactically meaningful
+can be general; that is,
+it does <i>not</i> need to be tied to any particular semantic.
+A notation where indentation is syntactically meaningful
+can also be homoiconic.
+As noted earlier, a Lisp notation needs to be
+<em>general</em> and <em>homoiconic</em>.
+Yet indentation can represent complexly-nested structures
+<i>and</i> do it in a way that is
+visually distinct from parentheses.
+An indentation-sensitive approach is also
+easy to define in a way that retains backwards compatibility.
+</p>
+
+<p>
+Making indentation syntactically meaningful eliminates many
+parentheses, making it much simpler for humans to determine
+which datums are in which expression.
+Lisp programs <i>already</i> use indentation to show structure,
+indeed, developers in nearly all languages already
+use indentation to show structure even when it is ignored by
+the underlying system.
+Currently tools (like editors and pretty-printers) are used to try to
+keep the indentation (used by humans) and parentheses (used by
+the computers) in sync.
+By making the indentation (which humans depend on)
+actually used by the computer as well,
+they are automatically kept in sync.
+</p>
+
+<p>
 In this SRFI we will call this approach
 &#8220;syntactically-meaningful indentation&#8221;.
 A related term is the
@@ -2263,23 +2345,13 @@ is a very specific form of syntactically-meaningful indentation:
 &#8220;southeast quadrant that just contains the
 phrase&#8217;s first symbol must contain the entire
 phrase, except possibly for bracketed subsegments.&#8221;
-However, the term &#8220;off-side rule&#8221;
-is often used today a broader meaning,
-e.g., that a block is expressed by indentation.
-We&#8217;ll use the term
+The term &#8220;off-side rule&#8221;
+is often used today with a broader meaning.
+But to avoid confusion,
+we&#8217;ll use the term
 &#8220;syntactically-meaningful indentation&#8221;
-to avoid confusion.
+to make it clear that we mean to use the more general approach.
 </p>
-
-<p>&#8220;In
-praise of mandatory indentation...&#8221; notes that it can be <em>helpful</em>
-to have mandatory indentation:</p>
-<blockquote>
-<p>It hurts me to say
-that something so shallow as requiring a few extra spaces can have
-a bigger effect than, say, Hindley-Milner type inference.
-- <a href="http://okasaki.blogspot.com/2008/02/in-praise-of-mandatory-indentation-for.html">Chris Okasaki</a></p>
-</blockquote>
 
 <p>
 Using syntactically-meaningful indentation is a proven idea.
@@ -2361,6 +2433,16 @@ As discussed in the
 <a href="#indentation-characters">indentation characters</a> section,
 we have solved this by adding &#8220;!&#8221; as an indentation character.
 </p>
+
+<p>&#8220;In
+praise of mandatory indentation...&#8221; notes that it can be <em>helpful</em>
+to have mandatory indentation:</p>
+<blockquote>
+<p>It hurts me to say
+that something so shallow as requiring a few extra spaces can have
+a bigger effect than, say, Hindley-Milner type inference.
+- <a href="http://okasaki.blogspot.com/2008/02/in-praise-of-mandatory-indentation-for.html">Chris Okasaki</a></p>
+</blockquote>
 
 <p>There&#8217;s a lot of
 past work on indentation to represent s-expressions.
