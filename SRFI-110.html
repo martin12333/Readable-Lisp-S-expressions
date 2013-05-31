@@ -2270,11 +2270,16 @@ Some implementations also allow {...}.
 But in practice this does not seem to work well;
 relatively few people use these alternatives in practice, and no one
 claims that the result is as readable as other languages (e.g., Python).
+Scheme R7RS-small dropped supporting [...],
+with a strong vote against them
+(out of 15 voters, 11 voted against supporting [...]).
+<!--
+The votes were reported by John Cowan on the srfi-110 mailing list
+on 2013-05-28, subject "Re: sweet-expressions are not homoiconic".
+-->
 Part of the problem may be that (), [], and {}
-aren&#8217;t visually distinct enough.
-It&#8217;s worth noting that R7RS-small drops supporting [...]
-as a requirement, so clearly
-there&#8217;s no groundswell of support for [...] as a synonym for (...).
+aren&#8217;t visually distinct enough to be helpful, but regardless
+of the the reason, there is clearly no groundswell supporting them.
 </li>
 <li>
 We could define a fixed syntax that is tailored to fixed language semantics.
