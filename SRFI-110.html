@@ -1249,13 +1249,12 @@ Here are the key BNF productions for sweet-expressions:
 // FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
 
 collecting_tail returns [Object v]
-  : it_expr more=collecting_tail {$v = cons($it_expr.v, $more.v);}
-  | comment_eol    retry1=collecting_tail {$v = $retry1.v;}
+  : it_expr more=collecting_tail {(cons $it_expr $more)}
+  | comment_eol    retry1=collecting_tail {$retry1}
   | INITIAL_INDENT /* Initial indent only allowed for lcomment */
-    LCOMMENT EOL   retry2=collecting_tail {$v = $retry2.v;}
-  | (FF | VT)+ EOL retry3=collecting_tail {$v = $retry3.v;}
-  | COLLECTING_END {$v = null;} ;
-
+    LCOMMENT EOL   retry2=collecting_tail {$retry2}
+  | (FF | VT)+ EOL retry3=collecting_tail {$retry3}
+  | COLLECTING_END {'()} ;
 
 // Process line after ". hspace+" sequence.  Does not go past current line.
 post_period returns [Object v]
