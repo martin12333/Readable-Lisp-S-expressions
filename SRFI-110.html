@@ -1039,8 +1039,10 @@ the mode changes back to indentation processing.
 &#8220;;&#8221; immediately follows the indentation, the line is skipped
 &mdash; with the indentation completely ignored &mdash;
 and the following line is examined instead.</li>
-<li>If the indentation is equal to top, no extra symbol is generated
-(this is called &#8220;same&#8221;).</li>
+<li>If the indentation is equal to top, no extra symbol is generated.
+The BNF identifies where this will match using the
+&#8220;same&#8221; non-terminal, but
+&#8220;same&#8221; is empty.</li>
 <li>If the indentation is longer than top, and top is a prefix of indentation,
 the indentation is pushed onto the indentation stack
 and the symbol <code>INDENT</code> is generated.</li>
@@ -1167,7 +1169,7 @@ fragment EOL_SEQUENCE : ('\r' '\n'? | '\n');
 
 // Comments. LCOMMENT=line comment, scomment=special comment.
 LCOMMENT :       ';' NOT_EOL_CHARS ; // Line comment - doesn't include EOL
-BLOCK_COMMENT : '#|' // This is #| ... #|
+BLOCK_COMMENT : '#|' // This is #|...|#
       (options {greedy=false;} : (BLOCK_COMMENT | .))* '|#' ;
 DATUM_COMMENT_START : '#;' ;
 // SRFI-105 notes that "implementations could trivially support
