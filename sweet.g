@@ -465,11 +465,10 @@ UNQUOTE        : ',';
 fragment EOL_CHAR : '\n' | '\r' ;
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
 fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
-fragment EOL_SEQUENCE : ('\r' '\n'? | '\n');
 
 // Comments. LCOMMENT=line comment, scomment=special comment.
 LCOMMENT :       ';' NOT_EOL_CHARS ; // Line comment - doesn't include EOL
-BLOCK_COMMENT : '#|' // This is #| ... #|
+BLOCK_COMMENT : '#|' // This is #|...|#
       (options {greedy=false;} : (BLOCK_COMMENT | .))* '|#' ;
 DATUM_COMMENT_START : '#;' ;
 // SRFI-105 notes that "implementations could trivially support
@@ -488,6 +487,8 @@ SHARP_BANG_DIRECTIVE : '#!' (('a'..'z'|'A'..'Z'|'_')
                     ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')*)? (SPACE|TAB)* ;
 
 // STOP INCLUDING IN SRFI
+
+fragment EOL_SEQUENCE : ('\r' '\n'? | '\n');
 
 // Specially handle formfeed (\f) and vertical tab (\v).
 // We support lone formfeeds on a line to support the GNU Coding Standards
