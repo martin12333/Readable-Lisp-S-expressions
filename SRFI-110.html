@@ -201,6 +201,7 @@ define fibfast(n)   ; Typical function notation
   <li><a href="#traditional-abbreviations">Traditional abbreviations</a></li>
   <li><a href="#sublist">Sublist ($)</a></li>
   <li><a href="#single-item-sublist">Why is <code>a $ b</code> equivalent to <code>(a b)</code> rather than <code>(a (b))</code>?</a></li>
+  <li><a href="#why-specific-symbols">Why specifically use <code>$</code> for SUBLIST, and <code>\\</code> for the two behaviors GROUP and SPLIT?</a></li>
   <li><a href="#collecting-lists">Collecting lists (&lt;* ... *&gt;)</a></li>
   <li><a href="#reserved">Reserved marker ($$$)</a></li>
   <li><a href="#line-continuation">Line Continuation</a></li>
@@ -4133,6 +4134,186 @@ if SUBLIST always created a list
 even in the case that the right-hand side
 is a single datum.
 </p>
+
+<h3 id="why-specific-symbols">
+Why specifically use <code>$</code> for SUBLIST,
+and <code>\\</code> for the two behaviors GROUP and SPLIT?
+</h3>
+
+<p>
+<a href="http://srfi.schemers.org/srfi-110/mail-archive/msg00174.html">
+On 2013-05-27,
+</a>
+John David Stone posted on the SRFI-110 mailing list that,
+&#8220;there is nothing about
+the <code>\\</code> and <code>$</code> symbols
+that represents the corresponding syntactic structures,
+and indeed <code>\\</code> is used
+in two completely different ways,
+depending on context.
+It even has two different names,
+GROUP and SPLIT,
+as if to emphasize the impossibility
+of making the same symbol
+serve as an icon
+for two unlike syntactic operations.
+&#8221;
+</p>
+<p>
+As it happens, both symbols were chosen
+by the same author (Alan Manuel K. Gloria),
+and he had already posted the rationales
+<a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg00404.html">for using <code>$</code> for SUBLIST</a>,
+as well as
+<a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg00329.html">for using <code>\\</code> for GROUP and SPLIT</a>,
+on the readable-discuss mailinglist
+where this notation
+and the SRFI-105 notation
+were initially developed.
+</p>
+<p>
+For SUBLIST, one basically considers "zooming in"
+on the <code>$</code> symbol,
+while looks a little like this:
+</p>
+<pre>
+  (|   &lt;-- open parenthesis
+   |)  &lt;-- close parenthesis
+</pre>
+<p>
+This visual pun is largely due
+to the common behavior
+that <code>a $ b c</code>
+will magically insert
+a pair of open and close parentheses.
+Of course,
+<code>a $ b</code> will
+not insert parentheses,
+but the reason for this
+<a href="#single-item-sublist">was explained in the previous section</a>.
+</p>
+<p>
+For GROUP/SPLIT,
+the main reason for merging
+the two &#8220;unlike&#8221; behaviors
+GROUP and SPLIT
+into a single symbol
+is because of the following
+reversible transformation:
+</p>
+<table border="1" cellpadding="4">
+<tr><th>SPLIT</th><th>GROUP</th></tr>
+<tr>
+<td>
+<pre>
+:foo \\ bar
+</pre>
+</td>
+<td>
+<pre>
+:foo
+\\  bar
+</pre>
+</td>
+</tr>
+</table>
+<p>
+This reversible transformation
+is useful for keywords.
+While the Scheme standard
+does not have keywords,
+they are idiomatic
+in some implementations &mdash;
+notably Guile &mdash;
+and are idiomatic
+in other Lisp-like languages &mdash;
+notably Common Lisp.
+Here is an example
+of defining a class in Guile's GOOPS:
+</p>
+<pre>
+define-class &lt;player&gt; (&lt;game-object&gt;)
+  owned
+    #:allocation \\ #:virtual
+    #:slot-ref
+    \\  lambda (pl)
+          player-owned pl
+    #:slot-set!
+    \\  lambda (_ __)
+          error "attempt to change 'owned slot of &lt;player&gt;." _ __
+</pre>
+<p>The exact symbol <code>\\</code>
+was chosen because
+there were four
+expected use cases,
+summarized below:
+</p>
+<table border="1" cellpadding="4">
+<tr><th>Use Case</th><th>Example</th><th>Why <code>\\</code></th></tr>
+<tr>
+<td>Lists of lists</td>
+<td><pre>
+let
+  \\
+  ! foo $ compute 'foo
+  ! bar $ compute 'bar
+  { foo + bar }
+</pre></td>
+<td><p>The <code>\\</code> points
+to the lower right,
+where the list elements are.
+</p></td>
+</tr>
+<tr>
+<td>Denoting keyword values</td>
+<td><pre>
+keyworded-function
+  :keyword
+  \\ compute 'keyword-value
+</pre></td>
+<td><p>Think of the <code>\\</code>
+as a &#8220;rounded edge&#8221;
+directing an invisible, bent line
+from the bottom of the keyword
+that turns 90 degrees to point
+to its attached value.</p>
+<pre>
+:keyword
+|
+\\-&gt; compute 'keyword-value
+</pre></td>
+</tr>
+<tr>
+<td>Separate elements on a single line</td>
+<td><pre>
+display "Hello, " \\ display player \\ newline()
+</pre></td>
+<td><p>The <code>\\</code> is almost like
+a vertical bar
+separating the elements.</p></td>
+</tr>
+<tr>
+<td>Alternative for denoting empty line</td>
+<td><pre>
+define foo(x)
+  \\
+  define bar(y)
+    compute 'bar x y
+  \\
+  compute 'foo bar x
+</pre></td>
+<td><p>
+The <code>\\</code> is
+almost like a vertical bar
+pointing downwards.
+Arguably the comment <code>;</code>
+is superior for this usage,
+but the option exists
+for whatever rhetorical reason
+users might find.
+</p></td>
+</tr>
+</table>
 
 <h3 id="collecting-lists">Collecting lists (&lt;* ... *&gt;)</h3>
 <p>
