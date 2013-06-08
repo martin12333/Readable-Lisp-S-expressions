@@ -970,7 +970,7 @@ abbrev_no_w returns [Object v]
   | UNQUOTE         {$v = "unquote";};
 
 abbrev_all returns [Object v]
-  : abbrevw         {$v = $abbrevw.v;}
+  : abbrevw hspace* {$v = $abbrevw.v;}
   | abbrev_no_w     {$v = $abbrev_no_w.v;} ;
 
 // Production "n_expr" is a full neoteric-expression as defined in SRFI-105.
