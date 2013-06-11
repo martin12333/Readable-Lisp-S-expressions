@@ -1106,7 +1106,7 @@ body returns [Object v]
 // support "*>" as the non-first element so that the "head" can end
 // without a literal EOL, e.g., as in "let <* y 5 *>".
 
-it_expr returns [Object v]
+normal_it_expr returns [Object v] 
   : head
     (options {greedy=true;} : (
      GROUP_SPLIT hspace* /* Not initial; interpret as split */
@@ -1121,10 +1121,14 @@ it_expr returns [Object v]
      | comment_eol // Normal case, handle child lines if any:
        (INDENT children=body {$v = append($head.v, $children.v);}
         | /*empty*/          {$v = monify($head.v);} /* No child lines */ )
-    // If COLLECTING_END doesn't generate multiple tokens, can do:
-    // | /*empty*/           {$v = monify($head.v);}
-     ))
-  | (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
+     // If COLLECTING_END doesn't generate multiple tokens, can do:
+     // | /*empty*/           {$v = monify($head.v);}
+     )) ;
+
+// An it_expr with a special prefix like \\ or $:
+
+special_it_expr returns [Object v]
+  : (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
       (group_i=it_expr {$v = $group_i.v;} /* Ignore initial GROUP/scomment */
        | comment_eol
          (INDENT g_body=body {$v = $g_body.v;} /* Normal GROUP use */
@@ -1141,6 +1145,10 @@ it_expr returns [Object v]
        | ai=it_expr
          {$v=list($abbrevw.v, $ai.v);} ) ;
 
+it_expr returns [Object v]
+  : normal_it_expr   {$v=$normal_it_expr.v;}
+  | special_it_expr  {$v = $special_it_expr.v;} ;
+
 // Production "t_expr" is the top-level production for sweet-expressions.
 // This production handles special cases, then in the normal case
 // drops to the it_expr production.
@@ -1155,13 +1163,13 @@ it_expr returns [Object v]
 // fire again on the next invocation, doing the right thing.
 
 t_expr returns [Object v]
-  : comment_eol    retry1=t_expr {$v=$retry1.v;}
-  | (FF | VT)+ EOL retry2=t_expr {$v=$retry2.v;}
-  | (INITIAL_INDENT | hspaces_maybe_bang) /* initial indent */
+  : comment_eol    retry1=t_expr {$v=$retry1.v;} // Skip initial blank lines
+  | (FF | VT)+ EOL retry2=t_expr {$v=$retry2.v;} // Skip initial FF|VT lines
+  | (INITIAL_INDENT | hspaces_maybe_bang) // Process initial indent
     (n_expr {$v = $n_expr.v;}
      | (scomment (options {greedy=true;} : hspace)*
        sretry=t_expr {$v=$sretry.v;})
      | comment_eol retry3=t_expr {$v=$retry3.v;} )
-  | EOF {generate_eof();} /* End of file */
+  | EOF {generate_eof();} // End of file
   | it_expr {$v = $it_expr.v;} /* Normal case */ ;
 
