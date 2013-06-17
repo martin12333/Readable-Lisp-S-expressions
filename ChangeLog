@@ -1,3 +1,15 @@
+2013-06-17 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Release of readable software version 0.9.1
+	  - Fixes Common Lisp tutorial, in particular, an
+	    "enable-sweet" was incorrectly "enable-neoteric" making all
+	    later text not work if you followed the tutorial exactly :-(.
+	  - Many improvements to draft SRFI-110.html
+	  - Presentation readable-s-expressions.odp has more Common Lisp info
+	    and nicer formatting
+	  - Common Lisp implementation improvements, e.g.,
+	    better handling of EOF, examples no longer use our own ASDF,
+	    and enable-... have better performance if already enabled.
+
 2013-05-09 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Release of readable software version 0.9.0
 	  - Adds a Common Lisp implementation (which was transliterated
