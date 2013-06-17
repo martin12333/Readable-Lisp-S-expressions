@@ -1,32 +1,45 @@
 #!/bin/sh
+# sweet-clisp [FILE]
 
 # By David A. Wheeler. Start up clisp in "sweet-expression" reading mode,
 # so you can try it out.  Setting *print-escape* isn't ideal, but
-# in most circumstances it works out.
+# in most circumstances it works well, and clisp has no better way
+# of disabling unnecessary escapes.
 
-# NOTE: For now, this assumes that the current directory has the
-# readable library *.lisp and *.asd files, and that tests/my-asdf.lisp
-# has a valid asdf implementation.  That way, we can ensure that we
-# run the current developmental version, not what's installed (if anything).
+# If you want to use local un-installed file, cd to dir with .slisp files and:
+#    CL_SOURCE_REGISTRY="$PWD" ./sweet-clisp ...
+# you can also replace "$PWD" with the readable .lisp files' directory.
 
-# This uses "cat", so readline won't work properly.  In compensation,
-# you can redirect files into this and have it execute.
+if [ $# -gt 0 ] ; then
 
-(
-cat << COMMAND_SET
-(load "tests/my-asdf.lisp")
+  origfile="$1"
+  shift
+
+  commandfile="$(mktemp)"
+  cat > "$commandfile" << COMMAND_SET
+(require "asdf")
 (asdf:load-system :readable)
 (setq *print-escape* nil)
 (readable:enable-sweet)
 COMMAND_SET
+  cat -- "$origfile" >> "$commandfile"
 
-if which stdbuf > /dev/null 2> /dev/null ; then
-  stdbuf -oL cat "$@"
+  clisp --quiet --quiet -modern "$commandfile"
+
+  # Clean up.
+  rm -fr "$commandfile"
+
 else
-  cat "$@"
-fi
 
-printf "\n\n"  # Ensure it ends on newlines.
-) | \
- CL_SOURCE_REGISTRY="$PWD" "/usr/bin/clisp" -lp "$PWD" -modern
+  expect -c "
+    spawn -noecho clisp --quiet --quiet -modern
+    send \"
+      (require \\\"asdf\\\")
+      (asdf:load-system :readable)
+      (setq *print-escape* nil)
+      (readable:enable-sweet)\n\n\"
+    interact
+ "
+
+fi
 

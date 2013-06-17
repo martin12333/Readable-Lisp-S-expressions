@@ -86,12 +86,28 @@ If you plan to use the development (not stable) version, you'll also need:
 
 You should be running on a POSIX system; if you use Windows, you may need to install Cygwin first. Any modern GNU/Linux system will do nicely.
 
+ASDF
+----
+
+You'll need Another System Definition Facility (asdf), which is usually included in your Common Lisp implementation.  If you don't already have it, you can download it here:  http://common-lisp.net/project/asdf/
+
+The clisp of Cygwin does not (as of this writing) include asdf.  For that, download the asdf.lisp file, then install asdf on clisp for this user by doing:
+
+    mkdir -p ~/lisp/asdf
+    cp asdf.lisp ~/lisp/asdf
+    clisp
+    (load (compile-file "asdf.lisp"))
+    (exit)
+
+After this point '(require "asdf")' will work.
+
+
 Download and prepare to configure
 -----------------------------------
 
 First, download the latest version of the demo and related files and get them ready to configure.
 
-At the time of this writing, the "stable" version doesn't strongly support Common Lisp.  Eventually it will.  To get the current "stable" version, browse http://readable.sourceforge.net - click on "download files" - and download the current version.  Then uncompress and cd into them, e.g., at the command line:
+To get the current "stable" version, browse http://readable.sourceforge.net - click on "download files" - and download the current version.  Then uncompress and cd into them, e.g., at the command line:
 
      tar xvzf readable-*.tar.gz
      cd readable-*
@@ -132,7 +148,11 @@ You actually don't have to install it to use it, if you just want to play with i
 
     make install
 
-This will probably require privileges, so you may need to run "su" first or use sudo ("sudo make install") to get those privileges.
+If your system uses the "common-lisp-controller" (including Debian, Ubunutu, and Fedora), then run during *final* installation:
+
+    register-common-lisp-source readable
+
+Both of these commands will probably require privileges, so you may need to run "su" first or use sudo ("sudo make install") to get those privileges.
 
 It's a lot easier to use if you install it, but if you have not (or can't), the text below will explain how to work around that.
 
@@ -272,7 +292,7 @@ It's actually quite common to have a function call pass one parameter, where the
 
 Just like traditional s-expressions, spaces separate parameters, so it's *important* that there be *no* space between the function name and the opening "(". Since spaces separate parameters, a space between the function name and the opening "(" would create two parameters instead of a single function call. The same is basically true for traditional s-expressions, too; (a b) and (ab) are not the same thing.
 
-Here's the real rule: in neoteric-expressions, e(...) maps to (e ...), e{} maps to (e), other e{...} maps to (e {...}), e[ ... ] maps to ($bracket-apply$ e), and (. e) maps to e. The "$bracket-apply$" is so that you can write a macro to access arrays and other mappings.  The (. e) rule lets you escape expressions (e.g., for the sweet-expressions we'll describe next).  Note that "neoteric-expressions" used be called "modern-expressions"; you may see some older documents using that name.
+Here's the real rule: in neoteric-expressions, e(...) maps to (e ...), e{} maps to (e), other e{...} maps to (e {...}), e[ ... ] maps to ($bracket-apply$ e), and (. e) maps to e. The "$bracket-apply$" is so that you can write a macro to access arrays and other mappings.  The (. e) rule lets you escape expressions (e.g., for the sweet-expressions we'll describe next).  Note that "neoteric-expressions" used to be called "modern-expressions"; you may see some older documents using that name.
 
 The advantage of full-curly-infix is that it is totally and completely compatible with traditional s-expressions (since traditional s-expressions do not define what happens inside {...} anyway).  Enable-neoteric can, in extremely unlikely scenarios, cause expressions to be interpreted differently... but they let you use n-expressions directly.
 
@@ -307,7 +327,7 @@ Using Sweet-expressions (t-expressions)
 
 Sweet-expressions take neoteric-expressions and infers parentheses from indentation.  You can enable neoteric-expressions by running:
 
-    (readable:enable-neoteric)
+    (readable:enable-sweet)
 
 In sweet-expressions:
 

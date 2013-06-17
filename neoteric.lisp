@@ -325,104 +325,104 @@
 ;;; Enablers
 
 (defun enable-neoteric ()
-  (setup-enable)
-  (setq *neoteric-underlying-readtable* (copy-readtable))
-  (set-macro-character #\{ #'neoteric-curly-brace nil
-    *neoteric-underlying-readtable*) ; (
-  (set-macro-character #\} (get-macro-character #\)) nil
-    *neoteric-underlying-readtable*)
-  (unless (get-macro-character #\[ )
-    (set-macro-character #\[ #'wrap-paren nil
-      *neoteric-underlying-readtable*))
-  (unless (get-macro-character #\] ) ; (
-    (set-macro-character #\] (get-macro-character #\) ) nil
-      *neoteric-underlying-readtable*))
+  (when (setup-enable 'neoteric)
+    (setq *neoteric-underlying-readtable* (copy-readtable))
+    (set-macro-character #\{ #'neoteric-curly-brace nil
+      *neoteric-underlying-readtable*) ; (
+    (set-macro-character #\} (get-macro-character #\)) nil
+      *neoteric-underlying-readtable*)
+    (unless (get-macro-character #\[ )
+      (set-macro-character #\[ #'wrap-paren nil
+        *neoteric-underlying-readtable*))
+    (unless (get-macro-character #\] ) ; (
+      (set-macro-character #\] (get-macro-character #\) ) nil
+        *neoteric-underlying-readtable*))
 
-  ; Wrap all constituents.  Presume ASCII for now.
-  ; TODO: Don't wrap if they aren't constituents any more.
-  (dolist (c *constituents*)
-    (set-macro-character c #'wrap-read-n-tail nil))
+    ; Wrap all constituents.  Presume ASCII for now.
+    ; TODO: Don't wrap if they aren't constituents any more.
+    (dolist (c *constituents*)
+      (set-macro-character c #'wrap-read-n-tail nil))
 
-  ; We need to do this so symbols starting with an escape will work:
-  (set-macro-character #\\ #'wrap-read-n-tail nil)
-  (set-macro-character #\| #'wrap-read-n-tail nil)
+    ; We need to do this so symbols starting with an escape will work:
+    (set-macro-character #\\ #'wrap-read-n-tail nil)
+    (set-macro-character #\| #'wrap-read-n-tail nil)
 
-  ; This ensures that "hi"(5) => ("hi" 5)
-  (set-macro-character #\" #'wrap-read-n-tail nil)
+    ; This ensures that "hi"(5) => ("hi" 5)
+    (set-macro-character #\" #'wrap-read-n-tail nil)
 
-  ; Wrap character pairs.
-  (set-macro-character #\( #'wrap-paren nil) ; )
-  (set-macro-character #\{ #'neoteric-curly-brace nil) ; (
-  (set-macro-character #\} (get-macro-character #\) ) nil)
-  (unless (get-macro-character #\[ )
-    (set-macro-character #\[ #'wrap-paren nil)) ; (
-  (unless (get-macro-character #\] )
-    (set-macro-character #\] (get-macro-character #\) ) nil))
+    ; Wrap character pairs.
+    (set-macro-character #\( #'wrap-paren nil) ; )
+    (set-macro-character #\{ #'neoteric-curly-brace nil) ; (
+    (set-macro-character #\} (get-macro-character #\) ) nil)
+    (unless (get-macro-character #\[ )
+      (set-macro-character #\[ #'wrap-paren nil)) ; (
+    (unless (get-macro-character #\] )
+      (set-macro-character #\] (get-macro-character #\) ) nil))
 
-  ; Now deal with dispatch macro char; we'll just deal with default "#".
-  ; set-dispatch-macro-character disp-char sub-char function
-  ;                              &optional readtable 
-  ;    Where "function" takes parameters (stream char arg).
-  ; get-dispatch-macro-character disp-char sub-char &optional readtable
-  ; See: http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node191.html
-  ;
-  ; How we wrap it depends on what will follow the macro char construct:
-  ; - Datums-to-follow like #+ and #;.  No change; the default
-  ;   neoteric readtable already handles datums.
-  ; - Undefined or "signals error" - no change.
-  ; - "Special-meaning" like #x.  These aren't followed by a datum. Instead,
-  ;   this is a sequence of characters that represents some special value.
-  ;   These characters (including the characters that started them)
-  ;   are read until a delimiter, put in a string, and read from the string.
-  ;   The result is then processed specially to look for
-  ;   a neoteric tail.  That way, constructs like "#xa(#xb)" work and are
-  ;   distinguished from  "#xa (#xb)". Use #'wrap-dispatch-disabled-tail.
-  ;
-  ; See Common Lisp hyperspec section 2.4.8
-  ; http://www.lispworks.com/documentation/HyperSpec/Body/02_dh.htm
-  ; Below is every standard # macro character syntax (except undefined
-  ; and signals error), in order (note the "debatable" ones):
+    ; Now deal with dispatch macro char; we'll just deal with default "#".
+    ; set-dispatch-macro-character disp-char sub-char function
+    ;                              &optional readtable 
+    ;    Where "function" takes parameters (stream char arg).
+    ; get-dispatch-macro-character disp-char sub-char &optional readtable
+    ; See: http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node191.html
+    ;
+    ; How we wrap it depends on what will follow the macro char construct:
+    ; - Datums-to-follow like #+ and #;.  No change; the default
+    ;   neoteric readtable already handles datums.
+    ; - Undefined or "signals error" - no change.
+    ; - "Special-meaning" like #x.  These aren't followed by a datum. Instead,
+    ;   this is a sequence of characters that represents some special value.
+    ;   These characters (including the characters that started them)
+    ;   are read until a delimiter, put in a string, and read from the string.
+    ;   The result is then processed specially to look for
+    ;   a neoteric tail.  That way, constructs like "#xa(#xb)" work and are
+    ;   distinguished from  "#xa (#xb)". Use #'wrap-dispatch-disabled-tail.
+    ;
+    ; See Common Lisp hyperspec section 2.4.8
+    ; http://www.lispworks.com/documentation/HyperSpec/Body/02_dh.htm
+    ; Below is every standard # macro character syntax (except undefined
+    ; and signals error), in order (note the "debatable" ones):
 
-  ;   ##      = reference to #= label    - Intentionally not wrapped
-  ;   #'      = function abbreviation    - Intentionally not wrapped
-  ;   #(...)  = vector                   - Intentionally not wrapped
-  ;   #*      = bit-vector               - Special-meaning, wrapped
-  (set-dispatch-macro-character #\# #\* #'wrap-dispatch-disabled-tail)
-  ;   #,      = (was) load-time eval [Steele] - Intentionally not wrapped
-  ;   #0..9   = used for infix arguments - Can't really wrap anyway.
-  ;   #:      = uninterned symbol        - Special-meaning, wrapped
-  (set-dispatch-macro-character #\# #\* #'wrap-dispatch-disabled-tail)
-  ;   #;      = datum comment (extension)- Intentionally not wrapped
-  ;   #=      = label following object   - Intentionally not wrapped
-  ;   #\char  = character object         - Special-meaning, wrapped
-  (set-dispatch-macro-character #\# #\\ #'wrap-dispatch-special-read-tail)
-  ;   #|...|# = balanced comment         - Intentionally not wrapped
-  ;   #+      = read-time conditional    - Intentionally not wrapped
-  ;   #-      = read-time conditional    - Intentionally not wrapped
-  ;   #.      = read-time evaluation     - Intentionally not wrapped
-  ;   #A,#a   = array                    - Not currently wrapped (debatable).
-  ;   #B,#b   = binary rational          - Special-meaning, wrapped
-  (set-dispatch-macro-character #\# #\B #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\b #'wrap-dispatch-disabled-tail)
-  ;   #C,#c   = complex number           - Not currently wrapped (debatable).
-  ;             Complex numbers, because of their format, are tricky to wrap,
-  ;             and there's no compelling reason to do so.
-  ;   #O,#o   = octal rational           - Special-meaning, wrapped
-  (set-dispatch-macro-character #\# #\O #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\o #'wrap-dispatch-disabled-tail)
-  ;   #P,#p   = pathname                 - Not wrapped currently (debatable).
-  ;             In the future this might be wrapped for #p"hi"(5), but
-  ;             it's not obvious it would ever be used that way.
-  ;   #R,#r   = radix-n rational         - Special-meaning, wrapped
-  (set-dispatch-macro-character #\# #\R #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\r #'wrap-dispatch-disabled-tail)
-  ;   #S,#s   = structure                - Not currently wrapped (debatable).
-  ;   #X,#x   = hexadecimal rational     - Special-meaning, wrapped
-  (set-dispatch-macro-character #\# #\X #'wrap-dispatch-disabled-tail)
-  (set-dispatch-macro-character #\# #\x #'wrap-dispatch-disabled-tail)
+    ;   ##      = reference to #= label    - Intentionally not wrapped
+    ;   #'      = function abbreviation    - Intentionally not wrapped
+    ;   #(...)  = vector                   - Intentionally not wrapped
+    ;   #*      = bit-vector               - Special-meaning, wrapped
+    (set-dispatch-macro-character #\# #\* #'wrap-dispatch-disabled-tail)
+    ;   #,      = (was) load-time eval [Steele] - Intentionally not wrapped
+    ;   #0..9   = used for infix arguments - Can't really wrap anyway.
+    ;   #:      = uninterned symbol        - Special-meaning, wrapped
+    (set-dispatch-macro-character #\# #\* #'wrap-dispatch-disabled-tail)
+    ;   #;      = datum comment (extension)- Intentionally not wrapped
+    ;   #=      = label following object   - Intentionally not wrapped
+    ;   #\char  = character object         - Special-meaning, wrapped
+    (set-dispatch-macro-character #\# #\\ #'wrap-dispatch-special-read-tail)
+    ;   #|...|# = balanced comment         - Intentionally not wrapped
+    ;   #+      = read-time conditional    - Intentionally not wrapped
+    ;   #-      = read-time conditional    - Intentionally not wrapped
+    ;   #.      = read-time evaluation     - Intentionally not wrapped
+    ;   #A,#a   = array                    - Not currently wrapped (debatable).
+    ;   #B,#b   = binary rational          - Special-meaning, wrapped
+    (set-dispatch-macro-character #\# #\B #'wrap-dispatch-disabled-tail)
+    (set-dispatch-macro-character #\# #\b #'wrap-dispatch-disabled-tail)
+    ;   #C,#c   = complex number           - Not currently wrapped (debatable).
+    ;             Complex numbers, because of their format, are tricky to wrap,
+    ;             and there's no compelling reason to do so.
+    ;   #O,#o   = octal rational           - Special-meaning, wrapped
+    (set-dispatch-macro-character #\# #\O #'wrap-dispatch-disabled-tail)
+    (set-dispatch-macro-character #\# #\o #'wrap-dispatch-disabled-tail)
+    ;   #P,#p   = pathname                 - Not wrapped currently (debatable).
+    ;             In the future this might be wrapped for #p"hi"(5), but
+    ;             it's not obvious it would ever be used that way.
+    ;   #R,#r   = radix-n rational         - Special-meaning, wrapped
+    (set-dispatch-macro-character #\# #\R #'wrap-dispatch-disabled-tail)
+    (set-dispatch-macro-character #\# #\r #'wrap-dispatch-disabled-tail)
+    ;   #S,#s   = structure                - Not currently wrapped (debatable).
+    ;   #X,#x   = hexadecimal rational     - Special-meaning, wrapped
+    (set-dispatch-macro-character #\# #\X #'wrap-dispatch-disabled-tail)
+    (set-dispatch-macro-character #\# #\x #'wrap-dispatch-disabled-tail)
 
-  ; Save in separate variable, so "sweet" can just create its own if needed
-  (setq *neoteric-readtable* *readtable*)
+    ; Save in separate variable, so "sweet" can just create its own if needed
+    (setq *neoteric-readtable* *readtable*))
 
   (values))
 
@@ -438,11 +438,11 @@
       processed-result)))
 
 (defun enable-full-curly-infix ()
-  (setup-enable)
-  ; Invoke curly-brace-infix-reader when opening curly brace is read in:
-  (set-macro-character #\{ #'full-curly-brace-infix-reader) ; (
-  ; This is necessary, else a cuddled closing brace will be part of an atom:
-  (set-macro-character #\} (get-macro-character #\) nil))
+  (when (setup-enable 'full-curly-infix)
+    ; Invoke curly-brace-infix-reader when opening curly brace is read in:
+    (set-macro-character #\{ #'full-curly-brace-infix-reader) ; (
+    ; This is necessary, else a cuddled closing brace will be part of an atom:
+    (set-macro-character #\} (get-macro-character #\) nil)))
   (values)) ; Meaning "Did it"
 
 (defun enable-curly-infix ()

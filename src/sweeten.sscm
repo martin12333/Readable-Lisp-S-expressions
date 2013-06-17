@@ -700,6 +700,7 @@ define read-symbol-elements(port)
         !     cons
         !       read-inline-hex-escape port
         !       read-symbol-elements port
+        !   #t cons(c2 read-symbol-elements(port)) ; Use c2 for unknown.
       #t cons(c read-symbol-elements(port))
 
 
@@ -727,7 +728,37 @@ define get-barred-symbol(port)
         cons #\| read-literal-symbol(port)
         read-symbol-elements port
 
+define read-cl-string-as-list(port)
+  let <* c $ read-char port *> $ cond
+    eof-object?(c)
+      read-error "EOF inside string literal"
+    eqv?(c #\")
+      '()  ; Done reading string.
+    eqv?(c #\\)
+      let <* c2 $ read-char port *> $ cond
+        eof-object?(c2)
+          read-error "EOF after \\ in string"
+        ; The following intentionally do NOT follow the Common Lisp spec,
+        ; under the theory that someone who writes "\n" in a CL string
+        ; almost certainly means "newline" and not the character n.
+        ; After all, "n" doesn't need escaping in the fist place.
+        ; We could greatly extend this, if appropriate. However,
+        ; since every extension disobeys the spec, I've only added a few
+        ; extensions that are most likely to be used.
+        eqv?(c2 #\t)
+          cons integer->char(9) read-cl-string-as-list(port)
+        eqv?(c2 #\n)
+          cons integer->char(10) read-cl-string-as-list(port)
+        eqv?(c2 #\r)
+          cons integer->char(13) read-cl-string-as-list(port)
+        #t
+          cons c2 read-cl-string-as-list(port)
+    #t
+      cons c read-cl-string-as-list(port)
 
+define read-cl-string(port)
+  read-char port ; Consume double-quote.
+  list->string $ read-cl-string-as-list port
 
 define default-scheme-read read
 
@@ -736,10 +767,12 @@ define my-read(port)
   let* <* pos $ get-sourceinfo port \\ c $ peek-char port *>
     cond
       eof-object?(c) c
-      char=?(c #\") default-scheme-read(port)
+      char=?(c #\")
+        if common-lisp
+          read-cl-string port
+          default-scheme-read port
       #t
-        attach-sourceinfo
-          pos
+        attach-sourceinfo pos
           cond
             char=?(c #\#)
               read-char port

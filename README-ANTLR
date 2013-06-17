@@ -1,0 +1,75 @@
+Why did we use ANTLR?
+=====================
+
+We have used ANTLR to develop and analyze a BNF grammar for
+sweet-expressions.  For example, we ensured that it's LL(1),
+because that form is much easier to implement across a wide variety
+of implementations (including recursive descent parsers) as
+well as being very efficient.  ANTLR can detect ambiguities
+(which we want to avoid where possible, and if they must occur,
+we want to ensure that they are resolved in a reasonable
+and deterministic way).  Currently there are no ambiguities.
+
+
+ANTLR-based grammar
+===================
+
+The "sweet.g" file contains a BNF for sweet-expressions in ANTLR v3 format.
+You can use the ANTLRWorks IDE to manipulate it.
+It is designed to generate Java, so you need a Java compiler and a
+proper CLASSPATH setting to use it.
+
+The "easy" way to use it is to download ANTLRWorks as a ".jar" file, and
+store it in this directory.
+
+Make sure the CLASSPATH includes (1) the jar file ANTLR or ANTLRWorks and
+(2) the "output" subdirectory.
+In ANTLRWorks, you may want to select File/Preferences, "Compiler" tab,
+and create a custom Classpath that includes these absolute directory names
+(separated by ";" in Windows or ":" everywhere else).
+
+You can generate Java class files from ANTLRWorks using
+"Generate/Generate files".  Then go to the "output" subdirectory.
+You need to compile and then run ("go.bat" does this for Windows;
+"go" runs on Linux/Unix/Cygwin, and also does a test run).
+
+A typical use process is:
+1. Run "ANTLRWorks", e.g., "java antlrworks-*.jar"
+2. Edit (and save) as you wish.
+   - Run Grammar/Check Grammar to do quick checks.
+   - You can use Run/Debug to debug; this can generate helpful parse trees.
+3. To create an executable, select "Generate/Generate code".
+   Then on command line, "cd output" and "./go"
+   which will also run some tests.
+
+External tool: ANTLRWorks
+===================
+
+The ANTLR BNF was developed using ANTLRworks version 1.4.3.
+If you wish to edit or generate files from it, it is known
+to work with file "antlrworks-1.4.3.jar" with the following attributes:
+Bytes 3588307
+MD5 9638f9b7b1b823fcaba977f06f0dd761
+SHA-1 f7974cf14ac19c3aa1841ee88c6d2dcbad89af01
+SHA-512 99374a96b541f09367af56bf704601204a6abb658ae9400776da15b4cae0e98674ee2a812d34ebad8a3fcfcde90087d031379ff88a3bd5acf02ddeaea924197b
+
+ANTLRWorks 1.4.3 is available from:
+http://www.antlr3.org/works/
+in particular from:
+http://www.antlr3.org/download/
+The ANTLRWorks GUI is released under the BSD 3-clause license,
+and it includes the ANTLR tool version 3.4, which is also
+released under the BSD 3-clause license:
+http://www.antlr3.org/license.html
+IF you cannot find a copy, check:
+http://sourceforge.net/projects/readable/files/
+
+
+For more information
+===================
+
+For more information, see:
+  http://readable.sourceforge.net
+
+Discussions are held on the mailing list.
+

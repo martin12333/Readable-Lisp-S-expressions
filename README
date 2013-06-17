@@ -1,13 +1,14 @@
-Readable Lisp S-expressions Project
-===================================
+Readable Lisp S-expressions ("readable")
+========================================
 
-This software improves the readability of Lisp S-expressions, by
-implementing three tiers of additional abbreviations in S-expressions.
+This "readable" software improves the readability of Lisp S-expressions
+by adding up to three tiers of new s-expression abbreviations.
 These tiers are (oversimplified):
-1. Curly-infix-expressions (c-expressions): Lists surrounded by {...} are
-   interpreted as infix notation, in a Lispy way.
-2. Neoteric-expressions (n-expressions): An e(...) is interpreted as
-   (e ...), an e{...} is interpreted as e({...}).
+
+1. Curly-infix-expressions (c-expressions): Lists with {...} are infix, in a
+   Lispy way: {a op b ...} maps to (op a b ...). No precedence, by intent.
+2. Neoteric-expressions (n-expressions): An e(...) maps to
+   (e ...), and e{...} with content maps to e({...}).
 3. Sweet-expressions (t-expressions): Parentheses are deduced from indentation:
    - An indented line is a parameter of its parent.
    - Later terms on a line are parameters of the first term.
@@ -15,37 +16,50 @@ These tiers are (oversimplified):
    - Empty lines end the previous expression. Just type ENTER ENTER
      to execute what you've typed.
 
-Well-formatted traditional s-expressions continue to be read in normally,
-so you only need to use the abbreviations when you find them useful.
+Unlike nearly all past efforts to improve s-expression readability, these
+are general (the notation is independent from any underlying semantic)
+and homoiconic (the underlying data structure is clear from the syntax).
+They are also backwards-compatible; well-formatted traditional
+s-expressions continue work normally.  Thus, it's easy to transition to
+these, and you can use traditional forms whenever it's convenient.
 
-For more information, see: http://readable.sourceforge.net.
-In particular, see the [Tutorial], [Solution], and other pages on the wiki.
-
-Lisp-based languages where this software can be helpful include Common Lisp,
-Scheme (including guile), Emacs Lisp, Clojure, Arc, BitC, ACL2,
-SUO-KIF, the GCC MiddleEndLispTranslator (MELT),
+Lisp-based languages where this approach or software can be helpful
+include Scheme (including guile), Common Lisp, Emacs Lisp, Clojure, Arc,
+BitC, ACL2, SUO-KIF, the GCC MiddleEndLispTranslator (MELT),
 Satisfiability Modulo Theories Library (SMT-LIB), NewLisp, and ISLisp.
+For Scheme these notations are defined in SRFI-105 and SRFI-110.
+At this time, the tools focus on Scheme and Common Lisp, but
+some of the tools can be easily used with many other Lisps.
 
-The tools provided here primarily handle Scheme and Common Lisp.
-By default the "sweeten" and "unsweeten" tools process Scheme;
-If you have Common Lisp, provide the "-C" (Common Lisp) option as documented.
+For more information, see:
+  http://readable.sourceforge.net
+
+
+Example
+=======
+
+Here is an example of a sweet-expression:
+
+define fibfast(n)   ; Typical function notation
+  if {n < 2}        ; Indentation, infix {...}
+     n              ; Single expr = no new list
+     fibup n 2 1 0  ; Simple function calls
+
+That sweet-expression would be interpreted as:
+
+(define (fibfast n)
+  (if (< n 2)
+      n
+      (fibup n 2 1 0)))
+
+A sweet-expression reader would accept *either* one.
 
 
 Maturity
-=======================
+========
 
-This code is *mature* and *production-ready* for Scheme, especially
-guile Scheme.  It's been extensively tested, and comes with
-a large regression test suite, and is based on a specially-analyzed grammar.
-The intent is for Scheme implementations to use this code as a starting
-point to embed the reader into their code... but the code can also be used
-as a pre-processor so that you can use these notations today.
-
-The code is *prototype-level* and *less mature* for Common Lisp.
-If you're careful to stay within its limitations, it works, but the
-Common Lisp capabilities are not as mature as Scheme.
-Please contact us if you're interested in helping us mature
-the Common Lisp implementation.
+This code is *mature* and *production-ready*, and comes with an
+extensive test suite.
 
 
 License
@@ -59,8 +73,8 @@ license, and by the FSF (fsf.org) as a Free software license.
 See the COPYING file for the license text.
 
 
-Building and Installing
-=======================
+Getting, building, and installing
+=================================
 
 This software supports the usual GNU Build System conventions.
 Here are the steps, spelled out.
@@ -92,7 +106,8 @@ As usual, configure.  To accept all the defaults, installing to /usr/local:
 
     ./configure
 
-If you want it to install to /usr (e.g., programs go in /usr/bin):
+If you want it to install to /usr (e.g., programs go in /usr/bin),
+which many will want:
 
     ./configure --prefix=/usr
 
@@ -102,7 +117,8 @@ Now build the code.
 
     make
 
-You can optionally run the testsuite; it's a very good idea:
+You can optionally run the testsuite; it's a very good idea (you need
+guile, clisp, a correctly-installed adsf, and expect to run the tests):
 
     make check
 
@@ -114,191 +130,67 @@ But it's often more convenient to install.  Do this with:
 
     make install
 
-Scheme
-======
 
-See the tutorial (scheme-tutorial.md) for how to use it.
+Scheme Tutorial
+==============
 
-Common Lisp
-===========
+File "scheme-tutorial.md" is the Scheme tutorial on how to use it.
 
-See the Common Lisp tutorial (common-lisp-tutorial.md) for how to use it.
 
-The Common Lisp implementation creates a package :readable
-and uses the usual ASDF system.  Use "make install" to install the files;
-by default they'll go in the usual global directory
+Common Lisp Tutorial
+====================
+
+File "common-lisp-tutorial.md" is the Common Lisp tutorial for how to use it.
+
+The Common Lisp implementation creates a package :readable and uses the
+usual ASDF system.  A "make install" puts files in the usual place,
 $PREFIX/share/common-lisp/source (where $PREFIX is /usr/local by default).
 
-If you have asdf, just run (require 'asdf).
+You need ASDF.  Most Common Lisp users already have that ready to go.
+If you don't have it, get it here:
+  http://common-lisp.net/project/asdf/
+Cygin's clisp doesn't have asdf by default; you can install it with:
+  mkdir -p ~/lisp/asdf
+  cp asdf.lisp ~/lisp/asdf
+  clisp
+  (load (compile-file "asdf.lisp"))
+  (exit)
 
-If you don't have ASDF installed and configured (why?),
-the "tests/" directory has an ASDF version 3 "my-asdf.lisp" you can use.
 Configure ASDF so it knows what directories to look at, e.g.,
 put this in file "/etc/common-lisp/source-registry.conf":
-(:source-registry
-  (:tree (:home "cl")) ;; will expand to e.g. "/home/joeluser/cl/"
-  (:tree "/usr/share/common-lisp/source/")
-  :inherit-configuration)
+ (:source-registry
+   (:tree (:home "cl")) ;; will expand to e.g. "/home/joeluser/cl/"
+   (:tree "/usr/share/common-lisp/source/")
+   :inherit-configuration)
 Alternatively, you can set the environment variable CL_SOURCE_REGISTRY, e.g.,
 to set the environment variable to the current directory and run sbcl:
 CL_SOURCE_REGISTRY="`realpath .`" sbcl
 
-Now fire up a Common Lisp (e.g., "clisp") and run:
-(load "tests/my-asdf.lisp") ; or (require 'asdf)
-(asdf:load-system :readable)
-(use-package :readable)
-(enable-basic-curly)
+Now fire up a Common Lisp (e.g., "clisp" or "sbcl") and run:
+ (require 'asdf) ; or (load "tests/my-asdf.lisp")  if asdf isn't installed.
+ (asdf:load-system :readable)
+ (readable:enable-basic-curly) ; or enable-sweet or whatever.
 
 ; now you can do:
 {3 + 4}
 
 
 
-ANTLR-based grammar
-===================
+Transitioning
+=============
 
-The "sweet.g" file contains a BNF for sweet-expressions in ANTLR v3 format.
-You can use the ANTLRWorks IDE to manipulate it.
-It is designed to generate Java, so you need a Java compiler and a
-proper CLASSPATH setting to use it.
+The "sweeten" tool is a pretty-printer that translates
+s-expressions to sweet-expressions.  You can use "sweeten" to create a file,
+hand-tweak the result to make it "prettier", and then use "diff-s-sweet"
+to verify that your newly-formatted file has exactly the same meaning.
 
-The "easy" way to use it is to download ANTLRWorks as a ".jar" file, and
-store it in this directory.
+The "unsweeten" tool can be used as a sweet-expression pre-processor,
+so you can use these notations even if your Lisp implementation does not
+yet support them.
 
-Make sure the CLASSPATH includes (1) the jar file ANTLR or ANTLRWorks and
-(2) the "output" subdirectory.
-In ANTLRWorks, you may want to select File/Preferences, "Compiler" tab,
-and create a custom Classpath that includes these absolute directory names
-(separated by ";" in Windows or ":" everywhere else).
-
-You can generate Java class files from ANTLRWorks using
-"Generate/Generate files".  Then go to the "output" subdirectory.
-You need to compile and then run ("go.bat" does this for Windows;
-"go" runs on Linux/Unix/Cygwin, and also does a test run).
-
-A typical use process is:
-1. Run "ANTLRWorks", e.g., "java antlrworks-*.jar"
-2. Edit (and save) as you wish.
-   - Run Grammar/Check Grammar to do quick checks.
-   - You can use Run/Debug to debug; this can generate helpful parse trees.
-3. To create an executable, select "Generate/Generate code".
-   Then on command line, "cd output" and "./go"
-   which will also run some tests.
-
-Key files
-=========
-
-Some of the key files are:
-
-## Installed:
-
-Executables:
-
-*   unsweeten: A filter that reads in (from stdin) a file of
-    sweet-expressions, and outputs sweet-expressions.  You can use this
-    in "makefiles" so that you can write files using sweet-expressions.
-    MIT license.
-*   sweeten: A filter that reads in s-expressions (Scheme format) from
-    standard in, and generates sweet-expressions on standard out.
-    This makes it much easier to transition to sweet-expressions.
-    MIT license.
-*   diff-s-sweet: A program that tells you if 2 files are semantically
-    different.  When transitioning to sweet-expressions, run "sweeten" and
-    then this tool if you want to confirm that everything's okay. MIT license.
-*   neoteric-guile: Start up guile, but use neoteric-expressions to
-    interact with it. MIT license.
-*   sweet-guile: Start up guile, but use sweet-expressions to interact
-    with it. MIT license.
-
-Documentation:
-
-*   README: This file.
-*   solution.md: A description of the notations this project implements.
-    See the project website for the current version of this.
-*   scheme-tutorial.md: A tutorial (Scheme-focused).
-    See the project website for a current version of this.
-*   common-lisp-tutorial.md: A tutorial (Common-Lisp-focused).
-    See the project website for a current version of this.
-*   src/sweeten.sscm: An example of code written using sweet-expressions.
-*   "man pages"
-
-The spec-* files need to be updated (volunteers welcome).  For now, see
-"solution.md" for the real specification.
-
-## Not Installed:
-
-*   src/kernel.scm: An implementation of the three notation tiers
-    curly-infix-read, neoteric-read, and sweet-read.  Implemented in the
-    Guile dialect of Scheme; it includes hooks for other dialects.  This is
-    installed into the "readable" site directory of guile. MIT license.
-*   src/sweeten.sscm: The source of the "sweeten" program.  It's written
-    in Scheme using sweet-expressions, so if you want to see what
-    sweet-expressions look like, well, here's an example.
-*   readable.cl: Formerly named "curly-infix.cl".  This is Common Lisp
-    code to implement this.  On load, the reader readtable is modified
-    to implement curly-infix in lists surrounded by {...}.
-    The curly-infix implementation is fine and ready to go.
-    There is an initial neoteric-read implementation, but it's not
-    ready for full use yet (help wanted!).
-    To try it out, run your implentation (e.g., clisp), then:
-      (load "readable.cl")
-*   SRFI-105.html - The SRFI defining curly-infix-expressions for Scheme
-*   SRFI-110.html - The draft SRFI defining sweet-expressions for Scheme
-
-Key directories
-===============
-
-src/      - Most source files
-bin/      - Generated command (script) files for installation
-readable/ - Guile library (generated, don't edit these)
-tests/    - Test scripts and test cases
-
-The "src/" directory holds most of the source code.
-A "make" will generate files in the top dir, bin/ directory, and the
-readable/ directory.  The generated files in the top directory are
-scripts designed to invoke the locally-built readable library, even if
-there's another one installed.
-
-File suffixes are:
-.cl    - Common Lisp
-.lisp  - Common Lisp
-.scm   - Scheme
-.sscm  - Sweet-Scheme; Scheme written with sweet-expressions.
-
-You can invoke the readers from your own Guile programs by doing:
-  (use-modules (readable kernel))
-and you can even:
-  (replace-read sweet-read)
-
-On Guile 2.0 there are occassional strangenesses in the interaction
-between the module system and autocompilation - the particular
-strangeness is when autocompilation is turned OFF.  If you want to
-use sweet-guile or neoteric-guile, turn ON autocompilation, as
-otherwise use-modules will use the default reader rather than
-what you replace.
-
-
-External tool: ANTLRWorks
-===================
-
-The ANTLR BNF was developed using ANTLRworks version 1.4.3.
-If you wish to edit or generate files from it, it is known
-to work with file "antlrworks-1.4.3.jar" with the following attributes:
-Bytes 3588307
-MD5 9638f9b7b1b823fcaba977f06f0dd761
-SHA-1 f7974cf14ac19c3aa1841ee88c6d2dcbad89af01
-SHA-512 99374a96b541f09367af56bf704601204a6abb658ae9400776da15b4cae0e98674ee2a812d34ebad8a3fcfcde90087d031379ff88a3bd5acf02ddeaea924197b
-
-ANTLRWorks 1.4.3 is available from:
-http://www.antlr3.org/works/
-in particular from:
-http://www.antlr3.org/download/
-The ANTLRWorks GUI is released under the BSD 3-clause license,
-and it includes the ANTLR tool version 3.4, which is also
-released under the BSD 3-clause license:
-http://www.antlr3.org/license.html
-IF you cannot find a copy, check:
-http://sourceforge.net/projects/readable/files/
+By default the "sweeten" and "unsweeten" tools process Scheme; if you
+have Common Lisp (or something like it), provide the "-C" (Common Lisp)
+option as documented.  They can be used as front-ends for other tools.
 
 
 For more information
@@ -307,5 +199,5 @@ For more information
 For more information, see:
   http://readable.sourceforge.net
 
-Discussions are held on the mailing list.
+Discussions are held on its "readable-discuss" mailing list.
 

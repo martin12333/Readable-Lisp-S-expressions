@@ -27,7 +27,7 @@
 ; Assume ASDL is set up, e.g., by setting environment var CL_SOURCE_REGISTRY
 ; to the name of the directory of the .asd file, followed by "/".
 
-(load "my-asdf.lisp")
+(require "asdf")
 (asdf:load-system :readable)
 (use-package :readable)
 
@@ -197,6 +197,29 @@ mytest
   !   1
   !   {n * fact{n - 1}}
   '(defun fact (n) (if (<= n 1) 1 (* n (fact (- n 1)))))
+
+mytest
+  ' foo1
+  !   a1
+  !   #;x
+  !   b1
+  '(foo1 a1 b1)
+
+mytest
+  ' foo2
+  !   a2
+  !   #;x b2
+  !   c2
+  '(foo2 a2 b2 c2)
+
+mytest
+  ` foo3
+  !   a3
+  !   ,@
+  !     cdr
+  !       ' b0 b1 (b2a b2b) b3
+  !   c3
+  '(foo3 a3 b1 (b2a b2b) b3 c3)
 
 
 (disable-readable)

@@ -69,6 +69,9 @@ dist_common_lisp_source_pkg_DATA += $(pkg_asd_file)
 # be "installed" and work as expected... but it's still useful for testing.
 EXTRA_DIST += sweet-clisp
 
+# Trivial example of a Common Lisp program.
+EXTRA_DIST += factorial.lisp
+
 # Install symlink so asdf can find these files. See:
 # http://www.gnu.org/software/automake/manual/html_node/Extending.html
 # Note that the LN_S does *not* use DESTDIR.
@@ -101,6 +104,9 @@ bin_SCRIPTS += bin/curly-guile bin/neoteric-guile bin/sweet-guile
 bin_SCRIPTS += bin/sweet-run bin/sweet-scsh
 bin_SCRIPTS += bin/diff-s-sweet
 CLEANFILES  += $(bin_SCRIPTS)
+
+# This is a script that's just copied straight.
+bin_SCRIPTS += sweet-clisp
 
 # These are the local scripts, for testing, and are not installed.
 noinst_SCRIPTS = ./sweeten ./unsweeten \
@@ -260,7 +266,8 @@ EXTRA_DIST += \
 
 # Man pages
 dist_man_MANS = man/unsweeten.1 man/sweet-run.1 \
-                man/sweeten.1 man/diff-s-sweet.1
+                man/sweeten.1 man/diff-s-sweet.1 \
+                man/sweet-clisp.1
 
 # Distribute some documentation.
 # README is distributed anyway; this just makes it clearer.
@@ -270,6 +277,7 @@ dist_man_MANS = man/unsweeten.1 man/sweet-run.1 \
 # information on what this code is trying to do and how to use it.
 dist_doc_DATA = README COPYING AUTHORS ChangeLog
 
+dist_doc_DATA += README-ANTLR README-files
 dist_doc_DATA += solution.md
 dist_doc_DATA += scheme-tutorial.md common-lisp-tutorial.md
 
@@ -310,10 +318,6 @@ EXTRA_DIST += \
  tests/curly-infix-testsuite2 \
  tests/write-test \
  tests/write-test-correct
-
-# We'll include our own copy of asdf (version 3).  Clisp on Cygwin doesn't
-# provide it, and in any case, this creates a known test environment.
-EXTRA_DIST += tests/my-asdf.lisp
 
 # TODO: Improve test harness & integration into overall system.
 

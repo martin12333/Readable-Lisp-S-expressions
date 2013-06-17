@@ -1,0 +1,115 @@
+.TH UNSWEETEN 1 local
+.SH NAME
+sweet-clisp \- Run clisp using sweet-expressions
+.SH SYNOPSIS
+.ll +8
+.B sweet-clisp [FILE]
+.ll -8
+.br
+.SH DESCRIPTION
+.PP
+.I sweet-clisp
+runs the Common Lisp "clisp" implementation,
+but first enables "sweet-expressions".
+If given a file, it will run that file (expressed using sweet-expressions);
+a file name of "-" means the standard input.
+If no file is given, then an interactive mode is enabled
+(normally this means that the clisp REPL is run with readline enabled).
+.PP
+Note that it will execute (using clisp) each sweet-expression in turn.
+If given a file, it will not normally display the results of each
+expression.
+If you want a result displayed, use functions that do so such as
+"print", "princ", "write", and so on.
+.PP
+This command uses whatever version of the "readable" library that asdf finds.
+You can override the usual readable library location by setting
+the asdf environment variable CL_SOURCE_REGISTRY.
+For example:
+
+  CL_SOURCE_REGISTRY="$PWD" ./sweet-clisp ...
+
+.PP
+This command requires clisp, and it also requires
+that asdf be set up properly for clisp.
+The interactive mode also requires a properly-installed "expect" command.
+.PP
+The
+.I sweet-clisp
+program is primarily intended for interactive use.
+If you're writing Common Lisp code in files, it is more portable
+to instead create ordinary ".lisp" files, and begin them early with:
+
+  (require "asdf")
+  (asdf:load-system :readable)
+  (readable:enable-sweet)
+
+.PP
+For maximum portability, you should also end each such file with:
+
+  (readable:disable-readable)
+
+.PP
+For more information, see
+http://readable.sourceforge.net.
+
+
+.SH OPTIONS
+.PP
+None.
+
+.\" .SH "ENVIRONMENT"
+.\" .PP
+
+.\" .SH BUGS
+.\" .PP
+
+.SH EXAMPLES
+.PP
+An example use might be the following:
+
+  sweet-clisp f.slisp
+
+.PP
+The file f.slisp would be executed; it might contain:
+
+  defun fact (x)
+    if {x < 1}
+      1
+      {x * fact{x - 1}}
+  princ fact(5)
+
+.PP
+If f.slisp does contain this, then "120" should be displayed.
+
+.SH "SEE ALSO"
+.PP
+.IR sweeten(1) ,
+.IR unsweeten(1) .
+
+
+.SH "COPYRIGHT NOTICE"
+.PP
+Copyright \(co 2013 David A. Wheeler
+.PP
+This software (including the documentation)
+is released as open source software under the "MIT" license:
+.PP
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+.PP
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+.PP
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+

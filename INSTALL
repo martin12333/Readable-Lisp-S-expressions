@@ -1,15 +1,25 @@
 Installation Instructions
 =========================
 
-For the basics of installation, see the README file.
+This package follows the usual GNU package conventions, so in most
+cases you can install it using the usual commmands:
+  ./configure --prefix=/usr
+  make
+  make install
+
+For more about installation and use, see the README file and tutorials.
+
+
+
 Below is the conventional installation instructions for
-any autoconf-based system, which explains some of the more
-advanced options.
+any autoconf-based system, which explain some of the more advanced options.
+Most people will not need the information below.
 
 
 
 Traditional Installation Instructions
-*************************************
+=====================================
+
 
 Copyright (C) 1994-1996, 1999-2002, 2004-2011 Free Software Foundation,
 Inc.

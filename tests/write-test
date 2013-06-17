@@ -115,7 +115,7 @@
 (define demo2 '(first . last))
 (set-cdr! demo2 demo2)
 
-(define nasty-quote '(quote x))
+(define nasty-quote '(quote z))
 (set-cdr! nasty-quote nasty-quote)
 
 (define demo3 '(dosomething (a1 a2) (b1 b2) (c1 c2)))
