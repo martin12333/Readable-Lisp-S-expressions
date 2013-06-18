@@ -9,6 +9,8 @@
 	  - Common Lisp implementation improvements, e.g.,
 	    better handling of EOF, examples no longer use our own ASDF,
 	    and enable-... have better performance if already enabled.
+	  - Add "factorial.lisp", a simple demo of how to use the
+	    sweet-expressions in Common Lisp files.
 
 2013-05-09 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Release of readable software version 0.9.0
