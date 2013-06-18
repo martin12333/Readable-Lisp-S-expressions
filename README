@@ -147,16 +147,24 @@ usual ASDF system.  A "make install" puts files in the usual place,
 $PREFIX/share/common-lisp/source (where $PREFIX is /usr/local by default).
 
 You need ASDF.  Most Common Lisp users already have that ready to go.
-If you don't have it, get it here:
+You can quickly install ASDF on many Linux distributions (such as Fedora,
+Debian, and Ubuntu) by installing the package "cl-asdf".
+If you don't have asdf, get it here:
   http://common-lisp.net/project/asdf/
-Cygin's clisp doesn't have asdf by default; you can install it with:
+
+Many clisp packages don't include asdf, or its support, by default.
+If you use Cygin's clisp, install asdf by doing this:
   mkdir -p ~/lisp/asdf
-  cp asdf.lisp ~/lisp/asdf
+  cp asdf.lisp ~/lisp/asdf     # See below.
   clisp
   (load (compile-file "asdf.lisp"))
   (exit)
+If you use clisp and a Linux distribution's asdf package, follow the above
+steps, but instead of the "cp asdf.lisp ~/lisp/asdf" command do this:
+  ln -s /usr/share/common-lisp/source/cl-asdf/asdf.lisp ~/lisp/asdf/
+That way, updates to your Linux distribution's asdf will be used automagically.
 
-Configure ASDF so it knows what directories to look at, e.g.,
+Ensure ASDF is configured so it knows what directories to look at, e.g.,
 put this in file "/etc/common-lisp/source-registry.conf":
  (:source-registry
    (:tree (:home "cl")) ;; will expand to e.g. "/home/joeluser/cl/"
