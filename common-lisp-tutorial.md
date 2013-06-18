@@ -89,7 +89,7 @@ You should be running on a POSIX system; if you use Windows, you may need to ins
 ASDF
 ----
 
-You'll need Another System Definition Facility (asdf), which is usually included in your Common Lisp implementation.  If you don't already have it, you can download it here:  http://common-lisp.net/project/asdf/
+You'll need Another System Definition Facility (asdf), which is usually included in your Common Lisp implementation.  Many Linux distributions include asdf; just install package "cl-asdf".  (Fedora, Debian, and Ubuntu are all known to include cl-asdf, and there are probably more that do as well.)  If you don't already have asdf, you can download it here:  http://common-lisp.net/project/asdf/
 
 The clisp of Cygwin does not (as of this writing) include asdf.  For that, download the asdf.lisp file, then install asdf on clisp for this user by doing:
 
@@ -99,7 +99,14 @@ The clisp of Cygwin does not (as of this writing) include asdf.  For that, downl
     (load (compile-file "asdf.lisp"))
     (exit)
 
-After this point '(require "asdf")' will work.
+If you use clisp and a Linux distribution's asdf package, follow the above
+steps, but instead of the "cp asdf.lisp ~/lisp/asdf" command do this:
+
+    ln -s /usr/share/common-lisp/source/cl-asdf/asdf.lisp ~/lisp/asdf/
+
+The "ln -s" means that updates to your Linux distribution's asdf will be used automagically.
+
+After this point '(require "asdf")' should work.
 
 
 Download and prepare to configure
