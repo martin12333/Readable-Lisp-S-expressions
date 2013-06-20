@@ -39,7 +39,7 @@ UNSWEETEN = ./unsweeten
 
 readable_libdir = $(GUILE_SITE)/readable
 
-readable_lib_DATA = readable/kernel.scm
+dist_readable_lib_DATA = readable/kernel.scm
 
 # "Local" version so we can test things without installing them.
 readable/kernel.scm: src/kernel.scm
@@ -67,21 +67,22 @@ dist_common_lisp_source_pkg_DATA += $(pkg_asd_file)
 
 # For now, install sweet-clisp specially, because it cannot currently
 # be "installed" and work as expected... but it's still useful for testing.
-EXTRA_DIST += sweet-clisp
+# EXTRA_DIST += sweet-clisp
 
 # Trivial example of a Common Lisp program.
 EXTRA_DIST += factorial.lisp
 
 # Install symlink so asdf can find these files. See:
 # http://www.gnu.org/software/automake/manual/html_node/Extending.html
-# Note that the LN_S does *not* use DESTDIR.
+# We first try to "rm" the symlink, in case it already exists.
+# Note that the LN_S must *not* use DESTDIR in its first parameter.
 
 install-exec-hook-cl:
 	$(MKDIR_P) "$(DESTDIR)$(common_lisp_source_pkgdir)"
 	$(MKDIR_P) "$(DESTDIR)$(common_lisp_systemsdir)"
-	$(RM) -f "$(common_lisp_systemsdir)/$(pkg_asd_file)"
-	cd "$(DESTDIR)$(common_lisp_source_pkgdir)" && \
-	  $(LN_S) "$(common_lisp_source_pkgdir)/$(pkg_asd_file)" ../../systems
+	$(RM) -f "$(DESTDIR)$(common_lisp_systemsdir)/$(pkg_asd_file)"
+	$(LN_S)  "$(common_lisp_source_pkgdir)/$(pkg_asd_file)" \
+	         "$(DESTDIR)$(common_lisp_systemsdir)/$(pkg_asd_file)"
 
 install-exec-hook: install-exec-hook-cl
 

@@ -27,12 +27,20 @@ AS_IF([test x"$GUILE" = x],[#then
   :
 ])
 AC_SUBST(GUILE)
+
 # Normally GUILE_SITE_DIR computes using guile-config, but
 # we can query the guile interpreter itself directly anyway.
 AC_MSG_CHECKING([for Guile site directory])
 GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
+# Patch GUILE_SITE so that $prefix and $datarootdir are honored;
+# this is necessary for "make distcheck" to work properly.
+# The funny assignment format is because sharp is also the m4 comment char.
+AS_CASE([$GUILE_SITE], [/usr/share/*],
+  [GUILE_SITE="\$(datarootdir)${GUILE_SITE#/usr/share}"
+  ])
 AC_MSG_RESULT($GUILE_SITE)
 AC_SUBST(GUILE_SITE)
+
 # The below is GUILE_MODULE_AVAILABLE code, but expanded and
 # with AC_REQUIRE([GUILE_PROGS]) removed.
 AC_MSG_CHECKING([if (ice-9 readline) is available])
