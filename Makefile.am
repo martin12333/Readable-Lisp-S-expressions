@@ -322,13 +322,14 @@ EXTRA_DIST += \
 
 # TODO: Improve test harness & integration into overall system.
 
-check: readable/kernel.scm
+EXTRA_DIST += my-realpath
+check: readable/kernel.scm my-realpath
 	@echo "Starting tests"
-	CL_SOURCE_REGISTRY="`realpath $(srcdir)`"/ \
-	  clisp -lp "`realpath $(srcdir)`/tests/" \
+	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
+	  clisp -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
 	        $(srcdir)/tests/curly-infix-test-cl
-	CL_SOURCE_REGISTRY="`realpath $(srcdir)`"/ \
-	  clisp -lp "`realpath $(srcdir)`/tests/" \
+	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
+	  clisp -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
 	        $(srcdir)/tests/full-test-cl
 	@echo "About to run guile curly-infix tests"
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/curly-infix-test-scm \

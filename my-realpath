@@ -1,0 +1,6 @@
+#! /bin/sh
+# Implementation of the `realpath` command.
+# `realpath` is not portable.
+
+cd $1
+pwd -P
