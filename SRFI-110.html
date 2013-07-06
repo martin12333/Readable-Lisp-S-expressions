@@ -1108,10 +1108,10 @@ The <i>traditional abbreviations</i> are
 which stand for
 quote, quasiquote, unquote-splicing, and unquote respectively.
 In indentation processing mode, a traditional abbreviation
-followed by space, tab, or end-of-line is represented as
+followed by space, tab, or EOL is represented as
 APOSW, QUASIQUOTEW, UNQUOTE_SPLICEW, and UNQUOTEW respectively.
-An end-of-line (if any) immediately after these
-abbreviations <em>MUST</em> also generate EOL.
+If they are followed immediately by EOL, the EOL
+<em>MUST </em> also be generated (and not consumed).
 The <i>syntax-case related abbreviations</i> are
 &#8220;<tt>#'</tt>&#8221;, &#8220;<tt>#`</tt>&#8221;,
 &#8220;<tt>#,</tt>&#8221;, and &#8220;<tt>#,@</tt>&#8221;,
@@ -1266,7 +1266,7 @@ post_period returns [Object v]
     | pn=n_expr hspace* (scomment hspace*)* (n_expr error)? {$pn}
     | COLLECTING hspace* pc=collecting_tail hspace*
       (scomment hspace*)* (n_expr error)? {$pc}
-    | /*empty*/ {"."} ;
+    | /*empty*/ {'.} ;
 
 // Production "head" reads 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression

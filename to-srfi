@@ -55,6 +55,7 @@ while (<>) {
 
     # Special case.
     s/\(list "."\)/(list '.)/g;
+    s/\{"."\}/{'.}/g;
     s/{greedy=false}/{greedy=false;}/g;
   }
 
