@@ -39,7 +39,7 @@ UNSWEETEN = ./unsweeten
 
 readable_libdir = $(GUILE_SITE)/readable
 
-dist_readable_lib_DATA = readable/kernel.scm
+readable_lib_DATA = readable/kernel.scm
 
 # "Local" version so we can test things without installing them.
 readable/kernel.scm: src/kernel.scm
