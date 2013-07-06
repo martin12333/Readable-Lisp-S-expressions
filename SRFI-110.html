@@ -984,18 +984,20 @@ any unescaped pairs of parentheses, brackets, or curly braces.
 To further understand sweet-expressions, we first need these definitions:
 </p>
 <ul>
-<li>eol character: A character that is a carriage return
-(U+000D) or linefeed (U+000A)
-(eol is short for &#8220;end of line&#8221;).</li>
-<li>eol sequence: A carriage return (U+000D)
-optionally followed by linefeed (U+000A), or a linefeed (U+000A)
-This is EOL_SEQUENCE in the BNF.
+<li>eol character: A carriage return (U+000D) or linefeed (U+000A).
 Implementations <em>MAY</em>
-also recognize other end of line characters or sequences.</li>
-<li>line: A sequence of 0+ non-eol characters terminated by an eol sequence.
+add implementation-defined eol characters.</li>
+<li>EOL (&#8220;end of line&#8221;):
+A carriage return (U+000D)
+optionally followed by linefeed (U+000A), or alternatively,
+a linefeed (U+000A).
+Implementations <em>MAY</em> accept
+other implementation-defined sequences.</li>
+<li>line: A sequence of 0+ non-eol characters terminated by EOL.
 A sweet-expression reader <em>MAY</em> also support a final line without
 an eol sequence.
-The line terminator is not considered part of the line contents.</li>
+The character(s) in a terminating EOL
+are not considered part of the line contents.</li>
 <li>hspace: A character that is a space (U+0020) or tab (U+0009)
 (short for &#8220;horizontal space&#8221;).</li>
 <li>indent character: A character that is a space (U+0020), tab (U+0009), or
@@ -1166,7 +1168,6 @@ UNQUOTE        : ',';
 fragment EOL_CHAR : '\n' | '\r' ;
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
 fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
-fragment EOL_SEQUENCE : ('\r' '\n'? | '\n');
 
 // Comments. LCOMMENT=line comment, scomment=special comment.
 LCOMMENT :       ';' NOT_EOL_CHARS ; // Line comment - doesn't include EOL
