@@ -516,6 +516,14 @@ the indentation of the special comment is used</a>.
 </li>
 <li>
 A single delimited period (.) still sets the value of the cdr field of a pair.
+If the period is not the first datum on the line, the next datum on the
+line is the cdr value.
+If the period is the only datum on the line, then the next (sibling) line
+is the cdr value.
+A period at the beginning of a line, with one datum after it,
+escapes that datum (just like neoteric-expressions do);
+a period at the end of a line, with at least one datum before it,
+is considered the same as |.|.
 </li>
 <li>An expression that
 <a href="#disabling-indentation-processing-with-an-initial-indent">starts
