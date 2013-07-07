@@ -1145,6 +1145,12 @@ not be wrapped into a list):
     (#t              x)))
 </pre>
 
+<p>
+The BNF body production uses an isperiodp(x) function,
+which returns true iff x is the datum "." and begins
+with a period.
+This is used so that "a . b" is recognized as the pair (a . b),
+while "a |.| b" is 3-element list "(a |.| b)"
 
 <h2><a name="bnf-supporting">Supporting BNF definitions</a></h2>
 
