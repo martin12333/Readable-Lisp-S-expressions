@@ -758,13 +758,24 @@ a b $ c d
 <tr>
 <td align="left" valign="top">
 <pre>
-a b $ c d e f $ g
+e f $ g
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
-(a b (c d e f g))
-; Not (a b (c d e f (g)))
+(e f g) ; Not (e f (g))
+</pre>
+</td>
+</tr>
+<tr>
+<td align="left" valign="top">
+<pre>
+a b $ c d e $ f g
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(a b (c d e (f g)))
 </pre>
 </td>
 </tr>
