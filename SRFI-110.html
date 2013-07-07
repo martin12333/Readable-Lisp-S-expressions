@@ -962,8 +962,9 @@ You can also separately view the
 <a href="sweet.g">full ANTLR BNF definition of sweet-expressions
 with Java action rules</a>, along with a support Java class
 <a href="Pair.java">Pair.java</a>.
-The non-terminal <code>same</code> emphasizes where there is a new
-line with unchanged indentation; it matches nothing.
+The non-terminal <code>same</code> is an empty sequence;
+it acts as a comment to emphasize where there is a new
+line with unchanged indentation.
 The non-terminal <code>error</code> emphasizes certain sequences that
 are not defined by this BNF
 (an implementation <em>MAY</em> implement an extension, but if it does
