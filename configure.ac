@@ -54,6 +54,27 @@ AS_IF([test "$GUILE_READLINE_AVAILABLE" = "0"],[#then
 AC_MSG_RESULT($GUILE_READLINE_AVAILABLE)
 AC_SUBST([GUILE_READLINE_AVAILABLE])
 
+# look for the program "clisp".
+AC_PATH_PROG([CLISP_INSTALLED], [clisp])
+AS_IF([test x"$CLISP_INSTALLED" == x],[#then
+  CLISP=:
+],[#else
+  # check if asdf is installed with clisp.
+  AC_MSG_CHECKING([if (require :asdf) is available])
+  echo '(require :"asdf")' > asdf-check.lisp
+  [$CLISP_INSTALLED] asdf-check.lisp > /dev/null 2>&1
+  AS_IF([test "$?" = 0],[#then
+    AC_MSG_RESULT([yes])
+    CLISP=$CLISP_INSTALLED
+  ],[#else
+    AC_MSG_RESULT([no])
+    CLISP=:
+  ])
+  rm asdf-check.lisp
+])
+AC_SUBST([CLISP])
+
+
 # Perhaps check for: (more) programs, libraries, header files, types,
 # structures, compiler characteristics, library functions, system services.
 

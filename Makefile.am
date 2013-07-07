@@ -53,6 +53,8 @@ CLEANFILES = readable/kernel.scm
 # and let the usual Common Lisp mechanisms (e.g., asdf) handle compiling
 # as needed.
 
+CLISP = @CLISP@
+
 common_lispdir = $(datadir)/common-lisp
 common_lisp_sourcedir = $(common_lispdir)/source
 common_lisp_source_pkgdir = $(common_lisp_sourcedir)/readable
@@ -326,10 +328,10 @@ EXTRA_DIST += my-realpath
 check: readable/kernel.scm my-realpath
 	@echo "Starting tests"
 	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
-	  clisp -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
+	  $(CLISP) -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
 	        $(srcdir)/tests/curly-infix-test-cl
 	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
-	  clisp -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
+	  $(CLISP) -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
 	        $(srcdir)/tests/full-test-cl
 	@echo "About to run guile curly-infix tests"
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/curly-infix-test-scm \
