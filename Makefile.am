@@ -169,7 +169,7 @@ bin/sweet-guile: src/sweet-guile my-subst
 	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
 	chmod a+x $@
 
-bin/sweet-scsh: src/sweet-scsh
+bin/sweet-scsh: src/sweet-scsh my-subst
 	$(MKDIR_P) bin
 	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
 	chmod a+x $@
