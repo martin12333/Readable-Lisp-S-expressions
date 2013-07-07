@@ -1034,8 +1034,8 @@ First, when the sweet-expression reader begins,
 a stack called the &#8220;indentation stack&#8221;
 is initialized to contain exactly one value, the empty string
 (<tt>""</tt>).
-Then, when a line is read and the current mode is not enclosed,
-the line indentation is removed and possibly replaced by other generated
+Then, when the current mode is <i>not</i> enclosed, the line indentation
+(if any) is read, removed, and possibly replaced by other generated
 symbols as follows (where &#8220;top&#8221; is the
 value of the top of the indentation stack):
 </p>
