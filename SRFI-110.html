@@ -962,8 +962,9 @@ You can also separately view the
 <a href="sweet.g">full ANTLR BNF definition of sweet-expressions
 with Java action rules</a>, along with a support Java class
 <a href="Pair.java">Pair.java</a>.
-The non-terminal <code>same</code> emphasizes where there is a new
-line with unchanged indentation; it matches nothing.
+The non-terminal <code>same</code> is an empty sequence;
+it acts as a comment to emphasize where there is a new
+line with unchanged indentation.
 The non-terminal <code>error</code> emphasizes certain sequences that
 are not defined by this BNF
 (an implementation <em>MAY</em> implement an extension, but if it does
@@ -1145,6 +1146,12 @@ not be wrapped into a list):
     (#t              x)))
 </pre>
 
+<p>
+The BNF body production uses an isperiodp(x) function,
+which returns true iff x is the datum "." and begins
+with a period.
+This is used so that "a . b" is recognized as the pair (a . b),
+while "a |.| b" is 3-element list "(a |.| b)"
 
 <h2><a name="bnf-supporting">Supporting BNF definitions</a></h2>
 
