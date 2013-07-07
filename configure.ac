@@ -54,7 +54,7 @@ AS_IF([test "$GUILE_READLINE_AVAILABLE" = "0"],[#then
 AC_MSG_RESULT($GUILE_READLINE_AVAILABLE)
 AC_SUBST([GUILE_READLINE_AVAILABLE])
 
-# look for the program "clisp".
+# Determine if "clisp" is available and has asdf properly installed.
 AC_PATH_PROG([CLISP_INSTALLED], [clisp])
 AS_IF([test x"$CLISP_INSTALLED" == x],[#then
   CLISP=:
