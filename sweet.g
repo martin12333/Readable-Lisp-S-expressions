@@ -437,6 +437,8 @@ QUASIQUOTEW     : {indent_processing()}? => '\`' (SPACE | TAB) ;
 UNQUOTE_SPLICEW : {indent_processing()}? => ',@' (SPACE | TAB) ;
 UNQUOTEW        : {indent_processing()}? => ','  (SPACE | TAB) ;
 
+DATUM_COMMENTW  : {indent_processing()}? => '#;' (SPACE | TAB) ;
+
 // Abbreviations followed by EOL also generate abbrevW:
 APOS_EOL        : {indent_processing()}? => '\'' EOL_SEQUENCE
                   SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
@@ -455,6 +457,11 @@ UNQUOTE_EOL     : {indent_processing()}? => ',' EOL_SEQUENCE
                   {emit_type(UNQUOTEW); emit_type(EOL);
                    process_indent($i.text, $i);};
 
+DATUM_COMMENT_EOL: {indent_processing()}? => '#;' EOL_SEQUENCE
+                  SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
+                  {emit_type(DATUM_COMMENTW); emit_type(EOL);
+                   process_indent($i.text, $i);};
+
 // Abbreviations not followed by horizontal space are ordinary:
 APOS           : '\'';
 QUASIQUOTE     : '\`';
@@ -470,7 +477,7 @@ fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
 LCOMMENT :       ';' NOT_EOL_CHARS ; // Line comment - doesn't include EOL
 BLOCK_COMMENT : '#|' // This is #|...|#
       (options {greedy=false;} : (BLOCK_COMMENT | .))* '|#' ;
-DATUM_COMMENT_START : '#;' ;
+DATUM_COMMENT : '#;' ;
 // SRFI-105 notes that "implementations could trivially support
 // (simultaneously) markers beginning with #! followed by a letter
 // (such as the one to identify support for curly-infix-expressions),
@@ -990,7 +997,7 @@ n_expr_first returns [Object v]
 sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE
                       | SHARP_BANG_DIRECTIVE ;
 scomment : BLOCK_COMMENT
-         | DATUM_COMMENT_START (options {greedy=true;} : hspace)* n_expr
+         | DATUM_COMMENT (options {greedy=true;} : hspace)* n_expr
          | sharp_bang_comments ;
 
 // Production "comment_eol" reads an optional ;-comment (if it exists),

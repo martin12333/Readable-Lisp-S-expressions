@@ -213,4 +213,5 @@ c
 (define x5 (define x6 2) (define x8 3))
 (dog . cat)
 (fickle (abc def . ghi) (jkl mno . pqr) (another . line))
+(z1 z2)
 fin

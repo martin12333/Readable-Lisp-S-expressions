@@ -541,4 +541,6 @@ fickle
   abc def . #|1|# ghi
   jkl mno . #|2|# pqr #|3|# \\ another . #|4|# line #|5|#
 
+z1 #;(a b) z2
+
 fin
