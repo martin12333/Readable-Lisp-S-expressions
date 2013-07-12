@@ -284,7 +284,24 @@ tokens {
     }
   }
 
-  // ; Utility function:
+  // Utility declarations and functions
+
+  public static Object empty = new Pair(null, null);
+  
+  // (define (econs x y) ; cons, but handle "empty" values
+  //   (cond
+  //     ((eq? y empty) x)
+  //     ((eq? x empty) y)
+  //     (#t (cons x y))))
+
+  public static Object econs(Object x, Object y) {
+    if (y == empty) {
+      return x;
+    } else if (x == empty) {
+      return y;
+    } else {return cons(x, y);}
+  }
+
   // ; If x is a 1-element list, return (car x), else return x
   // (define (monify x)
   //   (cond
