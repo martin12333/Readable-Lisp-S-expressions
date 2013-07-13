@@ -1195,10 +1195,7 @@ special_it_expr returns [Object v]
       (group_i=it_expr {$v = $group_i.v;} /* Ignore initial GROUP/scomment */
        | comment_eol
          (INDENT g_body=body {$v = $g_body.v;} /* Normal GROUP use */
-          | same ( g_i=it_expr {$v = $g_i.v;} /* Plausible separator */
-                   /* Handle #!sweet EOL EOL t_expr */
-                   | comment_eol {$v = empty;} )
-          ))
+          | same {$v = empty;} ))
   | SUBLIST hspace* /* "$" first on line */
     (is_i=it_expr {$v=liste($is_i.v);}
      | comment_eol error )
