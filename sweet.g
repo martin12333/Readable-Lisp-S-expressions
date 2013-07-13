@@ -291,18 +291,43 @@ tokens {
   // Common Lisp: (defconstant empty-tag (make-symbol "empty-tag"))
   public static Object empty = new Pair(null, null);
   
-  // (define (econs x y) ; cons, but handle "empty" values
+  // (define (conse x y) ; cons, but handle "empty" values
   //   (cond
   //     ((eq? y empty) x)
   //     ((eq? x empty) y)
   //     (#t (cons x y))))
 
-  public static Object econs(Object x, Object y) {
+  public static Object conse(Object x, Object y) {
     if (y == empty) {
       return x;
     } else if (x == empty) {
       return y;
     } else {return cons(x, y);}
+  }
+
+  // (define (appende x y) ; append, but handle "empty" values
+  //   (cond
+  //     ((eq? y empty) x)
+  //     ((eq? x empty) y)
+  //     (#t (append y))))
+
+  public static Object appende(Object x, Object y) {
+    if (y == empty) {
+      return x;
+    } else if (x == empty) {
+      return y;
+    } else {return append(x, y);}
+  }
+
+  // (define (liste x) ; list, but handle "empty" values
+  //   (if (eq? x empty)
+  //       empty
+  //       (list x)))
+
+  public static Object liste(Object x) {
+    if (x == empty) {
+      return x;
+    } else {return list(x);}
   }
 
   // ; If x is a 1-element list, return (car x), else return x
