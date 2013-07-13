@@ -321,13 +321,22 @@ tokens {
 
   // (define (liste x) ; list, but handle "empty" values
   //   (if (eq? x empty)
-  //       empty
+  //       ()
   //       (list x)))
+  // TODO: Define for >1 parameter.
 
   public static Object liste(Object x) {
     if (x == empty) {
-      return x;
+      return null;
     } else {return list(x);}
+  }
+
+  public static Object liste(Object x, Object y) {
+    if (x == empty) {
+      return liste(y);
+    } else if (y == empty) {
+      return liste(x);
+    } else {return list(x,y);}
   }
 
   // ; If x is a 1-element list, return (car x), else return x
@@ -1060,7 +1069,7 @@ comment_eol : LCOMMENT? EOL;
 // FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
 
 collecting_tail returns [Object v]
-  : it_expr more=collecting_tail {$v = cons($it_expr.v, $more.v);}
+  : it_expr more=collecting_tail {$v = conse($it_expr.v, $more.v);}
   | comment_eol    retry1=collecting_tail {$v = $retry1.v;}
   | INITIAL_INDENT /* Initial indent only allowed for lcomment */
     LCOMMENT EOL   retry2=collecting_tail {$v = $retry2.v;}
@@ -1140,9 +1149,11 @@ body returns [Object v]
      (same
        ( {isperiodp($i.v)}? => f=it_expr DEDENT
            {$v = $f.v;} // Improper list final value
-       | {! isperiodp($i.v)}? => nxt=body
+       | {$i.v == empty}? => retry=body
+           {$v = $retry.v;}
+       | {!isperiodp($i.v) && ($i.v != empty)}? => nxt=body
            {$v = conse($i.v, $nxt.v);} )
-     | DEDENT {$v = list($i.v);} ) ;
+     | DEDENT {$v = liste($i.v);} ) ;
 
 // Production "it_expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
@@ -1164,11 +1175,11 @@ normal_it_expr returns [Object v]
      GROUP_SPLIT hspace* /* Not initial; interpret as split */
       (options {greedy=true;} :
         // To allow \\ EOL as line-continuation, instead do:
-        //   comment_eol same more=it_expr {$v = append($head.v, $more.v);}
+        //   comment_eol same more=it_expr {$v = appende($head.v, $more.v);}
         comment_eol error
         | /*empty*/ {$v = monify($head.v);} )
      | SUBLIST hspace* /* head SUBLIST ... case */
-       (sub_i=it_expr {$v=append($head.v, list($sub_i.v));}
+       (sub_i=it_expr {$v=appende($head.v, liste($sub_i.v));}
         | comment_eol error )
      | comment_eol // Normal case, handle child lines if any:
        (INDENT children=body {$v = appende($head.v, $children.v);}
@@ -1189,15 +1200,15 @@ special_it_expr returns [Object v]
                    | comment_eol restart=t_expr {$v = $restart.v;} )
           | DEDENT error ))
   | SUBLIST hspace* /* "$" first on line */
-    (is_i=it_expr {$v=list($is_i.v);}
+    (is_i=it_expr {$v=liste($is_i.v);}
      | comment_eol error )
   | DATUM_COMMENTW hspace*
     (is_i=it_expr | comment_eol INDENT body ) {$v=empty;}
   | abbrevw hspace*
       (comment_eol INDENT ab=body
-         {$v = append(list($abbrevw.v), $ab.v);}
+         {$v = appende(list($abbrevw.v), $ab.v);}
        | ai=it_expr
-         {$v=list($abbrevw.v, $ai.v);} ) ;
+         {$v=liste($abbrevw.v, $ai.v);} ) ;
 
 it_expr returns [Object v]
   : normal_it_expr   {$v=$normal_it_expr.v;}
@@ -1225,5 +1236,7 @@ t_expr returns [Object v]
        sretry=t_expr {$v=$sretry.v;})
      | comment_eol retry3=t_expr {$v=$retry3.v;} )
   | EOF {generate_eof();} // End of file
-  | it_expr {$v = $it_expr.v;} /* Normal case */ ;
+  | it_expr
+    ( {$it_expr.v == empty}? => retry4=t_expr {$v = $retry4.v;}
+      | {$it_expr.v != empty}? => {$v = $it_expr.v;} /* Normal case */ ) ;
 

@@ -216,4 +216,11 @@ c
 (z1 z2)
 (foo1 a1 b2)
 (foo2 a2 b2)
+(foo3 a3)
+(foo4 a4)
+(foo5-body-only-comments)
+(foo6 a6)
+(collect1 ())
+(collect2 ())
+(collect3 ((a b) (c d)))
 fin

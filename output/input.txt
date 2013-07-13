@@ -555,4 +555,39 @@ foo2
     more stuff
   b2
 
+foo3
+  a3
+  #; hello
+
+foo4
+  #; hello
+  a4
+
+foo5-body-only-comments
+  #; hello
+
+#; do not show
+
+#; do not show
+   this either
+
+foo6
+  #; boggle
+  a6
+
+collect1 <* #; h1 h2 *>
+
+collect2 <*
+#; h5 h6
+   h7
+*>
+
+collect3 <*
+a b
+#; h5 h6
+   h7
+c d
+#; nothing
+*>
+
 fin
