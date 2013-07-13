@@ -1197,8 +1197,8 @@ special_it_expr returns [Object v]
          (INDENT g_body=body {$v = $g_body.v;} /* Normal GROUP use */
           | same ( g_i=it_expr {$v = $g_i.v;} /* Plausible separator */
                    /* Handle #!sweet EOL EOL t_expr */
-                   | comment_eol restart=t_expr {$v = $restart.v;} )
-          | DEDENT error ))
+                   | comment_eol {$v = empty;} )
+          ))
   | SUBLIST hspace* /* "$" first on line */
     (is_i=it_expr {$v=liste($is_i.v);}
      | comment_eol error )
@@ -1227,7 +1227,7 @@ it_expr returns [Object v]
 // horizontal space will not have have been read, so this production will
 // fire again on the next invocation, doing the right thing.
 
-t_expr returns [Object v]
+t_expr_real returns [Object v]
   : comment_eol    retry1=t_expr {$v=$retry1.v;} // Skip initial blank lines
   | (FF | VT)+ EOL retry2=t_expr {$v=$retry2.v;} // Skip initial FF|VT lines
   | (INITIAL_INDENT | hspaces_maybe_bang) // Process initial indent
@@ -1236,7 +1236,10 @@ t_expr returns [Object v]
        sretry=t_expr {$v=$sretry.v;})
      | comment_eol retry3=t_expr {$v=$retry3.v;} )
   | EOF {generate_eof();} // End of file
-  | it_expr
-    ( {$it_expr.v == empty}? => retry4=t_expr {$v = $retry4.v;}
-      | {$it_expr.v != empty}? => {$v = $it_expr.v;} /* Normal case */ ) ;
+  | i=it_expr {$v = $i.v;} /* Normal case */ ;
+
+t_expr returns [Object v]
+  : t=t_expr_real	
+    ( {$t.v == empty}? => retry=t_expr {$v = $retry.v;}
+      | {$t.v != empty}? => {$v = $t.v;} ) ;
 
