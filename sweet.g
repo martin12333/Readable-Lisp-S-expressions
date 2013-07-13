@@ -1238,5 +1238,5 @@ t_expr_real returns [Object v]
 t_expr returns [Object v]
   : t=t_expr_real	
     ( {$t.v == empty}? => retry=t_expr {$v = $retry.v;}
-      | {$t.v != empty}? => {$v = $t.v;} ) ;
+      | {$v = $t.v;} ) ;
 
