@@ -1141,7 +1141,7 @@ body returns [Object v]
        ( {isperiodp($i.v)}? => f=it_expr DEDENT
            {$v = $f.v;} // Improper list final value
        | {! isperiodp($i.v)}? => nxt=body
-           {$v = cons($i.v, $nxt.v);} )
+           {$v = conse($i.v, $nxt.v);} )
      | DEDENT {$v = list($i.v);} ) ;
 
 // Production "it_expr" (indented sweet-expressions)
@@ -1171,7 +1171,7 @@ normal_it_expr returns [Object v]
        (sub_i=it_expr {$v=append($head.v, list($sub_i.v));}
         | comment_eol error )
      | comment_eol // Normal case, handle child lines if any:
-       (INDENT children=body {$v = append($head.v, $children.v);}
+       (INDENT children=body {$v = appende($head.v, $children.v);}
         | /*empty*/          {$v = monify($head.v);} /* No child lines */ )
      // If COLLECTING_END doesn't generate multiple tokens, can do:
      // | /*empty*/           {$v = monify($head.v);}
@@ -1191,6 +1191,8 @@ special_it_expr returns [Object v]
   | SUBLIST hspace* /* "$" first on line */
     (is_i=it_expr {$v=list($is_i.v);}
      | comment_eol error )
+  | DATUM_COMMENTW hspace*
+    (is_i=it_expr | comment_eol INDENT body ) {$v=empty;}
   | abbrevw hspace*
       (comment_eol INDENT ab=body
          {$v = append(list($abbrevw.v), $ab.v);}

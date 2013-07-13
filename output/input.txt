@@ -543,4 +543,16 @@ fickle
 
 z1 #;(a b) z2
 
+foo1
+  a1
+  #; hello
+  b2
+
+foo2
+  a2
+  #;
+    goodbye stuff
+    more stuff
+  b2
+
 fin

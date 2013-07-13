@@ -214,4 +214,6 @@ c
 (dog . cat)
 (fickle (abc def . ghi) (jkl mno . pqr) (another . line))
 (z1 z2)
+(foo1 a1 b2)
+(foo2 a2 b2)
 fin
