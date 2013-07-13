@@ -286,6 +286,9 @@ tokens {
 
   // Utility declarations and functions
 
+  // Special "empty" object to represent "no value at all".
+  // Scheme: (define empty-tag (string-copy "empty-tag"))
+  // Common Lisp: (defconstant empty-tag (make-symbol "empty-tag"))
   public static Object empty = new Pair(null, null);
   
   // (define (econs x y) ; cons, but handle "empty" values
