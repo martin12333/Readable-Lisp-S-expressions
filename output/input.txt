@@ -590,4 +590,18 @@ c d
 #; nothing
 *>
 
+aaa
+
+#| x |#
+  #| y |#
+
+bbb
+
+\\
+  \\
+
+ccc
+
+  #| ignore this |#
+
 fin

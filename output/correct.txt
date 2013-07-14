@@ -223,4 +223,9 @@ c
 (collect1 ())
 (collect2 ())
 (collect3 ((a b) (c d)))
+aaa
+()
+bbb
+()
+ccc
 fin
