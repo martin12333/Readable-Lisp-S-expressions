@@ -598,6 +598,9 @@ aaa
 bbb
 
 \\
+  #; hello
+
+\\
   \\
 
 ccc
