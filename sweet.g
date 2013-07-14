@@ -1225,13 +1225,13 @@ it_expr returns [Object v]
 // fire again on the next invocation, doing the right thing.
 
 t_expr_real returns [Object v]
-  : comment_eol    retry1=t_expr_real {$v=$retry1.v;} // Skip initial blank lines
-  | (FF | VT)+ EOL retry2=t_expr_real {$v=$retry2.v;} // Skip initial FF|VT lines
+  : comment_eol    retry1=t_expr {$v=$retry1.v;} // Skip initial blank lines
+  | (FF | VT)+ EOL retry2=t_expr {$v=$retry2.v;} // Skip initial FF|VT lines
   | (INITIAL_INDENT | hspaces_maybe_bang) // Process initial indent
     (n_expr {$v = $n_expr.v;}
      | (scomment (options {greedy=true;} : hspace)*
-       sretry=t_expr_real {$v=$sretry.v;})
-     | comment_eol retry3=t_expr_real {$v=$retry3.v;} )
+       sretry=t_expr {$v=$sretry.v;})
+     | comment_eol retry3=t_expr {$v=$retry3.v;} )
   | EOF {generate_eof();} // End of file
   | i=it_expr {$v = $i.v;} /* Normal case */ ;
 
