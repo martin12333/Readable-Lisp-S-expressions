@@ -319,23 +319,29 @@ tokens {
     } else {return append(x, y);}
   }
 
-  // (define (liste x) ; list, but handle "empty" values
+  // (define (list1e x) ; list, but handle "empty" values
   //   (if (eq? x empty)
   //       ()
   //       (list x)))
-  // TODO: Define for >1 parameter.
 
-  public static Object liste(Object x) {
+  public static Object list1e(Object x) {
     if (x == empty) {
       return null;
     } else {return list(x);}
   }
 
-  public static Object liste(Object x, Object y) {
+  // (define (list2e x y) ; list, but handle "empty" values
+  //   (if (eq? x empty)
+  //       y
+  //       (if (eq? y empty)
+  //          x
+  //          (list x y))))
+
+  public static Object list2e(Object x, Object y) {
     if (x == empty) {
-      return liste(y);
+      return list1e(y);
     } else if (y == empty) {
-      return liste(x);
+      return list1e(x);
     } else {return list(x,y);}
   }
 
@@ -1157,7 +1163,7 @@ body returns [Object v]
            {$v = $retry.v;}
        | {!isperiodp($i.v) && ($i.v != empty)}? => nxt=body
            {$v = conse($i.v, $nxt.v);} )
-     | DEDENT {$v = liste($i.v);} ) ;
+     | DEDENT {$v = list1e($i.v);} ) ;
 
 // Production "it_expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
@@ -1183,7 +1189,7 @@ normal_it_expr returns [Object v]
         comment_eol error
         | /*empty*/ {$v = monify($head.v);} )
      | SUBLIST hspace* /* head SUBLIST ... case */
-       (sub_i=it_expr {$v=appende($head.v, liste($sub_i.v));}
+       (sub_i=it_expr {$v=appende($head.v, list1e($sub_i.v));}
         | comment_eol error )
      | comment_eol // Normal case, handle child lines if any:
        (INDENT children=body {$v = appende($head.v, $children.v);}
@@ -1203,13 +1209,13 @@ special_it_expr returns [Object v]
          (INDENT g_body=body {$v = $g_body.v;} /* Normal GROUP use */
           | same {$v = empty;} ))
   | SUBLIST hspace* /* "$" first on line */
-    (is_i=it_expr {$v=liste($is_i.v);}
+    (is_i=it_expr {$v=list1e($is_i.v);}
      | comment_eol error )
   | abbrevw hspace*
       (comment_eol INDENT ab=body
          {$v = appende(list($abbrevw.v), $ab.v);}
        | ai=it_expr
-         {$v=liste($abbrevw.v, $ai.v);} ) ;
+         {$v=list2e($abbrevw.v, $ai.v);} ) ;
 
 it_expr returns [Object v]
   : normal_it_expr   {$v=$normal_it_expr.v;}
