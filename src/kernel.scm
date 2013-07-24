@@ -1597,7 +1597,34 @@
               "^"))
         (#t (list->string indentation-as-list)))))
 
-  ; Utility function:
+  ; Utility declarations and functions
+
+  (define empty-tag (string-copy "empty-tag")) ; Represent no value at all
+
+  (define (conse x y) ; cons, but handle "empty" values
+    (cond
+      ((eq? y empty) x)
+      ((eq? x empty) y)
+      (#t (cons x y))))
+
+  (define (appende x y) ; append, but handle "empty" values
+    (cond
+      ((eq? y empty) x)
+      ((eq? x empty) y)
+      (#t (append y))))
+
+  (define (list1e x) ; list, but handle "empty" values
+    (if (eq? x empty)
+        ()
+        (list x)))
+
+  (define (list2e x y) ; list, but handle "empty" values
+    (if (eq? x empty)
+        y
+        (if (eq? y empty)
+           x
+           (list x y))))
+
   ; If x is a 1-element list, return (car x), else return x
   (define (monify x)
     (cond
