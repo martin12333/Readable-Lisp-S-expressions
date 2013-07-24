@@ -1078,10 +1078,9 @@ collecting_tail returns [Object v]
 
 // Process line after ". hspace+" sequence.  Does not go past current line.
 post_period returns [Object v]
-  : scomment hspace* rpt=post_period {$v = $rpt.v;} // (scomment hspace*)*
-    | DATUM_COMMENTW hspace*
-      (ignored=n_expr hspace* sp2=post_period {$v = $sp2.v;}
-       | /*empty*/ error {$v=empty;})
+  : DATUM_COMMENTW hspace*
+      (ignored=n_expr hspace* sp2=post_period {$v = $sp2.v;} | /*empty*/ error )
+    | scomment hspace* rpt=post_period {$v = $rpt.v;} // (scomment hspace*)*
     | pn=n_expr hspace* (scomment hspace*)* (n_expr error)? {$v = $pn.v;}
     | COLLECTING hspace* pc=collecting_tail hspace*
       (scomment hspace*)* (n_expr error)? {$v = $pc.v;}
@@ -1130,10 +1129,9 @@ rest returns [Object v]
   : PERIOD /* Improper list */
       (hspace+  pp=post_period {$v = $pp.v;}
        | /*empty*/   {$v = list(".");})
-  | scomment hspace* (sr=rest {$v = $sr.v;} | /*empty*/ {$v = null;} )
   | DATUM_COMMENTW hspace*
-    (ignored=n_expr hspace* sr2=rest {$v = $sr2.v;}
-     | /*empty*/ error {$v=empty;})
+    (ignored=n_expr hspace* sr2=rest {$v = $sr2.v;} | /*empty*/ error )
+  | scomment hspace* (sr=rest {$v = $sr.v;} | /*empty*/ {$v = null;} )
   | COLLECTING hspace* collecting_tail hspace*
     (rr=rest             {$v = cons($collecting_tail.v, $rr.v);}
      | /*empty*/             {$v = list($collecting_tail.v);} )
@@ -1197,7 +1195,9 @@ normal_it_expr returns [Object v]
 // An it_expr with a special prefix like \\ or $:
 
 special_it_expr returns [Object v]
-  : (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
+  : DATUM_COMMENTW hspace*
+    (is_i=it_expr | comment_eol INDENT body ) {$v=empty;}
+  | (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
       (group_i=it_expr {$v = $group_i.v;} /* Ignore initial GROUP/scomment */
        | comment_eol
          (INDENT g_body=body {$v = $g_body.v;} /* Normal GROUP use */
@@ -1205,8 +1205,6 @@ special_it_expr returns [Object v]
   | SUBLIST hspace* /* "$" first on line */
     (is_i=it_expr {$v=liste($is_i.v);}
      | comment_eol error )
-  | DATUM_COMMENTW hspace*
-    (is_i=it_expr | comment_eol INDENT body ) {$v=empty;}
   | abbrevw hspace*
       (comment_eol INDENT ab=body
          {$v = appende(list($abbrevw.v), $ab.v);}
