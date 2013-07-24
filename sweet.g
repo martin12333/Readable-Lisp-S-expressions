@@ -1079,6 +1079,9 @@ collecting_tail returns [Object v]
 // Process line after ". hspace+" sequence.  Does not go past current line.
 post_period returns [Object v]
   : scomment hspace* rpt=post_period {$v = $rpt.v;} // (scomment hspace*)*
+    | DATUM_COMMENTW hspace*
+      (ignored=n_expr hspace* sp2=post_period {$v = $sp2.v;}
+       | /*empty*/ error {$v=empty;})
     | pn=n_expr hspace* (scomment hspace*)* (n_expr error)? {$v = $pn.v;}
     | COLLECTING hspace* pc=collecting_tail hspace*
       (scomment hspace*)* (n_expr error)? {$v = $pc.v;}
@@ -1128,6 +1131,9 @@ rest returns [Object v]
       (hspace+  pp=post_period {$v = $pp.v;}
        | /*empty*/   {$v = list(".");})
   | scomment hspace* (sr=rest {$v = $sr.v;} | /*empty*/ {$v = null;} )
+  | DATUM_COMMENTW hspace*
+    (ignored=n_expr hspace* sr2=rest {$v = $sr2.v;}
+     | /*empty*/ error {$v=empty;})
   | COLLECTING hspace* collecting_tail hspace*
     (rr=rest             {$v = cons($collecting_tail.v, $rr.v);}
      | /*empty*/             {$v = list($collecting_tail.v);} )
