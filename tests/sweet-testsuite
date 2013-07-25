@@ -933,6 +933,9 @@ m7
 (x1 z1)
 x1 #; y z1
 
+(a88 . b89)
+a88 . #; qqq b89
+
 (x2 y2)
 x2 #|comment|# y2
 
