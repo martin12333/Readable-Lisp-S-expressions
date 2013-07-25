@@ -478,10 +478,10 @@ start : t_expr
 // Lexical token (terminal) names are in all upper case
 
 // INCLUDE IN SRFI
-
 SPACE    : ' ';
 TAB      : '\t';
 PERIOD   : '.';
+// STOP INCLUDING IN SRFI
 
 // Special markers, which only have meaning outside (), [], {}.
 GROUP_SPLIT  : {indent_processing()}? => '\\' '\\'; // GROUP/split symbol.
@@ -496,7 +496,6 @@ APOSW           : {indent_processing()}? => '\'' (SPACE | TAB) ;
 QUASIQUOTEW     : {indent_processing()}? => '\`' (SPACE | TAB) ;
 UNQUOTE_SPLICEW : {indent_processing()}? => ',@' (SPACE | TAB) ;
 UNQUOTEW        : {indent_processing()}? => ','  (SPACE | TAB) ;
-
 DATUM_COMMENTW  : {indent_processing()}? => '#;' (SPACE | TAB) ;
 
 // Abbreviations followed by EOL also generate abbrevW:
@@ -522,7 +521,9 @@ DATUM_COMMENT_EOL: {indent_processing()}? => '#;' EOL_SEQUENCE
                   {emit_type(DATUM_COMMENTW); emit_type(EOL);
                    process_indent($i.text, $i);};
 
-// Abbreviations not followed by horizontal space are ordinary:
+// INCLUDE IN SRFI
+
+// Abbreviations not followed by horizontal space or EOL are ordinary:
 APOS           : '\'';
 QUASIQUOTE     : '\`';
 UNQUOTE_SPLICE : ',@';
@@ -1013,8 +1014,6 @@ n_expr_noabbrev returns [Object v]
 
 
 // INCLUDE IN SRFI
-// IMPORTANT SUPPORTING PARSER DEFINITIONS for the BNF
-
 hspace  : SPACE | TAB ;        // horizontal space
 
 // This is for handling non-first n-expressions in initial indent.
@@ -1094,9 +1093,10 @@ post_period returns [Object v]
 
 // Production "head" reads 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
-// on the line, it returns a list of exactly one item; this makes it
-// easy to append to later (if appropriate).  In some cases, we want
-// single items to be themselves, not in a list; function monify does this.
+// on the line, it returns a list of exactly one item.
+// Precondition: At beginning of line+indent
+// Postcondition: At unconsumed EOL
+// STOP INCLUDING IN SRFI
 // The "head" production never reads beyond the current line
 // (except within a block comment), so it doesn't need to keep track
 // of indentation, and indentation will NOT change within head.
@@ -1106,9 +1106,7 @@ post_period returns [Object v]
 // Callers can depend on "head" and "rest" *not* changing indentation.
 // On entry, all indentation/hspace must have already been read.
 // On return, it will have consumed all hspace (spaces and tabs).
-
-// Precondition: At beginning of line+indent
-// Postcondition: At unconsumed EOL
+// INCLUDE IN SRFI
 
 head returns [Object v]
   : PERIOD /* Leading ".": escape following datum like an n-expression. */
@@ -1124,12 +1122,14 @@ head returns [Object v]
 
 // Production "rest" production reads the rest of the expressions on a line
 // (the "rest of the head"), after the first expression of the line.
+// Precondition: At beginning of non-first expression on line (past hspace)
+// Postcondition: At unconsumed EOL
+// STOP INCLUDING IN SRFI
 // Like head, it consumes any hspace before it returns.
 // The "rest" production is written this way so a non-tokenizing
 // implementation can read an expression specially. E.G., if it sees a period,
 // read the expression directly and then see if it's just a period.
-// Precondition: At beginning of non-first expression on line (past hspace)
-// Postcondition: At unconsumed EOL
+// INCLUDE IN SRFI
 
 rest returns [Object v]
   : PERIOD /* Improper list */
@@ -1149,10 +1149,12 @@ rest returns [Object v]
 // Production "body" handles the sequence of 1+ child lines in an it_expr
 // (e.g., after a "head"), each of which is itself an it_expr.
 // It returns the list of expressions in the body.
+// STOP INCLUDING IN SRFI
 // Note that an it-expr will consume any line comments or hspaces
 // before it returns back to the "body" production.
 // Since (list x) is simply (cons x '()), this production always does a
 // cons of the first it_expr and another body [if it exists] or '() [if not].
+// INCLUDE IN SRFI
 
 body returns [Object v]
   : i=it_expr
@@ -1169,6 +1171,7 @@ body returns [Object v]
 // is the main production for sweet-expressions in the usual case.
 // Precondition: At beginning of line+indent
 // Postcondition: it-expr ended by consuming EOL + examining indent
+// STOP INCLUDING IN SRFI
 // Note: This BNF presumes that "*>" generates multiple tokens,
 // "EOL DEDENT* COLLECTING_END", and resets the indentation list.
 // You can change the BNF below to allow "head /*empty*/", and handle dedents
@@ -1178,14 +1181,17 @@ body returns [Object v]
 // the first or the longer sequence first.  Either approach is needed to
 // support "*>" as the non-first element so that the "head" can end
 // without a literal EOL, e.g., as in "let <* y 5 *>".
+// INCLUDE IN SRFI
 
 normal_it_expr returns [Object v] 
   : head
     (options {greedy=true;} : (
      GROUP_SPLIT hspace* /* Not initial; interpret as split */
       (options {greedy=true;} :
+// STOP INCLUDING IN SRFI
         // To allow \\ EOL as line-continuation, instead do:
         //   comment_eol same more=it_expr {$v = appende($head.v, $more.v);}
+// INCLUDE IN SRFI
         comment_eol error
         | /*empty*/ {$v = monify($head.v);} )
      | SUBLIST hspace* /* head SUBLIST ... case */
@@ -1194,8 +1200,10 @@ normal_it_expr returns [Object v]
      | comment_eol // Normal case, handle child lines if any:
        (INDENT children=body {$v = appende($head.v, $children.v);}
         | /*empty*/          {$v = monify($head.v);} /* No child lines */ )
+// STOP INCLUDING IN SRFI
      // If COLLECTING_END doesn't generate multiple tokens, can do:
      // | /*empty*/           {$v = monify($head.v);}
+// INCLUDE IN SRFI
      )) ;
 
 // An it_expr with a special prefix like \\ or $:
