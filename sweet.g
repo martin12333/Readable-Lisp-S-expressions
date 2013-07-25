@@ -321,7 +321,7 @@ tokens {
 
   // (define (list1e x) ; list, but handle "empty" values
   //   (if (eq? x empty)
-  //       ()
+  //       '()
   //       (list x)))
 
   public static Object list1e(Object x) {
