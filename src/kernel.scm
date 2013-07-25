@@ -1488,9 +1488,12 @@
   ; Do 2-item append, but report read-error if the LHS is not a proper list.
   ; Don't use this if the lhs *must* be a list (e.g., if we have (list x)).
   (define (my-append lhs rhs)
-    (if (list? lhs)
-        (append lhs rhs)
-        (read-error "Must have proper list on left-hand-side to append data")))
+    (cond
+      ((eq? lhs empty-tag) rhs)
+      ((eq? rhs empty-tag) lhs)
+      ((list? lhs) (append lhs rhs))
+      (#t
+        (read-error "Must have proper list on left-hand-side to append data"))))
 
   ; Read an n-expression.  Returns ('scomment '()) if it's an scomment,
   ; else returns ('normal n-expr).
@@ -1603,25 +1606,25 @@
 
   (define (conse x y) ; cons, but handle "empty" values
     (cond
-      ((eq? y empty) x)
-      ((eq? x empty) y)
+      ((eq? y empty-tag) x)
+      ((eq? x empty-tag) y)
       (#t (cons x y))))
 
   (define (appende x y) ; append, but handle "empty" values
     (cond
-      ((eq? y empty) x)
-      ((eq? x empty) y)
+      ((eq? y empty-tag) x)
+      ((eq? x empty-tag) y)
       (#t (append y))))
 
   (define (list1e x) ; list, but handle "empty" values
-    (if (eq? x empty)
+    (if (eq? x empty-tag)
         ()
         (list x)))
 
   (define (list2e x y) ; list, but handle "empty" values
-    (if (eq? x empty)
+    (if (eq? x empty-tag)
         y
-        (if (eq? y empty)
+        (if (eq? y empty-tag)
            x
            (list x y))))
 
@@ -1674,7 +1677,7 @@
                 (if (null? it-value)
                     it-value
                     (list it-value)))
-              (#t (cons it-value (collecting-tail port)))))))))
+              (#t (conse it-value (collecting-tail port)))))))))
 
   ; Skip scomments and error out if we have a normal n-expr;
   ; Basically implement this BNF:
@@ -1704,6 +1707,7 @@
                (pn-stopper      (car pn-full-results))
                (pn-value        (cadr pn-full-results)))
           (cond
+            ; TODO: DATUM_COMMENTW
             ((eq? pn-stopper 'scomment)
               (hspaces port)
               (post-period port))
@@ -1767,6 +1771,7 @@
            (basic-special      (car basic-full-results))
            (basic-value        (cadr basic-full-results)))
       (cond
+        ; TODO: DATUM_COMMENTW
         ((eq? basic-special 'scomment)
           (hspaces port)
           (if (not (lcomment-eol? (my-peek-char port)))
@@ -1804,6 +1809,7 @@
     (let* ((i-full-results (it-expr port starting-indent))
            (i-new-indent   (car i-full-results))
            (i-value        (cadr i-full-results)))
+      ; TODO: fix up for empty/datum comment
       (if (string=? starting-indent i-new-indent)
           (if (eq? i-value period-symbol)
               (let* ((f-full-results (it-expr port i-new-indent))
@@ -1812,17 +1818,20 @@
                 (if (not (indentation>? starting-indent f-new-indent))
                     (read-error "Dedent required after lone . and value line"))
                 (list f-new-indent f-value)) ; final value of improper list
-              (let* ((nxt-full-results (body port i-new-indent))
-                     (nxt-new-indent   (car nxt-full-results))
-                     (nxt-value        (cadr nxt-full-results)))
-                (list nxt-new-indent (cons i-value nxt-value))))
-          (list i-new-indent (list i-value))))) ; dedent - end list.
+              (if (eq? i-value empty-tag)
+                (body port starting-indent)
+                (let* ((nxt-full-results (body port i-new-indent))
+                       (nxt-new-indent   (car nxt-full-results))
+                       (nxt-value        (cadr nxt-full-results)))
+                  (list nxt-new-indent (cons i-value nxt-value)))))
+          (list i-new-indent (list1e i-value))))) ; dedent - end list.
 
   ; Returns (new-indent computed-value)
   (define (it-expr-real port starting-indent)
     (let* ((head-full-results (head port))
            (head-stopper      (car head-full-results))
            (head-value        (cadr head-full-results)))
+      ; TODO: fix up for empty/datum comment
       (if (and (not (null? head-value)) (not (eq? head-stopper 'abbrevw)))
           ; The head... branches:
           (cond
@@ -1865,9 +1874,7 @@
                       ((indentation>? new-indent starting-indent)
                         (body port new-indent))
                       ((string=? starting-indent new-indent)
-                        (if (not (lcomment-eol? (my-peek-char port)))
-                          (it-expr port new-indent)
-                          (list new-indent (t-expr port)))) ; Restart
+                        (list new-indent empty-tag))
                       (#t
                         (read-error "GROUP-SPLIT EOL DEDENT illegal"))))))
             ((eq? head-stopper 'sublist-marker)
@@ -1878,7 +1885,7 @@
                      (is-i-new-indent   (car is-i-full-results))
                      (is-i-value        (cadr is-i-full-results)))
                 (list is-i-new-indent
-                  (list is-i-value))))
+                  (list1e is-i-value))))
             ((eq? head-stopper 'abbrevw)
               (hspaces port)
               (if (lcomment-eol? (my-peek-char port))
@@ -1895,7 +1902,7 @@
                          (ai-new-indent (car ai-full-results))
                          (ai-value    (cadr ai-full-results)))
                     (list ai-new-indent
-                      (list head-value ai-value)))))
+                      (list2e head-value ai-value)))))
             ((eq? head-stopper 'collecting-end)
               (list "" head-value))
             (#t 
@@ -1914,7 +1921,7 @@
 
   ; Top level - read a sweet-expression (t-expression).  Handle special
   ; cases, such as initial indent; call it-expr for normal case.
-  (define (t-expr port)
+  (define (t-expr-real port)
     (let* ((c (my-peek-char port)))
       ; Check EOF early (a bug in guile before 2.0.8 consumes EOF on peek)
       (if (eof-object? c)
@@ -1923,10 +1930,10 @@
             ((lcomment-eol? c)
               (consume-to-eol port)
               (consume-end-of-line port)
-              (t-expr port))
+              (t-expr-real port))
             ((or (eqv? c form-feed) (eqv? c vertical-tab))
               (consume-ff-vt port)
-              (t-expr port))
+              (t-expr-real port))
             ((char-ichar? c)
               (let ((indentation-list (cons #\^ (accumulate-ichar port))))
                 (if (not (memv (my-peek-char port) initial-comment-eol))
@@ -1935,11 +1942,11 @@
                           (cadr results) ; Normal n-expr, return one value.
                           (begin ; We have an scomment; skip and try again.
                             (hspaces port)
-                            (t-expr port))))
+                            (t-expr-real port))))
                     (begin ; Indented comment-eol, consume and try again.
                       (consume-to-eol port)
                       (consume-end-of-line port)
-                      (t-expr port)))))
+                      (t-expr-real port)))))
             (#t
               (let* ((results (it-expr port "^"))
                      (results-indent (car results))
@@ -1947,6 +1954,13 @@
                 (if (string=? results-indent "")
                     (read-error "Closing *> without preceding matching <*")
                     results-value)))))))
+
+  ; Top level - read a sweet-expression (t-expression).  Handle special
+  (define (t-expr port)
+    (let* ((te (t-expr-real port)))
+      (if (eq? te empty-tag)
+          (t-expr port)
+          te)))
 
   ; Skip until we find a completely empty line (not even initial space/tab).
   ; We use this after read error to resync to good input.
