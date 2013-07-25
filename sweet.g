@@ -1246,7 +1246,7 @@ t_expr_real returns [Object v]
   | i=it_expr {$v = $i.v;} /* Normal case */ ;
 
 t_expr returns [Object v]
-  : t=t_expr_real	
-    ( {$t.v == empty}? => retry=t_expr {$v = $retry.v;}
-      | {$v = $t.v;} ) ;
+  : te=t_expr_real	
+    ( {$te.v == empty}? => retry=t_expr {$v = $retry.v;}
+      | {$v = $te.v;} ) ;
 
