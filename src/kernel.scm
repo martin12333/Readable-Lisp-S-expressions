@@ -147,11 +147,12 @@
 ;     after it have been read in.
 ;   - The procedure returns one of the following:
 ;       #f  - the hash-character combination is invalid/not supported.
+;       (normal value) - the datum has value "value".
 ;       (scomment ()) - the hash-character combination introduced a comment;
 ;             at the return of this procedure with this value, the
 ;             comment has been removed from the input port.
 ;             You can use scomment-result, which has this value.
-;       (normal value) - the datum has value "value".
+;       (datum-commentw ()) - #; followed by whitespace.
 ;       (abbrev value) - this is an abbreviation for value "value"
 ;
 ;   hash-pipe-comment-nests?
@@ -986,8 +987,12 @@
                   (list 'normal (process-char port)))
                 ; Handle #; (item comment).
                 ((char=? c #\;)
-                  (no-indent-read port)  ; Read the datum to be consumed.
-                  scomment-result) ; Return comment
+                  (if (memv (my-peek-char port)
+                            `(#\space #\tab ,linefeed ,carriage-return))
+                    '(datum-commentw ())
+                  (begin
+                    (no-indent-read port)  ; Read the datum to be consumed.
+                    scomment-result))) ; Return comment
                 ; handle nested comments
                 ((char=? c #\|)
                   (nest-comment port)
@@ -1201,6 +1206,9 @@
                 (let ((rv (process-sharp no-indent-read port)))
                   (cond
                     ((eq? (car rv) 'scomment) (no-indent-read port))
+                    ((eq? (car rv) 'datum-commentw)
+                      (no-indent-read port) ; Consume following datum.
+                      (no-indent-read port))
                     ((eq? (car rv) 'normal) (cadr rv))
                     ((eq? (car rv) 'abbrev)
                       (list (cadr rv) (no-indent-read port)))
@@ -1618,7 +1626,7 @@
 
   (define (list1e x) ; list, but handle "empty" values
     (if (eq? x empty-tag)
-        ()
+        '()
         (list x)))
 
   (define (list2e x y) ; list, but handle "empty" values
@@ -1707,7 +1715,12 @@
                (pn-stopper      (car pn-full-results))
                (pn-value        (cadr pn-full-results)))
           (cond
-            ; TODO: DATUM_COMMENTW
+            ((eq? pn-stopper 'datum-commentw)
+              (hspaces port)
+              (if (lcomment-eol? (my-peek-char port))
+                  (read-error "Datum comment last item after ."))
+              (n-expr port) ; Consume commented-out item.
+              (post-period port))
             ((eq? pn-stopper 'scomment)
               (hspaces port)
               (post-period port))
@@ -1771,7 +1784,12 @@
            (basic-special      (car basic-full-results))
            (basic-value        (cadr basic-full-results)))
       (cond
-        ; TODO: DATUM_COMMENTW
+        ((eq? basic-special 'datum-commentw)
+          (hspaces port)
+          (if (lcomment-eol? (my-peek-char port))
+              (read-error "#; not followed by a datum in line"))
+          (n-expr port) ; Consume commented-out item.
+          (rest port))
         ((eq? basic-special 'scomment)
           (hspaces port)
           (if (not (lcomment-eol? (my-peek-char port)))
@@ -1864,6 +1882,22 @@
               (read-error "Must end line with end-of-line sequence")))
           ; Here, head begins with something special like GROUP-SPLIT:
           (cond
+            ((eq? head-stopper 'datum-commentw)
+              (hspaces port)
+              (cond
+                ((not (lcomment-eol? (my-peek-char port)))
+                  (let* ((is-i-full-results (it-expr port starting-indent))
+                         (is-i-new-indent   (car is-i-full-results))
+                         (is-i-value        (cadr is-i-full-results)))
+                    (list is-i-new-indent empty-tag)))
+                (#t
+                  (let ((new-indent (get-next-indent port)))
+                    (if (indentation>? new-indent starting-indent)
+                      (let* ((body-full-results (body port new-indent))
+                             (body-new-indent (car body-full-results))
+                             (body-value      (cadr body-full-results)))
+                        (list body-new-indent empty-tag))
+                      (read-error "#;+EOL must be followed by indent"))))))
             ((or (eq? head-stopper 'group-split-marker)
                  (eq? head-stopper 'scomment))
               (hspaces port)
