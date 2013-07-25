@@ -501,11 +501,6 @@ that end at the end of the line.</li>
 <li>Lines with only a ;-comment (preceded by 0 or more indent characters)
 are completely ignored - their indentation (if any) is irrelevant,
 and they do not end an expression.</li>
-<li>Scheme&#8217;s datum comments (<code>#;</code><i>datum</i>)
-comment out the next neoteric expression,
-not the next sweet expression
-(and please don&#8217;t follow the semicolon with whitespace).
-</li>
 <li>Special comments are non-whitespace sequences
 other than ;-comments that do not return a datum; they include
 datum comments (<code>#;</code><i>datum</i>) and
@@ -513,6 +508,11 @@ block comments (<code>#|</code>...<code>|#</code>).
 <a href="#block-comment-indent-significant">If a special comment
 begins immediately after the indent,
 the indentation of the special comment is used</a>.
+</li>
+<li>The datum comment marker (<code>#;</code>)
+at the beginning of a line, followed by whitespace,
+comments out the next <i>sweet-expression</i>;
+otherwise it comments out the next <i>neoteric-expression</i>.
 </li>
 <li>
 A single delimited period (.) still sets the value of the cdr field of a pair.
@@ -568,6 +568,8 @@ ff ; Demo special comments
   t3 t4
     t5 #| xyz |# t6
     t7 #;t8(q) t9
+  #; this is
+     all ignored
 </pre>
 </td>
 <td align="left" valign="top">
@@ -1468,8 +1470,6 @@ A sweet-expression reader <em>SHOULD</em> support
 and
 <a href="http://srfi.schemers.org/srfi-62/">SRFI-62
 (S-expression comments)</a> (<tt>#;</tt><var>datum</var>).
-Portable applications <em>SHOULD NOT</em> include whitespace
-after <code>#;</code> for a datum comment.
 A sweet-expression reader <em>SHOULD</em> support
 <a href="http://srfi.schemers.org/srfi-22/">SRFI-22
 (Running Scheme Scripts on Unix)</a> (where <tt>#!</tt>
@@ -3445,7 +3445,8 @@ define foo(x)
 <p>
 Although the reasons above pertain mostly to block comments,
 datum comments (<code>#;</code>) are considered
-essentially identical to block comments.
+essentially identical to block comments if "#;" is not followed by
+whitespace.
 </p>
 <p>
 We could have mandated a different behavior between datum
