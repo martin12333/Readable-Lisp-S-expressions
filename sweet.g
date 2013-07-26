@@ -1206,28 +1206,37 @@ normal_it_expr returns [Object v]
      // INCLUDE IN SRFI
      )) ;
 
-// An it_expr with a special prefix like \\ or $:
+// These are it_expr's with a special prefix like \\ or $:
 
-special_it_expr returns [Object v]
+datum_comment_line returns [Object v]
   : DATUM_COMMENTW hs
-    (is_i=it_expr | comment_eol INDENT body ) {$v=empty;}
-  | (GROUP_SPLIT | scomment) hs /* Initial; Interpet as group */
+    (is_i=it_expr | comment_eol INDENT body ) {$v=empty;} ;
+
+group_line returns [Object v]
+  : (GROUP_SPLIT | scomment) hs /* Initial; Interpet as group */
       (group_i=it_expr {$v = $group_i.v;} /* Ignore initial GROUP/scomment */
        | comment_eol
          (INDENT g_body=body {$v = $g_body.v;} /* Normal GROUP use */
-          | same {$v = empty;} ))
-  | SUBLIST hs /* "$" first on line */
+          | same {$v = empty;} )) ;
+
+sublist_line returns [Object v]
+  : SUBLIST hs /* "$" first on line */
     (is_i=it_expr {$v=list1e($is_i.v);}
-     | comment_eol error )
-  | abbrevw hs
+     | comment_eol error ) ;
+
+abbrevw_line returns [Object v]
+  : abbrevw hs
       (comment_eol INDENT ab=body
          {$v = appende(list($abbrevw.v), $ab.v);}
        | ai=it_expr
          {$v=list2e($abbrevw.v, $ai.v);} ) ;
 
 it_expr returns [Object v]
-  : normal_it_expr   {$v=$normal_it_expr.v;}
-  | special_it_expr  {$v = $special_it_expr.v;} ;
+  : normal_it_expr     {$v=$normal_it_expr.v;}
+  | datum_comment_line {$v=$datum_comment_line.v;}
+  | group_line         {$v=$group_line.v;}
+  | sublist_line       {$v=$sublist_line.v;}
+  | abbrevw_line       {$v=$abbrevw_line.v;} ;
 
 // Process initial indent.
 // The rule for "indent processing disabled on initial top-level hspace"
