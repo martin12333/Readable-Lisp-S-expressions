@@ -1188,10 +1188,10 @@ normal_it_expr returns [Object v]
     (options {greedy=true;} : (
      GROUP_SPLIT hspace* /* Not initial; interpret as split */
       (options {greedy=true;} :
-// STOP INCLUDING IN SRFI
+        // STOP INCLUDING IN SRFI
         // To allow \\ EOL as line-continuation, instead do:
         //   comment_eol same more=it_expr {$v = appende($head.v, $more.v);}
-// INCLUDE IN SRFI
+        // INCLUDE IN SRFI
         comment_eol error
         | /*empty*/ {$v = monify($head.v);} )
      | SUBLIST hspace* /* head SUBLIST ... case */
@@ -1200,10 +1200,10 @@ normal_it_expr returns [Object v]
      | comment_eol // Normal case, handle child lines if any:
        (INDENT children=body {$v = appende($head.v, $children.v);}
         | /*empty*/          {$v = monify($head.v);} /* No child lines */ )
-// STOP INCLUDING IN SRFI
+     // STOP INCLUDING IN SRFI
      // If COLLECTING_END doesn't generate multiple tokens, can do:
      // | /*empty*/           {$v = monify($head.v);}
-// INCLUDE IN SRFI
+     // INCLUDE IN SRFI
      )) ;
 
 // An it_expr with a special prefix like \\ or $:
@@ -1247,8 +1247,10 @@ initial returns [Object v]
 // Production "t_expr" is the top-level production for sweet-expressions.
 // This production handles special cases, then in the normal case
 // drops to the it_expr production.
+// STOP INCLUDING IN SRFI
 // Precondition: At beginning of line
 // Postcondition: At beginning of line
+// INCLUDE IN SRFI
 
 t_expr_real returns [Object v]
   : comment_eol    r1=t_expr_real {$v=$r1.v;} // Skip initial blank lines
