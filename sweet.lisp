@@ -81,7 +81,7 @@
 ; Represent no value at all, in the sweet-expression processing.
 (define-constant empty-tag (make-symbol "empty-tag"))
 
-(define-constant datum-commentw (make-symbol "datum-commentw"))
+(define-constant datum-commentw-tag (make-symbol "datum-commentw"))
 
 (define-constant vertical-tab (code-char 11)) ; VT is decimal 11.
 (define-constant form-feed #\page)            ; FF is decimal 12.
@@ -283,7 +283,7 @@
 (defun wrap-comment-datum (stream sub-char int)
   (declare (ignore sub-char int))
   (if (my-char-whitespacep (my-peek-char stream))
-    datum-commentw
+    datum-commentw-tag
     (let ((junk (neoteric-read-nocomment stream)))
       (declare (ignore junk))
       empty-values)))
@@ -372,16 +372,20 @@
 ; else returns ('normal n-expr).
 (defun n-expr-or-scomment (stream)
   (let ((result (my-read-datum stream))) ; Make it possible to return ".".
-    (if (eq result empty-values)
-      scomment-result
-      (list 'normal result))))
+    (cond
+      ((eq result empty-values) scomment-result)
+      ((eq result datum-commentw-tag) '(datum-commentw ()))
+      (t (list 'normal result)))))
 
 ; Read a straight-up n-expression.  Skip scomments.
 (defun neoteric-read-nocomment (stream)
   (let ((result (my-read-datum stream))) ; Make it possible to return ".".
-  (if (eq result empty-values)
-      (neoteric-read-nocomment stream)
-      result)))
+    (cond
+      ((eq result empty-values) (neoteric-read-nocomment stream))
+      ((eq result datum-commentw-tag)
+        (neoteric-read-nocomment stream) ; Consume the next n-expression.
+        (neoteric-read-nocomment stream))
+      (t result))))
 
 ; Read an n-expression.  Returns ('normal n-expr) in most cases;
 ; if it's a special marker, the car is the marker name instead of 'normal.
@@ -707,15 +711,15 @@
                 (let* ((nxt-full-results (body stream i-new-indent))
                        (nxt-new-indent   (car nxt-full-results))
                        (nxt-value        (cadr nxt-full-results)))
-                  (list nxt-new-indent (cons i-value nxt-value)))))
-        (list i-new-indent (list i-value))))) ; dedent - end list.
+                  (list nxt-new-indent (conse i-value nxt-value)))))
+        (list i-new-indent (list1e i-value))))) ; dedent - end list.
 
 ; Returns (new-indent computed-value)
 (defun it-expr-real (stream starting-indent)
   (let* ((head-full-results (head stream))
          (head-stopper      (car head-full-results))
          (head-value        (cadr head-full-results)))
-; (princ "DEBUG: it-expr-real: head result=") (write head-full-results) (terpri)
+    ; (princ "DEBUG: it-expr-real: head result=") (write head-full-results) (terpri)
     (if (and (not (null head-value)) (not (eq head-stopper 'abbrevw)))
         ; The head... branches:
         (cond

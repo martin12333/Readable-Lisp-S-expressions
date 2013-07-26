@@ -221,6 +221,46 @@ mytest
   !   c3
   '(foo3 a3 b1 (b2a b2b) b3 c3)
 
+mytest
+  ' yaa zaa
+    #; x y z
+  '(yaa zaa)
+
+mytest
+  ' ya1
+    za1
+    #; this line is ignored
+    zb3
+  '(ya1 za1 zb3)
+
+mytest
+  ' m1
+    p1
+    #;
+      q1 q2
+      r1 r2 r3
+        f4
+    p2
+  '(m1 p1 p2)
+
+mytest
+  ' m7
+    p8
+    p9
+    #; n1 n2
+      q1 q2
+      r1 r2 r3
+        f4
+  '(m7 p8 p9)
+
+mytest
+  ' x1 #; y z1
+  '(x1 z1)
+
+mytest
+  ' a88 . #; qqq b89
+  '(a88 . b89)
+
 
 (disable-readable)
 (princ "Tests complete!")
