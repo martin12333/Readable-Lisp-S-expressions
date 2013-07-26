@@ -1185,8 +1185,7 @@ body returns [Object v]
 // INCLUDE IN SRFI
 
 normal_it_expr returns [Object v] 
-  : head
-    (options {greedy=true;} : (
+  : head (options {greedy=true;} : (
      GROUP_SPLIT hs /* Not initial; interpret as split */
       (options {greedy=true;} :
         // STOP INCLUDING IN SRFI
