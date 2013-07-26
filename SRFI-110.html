@@ -1160,12 +1160,18 @@ per the it_expr production defined below.
 <p>
 The BNF depends on the following utility procedures.
 The first ones are variants of traditional list processing procedures
-but also handle a special &#8220;empty&#8221; value (represented as &#8220;empty-tag&#8221;).
+but also handle a special unique &#8220;empty_tag&#8221; value,
+which is used to indicate when no value at all is returned.
 The &#8220;monify&#8221; procedure enables lines with a
 single n-expression and no child lines to represent themselves and
 not be wrapped into a list:
 </p>
 <pre>
+  (define (isemptytagp x) (eq? x empty_tag))
+
+  (define (not_period_and_not_empty x)
+    (and (not (isperiodp x)) (not (isemptytagp x))))
+
   (define (conse x y) ; cons, but handle "empty" values
     (cond
       ((eq? y empty-tag) x)
@@ -1382,9 +1388,9 @@ body returns [Object v]
      (same
        ( {(isperiodp $i)}? =&gt; f=it_expr DEDENT
            {$f} // Improper list final value
-       | {$i == empty}? =&gt; retry=body
+       | {(isemptytagp $i)}? =&gt; retry=body
            {$retry}
-       | {!(isperiodp $i) &amp;&amp; ($i != empty)}? =&gt; nxt=body
+       | {(not_period_and_not_empty $i)}? =&gt; nxt=body
            {(conse $i $nxt)} )
      | DEDENT {(list1e $i)} ) ;
 
@@ -1411,14 +1417,14 @@ normal_it_expr returns [Object v]
 
 datum_comment_line returns [Object v]
   : DATUM_COMMENTW hs
-    (is_i=it_expr | comment_eol INDENT body ) {empty} ;
+    (is_i=it_expr | comment_eol INDENT body ) {empty_tag} ;
 
 group_line returns [Object v]
   : (GROUP_SPLIT | scomment) hs /* Initial; Interpet as group */
       (group_i=it_expr {$group_i} /* Ignore initial GROUP/scomment */
        | comment_eol
          (INDENT g_body=body {$g_body} /* Normal GROUP use */
-          | same {empty} )) ;
+          | same {empty_tag} )) ;
 
 sublist_line returns [Object v]
   : SUBLIST hs /* "$" first on line */
@@ -1467,8 +1473,9 @@ t_expr_real returns [Object v]
 
 t_expr returns [Object v]
   : te=t_expr_real	
-    ( {$te == empty}? =&gt; retry=t_expr {$retry}
+    ( {(isemptytagp $te)}? =&gt; retry=t_expr {$retry}
       | {$te} ) ;
+
 </pre>
 
 

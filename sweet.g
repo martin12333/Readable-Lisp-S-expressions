@@ -289,58 +289,69 @@ tokens {
   // Special "empty" object to represent "no value at all".
   // Scheme: (define empty-tag (string-copy "empty-tag"))
   // Common Lisp: (defconstant empty-tag (make-symbol "empty-tag"))
-  public static Object empty = new Pair(null, null);
-  
+  public static Object empty_tag = new Pair(null, null);
+
+  // (define (isemptytagp x) (eq? x empty_tag))
+  public static Boolean isemptytagp(Object x) {
+    return (x == empty_tag);
+  }
+
+  // (define (not_period_and_not_empty x)
+  //   (and (not (isperiodp x)) (not (isemptytagp x))))
+  public static Boolean not_period_and_not_empty(Object x) {
+    return (!isperiodp(x)) && (!isemptytagp(x));
+  }
+
   // (define (conse x y) ; cons, but handle "empty" values
   //   (cond
-  //     ((eq? y empty) x)
-  //     ((eq? x empty) y)
+  //     ((eq? y empty_tag) x)
+  //     ((eq? x empty_tag) y)
   //     (#t (cons x y))))
 
   public static Object conse(Object x, Object y) {
-    if (y == empty) {
+    if (y == empty_tag) {
       return x;
-    } else if (x == empty) {
+    } else if (x == empty_tag) {
       return y;
     } else {return cons(x, y);}
   }
 
   // (define (appende x y) ; append, but handle "empty" values
   //   (cond
-  //     ((eq? y empty) x)
-  //     ((eq? x empty) y)
+  //     ((eq? y empty_tag) x)
+  //     ((eq? x empty_tag) y)
   //     (#t (append y))))
 
   public static Object appende(Object x, Object y) {
-    if (y == empty) {
+    if (y == empty_tag) {
       return x;
-    } else if (x == empty) {
+    } else if (x == empty_tag) {
       return y;
     } else {return append(x, y);}
   }
 
   // (define (list1e x) ; list, but handle "empty" values
-  //   (if (eq? x empty)
+  //   (if (eq? x empty_tag)
   //       '()
   //       (list x)))
 
   public static Object list1e(Object x) {
-    if (x == empty) {
+    if (x == empty_tag) {
       return null;
     } else {return list(x);}
   }
 
   // (define (list2e x y) ; list, but handle "empty" values
-  //   (if (eq? x empty)
+  //   (if (eq? x empty_tag)
   //       y
-  //       (if (eq? y empty)
+  //       (if (eq? y empty_tag)
   //          x
   //          (list x y))))
 
   public static Object list2e(Object x, Object y) {
-    if (x == empty) {
+    if (x == empty_tag) {
       return list1e(y);
-    } else if (y == empty) {
+    } else if (y == empty_tag) {
       return list1e(x);
     } else {return list(x,y);}
   }
@@ -1163,9 +1174,9 @@ body returns [Object v]
      (same
        ( {isperiodp($i.v)}? => f=it_expr DEDENT
            {$v = $f.v;} // Improper list final value
-       | {$i.v == empty}? => retry=body
+       | {isemptytagp($i.v)}? => retry=body
            {$v = $retry.v;}
-       | {!isperiodp($i.v) && ($i.v != empty)}? => nxt=body
+       | {not_period_and_not_empty($i.v)}? => nxt=body
            {$v = conse($i.v, $nxt.v);} )
      | DEDENT {$v = list1e($i.v);} ) ;
 
@@ -1211,14 +1222,14 @@ normal_it_expr returns [Object v]
 
 datum_comment_line returns [Object v]
   : DATUM_COMMENTW hs
-    (is_i=it_expr | comment_eol INDENT body ) {$v=empty;} ;
+    (is_i=it_expr | comment_eol INDENT body ) {$v=empty_tag;} ;
 
 group_line returns [Object v]
   : (GROUP_SPLIT | scomment) hs /* Initial; Interpet as group */
       (group_i=it_expr {$v = $group_i.v;} /* Ignore initial GROUP/scomment */
        | comment_eol
          (INDENT g_body=body {$v = $g_body.v;} /* Normal GROUP use */
-          | same {$v = empty;} )) ;
+          | same {$v = empty_tag;} )) ;
 
 sublist_line returns [Object v]
   : SUBLIST hs /* "$" first on line */
@@ -1271,6 +1282,6 @@ t_expr_real returns [Object v]
 
 t_expr returns [Object v]
   : te=t_expr_real	
-    ( {$te.v == empty}? => retry=t_expr {$v = $retry.v;}
+    ( {isemptytagp($te.v)}? => retry=t_expr {$v = $retry.v;}
       | {$v = $te.v;} ) ;
 
