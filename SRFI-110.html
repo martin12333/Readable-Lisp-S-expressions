@@ -501,11 +501,6 @@ that end at the end of the line.</li>
 <li>Lines with only a ;-comment (preceded by 0 or more indent characters)
 are completely ignored - their indentation (if any) is irrelevant,
 and they do not end an expression.</li>
-<li>Scheme&#8217;s datum comments (<code>#;</code><i>datum</i>)
-comment out the next neoteric expression,
-not the next sweet expression
-(and please don&#8217;t follow the semicolon with whitespace).
-</li>
 <li>Special comments are non-whitespace sequences
 other than ;-comments that do not return a datum; they include
 datum comments (<code>#;</code><i>datum</i>) and
@@ -513,6 +508,11 @@ block comments (<code>#|</code>...<code>|#</code>).
 <a href="#block-comment-indent-significant">If a special comment
 begins immediately after the indent,
 the indentation of the special comment is used</a>.
+</li>
+<li>The datum comment marker (<code>#;</code>)
+at the beginning of a line, followed by whitespace,
+comments out the next <i>sweet-expression</i>;
+otherwise it comments out the next <i>neoteric-expression</i>.
 </li>
 <li>
 A single delimited period (.) still sets the value of the cdr field of a pair.
@@ -568,6 +568,8 @@ ff ; Demo special comments
   t3 t4
     t5 #| xyz |# t6
     t7 #;t8(q) t9
+  #; this is
+     all ignored
 </pre>
 </td>
 <td align="left" valign="top">
@@ -1142,6 +1144,10 @@ and the syntax-case related abbreviations,
 then the reader <em>SHOULD</em>
 treat those syntax-case abbreviations in the same manner.
 A sweet-expression reader <em>MAY</em> implement additional abbreviations.
+Similarly, in indentation mode,
+<tt>#;</tt> followed by space, tab, carriage return, or
+linefeed is represented as COMMENT_DATUMW; the
+carriage return or linefeed is <b>not</b> consumed.
 </p>
 
 <p>
@@ -1185,7 +1191,7 @@ SPACE    : ' ';
 TAB      : '\t';
 PERIOD   : '.';
 
-// Abbreviations not followed by horizontal space/EOL are ordinary:
+// Abbreviations not followed by horizontal space or EOL are ordinary:
 APOS           : '\'';
 QUASIQUOTE     : '\`';
 UNQUOTE_SPLICE : ',@';
@@ -1200,11 +1206,11 @@ fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
 LCOMMENT :       ';' NOT_EOL_CHARS ; // Line comment - doesn't include EOL
 BLOCK_COMMENT : '#|' // This is #|...|#
       (options {greedy=false;} : (BLOCK_COMMENT | .))* '|#' ;
-DATUM_COMMENT_START : '#;' ;
+DATUM_COMMENT : '#;' ;
 // SRFI-105 notes that "implementations could trivially support
 // (simultaneously) markers beginning with #! followed by a letter
 // (such as the one to identify support for curly-infix-expressions),
-// the SRFI-22 #! space marker as an ignored line, and the
+// the SRFI-22 #!+space marker as an ignored line, and the
 // format #!/ ... !# and #!. ... !# as a multi-line comment."
 // We'll implement that approach for maximum flexibility.
 SRFI_22_COMMENT : '#! ' NOT_EOL_CHARS ;
@@ -1238,7 +1244,7 @@ abbrev_no_w returns [Object v]
   | UNQUOTE         {'unquote};
 
 abbrev_all returns [Object v]
-  : abbrevw         {$abbrevw}
+  : abbrevw hspace* {$abbrevw}
   | abbrev_no_w     {$abbrev_no_w} ;
 
 // Production "n_expr" is a full neoteric-expression as defined in SRFI-105.
@@ -1258,7 +1264,7 @@ n_expr_first returns [Object v]
 sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE
                       | SHARP_BANG_DIRECTIVE ;
 scomment : BLOCK_COMMENT
-         | DATUM_COMMENT_START (options {greedy=true} : hspace)* n_expr
+         | DATUM_COMMENT (options {greedy=true} : hspace)* n_expr
          | sharp_bang_comments ;
 
 // Production "comment_eol" reads an optional ;-comment (if it exists),
@@ -1277,10 +1283,12 @@ Here are the key BNF productions for sweet-expressions:
 
 <pre>
 // Production "collecting_tail" returns a collecting list's contents.
+// Precondition: At beginning of line.
+// Postcondition: Consumed the matching COLLECTING_END.
 // FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
 
 collecting_tail returns [Object v]
-  : it_expr more=collecting_tail {(cons $it_expr $more)}
+  : it_expr more=collecting_tail {(conse $it_expr $more)}
   | comment_eol    retry1=collecting_tail {$retry1}
   | INITIAL_INDENT /* Initial indent only allowed for lcomment */
     LCOMMENT EOL   retry2=collecting_tail {$retry2}
@@ -1289,7 +1297,9 @@ collecting_tail returns [Object v]
 
 // Process line after ". hspace+" sequence.  Does not go past current line.
 post_period returns [Object v]
-  : scomment hspace* rpt=post_period {$rpt} // (scomment hspace*)*
+  : DATUM_COMMENTW hspace*
+      (ignored=n_expr hspace* sp2=post_period {$sp2} | /*empty*/ error )
+    | scomment hspace* rpt=post_period {$rpt} // (scomment hspace*)*
     | pn=n_expr hspace* (scomment hspace*)* (n_expr error)? {$pn}
     | COLLECTING hspace* pc=collecting_tail hspace*
       (scomment hspace*)* (n_expr error)? {$pc}
@@ -1298,6 +1308,8 @@ post_period returns [Object v]
 // Production "head" reads 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
 // on the line, it returns a list of exactly one item.
+// Precondition: At beginning of line+indent
+// Postcondition: At unconsumed EOL
 
 head returns [Object v]
   : PERIOD /* Leading ".": escape following datum like an n-expression. */
@@ -1313,12 +1325,15 @@ head returns [Object v]
 
 // Production "rest" production reads the rest of the expressions on a line
 // (the "rest of the head"), after the first expression of the line.
-// Like head, it consumes any hspace before it returns.
+// Precondition: At beginning of non-first expression on line (past hspace)
+// Postcondition: At unconsumed EOL
 
 rest returns [Object v]
   : PERIOD /* Improper list */
       (hspace+  pp=post_period {$pp}
        | /*empty*/   {(list '.)})
+  | DATUM_COMMENTW hspace*
+    (ignored=n_expr hspace* sr2=rest {$sr2} | /*empty*/ error )
   | scomment hspace* (sr=rest {$sr} | /*empty*/ {'()} )
   | COLLECTING hspace* collecting_tail hspace*
     (rr=rest             {(cons $collecting_tail $rr)}
@@ -1335,16 +1350,20 @@ rest returns [Object v]
 body returns [Object v]
   : i=it_expr
      (same
-       ( {isperiodp($i)}? =&gt; f=it_expr DEDENT
+       ( {(isperiodp $i)}? =&gt; f=it_expr DEDENT
            {$f} // Improper list final value
-       | {! isperiodp($i)}? =&gt; nxt=body
-           {(cons $i $nxt)} )
-     | DEDENT {(list $i)} ) ;
+       | {$i == empty}? =&gt; retry=body
+           {$retry}
+       | {!(isperiodp $i) &amp;&amp; ($i != empty)}? =&gt; nxt=body
+           {(conse $i $nxt)} )
+     | DEDENT {(list1e $i)} ) ;
 
 // Production "it_expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
+// Precondition: At beginning of line+indent
+// Postcondition: it-expr ended by consuming EOL + examining indent
 
-it_expr returns [Object v]
+normal_it_expr returns [Object v] 
   : head
     (options {greedy=true} : (
      GROUP_SPLIT hspace* /* Not initial; interpret as split */
@@ -1352,43 +1371,64 @@ it_expr returns [Object v]
         comment_eol error
         | /*empty*/ {(monify $head)} )
      | SUBLIST hspace* /* head SUBLIST ... case */
-       (sub_i=it_expr {(append $head (list $sub_i))}
+       (sub_i=it_expr {(appende $head (list1e $sub_i))}
         | comment_eol error )
      | comment_eol // Normal case, handle child lines if any:
-       (INDENT children=body {(append $head $children)}
+       (INDENT children=body {(appende $head $children)}
         | /*empty*/          {(monify $head)} /* No child lines */ )
-     ))
+     )) ;
+
+// An it_expr with a special prefix like \\ or $:
+
+special_it_expr returns [Object v]
+  : DATUM_COMMENTW hspace*
+    (is_i=it_expr | comment_eol INDENT body ) {empty}
   | (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
       (group_i=it_expr {$group_i} /* Ignore initial GROUP/scomment */
        | comment_eol
          (INDENT g_body=body {$g_body} /* Normal GROUP use */
-          | same ( g_i=it_expr {$g_i} /* Plausible separator */
-                   /* Handle #!sweet EOL EOL t_expr */
-                   | comment_eol restart=t_expr {$restart} )
-          | DEDENT error ))
+          | same {empty} ))
   | SUBLIST hspace* /* "$" first on line */
-    (is_i=it_expr {(list $is_i)}
+    (is_i=it_expr {(list1e $is_i)}
      | comment_eol error )
   | abbrevw hspace*
       (comment_eol INDENT ab=body
-         {(append (list $abbrevw) $ab)}
+         {(appende (list $abbrevw) $ab)}
        | ai=it_expr
-         {(list $abbrevw $ai)} ) ;
+         {(list2e $abbrevw $ai)} ) ;
+
+it_expr returns [Object v]
+  : normal_it_expr   {$normal_it_expr}
+  | special_it_expr  {$special_it_expr} ;
 
 // Production "t_expr" is the top-level production for sweet-expressions.
 // This production handles special cases, then in the normal case
 // drops to the it_expr production.
+// Precondition: At beginning of line
+// Postcondition: At beginning of line
 
-t_expr returns [Object v]
-  : comment_eol    retry1=t_expr {$retry1}
-  | (FF | VT)+ EOL retry2=t_expr {$retry2}
-  | (INITIAL_INDENT | hspaces_maybe_bang) /* initial indent */
+// The rule for "indent processing disabled on initial top-level hspace"
+// is a very simple (and clever) BNF construction by Alan Manuel K. Gloria.
+// If there is an indent it simply reads a single n-expression and returns.
+// If there is more than one on an initially-indented line, the later
+// horizontal space will not have have been read, so this production will
+// fire again on the next invocation, doing the right thing.
+
+t_expr_real returns [Object v]
+  : comment_eol    r1=t_expr_real {$r1} // Skip initial blank lines
+  | (FF | VT)+ EOL r2=t_expr_real {$r2} // Skip initial FF|VT lines
+  | (INITIAL_INDENT | hspaces_maybe_bang) // Process initial indent
     (n_expr {$n_expr}
      | (scomment (options {greedy=true} : hspace)*
-       sretry=t_expr {$sretry})
+       sretry=t_expr_real {$sretry})
      | comment_eol retry3=t_expr {$retry3} )
-  | EOF {(generate_eof)} /* End of file */
-  | it_expr {$it_expr} /* Normal case */ ;
+  | EOF {(generate_eof)} // End of file
+  | i=it_expr {$i} /* Normal case */ ;
+
+t_expr returns [Object v]
+  : te=t_expr_real	
+    ( {$te == empty}? =&gt; retry=t_expr {$retry}
+      | {$te} ) ;
 </pre>
 
 
@@ -1431,8 +1471,6 @@ A sweet-expression reader <em>SHOULD</em> support
 and
 <a href="http://srfi.schemers.org/srfi-62/">SRFI-62
 (S-expression comments)</a> (<tt>#;</tt><var>datum</var>).
-Portable applications <em>SHOULD NOT</em> include whitespace
-after <code>#;</code> for a datum comment.
 A sweet-expression reader <em>SHOULD</em> support
 <a href="http://srfi.schemers.org/srfi-22/">SRFI-22
 (Running Scheme Scripts on Unix)</a> (where <tt>#!</tt>
@@ -3408,7 +3446,8 @@ define foo(x)
 <p>
 Although the reasons above pertain mostly to block comments,
 datum comments (<code>#;</code>) are considered
-essentially identical to block comments.
+essentially identical to block comments if "#;" is not followed by
+whitespace.
 </p>
 <p>
 We could have mandated a different behavior between datum

@@ -541,4 +541,81 @@ fickle
   abc def . #|1|# ghi
   jkl mno . #|2|# pqr #|3|# \\ another . #|4|# line #|5|#
 
+z1 #;(a b) z2
+
+foo1
+  a1
+  #; hello
+  b2
+
+foo2
+  a2
+  #;
+    goodbye stuff
+    more stuff
+  b2
+
+foo3
+  a3
+  #; hello
+
+foo4
+  #; hello
+  a4
+
+foo5-body-only-comments
+  #; hello
+
+#; do not show
+
+#; do not show
+   this either
+
+foo6
+  #; boggle
+  a6
+
+collect1 <* #; h1 h2 *>
+
+collect2 <*
+#; h5 h6
+   h7
+*>
+
+collect3 <*
+a b
+#; h5 h6
+   h7
+c d
+#; nothing
+*>
+
+aaa
+
+#| x |#
+  #| y |#
+
+bbb
+
+\\
+  #; hello
+
+\\
+  \\
+
+ccc
+
+  #| ignore this |#
+
+this is #; not a test
+
+this is #;only a test of the emergency broadcast system
+
+had this been
+  an actual . #; fnord emergency
+
+you would have
+  a . #;fnord donut
+
+
 fin

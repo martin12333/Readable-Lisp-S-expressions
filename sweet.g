@@ -284,7 +284,67 @@ tokens {
     }
   }
 
-  // ; Utility function:
+  // Utility declarations and functions
+
+  // Special "empty" object to represent "no value at all".
+  // Scheme: (define empty-tag (string-copy "empty-tag"))
+  // Common Lisp: (defconstant empty-tag (make-symbol "empty-tag"))
+  public static Object empty = new Pair(null, null);
+  
+  // (define (conse x y) ; cons, but handle "empty" values
+  //   (cond
+  //     ((eq? y empty) x)
+  //     ((eq? x empty) y)
+  //     (#t (cons x y))))
+
+  public static Object conse(Object x, Object y) {
+    if (y == empty) {
+      return x;
+    } else if (x == empty) {
+      return y;
+    } else {return cons(x, y);}
+  }
+
+  // (define (appende x y) ; append, but handle "empty" values
+  //   (cond
+  //     ((eq? y empty) x)
+  //     ((eq? x empty) y)
+  //     (#t (append y))))
+
+  public static Object appende(Object x, Object y) {
+    if (y == empty) {
+      return x;
+    } else if (x == empty) {
+      return y;
+    } else {return append(x, y);}
+  }
+
+  // (define (list1e x) ; list, but handle "empty" values
+  //   (if (eq? x empty)
+  //       '()
+  //       (list x)))
+
+  public static Object list1e(Object x) {
+    if (x == empty) {
+      return null;
+    } else {return list(x);}
+  }
+
+  // (define (list2e x y) ; list, but handle "empty" values
+  //   (if (eq? x empty)
+  //       y
+  //       (if (eq? y empty)
+  //          x
+  //          (list x y))))
+
+  public static Object list2e(Object x, Object y) {
+    if (x == empty) {
+      return list1e(y);
+    } else if (y == empty) {
+      return list1e(x);
+    } else {return list(x,y);}
+  }
+
   // ; If x is a 1-element list, return (car x), else return x
   // (define (monify x)
   //   (cond
@@ -418,10 +478,10 @@ start : t_expr
 // Lexical token (terminal) names are in all upper case
 
 // INCLUDE IN SRFI
-
 SPACE    : ' ';
 TAB      : '\t';
 PERIOD   : '.';
+// STOP INCLUDING IN SRFI
 
 // Special markers, which only have meaning outside (), [], {}.
 GROUP_SPLIT  : {indent_processing()}? => '\\' '\\'; // GROUP/split symbol.
@@ -436,6 +496,7 @@ APOSW           : {indent_processing()}? => '\'' (SPACE | TAB) ;
 QUASIQUOTEW     : {indent_processing()}? => '\`' (SPACE | TAB) ;
 UNQUOTE_SPLICEW : {indent_processing()}? => ',@' (SPACE | TAB) ;
 UNQUOTEW        : {indent_processing()}? => ','  (SPACE | TAB) ;
+DATUM_COMMENTW  : {indent_processing()}? => '#;' (SPACE | TAB) ;
 
 // Abbreviations followed by EOL also generate abbrevW:
 APOS_EOL        : {indent_processing()}? => '\'' EOL_SEQUENCE
@@ -455,7 +516,14 @@ UNQUOTE_EOL     : {indent_processing()}? => ',' EOL_SEQUENCE
                   {emit_type(UNQUOTEW); emit_type(EOL);
                    process_indent($i.text, $i);};
 
-// Abbreviations not followed by horizontal space are ordinary:
+DATUM_COMMENT_EOL: {indent_processing()}? => '#;' EOL_SEQUENCE
+                  SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
+                  {emit_type(DATUM_COMMENTW); emit_type(EOL);
+                   process_indent($i.text, $i);};
+
+// INCLUDE IN SRFI
+
+// Abbreviations not followed by horizontal space or EOL are ordinary:
 APOS           : '\'';
 QUASIQUOTE     : '\`';
 UNQUOTE_SPLICE : ',@';
@@ -470,7 +538,7 @@ fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
 LCOMMENT :       ';' NOT_EOL_CHARS ; // Line comment - doesn't include EOL
 BLOCK_COMMENT : '#|' // This is #|...|#
       (options {greedy=false;} : (BLOCK_COMMENT | .))* '|#' ;
-DATUM_COMMENT_START : '#;' ;
+DATUM_COMMENT : '#;' ;
 // SRFI-105 notes that "implementations could trivially support
 // (simultaneously) markers beginning with #! followed by a letter
 // (such as the one to identify support for curly-infix-expressions),
@@ -946,8 +1014,6 @@ n_expr_noabbrev returns [Object v]
 
 
 // INCLUDE IN SRFI
-// IMPORTANT SUPPORTING PARSER DEFINITIONS for the BNF
-
 hspace  : SPACE | TAB ;        // horizontal space
 
 // This is for handling non-first n-expressions in initial indent.
@@ -990,7 +1056,7 @@ n_expr_first returns [Object v]
 sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE
                       | SHARP_BANG_DIRECTIVE ;
 scomment : BLOCK_COMMENT
-         | DATUM_COMMENT_START (options {greedy=true;} : hspace)* n_expr
+         | DATUM_COMMENT (options {greedy=true;} : hspace)* n_expr
          | sharp_bang_comments ;
 
 // Production "comment_eol" reads an optional ;-comment (if it exists),
@@ -1008,7 +1074,7 @@ comment_eol : LCOMMENT? EOL;
 // FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
 
 collecting_tail returns [Object v]
-  : it_expr more=collecting_tail {$v = cons($it_expr.v, $more.v);}
+  : it_expr more=collecting_tail {$v = conse($it_expr.v, $more.v);}
   | comment_eol    retry1=collecting_tail {$v = $retry1.v;}
   | INITIAL_INDENT /* Initial indent only allowed for lcomment */
     LCOMMENT EOL   retry2=collecting_tail {$v = $retry2.v;}
@@ -1017,7 +1083,9 @@ collecting_tail returns [Object v]
 
 // Process line after ". hspace+" sequence.  Does not go past current line.
 post_period returns [Object v]
-  : scomment hspace* rpt=post_period {$v = $rpt.v;} // (scomment hspace*)*
+  : DATUM_COMMENTW hspace*
+      (ignored=n_expr hspace* sp2=post_period {$v = $sp2.v;} | /*empty*/ error )
+    | scomment hspace* rpt=post_period {$v = $rpt.v;} // (scomment hspace*)*
     | pn=n_expr hspace* (scomment hspace*)* (n_expr error)? {$v = $pn.v;}
     | COLLECTING hspace* pc=collecting_tail hspace*
       (scomment hspace*)* (n_expr error)? {$v = $pc.v;}
@@ -1025,9 +1093,10 @@ post_period returns [Object v]
 
 // Production "head" reads 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
-// on the line, it returns a list of exactly one item; this makes it
-// easy to append to later (if appropriate).  In some cases, we want
-// single items to be themselves, not in a list; function monify does this.
+// on the line, it returns a list of exactly one item.
+// Precondition: At beginning of line+indent
+// Postcondition: At unconsumed EOL
+// STOP INCLUDING IN SRFI
 // The "head" production never reads beyond the current line
 // (except within a block comment), so it doesn't need to keep track
 // of indentation, and indentation will NOT change within head.
@@ -1037,9 +1106,7 @@ post_period returns [Object v]
 // Callers can depend on "head" and "rest" *not* changing indentation.
 // On entry, all indentation/hspace must have already been read.
 // On return, it will have consumed all hspace (spaces and tabs).
-
-// Precondition: At beginning of line+indent
-// Postcondition: At unconsumed EOL
+// INCLUDE IN SRFI
 
 head returns [Object v]
   : PERIOD /* Leading ".": escape following datum like an n-expression. */
@@ -1055,17 +1122,21 @@ head returns [Object v]
 
 // Production "rest" production reads the rest of the expressions on a line
 // (the "rest of the head"), after the first expression of the line.
+// Precondition: At beginning of non-first expression on line (past hspace)
+// Postcondition: At unconsumed EOL
+// STOP INCLUDING IN SRFI
 // Like head, it consumes any hspace before it returns.
 // The "rest" production is written this way so a non-tokenizing
 // implementation can read an expression specially. E.G., if it sees a period,
 // read the expression directly and then see if it's just a period.
-// Precondition: At beginning of non-first expression on line (past hspace)
-// Postcondition: At unconsumed EOL
+// INCLUDE IN SRFI
 
 rest returns [Object v]
   : PERIOD /* Improper list */
       (hspace+  pp=post_period {$v = $pp.v;}
        | /*empty*/   {$v = list(".");})
+  | DATUM_COMMENTW hspace*
+    (ignored=n_expr hspace* sr2=rest {$v = $sr2.v;} | /*empty*/ error )
   | scomment hspace* (sr=rest {$v = $sr.v;} | /*empty*/ {$v = null;} )
   | COLLECTING hspace* collecting_tail hspace*
     (rr=rest             {$v = cons($collecting_tail.v, $rr.v);}
@@ -1078,24 +1149,29 @@ rest returns [Object v]
 // Production "body" handles the sequence of 1+ child lines in an it_expr
 // (e.g., after a "head"), each of which is itself an it_expr.
 // It returns the list of expressions in the body.
+// STOP INCLUDING IN SRFI
 // Note that an it-expr will consume any line comments or hspaces
 // before it returns back to the "body" production.
 // Since (list x) is simply (cons x '()), this production always does a
 // cons of the first it_expr and another body [if it exists] or '() [if not].
+// INCLUDE IN SRFI
 
 body returns [Object v]
   : i=it_expr
      (same
        ( {isperiodp($i.v)}? => f=it_expr DEDENT
            {$v = $f.v;} // Improper list final value
-       | {! isperiodp($i.v)}? => nxt=body
-           {$v = cons($i.v, $nxt.v);} )
-     | DEDENT {$v = list($i.v);} ) ;
+       | {$i.v == empty}? => retry=body
+           {$v = $retry.v;}
+       | {!isperiodp($i.v) && ($i.v != empty)}? => nxt=body
+           {$v = conse($i.v, $nxt.v);} )
+     | DEDENT {$v = list1e($i.v);} ) ;
 
 // Production "it_expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
 // Precondition: At beginning of line+indent
 // Postcondition: it-expr ended by consuming EOL + examining indent
+// STOP INCLUDING IN SRFI
 // Note: This BNF presumes that "*>" generates multiple tokens,
 // "EOL DEDENT* COLLECTING_END", and resets the indentation list.
 // You can change the BNF below to allow "head /*empty*/", and handle dedents
@@ -1105,45 +1181,49 @@ body returns [Object v]
 // the first or the longer sequence first.  Either approach is needed to
 // support "*>" as the non-first element so that the "head" can end
 // without a literal EOL, e.g., as in "let <* y 5 *>".
+// INCLUDE IN SRFI
 
 normal_it_expr returns [Object v] 
   : head
     (options {greedy=true;} : (
      GROUP_SPLIT hspace* /* Not initial; interpret as split */
       (options {greedy=true;} :
+// STOP INCLUDING IN SRFI
         // To allow \\ EOL as line-continuation, instead do:
-        //   comment_eol same more=it_expr {$v = append($head.v, $more.v);}
+        //   comment_eol same more=it_expr {$v = appende($head.v, $more.v);}
+// INCLUDE IN SRFI
         comment_eol error
         | /*empty*/ {$v = monify($head.v);} )
      | SUBLIST hspace* /* head SUBLIST ... case */
-       (sub_i=it_expr {$v=append($head.v, list($sub_i.v));}
+       (sub_i=it_expr {$v=appende($head.v, list1e($sub_i.v));}
         | comment_eol error )
      | comment_eol // Normal case, handle child lines if any:
-       (INDENT children=body {$v = append($head.v, $children.v);}
+       (INDENT children=body {$v = appende($head.v, $children.v);}
         | /*empty*/          {$v = monify($head.v);} /* No child lines */ )
+// STOP INCLUDING IN SRFI
      // If COLLECTING_END doesn't generate multiple tokens, can do:
      // | /*empty*/           {$v = monify($head.v);}
+// INCLUDE IN SRFI
      )) ;
 
 // An it_expr with a special prefix like \\ or $:
 
 special_it_expr returns [Object v]
-  : (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
+  : DATUM_COMMENTW hspace*
+    (is_i=it_expr | comment_eol INDENT body ) {$v=empty;}
+  | (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
       (group_i=it_expr {$v = $group_i.v;} /* Ignore initial GROUP/scomment */
        | comment_eol
          (INDENT g_body=body {$v = $g_body.v;} /* Normal GROUP use */
-          | same ( g_i=it_expr {$v = $g_i.v;} /* Plausible separator */
-                   /* Handle #!sweet EOL EOL t_expr */
-                   | comment_eol restart=t_expr {$v = $restart.v;} )
-          | DEDENT error ))
+          | same {$v = empty;} ))
   | SUBLIST hspace* /* "$" first on line */
-    (is_i=it_expr {$v=list($is_i.v);}
+    (is_i=it_expr {$v=list1e($is_i.v);}
      | comment_eol error )
   | abbrevw hspace*
       (comment_eol INDENT ab=body
-         {$v = append(list($abbrevw.v), $ab.v);}
+         {$v = appende(list($abbrevw.v), $ab.v);}
        | ai=it_expr
-         {$v=list($abbrevw.v, $ai.v);} ) ;
+         {$v=list2e($abbrevw.v, $ai.v);} ) ;
 
 it_expr returns [Object v]
   : normal_it_expr   {$v=$normal_it_expr.v;}
@@ -1162,14 +1242,19 @@ it_expr returns [Object v]
 // horizontal space will not have have been read, so this production will
 // fire again on the next invocation, doing the right thing.
 
-t_expr returns [Object v]
-  : comment_eol    retry1=t_expr {$v=$retry1.v;} // Skip initial blank lines
-  | (FF | VT)+ EOL retry2=t_expr {$v=$retry2.v;} // Skip initial FF|VT lines
+t_expr_real returns [Object v]
+  : comment_eol    r1=t_expr_real {$v=$r1.v;} // Skip initial blank lines
+  | (FF | VT)+ EOL r2=t_expr_real {$v=$r2.v;} // Skip initial FF|VT lines
   | (INITIAL_INDENT | hspaces_maybe_bang) // Process initial indent
     (n_expr {$v = $n_expr.v;}
      | (scomment (options {greedy=true;} : hspace)*
-       sretry=t_expr {$v=$sretry.v;})
+       sretry=t_expr_real {$v=$sretry.v;})
      | comment_eol retry3=t_expr {$v=$retry3.v;} )
   | EOF {generate_eof();} // End of file
-  | it_expr {$v = $it_expr.v;} /* Normal case */ ;
+  | i=it_expr {$v = $i.v;} /* Normal case */ ;
+
+t_expr returns [Object v]
+  : te=t_expr_real	
+    ( {$te.v == empty}? => retry=t_expr {$v = $retry.v;}
+      | {$v = $te.v;} ) ;
 
