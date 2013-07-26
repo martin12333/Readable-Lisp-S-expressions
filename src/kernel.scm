@@ -1827,7 +1827,6 @@
     (let* ((i-full-results (it-expr port starting-indent))
            (i-new-indent   (car i-full-results))
            (i-value        (cadr i-full-results)))
-      ; TODO: fix up for empty/datum comment
       (if (string=? starting-indent i-new-indent)
           (if (eq? i-value period-symbol)
               (let* ((f-full-results (it-expr port i-new-indent))
@@ -1849,7 +1848,6 @@
     (let* ((head-full-results (head port))
            (head-stopper      (car head-full-results))
            (head-value        (cadr head-full-results)))
-      ; TODO: fix up for empty/datum comment
       (if (and (not (null? head-value)) (not (eq? head-stopper 'abbrevw)))
           ; The head... branches:
           (cond
