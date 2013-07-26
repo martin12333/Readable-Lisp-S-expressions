@@ -2889,20 +2889,23 @@ and others have argued for less;
 we have tried to strike a balance.
 </p>
 
-
 <p>
-The specification itself looks more complex, but that is because
-we have chosen to develop a rigorous specification using an exacting BNF.
-This was in response to lessons learned with SRFI-49;
-the SRFI-49 specification was simpler but left a number of issues
+We have chosen to develop a rigorous specification using an exacting BNF.
+It could be simpler if we were not rigorous, but this
+was in response to lessons learned with SRFI-49.
+The SRFI-49 specification was simpler but left a number of issues
 underspecified, and thus it easily led to different interpretations.
 The key BNF definitions for sweet-expressions
-only require 88 non-comment non-blank lines for 7 productions in ANTLR.
+only uses 14 productions in 104 non-comment non-blank lines.
 As a comparison, defining Scheme simple datums
 (such as identifiers and numbers) using the same notation
-required more lines (109 non-comment non-blank lines)
-and more productions (52).
-<!-- measurement taken on 2013-03-27 using "sweet.g" -->
+uses far more productions (52) and
+a few more lines (109 non-comment non-blank lines).
+<!-- measurement taken on 2013-07-26.
+Text inside "key-bnf"'s "pre" section was copied to file ",z".  Then:
+  grep '^[a-zA-Z]' ,z | wc -l
+  grep -v '^ *$' ,z | grep -v '^/' | wc -l
+ -->
 </p>
 
 <p>
