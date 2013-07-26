@@ -1160,8 +1160,8 @@ per the it_expr production defined below.
 <p>
 The BNF depends on the following utility procedures.
 The first ones are variants of traditional list processing procedures
-but also handle a special "empty" value (represented as "empty-tag").
-The "monify" procedure enables lines with a
+but also handle a special &#8220;empty&#8221; value (represented as &#8220;empty-tag&#8221;).
+The &#8220;monify&#8221; procedure enables lines with a
 single n-expression and no child lines to represent themselves and
 not be wrapped into a list:
 </p>
@@ -1200,10 +1200,11 @@ not be wrapped into a list:
 
 <p>
 The BNF body production uses an isperiodp(x) function,
-which returns true iff x is the datum "." and begins
+which returns true iff x is the datum &#8220;.&#8221; and begins
 with a period.
-This is used so that "a . b" is recognized as the pair (a . b),
-while "a |.| b" is 3-element list "(a |.| b)"
+This is used so that &#8220;a . b&#8221; is recognized as the pair (a . b),
+while &#8220;a&nbsp;|.|&nbsp;b&#8221; is the
+3-element list &#8220;(a&nbsp;|.|&nbsp;b)&#8221;.
 </p>
 
 <h2><a name="bnf-supporting">Supporting BNF definitions</a></h2>
@@ -3485,7 +3486,7 @@ define foo(x)
 <p>
 Although the reasons above pertain mostly to block comments,
 datum comments (<code>#;</code>) are considered
-essentially identical to block comments if "#;" is not followed by
+essentially identical to block comments if &#8220;#;&#8221; is not followed by
 whitespace.
 </p>
 <p>
@@ -4278,7 +4279,7 @@ and the SRFI-105 notation
 were initially developed.
 </p>
 <p>
-For SUBLIST, one basically considers "zooming in"
+For SUBLIST, one basically considers &#8220;zooming in&#8221;
 on the <code>$</code> symbol,
 while looks a little like this:
 </p>
@@ -4335,7 +4336,7 @@ and are idiomatic
 in other Lisp-like languages &mdash;
 notably Common Lisp.
 Here is an example
-of defining a class in Guile's GOOPS:
+of defining a class in Guile&#8217;s GOOPS:
 </p>
 <pre>
 define-class &lt;player&gt; (&lt;game-object&gt;)
