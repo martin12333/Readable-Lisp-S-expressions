@@ -43,7 +43,7 @@
 ; be the only thing on the line, and in that case it should
 ; operate as a placeholder for that indentation position.
 ; Thus, we'll specially wrap such cases and return a
-; distinctive cons value "empty-values", to represent the "no value" case.
+; distinctive value "empty-values", to represent the "no value" case.
 (defvar *underlying-sweet-readtable*
   "This table is basically neoteric-expressions with some tweaks")
 
@@ -78,8 +78,10 @@
 ; and allow us to override the reader.
 (define-constant empty-values (make-symbol "empty-values"))
 
-; Represent no value at all
+; Represent no value at all, in the sweet-expression processing.
 (define-constant empty-tag (make-symbol "empty-tag"))
+
+(define-constant datum-commentw (make-symbol "datum-commentw"))
 
 (define-constant vertical-tab (code-char 11)) ; VT is decimal 11.
 (define-constant form-feed #\page)            ; FF is decimal 12.
@@ -281,7 +283,7 @@
 (defun wrap-comment-datum (stream sub-char int)
   (declare (ignore sub-char int))
   (if (my-char-whitespacep (my-peek-char stream))
-    (read-error "Sequence #; must not be followed by whitespace.")
+    datum-commentw
     (let ((junk (neoteric-read-nocomment stream)))
       (declare (ignore junk))
       empty-values)))
