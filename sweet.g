@@ -1229,12 +1229,7 @@ it_expr returns [Object v]
   : normal_it_expr   {$v=$normal_it_expr.v;}
   | special_it_expr  {$v = $special_it_expr.v;} ;
 
-// Production "t_expr" is the top-level production for sweet-expressions.
-// This production handles special cases, then in the normal case
-// drops to the it_expr production.
-// Precondition: At beginning of line
-// Postcondition: At beginning of line
-
+// Process initial indent.
 // The rule for "indent processing disabled on initial top-level hspace"
 // is a very simple (and clever) BNF construction by Alan Manuel K. Gloria.
 // If there is an indent it simply reads a single n-expression and returns.
@@ -1242,14 +1237,23 @@ it_expr returns [Object v]
 // horizontal space will not have have been read, so this production will
 // fire again on the next invocation, doing the right thing.
 
-t_expr_real returns [Object v]
-  : comment_eol    r1=t_expr_real {$v=$r1.v;} // Skip initial blank lines
-  | (FF | VT)+ EOL r2=t_expr_real {$v=$r2.v;} // Skip initial FF|VT lines
-  | (INITIAL_INDENT | hspaces_maybe_bang) // Process initial indent
+initial returns [Object v]
+  : (INITIAL_INDENT | hspaces_maybe_bang)
     (n_expr {$v = $n_expr.v;}
      | (scomment (options {greedy=true;} : hspace)*
        sretry=t_expr_real {$v=$sretry.v;})
-     | comment_eol retry3=t_expr {$v=$retry3.v;} )
+     | comment_eol retry3=t_expr {$v=$retry3.v;} ) ;
+
+// Production "t_expr" is the top-level production for sweet-expressions.
+// This production handles special cases, then in the normal case
+// drops to the it_expr production.
+// Precondition: At beginning of line
+// Postcondition: At beginning of line
+
+t_expr_real returns [Object v]
+  : comment_eol    r1=t_expr_real {$v=$r1.v;} // Skip initial blank lines
+  | (FF | VT)+ EOL r2=t_expr_real {$v=$r2.v;} // Skip initial FF|VT lines
+  | initial {$v=$initial.v;}
   | EOF {generate_eof();} // End of file
   | i=it_expr {$v = $i.v;} /* Normal case */ ;
 
