@@ -1158,17 +1158,44 @@ per the it_expr production defined below.
 </p>
 
 <p>
-The BNF depends on this utility function (this enables lines with a
+The BNF depends on the following utility procedures.
+The first ones are variants of traditional list processing procedures
+but also handle a special "empty" value (represented as "empty-tag").
+The "monify" procedure enables lines with a
 single n-expression and no child lines to represent themselves and
-not be wrapped into a list):
+not be wrapped into a list:
 </p>
 <pre>
-; If x is a 1-element list, return (car x), else return x
-(define (monify x)
-  (cond
-    ((not (pair? x)) x)
-    ((null? (cdr x)) (car x))
-    (#t              x)))
+  (define (conse x y) ; cons, but handle "empty" values
+    (cond
+      ((eq? y empty-tag) x)
+      ((eq? x empty-tag) y)
+      (#t (cons x y))))
+
+  (define (appende x y) ; append, but handle "empty" values
+    (cond
+      ((eq? y empty-tag) x)
+      ((eq? x empty-tag) y)
+      (#t (append y))))
+
+  (define (list1e x) ; list, but handle "empty" values
+    (if (eq? x empty-tag)
+        '()
+        (list x)))
+
+  (define (list2e x y) ; list, but handle "empty" values
+    (if (eq? x empty-tag)
+        y
+        (if (eq? y empty-tag)
+           x
+           (list x y))))
+
+  ; If x is a 1-element list, return (car x), else return x
+  (define (monify x)
+    (cond
+      ((not (pair? x)) x)
+      ((null? (cdr x)) (car x))
+      (#t              x)))
 </pre>
 
 <p>
