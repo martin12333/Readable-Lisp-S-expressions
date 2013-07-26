@@ -1015,6 +1015,7 @@ n_expr_noabbrev returns [Object v]
 
 // INCLUDE IN SRFI
 hspace  : SPACE | TAB ;        // horizontal space
+hs      : hspace* ;
 
 // This is for handling non-first n-expressions in initial indent.
 // An implementation MAY implement this as "(hspace | '!')+"
@@ -1036,7 +1037,7 @@ abbrev_no_w returns [Object v]
   | UNQUOTE         {$v = "unquote";};
 
 abbrev_all returns [Object v]
-  : abbrevw hspace* {$v = $abbrevw.v;}
+  : abbrevw hs {$v = $abbrevw.v;}
   | abbrev_no_w     {$v = $abbrev_no_w.v;} ;
 
 // Production "n_expr" is a full neoteric-expression as defined in SRFI-105.
@@ -1083,12 +1084,12 @@ collecting_tail returns [Object v]
 
 // Process line after ". hspace+" sequence.  Does not go past current line.
 post_period returns [Object v]
-  : DATUM_COMMENTW hspace*
-      (ignored=n_expr hspace* sp2=post_period {$v = $sp2.v;} | /*empty*/ error )
-    | scomment hspace* rpt=post_period {$v = $rpt.v;} // (scomment hspace*)*
-    | pn=n_expr hspace* (scomment hspace*)* (n_expr error)? {$v = $pn.v;}
-    | COLLECTING hspace* pc=collecting_tail hspace*
-      (scomment hspace*)* (n_expr error)? {$v = $pc.v;}
+  : DATUM_COMMENTW hs
+      (ignored=n_expr hs sp2=post_period {$v = $sp2.v;} | /*empty*/ error )
+    | scomment hs rpt=post_period {$v = $rpt.v;} // (scomment hs)*
+    | pn=n_expr hs (scomment hs)* (n_expr error)? {$v = $pn.v;}
+    | COLLECTING hs pc=collecting_tail hs
+      (scomment hs)* (n_expr error)? {$v = $pc.v;}
     | /*empty*/ {$v = ".";} ;
 
 // Production "head" reads 1+ n-expressions on one line; it will
@@ -1112,7 +1113,7 @@ head returns [Object v]
   : PERIOD /* Leading ".": escape following datum like an n-expression. */
       (hspace+ pp=post_period {$v = list($pp.v);}
        | /*empty*/    {$v = list(".");} )
-  | COLLECTING hspace* collecting_tail hspace*
+  | COLLECTING hs collecting_tail hs
       (rr=rest            {$v = cons($collecting_tail.v, $rr.v); }
        | /*empty*/        {$v = list($collecting_tail.v); } )
   | basic=n_expr_first /* Only match n_expr_first */
@@ -1135,10 +1136,10 @@ rest returns [Object v]
   : PERIOD /* Improper list */
       (hspace+  pp=post_period {$v = $pp.v;}
        | /*empty*/   {$v = list(".");})
-  | DATUM_COMMENTW hspace*
-    (ignored=n_expr hspace* sr2=rest {$v = $sr2.v;} | /*empty*/ error )
-  | scomment hspace* (sr=rest {$v = $sr.v;} | /*empty*/ {$v = null;} )
-  | COLLECTING hspace* collecting_tail hspace*
+  | DATUM_COMMENTW hs
+    (ignored=n_expr hs sr2=rest {$v = $sr2.v;} | /*empty*/ error )
+  | scomment hs (sr=rest {$v = $sr.v;} | /*empty*/ {$v = null;} )
+  | COLLECTING hs collecting_tail hs
     (rr=rest             {$v = cons($collecting_tail.v, $rr.v);}
      | /*empty*/             {$v = list($collecting_tail.v);} )
   | basic=n_expr
@@ -1186,7 +1187,7 @@ body returns [Object v]
 normal_it_expr returns [Object v] 
   : head
     (options {greedy=true;} : (
-     GROUP_SPLIT hspace* /* Not initial; interpret as split */
+     GROUP_SPLIT hs /* Not initial; interpret as split */
       (options {greedy=true;} :
         // STOP INCLUDING IN SRFI
         // To allow \\ EOL as line-continuation, instead do:
@@ -1194,7 +1195,7 @@ normal_it_expr returns [Object v]
         // INCLUDE IN SRFI
         comment_eol error
         | /*empty*/ {$v = monify($head.v);} )
-     | SUBLIST hspace* /* head SUBLIST ... case */
+     | SUBLIST hs /* head SUBLIST ... case */
        (sub_i=it_expr {$v=appende($head.v, list1e($sub_i.v));}
         | comment_eol error )
      | comment_eol // Normal case, handle child lines if any:
@@ -1209,17 +1210,17 @@ normal_it_expr returns [Object v]
 // An it_expr with a special prefix like \\ or $:
 
 special_it_expr returns [Object v]
-  : DATUM_COMMENTW hspace*
+  : DATUM_COMMENTW hs
     (is_i=it_expr | comment_eol INDENT body ) {$v=empty;}
-  | (GROUP_SPLIT | scomment) hspace* /* Initial; Interpet as group */
+  | (GROUP_SPLIT | scomment) hs /* Initial; Interpet as group */
       (group_i=it_expr {$v = $group_i.v;} /* Ignore initial GROUP/scomment */
        | comment_eol
          (INDENT g_body=body {$v = $g_body.v;} /* Normal GROUP use */
           | same {$v = empty;} ))
-  | SUBLIST hspace* /* "$" first on line */
+  | SUBLIST hs /* "$" first on line */
     (is_i=it_expr {$v=list1e($is_i.v);}
      | comment_eol error )
-  | abbrevw hspace*
+  | abbrevw hs
       (comment_eol INDENT ab=body
          {$v = appende(list($abbrevw.v), $ab.v);}
        | ai=it_expr
