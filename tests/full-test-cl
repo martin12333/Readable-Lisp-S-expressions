@@ -261,6 +261,10 @@ mytest
   ' a88 . #; qqq b89
   '(a88 . b89)
 
+mytest
+  ' foo
+    #; bar
+  '(foo)
 
 (disable-readable)
 (princ "Tests complete!")
