@@ -1083,6 +1083,7 @@ collecting_tail returns [Object v]
   | COLLECTING_END {$v = null;} ;
 
 // Process line after ". hspace+" sequence.  Does not go past current line.
+
 post_period returns [Object v]
   : DATUM_COMMENTW hs
       (ignored=n_expr hs sp2=post_period {$v = $sp2.v;} | /*empty*/ error )
