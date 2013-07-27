@@ -726,7 +726,18 @@
           ((eq head-stopper 'group-split-marker)
             (hspaces stream)
             (if (lcomment-eolp (my-peek-char stream))
-                (read-error "Cannot follow split with end of line.")
+                ; Local extension - allow \\ as line-continuation, a
+                ; capability more useful in Common Lisp than in Scheme.
+                ; To error out instead, replace with:
+                ; (read-error "Cannot follow split with end of line.")
+                (let ((new-indent (get-next-indent stream)))
+                  (if (string= new-indent starting-indent)
+                    (let* ((more-full-results (it-expr stream new-indent))
+                           (more-new-indent   (car more-full-results))
+                           (more-value        (cadr more-full-results)))
+                      (list more-new-indent
+                        (my-append head-value more-value)))
+                    (read-error "Continue without same-indent line.")))
                 (list starting-indent (monify head-value))))
           ((eq head-stopper 'sublist-marker)
             (hspaces stream)
