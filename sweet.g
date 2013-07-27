@@ -1077,6 +1077,10 @@ scomment : BLOCK_COMMENT
 
 comment_eol : LCOMMENT? EOL;
 
+ignorable
+  : scomment hs
+  | DATUM_COMMENTW hs (ignored=n_expr hs | /*empty*/ error ) ;
+
 
 // KEY BNF PRODUCTIONS for sweet-expressions:
 
@@ -1096,12 +1100,10 @@ collecting_tail returns [Object v]
 // Process line after ". hspace+" sequence.  Does not go past current line.
 
 post_period returns [Object v]
-  : DATUM_COMMENTW hs
-      (ignored=n_expr hs sp2=post_period {$v = $sp2.v;} | /*empty*/ error )
-    | scomment hs rpt=post_period {$v = $rpt.v;} // (scomment hs)*
-    | pn=n_expr hs (scomment hs)* (n_expr error)? {$v = $pn.v;}
+  : ignorable retry=post_period {$v = $retry.v;}
+    | pn=n_expr hs ignorable* (n_expr error)? {$v = $pn.v;}
     | COLLECTING hs pc=collecting_tail hs
-      (scomment hs)* (n_expr error)? {$v = $pc.v;}
+      ignorable* (n_expr error)? {$v = $pc.v;}
     | /*empty*/ {$v = ".";} ;
 
 // Production "head" reads 1+ n-expressions on one line; it will
@@ -1146,12 +1148,10 @@ head returns [Object v]
 
 rest returns [Object v]
   : PERIOD hspace+ pp=post_period {$v = $pp.v;} /* Improper list */
-  | DATUM_COMMENTW hs
-    (ignored=n_expr hs sr2=rest {$v = $sr2.v;} | /*empty*/ error )
-  | scomment hs (sr=rest {$v = $sr.v;} | /*empty*/ {$v = null;} )
+  | ignorable (retry=rest {$v = $retry.v;} | /*empty*/ {$v = null;})
   | COLLECTING hs collecting_tail hs
     (rr=rest             {$v = cons($collecting_tail.v, $rr.v);}
-     | /*empty*/             {$v = list($collecting_tail.v);} )
+     | /*empty*/         {$v = list($collecting_tail.v);} )
   | basic=n_expr
       ((hspace+ (br=rest {$v = cons($basic.v, $br.v);}
                  | /*empty*/ {$v = list($basic.v);} ))
