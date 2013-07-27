@@ -1810,7 +1810,8 @@
               (begin
                 (hspaces port)
                 (post-period port))
-              (list 'normal (list period-symbol))))
+              ; (list 'normal (list period-symbol)) ; To interpret as |.|
+              (read-error "Cannot end line with '.'")))
         ((not (eq? basic-special 'normal)) (list basic-special '())) 
         ((char-hspace? (my-peek-char port))
           (hspaces port)

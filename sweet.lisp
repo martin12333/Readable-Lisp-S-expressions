@@ -563,7 +563,8 @@
             (progn
               (hspaces stream)
               (post-period stream))
-            (list 'normal (list period-symbol))))
+            ; (list 'normal (list period-symbol)) ; To interpret as |.|
+            (read-error "Cannot end line with '.'")))
       ((not (eq basic-special 'normal)) (list basic-special '())) 
       ((char-hspacep (my-peek-char stream))
         (hspaces stream)

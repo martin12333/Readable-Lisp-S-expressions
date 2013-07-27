@@ -1145,9 +1145,7 @@ head returns [Object v]
 // INCLUDE IN SRFI
 
 rest returns [Object v]
-  : PERIOD /* Improper list */
-      (hspace+  pp=post_period {$v = $pp.v;}
-       | /*empty*/   {$v = list(".");})
+  : PERIOD hspace+ pp=post_period {$v = $pp.v;} /* Improper list */
   | DATUM_COMMENTW hs
     (ignored=n_expr hs sr2=rest {$v = $sr2.v;} | /*empty*/ error )
   | scomment hs (sr=rest {$v = $sr.v;} | /*empty*/ {$v = null;} )

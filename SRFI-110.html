@@ -1365,9 +1365,7 @@ head returns [Object v]
 // Postcondition: At unconsumed EOL
 
 rest returns [Object v]
-  : PERIOD /* Improper list */
-      (hspace+  pp=post_period {$pp}
-       | /*empty*/   {(list '.)})
+  : PERIOD hspace+ pp=post_period {$pp} /* Improper list */
   | DATUM_COMMENTW hs
     (ignored=n_expr hs sr2=rest {$sr2} | /*empty*/ error )
   | scomment hs (sr=rest {$sr} | /*empty*/ {'()} )
