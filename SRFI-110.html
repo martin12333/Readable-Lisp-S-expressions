@@ -1130,10 +1130,10 @@ The <i>traditional abbreviations</i> are
 which stand for
 quote, quasiquote, unquote-splicing, and unquote respectively.
 In indentation processing mode, a traditional abbreviation
-followed by space, tab, or EOL is represented as
+followed by space, tab, or eol character is represented as
 APOSW, QUASIQUOTEW, UNQUOTE_SPLICEW, and UNQUOTEW respectively.
-If they are followed immediately by EOL, the EOL
-<em>MUST </em> also be generated (and not consumed).
+If they are followed immediately by an eol character, that character
+<em>MUST NOT</em> be consumed.
 The <i>syntax-case related abbreviations</i> are
 &#8220;<tt>#'</tt>&#8221;, &#8220;<tt>#`</tt>&#8221;,
 &#8220;<tt>#,</tt>&#8221;, and &#8220;<tt>#,@</tt>&#8221;,
