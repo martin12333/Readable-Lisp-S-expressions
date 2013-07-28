@@ -494,11 +494,11 @@
 ; Returns (stopper computed-value).
 ; The stopper may be 'normal, 'scomment (special comment),
 ; 'abbrevw (initial abbreviation), 'sublist-marker, or 'group-split-marker
-(defun head (stream)
+(defun line-exprs (stream)
   (let* ((basic-full-results (n-expr-first stream))
          (basic-special      (car basic-full-results))
          (basic-value        (cadr basic-full-results)))
-    ; (princ "DEBUG: head=") (write basic-full-results) (terpri)
+    ; (princ "DEBUG: line-exprs=") (write basic-full-results) (terpri)
     (cond
       ((eq basic-special 'collecting)
         (hspaces stream)
@@ -594,14 +594,14 @@
 
 ; Returns (new-indent computed-value)
 (defun it-expr-real (stream starting-indent)
-  (let* ((head-full-results (head stream))
-         (head-stopper      (car head-full-results))
-         (head-value        (cadr head-full-results)))
-    ; (princ "DEBUG: it-expr-real: head result=") (write head-full-results) (terpri)
-    (if (and (not (null head-value)) (not (eq head-stopper 'abbrevw)))
-        ; The head... branches:
+  (let* ((line-full-results (line-exprs stream))
+         (line-stopper      (car line-full-results))
+         (line-value        (cadr line-full-results)))
+    ; (princ "DEBUG: it-expr-real: line-exprs result=") (write line-full-results) (terpri)
+    (if (and (not (null line-value)) (not (eq line-stopper 'abbrevw)))
+        ; Production line-exprs produced at least one n-expression:
         (cond
-          ((eq head-stopper 'group-split-marker)
+          ((eq line-stopper 'group-split-marker)
             (hspaces stream)
             (if (lcomment-eolp (my-peek-char stream))
                 ; Local extension - allow \\ as line-continuation, a
@@ -614,10 +614,10 @@
                            (more-new-indent   (car more-full-results))
                            (more-value        (cadr more-full-results)))
                       (list more-new-indent
-                        (my-append head-value more-value)))
+                        (my-append line-value more-value)))
                     (read-error "Continue without same-indent line.")))
-                (list starting-indent (monify head-value))))
-          ((eq head-stopper 'sublist-marker)
+                (list starting-indent (monify line-value))))
+          ((eq line-stopper 'sublist-marker)
             (hspaces stream)
             (if (lcomment-eolp (my-peek-char stream))
                 (read-error "EOL illegal immediately after sublist."))
@@ -625,23 +625,23 @@
                    (sub-i-new-indent   (car sub-i-full-results))
                    (sub-i-value        (cadr sub-i-full-results)))
               (list sub-i-new-indent
-                (my-append head-value (list sub-i-value)))))
-          ((eq head-stopper 'collecting-end)
+                (my-append line-value (list sub-i-value)))))
+          ((eq line-stopper 'collecting-end)
             ; Note that indent is "", forcing dedent all the way out.
-            (list "" (monify head-value)))
+            (list "" (monify line-value)))
           ((lcomment-eolp (my-peek-char stream))
             (let ((new-indent (get-next-indent stream)))
               (if (indentation>p new-indent starting-indent)
                   (let* ((body-full-results (body stream new-indent))
                          (body-new-indent (car body-full-results))
                          (body-value      (cadr body-full-results)))
-                    (list body-new-indent (my-append head-value body-value)))
-                  (list new-indent (monify head-value)))))
+                    (list body-new-indent (my-append line-value body-value)))
+                  (list new-indent (monify line-value)))))
           (t
             (read-error "Must end line with end-of-line sequence.")))
-        ; Here, head begins with something special like GROUP-SPLIT:
+        ; Here, line-exprs begins with something special like GROUP-SPLIT:
         (cond
-          ((eq head-stopper 'datum-commentw)
+          ((eq line-stopper 'datum-commentw)
             (hspaces stream)
             (cond
               ((not (lcomment-eolp (my-peek-char stream)))
@@ -659,8 +659,8 @@
                       (declare (ignore body-value))
                       (list body-new-indent empty-tag))
                     (read-error "#;+EOL must be followed by indent"))))))
-          ((or (eq head-stopper 'group-split-marker)
-               (eq head-stopper 'scomment))
+          ((or (eq line-stopper 'group-split-marker)
+               (eq line-stopper 'scomment))
             (hspaces stream)
             (if (not (lcomment-eolp (my-peek-char stream)))
                 (it-expr stream starting-indent) ; Skip and try again.
@@ -672,7 +672,7 @@
                       (list new-indent empty-tag))
                     (t
                       (read-error "GROUP-SPLIT EOL DEDENT illegal."))))))
-          ((eq head-stopper 'sublist-marker)
+          ((eq line-stopper 'sublist-marker)
             (hspaces stream)
             (if (lcomment-eolp (my-peek-char stream))
                 (read-error "EOL illegal immediately after solo sublist."))
@@ -681,7 +681,7 @@
                    (is-i-value        (cadr is-i-full-results)))
               (list is-i-new-indent
                 (list1e is-i-value))))
-          ((eq head-stopper 'abbrevw)
+          ((eq line-stopper 'abbrevw)
             (hspaces stream)
             (if (lcomment-eolp (my-peek-char stream))
                 (progn
@@ -692,16 +692,16 @@
                            (ab-new-indent   (car ab-full-results))
                            (ab-value      (cadr ab-full-results)))
                       (list ab-new-indent
-                        (append (list head-value) ab-value)))))
+                        (append (list line-value) ab-value)))))
                 (let* ((ai-full-results (it-expr stream starting-indent))
                        (ai-new-indent (car ai-full-results))
                        (ai-value    (cadr ai-full-results)))
                   (list ai-new-indent
-                    (list2e head-value ai-value)))))
-          ((eq head-stopper 'collecting-end)
-            (list "" head-value))
+                    (list2e line-value ai-value)))))
+          ((eq line-stopper 'collecting-end)
+            (list "" line-value))
           (t 
-            (read-error "Initial head error."))))))
+            (read-error "Initial line-expression error."))))))
 
 ; Read it-expr.  This is a wrapper that attaches source info
 ; and checks for consistent indentation results.

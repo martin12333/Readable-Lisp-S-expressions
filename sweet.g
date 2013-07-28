@@ -1059,7 +1059,7 @@ n_expr returns [Object v]
  | n_expr_noabbrev      {$v = $n_expr_noabbrev.v;} ;
 
 // Production "n_expr_first" is a neoteric-expression, but leading
-// abbreviations cannot have an whitespace afterwards (used by "head"):
+// abbreviations cannot have an whitespace afterwards (used by "line_exprs"):
 n_expr_first returns [Object v]
   : abbrev_no_w n1=n_expr_first {$v = list($abbrev_no_w.v, $n1.v);}
   | n_expr_noabbrev            {$v = $n_expr_noabbrev.v;} ;
@@ -1106,24 +1106,24 @@ post_period returns [Object v]
       skippable* (n_expr error)? {$v = $pc.v;}
     | /*empty*/ {$v = ".";} ;
 
-// Production "head" reads 1+ n-expressions on one line; it will
+// Production "line_exprs" reads the 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
 // on the line, it returns a list of exactly one item.
 // Precondition: At beginning of line after indent
 // Postcondition: At unconsumed EOL
 // STOP INCLUDING IN SRFI
-// The "head" production never reads beyond the current line
+// The "line_exprs" production never reads beyond the current line
 // (except within a block comment), so it doesn't need to keep track
-// of indentation, and indentation will NOT change within head.
-// The "head" production only directly handles the first n-expression on the
+// of indentation, and indentation will NOT change within it.
+// The production only directly handles the first n-expression on the
 // line, and then calls on "rest" to process the rest (if any); we do this
 // because in a few cases it matters if an expression is the first one.
-// Callers can depend on "head" and "rest" *not* changing indentation.
+// Callers can depend on "line_exprs" and "rest" *not* changing indentation.
 // On entry, all indentation/hspace must have already been read.
 // On return, it will have consumed all hspace (spaces and tabs).
 // INCLUDE IN SRFI
 
-head returns [Object v]
+line_exprs returns [Object v]
   : PERIOD /* Leading ".": escape following datum like an n-expression. */
       (hspace+ pp=post_period {$v = list($pp.v);}
        | /*empty*/    {$v = list(".");} )
@@ -1140,7 +1140,7 @@ head returns [Object v]
 // Precondition: At beginning of non-first expression on line (past hspace)
 // Postcondition: At unconsumed EOL
 // STOP INCLUDING IN SRFI
-// Like head, it consumes any hspace before it returns.
+// Like line_exprs, it consumes any hspace before it returns.
 // The "rest_of_line" production is written this way so a non-tokenizing
 // implementation can read an expression specially. E.G., if it sees a period,
 // read the expression directly and then see if it's just a period.
@@ -1158,7 +1158,7 @@ rest_of_line returns [Object v]
        | /*empty*/               {$v = list($basic.v);} ) ;
 
 // Production "body" handles the sequence of 1+ child lines in an it_expr
-// (e.g., after a "head"), each of which is itself an it_expr.
+// (e.g., after "line_expr"), each of which is itself an it_expr.
 // It returns the list of expressions in the body.
 // STOP INCLUDING IN SRFI
 // Note that an it-expr will consume any line comments or hspaces
@@ -1179,31 +1179,31 @@ body returns [Object v]
 // STOP INCLUDING IN SRFI
 // Note: This BNF presumes that "*>" generates multiple tokens,
 // "EOL DEDENT* COLLECTING_END", and resets the indentation list.
-// You can change the BNF below to allow "head /*empty*/", and handle dedents
-// by directly comparing values; then "*>" only needs to generate
+// You can change the BNF below to allow "line_expr /*empty*/", and handle
+// dedents by directly comparing values; then "*>" only needs to generate
 // COLLECTING_END. But this creates a bunch of ambiguities
 // like a 'dangling else', which must all be disambiguated by accepting
 // the first or the longer sequence first.  Either approach is needed to
-// support "*>" as the non-first element so that the "head" can end
+// support "*>" as the non-first element so that the "line_exprs" can end
 // without a literal EOL, e.g., as in "let <* y 5 *>".
 // INCLUDE IN SRFI
 
 normal_it_expr returns [Object v] 
-  : head (options {greedy=true;} : (
-     GROUP_SPLIT hs {$v = monify($head.v);} // split
+  : line_exprs (options {greedy=true;} : (
+     GROUP_SPLIT hs {$v = monify($line_exprs.v);} // split
        // STOP INCLUDING IN SRFI
        // To allow \\ EOL as line-continuation, instead of the action, do:
-       //   (options {greedy=true;} :
-       //     comment_eol same more=it_expr {$v = appende($head.v, $more.v);}
-       //     | /*empty*/ {$v = monify($head.v);} )
+       // (options {greedy=true;} :
+       //  comment_eol same more=it_expr {$v = appende($line_exprs.v, $more.v);}
+       //  | /*empty*/ {$v = monify($line_exprs.v);} )
        // INCLUDE IN SRFI
-     | SUBLIST hs sub_i=it_expr {$v=appende($head.v, list1e($sub_i.v));}
+     | SUBLIST hs sub_i=it_expr {$v=appende($line_exprs.v, list1e($sub_i.v));}
      | comment_eol // Normal case, handle child lines if any:
-       (INDENT children=body {$v = appende($head.v, $children.v);}
-        | /*empty*/          {$v = monify($head.v);} /* No child lines */ )
+       (INDENT children=body {$v = appende($line_exprs.v, $children.v);}
+        | /*empty*/          {$v = monify($line_exprs.v);} /* No child lines */ )
      // STOP INCLUDING IN SRFI
      // If COLLECTING_END doesn't generate multiple tokens, can do:
-     // | /*empty*/           {$v = monify($head.v);}
+     // | /*empty*/           {$v = monify($line_exprs.v);}
      // INCLUDE IN SRFI
      )) ;
 
