@@ -1196,17 +1196,14 @@ body returns [Object v]
 
 normal_it_expr returns [Object v] 
   : head (options {greedy=true;} : (
-     GROUP_SPLIT hs /* Not initial; interpret as split */
-      (options {greedy=true;} :
-        // STOP INCLUDING IN SRFI
-        // To allow \\ EOL as line-continuation, instead do:
-        //   comment_eol same more=it_expr {$v = appende($head.v, $more.v);}
-        // INCLUDE IN SRFI
-        comment_eol error
-        | /*empty*/ {$v = monify($head.v);} )
-     | SUBLIST hs /* head SUBLIST ... case */
-       (sub_i=it_expr {$v=appende($head.v, list1e($sub_i.v));}
-        | comment_eol error )
+     GROUP_SPLIT hs {$v = monify($head.v);} // split
+       // STOP INCLUDING IN SRFI
+       // To allow \\ EOL as line-continuation, instead of the action, do:
+       //   (options {greedy=true;} :
+       //     comment_eol same more=it_expr {$v = appende($head.v, $more.v);}
+       //     | /*empty*/ {$v = monify($head.v);} )
+       // INCLUDE IN SRFI
+     | SUBLIST hs sub_i=it_expr {$v=appende($head.v, list1e($sub_i.v));}
      | comment_eol // Normal case, handle child lines if any:
        (INDENT children=body {$v = appende($head.v, $children.v);}
         | /*empty*/          {$v = monify($head.v);} /* No child lines */ )
@@ -1229,10 +1226,8 @@ group_line returns [Object v]
          (INDENT g_body=body {$v = $g_body.v;} /* Normal GROUP use */
           | same {$v = empty_tag;} )) ;
 
-sublist_line returns [Object v]
-  : SUBLIST hs /* "$" first on line */
-    (is_i=it_expr {$v=list1e($is_i.v);}
-     | comment_eol error ) ;
+sublist_line returns [Object v] // "$" first on line
+  : SUBLIST hs is_i=it_expr {$v=list1e($is_i.v);} ;
 
 abbrevw_line returns [Object v]
   : abbrevw hs
