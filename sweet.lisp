@@ -216,11 +216,11 @@
   (or (eql char #\space)
       (eql char #\tab)))
 
-; Consume 0+ spaces or tabs
+; Consume 0+ spaces or tabs.  Uses direct iteraction, not tail recursion.
 (defun hspaces (stream)
-  (when (char-hspacep (my-peek-char stream))
-      (my-read-char stream)
-      (hspaces stream)))
+  (loop
+     while (char-hspacep (my-peek-char stream))
+     do (my-read-char stream)))
 
 ; Return t if char is space, tab, or !
 (defun char-icharp (char)

@@ -266,6 +266,10 @@ mytest
     #; bar
   '(foo)
 
+mytest
+  '    firstone          secondone      thirdone   
+  '(firstone secondone thirdone)
+
 (disable-readable)
 (princ "Tests complete!")
 (exit 0)
