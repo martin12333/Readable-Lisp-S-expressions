@@ -1188,7 +1188,7 @@ body returns [Object v]
 // INCLUDE IN SRFI
 
 normal_it_expr returns [Object v] 
-  : line_exprs (options {greedy=true;} : (
+  : line_exprs (
      GROUP_SPLIT hs {$v = monify($line_exprs.v);} // split
        // STOP INCLUDING IN SRFI
        // To allow \\ EOL as line-continuation, instead of the action, do:
@@ -1199,12 +1199,11 @@ normal_it_expr returns [Object v]
      | SUBLIST hs sub_i=it_expr {$v=appende($line_exprs.v, list1e($sub_i.v));}
      | comment_eol // Normal case, handle child lines if any:
        (INDENT children=body {$v = appende($line_exprs.v, $children.v);}
-        | /*empty*/          {$v = monify($line_exprs.v);} /* No child lines */ )
+        | /*empty*/          {$v = monify($line_exprs.v);} /* No child lines */ )) ;
      // STOP INCLUDING IN SRFI
-     // If COLLECTING_END doesn't generate multiple tokens, can do:
+     // If COLLECTING_END doesn't generate multiple tokens, can add this branch:
      // | /*empty*/           {$v = monify($line_exprs.v);}
      // INCLUDE IN SRFI
-     )) ;
 
 // These are it_expr's with a special prefix like \\ or $:
 

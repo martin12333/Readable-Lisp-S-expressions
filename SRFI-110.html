@@ -1396,13 +1396,12 @@ body returns [Object v]
 // Production "normal_it_expr" is an it_expr without a special prefix:
 
 normal_it_expr returns [Object v] 
-  : line_exprs (options {greedy=true} : (
+  : line_exprs (
      GROUP_SPLIT hs {(monify $line_exprs)} // split
      | SUBLIST hs sub_i=it_expr {(appende $line_exprs (list1e $sub_i))}
      | comment_eol // Normal case, handle child lines if any:
        (INDENT children=body {(appende $line_exprs $children)}
-        | /*empty*/          {(monify $line_exprs)} /* No child lines */ )
-     )) ;
+        | /*empty*/          {(monify $line_exprs)} /* No child lines */ )) ;
 
 // These are it_expr's with a special prefix like \\ or $:
 
