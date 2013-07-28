@@ -1128,34 +1128,34 @@ head returns [Object v]
       (hspace+ pp=post_period {$v = list($pp.v);}
        | /*empty*/    {$v = list(".");} )
   | COLLECTING hs collecting_tail hs
-      (rr=rest            {$v = cons($collecting_tail.v, $rr.v); }
+      (rr=rest_of_line    {$v = cons($collecting_tail.v, $rr.v); }
        | /*empty*/        {$v = list($collecting_tail.v); } )
   | basic=n_expr_first /* Only match n_expr_first */
-      ((hspace+ (br=rest  {$v = cons($basic.v, $br.v);}
-                 | /*empty*/  {$v = list($basic.v);} ))
-       | /*empty*/            {$v = list($basic.v);} ) ;
+      ((hspace+ (br=rest_of_line  {$v = cons($basic.v, $br.v);}
+                 | /*empty*/      {$v = list($basic.v);} ))
+       | /*empty*/                {$v = list($basic.v);} ) ;
 
-// Production "rest" production reads the rest of the expressions on a line
-// (the "rest of the head"), after the first expression of the line.
+// Production "rest_of_line" reads the rest of the expressions on a line,
+// after the first expression of the line.
 // Precondition: At beginning of non-first expression on line (past hspace)
 // Postcondition: At unconsumed EOL
 // STOP INCLUDING IN SRFI
 // Like head, it consumes any hspace before it returns.
-// The "rest" production is written this way so a non-tokenizing
+// The "rest_of_line" production is written this way so a non-tokenizing
 // implementation can read an expression specially. E.G., if it sees a period,
 // read the expression directly and then see if it's just a period.
 // INCLUDE IN SRFI
 
-rest returns [Object v]
+rest_of_line returns [Object v]
   : PERIOD hspace+ pp=post_period {$v = $pp.v;} /* Improper list */
-  | skippable (retry=rest {$v = $retry.v;} | /*empty*/ {$v = null;})
+  | skippable (retry=rest_of_line {$v = $retry.v;} | /*empty*/ {$v = null;})
   | COLLECTING hs collecting_tail hs
-    (rr=rest             {$v = cons($collecting_tail.v, $rr.v);}
+    (rr=rest_of_line     {$v = cons($collecting_tail.v, $rr.v);}
      | /*empty*/         {$v = list($collecting_tail.v);} )
   | basic=n_expr
-      ((hspace+ (br=rest {$v = cons($basic.v, $br.v);}
-                 | /*empty*/ {$v = list($basic.v);} ))
-       | /*empty*/           {$v = list($basic.v);} ) ;
+      ((hspace+ (br=rest_of_line {$v = cons($basic.v, $br.v);}
+                 | /*empty*/     {$v = list($basic.v);} ))
+       | /*empty*/               {$v = list($basic.v);} ) ;
 
 // Production "body" handles the sequence of 1+ child lines in an it_expr
 // (e.g., after a "head"), each of which is itself an it_expr.

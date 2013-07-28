@@ -1359,28 +1359,28 @@ head returns [Object v]
       (hspace+ pp=post_period {(list $pp)}
        | /*empty*/    {(list '.)} )
   | COLLECTING hs collecting_tail hs
-      (rr=rest            {(cons $collecting_tail $rr)}
+      (rr=rest_of_line    {(cons $collecting_tail $rr)}
        | /*empty*/        {(list $collecting_tail)} )
   | basic=n_expr_first /* Only match n_expr_first */
-      ((hspace+ (br=rest  {(cons $basic $br)}
-                 | /*empty*/  {(list $basic)} ))
-       | /*empty*/            {(list $basic)} ) ;
+      ((hspace+ (br=rest_of_line  {(cons $basic $br)}
+                 | /*empty*/      {(list $basic)} ))
+       | /*empty*/                {(list $basic)} ) ;
 
-// Production "rest" production reads the rest of the expressions on a line
-// (the "rest of the head"), after the first expression of the line.
+// Production "rest_of_line" reads the rest of the expressions on a line,
+// after the first expression of the line.
 // Precondition: At beginning of non-first expression on line (past hspace)
 // Postcondition: At unconsumed EOL
 
-rest returns [Object v]
+rest_of_line returns [Object v]
   : PERIOD hspace+ pp=post_period {$pp} /* Improper list */
-  | skippable (retry=rest {$retry} | /*empty*/ {'()})
+  | skippable (retry=rest_of_line {$retry} | /*empty*/ {'()})
   | COLLECTING hs collecting_tail hs
-    (rr=rest             {(cons $collecting_tail $rr)}
+    (rr=rest_of_line     {(cons $collecting_tail $rr)}
      | /*empty*/         {(list $collecting_tail)} )
   | basic=n_expr
-      ((hspace+ (br=rest {(cons $basic $br)}
-                 | /*empty*/ {(list $basic)} ))
-       | /*empty*/           {(list $basic)} ) ;
+      ((hspace+ (br=rest_of_line {(cons $basic $br)}
+                 | /*empty*/     {(list $basic)} ))
+       | /*empty*/               {(list $basic)} ) ;
 
 // Production "body" handles the sequence of 1+ child lines in an it_expr
 // (e.g., after a "head"), each of which is itself an it_expr.
