@@ -1346,7 +1346,7 @@ post_period returns [Object v]
 // Production "head" reads 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
 // on the line, it returns a list of exactly one item.
-// Precondition: At beginning of line+indent
+// Precondition: At beginning of line after indent
 // Postcondition: At unconsumed EOL
 
 head returns [Object v]
@@ -1384,28 +1384,17 @@ rest returns [Object v]
 body returns [Object v]
   : i=it_expr
      (same
-       ( {(isperiodp $i)}? =&gt; f=it_expr DEDENT
-           {$f} // Improper list final value
-       | {(isemptytagp $i)}? =&gt; retry=body
-           {$retry}
-       | {(not_period_and_not_empty $i)}? =&gt; nxt=body
-           {(conse $i $nxt)} )
+       ( {(isperiodp $i)}? =&gt;   f=it_expr DEDENT {$f} // Improper list
+       | {(isemptytagp $i)}? =&gt; retry=body       {$retry}
+       | {(not_period_and_not_empty $i)}? =&gt; nxt=body {(conse $i $nxt)} )
      | DEDENT {(list1e $i)} ) ;
 
-// Production "it_expr" (indented sweet-expressions)
-// is the main production for sweet-expressions in the usual case.
-// Precondition: At beginning of line+indent
-// Postcondition: it-expr ended by consuming EOL + examining indent
+// Production "normal_it_expr" is an it_expr without a special prefix:
 
 normal_it_expr returns [Object v] 
   : head (options {greedy=true} : (
-     GROUP_SPLIT hs /* Not initial; interpret as split */
-      (options {greedy=true} :
-        comment_eol error
-        | /*empty*/ {(monify $head)} )
-     | SUBLIST hs /* head SUBLIST ... case */
-       (sub_i=it_expr {(appende $head (list1e $sub_i))}
-        | comment_eol error )
+     GROUP_SPLIT hs {(monify $head)} // split
+     | SUBLIST hs sub_i=it_expr {(appende $head (list1e $sub_i))}
      | comment_eol // Normal case, handle child lines if any:
        (INDENT children=body {(appende $head $children)}
         | /*empty*/          {(monify $head)} /* No child lines */ )
@@ -1424,10 +1413,8 @@ group_line returns [Object v]
          (INDENT g_body=body {$g_body} /* Normal GROUP use */
           | same {empty_tag} )) ;
 
-sublist_line returns [Object v]
-  : SUBLIST hs /* "$" first on line */
-    (is_i=it_expr {(list1e $is_i)}
-     | comment_eol error ) ;
+sublist_line returns [Object v] // "$" first on line
+  : SUBLIST hs is_i=it_expr {(list1e $is_i)} ;
 
 abbrevw_line returns [Object v]
   : abbrevw hs
@@ -1436,6 +1423,11 @@ abbrevw_line returns [Object v]
        | ai=it_expr
          {(list2e $abbrevw $ai)} ) ;
 
+// Production "it_expr" (indented sweet-expressions)
+// is the main production for sweet-expressions in the usual case.
+// Precondition: At beginning of line after indent, NOT at an EOL char
+// Postcondition: it-expr ended by consuming EOL + examining indent
+
 it_expr returns [Object v]
   : normal_it_expr     {$normal_it_expr}
   | datum_comment_line {$datum_comment_line}
@@ -1443,13 +1435,7 @@ it_expr returns [Object v]
   | sublist_line       {$sublist_line}
   | abbrevw_line       {$abbrevw_line} ;
 
-// Process initial indent.
-// The rule for "indent processing disabled on initial top-level hspace"
-// is a very simple (and clever) BNF construction by Alan Manuel K. Gloria.
-// If there is an indent it simply reads a single n-expression and returns.
-// If there is more than one on an initially-indented line, the later
-// horizontal space will not have have been read, so this production will
-// fire again on the next invocation, doing the right thing.
+// Production "initial" processes initial indent expresions.
 
 initial returns [Object v]
   : (INITIAL_INDENT | hspaces_maybe_bang)
@@ -1458,9 +1444,7 @@ initial returns [Object v]
        sretry=t_expr_real {$sretry})
      | comment_eol retry3=t_expr {$retry3} ) ;
 
-// Production "t_expr" is the top-level production for sweet-expressions.
-// This production handles special cases, then in the normal case
-// drops to the it_expr production.
+// Production "t_expr_real" handles special cases, else it invokes it_expr.
 
 t_expr_real returns [Object v]
   : comment_eol    r1=t_expr_real {$r1} // Skip initial blank lines
@@ -1469,11 +1453,12 @@ t_expr_real returns [Object v]
   | EOF {(generate_eof)} // End of file
   | i=it_expr {$i} /* Normal case */ ;
 
+// Production "t_expr" is the top-level production for sweet-expressions.
+
 t_expr returns [Object v]
   : te=t_expr_real	
     ( {(isemptytagp $te)}? =&gt; retry=t_expr {$retry}
       | {$te} ) ;
-
 </pre>
 
 
