@@ -419,6 +419,7 @@
       ((char-icharp c)
         (let* ((indentation (accumulate-ichar stream))
                (c (my-peek-char stream)))
+          (declare (ignore indentation))
           (if (lcomment-eolp c)
               (collecting-tail stream)
               (read-error "Collecting tail: Only ; after indent."))))
