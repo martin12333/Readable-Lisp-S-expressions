@@ -1092,8 +1092,7 @@ skippable
 collecting_tail returns [Object v]
   : it_expr more=collecting_tail {$v = conse($it_expr.v, $more.v);}
   | comment_eol    retry1=collecting_tail {$v = $retry1.v;}
-  | INITIAL_INDENT /* Initial indent only allowed for lcomment */
-    LCOMMENT? EOL  retry2=collecting_tail {$v = $retry2.v;}
+  | INITIAL_INDENT LCOMMENT? EOL retry2=collecting_tail {$v = $retry2.v;}
   | (FF | VT)+ EOL retry3=collecting_tail {$v = $retry3.v;}
   | COLLECTING_END {$v = null;} ;
 

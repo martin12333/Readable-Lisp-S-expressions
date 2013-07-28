@@ -1334,8 +1334,7 @@ Here are the key BNF productions for sweet-expressions:
 collecting_tail returns [Object v]
   : it_expr more=collecting_tail {(conse $it_expr $more)}
   | comment_eol    retry1=collecting_tail {$retry1}
-  | INITIAL_INDENT /* Initial indent only allowed for lcomment */
-    LCOMMENT? EOL  retry2=collecting_tail {$retry2}
+  | INITIAL_INDENT LCOMMENT? EOL retry2=collecting_tail {$retry2}
   | (FF | VT)+ EOL retry3=collecting_tail {$retry3}
   | COLLECTING_END {'()} ;
 
