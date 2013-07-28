@@ -2105,3 +2105,12 @@ inside
 #' q1 q2
   q3 q4
 
+(a7 b7 . c7)
+a7 b7 #; ignore1 . #; ignore2 c7 #; ignore3
+
+(a8 b8)
+a8 b8 #; ignorethis #; (ignore this too)
+
+(xyzz (stuff) last-one)
+xyzz <* stuff *>  #; ignore11 #; ignore12 last-one
+

@@ -1608,6 +1608,19 @@
               "^"))
         (#t (list->string indentation-as-list)))))
 
+  (define (ignorable stopper port)
+    (cond
+    ((eq? stopper 'scomment)
+      (hspaces port))
+    ((eq? stopper 'datum-commentw)
+      (hspaces port)
+      (if (not (lcomment-eol? (my-peek-char port)))
+        (begin
+          (n-expr port)
+          (hspaces port))
+        (read-error "Datum comment not followed a datum (EOL instead)")))
+    (#t (read-error "ignorable: Impossible case"))))
+
   ; Utility declarations and functions
 
   (define empty-tag (string-copy "empty-tag")) ; Represent no value at all
@@ -1700,8 +1713,8 @@
                (n-stopper      (car n-full-results))
                (n-value        (cadr n-full-results)))
           (cond
-            ((eq? n-stopper 'scomment) ; Consume scomments.
-              (hspaces port)
+            ((or (eq? n-stopper 'scomment) (eq? n-stopper 'datum-commentw))
+              (ignorable n-stopper port)
               (n-expr-error port full))
             ((eq? n-stopper 'normal)
               (read-error "Illegal second value after ."))
@@ -1715,14 +1728,8 @@
                (pn-stopper      (car pn-full-results))
                (pn-value        (cadr pn-full-results)))
           (cond
-            ((eq? pn-stopper 'datum-commentw)
-              (hspaces port)
-              (if (lcomment-eol? (my-peek-char port))
-                  (read-error "Datum comment last item after ."))
-              (n-expr port) ; Consume commented-out item.
-              (post-period port))
-            ((eq? pn-stopper 'scomment)
-              (hspaces port)
+            ((or (eq? pn-stopper 'scomment) (eq? pn-stopper 'datum-commentw))
+              (ignorable pn-stopper port)
               (post-period port))
             ((eq? pn-stopper 'normal)
               (hspaces port)
@@ -1784,14 +1791,8 @@
            (basic-special      (car basic-full-results))
            (basic-value        (cadr basic-full-results)))
       (cond
-        ((eq? basic-special 'datum-commentw)
-          (hspaces port)
-          (if (lcomment-eol? (my-peek-char port))
-              (read-error "#; not followed by a datum in line"))
-          (n-expr port) ; Consume commented-out item.
-          (rest port))
-        ((eq? basic-special 'scomment)
-          (hspaces port)
+        ((or (eq? basic-special 'scomment) (eq? basic-special 'datum-commentw))
+          (ignorable basic-special port)
           (if (not (lcomment-eol? (my-peek-char port)))
               (rest port)
               (list 'normal '())))
