@@ -1124,16 +1124,20 @@ that it has priority; ",@" is interpreted differently from
 -->
 
 <p>
-The <i>traditional abbreviations</i> are
-&#8220;<tt>'</tt>&#8221;, &#8220;<tt>`</tt>&#8221;,
-&#8220;<tt>,@</tt>&#8221;, and &#8220;<tt>,</tt>&#8221;,
-which stand for
-quote, quasiquote, unquote-splicing, and unquote respectively.
-In indentation processing mode, a traditional abbreviation
-followed by space, tab, or eol character is represented as
-APOSW, QUASIQUOTEW, UNQUOTE_SPLICEW, and UNQUOTEW respectively.
-If they are followed immediately by an eol character, that character
-<em>MUST NOT</em> be consumed.
+The following whitespace-terminated terminals <em>MUST</em> be
+recognized if and only if the reader is in indentation processing mode;
+the linefeed or carriage return (if any) in them <em>MUST NOT</em>
+be permanently consumed:
+</p>
+<pre>
+APOSW           : '\'' (' ' | '\t' | '\n' | '\r') ;  // quote
+QUASIQUOTEW     : '\`' (' ' | '\t' | '\n' | '\r') ;  // quasiquote
+UNQUOTE_SPLICEW : ',@' (' ' | '\t' | '\n' | '\r') ;  // unquote-splicing
+UNQUOTEW        : ','  (' ' | '\t' | '\n' | '\r') ;  // unquote
+DATUM_COMMENTW  : '#;' (' ' | '\t' | '\n' | '\r') ;  // start datum comment
+</pre>
+
+<p>
 The <i>syntax-case related abbreviations</i> are
 &#8220;<tt>#'</tt>&#8221;, &#8220;<tt>#`</tt>&#8221;,
 &#8220;<tt>#,</tt>&#8221;, and &#8220;<tt>#,@</tt>&#8221;,
@@ -1142,12 +1146,9 @@ syntax, quasisyntax, unsyntax-splicing, and unsyntax respectively.
 If a Scheme system supports both this SRFI
 and the syntax-case related abbreviations,
 then the reader <em>SHOULD</em>
-treat those syntax-case abbreviations in the same manner.
+treat those syntax-case abbreviations when whitespace-terminated
+in the same manner.
 A sweet-expression reader <em>MAY</em> implement additional abbreviations.
-Similarly, in indentation mode,
-<tt>#;</tt> followed by space, tab, carriage return, or
-linefeed is represented as COMMENT_DATUMW; the
-carriage return or linefeed is <b>not</b> consumed.
 </p>
 
 <p>
