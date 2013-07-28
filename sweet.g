@@ -1109,7 +1109,7 @@ post_period returns [Object v]
 // Production "head" reads 1+ n-expressions on one line; it will
 // return the list of n-expressions on the line.  If there is one n-expression
 // on the line, it returns a list of exactly one item.
-// Precondition: At beginning of line+indent
+// Precondition: At beginning of line after indent
 // Postcondition: At unconsumed EOL
 // STOP INCLUDING IN SRFI
 // The "head" production never reads beyond the current line
@@ -1170,18 +1170,12 @@ rest returns [Object v]
 body returns [Object v]
   : i=it_expr
      (same
-       ( {isperiodp($i.v)}? => f=it_expr DEDENT
-           {$v = $f.v;} // Improper list final value
-       | {isemptytagp($i.v)}? => retry=body
-           {$v = $retry.v;}
-       | {not_period_and_not_empty($i.v)}? => nxt=body
-           {$v = conse($i.v, $nxt.v);} )
+       ( {isperiodp($i.v)}? =>   f=it_expr DEDENT {$v = $f.v;} // Improper list
+       | {isemptytagp($i.v)}? => retry=body       {$v = $retry.v;}
+       | {not_period_and_not_empty($i.v)}? => nxt=body {$v = conse($i.v, $nxt.v);} )
      | DEDENT {$v = list1e($i.v);} ) ;
 
-// Production "it_expr" (indented sweet-expressions)
-// is the main production for sweet-expressions in the usual case.
-// Precondition: At beginning of line+indent
-// Postcondition: it-expr ended by consuming EOL + examining indent
+// Production "normal_it_expr" is an it_expr without a special prefix:
 // STOP INCLUDING IN SRFI
 // Note: This BNF presumes that "*>" generates multiple tokens,
 // "EOL DEDENT* COLLECTING_END", and resets the indentation list.
@@ -1236,6 +1230,11 @@ abbrevw_line returns [Object v]
        | ai=it_expr
          {$v=list2e($abbrevw.v, $ai.v);} ) ;
 
+// Production "it_expr" (indented sweet-expressions)
+// is the main production for sweet-expressions in the usual case.
+// Precondition: At beginning of line after indent
+// Postcondition: it-expr ended by consuming EOL + examining indent
+
 it_expr returns [Object v]
   : normal_it_expr     {$v=$normal_it_expr.v;}
   | datum_comment_line {$v=$datum_comment_line.v;}
@@ -1243,13 +1242,15 @@ it_expr returns [Object v]
   | sublist_line       {$v=$sublist_line.v;}
   | abbrevw_line       {$v=$abbrevw_line.v;} ;
 
-// Process initial indent.
+// Production "initial" processes initial indent expresions.
+// STOP INCLUDING IN SRFI
 // The rule for "indent processing disabled on initial top-level hspace"
 // is a very simple (and clever) BNF construction by Alan Manuel K. Gloria.
 // If there is an indent it simply reads a single n-expression and returns.
 // If there is more than one on an initially-indented line, the later
 // horizontal space will not have have been read, so this production will
 // fire again on the next invocation, doing the right thing.
+// INCLUDE IN SRFI
 
 initial returns [Object v]
   : (INITIAL_INDENT | hspaces_maybe_bang)
@@ -1258,9 +1259,7 @@ initial returns [Object v]
        sretry=t_expr_real {$v=$sretry.v;})
      | comment_eol retry3=t_expr {$v=$retry3.v;} ) ;
 
-// Production "t_expr" is the top-level production for sweet-expressions.
-// This production handles special cases, then in the normal case
-// drops to the it_expr production.
+// Production "t_expr_real" handles special cases, else it invokes it_expr.
 // STOP INCLUDING IN SRFI
 // Precondition: At beginning of line
 // Postcondition: At beginning of line
@@ -1272,6 +1271,8 @@ t_expr_real returns [Object v]
   | initial {$v=$initial.v;}
   | EOF {generate_eof();} // End of file
   | i=it_expr {$v = $i.v;} /* Normal case */ ;
+
+// Production "t_expr" is the top-level production for sweet-expressions.
 
 t_expr returns [Object v]
   : te=t_expr_real	
