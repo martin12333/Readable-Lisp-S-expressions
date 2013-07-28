@@ -358,7 +358,7 @@
             "^"))
       (t (concatenate 'string indentation-as-list)))))
 
-(defun ignorable (stopper stream)
+(defun skippable (stopper stream)
   (cond
   ((eq stopper 'scomment)
     (hspaces stream))
@@ -369,7 +369,7 @@
         (n-expr stream)
         (hspaces stream))
       (read-error "Datum comment not followed a datum (EOL instead)")))
-  (t (read-error "ignorable: Impossible case"))))
+  (t (read-error "skippable: Impossible case"))))
 
 ; Utility declarations and functions
 
@@ -458,7 +458,7 @@
         (declare (ignore n-value))
         (cond
           ((or (eq n-stopper 'scomment) (eq n-stopper 'datum-commentw))
-            (ignorable n-stopper stream)
+            (skippable n-stopper stream)
             (n-expr-error stream full))
           ((eq n-stopper 'normal)
             (read-error "Illegal second value after '.'."))
@@ -474,7 +474,7 @@
         (declare (ignore pn-value))
         (cond
           ((or (eq pn-stopper 'scomment) (eq pn-stopper 'datum-commentw))
-            (ignorable pn-stopper stream)
+            (skippable pn-stopper stream)
             (post-period stream))
           ((eq pn-stopper 'normal)
             (hspaces stream)
@@ -539,7 +539,7 @@
          (basic-value        (cadr basic-full-results)))
     (cond
       ((or (eq basic-special 'scomment) (eq basic-special 'datum-commentw))
-        (ignorable basic-special stream)
+        (skippable basic-special stream)
         (if (not (lcomment-eolp (my-peek-char stream)))
             (sweet-rest stream)
             (list 'normal '())))

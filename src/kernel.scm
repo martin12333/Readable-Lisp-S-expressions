@@ -1608,7 +1608,7 @@
               "^"))
         (#t (list->string indentation-as-list)))))
 
-  (define (ignorable stopper port)
+  (define (skippable stopper port)
     (cond
     ((eq? stopper 'scomment)
       (hspaces port))
@@ -1619,7 +1619,7 @@
           (n-expr port)
           (hspaces port))
         (read-error "Datum comment not followed a datum (EOL instead)")))
-    (#t (read-error "ignorable: Impossible case"))))
+    (#t (read-error "skippable: Impossible case"))))
 
   ; Utility declarations and functions
 
@@ -1708,7 +1708,7 @@
                (n-value        (cadr n-full-results)))
           (cond
             ((or (eq? n-stopper 'scomment) (eq? n-stopper 'datum-commentw))
-              (ignorable n-stopper port)
+              (skippable n-stopper port)
               (n-expr-error port full))
             ((eq? n-stopper 'normal)
               (read-error "Illegal second value after ."))
@@ -1723,7 +1723,7 @@
                (pn-value        (cadr pn-full-results)))
           (cond
             ((or (eq? pn-stopper 'scomment) (eq? pn-stopper 'datum-commentw))
-              (ignorable pn-stopper port)
+              (skippable pn-stopper port)
               (post-period port))
             ((eq? pn-stopper 'normal)
               (hspaces port)
@@ -1786,7 +1786,7 @@
            (basic-value        (cadr basic-full-results)))
       (cond
         ((or (eq? basic-special 'scomment) (eq? basic-special 'datum-commentw))
-          (ignorable basic-special port)
+          (skippable basic-special port)
           (if (not (lcomment-eol? (my-peek-char port)))
               (rest port)
               (list 'normal '())))

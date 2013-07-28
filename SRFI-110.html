@@ -1313,7 +1313,7 @@ scomment : BLOCK_COMMENT
 
 comment_eol : LCOMMENT? EOL;
 
-ignorable
+skippable
   : scomment hs
   | DATUM_COMMENTW hs (ignored=n_expr hs | /*empty*/ error ) ;
 </pre>
@@ -1342,10 +1342,10 @@ collecting_tail returns [Object v]
 // Process line after ". hspace+" sequence.  Does not go past current line.
 
 post_period returns [Object v]
-  : ignorable retry=post_period {$retry}
-    | pn=n_expr hs ignorable* (n_expr error)? {$pn}
+  : skippable retry=post_period {$retry}
+    | pn=n_expr hs skippable* (n_expr error)? {$pn}
     | COLLECTING hs pc=collecting_tail hs
-      ignorable* (n_expr error)? {$pc}
+      skippable* (n_expr error)? {$pc}
     | /*empty*/ {'.} ;
 
 // Production "head" reads 1+ n-expressions on one line; it will
@@ -1373,7 +1373,7 @@ head returns [Object v]
 
 rest returns [Object v]
   : PERIOD hspace+ pp=post_period {$pp} /* Improper list */
-  | ignorable (retry=rest {$retry} | /*empty*/ {'()})
+  | skippable (retry=rest {$retry} | /*empty*/ {'()})
   | COLLECTING hs collecting_tail hs
     (rr=rest             {(cons $collecting_tail $rr)}
      | /*empty*/         {(list $collecting_tail)} )
