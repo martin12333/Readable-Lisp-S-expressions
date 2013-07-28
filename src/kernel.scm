@@ -1670,15 +1670,9 @@
         ((char-ichar? c)
           (let* ((indentation (accumulate-ichar port))
                  (c (my-peek-char port)))
-            (cond
-              ((eqv? c #\;)
-                (collecting-tail port))
-              ((lcomment-eol? c)
-                (if (memv #\! indentation)
-                    (read-error "Collecting tail: False empty line with !")
-                    (collecting-tail port)))
-              (#t
-                (read-error "Collecting tail: Only ; after indent")))))
+            (if (lcomment-eol? c)
+                (collecting-tail port)
+                (read-error "Collecting tail: Only ; after indent"))))
         ((or (eqv? c form-feed) (eqv? c vertical-tab))
           (consume-ff-vt port)
           (if (lcomment-eol? (my-peek-char port))

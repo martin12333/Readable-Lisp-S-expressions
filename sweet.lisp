@@ -419,15 +419,9 @@
       ((char-icharp c)
         (let* ((indentation (accumulate-ichar stream))
                (c (my-peek-char stream)))
-          (cond
-            ((eql c #\;)
-              (collecting-tail stream))
-            ((lcomment-eolp c)
-              (if (member #\! indentation)
-                  (read-error "Collecting tail: False empty line with !.")
-                  (collecting-tail stream)))
-            (t
-              (read-error "Collecting tail: Only ; after indent.")))))
+          (if (lcomment-eolp c)
+              (collecting-tail stream)
+              (read-error "Collecting tail: Only ; after indent."))))
       ((or (eql c form-feed) (eql c vertical-tab))
         (consume-ff-vt stream)
         (if (lcomment-eolp (my-peek-char stream))
