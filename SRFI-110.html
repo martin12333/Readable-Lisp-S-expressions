@@ -1132,7 +1132,7 @@ the linefeed or carriage return (if any) in them <em>MUST NOT</em>
 be permanently consumed:
 </p>
 <pre>
-APOSW           : '\'' (' ' | '\t' | '\n' | '\r') ;  // quote
+QUOTEW          : '\'' (' ' | '\t' | '\n' | '\r') ;  // quote
 QUASIQUOTEW     : '\`' (' ' | '\t' | '\n' | '\r') ;  // quasiquote
 UNQUOTE_SPLICEW : ',@' (' ' | '\t' | '\n' | '\r') ;  // unquote-splicing
 UNQUOTEW        : ','  (' ' | '\t' | '\n' | '\r') ;  // unquote
@@ -1231,7 +1231,7 @@ TAB      : '\t';
 PERIOD   : '.';
 
 // Abbreviations not followed by horizontal space or EOL are ordinary:
-APOS           : '\'';
+QUOTE          : '\'';
 QUASIQUOTE     : '\`';
 UNQUOTE_SPLICE : ',@';
 UNQUOTE        : ',';
@@ -1271,14 +1271,14 @@ hspaces_maybe_bang: hspace+ ;
 
 // Production "abbrevw" is an abbreviation with a following whitespace:
 abbrevw returns [Object v]
-  : APOSW           {'quote}
+  : QUOTEW          {'quote}
   | QUASIQUOTEW     {'quasiquote}
   | UNQUOTE_SPLICEW {'unquote-splicing}
   | UNQUOTEW        {'unquote} ;
 
 // Production "abbrev_no_w" is an abbreviation without a following whitespace:
 abbrev_no_w returns [Object v]
-  : APOS            {'quote}
+  : QUOTE           {'quote}
   | QUASIQUOTE      {'quasiquote}
   | UNQUOTE_SPLICE  {'unquote-splicing}
   | UNQUOTE         {'unquote};

@@ -503,16 +503,16 @@ COLLECTING_END : {indent_processing()}? => t='*>' {process_collecting_end($t);};
 RESERVED_TRIPLE_DOLLAR : {indent_processing()}? => '$$$';  // Reserved.
 
 // Abbreviations followed by certain whitespace are special:
-APOSW           : {indent_processing()}? => '\'' (SPACE | TAB) ;
+QUOTEW          : {indent_processing()}? => '\'' (SPACE | TAB) ;
 QUASIQUOTEW     : {indent_processing()}? => '\`' (SPACE | TAB) ;
 UNQUOTE_SPLICEW : {indent_processing()}? => ',@' (SPACE | TAB) ;
 UNQUOTEW        : {indent_processing()}? => ','  (SPACE | TAB) ;
 DATUM_COMMENTW  : {indent_processing()}? => '#;' (SPACE | TAB) ;
 
 // Abbreviations followed by EOL also generate abbrevW:
-APOS_EOL        : {indent_processing()}? => '\'' EOL_SEQUENCE
+QUOTE_EOL       : {indent_processing()}? => '\'' EOL_SEQUENCE
                   SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
-                  {emit_type(APOSW); emit_type(EOL);
+                  {emit_type(QUOTEW); emit_type(EOL);
                    process_indent($i.text, $i);};
 QUASIQUOTE_EOL  : {indent_processing()}? => '\`' EOL_SEQUENCE
                   SPECIAL_IGNORED_LINE* i=INDENT_CHARS_PLUS
@@ -535,7 +535,7 @@ DATUM_COMMENT_EOL: {indent_processing()}? => '#;' EOL_SEQUENCE
 // INCLUDE IN SRFI
 
 // Abbreviations not followed by horizontal space or EOL are ordinary:
-APOS           : '\'';
+QUOTE          : '\'';
 QUASIQUOTE     : '\`';
 UNQUOTE_SPLICE : ',@';
 UNQUOTE        : ',';
@@ -1035,14 +1035,14 @@ hspaces_maybe_bang: hspace+ ;
 
 // Production "abbrevw" is an abbreviation with a following whitespace:
 abbrevw returns [Object v]
-  : APOSW           {$v = "quote";}
+  : QUOTEW          {$v = "quote";}
   | QUASIQUOTEW     {$v = "quasiquote";}
   | UNQUOTE_SPLICEW {$v = "unquote-splicing";}
   | UNQUOTEW        {$v = "unquote";} ;
 
 // Production "abbrev_no_w" is an abbreviation without a following whitespace:
 abbrev_no_w returns [Object v]
-  : APOS            {$v = "quote";}
+  : QUOTE           {$v = "quote";}
   | QUASIQUOTE      {$v = "quasiquote";}
   | UNQUOTE_SPLICE  {$v = "unquote-splicing";}
   | UNQUOTE         {$v = "unquote";};
