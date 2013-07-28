@@ -1307,6 +1307,10 @@ scomment : BLOCK_COMMENT
 // additional comment-only lines (if any) which may be indented.
 
 comment_eol : LCOMMENT? EOL;
+
+ignorable
+  : scomment hs
+  | DATUM_COMMENTW hs (ignored=n_expr hs | /*empty*/ error ) ;
 </pre>
 
 
@@ -1333,12 +1337,10 @@ collecting_tail returns [Object v]
 // Process line after ". hspace+" sequence.  Does not go past current line.
 
 post_period returns [Object v]
-  : DATUM_COMMENTW hs
-      (ignored=n_expr hs sp2=post_period {$sp2} | /*empty*/ error )
-    | scomment hs rpt=post_period {$rpt} // (scomment hs)*
-    | pn=n_expr hs (scomment hs)* (n_expr error)? {$pn}
+  : ignorable retry=post_period {$retry}
+    | pn=n_expr hs ignorable* (n_expr error)? {$pn}
     | COLLECTING hs pc=collecting_tail hs
-      (scomment hs)* (n_expr error)? {$pc}
+      ignorable* (n_expr error)? {$pc}
     | /*empty*/ {'.} ;
 
 // Production "head" reads 1+ n-expressions on one line; it will
@@ -1366,12 +1368,10 @@ head returns [Object v]
 
 rest returns [Object v]
   : PERIOD hspace+ pp=post_period {$pp} /* Improper list */
-  | DATUM_COMMENTW hs
-    (ignored=n_expr hs sr2=rest {$sr2} | /*empty*/ error )
-  | scomment hs (sr=rest {$sr} | /*empty*/ {'()} )
+  | ignorable (retry=rest {$retry} | /*empty*/ {'()})
   | COLLECTING hs collecting_tail hs
     (rr=rest             {(cons $collecting_tail $rr)}
-     | /*empty*/             {(list $collecting_tail)} )
+     | /*empty*/         {(list $collecting_tail)} )
   | basic=n_expr
       ((hspace+ (br=rest {(cons $basic $br)}
                  | /*empty*/ {(list $basic)} ))
