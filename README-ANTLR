@@ -61,8 +61,27 @@ The ANTLRWorks GUI is released under the BSD 3-clause license,
 and it includes the ANTLR tool version 3.4, which is also
 released under the BSD 3-clause license:
 http://www.antlr3.org/license.html
-IF you cannot find a copy, check:
+If you cannot find a copy, check:
 http://sourceforge.net/projects/readable/files/
+
+Expected warning messages
+=========================
+
+Many warning messages have been addressed or suppressed.
+However, the following warning message still exists
+(where the line# points to the definition of "hs"):
+
+[18:06:22] warning(200): sweet.g:1029:11: 
+Decision can match input such as "{SPACE, TAB}" using multiple alternatives: 1, 2
+
+As a result, alternative(s) 2 were disabled for that input
+Semantic predicates were present but were hidden by actions.
+[18:06:22] warning(200): C:\cygwin\home\dwheeler\readable-code\sweet.g:1029:11: 
+Decision can match input such as "{SPACE, TAB}" using multiple alternatives: 1, 2
+
+As a result, alternative(s) 2 were disabled for that input
+Semantic predicates were present but were hidden by actions.
+
 
 
 For more information
