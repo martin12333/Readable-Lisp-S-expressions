@@ -1232,7 +1232,7 @@ abbrevw_line returns [Object v]
 
 // Production "it_expr" (indented sweet-expressions)
 // is the main production for sweet-expressions in the usual case.
-// Precondition: At beginning of line after indent
+// Precondition: At beginning of line after indent, NOT at an EOL char
 // Postcondition: it-expr ended by consuming EOL + examining indent
 
 it_expr returns [Object v]
