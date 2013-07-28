@@ -1656,9 +1656,9 @@
       ((null? (cdr x)) (car x))
       (#t x)))
 
-  ; Return contents (value) of collecting-tail.  It does *not* report a
+  ; Return contents (value) of collecting-content.  It does *not* report a
   ; stopper or ending indent, because it is *ONLY* stopped by collecting-end
-  (define (collecting-tail port)
+  (define (collecting-content port)
     (let* ((c (my-peek-char port)))
       (cond
         ((eof-object? c)
@@ -1666,17 +1666,17 @@
         ((lcomment-eol? c)
           (consume-to-eol port)
           (consume-end-of-line port)
-          (collecting-tail port))
+          (collecting-content port))
         ((char-ichar? c)
           (let* ((indentation (accumulate-ichar port))
                  (c (my-peek-char port)))
             (if (lcomment-eol? c)
-                (collecting-tail port)
+                (collecting-content port)
                 (read-error "Collecting tail: Only ; after indent"))))
         ((or (eqv? c form-feed) (eqv? c vertical-tab))
           (consume-ff-vt port)
           (if (lcomment-eol? (my-peek-char port))
-              (collecting-tail port)
+              (collecting-content port)
               (read-error "Collecting tail: FF and VT must be alone on line")))
         (#t
           (let* ((it-full-results (it-expr port "^"))
@@ -1692,7 +1692,7 @@
                 (if (null? it-value)
                     it-value
                     (list it-value)))
-              (#t (conse it-value (collecting-tail port)))))))))
+              (#t (conse it-value (collecting-content port)))))))))
 
   ; Skip scomments and error out if we have a normal n-expr;
   ; Basically implement this BNF:
@@ -1730,7 +1730,7 @@
               (n-expr-error port pn-full-results))
             ((eq? pn-stopper 'collecting)
               (hspaces port)
-              (let ((ct (collecting-tail port)))
+              (let ((ct (collecting-content port)))
                 (hspaces port)
                 (n-expr-error port (list 'normal ct))))
             ((eq? pn-stopper 'period-marker)
@@ -1749,7 +1749,7 @@
       (cond
         ((eq? basic-special 'collecting)
           (hspaces port)
-          (let* ((ct-results (collecting-tail port)))
+          (let* ((ct-results (collecting-content port)))
             (hspaces port)
             (if (not (lcomment-eol? (my-peek-char port)))
                 (let* ((rr-full-results (rest-of-line port))
@@ -1792,7 +1792,7 @@
               (list 'normal '())))
         ((eq? basic-special 'collecting)
           (hspaces port)
-          (let* ((ct-results (collecting-tail port)))
+          (let* ((ct-results (collecting-content port)))
             (hspaces port)
             (if (not (lcomment-eol? (my-peek-char port)))
                 (let* ((rr-full-results (rest-of-line port))

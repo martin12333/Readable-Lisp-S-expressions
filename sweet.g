@@ -1084,16 +1084,16 @@ skippable
 
 // KEY BNF PRODUCTIONS for sweet-expressions:
 
-// Production "collecting_tail" returns a collecting list's contents.
+// Production "collecting_content" returns a collecting list's contents.
 // Precondition: At beginning of line.
 // Postcondition: Consumed the matching COLLECTING_END.
 // FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
 
-collecting_tail returns [Object v]
-  : it_expr more=collecting_tail {$v = conse($it_expr.v, $more.v);}
-  | comment_eol    retry1=collecting_tail {$v = $retry1.v;}
-  | INITIAL_INDENT LCOMMENT? EOL retry2=collecting_tail {$v = $retry2.v;}
-  | (FF | VT)+ EOL retry3=collecting_tail {$v = $retry3.v;}
+collecting_content returns [Object v]
+  : it_expr more=collecting_content {$v = conse($it_expr.v, $more.v);}
+  | comment_eol    retry1=collecting_content {$v = $retry1.v;}
+  | INITIAL_INDENT LCOMMENT? EOL retry2=collecting_content {$v = $retry2.v;}
+  | (FF | VT)+ EOL retry3=collecting_content {$v = $retry3.v;}
   | COLLECTING_END {$v = null;} ;
 
 // Process line after ". hspace+" sequence.  Does not go past current line.
@@ -1101,7 +1101,7 @@ collecting_tail returns [Object v]
 post_period returns [Object v]
   : skippable retry=post_period {$v = $retry.v;}
     | pn=n_expr hs skippable* (n_expr error)? {$v = $pn.v;}
-    | COLLECTING hs pc=collecting_tail hs
+    | COLLECTING hs pc=collecting_content hs
       skippable* (n_expr error)? {$v = $pc.v;}
     | /*empty*/ {$v = ".";} ;
 
@@ -1126,9 +1126,9 @@ line_exprs returns [Object v]
   : PERIOD /* Leading ".": escape following datum like an n-expression. */
       (hspace+ pp=post_period {$v = list($pp.v);}
        | /*empty*/    {$v = list(".");} )
-  | COLLECTING hs collecting_tail hs
-      (rr=rest_of_line    {$v = cons($collecting_tail.v, $rr.v); }
-       | /*empty*/        {$v = list($collecting_tail.v); } )
+  | COLLECTING hs collecting_content hs
+      (rr=rest_of_line    {$v = cons($collecting_content.v, $rr.v); }
+       | /*empty*/        {$v = list($collecting_content.v); } )
   | basic=n_expr_first /* Only match n_expr_first */
       ((hspace+ (br=rest_of_line  {$v = cons($basic.v, $br.v);}
                  | /*empty*/      {$v = list($basic.v);} ))
@@ -1148,9 +1148,9 @@ line_exprs returns [Object v]
 rest_of_line returns [Object v]
   : PERIOD hspace+ pp=post_period {$v = $pp.v;} /* Improper list */
   | skippable (retry=rest_of_line {$v = $retry.v;} | /*empty*/ {$v = null;})
-  | COLLECTING hs collecting_tail hs
-    (rr=rest_of_line     {$v = cons($collecting_tail.v, $rr.v);}
-     | /*empty*/         {$v = list($collecting_tail.v);} )
+  | COLLECTING hs collecting_content hs
+    (rr=rest_of_line     {$v = cons($collecting_content.v, $rr.v);}
+     | /*empty*/         {$v = list($collecting_content.v);} )
   | basic=n_expr
       ((hspace+ (br=rest_of_line {$v = cons($basic.v, $br.v);}
                  | /*empty*/     {$v = list($basic.v);} ))

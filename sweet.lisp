@@ -405,9 +405,9 @@
     (t x)))
 
 
-; Return contents (value) of collecting-tail.  It does *not* report a
+; Return contents (value) of collecting-content.  It does *not* report a
 ; stopper or ending indent, because it is *ONLY* stopped by collecting-end
-(defun collecting-tail (stream)
+(defun collecting-content (stream)
   (let* ((c (my-peek-char stream)))
     (cond
       ((eof-objectp c)
@@ -415,18 +415,18 @@
       ((lcomment-eolp c)
         (consume-to-eol stream)
         (consume-end-of-line stream)
-        (collecting-tail stream))
+        (collecting-content stream))
       ((char-icharp c)
         (let* ((indentation (accumulate-ichar stream))
                (c (my-peek-char stream)))
           (declare (ignore indentation))
           (if (lcomment-eolp c)
-              (collecting-tail stream)
+              (collecting-content stream)
               (read-error "Collecting tail: Only ; after indent."))))
       ((or (eql c form-feed) (eql c vertical-tab))
         (consume-ff-vt stream)
         (if (lcomment-eolp (my-peek-char stream))
-            (collecting-tail stream)
+            (collecting-content stream)
             (read-error "Collecting tail: FF and VT must be alone on line.")))
       (t
         (let* ((it-full-results (it-expr stream "^"))
@@ -442,7 +442,7 @@
               (if (null it-value)
                   it-value
                   (list it-value)))
-            (t (conse it-value (collecting-tail stream)))))))))
+            (t (conse it-value (collecting-content stream)))))))))
 
 ; Skip scomments and error out if we have a normal n-expr;
 ; Basically implement this BNF:
@@ -482,7 +482,7 @@
             (n-expr-error stream pn-full-results))
           ((eq pn-stopper 'collecting)
             (hspaces stream)
-            (let ((ct (collecting-tail stream)))
+            (let ((ct (collecting-content stream)))
               (hspaces stream)
               (n-expr-error stream (list 'normal ct))))
           ((eq pn-stopper 'period-marker)
@@ -502,7 +502,7 @@
     (cond
       ((eq basic-special 'collecting)
         (hspaces stream)
-        (let* ((ct-results (collecting-tail stream)))
+        (let* ((ct-results (collecting-content stream)))
           (hspaces stream)
           (if (not (lcomment-eolp (my-peek-char stream)))
               (let* ((rr-full-results (rest-of-line stream))
@@ -545,7 +545,7 @@
             (list 'normal '())))
       ((eq basic-special 'collecting)
         (hspaces stream)
-        (let* ((ct-results (collecting-tail stream)))
+        (let* ((ct-results (collecting-content stream)))
           (hspaces stream)
           (if (not (lcomment-eolp (my-peek-char stream)))
               (let* ((rr-full-results (rest-of-line stream))
