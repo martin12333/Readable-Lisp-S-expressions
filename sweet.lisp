@@ -358,6 +358,19 @@
             "^"))
       (t (concatenate 'string indentation-as-list)))))
 
+(defun ignorable (stopper stream)
+  (cond
+  ((eq stopper 'scomment)
+    (hspaces stream))
+  ((eq stopper 'datum-commentw)
+    (hspaces stream)
+    (if (not (lcomment-eolp (my-peek-char stream)))
+      (progn
+        (n-expr stream)
+        (hspaces stream))
+      (read-error "Datum comment not followed a datum (EOL instead)")))
+  (t (read-error "ignorable: Impossible case"))))
+
 ; Utility declarations and functions
 
 (defun conse (x y) ; cons, but handle "empty" values
@@ -450,8 +463,8 @@
              (n-value        (cadr n-full-results)))
         (declare (ignore n-value))
         (cond
-          ((eq n-stopper 'scomment) ; Consume scomments.
-            (hspaces stream)
+          ((or (eq n-stopper 'scomment) (eq n-stopper 'datum-commentw))
+            (ignorable n-stopper stream)
             (n-expr-error stream full))
           ((eq n-stopper 'normal)
             (read-error "Illegal second value after '.'."))
@@ -466,14 +479,8 @@
              (pn-value        (cadr pn-full-results)))
         (declare (ignore pn-value))
         (cond
-          ((eq pn-stopper 'datum-commentw)
-            (hspaces stream)
-            (if (lcomment-eolp (my-peek-char stream))
-                (read-error "Datum comment last item after ."))
-            (n-expr stream) ; Consume commented-out item.
-            (post-period stream))
-          ((eq pn-stopper 'scomment)
-            (hspaces stream)
+          ((or (eq pn-stopper 'scomment) (eq pn-stopper 'datum-commentw))
+            (ignorable pn-stopper stream)
             (post-period stream))
           ((eq pn-stopper 'normal)
             (hspaces stream)
@@ -537,14 +544,8 @@
          (basic-special      (car basic-full-results))
          (basic-value        (cadr basic-full-results)))
     (cond
-      ((eq basic-special 'datum-commentw)
-        (hspaces stream)
-        (if (lcomment-eolp (my-peek-char stream))
-            (read-error "#; not followed by a datum in line"))
-        (n-expr stream) ; Consume commented-out item.
-        (sweet-rest stream))
-      ((eq basic-special 'scomment)
-        (hspaces stream)
+      ((or (eq basic-special 'scomment) (eq basic-special 'datum-commentw))
+        (ignorable basic-special stream)
         (if (not (lcomment-eolp (my-peek-char stream)))
             (sweet-rest stream)
             (list 'normal '())))
