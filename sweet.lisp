@@ -578,7 +578,7 @@
                   (read-error "Dedent required after lone . and value line."))
               (list f-new-indent f-value)) ; final value of improper list
             (if (eq i-value empty-tag)
-                (body stream starting-indent)
+                (body stream i-new-indent)
                 (let-splitter (nxt-full-results nxt-new-indent nxt-value)
                               (body stream i-new-indent)
                   (list nxt-new-indent (conse i-value nxt-value)))))
