@@ -235,9 +235,8 @@
       (eql char non-whitespace-indent)))
 
 (defun accumulate-ichar (stream)
-  (if (char-icharp (my-peek-char stream))
-      (cons (my-read-char stream) (accumulate-ichar stream))
-      '()))
+  (loop while (char-icharp (my-peek-char stream))
+        collect (my-read-char stream)))
 
 (defun consume-ff-vt (stream)
   (let ((c (my-peek-char stream)))
