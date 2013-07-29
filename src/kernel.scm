@@ -1458,8 +1458,8 @@
   ; it's probably trivial to reimplement this.  E.G., in Common Lisp:
   ; (defmacro let-splitter ((full first-value second-value) expr &rest body)
   ;   `(let* ((,full ,expr)
-  ;           (,first-value (car full))
-  ;           (,second-value (cadr full)))
+  ;           (,first-value (car ,full))
+  ;           (,second-value (cadr ,full)))
   ;          ,@body))
 
   (define group-split (string->symbol "\\\\"))
