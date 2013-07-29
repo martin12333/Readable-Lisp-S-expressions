@@ -133,12 +133,11 @@
   '(#\( #\) #\[ #\] #\{ #\} #\space #\tab #\newline #\return #\#
     #\' #\` #\,))
 
-; Return list of characters up to, but not including, a delimiter.
-(defun chars-before-delimiter (input-stream)
-  (let* ((c (peek-char nil input-stream nil my-eof-marker)))
-    (if (or (eq c my-eof-marker) (find c neoteric-delimiters))
-      '()
-      (cons (read-char input-stream) (chars-before-delimiter input-stream)))))
+(defun string-before-delimiter (input-stream start)
+  (concatenate 'string start
+    (loop for c = (peek-char nil input-stream nil my-eof-marker)
+          until (or (eq c my-eof-marker) (find c neoteric-delimiters))
+          collect (read-char input-stream))))
 
 ; Note: In traditional Common Lisp, symbols with just multiple "."
 ; are illegal, especially "...".  For the moment we'll allow it.
@@ -146,8 +145,7 @@
 ; Read a datum and ALLOW "." as a possible value:
 (defun my-read-to-delimiter (input-stream start)
   (let* ((*readtable* *neoteric-underlying-readtable*) ; Temporary switch
-         (clist (chars-before-delimiter input-stream))
-         (my-string (concatenate 'string start clist)))
+         (my-string (string-before-delimiter input-stream start)))
     (if (string= my-string ".")
         '|.|
         (read-from-string my-string))))
@@ -286,8 +284,7 @@
   ; To deal with this, we collect all the characters before a delimiter,
   ; put them into a string, and read from the string instead.
   (neoteric-process-tail stream
-    (let* ((chars (chars-before-delimiter stream))
-           (ctext (concatenate 'string chars))
+    (let* ((ctext (string-before-delimiter stream ""))
            (*readtable* *neoteric-underlying-readtable*)) ; temporary switch.
       (with-input-from-string (string-stream ctext)
         (funcall
