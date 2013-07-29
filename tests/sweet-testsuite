@@ -2114,3 +2114,6 @@ a8 b8 #; ignorethis #; (ignore this too)
 (xyzz (stuff) last-one)
 xyzz <* stuff *>  #; ignore11 #; ignore12 last-one
 
+(!x1 !x2 (!x2a !x2b) !x3 . !x4)
+|!x1|   !x2  (  !x2a  !x2b  )   #; stuff  !x3  . !x4
+
