@@ -195,6 +195,12 @@
 ;     all normal indents with "^", and "*>" generates a length-0 indent
 ;     (which is thus shorter than even an indent of 0 characters).
 
+; Define let-splitter macro to simplify common code pattern.
+(defmacro let-splitter ((full first-value second-value) expr &rest body)
+  `(let* ((,full ,expr)
+          (,first-value (car ,full))
+          (,second-value (cadr ,full)))
+         ,@body))
 
 (define-constant group-split '\\)
 (define-constant group-split-char #\\ ) ; First character of split symbol.
@@ -275,32 +281,31 @@
 ; the "normal" character, e.g., {$} is not a sublist.
 ; Call "process-sharp" if first char is "#".
 (defun n-expr (stream)
-  (let* ((c (my-peek-char stream))
-         (results (n-expr-or-scomment stream))
-         (type (car results))
-         (expr (cadr results)))
-    (declare (ignore type))
-    ; (princ "DEBUG: n-expr, results=") (write results) (terpri)
-    ; (princ "DEBUG: n-expr, car results=") (write (car results)) (terpri)
-    ; (princ "DEBUG: n-expr, car results scomment=") (write (eq (car results) 'scomment)) (terpri)
-    (if (eq (car results) 'scomment)
-        results
-        (cond
-          ; TODO: Improve Workaround for symbol packaging:
-          ((and (eql c sublist-char) (string= (symbol-name expr) "$"))
-            (list 'sublist-marker '()))
-          ((and (eql c group-split-char) (string= (symbol-name expr) "\\"))
-            (list 'group-split-marker '()))
-          ((and (eql c #\<) (string= (symbol-name expr) "<*"))
-            (list 'collecting '()))
-          ((and (eql c #\*) (string= (symbol-name expr) "*>"))
-            (list 'collecting-end '()))
-          ((and (eql c #\$) (string= (symbol-name expr) "$$$"))
-            (read-error "$$$ is reserved."))
-          ((and (eql c #\.) (string= (symbol-name expr) "."))
-            (list 'period-marker '()))
-          (t
-            results)))))
+  (let ((c (my-peek-char stream)))
+    (let-splitter (results type expr)
+                  (n-expr-or-scomment stream)
+      (declare (ignore type))
+      ; (princ "DEBUG: n-expr, results=") (write results) (terpri)
+      ; (princ "DEBUG: n-expr, car results=") (write (car results)) (terpri)
+      ; (princ "DEBUG: n-expr, car results scomment=") (write (eq (car results) 'scomment)) (terpri)
+      (if (eq (car results) 'scomment)
+          results
+          (cond
+            ; TODO: Improve Workaround for symbol packaging:
+            ((and (eql c sublist-char) (string= (symbol-name expr) "$"))
+              (list 'sublist-marker '()))
+            ((and (eql c group-split-char) (string= (symbol-name expr) "\\"))
+              (list 'group-split-marker '()))
+            ((and (eql c #\<) (string= (symbol-name expr) "<*"))
+              (list 'collecting '()))
+            ((and (eql c #\*) (string= (symbol-name expr) "*>"))
+              (list 'collecting-end '()))
+            ((and (eql c #\$) (string= (symbol-name expr) "$$$"))
+              (read-error "$$$ is reserved."))
+            ((and (eql c #\.) (string= (symbol-name expr) "."))
+              (list 'period-marker '()))
+            (t
+              results))))))
 
 ; Check if we have abbrev+whitespace.  If the current peeked character
 ; is one of certain whitespace chars,
@@ -429,9 +434,8 @@
             (collecting-content stream)
             (read-error "Collecting tail: FF and VT must be alone on line.")))
       (t
-        (let* ((it-full-results (it-expr stream "^"))
-               (it-new-indent   (car it-full-results))
-               (it-value        (cadr it-full-results)))
+        (let-splitter (it-full-results it-new-indent it-value)
+                      (it-expr stream "^")
           (cond
             ((string= it-new-indent "")
               ; Specially compensate for "*>" at the end of a line if it's
@@ -453,9 +457,8 @@
       (read-error "BUG! n-expr-error called but stopper not normal."))
   (if (lcomment-eolp (my-peek-char stream))
       full ; All done!
-      (let* ((n-full-results (n-expr stream))
-             (n-stopper      (car n-full-results))
-             (n-value        (cadr n-full-results)))
+      (let-splitter (n-full-results n-stopper n-value)
+                    (n-expr stream)
         (declare (ignore n-value))
         (cond
           ((or (eq n-stopper 'scomment) (eq n-stopper 'datum-commentw))
@@ -469,9 +472,8 @@
 ; Returns (stopper value-after-period)
 (defun post-period (stream)
   (if (not (lcomment-eolp (my-peek-char stream)))
-      (let* ((pn-full-results (n-expr stream))
-             (pn-stopper      (car pn-full-results))
-             (pn-value        (cadr pn-full-results)))
+      (let-splitter (pn-full-results pn-stopper pn-value)
+                    (n-expr stream)
         (declare (ignore pn-value))
         (cond
           ((or (eq pn-stopper 'scomment) (eq pn-stopper 'datum-commentw))
@@ -495,9 +497,8 @@
 ; The stopper may be 'normal, 'scomment (special comment),
 ; 'abbrevw (initial abbreviation), 'sublist-marker, or 'group-split-marker
 (defun line-exprs (stream)
-  (let* ((basic-full-results (n-expr-first stream))
-         (basic-special      (car basic-full-results))
-         (basic-value        (cadr basic-full-results)))
+  (let-splitter (basic-full-results basic-special basic-value)
+                (n-expr-first stream)
     ; (princ "DEBUG: line-exprs=") (write basic-full-results) (terpri)
     (cond
       ((eq basic-special 'collecting)
@@ -505,27 +506,24 @@
         (let* ((ct-results (collecting-content stream)))
           (hspaces stream)
           (if (not (lcomment-eolp (my-peek-char stream)))
-              (let* ((rr-full-results (rest-of-line stream))
-                     (rr-stopper      (car rr-full-results))
-                     (rr-value        (cadr rr-full-results)))
+              (let-splitter (rr-full-results rr-stopper rr-value)
+                            (rest-of-line stream)
                 (list rr-stopper (cons ct-results rr-value)))
               (list 'normal (list ct-results)))))
       ((eq basic-special 'period-marker)
         (if (char-hspacep (my-peek-char stream))
             (progn
               (hspaces stream)
-              (let* ((ct-full-results (post-period stream))
-                     (ct-stopper      (car ct-full-results))
-                     (ct-value        (cadr ct-full-results)))
+              (let-splitter (ct-full-results ct-stopper ct-value)
+                            (post-period stream)
                 (list ct-stopper (list ct-value))))
             (list 'normal (list period-symbol))))
       ((not (eq basic-special 'normal)) basic-full-results)
       ((char-hspacep (my-peek-char stream))
         (hspaces stream)
         (if (not (lcomment-eolp (my-peek-char stream)))
-            (let* ((br-full-results (rest-of-line stream))
-                   (br-stopper      (car br-full-results))
-                   (br-value        (cadr br-full-results)))
+            (let-splitter (br-full-results br-stopper br-value)
+                          (rest-of-line stream)
               (list br-stopper (cons basic-value br-value)))
             (list 'normal (list basic-value))))
       (t 
@@ -534,9 +532,8 @@
 ; Returns (stopper computed-value); stopper may be 'normal, etc.
 ; Read in one n-expr, then process based on whether or not it's special.
 (defun rest-of-line (stream)
-  (let* ((basic-full-results (n-expr stream))
-         (basic-special      (car basic-full-results))
-         (basic-value        (cadr basic-full-results)))
+  (let-splitter (basic-full-results basic-special basic-value)
+                (n-expr stream)
     (cond
       ((or (eq basic-special 'scomment) (eq basic-special 'datum-commentw))
         (skippable basic-special stream)
@@ -548,9 +545,8 @@
         (let* ((ct-results (collecting-content stream)))
           (hspaces stream)
           (if (not (lcomment-eolp (my-peek-char stream)))
-              (let* ((rr-full-results (rest-of-line stream))
-                     (rr-stopper      (car rr-full-results))
-                     (rr-value        (cadr rr-full-results)))
+              (let-splitter (rr-full-results rr-stopper rr-value)
+                            (rest-of-line stream)
                 (list rr-stopper (cons ct-results rr-value)))
               (list 'normal (list ct-results)))))
       ((eq basic-special 'period-marker)
@@ -564,39 +560,34 @@
       ((char-hspacep (my-peek-char stream))
         (hspaces stream)
         (if (not (lcomment-eolp (my-peek-char stream)))
-            (let* ((br-full-results (rest-of-line stream))
-                   (br-stopper      (car br-full-results))
-                   (br-value        (cadr br-full-results)))
+            (let-splitter (br-full-results br-stopper br-value)
+                          (rest-of-line stream)
               (list br-stopper (cons basic-value br-value)))
             (list 'normal (list basic-value))))
       (t (list 'normal (list basic-value))))))
 
 ; Returns (new-indent computed-value)
 (defun body (stream starting-indent)
-  (let* ((i-full-results (it-expr stream starting-indent))
-         (i-new-indent   (car i-full-results))
-         (i-value        (cadr i-full-results)))
+  (let-splitter (i-full-results i-new-indent i-value)
+                (it-expr stream starting-indent)
     (if (string= starting-indent i-new-indent)
         (if (eq i-value period-symbol)
-            (let* ((f-full-results (it-expr stream i-new-indent))
-                   (f-new-indent   (car f-full-results))
-                   (f-value        (cadr f-full-results)))
+            (let-splitter (f-full-results f-new-indent f-value)
+                          (it-expr stream i-new-indent)
               (if (not (indentation>p starting-indent f-new-indent))
                   (read-error "Dedent required after lone . and value line."))
               (list f-new-indent f-value)) ; final value of improper list
             (if (eq i-value empty-tag)
                 (body stream starting-indent)
-                (let* ((nxt-full-results (body stream i-new-indent))
-                       (nxt-new-indent   (car nxt-full-results))
-                       (nxt-value        (cadr nxt-full-results)))
+                (let-splitter (nxt-full-results nxt-new-indent nxt-value)
+                              (body stream i-new-indent)
                   (list nxt-new-indent (conse i-value nxt-value)))))
         (list i-new-indent (list1e i-value))))) ; dedent - end list.
 
 ; Returns (new-indent computed-value)
 (defun it-expr-real (stream starting-indent)
-  (let* ((line-full-results (line-exprs stream))
-         (line-stopper      (car line-full-results))
-         (line-value        (cadr line-full-results)))
+  (let-splitter (line-full-results line-stopper line-value)
+                (line-exprs stream)
     ; (princ "DEBUG: it-expr-real: line-exprs result=") (write line-full-results) (terpri)
     (if (and (not (null line-value)) (not (eq line-stopper 'abbrevw)))
         ; Production line-exprs produced at least one n-expression:
@@ -610,9 +601,8 @@
                 ; (read-error "Cannot follow split with end of line.")
                 (let ((new-indent (get-next-indent stream)))
                   (if (string= new-indent starting-indent)
-                    (let* ((more-full-results (it-expr stream new-indent))
-                           (more-new-indent   (car more-full-results))
-                           (more-value        (cadr more-full-results)))
+                    (let-splitter (more-full-results more-new-indent more-value)
+                                  (it-expr stream new-indent)
                       (list more-new-indent
                         (my-append line-value more-value)))
                     (read-error "Continue without same-indent line.")))
@@ -621,9 +611,8 @@
             (hspaces stream)
             (if (lcomment-eolp (my-peek-char stream))
                 (read-error "EOL illegal immediately after sublist."))
-            (let* ((sub-i-full-results (it-expr stream starting-indent))
-                   (sub-i-new-indent   (car sub-i-full-results))
-                   (sub-i-value        (cadr sub-i-full-results)))
+            (let-splitter (sub-i-full-results sub-i-new-indent sub-i-value)
+                          (it-expr stream starting-indent)
               (list sub-i-new-indent
                 (my-append line-value (list sub-i-value)))))
           ((eq line-stopper 'collecting-end)
@@ -632,9 +621,8 @@
           ((lcomment-eolp (my-peek-char stream))
             (let ((new-indent (get-next-indent stream)))
               (if (indentation>p new-indent starting-indent)
-                  (let* ((body-full-results (body stream new-indent))
-                         (body-new-indent (car body-full-results))
-                         (body-value      (cadr body-full-results)))
+                  (let-splitter (body-full-results body-new-indent body-value)
+                                (body stream new-indent)
                     (list body-new-indent (my-append line-value body-value)))
                   (list new-indent (monify line-value)))))
           (t
@@ -645,17 +633,15 @@
             (hspaces stream)
             (cond
               ((not (lcomment-eolp (my-peek-char stream)))
-                (let* ((is-i-full-results (it-expr stream starting-indent))
-                       (is-i-new-indent   (car is-i-full-results))
-                       (is-i-value        (cadr is-i-full-results)))
+                (let-splitter (is-i-full-results is-i-new-indent is-i-value)
+                              (it-expr stream starting-indent)
                   (declare (ignore is-i-value))
                   (list is-i-new-indent empty-tag)))
               (t
                 (let ((new-indent (get-next-indent stream)))
                   (if (indentation>p new-indent starting-indent)
-                    (let* ((body-full-results (body stream new-indent))
-                           (body-new-indent (car body-full-results))
-                           (body-value      (cadr body-full-results)))
+                    (let-splitter (body-full-results body-new-indent body-value)
+                                  (body stream new-indent)
                       (declare (ignore body-value))
                       (list body-new-indent empty-tag))
                     (read-error "#;+EOL must be followed by indent"))))))
@@ -676,9 +662,8 @@
             (hspaces stream)
             (if (lcomment-eolp (my-peek-char stream))
                 (read-error "EOL illegal immediately after solo sublist."))
-            (let* ((is-i-full-results (it-expr stream starting-indent))
-                   (is-i-new-indent   (car is-i-full-results))
-                   (is-i-value        (cadr is-i-full-results)))
+            (let-splitter (is-i-full-results is-i-new-indent is-i-value)
+                          (it-expr stream starting-indent)
               (list is-i-new-indent
                 (list1e is-i-value))))
           ((eq line-stopper 'abbrevw)
@@ -688,14 +673,12 @@
                   (let ((new-indent (get-next-indent stream)))
                     (if (not (indentation>p new-indent starting-indent))
                         (read-error "Indent required after abbreviation."))
-                    (let* ((ab-full-results (body stream new-indent))
-                           (ab-new-indent   (car ab-full-results))
-                           (ab-value      (cadr ab-full-results)))
+                    (let-splitter (ab-full-results ab-new-indent ab-value)
+                                  (body stream new-indent)
                       (list ab-new-indent
                         (append (list line-value) ab-value)))))
-                (let* ((ai-full-results (it-expr stream starting-indent))
-                       (ai-new-indent (car ai-full-results))
-                       (ai-value    (cadr ai-full-results)))
+                (let-splitter (ai-full-results ai-new-indent ai-value)
+                              (it-expr stream starting-indent)
                   (list ai-new-indent
                     (list2e line-value ai-value)))))
           ((eq line-stopper 'collecting-end)
@@ -706,13 +689,12 @@
 ; Read it-expr.  This is a wrapper that attaches source info
 ; and checks for consistent indentation results.
 (defun it-expr (stream starting-indent)
-  (let* ((pos (get-sourceinfo stream))
-         (results (it-expr-real stream starting-indent))
-         (results-indent (car results))
-         (results-value (cadr results)))
-    (if (indentation>p results-indent starting-indent)
-        (read-error "Inconsistent indentation."))
-    (list results-indent (attach-sourceinfo pos results-value))))
+  (let ((pos (get-sourceinfo stream)))
+    (let-splitter (results results-indent results-value)
+                  (it-expr-real stream starting-indent)
+      (if (indentation>p results-indent starting-indent)
+          (read-error "Inconsistent indentation."))
+      (list results-indent (attach-sourceinfo pos results-value)))))
 
 ; Top level - read a sweet-expression (t-expression).  Handle special
 ; cases, such as initial indent; call it-expr for normal case.
@@ -741,9 +723,8 @@
                     (consume-end-of-line stream)
                     (t-expr-real stream)))))
           (t
-            (let* ((results (it-expr stream "^"))
-                   (results-indent (car results))
-                   (results-value (cadr results)))
+            (let-splitter (results results-indent results-value)
+                          (it-expr stream "^")
               (if (string= results-indent "")
                   (read-error "Closing *> without preceding matching <*.")
                   results-value))))))
