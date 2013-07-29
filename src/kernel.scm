@@ -1945,36 +1945,35 @@
   ; cases, such as initial indent; call it-expr for normal case.
   (define (t-expr-real port)
     (let* ((c (my-peek-char port)))
-      ; Check EOF early (a bug in guile before 2.0.8 consumes EOF on peek)
-      (if (eof-object? c)
-          c
-          (cond
-            ((lcomment-eol? c)
-              (consume-to-eol port)
-              (consume-end-of-line port)
-              (t-expr-real port))
-            ((or (eqv? c form-feed) (eqv? c vertical-tab))
-              (consume-ff-vt port)
-              (t-expr-real port))
-            ((char-ichar? c)
-              (let ((indentation-list (cons #\^ (accumulate-ichar port))))
-                (if (not (memv (my-peek-char port) initial-comment-eol))
-                    (let ((results (n-expr-or-scomment port)))
-                      (if (not (eq? (car results) 'scomment))
-                          (cadr results) ; Normal n-expr, return one value.
-                          (begin ; We have an scomment; skip and try again.
-                            (hspaces port)
-                            (t-expr-real port))))
-                    (begin ; Indented comment-eol, consume and try again.
-                      (consume-to-eol port)
-                      (consume-end-of-line port)
-                      (t-expr-real port)))))
-            (#t
-              (let-splitter (results results-indent results-value)
-                            (it-expr port "^")
-                (if (string=? results-indent "")
-                    (read-error "Closing *> without preceding matching <*")
-                    results-value)))))))
+      (cond
+        ; Check EOF early (a bug in guile before 2.0.8 consumes EOF on peek)
+        ((eof-object? c) c)
+        ((lcomment-eol? c)
+          (consume-to-eol port)
+          (consume-end-of-line port)
+          (t-expr-real port))
+        ((or (eqv? c form-feed) (eqv? c vertical-tab))
+          (consume-ff-vt port)
+          (t-expr-real port))
+        ((char-ichar? c)
+          (let ((indentation-list (cons #\^ (accumulate-ichar port))))
+            (if (not (memv (my-peek-char port) initial-comment-eol))
+                (let ((results (n-expr-or-scomment port)))
+                  (if (not (eq? (car results) 'scomment))
+                      (cadr results) ; Normal n-expr, return one value.
+                      (begin ; We have an scomment; skip and try again.
+                        (hspaces port)
+                        (t-expr-real port))))
+                (begin ; Indented comment-eol, consume and try again.
+                  (consume-to-eol port)
+                  (consume-end-of-line port)
+                  (t-expr-real port)))))
+        (#t
+          (let-splitter (results results-indent results-value)
+                        (it-expr port "^")
+            (if (string=? results-indent "")
+                (read-error "Closing *> without preceding matching <*")
+                results-value))))))
 
   ; Top level - read a sweet-expression (t-expression).  Handle special
   (define (t-expr port)
