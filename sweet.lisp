@@ -218,6 +218,7 @@
            (string= indentation2 (subseq indentation1 0 len2)))))
 
 ; Return t if char is space or tab.
+(declaim (inline char-hspacep))
 (defun char-hspacep (char)
   (or (eql char #\space)
       (eql char #\tab)))
@@ -229,11 +230,13 @@
      do (my-read-char stream)))
 
 ; Return t if char is space, tab, or !
+(declaim (inline char-icharp))
 (defun char-icharp (char)
   (or (eql char #\space)
       (eql char #\tab)
       (eql char non-whitespace-indent)))
 
+(declaim (inline accumulate-ichar))
 (defun accumulate-ichar (stream)
   (loop while (char-icharp (my-peek-char stream))
         collect (my-read-char stream)))
