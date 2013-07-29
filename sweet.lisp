@@ -213,9 +213,9 @@
 
 (defun indentation>p (indentation1 indentation2)
   (let ((len1 (string-length indentation1))
-          (len2 (string-length indentation2)))
+        (len2 (string-length indentation2)))
     (and (> len1 len2)
-           (string= indentation2 (subseq indentation1 0 len2)))))
+         (string= indentation2 (subseq indentation1 0 len2)))))
 
 ; Return t if char is space or tab.
 (declaim (inline char-hspacep))
