@@ -1174,7 +1174,7 @@ body returns [Object v]
        | {not_period_and_not_empty($i.v)}? => nxt=body {$v = conse($i.v, $nxt.v);} )
      | DEDENT {$v = list1e($i.v);} ) ;
 
-// Production "normal_it_expr" is an it_expr without a special prefix:
+// Production "normal_it_expr" is an it_expr without a special prefix.
 // STOP INCLUDING IN SRFI
 // Note: This BNF presumes that "*>" generates multiple tokens,
 // "EOL DEDENT* COLLECTING_END", and resets the indentation list.
@@ -1228,7 +1228,7 @@ abbrevw_line returns [Object v]
        | ai=it_expr
          {$v=list2e($abbrevw.v, $ai.v);} ) ;
 
-// Production "it_expr" (indented sweet-expressions)
+// Production "it_expr" (indenting sweet-expression)
 // is the main production for sweet-expressions in the usual case.
 // Precondition: At beginning of line after indent, NOT at an EOL char
 // Postcondition: it-expr ended by consuming EOL + examining indent
@@ -1240,7 +1240,7 @@ it_expr returns [Object v]
   | sublist_line       {$v=$sublist_line.v;}
   | abbrevw_line       {$v=$abbrevw_line.v;} ;
 
-// Production "initial" processes initial indent expresions.
+// Production "initial_indent_expr" is for an expression starting with indent.
 // STOP INCLUDING IN SRFI
 // The rule for "indent processing disabled on initial top-level hspace"
 // is a very simple (and clever) BNF construction by Alan Manuel K. Gloria.
@@ -1250,7 +1250,7 @@ it_expr returns [Object v]
 // fire again on the next invocation, doing the right thing.
 // INCLUDE IN SRFI
 
-initial returns [Object v]
+initial_indent_expr returns [Object v]
   : (INITIAL_INDENT | hspaces_maybe_bang)
     (n_expr {$v = $n_expr.v;}
      | (scomment (options {greedy=true;} : hspace)*
@@ -1266,9 +1266,9 @@ initial returns [Object v]
 t_expr_real returns [Object v]
   : comment_eol    r1=t_expr_real {$v=$r1.v;} // Skip initial blank lines
   | (FF | VT)+ EOL r2=t_expr_real {$v=$r2.v;} // Skip initial FF|VT lines
-  | initial {$v=$initial.v;}
-  | EOF {generate_eof();} // End of file
-  | i=it_expr {$v = $i.v;} /* Normal case */ ;
+  | initial_indent_expr           {$v=$initial_indent_expr.v;}
+  | EOF                           {generate_eof();} // End of file
+  | i=it_expr                     {$v = $i.v;} /* Normal case */ ;
 
 // Production "t_expr" is the top-level production for sweet-expressions.
 
