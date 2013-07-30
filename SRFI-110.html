@@ -5965,7 +5965,7 @@ traditional Lisp.
 For example, here is a wisp expression:
 <blockquote>
 <pre>
-  if condition? ; wisp
+  if condition?   ; wisp example
     . #t
     . #f
 </pre>
@@ -5973,7 +5973,7 @@ For example, here is a wisp expression:
 The same could be expressed using sweet-expressions as:
 <blockquote>
 <pre>
-  if condition? ; sweet-expressions
+  if condition?   ; sweet-expressions example
     #t
     #f
 </pre>
@@ -6013,7 +6013,18 @@ E.G., this sweet-expression:
 
 <pre>
   define me()
-    you now \\ others now \\ others past
+    you now
+    others now
+    others past
+    '()
+</pre>
+
+<p>
+Can also be written in sweet-expressions to conserve vertical space as:
+</p>
+<pre>
+  define me()
+    you now \\ others now \\ others past \\ '()
 </pre>
   
 <p>
@@ -6026,6 +6037,7 @@ a longer format such as:
     you now
     others now
     others past
+    . '()
 </pre>
   
 <p>
