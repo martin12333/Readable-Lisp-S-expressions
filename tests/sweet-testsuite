@@ -2117,3 +2117,8 @@ xyzz <* stuff *>  #; ignore11 #; ignore12 last-one
 (!x1 !x2 (!x2a !x2b) !x3 . !x4)
 |!x1|   !x2  (  !x2a  !x2b  )   #; stuff  !x3  . !x4
 
+(module mod (define (z a) (* 2 a)))
+<* module \\ mod
+define z(a) {2 * a}
+*>
+
