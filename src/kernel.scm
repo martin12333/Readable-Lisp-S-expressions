@@ -1953,7 +1953,7 @@
         ((or (eqv? c form-feed) (eqv? c vertical-tab))
           (consume-ff-vt port)
           (t-expr-real port))
-        ((char-ichar? c)
+        ((char-ichar? c) ; initial_indent_expr
           (let ((indentation-list (cons #\^ (accumulate-ichar port))))
             (if (not (memv (my-peek-char port) initial-comment-eol))
                 (let ((results (n-expr-or-scomment port)))
