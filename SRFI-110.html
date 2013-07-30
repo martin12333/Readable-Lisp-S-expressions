@@ -197,7 +197,7 @@ define fibfast(n)   ; Typical function notation
   <li><a href="#specific-constructs">Other specific sweet-expression constructs</a>
   <ul>
   <li><a href="#singleton">Singleton expression represents itself</a></li>
-  <li><a href="#sweet">The #!sweet marker</a></li>
+  <li><a href="#sweet">The #!sweet directive</a></li>
   <li><a href="#grouping-and-splitting">Grouping and splitting (\\)</a></li>
   <li><a href="#initial-group-mean-nothing">Why does initial \\ mean nothing if there are datums afterwards on the same line?</a></li>
   <li><a href="#traditional-abbreviations">Traditional abbreviations</a></li>
@@ -464,6 +464,25 @@ define gcd(x y)
 </pre>
 </td>
 </tr>
+<tr>
+<td align="left" valign="top">
+<pre>
+define factorial(n)
+  if {n &lt;= 1}
+     1
+     {n * factorial{n - 1}}
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(define (factorial n)
+  (if (&lt;= n 1)
+      1
+      (* n (factorial (- n 1)))))
+</pre>
+</td>
+</tr>
+
 </table>
 </blockquote>
 
@@ -518,21 +537,19 @@ otherwise it comments out the next <i>neoteric-expression</i>.
 </li>
 <li>
 A single delimited period (.) still sets the value of the cdr field of a pair.
-If the period is not the first datum on the line, the next datum on the
-line is the cdr value.
 If the period is the only datum on the line, then the next (sibling) line
 is the cdr value.
-A period at the beginning of a line, with one datum after it,
-escapes that datum (just like neoteric-expressions do);
-a period at the end of a line, with at least one datum before it,
-is considered the same as |.|.
+A period at the beginning of a line, with exactly one datum after it,
+escapes that datum (just like neoteric-expressions do).
+If the period is not at the beginning of the line, there must be
+exactly one following datum on the line (the cdr value).
 </li>
 <li>An expression that
 <a href="#disabling-indentation-processing-with-an-initial-indent">starts
 indented enables &#8220;initial-indent&#8221; mode</a>.
 That line is considered a sequence of whitespace-separated
 neoteric-expressions that are each read separately
-(this also helps backwards compatibility).</li>
+(this helps backwards compatibility).</li>
 </ol>
 
 <p>
@@ -565,13 +582,10 @@ aaa bbb
 <tr>
 <td align="left" valign="top">
 <pre>
-ff ; Demo special comments
+ff ; Demo block comments
   #| qq |# t1 t2
   t3 t4
     t5 #| xyz |# t6
-    t7 #;t8(q) t9
-  #; this is
-     all ignored
 </pre>
 </td>
 <td align="left" valign="top">
@@ -579,8 +593,24 @@ ff ; Demo special comments
 (ff
   (t1 t2)
   (t3 t4
-    (t5 t6)
-    (t7 t9)))
+    (t5 t6)))
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+t7 #;t8(q) t9 ; Demo datum comments
+  stuff #; a(b) here
+  #; this is
+     all ignored
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(t7 t9
+  (stuff here))
 </pre>
 </td>
 </tr>
@@ -622,7 +652,7 @@ f ; Demo vertical improper list
 <tr>
 <td align="left" valign="top">
 <pre>
-; Initial indent
+; Demo initial indent
     (define x 1) (define y 2)
 </pre>
 </td>
@@ -735,9 +765,9 @@ the right-hand-side (including any child lines)
 is the last element of the list described on that
 line&#8217;s left-hand side.
 (This was inspired by the similar Haskell operator.)
-If there&#8217;s no text on the left-hand-side,
+If the left-hand-side has no datums,
 it is interpreted as an empty list
-(so the right-hand-side is put in a list).
+(putting the right-hand-side in a list).
 Examples:
 </p>
 
@@ -786,6 +816,26 @@ a b $ c d e $ f g
 <tr>
 <td align="left" valign="top">
 <pre>
+let ; Demo GROUP + SUBLIST
+  \\
+    c $ cos a
+    s $ sin a
+  body...
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(let
+  (
+    (c (cos a))
+    (s (sin a)))
+  body...)
+</pre>
+</td>
+</tr>
+<tr>
+<td align="left" valign="top">
+<pre>
 let
   $ x sqrt(a)
   {2 * x}
@@ -818,10 +868,12 @@ run $ grep |-v| "xx.*zz" &lt;(oldfile) &gt;(newfile)
 A
 <a href="#traditional-abbreviations">leading traditional abbreviation
 (quote, comma, backquote, or comma-at)
-located after indentation, and followed by space, tab, or the end-of-line</a>,
+located at the beginning of a line (after indentation),
+and also followed by space, tab, or the end-of-line</a>,
 is interpreted as that operator applied to
 the entire sweet-expression that follows.
-Examples:
+Note that datum comments (<code>#;</code>) do the same thing.
+For example:
 </p>
 
 <blockquote>
@@ -834,13 +886,13 @@ Examples:
 <td align="left" valign="top">
 <pre>
 ' a b ; Demo abbreviations
-  ' c d e \\ 'f g h
+  c d
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
 (quote (a b
-  (quote (c d e)) ((quote f) g h)))
+  (c d)))
 </pre>
 </td>
 </tr>
@@ -895,6 +947,26 @@ let &lt;* x getx() \\ y gety() *&gt;
   (+ (* x x) (* y y)))
 </pre>
 </td>
+<tr>
+<td align="left" valign="top">
+<pre>
+module x . <*
+define x(a) {2 * a}
+
+define y(b) x{b - 1}
+*>
+</pre>
+</td>
+<td>
+<pre>
+(module x . (
+  (define (x a) (* 2 a))
+
+  (define (y b) (x (- b 1)))
+))
+</pre>
+</td>
+</tr>
 </tr>
 </table>
 </blockquote>
@@ -999,7 +1071,8 @@ A sweet-expression reader <em>MUST</em>
 support three modes: indentation processing, enclosed, and initial indent.
 A sweet-expression reader <em>MUST</em> start
 in indentation processing mode before it begins to read a sweet-expression.
-The reader temporarily switches to enclosed mode when it is reading inside
+The reader <em>MUST</em> temporarily switch
+to enclosed mode when it is reading inside
 any unescaped pairs of parentheses, brackets, or curly braces.
 </p>
 
@@ -1126,9 +1199,9 @@ that it has priority; ",@" is interpreted differently from
 
 <p>
 The following whitespace-terminated terminals <em>MUST</em> be
-recognized if and only if the reader is in indentation processing mode;
-the linefeed or carriage return (if any) in them <em>MUST NOT</em>
-be permanently consumed:
+recognized if and only if the reader is in indentation processing mode.
+The linefeed or carriage return (if any) in them <em>MUST NOT</em>
+be permanently consumed (the space or tab, if any, <em>MAY</em> be consumed):
 </p>
 <pre>
 QUOTEW          : '\'' (' ' | '\t' | '\n' | '\r') ;  // quote
@@ -1392,7 +1465,7 @@ body returns [Object v]
        | {(not_period_and_not_empty $i)}? =&gt; nxt=body {(conse $i $nxt)} )
      | DEDENT {(list1e $i)} ) ;
 
-// Production "normal_it_expr" is an it_expr without a special prefix:
+// Production "normal_it_expr" is an it_expr without a special prefix.
 
 normal_it_expr returns [Object v] 
   : line_exprs (
@@ -1425,7 +1498,7 @@ abbrevw_line returns [Object v]
        | ai=it_expr
          {(list2e $abbrevw $ai)} ) ;
 
-// Production "it_expr" (indented sweet-expressions)
+// Production "it_expr" (indenting sweet-expression)
 // is the main production for sweet-expressions in the usual case.
 // Precondition: At beginning of line after indent, NOT at an EOL char
 // Postcondition: it-expr ended by consuming EOL + examining indent
@@ -1437,9 +1510,9 @@ it_expr returns [Object v]
   | sublist_line       {$sublist_line}
   | abbrevw_line       {$abbrevw_line} ;
 
-// Production "initial" processes initial indent expresions.
+// Production "initial_indent_expr" is for an expression starting with indent.
 
-initial returns [Object v]
+initial_indent_expr returns [Object v]
   : (INITIAL_INDENT | hspaces_maybe_bang)
     (n_expr {$n_expr}
      | (scomment (options {greedy=true} : hspace)*
@@ -1451,9 +1524,9 @@ initial returns [Object v]
 t_expr_real returns [Object v]
   : comment_eol    r1=t_expr_real {$r1} // Skip initial blank lines
   | (FF | VT)+ EOL r2=t_expr_real {$r2} // Skip initial FF|VT lines
-  | initial {$initial}
-  | EOF {(generate_eof)} // End of file
-  | i=it_expr {$i} /* Normal case */ ;
+  | initial_indent_expr           {$initial_indent_expr}
+  | EOF                           {(generate_eof)} // End of file
+  | i=it_expr                     {$i} /* Normal case */ ;
 
 // Production "t_expr" is the top-level production for sweet-expressions.
 
@@ -1678,25 +1751,6 @@ define fibup(max count n-1 n-2)
   (if (= max count)
       (+ n-1 n-2)
       (fibup max (+ count 1) (+ n-1 n-2) n-1)))
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
-define factorial(n)
-  if {n &lt;= 1}
-     1
-     {n * factorial{n - 1}}
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-(define (factorial n)
-  (if (&lt;= n 1)
-      1
-      (* n (factorial (- n 1)))))
 </pre>
 </td>
 </tr>
@@ -3727,26 +3781,26 @@ but not a procedure call, the alternative format
 &#8220;(element-value)&#8221; also seems quite clear.
 </p>
 
-<h3 id="sweet">The #!sweet marker</h3>
+<h3 id="sweet">The #!sweet directive</h3>
 
 <p>
-The marker <code>#!sweet</code> is intended to be used
+The directive <code>#!sweet</code> is intended to be used
 before any sweet-expressions in Scheme.
 This improves backwards compatibility; readers can by default
 read only traditional s-expressions, and only change when they
 receive <code>#!sweet</code>.
 Readers are allowed, but not required, to accept sweet-expressions
-before this marker.
+before this directive.
 </p>
 
 <p>
-The marker <code>#!sweet</code> was chosen as an analogy
-to similar Scheme markers, such as
+The directive <code>#!sweet</code> was chosen as an analogy
+to similar Scheme directives, such as
 <code>#!fold-case</code> and <code>#!no-fold-case</code>
 (R6RS and R7RS),
 <code>#!r6rs</code> (R6RS), and
 <code>#!curly-infix</code> (SRFI-105).
-Note that this enabling marker is specifically for Scheme;
+Note that this enabling directive is specifically for Scheme;
 other Lisp notations (e.g., Common Lisp) may use
 different mechanisms to enable sweet-expression processing.
 </p>
@@ -3770,7 +3824,7 @@ distinguish between (1) a list to read and
 (2) a command to change modes.
 Also, not all Scheme systems support ways to invoke SRFIs,
 or even a module system, and there are many module systems in use.
-A special marker avoids these issues.
+A special directive avoids these issues.
 </p>
 
 <p>
@@ -4062,21 +4116,26 @@ define c[i]
 </pre>
 
 <p>
-This function shows a common occurrence
+This perfectly valid sweet-expression shows two common occurrences
 in Scheme programming:
-A function that immediately begins with <code>cond</code>.
-The formatting of <code>cond</code> above, however,
-has several lines that consist of a single n-expression item
+A function that immediately begins with <code>cond</code>,
+and cond clauses with relatively short tests and tail sequences.
+The above formatting has several lines with single n-expression
 (e.g. &#8220;<code>cond</code>&#8221;, &#8220;<code>else</code>&#8221;,
-&#8220;<code>string?(c)</code>&#8221;, etc.).
+&#8220;<code>string?(c)</code>&#8221;, etc.), and
+many other lines that are fairly short.
 </p>
 
 <p>
 Vertical space is precious.
 Using SUBLIST,
-we can compress the code to:
+we can choose to compress the code to:
 </p>
 
+<table border="1" cellpadding="4">
+<tr><th>sweet-expression</th><th>s-expression</th></tr>
+<tr>
+<td>
 <pre>
 define c[i] $ cond
   vector?(c) $ vector-ref c i
@@ -4084,6 +4143,18 @@ define c[i] $ cond
   pair?(c)   $ list-ref c i
   else       $ error "Not a collection"
 </pre>
+</td>
+<td>
+<pre>
+(define ($bracket-apply$ c i) (cond
+  ((vector? c) (vector-ref c i))
+  ((string? c) (string-ref c i))
+  ((pair? c)   (list-ref c i))
+  (else        (error "Not a collection"))))
+</pre>
+</td>
+</tr>
+</table>
 
 <p>
 Arguably,
@@ -4097,17 +4168,37 @@ this idiomatic formatting of <code>cond</code> using SUBLIST
 makes possible the following code:
 </p>
 
+<table border="1" cellpadding="4">
+<tr><th>sweet-expression</th><th>s-expression</th></tr>
+<tr>
+<td align="left" valign="top">
 <pre>
 define merge(&lt; as bs) $ cond
   null?(as)           $ bs
   null?(bs)           $ as
   {car(as) &lt; car(bs)} $ cons
                          car as
-                         merge &lt; (cdr as) bs
+                         merge &lt; cdr(as) bs
   else                $ cons
                          car bs
-                         merge &lt; as (cdr bs)
+                         merge &lt; as cdr(bs)
 </pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(define (merge &lt; as bs) (cond
+  ((null? as)            bs)
+  ((null? bs)            as)
+  ((&lt; (car as) (car bs)) (cons
+                           (car as)
+                           (merge &lt; (cdr as) bs)))
+  (else                  (cons
+                           (car bs)
+                           (merge &lt; as (cdr bs))))))
+</pre>
+</td>
+</tr>
+</table>
 
 <p>
 Without SUBLIST, the more complex branches of the <code>cond</code>
@@ -4117,6 +4208,39 @@ would have to be formatted differently from the simpler branches
 or would be expressed in deeply-nested parentheses,
 defeating the purpose of using sweet-expressions.
 </p>
+
+<p>
+Another idiom that SUBLIST enables is a straightward
+let* format where variable names are followed by <code>$</code>.
+This eliminates the need to parenthesize the othermost layer of the
+variable value expressions:
+</p>
+
+<table border="1" cellpadding="4">
+<tr><th>sweet-expression</th><th>s-expression</th></tr>
+<tr>
+<td>
+<pre>
+let*
+  \\
+    asline $ line-in-collecting car(m)
+    length-asline $ length asline
+  body...
+</pre>
+</td>
+<td>
+<pre>
+(let*
+  (
+    (asline (line-in-collecting (car m)))
+    (length-asline (length asline)))
+  body...)
+</pre>
+</td>
+</tr>
+</table>
+
+
 
 <p>After discussion,
 <a href="http://www.mail-archive.com/readable-discuss@lists.sourceforge.net/msg00496.html">
@@ -4311,12 +4435,13 @@ reversible transformation:
 <tr>
 <td>
 <pre>
-:foo \\ bar
+foo \\ bar
+&nbsp;
 </pre>
 </td>
 <td>
 <pre>
-:foo
+foo
 \\  bar
 </pre>
 </td>
@@ -4655,7 +4780,7 @@ let &lt;* x 5 \\ y 7 *&gt;
 It seems prudent to have a symbol available for future expansion.
 Thus, the marker <tt>$$$</tt> is reserved for future use.
 This means that <tt>$$$</tt>
-must be escaped (e.g., using {...}) if it is used in an
+must be escaped (e.g., {$$$} or |$$$|) if it is used in an
 indentation-processing context.
 </p>
 
@@ -6637,25 +6762,15 @@ easy-to-read sweet-expressions, based on the
 Readable project style guide</a>.
 </p>
 
-<h3>General Guidance</h3>
+<h3>Use indentation for major program/data structure</h3>
 
 <p>
-Mentally, this is pretty straightforward - on each line, write an
-expression; everything after the first term on the line, or all child
-lines, are parameters of the first term.
-You can use grouping operators (), [ ], and { } to put
-subexpressions on the same line, if you want.
-Use -( ... ) to negate something.
-</p>
-
-<p>
-Whenever you have an infix expression, just surround it with {...}.
-You can use the form f(...) to call a function; if it has zero parameters,
-express it as f(), and if it has more than one parameter, separate the
-parameters with spaces.
-The f(...) form is especially handy for creating
-short expressions as a parameter on a line;
-for long expressions, use indentation instead.
+In general, use indentation to make it easy to see the larger-scale
+structure of a program or data. Typically major structural atoms should
+start a new line, including defining a new term
+(e.g., &#8220;define&#8221; and &#8220;let&#8221;),
+conditionals (e.g., &#8220;if&#8221; and &#8220;cond&#8221;),
+and loops (e.g., &#8220;loop&#8221;).
 </p>
 
 <h3>Use infix notation</h3>
@@ -6680,28 +6795,14 @@ This situation can often occur with &#8220;and&#8221; and &#8220;or&#8221;
 if you&#8217;re using a functional programming style.
 </p>
 
-<h3>Use indentation for major program/data structure</h3>
-
-<p>
-In general, use indentation to make it easy to see the larger-scale
-structure of a program or data. Typically major structural atoms should
-start a new line, including defining a new term
-(e.g., &#8220;define&#8221; and &#8220;let&#8221;),
-conditionals (e.g., &#8220;if&#8221; and &#8220;cond&#8221;),
-and loops (e.g., &#8220;loop&#8221;).
-</p>
-
 <h3>Use function call notation for parameters if they fit in a line</h3>
 
 <p>
-When calling a function, if the parameters will fit easily on a line if
-you use function notation like f(x y(z)), then put them all on a line.
-When you&#8217;re calling a function with no parameters, use function-calling
+If parameters will easily fit on a line if
+you use function notation such as y(z), then use it.
+When you&#8217;re calling a procedure with no parameters, use function call
 format with &#8220;()&#8221; at the end, e.g., &#8220;f()&#8221;.
-In general, indentation is used for the major &#8220;structural&#8221; elements
-of a program, and function calls get used once you&#8217;re
-&#8220;near the leaf&#8221;
-of structure (where you won&#8217;t go beyond the end of the line).
+Use -( ... ) to negate something.
 </p>
 
 <p>
@@ -6709,12 +6810,18 @@ If you are providing a list of data (and not performing a function/method
 call), then use the traditional list notation such as
 &#8220;(a&nbsp;b&nbsp;c)&#8221;.
 This is exactly equivalent to &#8220;a(b&nbsp;c)&#8221;,
-but expressing it as a list will give
-the human reader a hint that this data is not considered a potential
-program. If it&#8217;s used as both data and as program, then consider it a
+but expressing it as a list will give the human reader
+a hint that this data is not considered a potential program.
+If it&#8217;s used as both data and as program, then consider it a
 program, and use function call notation.
 </p>
 
+<p>
+In general, indentation is used for the major &#8220;structural&#8221; elements
+of a program, and function calls get used once you&#8217;re
+&#8220;near the leaf&#8221;
+of structure (where you won&#8217;t go beyond the end of the line).
+</p>
 
 <h3>Avoid unnecessary parentheses</h3>
 
@@ -6726,7 +6833,7 @@ state the function followed by space-separated parameters.
 </p>
 
 <p>
-Both SUBLIST (<code>$</code>) and SPLIT (inline <code>\\</code>)
+Both SUBLIST (<code>$</code>) and GROUP/SPLIT (inline <code>\\</code>)
 allow some limited freedom in laying out the program text
 without disabling indentation processing; feel free to use them.
 For example, in a
@@ -6764,14 +6871,6 @@ define func-w/return(a) $ call/cc $ lambda (return)
   body ... return(whatever) ...
 </pre>
 
-
-<h3>Width</h3>
-
-<p>
-You should probably stick to an 80-character width for program text.
-</p>
-
-
 <h3>Indentation</h3>
 <p>
 Use a consistent amount of indenting for each level.
@@ -6792,6 +6891,12 @@ the next line; the &#8220;!&#8221; is <i>not</i>
 an indent character inside parentheses, braces, or brackets.
 </p>
 
+<h3>Width</h3>
+
+<p>
+You should probably stick to an 80-character width for program text.
+</p>
+
 <!-- See original page for "notes about cond", etc. -->
 
 
@@ -6801,7 +6906,7 @@ an indent character inside parentheses, braces, or brackets.
 Scheme provides no standard mechanism to override the built-in reader.
 An implementation that complies with this SRFI must
 at least activate this behavior
-when they read the <code>#!sweet</code> marker
+when they read the <code>#!sweet</code> directive
 followed by whitespace.
 </p>
 <p>The reference implementation is SRFI type 2: &#8220;A
