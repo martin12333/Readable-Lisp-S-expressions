@@ -1710,10 +1710,8 @@
                     (list it-value)))
               (#t (conse it-value (collecting-content port)))))))))
 
-  ; Skip scomments and error out if we have a normal n-expr;
-  ; Basically implement this BNF:
-  ;    (scomment hspace*)* (n-expr error)?
-  ; This procedure is used after ". value".
+  ; Skip scomments and error out if we have a normal n-expr, implementing:
+  ;    skippable* (n-expr error)?
   (define (n-expr-error port full)
     (if (not (eq? (car full) 'normal))
         (read-error "BUG! n-expr-error called but stopper not normal"))
