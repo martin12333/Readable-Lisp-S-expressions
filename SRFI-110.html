@@ -988,10 +988,8 @@ with Java action rules</a>, along with a support Java class
 The non-terminal <code>same</code> is an empty sequence;
 it acts as a comment to emphasize where there is a new
 line with unchanged indentation.
-The non-terminal <code>error</code> emphasizes certain sequences that
-are not defined by this BNF
-(an implementation <em>MAY</em> implement an extension, but if it does
-not, it <em>SHOULD</em> report an error).
+The non-terminal <code>error</code> indicates where an implementation
+<em>SHOULD</em> report an error if that position is reached.
 The sequence <code>/*empty*/</code> identifies an empty branch.
 </p>
 
