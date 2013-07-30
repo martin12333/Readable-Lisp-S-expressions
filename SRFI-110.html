@@ -6799,9 +6799,28 @@ some Scheme interpreter/compiler. In this case, a detailed
 specification of the hooks must be included so that the SRFI is
 self-contained.&#8221;</p>
 <p>
-See 
+The reference implementation includes
+an entire reader re-implementation that supports SRFI-105, as well as
+headings to improve its portability among Scheme implementations.
+Thus, it can be directly used to implement sweet-expressions.
+</p>
+<p>
+This reference implementation never needs to unread characters.
+It was written this way for portability, because there is no
+standard Scheme procedure for unreading characters.
+A sweet-expression implementation could be simpler if its underlying platform
+(e.g., a typical text editor) supported multi-character unread.
+For example, multi-character unread simplifies
+comparing indent levels, as well as looking after the <code>#</code>
+to determine what follows it (e.g., if it is <code>#;</code>, and if it is,
+whether or not it is followed by whitespace).
+That said, note that sweet-expressions do not
+<i>require</i> multi-character unread for a fully-correct implementation.
+</p>
+<p>
+<b>See
 <a href="kernel.scm">the Scheme source code
-for the reference implementation</a>.
+for the reference implementation</a></b>.
 </p>
 
 <h1><a name="references">References</a></h1>
