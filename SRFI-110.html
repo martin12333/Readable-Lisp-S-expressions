@@ -3730,7 +3730,7 @@ but not a procedure call, the alternative format
 
 <p>
 The marker <code>#!sweet</code> is intended to be used
-before any sweet-expressions.
+before any sweet-expressions in Scheme.
 This improves backwards compatibility; readers can by default
 read only traditional s-expressions, and only change when they
 receive <code>#!sweet</code>.
@@ -3740,11 +3740,14 @@ before this marker.
 
 <p>
 The marker <code>#!sweet</code> was chosen as an analogy
-to similar markers, such as
+to similar Scheme markers, such as
 <code>#!fold-case</code> and <code>#!no-fold-case</code>
 (R6RS and R7RS),
 <code>#!r6rs</code> (R6RS), and
 <code>#!curly-infix</code> (SRFI-105).
+Note that this enabling marker is specifically for Scheme;
+other Lisp notations (e.g., Common Lisp) may use
+different mechanisms to enable sweet-expression processing.
 </p>
 
 <p>
