@@ -1486,7 +1486,7 @@ group_line returns [Object v]
       (group_i=it_expr {$group_i} /* Ignore initial GROUP/scomment */
        | comment_eol
          (INDENT g_body=body {$g_body} /* Normal GROUP use */
-          | same {empty_tag} )) ;
+          | {empty_tag} )) ;
 
 sublist_line returns [Object v] // "$" first on line
   : SUBLIST hs is_i=it_expr {(list1e $is_i)} ;
