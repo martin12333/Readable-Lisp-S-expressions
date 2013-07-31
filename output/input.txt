@@ -621,4 +621,6 @@ a7 b7 #; ignore1 . #; ignore2 c7 #; ignore3
 
 a8 b8 #; ignorethis #; (ignore this too)
 
+a <* #; hello *>
+
 fin

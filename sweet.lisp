@@ -445,9 +445,10 @@
               ; which would cons a () after the result.
               ; Directly calling list for a non-null it-value has
               ; the same effect, but is a lot quicker and simpler.
-              (if (null it-value)
-                  it-value
-                  (list it-value)))
+              (cond
+                ((null it-value) it-value)
+                ((eq it-value empty-tag) '())
+                (t (list it-value))))
             (t (conse it-value (collecting-content stream)))))))))
 
 ; Skip scomments and error out if we have a normal n-expr;
@@ -619,7 +620,10 @@
                 (my-append line-value (list sub-i-value)))))
           ((eq line-stopper 'collecting-end)
             ; Note that indent is "", forcing dedent all the way out.
-            (list "" (monify line-value)))
+            (list ""
+              (if (eq line-value empty-tag)
+                '()
+                (monify line-value))))
           ((lcomment-eolp (my-peek-char stream))
             (let ((new-indent (get-next-indent stream)))
               (if (indentation>p new-indent starting-indent)

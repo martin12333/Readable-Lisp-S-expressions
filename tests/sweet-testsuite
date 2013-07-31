@@ -2127,3 +2127,28 @@ xyzz <* stuff *>  #; ignore11 #; ignore12 last-one
 define z(a) {2 * a}
 *>
 
+(a1 ())
+a1 <* #; hello *>
+
+
+(a2 ())
+a2 <* #; hello  
+*>
+
+(a3 ())
+a3 <* #; hello stuff  
+*>
+
+(a4 (stuff))
+a4 <* #; hello
+stuff  
+*>
+
+(a5 (stuff))
+a5 <* #;hello stuff  
+*>
+
+(a6 (stuff))
+a6 <* stuff #; hello
+*>
+
