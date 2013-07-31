@@ -270,6 +270,17 @@ mytest
   '    firstone          secondone      thirdone   
   '(firstone secondone thirdone)
 
+mytest
+  ' <* #; 1 *> <* #; 2 *> <* #; 3 *> <* stuff *>
+  '(() () () (stuff))
+
+mytest
+  ' <*
+aa1
+ab1 ab2
+*>
+  '(aa1 (ab1 ab2))
+
 (disable-readable)
 (princ "Tests complete!")
 (exit 0)
