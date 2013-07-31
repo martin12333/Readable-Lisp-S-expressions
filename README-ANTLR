@@ -8,7 +8,13 @@ of implementations (including recursive descent parsers) as
 well as being very efficient.  ANTLR can detect ambiguities
 (which we want to avoid where possible, and if they must occur,
 we want to ensure that they are resolved in a reasonable
-and deterministic way).  Currently there are no ambiguities.
+and deterministic way).
+
+We intentionally use ANTLR version 3; version 4 was not ready
+when we started, and ANTLR version 4 provides many advanced
+capabilities that we want to *avoid* because we want to design
+a grammar that is relatively easy to parse (as well as being
+easy to read).
 
 
 ANTLR-based grammar
@@ -81,6 +87,19 @@ Decision can match input such as "{SPACE, TAB}" using multiple alternatives: 1, 
 
 As a result, alternative(s) 2 were disabled for that input
 Semantic predicates were present but were hidden by actions.
+
+
+
+These are spurious warnings.
+These messages are caused because production "initial_indent_expr"
+accepts (INITIAL_INDENT | hspaces_maybe_bang).
+When the sweet-expression parsing begins, if we have hspaces available
+at the start, we have an initial indent.  However, it's difficult
+to express this precisely in ANTLR to deal with the case where there
+may be later hspaces on the line where this applies.
+You can confirm this by changing
+"(INITIAL_INDENT | hspaces_maybe_bang)" to "INITIAL_INDENT" and
+running "Generate code"; the warnings should disappear.
 
 
 
