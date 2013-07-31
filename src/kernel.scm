@@ -1899,10 +1899,8 @@
                     (cond
                       ((indentation>? new-indent starting-indent)
                         (body port new-indent))
-                      ((string=? starting-indent new-indent)
-                        (list new-indent empty-tag))
                       (#t
-                        (read-error "GROUP-SPLIT EOL DEDENT illegal"))))))
+                        (list new-indent empty-tag))))))
             ((eq? line-stopper 'sublist-marker)
               (hspaces port)
               (if (lcomment-eol? (my-peek-char port))

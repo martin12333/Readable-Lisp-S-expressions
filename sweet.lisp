@@ -656,10 +656,8 @@
                   (cond
                     ((indentation>p new-indent starting-indent)
                       (body stream new-indent))
-                    ((string= starting-indent new-indent)
-                      (list new-indent empty-tag))
                     (t
-                      (read-error "GROUP-SPLIT EOL DEDENT illegal."))))))
+                      (list new-indent empty-tag))))))
           ((eq line-stopper 'sublist-marker)
             (hspaces stream)
             (if (lcomment-eolp (my-peek-char stream))

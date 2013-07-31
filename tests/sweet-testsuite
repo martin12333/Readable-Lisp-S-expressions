@@ -881,7 +881,7 @@ x
 x
 
 (x88 y88)
-  #| shouldn't disable t-expression mode
+#| shouldn't disable t-expression mode
    #|
     |#
    |#
@@ -900,6 +900,11 @@ x91
   #|
    |#
   |# y91
+
+(x93 y93)
+x93 y93
+  #|  hello1  |#
+  #|  hello2  |#
 
 (yaa zaa)
 yaa zaa
