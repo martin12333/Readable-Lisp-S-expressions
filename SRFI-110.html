@@ -692,7 +692,7 @@ is specially interpreted</a>.
 If no n-expressions precede it on the line, it is called GROUP,
 and it represents no symbol at all located at that indentation.
 GROUP is useful for representing lists of lists.
-If any there are preceding n-expressions on the line,
+If there are any preceding n-expressions on the line,
 it is called SPLIT, and it is interpreted as
 the start of a new line at the current line&#8217;s indentation.
 Examples:
@@ -752,15 +752,15 @@ arc-if ; Emphasize logical relationships
 <td align="left" valign="top">
 <pre>
 myfunction ; Demo SPLIT
-  x: \\ xpos
-  y: \\ ypos
+  x: \\ original-x
+  y: \\ calculate-y original-y
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
 (myfunction
-  x: xpos
-  y: ypos)
+  x: original-x
+  y: (calculate-y original-y))
 </pre>
 </td>
 </tr>
