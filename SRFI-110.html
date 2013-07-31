@@ -190,6 +190,7 @@ define fibfast(n)   ; Typical function notation
   <li><a href="#disabling-indentation-processing-with-paired-characters">Disabling indentation processing with paired characters</a></li>
   <li><a href="#disabling-indentation-processing-with-an-initial-indent">Disabling indentation processing with an initial indent</a></li>
   <li><a href="#block-comment-indent-significant">Why are the indentations of block comments and datum comments significant?</a></li>
+  <li><a href="#child-is-child">Child lines producing an empty value are still child lines</li>
   <li><a href="#eol">End-of-line (EOL) handling</a></li>
   <li><a href="#eof">End-of-file (EOF) handling</a></li>
   <li><a href="#semicolon">Special semicolon values for an unsweetener</a></li>
@@ -3659,6 +3660,86 @@ indent replace with <code>\\</code>)
 then it was considered simpler
 to just use the same behavior for both.
 </p>
+
+<h3 id="child-is-child">Child lines producing an empty value are still child lines</h3>
+
+
+<p>
+Under the current semantics:
+</p>
+<pre>
+foo
+==&gt; foo
+
+foo
+! bar
+==&gt; (foo bar)
+</pre>
+
+<p>
+But what should be done when there are child lines, and all of them
+produce an empty value (from datum comments or block comments)?
+For example:
+</p>
+<pre>
+foo
+! #; bar
+</pre>
+
+<p>
+We have two conflicting rules: (1) a child line means that the
+parent should be wrapped in a list, but (2) comments usually are ignored.
+</p>
+
+<p>
+The current specification resolves this by picking rule #1 as
+being more important, thus, this is <tt>(foo)</tt>.
+If a line has a child line, then it's wrapped into a list...
+even if the child lines together produce an empty value.
+</p>
+
+<p>
+The rationale is that if you comment out later lines that are
+parameters of a procedure, you probably <i>still</i> want to
+treat it as a procedure. E.G., given:
+</p>
+<pre>
+foo
+! complicated-expression 4 7
+! ! otherstuff 8
+</pre>
+
+Let's imagine that you comment out foo's parameters:
+<pre>
+foo
+! #; complicated-expression 4 7
+! ! otherstuff 8
+</pre>
+
+<p>
+In most cases, you probably still want "<tt>foo</tt>" to be called,
+so "<tt>(foo)</tt>"
+is probably the correct way to interpret this.
+Thus, it makes sense to simply say that "monify" is only called when
+there are no child lines. It's an easier rule to explain, too.
+And once you accept that notion, it's important to be consistent
+about it all the way through.
+</p>
+
+<p>
+If someone REALLY wants foo to become a single value, he
+can use line comments or a block comment so that there are no child lines:
+</p>
+<pre>
+foo #|
+; complicated-expression 4 7
+; ! otherstuff 8 |#
+
+foo #|
+! #; complicated-expression 4 7
+! ! otherstuff 8 |#
+</pre>
+
 
 <h3 id="eol">End-of-line (EOL) handling</h3>
 <p>
