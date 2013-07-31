@@ -689,12 +689,12 @@ Below is an explanation of each.
 The
 <a href="#grouping-and-splitting">marker <code>\\</code>
 is specially interpreted</a>.
-If any n-expressions precede it on the line, it is called SPLIT, and
-it is interpreted as
-the start of a new line at the current line&#8217;s indentation.
-Otherwise it is called GROUP,
+If no n-expressions precede it on the line, it is called GROUP,
 and it represents no symbol at all located at that indentation.
 GROUP is useful for representing lists of lists.
+If any there are preceding n-expressions on the line,
+it is called SPLIT, and it is interpreted as
+the start of a new line at the current line&#8217;s indentation.
 Examples:
 </p>
 
@@ -721,6 +721,29 @@ let ; Demo GROUP
     (var1 (cos a))
     (var2 (sin a)))
   body...)
+</pre>
+</td>
+</tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+arc-if ; Emphasize logical relationships
+  fuzzy?(x)
+  \\  shave(x)
+  dry?(x)
+  \\  pour-water-on(x)
+  admire(x)
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(arc-if
+  (fuzzy? x)
+    (shave x)
+  (dry? x)
+    (pour-water-on x)
+  (admire x))
 </pre>
 </td>
 </tr>
