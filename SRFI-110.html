@@ -840,26 +840,6 @@ a b $ c d e $ f g
 <tr>
 <td align="left" valign="top">
 <pre>
-let ; Demo GROUP + SUBLIST
-  \\
-    c $ cos a
-    s $ sin a
-  body...
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-(let
-  (
-    (c (cos a))
-    (s (sin a)))
-  body...)
-</pre>
-</td>
-</tr>
-<tr>
-<td align="left" valign="top">
-<pre>
 let
   $ x sqrt(a)
   {2 * x}
@@ -882,6 +862,26 @@ run $ grep |-v| "xx.*zz" &lt;(oldfile) &gt;(newfile)
 <td align="left" valign="top">
 <pre>
 (run (grep |-v| "xx.*zz" (&lt; oldfile) (&gt; newfile)))
+</pre>
+</td>
+</tr>
+<tr>
+<td align="left" valign="top">
+<pre>
+let ; Demo GROUP + SUBLIST
+  \\
+    c $ cos a
+    s $ sin a
+  body...
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(let
+  (
+    (c (cos a))
+    (s (sin a)))
+  body...)
 </pre>
 </td>
 </tr>
