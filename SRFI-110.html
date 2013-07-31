@@ -619,6 +619,20 @@ t7 #;t8(q) t9 ; Demo datum comments
 <tr>
 <td align="left" valign="top">
 <pre>
+foo ; Empty child line is still a child
+  #; bar
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(foo
+    )
+</pre>
+</td>
+</tr>
+<tr>
+<td align="left" valign="top">
+<pre>
 f ; Demo improper list
   a . b
 </pre>
