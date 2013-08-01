@@ -1959,9 +1959,18 @@
           (let ((indentation-list (cons #\^ (accumulate-ichar port))))
             (if (not (memv (my-peek-char port) initial-comment-eol))
                 (let ((results (n-expr-or-scomment port)))
-                  (if (not (eq? (car results) 'scomment))
-                      (cadr results) ; Normal n-expr, return one value.
-                      empty-tag))
+                  (cond
+                    ((eq? (car results) 'scomment)  empty-tag)
+                    ((eq? (car results) 'datum-commentw)
+                      ; We ALWAYS translate #;+whitespace as datum-commentw,
+                      ; so we also need to handle its following datum here.
+                      (hspaces port)
+                      (if (lcomment-eol? (my-peek-char port))
+                        (read-error "#; must be followed by datum")
+                        (begin
+                          (n-expr port)
+                          empty-tag)))
+                    (#t (cadr results)))) ; Normal n-expr, return one value.
                 (begin ; Indented comment-eol, consume and try again.
                   (consume-to-eol port)
                   (consume-end-of-line port)

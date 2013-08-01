@@ -79,4 +79,15 @@ b
 
 |.|
 
+
+; initial-indent tests
+
+  a1 #; hi b1
+
+  a2 #; hi #; bye b2  #; zz #; zz2
+
+  a3 #;hi #|ugly|# b3  #;zz #|ugly2|#
+
+fin
+
 ; Comment at end of file.
