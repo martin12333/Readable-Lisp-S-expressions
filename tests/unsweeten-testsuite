@@ -88,6 +88,8 @@ b
 
   a3 #;hi #|ugly|# b3  #;zz #|ugly2|#
 
+  a4 #|junk|##|junk2|# b4 #|junk3|##|junk4|#  
+
 fin
 
 ; Comment at end of file.
