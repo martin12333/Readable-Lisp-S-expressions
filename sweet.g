@@ -1028,10 +1028,10 @@ n_expr_noabbrev returns [Object v]
 hspace  : SPACE | TAB ;        // horizontal space
 hs      : hspace* ;
 
-// This is for handling non-first n-expressions in initial indent.
+// An "separator_initial_indent" separates n-expressions in initial indent.
 // An implementation MAY implement this as "(hspace | '!')+"
 // (e.g., to avoid retaining state when returning a value).
-hspaces_maybe_bang: hspace+ ;
+separator_initial_indent: hspace+ ;
 
 // Production "abbrevw" is an abbreviation with a following whitespace:
 abbrevw returns [Object v]
@@ -1253,7 +1253,7 @@ it_expr returns [Object v]
 // INCLUDE IN SRFI
 
 initial_indent_expr returns [Object v]
-  : (INITIAL_INDENT | hspaces_maybe_bang)
+  : (INITIAL_INDENT | separator_initial_indent)
     (n_expr {$v = $n_expr.v;}
      | (scomment (options {greedy=true;} : hspace)*
        sretry=t_expr_real {$v=$sretry.v;})
