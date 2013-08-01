@@ -1253,10 +1253,9 @@ it_expr returns [Object v]
 // INCLUDE IN SRFI
 
 initial_indent_expr returns [Object v]
-  : (INITIAL_INDENT | separator_initial_indent)
+  : (INITIAL_INDENT | separator_initial_indent) (scomment hs)*
     (n_expr {$v = $n_expr.v;}
-     | scomment {$v = empty_tag;}
-     | comment_eol retry3=t_expr {$v=$retry3.v;} ) ;
+     | comment_eol retry=t_expr {$v=$retry.v;} ) ;
 
 // Production "t_expr_real" handles special cases, else it invokes it_expr.
 // STOP INCLUDING IN SRFI
