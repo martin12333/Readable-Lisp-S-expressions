@@ -700,6 +700,21 @@
           (read-error "Inconsistent indentation."))
       (list results-indent (attach-sourceinfo pos results-value)))))
 
+ 
+(defun initial-indent-expr-tail (stream)
+  (if (not (member (my-peek-char stream) initial-comment-eol))
+      (let-splitter (results results-stopper results-value)
+                    (n-expr-or-scomment stream)
+        (cond
+          ((member results-stopper '(scomment datum-commentw))
+            (skippable results-stopper stream)
+            (initial-indent-expr-tail stream))
+          (t results-value))) ; Normal n-expr, return one value.
+      (progn
+        (consume-to-eol stream)
+        (consume-end-of-line stream)
+        empty-tag))) ; (t-expr-real stream)
+
 ; Top level - read a sweet-expression (t-expression).  Handle special
 ; cases, such as initial indent; call it-expr for normal case.
 (defun t-expr-real (stream)
@@ -712,20 +727,9 @@
           ((or (eql c form-feed) (eql c vertical-tab))
             (consume-ff-vt stream)
             (t-expr-real stream))
-          ((char-icharp c)
-            (let ((indentation-list (cons #\^ (accumulate-ichar stream))))
-              (declare (ignore indentation-list))
-              (if (not (member (my-peek-char stream) initial-comment-eol))
-                  (let ((results (n-expr-or-scomment stream)))
-                    (if (not (eq (car results) 'scomment))
-                        (cadr results) ; Normal n-expr, return one value.
-                        (progn ; We have an scomment; skip and try again.
-                          (hspaces stream)
-                          (t-expr-real stream))))
-                  (progn ; Indented comment-eol, consume and try again.
-                    (consume-to-eol stream)
-                    (consume-end-of-line stream)
-                    (t-expr-real stream)))))
+          ((char-icharp c) ; initial-indent-expr
+            (accumulate-ichar stream) ; consume and throw away ichars
+            (initial-indent-expr-tail stream))
           (t
             (let-splitter (results results-indent results-value)
                           (it-expr stream "^")
