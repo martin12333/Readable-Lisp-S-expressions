@@ -1942,6 +1942,20 @@
             (read-error "Inconsistent indentation"))
         (list results-indent (attach-sourceinfo pos results-value)))))
 
+  (define (initial-indent-expr-tail port)
+    (if (not (memv (my-peek-char port) initial-comment-eol))
+        (let-splitter (results results-stopper results-value)
+                      (n-expr-or-scomment port)
+          (cond
+            ((memq results-stopper '(scomment datum-commentw))
+              (skippable results-stopper port)
+              (initial-indent-expr-tail port))
+            (#t results-value))) ; Normal n-expr, return one value.
+        (begin
+          (consume-to-eol port)
+          (consume-end-of-line port)
+          empty-tag))) ; (t-expr-real port)
+
   ; Top level - read a sweet-expression (t-expression).  Handle special
   ; cases, such as initial indent; call it-expr for normal case.
   (define (t-expr-real port)
@@ -1956,26 +1970,9 @@
         ((or (eqv? c form-feed) (eqv? c vertical-tab))
           (consume-ff-vt port)
           (t-expr-real port))
-        ((char-ichar? c) ; initial_indent_expr
-          (let ((indentation-list (cons #\^ (accumulate-ichar port))))
-            (if (not (memv (my-peek-char port) initial-comment-eol))
-                (let ((results (n-expr-or-scomment port)))
-                  (cond
-                    ((eq? (car results) 'scomment)  empty-tag)
-                    ((eq? (car results) 'datum-commentw)
-                      ; We ALWAYS translate #;+whitespace as datum-commentw,
-                      ; so we also need to handle its following datum here.
-                      (hspaces port)
-                      (if (lcomment-eol? (my-peek-char port))
-                        (read-error "#; must be followed by datum")
-                        (begin
-                          (n-expr port)
-                          empty-tag)))
-                    (#t (cadr results)))) ; Normal n-expr, return one value.
-                (begin ; Indented comment-eol, consume and try again.
-                  (consume-to-eol port)
-                  (consume-end-of-line port)
-                  (t-expr-real port)))))
+        ((char-ichar? c) ; initial-indent-expr
+          (accumulate-ichar port) ; consume and throw away ichars
+          (initial-indent-expr-tail port))
         (#t
           (let-splitter (results results-indent results-value)
                         (it-expr port "^")
