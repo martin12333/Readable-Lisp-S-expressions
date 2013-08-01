@@ -1625,6 +1625,7 @@
               "^"))
         (#t (list->string indentation-as-list)))))
 
+  ; Implement (scomment hs | datum-commentw hs n-expr hs)
   (define (skippable stopper port)
     (cond
     ((eq? stopper 'scomment)
