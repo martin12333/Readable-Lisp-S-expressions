@@ -1961,9 +1961,7 @@
                 (let ((results (n-expr-or-scomment port)))
                   (if (not (eq? (car results) 'scomment))
                       (cadr results) ; Normal n-expr, return one value.
-                      (begin ; We have an scomment; skip and try again.
-                        (hspaces port)
-                        (t-expr-real port))))
+                      empty-tag))
                 (begin ; Indented comment-eol, consume and try again.
                   (consume-to-eol port)
                   (consume-end-of-line port)
