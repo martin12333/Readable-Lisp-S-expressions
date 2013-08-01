@@ -1173,8 +1173,7 @@ is generated and the reader changes to initial indent mode.
 When an end-of-line sequence is reached
 the mode changes back to indentation processing.
 </li>
-<li>If top is not the empty string, and
-&#8220;;&#8221; immediately follows the indentation, the line is skipped
+<li>If &#8220;;&#8221; immediately follows the indentation, the line is skipped
 &mdash; with the indentation completely ignored &mdash;
 and the following line is examined instead.</li>
 <li>If the indentation is equal to top, no extra symbol is generated.
@@ -1445,8 +1444,7 @@ Here are the key BNF productions for sweet-expressions:
 collecting_content returns [Object v]
   : it_expr more=collecting_content {(conse $it_expr $more)}
   | comment_eol    retry1=collecting_content {$retry1}
-  | INITIAL_INDENT LCOMMENT? EOL retry2=collecting_content {$retry2}
-  | (FF | VT)+ EOL retry3=collecting_content {$retry3}
+  | (FF | VT)+ EOL retry2=collecting_content {$retry2}
   | COLLECTING_END {'()} ;
 
 // Process line after ". hspace+" sequence.  Does not go past current line.

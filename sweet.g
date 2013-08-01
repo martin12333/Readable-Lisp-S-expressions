@@ -1092,8 +1092,10 @@ skippable
 collecting_content returns [Object v]
   : it_expr more=collecting_content {$v = conse($it_expr.v, $more.v);}
   | comment_eol    retry1=collecting_content {$v = $retry1.v;}
-  | INITIAL_INDENT LCOMMENT? EOL retry2=collecting_content {$v = $retry2.v;}
-  | (FF | VT)+ EOL retry3=collecting_content {$v = $retry3.v;}
+// STOP INCLUDING IN SRFI - preprocessor rule covers this
+  | INITIAL_INDENT comment_eol retry_cl=collecting_content {$v = $retry_cl.v;}
+// INCLUDE IN SRFI
+  | (FF | VT)+ EOL retry2=collecting_content {$v = $retry2.v;}
   | COLLECTING_END {$v = null;} ;
 
 // Process line after ". hspace+" sequence.  Does not go past current line.
