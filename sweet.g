@@ -1255,8 +1255,7 @@ it_expr returns [Object v]
 initial_indent_expr returns [Object v]
   : (INITIAL_INDENT | separator_initial_indent)
     (n_expr {$v = $n_expr.v;}
-     | (scomment (options {greedy=true;} : hspace)*
-       sretry=t_expr_real {$v=$sretry.v;})
+     | scomment {$v = empty_tag;}
      | comment_eol retry3=t_expr {$v=$retry3.v;} ) ;
 
 // Production "t_expr_real" handles special cases, else it invokes it_expr.
