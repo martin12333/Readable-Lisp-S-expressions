@@ -1266,9 +1266,9 @@ initial_indent_expr returns [Object v]
 t_expr_real returns [Object v]
   : comment_eol    r1=t_expr_real {$v=$r1.v;} // Skip initial blank lines
   | (FF | VT)+ EOL r2=t_expr_real {$v=$r2.v;} // Skip initial FF|VT lines
-  | initial_indent_expr           {$v=$initial_indent_expr.v;}
   | EOF                           {generate_eof();} // End of file
-  | i=it_expr                     {$v = $i.v;} /* Normal case */ ;
+  | initial_indent_expr           {$v=$initial_indent_expr.v;}
+  | i=it_expr                     {$v=$i.v;} /* Normal case */ ;
 
 // Production "t_expr" is the top-level production for sweet-expressions.
 
