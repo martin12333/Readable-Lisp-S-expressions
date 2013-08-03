@@ -1028,7 +1028,7 @@ n_expr_noabbrev returns [Object v]
 hspace  : SPACE | TAB ;        // horizontal space
 hs      : (options {greedy=true;} : hspace)* ;
 
-// An "separator_initial_indent" separates n-expressions in initial indent.
+// A "separator_initial_indent" separates n-expressions in initial indent.
 // An implementation MAY implement this as "(hspace | '!')+"
 // (e.g., to avoid retaining state when returning a value).
 separator_initial_indent: hspace+ ;
