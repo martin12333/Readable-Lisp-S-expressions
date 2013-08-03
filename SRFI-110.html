@@ -1372,12 +1372,12 @@ SHARP_BANG_DIRECTIVE : '#!' (('a'..'z'|'A'..'Z'|'_')
                     ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')*)? (SPACE|TAB)* ;
 
 hspace  : SPACE | TAB ;        // horizontal space
-hs      : hspace* ;
+hs      : (options {greedy=true} : hspace)* ;
 
-// This is for handling non-first n-expressions in initial indent.
+// A "separator_initial_indent" separates n-expressions in initial indent.
 // An implementation MAY implement this as "(hspace | '!')+"
 // (e.g., to avoid retaining state when returning a value).
-hspaces_maybe_bang: hspace+ ;
+separator_initial_indent: hspace+ ;
 
 // Production "abbrevw" is an abbreviation with a following whitespace:
 abbrevw returns [Object v]
@@ -1550,27 +1550,24 @@ it_expr returns [Object v]
 // Production "initial_indent_expr" is for an expression starting with indent.
 
 initial_indent_expr returns [Object v]
-  : (INITIAL_INDENT | hspaces_maybe_bang)
+  : (INITIAL_INDENT | separator_initial_indent) (scomment hs)*
     (n_expr {$n_expr}
-     | (scomment (options {greedy=true} : hspace)*
-       sretry=t_expr_real {$sretry})
-     | comment_eol retry3=t_expr {$retry3} ) ;
+     | comment_eol {empty_tag} ) ;
 
 // Production "t_expr_real" handles special cases, else it invokes it_expr.
 
 t_expr_real returns [Object v]
   : comment_eol    r1=t_expr_real {$r1} // Skip initial blank lines
   | (FF | VT)+ EOL r2=t_expr_real {$r2} // Skip initial FF|VT lines
-  | initial_indent_expr           {$initial_indent_expr}
   | EOF                           {(generate_eof)} // End of file
+  | initial_indent_expr           {$initial_indent_expr}
   | i=it_expr                     {$i} /* Normal case */ ;
 
 // Production "t_expr" is the top-level production for sweet-expressions.
 
 t_expr returns [Object v]
   : te=t_expr_real	
-    ( {(isemptytagp $te)}? =&gt; retry=t_expr {$retry}
-      | {$te} ) ;
+      {(if (isemptytagp $te) (t_expr) $te)} ; if empty value returned, retry.
 </pre>
 
 
