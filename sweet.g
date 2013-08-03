@@ -1255,7 +1255,7 @@ it_expr returns [Object v]
 initial_indent_expr returns [Object v]
   : (INITIAL_INDENT | separator_initial_indent) (scomment hs)*
     (n_expr {$v = $n_expr.v;}
-     | comment_eol retry=t_expr {$v=$retry.v;} ) ;
+     | comment_eol {$v= empty_tag;} ) ;
 
 // Production "t_expr_real" handles special cases, else it invokes it_expr.
 // STOP INCLUDING IN SRFI
@@ -1274,6 +1274,17 @@ t_expr_real returns [Object v]
 
 t_expr returns [Object v]
   : te=t_expr_real	
-    ( {isemptytagp($te.v)}? => retry=t_expr {$v = $retry.v;}
-      | {$v = $te.v;} ) ;
-
+// STOP INCLUDING IN SRFI
+    {
+      if (isemptytagp($te.v)) {
+        $v = t_expr();
+      } else {
+        $v = $te.v;
+      }
+    /*
+// INCLUDE IN SRFI
+      {(if (isemptytagp $te.v) (t_expr) $te.v)} ; if empty value returned, retry.
+// STOP INCLUDING IN SRFI
+    */
+    } ;
+// INCLUDE IN SRFI
