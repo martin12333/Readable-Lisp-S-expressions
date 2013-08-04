@@ -376,3 +376,12 @@ pull:
 
 test:
 	make check
+
+# SRFI-110 files to distribute.
+110:
+	mkdir 110-files
+	cp -p SRFI-110.html sweet.g src/kernel.scm output/scheme/Pair.java \
+	      110-files/
+	tar cvzf srfi-110.tar.gz 110-files/
+	rm -fr 110-files/
+
