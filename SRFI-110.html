@@ -1135,6 +1135,7 @@ The character(s) in a terminating EOL
 are not considered part of the line contents.</li>
 <li>hspace: A character that is a space (U+0020) or tab (U+0009)
 (short for &#8220;horizontal space&#8221;).</li>
+<li>blank line: A line containing only 0+ hspace characters.
 <li>indent character: A character that is a space (U+0020), tab (U+0009), or
 exclamation point &#8220;!&#8221; (U+0021).</li>
 <li>indentation: The set of all 0+ indent characters
@@ -1261,13 +1262,6 @@ then the reader <em>SHOULD</em>
 treat those syntax-case abbreviations when whitespace-terminated
 in the same manner.
 A sweet-expression reader <em>MAY</em> implement additional abbreviations.
-</p>
-
-<p>
-An implication of these definitions is that a line with only
-0+ hspace characters (aka a &#8220;blank line&#8221;) terminates
-a sweet-expression once it has begun in the normal case,
-per the it_expr production defined below.
 </p>
 
 <h2><a name="bnf-utility">Utility procedures used in the BNF</a></h2>
@@ -1572,9 +1566,13 @@ t_expr returns [Object v]
       {(if (isemptytagp $te) (t_expr) $te)} ; if empty value returned, retry.
 </pre>
 
+<p>
+Note that per these definitions, a blank line normally terminates
+a sweet-expression once it has begun, but a blank line does not
+terminate a collecting list.
+</p>
 
 <h2 id="other-requirements">Other requirements</h2>
-
 
 <p>
 An implementation of this SRFI <em>MUST</em> accept
