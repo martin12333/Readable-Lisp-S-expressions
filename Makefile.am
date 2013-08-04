@@ -385,3 +385,5 @@ test:
 	tar cvzf srfi-110.tar.gz 110-files/
 	rm -fr 110-files/
 
+.PHONY: push pull test 110
+
