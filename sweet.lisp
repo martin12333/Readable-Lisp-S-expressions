@@ -43,7 +43,7 @@
 ; be the only thing on the line, and in that case it should
 ; operate as a placeholder for that indentation position.
 ; Thus, we'll specially wrap such cases and return a
-; distinctive value "empty-values", to represent the "no value" case.
+; distinctive value "no-neoteric-value", to represent the "no value" case.
 (defvar *underlying-sweet-readtable*
   "This table is basically neoteric-expressions with some tweaks")
 
@@ -76,7 +76,7 @@
 ; performs actions that we can't intercept.  So we'll override the "empty"
 ; returns with this instead, so that they will get passed back to us
 ; and allow us to override the reader.
-(define-constant empty-values (make-symbol "empty-values"))
+(define-constant no-neoteric-value (make-symbol "no-neoteric-value"))
 
 ; Represent no value at all, in the sweet-expression processing.
 (define-constant empty-tag (make-symbol "empty-tag"))
@@ -137,13 +137,13 @@
   (let ((c (my-read-char stream)))
     (cond
       ((eof-objectp c)
-        empty-values)
+        no-neoteric-value)
       ((char= c #\|)
         (let ((c2 (my-peek-char stream)))
           (if (and (not (eof-objectp c2)) (char= c2 #\#))
               (progn
                 (my-read-char stream)
-                empty-values)
+                no-neoteric-value)
               (nest-comment stream))))
       ((and hash-pipe-comment-nestsp (char= c #\#))
         (let ((c2 (my-peek-char stream)))
@@ -151,7 +151,7 @@
               (progn
                 (my-read-char stream)
                 (nest-comment stream))
-              empty-values)
+              no-neoteric-value)
           (nest-comment stream)))
       (t
         (nest-comment stream)))))
@@ -168,7 +168,7 @@
     datum-commentw-tag
     (let ((junk (neoteric-read-nocomment stream)))
       (declare (ignore junk))
-      empty-values)))
+      no-neoteric-value)))
 
 ; There is no standard mechanism to unread multiple characters.
 ; Therefore, the key productions and some of their supporting procedures
@@ -263,7 +263,7 @@
 (defun n-expr-or-scomment (stream)
   (let ((result (my-read-datum stream))) ; Make it possible to return ".".
     (cond
-      ((eq result empty-values) scomment-result)
+      ((eq result no-neoteric-value) scomment-result)
       ((eq result datum-commentw-tag) '(datum-commentw ()))
       (t (list 'normal result)))))
 
@@ -271,7 +271,7 @@
 (defun neoteric-read-nocomment (stream)
   (let ((result (my-read-datum stream))) ; Make it possible to return ".".
     (cond
-      ((eq result empty-values) (neoteric-read-nocomment stream))
+      ((eq result no-neoteric-value) (neoteric-read-nocomment stream))
       ((eq result datum-commentw-tag)
         (neoteric-read-nocomment stream) ; Consume the next n-expression.
         (neoteric-read-nocomment stream))
