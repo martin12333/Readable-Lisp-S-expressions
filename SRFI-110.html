@@ -184,7 +184,7 @@ define fibfast(n)   ; Typical function notation
   </li>
   <li><a href="#whitespace-indentation-comment">Whitespace, indentation, and comment handling</a>
   <ul>
-  <li><a href="#empty-lines">Empty lines</a></li>
+  <li><a href="#blank-lines">Blank lines</a></li>
   <li><a href="#trailing-hspace">Trailing horizontal spaces are ignored</a></li>
   <li><a href="#indentation-characters">Indentation characters (! as indent)</a></li>
   <li><a href="#disabling-indentation-processing-with-paired-characters">Disabling indentation processing with paired characters</a></li>
@@ -489,12 +489,12 @@ define factorial(n)
 </blockquote>
 
 <p>
-An <a href="#empty-lines">empty line
+A <a href="#blank-lines">blank line
 (a line containing only 0+ spaces and tabs)
 ends an expression once one has begun</a>.
 This makes sweet-expressions easy to use interactively; just press
 &#8220;Enter Enter&#8221; to end an expression.
-Empty lines are ignored before an expression begins.
+Blank lines are ignored before an expression begins.
 </p>
 
 <p>
@@ -945,9 +945,9 @@ and &#8220;*&gt;&#8221; surround a
 <i>collecting list</i></a>.
 This represents a list, but unlike (...), indentation processing
 continues to work, the indentation level is temporarily restarted
-at the left edge, and empty lines do not end a collecting list.
+at the left edge, and blank lines do not end a collecting list.
 Collecting lists are useful for very long lists (such as module definitions)
-because they shorten indentation and allow empty lines.
+because they shorten indentation and allow blank lines.
 They are also useful in let expressions with short variable expressions.
 The <a href="#examples">examples</a> section has longer examples;
 here are short examples:
@@ -1265,7 +1265,7 @@ A sweet-expression reader <em>MAY</em> implement additional abbreviations.
 
 <p>
 An implication of these definitions is that a line with only
-0+ hspace characters (aka an &#8220;empty line&#8221;) terminates
+0+ hspace characters (aka a &#8220;blank line&#8221;) terminates
 a sweet-expression once it has begun in the normal case,
 per the it_expr production defined below.
 </p>
@@ -1714,7 +1714,7 @@ that reads sweet-expressions and writes out s-expressions.
 An unsweetener <em>SHOULD</em> specially treat
 lines that begin with a semicolon
 when they are not currently reading an expression (e.g., no expression has
-been read, or the last expression read has been completed with an empty line).
+been read, or the last expression read has been completed with a blank line).
 Such a tool <em>SHOULD</em>
 (when outside an expression) copy exactly
 any line beginning with semicolon followed by a whitespace or semicolon.
@@ -2719,14 +2719,14 @@ used SRFI-49 directly.</p>
 However, SRFI-49 turned out to have problems in practice when
 we tried to use it seriously.
 For example,
-in SRFI-49, leading empty lines could produce the empty list <tt>()</tt>
+in SRFI-49, leading blank lines could produce the empty list <tt>()</tt>
 instead of being ignored,
-limiting the use of empty lines and leading to easy-to-create errors.
+limiting the use of blank lines and leading to easy-to-create errors.
 As specified, a SRFI-49 expression would never complete
 until after the next expressions&#8217;s first line was entered, making
 interactive use extremely unpleasant.
-Lines with just spaces and tabs would be considered different from empty
-lines, creating another opportunity for difficult-to-find errors.
+Lines with just spaces and tabs would be considered different from
+blank lines, creating another opportunity for difficult-to-find errors.
 The symbol <tt>group</tt> is given a special meaning, which is
 inconsistent with the rest of Lisp
 (where only punctuation has special syntactic meanings).
@@ -3022,27 +3022,31 @@ sweet-expression constructs related to whitespace, indentation,
 and comment handling, including why they are defined the way they are.
 </p>
 
-<h3 id="empty-lines">Empty lines</h3>
+<h3 id="blank-lines">Blank lines</h3>
 
 <p>
-The issues of how to deal with empty lines, and how to end expressions,
+A blank line, in this specification, is a line with only 0+ spaces and/or tabs.
+They are also called "empty lines", but this specification uses the
+term "blank line" to reduce confusion
+(the word "empty" has many other meanings).
+The issues of how to deal with blank lines, and how to end expressions,
 involves various trade-offs between use in a REPL and use in a file.
 </p>
 
 <p>
-In sweet-expressions, an empty line
+In sweet-expressions, a blank line
 always terminates a datum, once an expression has started;
-if (another) expression has not started, empty lines are ignored.
+if (another) expression has not started, blank lines are ignored.
 That means that in a REPL,
 once you&#8217;ve entered a complete expression,
 &#8220;Enter Enter&#8221; will always end it.
-The &#8220;empty lines at the beginning are ignored&#8221;
+The &#8220;blank lines at the beginning are ignored&#8221;
 rule eliminates a usability problem
 with the original SRFI-49 (I-expression) spec, in which two sequential
-empty lines before an expression surprisingly returned ().
+blank lines before an expression surprisingly returned ().
 This was a serious usability problem.
 The sample SRFI-49
-implementation <em>did</em> end expressions on an empty line - the problem
+implementation <em>did</em> end expressions on a blank line - the problem
 was that the spec didn&#8217;t clearly capture this.
 </p>
 
@@ -3063,7 +3067,7 @@ This is absurdly confusing and unacceptable.
 Early Pascal I/O had similar problems.
 </li>
 <li>It would be possible
-to have empty lines end an expression only in interactive use.
+to have blank lines end an expression only in interactive use.
 In particular, Python does this; Python
 has different rules for interactive use and files.
 However, this means that you cannot cut-and-paste text from files into
@@ -3108,13 +3112,13 @@ will be until it is done, so this does not help enough.
 </ol>
 
 <p>
-The chosen solution, where an empty line
+The chosen solution, where a blank line
 (&#8220;Enter Enter&#8221;) <em>always</em> end an expression,
 works reasonably well and keeps the notation consistent.
 Pressing Enter twice is quite easy in a REPL (since the user&#8217;s
 finger is already on Enter to press it the first time).
 Of course, people sometimes want to have something like
-an empty line in the middle of an s-expression, to vertically separate
+a blank line in the middle of an s-expression, to vertically separate
 parts of a larger expression.
 Sweet-expressions have alternatives that work quite well for this purpose:
 </p>
@@ -3122,7 +3126,7 @@ Sweet-expressions have alternatives that work quite well for this purpose:
 <li>
 The recommended solution is to use comment-only lines using &#8220;;&#8221;
 (indented or not).
-These are completely ignored and not even considered empty lines.
+These are completely ignored and not even considered blank lines.
 Thus, you can use comment-only lines for the purpose
 of separating sections in a single datum.
 The indentation of comment-only lines is intentionally ignored;
@@ -3132,7 +3136,7 @@ We&#8217;ve found that in practice this works very well.
 </li>
 <li>
 You can also use a line with at least one exclamation point, and nothing
-else other than possibly whitespace; this has the same effect.
+else other than possibly whitespace; such lines are also ignored.
 </li>
 <li>
 If you also want to disable indentation processing, placing the expression
@@ -3144,12 +3148,12 @@ a collecting list can typically be used.
 </li>
 </ol>
 
-<p>Since a line with only spaces or tabs may look exactly identical to an
-empty line, we decided to clearly state that
-a line with only spaces and tabs is an empty line
+<p>Since a line with only spaces or tabs may look exactly identical to a
+blank line, we decided to clearly state that
+a line with only spaces and tabs is a blank line
 (and is treated the same way).
 This eliminates some nasty usability problems that
-could arise if an &#8220;empty&#8221; line was interpreted differently
+could arise if a &#8220;blank&#8221; line was interpreted differently
 depending on whether or not it had invisible whitespace in it.
 A silent error like this could be hard to debug.</p>
 
@@ -3157,7 +3161,7 @@ A silent error like this could be hard to debug.</p>
 <p>
 It is not possible to see trailing horizontal space on most screens
 and printouts.
-Thus, the BNF is defined so that in most cases trailing horizontal space
+Thus, the BNF is defined so that in normal cases trailing horizontal space
 is ignored
 (except in special cases such as being inside a string constant).
 </p>
@@ -3339,7 +3343,7 @@ We&#8217;d like this reader to be a drop-in replacement for read(),
 so minimizing incompatibilities is important.</p>
 
 <p>There is a risk that this
-indentation will be accidental (e.g., a user might enter an empty line in
+indentation will be accidental (e.g., a user might enter a blank line in
 the middle of a routine and then start the next line indented).  However,
 this is less likely to happen interactively (users can typically see
 something happened immediately), and editors can easily detect and show
@@ -3549,7 +3553,7 @@ define foo(x)
           |#
 </pre>
 Again, a simple &#8220;outright delete&#8221;
-would yield an empty line
+would yield a blank line
 right after the &#8220;<code>define foo(x)</code>&#8221; line.
 Instead, what we mandate is that,
 if a block or datum comment immediately follows indentation,
@@ -4653,7 +4657,7 @@ a vertical bar
 separating the elements.</p></td>
 </tr>
 <tr>
-<td>Alternative for denoting empty line</td>
+<td>Alternative for denoting a line to ignore</td>
 <td><pre>
 define foo(x)
   \\
@@ -4677,14 +4681,14 @@ users might find.
 
 <h3 id="collecting-lists">Collecting lists (&lt;* ... *&gt;)</h3>
 <p>
-Each sweet-expression is ended with an empty line, which is usually what you
+Each sweet-expression is ended with a blank line, which is usually what you
 want.  There is one circumstance where that behavior is awkward: a long
 sequence of definitions within an initial statement.
 We have developed a solution, collecting lists, that are also
 useful for 1-2 variable let-like statements.
 </p>
 <p>
-An accidental empty line between two internal definitions will end the initial
+An accidental blank line between two internal definitions will end the initial
 statement:
 </p>
 <pre>
@@ -4701,7 +4705,8 @@ define-library
     define rows(grid) vector-length(grid)
     define cols(grid) vector-length(vector-ref(grid 0))
 
-; above empty line prematurely ends define-library
+; The above blank line prematurely ends define-library, and since
+; there is an initial indent, these will be interpreted quite differently:
     define ref(grid n m)
       and
         {-1 &lt; n &lt; rows(grid)}
@@ -4710,7 +4715,7 @@ define-library
     define put!(grid n m v) vector-set!(vector-ref(grid n) m v)
 </pre>
 <p>
-You can work around this for short sequences by removing the empty lines or
+You can work around this for short sequences by removing the blank lines or
 replacing them with one of:
 </p>
 <ol>
@@ -4728,7 +4733,7 @@ but restart indentation processing at the beginning,
 and collect any sweet-expressions inside.
 In a collecting list, horizontal spaces after the initial &lt;* are consumed,
 and then sweet-expressions are read.
-These t-expressions must not be indented
+These t-expressions must not begin with an indent
 (though you can indent lines with only ;-comments).
 </p>
 
@@ -4773,7 +4778,7 @@ Opening a parentheses intentionally disables indentation processing;
 this is what developers typically expect (note that both Python and
 SRFI-49 do this), and it also makes sweet-expressions very
 backwards-compatible with traditional s-expressions.
-Ending a definition at an empty line is very convenient for interactive use,
+Ending a definition at a blank line is very convenient for interactive use,
 and interactive and file notation should be identical
 (since people often switch between them).
 </p>
@@ -6068,7 +6073,7 @@ class example:
 In wisp, expressions do not end on blank lines, and
 this could cause significant problems in interactive use.
 Wisp&#8217;s creator said on 2013-04-16,
-&#8220;Not breaking at an empty line is a design choice,
+&#8220;Not breaking at an empty [aka blank] line is a design choice,
 because I tend to often use empty lines
 in python-code to separate logical parts of a function.
 But this actually creates problems when pasting a python
@@ -6077,7 +6082,7 @@ Note, though, that there is no interactive wisp shell (yet).
 I think I would end a statement at 2 empty lines,
 which would mean that you <i>should not</i> use
 2 consecutive empty lines in a script (but you could).&#8221;
-Using two empty lines is a plausible alternative, but note that this makes
+Using two blank lines is a plausible alternative, but note that this makes
 interactive use less appealing; users would actually have to press
 Enter three times (once to end a line, and twice more to create
 two blank lines).
@@ -6790,7 +6795,7 @@ it_expr returns [Object v]
         | comment_eol indent sub_b=body
           ( re_indent partial_out=body
              {(append (append $head (list $sub_b)) $partial_out)}
-           | empty {(append $head (list $sub_b))} ) )
+           | /*empty*/ {(append $head (list $sub_b))} ) )
   ...
   | SUBLIST hspace* /* "$" first on line */
     (is_i=it_expr {(list $is_i)}
