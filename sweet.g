@@ -1085,7 +1085,7 @@ skippable
 // KEY BNF PRODUCTIONS for sweet-expressions:
 
 // Production "collecting_content" returns a collecting list's contents.
-// Precondition: At beginning of line.
+// Precondition: After collecting start and horizontal spaces.
 // Postcondition: Consumed the matching COLLECTING_END.
 // FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
 
@@ -1098,13 +1098,15 @@ collecting_content returns [Object v]
   | (FF | VT)+ EOL retry2=collecting_content {$v = $retry2.v;}
   | COLLECTING_END {$v = null;} ;
 
+collecting_list returns [Object v]
+  : COLLECTING hs cc=collecting_content hs {$v = $cc.v;} ;
+
 // Process line after ". hspace+" sequence.  Does not go past current line.
 
 post_period returns [Object v]
   : skippable retry=post_period {$v = $retry.v;}
     | pn=n_expr hs skippable* (n_expr error)? {$v = $pn.v;}
-    | COLLECTING hs pc=collecting_content hs
-      skippable* (n_expr error)? {$v = $pc.v;}
+    | cl=collecting_list skippable* (n_expr error)? {$v = $cl.v;}
     | /*empty*/ {$v = ".";} ;
 
 // Production "line_exprs" reads the 1+ n-expressions on one line; it will
@@ -1128,9 +1130,9 @@ line_exprs returns [Object v]
   : PERIOD /* Leading ".": escape following datum like an n-expression. */
       (hspace+ pp=post_period {$v = list($pp.v);}
        | /*empty*/    {$v = list(".");} )
-  | COLLECTING hs collecting_content hs
-      (rr=rest_of_line    {$v = cons($collecting_content.v, $rr.v); }
-       | /*empty*/        {$v = list($collecting_content.v); } )
+  | cl=collecting_list
+      (rr=rest_of_line    {$v = cons($cl.v, $rr.v); }
+       | /*empty*/        {$v = list($cl.v); } )
   | basic=n_expr_first /* Only match n_expr_first */
       ((hspace+ (br=rest_of_line  {$v = cons($basic.v, $br.v);}
                  | /*empty*/      {$v = list($basic.v);} ))
@@ -1150,9 +1152,9 @@ line_exprs returns [Object v]
 rest_of_line returns [Object v]
   : PERIOD hspace+ pp=post_period {$v = $pp.v;} /* Improper list */
   | skippable (retry=rest_of_line {$v = $retry.v;} | /*empty*/ {$v = null;})
-  | COLLECTING hs collecting_content hs
-    (rr=rest_of_line     {$v = cons($collecting_content.v, $rr.v);}
-     | /*empty*/         {$v = list($collecting_content.v);} )
+  | cl=collecting_list
+    (rr=rest_of_line     {$v = cons($cl.v, $rr.v);}
+     | /*empty*/         {$v = list($cl.v);} )
   | basic=n_expr
       ((hspace+ (br=rest_of_line {$v = cons($basic.v, $br.v);}
                  | /*empty*/     {$v = list($basic.v);} ))
