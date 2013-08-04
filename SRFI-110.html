@@ -1414,7 +1414,7 @@ n_expr_first returns [Object v]
 sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE
                       | SHARP_BANG_DIRECTIVE ;
 scomment : BLOCK_COMMENT
-         | DATUM_COMMENT (options {greedy=true} : hspace)* n_expr
+         | DATUM_COMMENT hs n_expr
          | sharp_bang_comments ;
 
 // Production "comment_eol" reads an optional ;-comment (if it exists),
