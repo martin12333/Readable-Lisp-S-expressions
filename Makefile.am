@@ -378,12 +378,15 @@ test:
 	make check
 
 # SRFI-110 files to distribute.
-110:
-	mkdir 110-files
-	cp -p SRFI-110.html sweet.g src/kernel.scm output/scheme/Pair.java \
-	      110-files/
-	tar cvzf srfi-110.tar.gz 110-files/
-	rm -fr 110-files/
+srfi_110_fileset = SRFI-110.html sweet.g src/kernel.scm output/scheme/Pair.java
+110.tar.gz: $(srfi_110_fileset)
+	rm -fr 110/
+	mkdir  110/
+	cp -p $(srfi_110_fileset) 110/
+	tar cvzf 110.tar.gz 110/
+	rm -fr 110/
+
+110: 110.tar.gz
 
 .PHONY: push pull test 110
 
