@@ -3024,9 +3024,9 @@ and comment handling, including why they are defined the way they are.
 
 <p>
 A blank line, in this specification, is a line with only 0+ spaces and/or tabs.
-They are also called "empty lines", but this specification uses the
-term "blank line" to reduce confusion
-(the word "empty" has many other meanings).
+They are also called &#8220;empty lines&#8221;, but this specification uses the
+term &#8220;blank line&#8221; to reduce confusion
+(the word &#8220;empty&#8221; has many other meanings).
 The issues of how to deal with blank lines, and how to end expressions,
 involves various trade-offs between use in a REPL and use in a file.
 </p>
@@ -3693,7 +3693,7 @@ parent should be wrapped in a list, but (2) comments usually are ignored.
 <p>
 The current specification resolves this by picking rule #1 as
 being more important, thus, this is <tt>(foo)</tt>.
-If a line has a child line, then it's wrapped into a list...
+If a line has a child line, then it&#8217;s wrapped into a list...
 even if the child lines together produce an empty value.
 </p>
 
@@ -3708,7 +3708,7 @@ foo
 ! ! otherstuff 8
 </pre>
 
-Let's imagine that you comment out foo's parameters:
+Let&#8217;s imagine that you comment out foo&#8217;s parameters:
 <pre>
 foo
 ! #; complicated-expression 4 7
@@ -3716,12 +3716,12 @@ foo
 </pre>
 
 <p>
-In most cases, you probably still want "<tt>foo</tt>" to be called,
-so "<tt>(foo)</tt>"
+In most cases, you probably still want &#8220;<tt>foo</tt>&#8221; to be called,
+so &#8220;<tt>(foo)</tt>&#8221;
 is probably the correct way to interpret this.
-Thus, it makes sense to simply say that "monify" is only called when
-there are no child lines. It's an easier rule to explain, too.
-And once you accept that notion, it's important to be consistent
+Thus, it makes sense to simply say that &#8220;monify&#8221; is only called when
+there are no child lines. It&#8217;s an easier rule to explain, too.
+And once you accept that notion, it&#8217;s important to be consistent
 about it all the way through.
 </p>
 
