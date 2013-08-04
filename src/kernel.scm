@@ -1987,7 +1987,7 @@
           (t-expr port)
           te)))
 
-  ; Skip until we find a completely empty line (not even initial space/tab).
+  ; Skip until we find a completely blank line (not even initial space/tab).
   ; We use this after read error to resync to good input.
   (define (read-to-blank-line port)
     (consume-to-eol port)
