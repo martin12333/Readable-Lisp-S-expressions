@@ -1203,31 +1203,37 @@ If no match is found, it is an error.</li>
 </ol>
 
 <p>
-Markers are character sequences that have special meanings.
-A marker <em>MUST</em> only have its special meaning when
+Markers <em>MUST</em> be recognized if and only if
 the reader is in indentation processing mode,
 the marker is preceded by indentation or hspace,
 the marker is followed by an hspace or EOL,
-and when the marker starts with the character shown
+and the marker starts with the character shown
 (e.g., neither <tt>|$|</tt> nor <tt>'$</tt> contains a marker).
-The markers, BNF names, and meanings are:
+The markers are:
 </p>
-<ul>
-<li><tt>\\</tt> : GROUP_SPLIT.  This is called GROUP if it occurs in
+
+<pre>
+GROUP_SPLIT    : '\\\\' ;        // This is "\\"
+SUBLIST        : '$' ;
+COLLECTING     : '&lt;*' ;          // Start collecting list
+COLLECTING_END : '*&gt;' ;          // End collecting list
+RESERVED_TRIPLE_DOLLAR : '$$$' ; // Reserved for future use
+</pre>
+
+<p>
+GROUP_SPLIT (<tt>\\</tt>)
+is called GROUP if it occurs in
 the position of the first n-expression in a given line
-(e.g., immediately after indentation); otherwise it is called SPLIT.</li>
-<li><tt>$</tt> : SUBLIST.</li>
-<li><tt>&lt;*</tt> : COLLECTING.  Begins a &#8220;collecting list&#8221;, a
-new list that ends with a matching COLLECTING_END.
-This pushes an empty string onto the indentation stack as
-well as generating the symbol COLLECTING.</li>
-<li><tt>*&gt;</tt> : COLLECTING_END.
-This pops any non-empty strings from the indentation stack (generating a
+(e.g., immediately after indentation); otherwise it is called SPLIT.
+When COLLECTING is recognized it
+pushes an empty string onto the indentation stack as well as
+generating COLLECTING.
+When COLLECTING_END is recognized it
+pops any non-empty strings from the indentation stack (generating a
 <code>DEDENT</code> for each one),
 pops the empty string initially placed by COLLECTING,
-and generates the two symbols EOL and COLLECTING_END.</li>
-<li><tt>$$$</tt> : RESERVED_TRIPLE_DOLLAR.  Reserved.</li>
-</ul>
+generates EOL, and then finally generates COLLECTING_END.
+</p>
 
 <!--
 Note "UNQUOTE_SPLICEW" before "UNQUOTEW" so that it's clear
@@ -1239,7 +1245,8 @@ that it has priority; ",@" is interpreted differently from
 The following whitespace-terminated terminals <em>MUST</em> be
 recognized if and only if the reader is in indentation processing mode.
 The linefeed or carriage return (if any) in them <em>MUST NOT</em>
-be permanently consumed (the space or tab, if any, <em>MAY</em> be consumed):
+be permanently consumed by the terminal
+(the space or tab, if any, <em>MAY</em> be consumed):
 </p>
 <pre>
 QUOTEW          : '\'' (' ' | '\t' | '\n' | '\r') ;  // quote
