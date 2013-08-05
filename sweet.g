@@ -540,29 +540,28 @@ UNQUOTE        : ',';
 
 // INCLUDE IN SRFI
 
-// Special end-of-line character definitions.
 fragment EOL_CHAR : '\n' | '\r' ;
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
 fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
 
 // Comments. LCOMMENT=line comment, scomment=special comment.
-LCOMMENT :       ';' NOT_EOL_CHARS ; // Line comment - doesn't include EOL
+// SRFI_22_COMMENT and SHARP_BANG_FILE support is RECOMMENDED.
+LCOMMENT      : ';' NOT_EOL_CHARS ; // Line comment - doesn't include EOL
 BLOCK_COMMENT : '#|' (options {greedy=false;} : (BLOCK_COMMENT | .))* '|#' ;
 DATUM_COMMENT : '#;' ;
+// STOP INCLUDING IN SRFI
 // SRFI-105 notes that "implementations could trivially support
 // (simultaneously) markers beginning with #! followed by a letter
 // (such as the one to identify support for curly-infix-expressions),
 // the SRFI-22 #!+space marker as an ignored line, and the
 // format #!/ ... !# and #!. ... !# as a multi-line comment."
 // We'll implement that approach for maximum flexibility.
-SRFI_22_COMMENT : '#! ' NOT_EOL_CHARS ;
-SHARP_BANG_FILE : '#!' ('/' | '.') (options {greedy=false;} : .)*
-                  '!#' (SPACE|TAB)* ;
-// These match #!fold-case, #!no-fold-case, #!sweet, and #!curly-infix;
-// it also matches a lone "#!".  The "#!"+space case is handled above,
-// in SRFI_22_COMMENT, overriding this one:
-SHARP_BANG_DIRECTIVE : '#!' (('a'..'z'|'A'..'Z'|'_')
-                    ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')*)? (SPACE|TAB)* ;
+// INCLUDE IN SRFI
+SRFI_22_COMMENT : '#!' SPACE NOT_EOL_CHARS ;
+SHARP_BANG_FILE : '#!' ('/' | '.') (options {greedy=false;} : .)* '!#' ;
+// These match #!fold-case, #!no-fold-case, #!sweet, and #!curly-infix:
+SHARP_BANG_DIRECTIVE : '#!' ('a'..'z'|'A'..'Z'|'_')
+                       ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')* ;
 
 // STOP INCLUDING IN SRFI
 

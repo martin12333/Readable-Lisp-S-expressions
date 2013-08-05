@@ -41,7 +41,6 @@ one
 two
 #!sweet
 three
-#!
 four
 
 $ a
