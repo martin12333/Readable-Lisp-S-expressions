@@ -1048,8 +1048,8 @@ abbrev_no_w returns [Object v]
   | UNQUOTE         {$v = "unquote";};
 
 abbrev_all returns [Object v]
-  : abbrevw hs {$v = $abbrevw.v;}
-  | abbrev_no_w     {$v = $abbrev_no_w.v;} ;
+  : abbrevw hs   {$v = $abbrevw.v;}
+  | abbrev_no_w  {$v = $abbrev_no_w.v;} ;
 
 // Production "n_expr" is a full neoteric-expression as defined in SRFI-105.
 // n_expr does *not* consume any following horizontal space.
@@ -1062,14 +1062,12 @@ n_expr returns [Object v]
 // abbreviations cannot have an whitespace afterwards (used by "line_exprs"):
 n_expr_first returns [Object v]
   : abbrev_no_w n1=n_expr_first {$v = list($abbrev_no_w.v, $n1.v);}
-  | n_expr_noabbrev            {$v = $n_expr_noabbrev.v;} ;
+  | n_expr_noabbrev             {$v = $n_expr_noabbrev.v;} ;
 
 // Production "scomment" (special comment) defines comments other than ";":
 sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE
                       | SHARP_BANG_DIRECTIVE ;
-scomment : BLOCK_COMMENT
-         | DATUM_COMMENT hs n_expr
-         | sharp_bang_comments ;
+scomment : BLOCK_COMMENT | DATUM_COMMENT hs n_expr | sharp_bang_comments ;
 
 // Production "comment_eol" reads an optional ;-comment (if it exists),
 // and then reads the end-of-line (EOL) sequence.  EOL processing consumes
@@ -1227,10 +1225,8 @@ sublist_line returns [Object v] // "$" first on line
 
 abbrevw_line returns [Object v]
   : abbrevw hs
-      (comment_eol INDENT ab=body
-         {$v = appende(list($abbrevw.v), $ab.v);}
-       | ai=it_expr
-         {$v=list2e($abbrevw.v, $ai.v);} ) ;
+      (comment_eol INDENT ab=body {$v = appende(list($abbrevw.v), $ab.v);}
+       | ai=it_expr               {$v=list2e($abbrevw.v, $ai.v);} ) ;
 
 // Production "it_expr" (indenting sweet-expression)
 // is the main production for sweet-expressions in the usual case.
