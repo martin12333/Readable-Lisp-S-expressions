@@ -547,8 +547,7 @@ fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
 
 // Comments. LCOMMENT=line comment, scomment=special comment.
 LCOMMENT :       ';' NOT_EOL_CHARS ; // Line comment - doesn't include EOL
-BLOCK_COMMENT : '#|' // This is #|...|#
-      (options {greedy=false;} : (BLOCK_COMMENT | .))* '|#' ;
+BLOCK_COMMENT : '#|' (options {greedy=false;} : (BLOCK_COMMENT | .))* '|#' ;
 DATUM_COMMENT : '#;' ;
 // SRFI-105 notes that "implementations could trivially support
 // (simultaneously) markers beginning with #! followed by a letter
