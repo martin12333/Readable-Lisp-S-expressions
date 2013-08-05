@@ -1201,12 +1201,12 @@ Thus <samp>{a&nbsp;+&nbsp;b}</samp> maps to <samp>(+&nbsp;a&nbsp;b)</samp>,
 <samp>f(...)</samp> maps to <samp>(f&nbsp;...)</samp>, and
 <samp>f{...}</samp> with content other than whitespace
 maps to <samp>(f&nbsp;{...})</samp>.
-The <tt>n_expr</tt> production <em>MUST NOT</em>
-consume a trailing space or tab.
 The production &#8220;<tt>n_expr_first</tt>&#8221;
 matches a neoteric-expression
 that either has no leading abbreviations (such as &#8220;,@&#8221;),
 or its leading abbreviation does not have whitespace after it.
+The productions <tt>n_expr</tt> and <tt>n_expr_first</tt> <em>MUST NOT</em>
+consume a trailing space or tab.
 </p>
 
 <p>
