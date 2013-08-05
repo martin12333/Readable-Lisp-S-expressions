@@ -1173,7 +1173,7 @@ body returns [Object v]
   : i=it_expr
      (same
        ( {isperiodp($i.v)}? =>   f=it_expr DEDENT {$v = $f.v;} // Improper list
-       | {isemptyvaluep($i.v)}? => retry=body       {$v = $retry.v;}
+       | {isemptyvaluep($i.v)}? => retry=body     {$v = $retry.v;}
        | {not_period_and_not_empty($i.v)}? => nxt=body {$v = conse($i.v, $nxt.v);} )
      | DEDENT {$v = list1e($i.v);} ) ;
 

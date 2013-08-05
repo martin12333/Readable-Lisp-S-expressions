@@ -1131,8 +1131,7 @@ other implementation-defined sequences.</li>
 <li>line: A sequence of 0+ non-eol characters terminated by EOL.
 A sweet-expression reader <em>MAY</em> also support a final line without
 an eol sequence.
-The character(s) in a terminating EOL
-are not considered part of the line contents.</li>
+The character(s) in EOL are not considered part of the line contents.</li>
 <li>hspace: A character that is a space (U+0020) or tab (U+0009)
 (short for &#8220;horizontal space&#8221;).</li>
 <li>blank line: A line containing only 0+ hspace characters.
@@ -1220,8 +1219,9 @@ and when it starts with the character shown
 The markers, BNF names, and meanings are:
 </p>
 <ul>
-<li><tt>\\</tt> : GROUP_SPLIT.  This is called GROUP if it immediately follows
-indentation; otherwise it is called SPLIT.</li>
+<li><tt>\\</tt> : GROUP_SPLIT.  This is called GROUP if it occurs in
+the position of the first n-expression in a given line
+(e.g., immediately after indentation); otherwise it is called SPLIT.</li>
 <li><tt>$</tt> : SUBLIST.</li>
 <li><tt>&lt;*</tt> : COLLECTING.  Begins a &#8220;collecting list&#8221;, a
 new list that ends with a matching COLLECTING_END.
@@ -1461,7 +1461,7 @@ body returns [Object v]
   : i=it_expr
      (same
        ( {(isperiodp $i)}? =&gt;   f=it_expr DEDENT {$f} // Improper list
-       | {(isemptyvaluep $i)}? =&gt; retry=body       {$retry}
+       | {(isemptyvaluep $i)}? =&gt; retry=body     {$retry}
        | {(not_period_and_not_empty $i)}? =&gt; nxt=body {(conse $i $nxt)} )
      | DEDENT {(list1e $i)} ) ;
 
