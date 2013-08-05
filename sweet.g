@@ -1069,10 +1069,11 @@ n_expr_first returns [Object v]
 // Production "scomment" (special comment) defines comments other than ";":
 sharp_bang_comment : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_DIRECTIVE ;
 scomment : BLOCK_COMMENT | DATUM_COMMENT hs n_expr | sharp_bang_comment ;
-
+// STOP INCLUDING IN SRFI - preprocessor rule covers this
 // Production "comment_eol" reads an optional ;-comment (if it exists),
 // and then reads the end-of-line (EOL) sequence.  EOL processing consumes
 // additional comment-only lines (if any) which may be indented.
+// INCLUDE IN SRFI
 
 comment_eol : LCOMMENT? EOL;
 
