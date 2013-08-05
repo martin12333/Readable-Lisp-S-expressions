@@ -532,13 +532,13 @@ DATUM_COMMENT_EOL: {indent_processing()}? => '#;' EOL_SEQUENCE
                   {emit_type(DATUM_COMMENTW); emit_type(EOL);
                    process_indent($i.text, $i);};
 
-// INCLUDE IN SRFI
-
 // Abbreviations not followed by horizontal space or EOL are ordinary:
 QUOTE          : '\'';
 QUASIQUOTE     : '\`';
 UNQUOTE_SPLICE : ',@';
 UNQUOTE        : ',';
+
+// INCLUDE IN SRFI
 
 // Special end-of-line character definitions.
 fragment EOL_CHAR : '\n' | '\r' ;
@@ -1040,6 +1040,7 @@ abbrevw returns [Object v]
   | UNQUOTE_SPLICEW {$v = "unquote-splicing";}
   | UNQUOTEW        {$v = "unquote";} ;
 
+// STOP INCLUDING IN SRFI - preprocessor rule covers this
 // Production "abbrev_no_w" is an abbreviation without a following whitespace:
 abbrev_no_w returns [Object v]
   : QUOTE           {$v = "quote";}
@@ -1064,6 +1065,7 @@ n_expr_first returns [Object v]
   : abbrev_no_w n1=n_expr_first {$v = list($abbrev_no_w.v, $n1.v);}
   | n_expr_noabbrev             {$v = $n_expr_noabbrev.v;} ;
 
+// INCLUDE IN SRFI
 // Production "scomment" (special comment) defines comments other than ";":
 sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE
                       | SHARP_BANG_DIRECTIVE ;

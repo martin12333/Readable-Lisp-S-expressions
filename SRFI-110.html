@@ -1201,6 +1201,9 @@ Thus <samp>{a&nbsp;+&nbsp;b}</samp> maps to <samp>(+&nbsp;a&nbsp;b)</samp>,
 <samp>f(...)</samp> maps to <samp>(f&nbsp;...)</samp>, and
 <samp>f{...}</samp> with content other than whitespace
 maps to <samp>(f&nbsp;{...})</samp>.
+The n_expr production <em>MUST NOT</em> consume a trailing space or tab.
+The production &#8220;n_expr_first&#8221; is also neoteric-expression,
+but any leading abbreviations cannot have a whitespace afterwards.
 </p>
 
 <p>
@@ -1333,12 +1336,6 @@ SPACE    : ' ';
 TAB      : '\t';
 PERIOD   : '.';
 
-// Abbreviations not followed by horizontal space or EOL are ordinary:
-QUOTE          : '\'';
-QUASIQUOTE     : '\`';
-UNQUOTE_SPLICE : ',@';
-UNQUOTE        : ',';
-
 // Special end-of-line character definitions.
 fragment EOL_CHAR : '\n' | '\r' ;
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
@@ -1378,30 +1375,6 @@ abbrevw returns [Object v]
   | QUASIQUOTEW     {'quasiquote}
   | UNQUOTE_SPLICEW {'unquote-splicing}
   | UNQUOTEW        {'unquote} ;
-
-// Production "abbrev_no_w" is an abbreviation without a following whitespace:
-abbrev_no_w returns [Object v]
-  : QUOTE           {'quote}
-  | QUASIQUOTE      {'quasiquote}
-  | UNQUOTE_SPLICE  {'unquote-splicing}
-  | UNQUOTE         {'unquote};
-
-abbrev_all returns [Object v]
-  : abbrevw hs   {$abbrevw}
-  | abbrev_no_w  {$abbrev_no_w} ;
-
-// Production "n_expr" is a full neoteric-expression as defined in SRFI-105.
-// n_expr does *not* consume any following horizontal space.
-// Uses "n_expr_noabbrev", an n-expression with no leading abbreviations:
-n_expr returns [Object v]
- : abbrev_all n1=n_expr {(list $abbrev_all $n1)}
- | n_expr_noabbrev      {$n_expr_noabbrev} ;
-
-// Production "n_expr_first" is a neoteric-expression, but leading
-// abbreviations cannot have an whitespace afterwards (used by "line_exprs"):
-n_expr_first returns [Object v]
-  : abbrev_no_w n1=n_expr_first {(list $abbrev_no_w $n1)}
-  | n_expr_noabbrev             {$n_expr_noabbrev} ;
 
 // Production "scomment" (special comment) defines comments other than ";":
 sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE
