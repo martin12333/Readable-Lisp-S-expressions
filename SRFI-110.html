@@ -1194,16 +1194,19 @@ If no match is found, it is an error.</li>
 </ol>
 
 <p>
-The production &#8220;n_expr&#8221; is a neoteric-expression
+The production &#8220;<tt>n_expr</tt>&#8221; is a neoteric-expression
 as defined in
 <a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
 Thus <samp>{a&nbsp;+&nbsp;b}</samp> maps to <samp>(+&nbsp;a&nbsp;b)</samp>,
 <samp>f(...)</samp> maps to <samp>(f&nbsp;...)</samp>, and
 <samp>f{...}</samp> with content other than whitespace
 maps to <samp>(f&nbsp;{...})</samp>.
-The n_expr production <em>MUST NOT</em> consume a trailing space or tab.
-The production &#8220;n_expr_first&#8221; is also neoteric-expression,
-but any leading abbreviations cannot have a whitespace afterwards.
+The <tt>n_expr</tt> production <em>MUST NOT</em>
+consume a trailing space or tab.
+The production &#8220;<tt>n_expr_first</tt>&#8221;
+matches a neoteric-expression
+that either has no leading abbreviations (such as &#8220;,@&#8221;),
+or has a leading abbreviation without whitespace after it.
 </p>
 
 <p>
