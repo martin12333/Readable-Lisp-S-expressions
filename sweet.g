@@ -1067,9 +1067,8 @@ n_expr_first returns [Object v]
 
 // INCLUDE IN SRFI
 // Production "scomment" (special comment) defines comments other than ";":
-sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE
-                      | SHARP_BANG_DIRECTIVE ;
-scomment : BLOCK_COMMENT | DATUM_COMMENT hs n_expr | sharp_bang_comments ;
+sharp_bang_comment : SRFI_22_COMMENT | SHARP_BANG_FILE | SHARP_BANG_DIRECTIVE ;
+scomment : BLOCK_COMMENT | DATUM_COMMENT hs n_expr | sharp_bang_comment ;
 
 // Production "comment_eol" reads an optional ;-comment (if it exists),
 // and then reads the end-of-line (EOL) sequence.  EOL processing consumes
