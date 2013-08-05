@@ -488,9 +488,9 @@ start : t_expr
 // LEXER SECTION.
 // Lexical token (terminal) names are in all upper case
 
-// INCLUDE IN SRFI
 SPACE    : ' ';
 TAB      : '\t';
+// INCLUDE IN SRFI
 PERIOD   : '.';
 // STOP INCLUDING IN SRFI
 
@@ -538,11 +538,11 @@ QUASIQUOTE     : '\`';
 UNQUOTE_SPLICE : ',@';
 UNQUOTE        : ',';
 
-// INCLUDE IN SRFI
 
 fragment EOL_CHAR : '\n' | '\r' ;
 fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
 fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
+// INCLUDE IN SRFI
 
 // Comments. LCOMMENT=line comment, scomment=special comment.
 // SRFI_22_COMMENT and SHARP_BANG_FILE support is RECOMMENDED.
@@ -1022,8 +1022,8 @@ n_expr_noabbrev returns [Object v]
       n_expr_tail[$n_expr_prefix.v] {$v = $n_expr_tail.v;} ;
 
 
-// INCLUDE IN SRFI
 hspace  : SPACE | TAB ;        // horizontal space
+// INCLUDE IN SRFI
 hs      : (options {greedy=true;} : hspace)* ;
 
 // A "separator_initial_indent" separates n-expressions in initial indent.

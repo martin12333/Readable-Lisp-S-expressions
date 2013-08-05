@@ -1109,32 +1109,31 @@ The non-terminal <code>error</code> indicates where an implementation
 </p>
 
 <p>
-To further understand sweet-expressions, we first need these definitions:
+Here are some basic definitions in ANTLR version 3 format:
 </p>
-<ul>
-<li>eol character: A carriage return (\r, U+000D) or linefeed (\n, U+000A).
-Implementations <em>MAY</em>
-add implementation-defined eol characters.</li>
-<li>EOL (&#8220;end of line&#8221;):
-A carriage return (U+000D)
-optionally followed by linefeed (U+000A), or alternatively,
-a linefeed (U+000A).
-Implementations <em>MAY</em> accept
-other implementation-defined sequences.</li>
-<li>line: A sequence of 0+ non-eol characters (the line contents)
-terminated by EOL.
-The character(s) in EOL are not considered part of the line contents,
-but they are part of the line.
-A sweet-expression reader <em>MAY</em> also support a final line without
+
+<pre>
+SPACE    : ' ' ;  // U+0020
+TAB      : '\t' ; // U+0009
+
+fragment EOL_CHAR      : '\n' | '\r' ; // U+000A or U+000D
+fragment NOT_EOL_CHAR  : (~ (EOL_CHAR)) ;
+fragment NOT_EOL_CHARS : NOT_EOL_CHAR* ;
+fragment INDENT_CHAR   : SPACE | TAB | '!' ; // An "indent character"
+EOL                    : '\r' '\n'? | '\n' ; // End of line
+
+line       : NOT_EOL_CHARS EOL ; // A line = contents followed by EOL
+hspace     : SPACE | TAB ;       // A horizontal space
+blank_line : hspace* EOL ;       // A "blank line" is a line with only hspaces
+</pre>
+
+<p>
+An implementation <em>MAY</em>
+add implementation-defined characters to EOL_CHAR
+and <em>MAY</em> accept additional sequences as EOL.
+An implementation <em>MAY</em> also accept a final line without
 a terminating eol sequence.</li>
-<li>hspace: A character that is a space (U+0020) or tab (U+0009)
-(short for &#8220;horizontal space&#8221;).</li>
-<li>blank line: A line containing only 0+ hspace characters.
-<li>indent character: A character that is a space (U+0020), tab (U+0009), or
-exclamation point &#8220;!&#8221; (U+0021).</li>
-<li>indentation: The set of all 0+ indent characters
-at the beginning of a line.</li>
-</ul>
+</p>
 
 <p>
 A sweet-expression reader <em>MUST</em>
@@ -1147,16 +1146,18 @@ any unescaped pairs of parentheses, brackets, or curly braces.
 </p>
 
 <p>
+The indentation of a line is the set of all 0+ indent characters
+(INDENT_CHARs) at the beginning of a line.
 Indentation is not directly represented in the following syntax definition.
 Instead, a sweet-expression reader <em>MUST</em> act as if it preprocessed
-its input according to the following rules.
+its input.
 First, when the sweet-expression reader begins,
 a stack called the &#8220;indentation stack&#8221;
 is initialized to contain exactly one value, the empty string
 (<tt>""</tt>).
 Then, when in indentation processing mode, the line indentation
 (if any) is read, removed, and possibly replaced by other generated
-symbols as follows (where &#8220;top&#8221; is the
+symbols accordign to the following rules (where &#8220;top&#8221; is the
 value of the top of the indentation stack):
 </p>
 <ol>
@@ -1352,13 +1353,7 @@ Here are supporting definitions in BNF format:
 
 <!-- Between start and end pre, insert the results of ./to-srfi < sweet.g -->
 <pre>
-SPACE    : ' ';
-TAB      : '\t';
 PERIOD   : '.';
-
-fragment EOL_CHAR : '\n' | '\r' ;
-fragment NOT_EOL_CHAR : (~ (EOL_CHAR));
-fragment NOT_EOL_CHARS : NOT_EOL_CHAR*;
 
 // Comments. LCOMMENT=line comment, scomment=special comment.
 // SRFI_22_COMMENT and SHARP_BANG_FILE support is RECOMMENDED.
@@ -1371,7 +1366,6 @@ SHARP_BANG_FILE : '#!' ('/' | '.') (options {greedy=false;} : .)* '!#' ;
 SHARP_BANG_DIRECTIVE : '#!' ('a'..'z'|'A'..'Z'|'_')
                        ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')* ;
 
-hspace  : SPACE | TAB ;        // horizontal space
 hs      : (options {greedy=true} : hspace)* ;
 
 // A "separator_initial_indent" separates n-expressions in initial indent.
