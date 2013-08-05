@@ -79,7 +79,7 @@
 (define-constant no-neoteric-value (make-symbol "no-neoteric-value"))
 
 ; Represent no value at all, in the sweet-expression processing.
-(define-constant empty-tag (make-symbol "empty-tag"))
+(define-constant empty-value (make-symbol "empty-value"))
 
 (define-constant datum-commentw-tag (make-symbol "datum-commentw"))
 
@@ -252,8 +252,8 @@
 ; Don't use this if the lhs *must* be a list (e.g., if we have (list x)).
 (defun my-append (lhs rhs)
   (cond
-    ((eq lhs empty-tag) rhs)
-    ((eq rhs empty-tag) lhs)
+    ((eq lhs empty-value) rhs)
+    ((eq rhs empty-value) lhs)
     ((listp lhs) (append lhs rhs))
     (t
       (read-error "Must have proper list on left-hand-side to append data"))))
@@ -382,25 +382,25 @@
 
 (defun conse (x y) ; cons, but handle "empty" values
   (cond
-    ((eq y empty-tag) x)
-    ((eq x empty-tag) y)
+    ((eq y empty-value) x)
+    ((eq x empty-value) y)
     (t (cons x y))))
 
 (defun appende (x y) ; append, but handle "empty" values
   (cond
-    ((eq y empty-tag) x)
-    ((eq x empty-tag) y)
+    ((eq y empty-value) x)
+    ((eq x empty-value) y)
     (t (append y))))
 
 (defun list1e (x) ; list, but handle "empty" values
-  (if (eq x empty-tag)
+  (if (eq x empty-value)
       '()
       (list x)))
 
 (defun list2e (x y) ; list, but handle "empty" values
-  (if (eq x empty-tag)
+  (if (eq x empty-value)
       y
-      (if (eq y empty-tag)
+      (if (eq y empty-value)
          x
          (list x y))))
 
@@ -447,7 +447,7 @@
               ; the same effect, but is a lot quicker and simpler.
               (cond
                 ((null it-value) it-value)
-                ((eq it-value empty-tag) '())
+                ((eq it-value empty-value) '())
                 (t (list it-value))))
             (t (conse it-value (collecting-content stream)))))))))
 
@@ -580,7 +580,7 @@
               (if (not (indentation>p starting-indent f-new-indent))
                   (read-error "Dedent required after lone . and value line."))
               (list f-new-indent f-value)) ; final value of improper list
-            (if (eq i-value empty-tag)
+            (if (eq i-value empty-value)
                 (body stream i-new-indent)
                 (let-splitter (nxt-full-results nxt-new-indent nxt-value)
                               (body stream i-new-indent)
@@ -621,7 +621,7 @@
           ((eq line-stopper 'collecting-end)
             ; Note that indent is "", forcing dedent all the way out.
             (list ""
-              (if (eq line-value empty-tag)
+              (if (eq line-value empty-value)
                 '()
                 (monify line-value))))
           ((lcomment-eolp (my-peek-char stream))
@@ -642,14 +642,14 @@
                 (let-splitter (is-i-full-results is-i-new-indent is-i-value)
                               (it-expr stream starting-indent)
                   (declare (ignore is-i-value))
-                  (list is-i-new-indent empty-tag)))
+                  (list is-i-new-indent empty-value)))
               (t
                 (let ((new-indent (get-next-indent stream)))
                   (if (indentation>p new-indent starting-indent)
                     (let-splitter (body-full-results body-new-indent body-value)
                                   (body stream new-indent)
                       (declare (ignore body-value))
-                      (list body-new-indent empty-tag))
+                      (list body-new-indent empty-value))
                     (read-error "#;+EOL must be followed by indent"))))))
           ((or (eq line-stopper 'group-split-marker)
                (eq line-stopper 'scomment))
@@ -661,7 +661,7 @@
                     ((indentation>p new-indent starting-indent)
                       (body stream new-indent))
                     (t
-                      (list new-indent empty-tag))))))
+                      (list new-indent empty-value))))))
           ((eq line-stopper 'sublist-marker)
             (hspaces stream)
             (if (lcomment-eolp (my-peek-char stream))
@@ -713,7 +713,7 @@
       (progn
         (consume-to-eol stream)
         (consume-end-of-line stream)
-        empty-tag))) ; (t-expr-real stream)
+        empty-value))) ; (t-expr-real stream)
 
 ; Top level - read a sweet-expression (t-expression).  Handle special
 ; cases, such as initial indent; call it-expr for normal case.
@@ -739,7 +739,7 @@
 
 (defun t-expr (stream)
   (let* ((te (t-expr-real stream)))
-    (if (eq te empty-tag)
+    (if (eq te empty-value)
         (t-expr stream)
         te)))
 
