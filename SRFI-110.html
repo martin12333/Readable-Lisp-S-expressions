@@ -1269,39 +1269,39 @@ A sweet-expression reader <em>MAY</em> implement additional abbreviations.
 <p>
 The BNF depends on the following utility procedures.
 The first ones are variants of traditional list processing procedures
-but also handle a special unique &#8220;empty_tag&#8221; value,
+but also handle a special unique value &#8220;empty_value&#8221;,
 which is used to indicate when no value at all is returned.
 The &#8220;monify&#8221; procedure enables lines with a
 single n-expression and no child lines to represent themselves and
 not be wrapped into a list:
 </p>
 <pre>
-  (define (isemptytagp x) (eq? x empty_tag))
+  (define (isemptyvaluep x) (eq? x empty_value))
 
   (define (not_period_and_not_empty x)
-    (and (not (isperiodp x)) (not (isemptytagp x))))
+    (and (not (isperiodp x)) (not (isemptyvaluep x))))
 
   (define (conse x y) ; cons, but handle "empty" values
     (cond
-      ((eq? y empty-tag) x)
-      ((eq? x empty-tag) y)
+      ((eq? y empty-value) x)
+      ((eq? x empty-value) y)
       (#t (cons x y))))
 
   (define (appende x y) ; append, but handle "empty" values
     (cond
-      ((eq? y empty-tag) x)
-      ((eq? x empty-tag) y)
+      ((eq? y empty-value) x)
+      ((eq? x empty-value) y)
       (#t (append y))))
 
   (define (list1e x) ; list, but handle "empty" values
-    (if (eq? x empty-tag)
+    (if (eq? x empty-value)
         '()
         (list x)))
 
   (define (list2e x y) ; list, but handle "empty" values
-    (if (eq? x empty-tag)
+    (if (eq? x empty-value)
         y
-        (if (eq? y empty-tag)
+        (if (eq? y empty-value)
            x
            (list x y))))
 
@@ -1494,7 +1494,7 @@ body returns [Object v]
   : i=it_expr
      (same
        ( {(isperiodp $i)}? =&gt;   f=it_expr DEDENT {$f} // Improper list
-       | {(isemptytagp $i)}? =&gt; retry=body       {$retry}
+       | {(isemptyvaluep $i)}? =&gt; retry=body       {$retry}
        | {(not_period_and_not_empty $i)}? =&gt; nxt=body {(conse $i $nxt)} )
      | DEDENT {(list1e $i)} ) ;
 
@@ -1512,14 +1512,14 @@ normal_it_expr returns [Object v]
 
 datum_comment_line returns [Object v]
   : DATUM_COMMENTW hs
-    (is_i=it_expr | comment_eol INDENT body ) {empty_tag} ;
+    (is_i=it_expr | comment_eol INDENT body ) {empty_value} ;
 
 group_line returns [Object v]
   : (GROUP_SPLIT | scomment) hs /* Initial; Interpet as group */
       (group_i=it_expr {$group_i} /* Ignore initial GROUP/scomment */
        | comment_eol
          (INDENT g_body=body {$g_body} /* Normal GROUP use */
-          | {empty_tag} )) ;
+          | {empty_value} )) ;
 
 sublist_line returns [Object v] // "$" first on line
   : SUBLIST hs is_i=it_expr {(list1e $is_i)} ;
@@ -1548,7 +1548,7 @@ it_expr returns [Object v]
 initial_indent_expr returns [Object v]
   : (INITIAL_INDENT | separator_initial_indent) (scomment hs)*
     (n_expr {$n_expr}
-     | comment_eol {empty_tag} ) ;
+     | comment_eol {empty_value} ) ;
 
 // Production "t_expr_real" handles special cases, else it invokes it_expr.
 
@@ -1563,7 +1563,7 @@ t_expr_real returns [Object v]
 
 t_expr returns [Object v]
   : te=t_expr_real	
-      {(if (isemptytagp $te) (t_expr) $te)} ; if empty value returned, retry.
+      {(if (isemptyvaluep $te) (t_expr) $te)} ; retry if empty_value.
 </pre>
 
 <p>
