@@ -1388,8 +1388,8 @@ abbrev_no_w returns [Object v]
   | UNQUOTE         {'unquote};
 
 abbrev_all returns [Object v]
-  : abbrevw hs {$abbrevw}
-  | abbrev_no_w     {$abbrev_no_w} ;
+  : abbrevw hs   {$abbrevw}
+  | abbrev_no_w  {$abbrev_no_w} ;
 
 // Production "n_expr" is a full neoteric-expression as defined in SRFI-105.
 // n_expr does *not* consume any following horizontal space.
@@ -1402,14 +1402,12 @@ n_expr returns [Object v]
 // abbreviations cannot have an whitespace afterwards (used by "line_exprs"):
 n_expr_first returns [Object v]
   : abbrev_no_w n1=n_expr_first {(list $abbrev_no_w $n1)}
-  | n_expr_noabbrev            {$n_expr_noabbrev} ;
+  | n_expr_noabbrev             {$n_expr_noabbrev} ;
 
 // Production "scomment" (special comment) defines comments other than ";":
 sharp_bang_comments : SRFI_22_COMMENT | SHARP_BANG_FILE
                       | SHARP_BANG_DIRECTIVE ;
-scomment : BLOCK_COMMENT
-         | DATUM_COMMENT hs n_expr
-         | sharp_bang_comments ;
+scomment : BLOCK_COMMENT | DATUM_COMMENT hs n_expr | sharp_bang_comments ;
 
 // Production "comment_eol" reads an optional ;-comment (if it exists),
 // and then reads the end-of-line (EOL) sequence.  EOL processing consumes
@@ -1519,17 +1517,15 @@ group_line returns [Object v]
       (group_i=it_expr {$group_i} /* Ignore initial GROUP/scomment */
        | comment_eol
          (INDENT g_body=body {$g_body} /* Normal GROUP use */
-          | {empty_value} )) ;
+          | /*empty*/ {empty_value} )) ;
 
 sublist_line returns [Object v] // "$" first on line
   : SUBLIST hs is_i=it_expr {(list1e $is_i)} ;
 
 abbrevw_line returns [Object v]
   : abbrevw hs
-      (comment_eol INDENT ab=body
-         {(appende (list $abbrevw) $ab)}
-       | ai=it_expr
-         {(list2e $abbrevw $ai)} ) ;
+      (comment_eol INDENT ab=body {(appende (list $abbrevw) $ab)}
+       | ai=it_expr               {(list2e $abbrevw $ai)} ) ;
 
 // Production "it_expr" (indenting sweet-expression)
 // is the main production for sweet-expressions in the usual case.
