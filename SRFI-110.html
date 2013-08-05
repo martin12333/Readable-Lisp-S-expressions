@@ -1159,24 +1159,23 @@ value of the top of the indentation stack):
 <li>If an end-of-line sequence immediately follows the indentation
 and the indentation length is nonzero:
 <ol>
-<li type="a">If the indentation contains &#8220;!&#8221;, it is ignored;
-an implementation <em>MUST</em> consume the end-of-line sequence and
-start applying these rules again, from the beginning, with the next line.</li>
+<li type="a">If the indentation contains &#8220;!&#8221;, the line is ignored;
+an implementation <em>MUST</em> consume the line and
+reapply these rules to the next line.</li>
 <li type="a">If the indentation does not contain &#8220;!&#8221;,
-it is considered a line with no characters
-(thus indentation has zero length)
+the line is considered a blank line with zero-length indentation
 and the rest of these rules are applied.</li>
 </ol>
 </li>
 <li>If top is the empty string and the indentation length is nonzero,
 symbol <code>INITIAL_INDENT</code>
 is generated and the reader changes to initial indent mode.
-When an end-of-line sequence is reached
+When an end-of-line sequence is reached in initial indent mode,
 the mode changes back to indentation processing.
 </li>
-<li>If &#8220;;&#8221; immediately follows the indentation, the line is skipped
-&mdash; with the indentation completely ignored &mdash;
-and the following line is examined instead.</li>
+<li>If &#8220;;&#8221; immediately follows the indentation, the line is ignored;
+an implementation <em>MUST</em> consume the line and
+reapply these rules to the next line.</li>
 <li>If the indentation is equal to top, no extra symbol is generated.
 The BNF identifies where this will match using the
 &#8220;same&#8221; non-terminal, but
