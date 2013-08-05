@@ -1177,9 +1177,9 @@ the mode changes back to indentation processing.
 an implementation <em>MUST</em> consume the line and
 reapply these rules to the next line.</li>
 <li>If the indentation is equal to top, no extra symbol is generated.
-The BNF identifies where this will match using the
+(The BNF identifies where this will match using the
 &#8220;same&#8221; non-terminal, but
-&#8220;same&#8221; is empty.</li>
+&#8220;same&#8221; is empty.)</li>
 <li>If the indentation is longer than top, and top is a prefix of indentation,
 the indentation is pushed onto the indentation stack
 and the symbol <code>INDENT</code> is generated.</li>
