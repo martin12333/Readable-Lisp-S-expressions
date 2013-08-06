@@ -344,22 +344,22 @@ check: readable/kernel.scm my-realpath
 	            < $(srcdir)/tests/sweet-testsuite
 	@echo "About to run write-test"
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/write-test \
-             | diff -b -u - "$(srcdir)/tests/write-test-correct"
+             | diff -b -u "$(srcdir)/tests/write-test-correct" -
 	@echo "Running srfi-curly-infix, showing diffs from correct results:"
 	GUILE_LOAD_PATH="$(builddir)" guile \
 	            $(srcdir)/src/srfi-curly-infix.scm < \
 	            $(srcdir)/tests/curly-infix-testsuite2 | \
-	          diff -u - "$(srcdir)/tests/curly-infix-correct2"
+	          diff -u "$(srcdir)/tests/curly-infix-correct2" -
 	@echo "Running unsweeten, showing differences from correct results:"
-	"$(builddir)/unsweeten" < "$(srcdir)/tests/unsweeten-testsuite" | \
-	     diff -b -u - "$(srcdir)/tests/unsweeten-correct"
+	"$(builddir)/unsweeten" < "$(srcdir)/tests/unsweeten-testsuite" 2>&1 | \
+	     diff -b -u "$(srcdir)/tests/unsweeten-correct" -
 	test "`printf '\140(a b c ,d)\n' | \"$(builddir)/unsweeten\" -C`" = \
 	     '`(a b c ,d)'
 	"$(builddir)/unsweeten" -C < "$(srcdir)/tests/unsweeten-cl-testsuite" \
-             | diff -b -u - "$(srcdir)/tests/unsweeten-cl-correct"
+             | diff -b -u "$(srcdir)/tests/unsweeten-cl-correct" -
 	@echo "Running sweeten, showing differences from correct results:"
 	"$(builddir)/sweeten" < "$(srcdir)/tests/sweeten-testsuite" | \
-	     diff -u - "$(srcdir)/tests/sweeten-correct"
+	     diff -u "$(srcdir)/tests/sweeten-correct" -
 	PATH="$(builddir):$(srcdir)/tests:${PATH}" \
 	     $(srcdir)/tests/roundtrip-test $(srcdir)/tests/roundtrip-testsuite
 
