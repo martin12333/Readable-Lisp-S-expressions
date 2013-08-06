@@ -1560,7 +1560,7 @@
               ((and (eq? expr '*>) (eqv? c #\*))
                 (list 'collecting-end '()))
               ((and (eq? expr '$$$) (eqv? c #\$))
-                (read-error "Error - $$$ is reserved"))
+                (read-error "$$$ is reserved"))
               ((and (eq? expr period-symbol) (eqv? c #\.))
                 (list 'period-marker '()))
               (#t
@@ -1636,7 +1636,7 @@
         (begin
           (n-expr port)
           (hspaces port))
-        (read-error "Datum comment not followed a datum (EOL instead)")))
+        (read-error "Datum comment start not followed a datum (EOL instead)")))
     (#t (read-error "skippable: Impossible case"))))
 
   ; Utility declarations and functions
@@ -1877,7 +1877,7 @@
                       (list body-new-indent (my-append line-value body-value)))
                     (list new-indent (monify line-value)))))
             (#t
-              (read-error "Must end line with end-of-line sequence")))
+              (read-error "Unexpected text after n-expression")))
           ; line-exprs begins with something special like GROUP-SPLIT:
           (cond
             ((eq? line-stopper 'datum-commentw)
