@@ -375,7 +375,7 @@
       (progn
         (n-expr stream)
         (hspaces stream))
-      (read-error "Datum comment not followed a datum (EOL instead)")))
+      (read-error "Datum comment start not followed a datum (EOL instead)")))
   (t (read-error "skippable: Impossible case"))))
 
 ; Utility declarations and functions
@@ -632,7 +632,7 @@
                     (list body-new-indent (my-append line-value body-value)))
                   (list new-indent (monify line-value)))))
           (t
-            (read-error "Must end line with end-of-line sequence.")))
+            (read-error "Unexpected text after n-expression")))
         ; Here, line-exprs begins with something special like GROUP-SPLIT:
         (cond
           ((eq line-stopper 'datum-commentw)
