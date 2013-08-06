@@ -1971,6 +1971,8 @@
           (t-expr-real port))
         ((or (eqv? c form-feed) (eqv? c vertical-tab))
           (consume-ff-vt port)
+          (if (not (lcomment-eol? (my-peek-char port)))
+              (read-error "FF and VT must be alone on line in a sweet-expr"))
           (t-expr-real port))
         ((char-ichar? c) ; initial-indent-expr
           (accumulate-ichar port) ; consume and throw away ichars
