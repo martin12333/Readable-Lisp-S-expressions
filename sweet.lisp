@@ -726,6 +726,8 @@
             (t-expr-real stream))
           ((or (eql c form-feed) (eql c vertical-tab))
             (consume-ff-vt stream)
+            (if (not (lcomment-eolp (my-peek-char stream)))
+              (read-error "FF and VT must be alone on line in a sweet-expr"))
             (t-expr-real stream))
           ((char-icharp c) ; initial-indent-expr
             (accumulate-ichar stream) ; consume and throw away ichars
