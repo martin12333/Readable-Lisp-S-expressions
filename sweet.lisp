@@ -487,7 +487,7 @@
             (n-expr-error stream pn-full-results))
           ((eq pn-stopper 'collecting)
             (hspaces stream)
-            (let ((cl (collecling-content stream)))
+            (let ((cl (collecting-content stream)))
               (hspaces stream)
               (n-expr-error stream (list 'normal cl))))
           ((eq pn-stopper 'period-marker)
