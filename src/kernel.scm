@@ -725,6 +725,8 @@
     (display "Error: " (current-error-port))
     (display message (current-error-port))
     (newline (current-error-port))
+    ; Guile extension to flush output on stderr
+    (force-output (current-error-port))
     ; Guile extension, but many Schemes have exceptions
     (throw 'readable)
     '())
