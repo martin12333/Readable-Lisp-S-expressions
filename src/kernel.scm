@@ -1991,14 +1991,20 @@
           (t-expr port)
           te)))
 
-  ; Skip until we find a completely blank line (not even initial space/tab).
+  ; Skip until we find a line with 0 indent characters.
   ; We use this after read error to resync to good input.
-  (define (read-to-blank-line port)
-    (consume-to-eol port)
-    (consume-end-of-line port)
+  (define (read-to-unindented-line port)
     (let* ((c (my-peek-char port)))
-      (if (not (or (eof-object? c) (char-line-ending? c)))
-        (read-to-blank-line port))))
+      (cond
+        ((eof-object? c) c)
+        ((char-line-ending? c)
+          (consume-end-of-line port)
+          (if (char-ichar? (my-peek-char port))
+            (read-to-unindented-line port)))
+        (#t
+          (consume-to-eol port)
+          (consume-end-of-line port)
+          (read-to-unindented-line port)))))
 
   ; Call on sweet-expression reader - use guile's nonstandard catch/throw
   ; so that errors will force a restart.
@@ -2009,7 +2015,7 @@
 
     (catch 'readable
       (lambda () (t-expr port))
-      (lambda (key . args) (read-to-blank-line port) (t-expr-catch port))))
+      (lambda (key . args) (read-to-unindented-line port) (t-expr-catch port))))
 
 ; -----------------------------------------------------------------------------
 ; Write routines
