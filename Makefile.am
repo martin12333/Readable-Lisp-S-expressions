@@ -387,5 +387,23 @@ srfi_110_fileset = SRFI-110.html sweet.g src/kernel.scm output/scheme/Pair.java
 
 110: 110.tar.gz
 
-.PHONY: push pull test 110
+
+# The following creates an "rpm" package, using an rpm spec file.
+# It focuses on Fedora, but it should be a good starting point for
+# other packages.  If you package for Fedora, be sure to set up your system:
+# - yum install @development-tools
+# - yum install fedora-packager
+# For more information on RPM and Fedora, see:
+# - http://fedoraproject.org/wiki/How_to_create_an_RPM_package
+# - http://fedoraproject.org/wiki/Packaging:Guidelines
+# Note that the results will be in "~/rpmbuild/RPMS/".
+
+SPECFILE = readable.spec
+EXTRA_DIST += $(SPECFILE)
+
+rpm:
+	rpmbuild -ba $(SPECFILE)
+	-rpmlint $(SPECFILE)
+
+.PHONY: push pull test 110 rpm
 
