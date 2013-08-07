@@ -1,16 +1,17 @@
 #!/bin/sh
-# sweet-clisp [FILE [args]]
+# sweet-clisp [clisp-options] [FILE-TO-RUN.slisp [args]]
 
 # By David A. Wheeler. Start up clisp in "sweet-expression" reading mode,
-# so you can try it out.  Setting *print-escape* isn't ideal, but
+# so you can try it out.  A useful "clisp-option" is "-modern".
+# This sets *print-escape*; this isn't ideal, but
 # in most circumstances it works well, and clisp has no better way
-# of disabling unnecessary escapes.
+# of disabling its unnecessary escapes which otherwise look ugly.
 
-# If you want to use local un-installed file, cd to dir with .slisp files and:
+# If you want to use un-installed sweet-expression implementation, you
+# need to set CL_SOURCE_REGISTRY to point to it.  E.G.:
 #    CL_SOURCE_REGISTRY="$PWD" ./sweet-clisp ...
-# you can also replace "$PWD" with the readable .lisp files' directory.
 
-clisp_options="-modern"
+clisp_options=""
 
 setup_commands='
 (require "asdf")
@@ -18,6 +19,22 @@ setup_commands='
 (setq *print-escape* nil)
 (readable:enable-sweet)
 '
+
+while [ $# -gt 0 ]
+do
+  case "$1" in
+    (-B|-K|-M|-m|-L|-N|-p|-lp|-i|-c|-o|-x)
+      # Options with parameters.
+      clisp_options="$clisp_options $1 $2"
+      shift ; shift ;;
+    (-*)
+      # Options without parameters, e.g., "-modern".
+      clisp_options="$clisp_options $1"
+      shift ;;
+    (*)
+      break 2 ;;
+  esac
+done
 
 if [ $# -gt 0 ] ; then
 
