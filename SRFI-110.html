@@ -203,7 +203,7 @@ define fibfast(n)   ; Typical function notation
   <li><a href="#singleton">Singleton expression represents itself</a></li>
   <li><a href="#sweet">The #!sweet directive</a></li>
   <li><a href="#grouping-and-splitting">Grouping and splitting (\\)</a></li>
-  <li><a href="#initial-group-mean-nothing">Why does initial \\ mean nothing if there are datums afterwards on the same line?</a></li>
+  <li><a href="#initial-group-means-nothing">Why does initial \\ mean nothing if there are datums afterwards on the same line?</a></li>
   <li><a href="#traditional-abbreviations">Traditional abbreviations</a></li>
   <li><a href="#sublist">Sublist ($)</a></li>
   <li><a href="#single-item-sublist">Why is <code>a $ b</code> equivalent to <code>(a b)</code> rather than <code>(a (b))</code>?</a></li>
@@ -427,7 +427,8 @@ a <i>child</i> line, and the previous line is a <i>parent</i> to that child.
 Later lines with the same indentation as the child are also children
 of that parent, until there is an intervening line with the parent&#8217;s
 indentation or less.
-A line with only one n-expression, and no child lines, represents itself.
+<a href="#singleton">A line with only one n-expression,
+and no child lines, represents itself</a>.
 Otherwise, the line represents a list; each n-expression on the line
 is an element of the list, and each of its child lines represents
 an element of the list (in order).
@@ -707,7 +708,9 @@ The
 <a href="#grouping-and-splitting">marker <code>\\</code>
 is specially interpreted</a>.
 If no n-expressions precede it on the line, it is called GROUP,
-and it represents no symbol at all located at that indentation.
+and it represents
+<a href="#initial-group-means-nothing">
+no symbol at all located at that indentation</a>.
 GROUP is useful for representing lists of lists.
 If there are any preceding n-expressions on the line,
 it is called SPLIT, and it is interpreted as
@@ -838,7 +841,7 @@ e f $ g
 </td>
 <td align="left" valign="top">
 <pre>
-(e f g) ; Not (e f (g))
+(e f g) ; <a href="#single-item-sublist">Not (e f (g))</a>
 </pre>
 </td>
 </tr>
@@ -1022,8 +1025,8 @@ always means the symbol <code>$</code>, not the special marker.
 <h2><a name="tutorial-implementation">Getting an implementation</a></h2>
 
 <p>
-Your Scheme implementation may already provide these capabilities
-if you simply enter the
+Your Scheme implementation may already provide these capabilities if you
+simply enter the
 <a href="#sweet"><code>#!sweet</code></a> directive first.
 If your preferred Scheme implementation does not yet support
 sweet-expressions, encourage or help them to add it.
@@ -4040,7 +4043,7 @@ reduced the number of different symbols that users needed to escape.</p>
 it (group group); the {} escape mechanism is more regular, and
 makes it far more obvious that some special escape is going on.</p>
 
-<h3 id="initial-group-mean-nothing">Why does initial \\ mean nothing
+<h3 id="initial-group-means-nothing">Why does initial \\ mean nothing
 if there are datums afterwards on the same line?</h3>
 <p>Since &#8220;let&#8221; occurs in many programs,
 it would have been possible to define \\ to allow this:</p>
