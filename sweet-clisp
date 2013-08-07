@@ -1,5 +1,5 @@
 #!/bin/sh
-# sweet-clisp [FILE]
+# sweet-clisp [FILE [args]]
 
 # By David A. Wheeler. Start up clisp in "sweet-expression" reading mode,
 # so you can try it out.  Setting *print-escape* isn't ideal, but
@@ -10,32 +10,32 @@
 #    CL_SOURCE_REGISTRY="$PWD" ./sweet-clisp ...
 # you can also replace "$PWD" with the readable .lisp files' directory.
 
+clisp_options="-modern"
+
+setup_commands='
+(require "asdf")
+(asdf:load-system :readable)
+(setq *print-escape* nil)
+(readable:enable-sweet)
+'
+
 if [ $# -gt 0 ] ; then
 
   origfile="$1"
   shift
 
   commandfile="$(mktemp)"
-  cat > "$commandfile" << COMMAND_SET
-(require "asdf")
-(asdf:load-system :readable)
-(setq *print-escape* nil)
-(readable:enable-sweet)
-COMMAND_SET
+  printf "$setup_commands" > "$commandfile"
   cat -- "$origfile" >> "$commandfile"
 
-  clisp --quiet --quiet -modern "$commandfile"
+  clisp --quiet --quiet $clisp_options "$commandfile" "$@"
 
   # Clean up.
   rm -fr "$commandfile"
 
 else
 
-  clisp -x '(require "asdf")
-(asdf:load-system :readable)
-(setq *print-escape* nil)
-(readable:enable-sweet)
-' -repl
+  clisp $clisp_options -x "$setup_commands" -repl
 
 fi
 
