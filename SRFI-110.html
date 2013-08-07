@@ -160,6 +160,8 @@ define fibfast(n)   ; Typical function notation
 <li><a href="#specification">Specification</a>
   <ul>
   <li><a href="#bnf-conventions">BNF conventions</a></li>
+  <li><a href="#spec-advanced-features">Advanced features</a></li>
+  <li><a href="#spec-line-and-indentation">Line and indentation handling</a></li>
   <li><a href="#bnf-utility">Utility procedures used in the BNF</a></li>
   <li><a href="#bnf-supporting">Supporting BNF definitions</a></li>
   <li><a href="#bnf-key">Key BNF productions</a></li>
@@ -1067,6 +1069,8 @@ document are to be interpreted as described in
 <p>
 The following subsections provide the
 <a href="#bnf-conventions">Backus-Naur Form (BNF) conventions</a>,
+<a href="#spec-advanced-features">Advanced features</a>,
+<a href="#spec-line-and-indentation">Line and indentation handling</a>,
 <a href="#bnf-utility">utility procedures used in the BNF</a>,
 <a href="#bnf-supporting">supporting definitions in BNF format</a>,
 <a href="#bnf-key">key productions in BNF format</a>,
@@ -1109,7 +1113,45 @@ The non-terminal <code>error</code> indicates where an implementation
 </p>
 
 <p>
-Here are some basic definitions in ANTLR version 3 format:
+The production &#8220;<tt>n_expr</tt>&#8221; is a neoteric-expression
+as defined in
+<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
+Thus <samp>{a&nbsp;+&nbsp;b}</samp> maps to <samp>(+&nbsp;a&nbsp;b)</samp>,
+<samp>f(...)</samp> maps to <samp>(f&nbsp;...)</samp>, and
+<samp>f{...}</samp> with content other than whitespace
+maps to <samp>(f&nbsp;{...})</samp>.
+The production &#8220;<tt>n_expr_first</tt>&#8221;
+matches a neoteric-expression
+that either has no leading abbreviations
+(&#8220;<tt>&#39;</tt>&#8221;,  <!-- ' -->
+&#8220;<tt>&#96;</tt>&#8221;,   <!-- ` -->
+&#8220;<tt>,</tt>&#8221;,
+&#8220;<tt>,@</tt>&#8221;, or
+the syntax-case related abbreviations as defined below),
+or its leading abbreviation does not have a tab, space, linefeed,
+or carriage return immediately after it.
+The productions <tt>n_expr</tt> and <tt>n_expr_first</tt> <em>MUST NOT</em>
+match a comment (e.g., block comments or datum comments), though
+they may contain comments (e.g., <tt>a(#|x|# b)</tt>).
+The productions <tt>n_expr</tt> and <tt>n_expr_first</tt> <em>MUST NOT</em>
+consume trailing whitespace.
+</p>
+
+
+<h2 id="spec-line-and-indentation">Line and indentation handling</h2>
+
+<p>
+A sweet-expression reader <em>MUST</em>
+support three modes: indentation processing, enclosed, and initial indent.
+A sweet-expression reader <em>MUST</em> start
+in indentation processing mode before it begins to read a sweet-expression.
+The reader <em>MUST</em> temporarily switch
+to enclosed mode when it is reading inside
+any unescaped pairs of parentheses, brackets, or curly braces.
+</p>
+
+<p>
+Given these definitions (in ANTLR version 3 format):
 </p>
 
 <pre>
@@ -1136,21 +1178,10 @@ a terminating eol sequence.</li>
 </p>
 
 <p>
-A sweet-expression reader <em>MUST</em>
-support three modes: indentation processing, enclosed, and initial indent.
-A sweet-expression reader <em>MUST</em> start
-in indentation processing mode before it begins to read a sweet-expression.
-The reader <em>MUST</em> temporarily switch
-to enclosed mode when it is reading inside
-any unescaped pairs of parentheses, brackets, or curly braces.
-</p>
-
-<p>
 The indentation of a line is the set of all 0+ indent characters
 (INDENT_CHARs) at the beginning of a line.
-Indentation is not directly represented in the following syntax definition.
-Instead, a sweet-expression reader <em>MUST</em> act as if it preprocessed
-its input.
+Indentation is represented in the BNF syntax definition below as if
+the sweet-expression reader preprocessed its input as follows.
 First, when the sweet-expression reader begins,
 a stack called the &#8220;indentation stack&#8221;
 is initialized to contain exactly one value, the empty string
@@ -1202,6 +1233,8 @@ If no match is found, it is an error.</li>
 <li>Otherwise, it is an error.</li>
 </ol>
 
+<h2 id="spec-advanced-features">Advanced features</h2>
+
 <p>
 Markers <em>MUST</em> be recognized if and only if
 the reader is in indentation processing mode,
@@ -1214,7 +1247,7 @@ The markers are:
 
 <pre>
 GROUP_SPLIT    : '\\\\' ;        // This is "\\"
-SUBLIST        : '$' ;
+SUBLIST        : '$' ;           // RHS (incl. children) is last datum of LHS
 COLLECTING     : '&lt;*' ;          // Start collecting list
 COLLECTING_END : '*&gt;' ;          // End collecting list
 RESERVED_TRIPLE_DOLLAR : '$$$' ; // Reserved for future use
@@ -1268,30 +1301,6 @@ then the reader <em>SHOULD</em>
 treat those syntax-case abbreviations when whitespace-terminated
 in the same manner.
 A sweet-expression reader <em>MAY</em> implement additional abbreviations.
-</p>
-
-<p>
-The production &#8220;<tt>n_expr</tt>&#8221; is a neoteric-expression
-as defined in
-<a href="http://srfi.schemers.org/srfi-105/">SRFI-105</a>.
-Thus <samp>{a&nbsp;+&nbsp;b}</samp> maps to <samp>(+&nbsp;a&nbsp;b)</samp>,
-<samp>f(...)</samp> maps to <samp>(f&nbsp;...)</samp>, and
-<samp>f{...}</samp> with content other than whitespace
-maps to <samp>(f&nbsp;{...})</samp>.
-The production &#8220;<tt>n_expr_first</tt>&#8221;
-matches a neoteric-expression
-that either has no leading abbreviations
-(&#8220;<tt>&#39;</tt>&#8221;,  <!-- ' -->
-&#8220;<tt>&#96;</tt>&#8221;,   <!-- ` -->
-&#8220;<tt>,</tt>&#8221;,
-&#8220;<tt>,@</tt>&#8221;, or
-the syntax-case related abbreviations)
-or its leading abbreviation does not have whitespace immediately after it.
-The productions <tt>n_expr</tt> and <tt>n_expr_first</tt> <em>MUST NOT</em>
-match a comment (e.g., block comments or datum comments), though
-they may contain comments (e.g., <tt>a(#|x|# b)</tt>).
-The productions <tt>n_expr</tt> and <tt>n_expr_first</tt> <em>MUST NOT</em>
-consume trailing whitespace.
 </p>
 
 
