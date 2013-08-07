@@ -67,10 +67,6 @@ dist_common_lisp_source_pkg_DATA = \
 
 dist_common_lisp_source_pkg_DATA += $(pkg_asd_file)
 
-# For now, install sweet-clisp specially, because it cannot currently
-# be "installed" and work as expected... but it's still useful for testing.
-# EXTRA_DIST += sweet-clisp
-
 # Trivial example of a Common Lisp program.
 EXTRA_DIST += factorial.lisp
 
