@@ -70,6 +70,9 @@ dist_common_lisp_source_pkg_DATA += $(pkg_asd_file)
 # Trivial example of a Common Lisp program.
 EXTRA_DIST += factorial.lisp
 
+# Trivial example of a Common Lisp .slisp program.
+EXTRA_DIST += factorial.slisp
+
 # Install symlink so asdf can find these files. See:
 # http://www.gnu.org/software/automake/manual/html_node/Extending.html
 # We first try to "rm" the symlink, in case it already exists.

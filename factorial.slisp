@@ -1,0 +1,14 @@
+; This is a trivial demo of sweet-expressions in Common Lisp.  Run as:
+;    sweet-clisp f.slisp
+; To run the NOT installed readable version, run as:
+;    CL_SOURCE_REGISTRY="$PWD" ./sweet-clisp f.slisp
+
+
+defun fact (x)
+  if {x < 1}
+    1
+    {x * fact{x - 1}}
+
+format t "Demo factorial of 5 using sweet-expressions:~%"
+princ fact(5)
+
