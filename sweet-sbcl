@@ -1,24 +1,13 @@
 #!/bin/sh
+# Start up sbcl in "sweet-expression" mode.
+# sweet-sbcl [sbcl-options]
 
-# By David A. Wheeler. Start up clisp in "sweet-expression" reading mode,
-# so you can try it out.
+# To run an UNINSTALLED readable library, do this:
+#    CL_SOURCE_REGISTRY="$PWD" ./sweet-sbcl
+# You can run scripts, e.g.:
+#    CL_SOURCE_REGISTRY="$PWD" ./sweet-sbcl --script FILE.slisp
 
-(
-cat << COMMAND_SET
-(require "asdf")
-(asdf:load-system :readable)
-(readable:enable-sweet)
-COMMAND_SET
-
-if which stdbuf > /dev/null 2> /dev/null ; then
-  stdbuf -oL cat "$@"
-else
-  cat "$@"
-fi
-
-printf "\n\n"  # Ensure it ends on newlines.
-) | \
- CL_SOURCE_REGISTRY="$PWD" "sbcl"
-
-# -lp "$PWD"
+sbcl --eval '(require "asdf")' \
+     --eval '(asdf:load-system :readable)' \
+     --eval '(readable:enable-sweet)' "$@"
 
