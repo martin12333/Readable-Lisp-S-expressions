@@ -25,6 +25,9 @@ do
   case "$1" in
     (-)            # File is standard input.
       break 2 ;;
+    (--)
+      shift
+      break 2 ;;
     (-B|-K|-M|-m|-L|-N|-p|-lp|-i|-c|-o|-x)
       # Options with parameters.
       clisp_options="$clisp_options $1 $2"
