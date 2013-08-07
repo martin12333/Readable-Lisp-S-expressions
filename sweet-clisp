@@ -31,15 +31,11 @@ COMMAND_SET
 
 else
 
-  expect -c "
-    spawn -noecho clisp --quiet --quiet -modern
-    send \"
-      (require \\\"asdf\\\")
-      (asdf:load-system :readable)
-      (setq *print-escape* nil)
-      (readable:enable-sweet)\n\n\"
-    interact
- "
+  clisp -x '(require "asdf")
+(asdf:load-system :readable)
+(setq *print-escape* nil)
+(readable:enable-sweet)
+' -repl
 
 fi
 
