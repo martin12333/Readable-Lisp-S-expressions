@@ -480,7 +480,7 @@ define patch-datum-label-tail(number replace position skip)
         !   cdr position
         !   new-skip
       vector?(position)
-        do (len(vector-length(position)) k(0 {k + 1}))
+        do <* len vector-length(position) \\ k 0 {k + 1} *>
         ! {k >= len} values()
         ! let <* x $ vector-ref position k *>
         !   if is-matching-label-tag?(number x)
