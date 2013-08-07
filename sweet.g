@@ -1262,8 +1262,8 @@ initial_indent_expr returns [Object v]
 // INCLUDE IN SRFI
 
 t_expr_real returns [Object v]
-  : comment_eol    r1=t_expr_real {$v=$r1.v;} // Skip initial blank lines
-  | (FF | VT)+ EOL r2=t_expr_real {$v=$r2.v;} // Skip initial FF|VT lines
+  : comment_eol    retry1=t_expr_real {$v=$retry1.v;} // Skip initial blank lines
+  | (FF | VT)+ EOL retry2=t_expr_real {$v=$retry2.v;} // Skip initial FF|VT lines
   | EOF                           {generate_eof();} // End of file
   | initial_indent_expr           {$v=$initial_indent_expr.v;}
   | i=it_expr                     {$v=$i.v;} /* Normal case */ ;

@@ -1542,8 +1542,8 @@ initial_indent_expr
 // Production "t_expr_real" handles special cases, else it invokes it_expr.
 
 t_expr_real
-  : comment_eol    r1=t_expr_real {$r1} // Skip initial blank lines
-  | (FF | VT)+ EOL r2=t_expr_real {$r2} // Skip initial FF|VT lines
+  : comment_eol    retry1=t_expr_real {$retry1} // Skip initial blank lines
+  | (FF | VT)+ EOL retry2=t_expr_real {$retry2} // Skip initial FF|VT lines
   | EOF                           {(generate_eof)} // End of file
   | initial_indent_expr           {$initial_indent_expr}
   | i=it_expr                     {$i} /* Normal case */ ;
