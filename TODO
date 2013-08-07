@@ -1,8 +1,9 @@
 
-* Common Lisp - fix adjacent initial-indent
+* sweet-clisp - fix adjacent initial-indent when used interactively:
    1 2 3
    4 5 6
-  Currently 5 and 6 not returned
+  Currently 5 and 6 not returned.
+  Yet it DOES work if you put these in a file (.lisp or .slisp).
 
 * eval-when: Do we need it?  When? Can we embed it?
   (Need to test with sbcl)
