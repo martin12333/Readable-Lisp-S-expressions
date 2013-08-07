@@ -105,6 +105,9 @@ foo1    foo2
 ; Errors
 a(b)WRONG
 
+
+#\NOT-A-VALID-CHARNAME
+
 *>
 
 x #;

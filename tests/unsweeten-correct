@@ -129,6 +129,7 @@ b4
 
 ; Errors
 Error: Unexpected text after n-expression
+Error: Invalid character name
 Error: Closing *> without preceding matching <*
 Error: Datum comment start not followed a datum (EOL instead)
 Error: #;+EOL must be followed by indent
