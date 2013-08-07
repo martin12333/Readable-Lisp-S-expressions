@@ -195,7 +195,6 @@ define fibfast(n)   ; Typical function notation
   <li><a href="#child-is-child">Child lines producing an empty value are still child lines</a></li>
   <li><a href="#eol">End-of-line (EOL) handling</a></li>
   <li><a href="#eof">End-of-file (EOF) handling</a></li>
-  <li><a href="#semicolon">Special semicolon values for an unsweetener</a></li>
   </ul>
   </li>
   <li><a href="#specific-constructs">Other specific sweet-expression constructs</a>
@@ -1692,28 +1691,6 @@ guarantee neither.
 
 
 <h2><a name="related-tools">Related tools</a></h2>
-
-<p>
-Implementations <em>MAY</em> provide a tool,
-called an &#8220;unsweetener&#8221;,
-that reads sweet-expressions and writes out s-expressions.
-An unsweetener <em>SHOULD</em> specially treat
-lines that begin with a semicolon
-when they are not currently reading an expression (e.g., no expression has
-been read, or the last expression read has been completed with a blank line).
-Such a tool <em>SHOULD</em>
-(when outside an expression) copy exactly
-any line beginning with semicolon followed by a whitespace or semicolon.
-Such a tool <em>SHOULD</em>
-(when outside an expression) also
-copy lines beginning with &#8220;;#&#8221; or &#8220;;!&#8221;
-without the leading semicolon,
-and copy lines beginning with &#8220;;_&#8221;
-without either of those first two characters.
-Application authors <em>SHOULD</em>
-follow a semicolon in the first column with a whitespace character
-or semicolon if they mean for it to be a comment.
-</p>
 
 <p>
 A program editor <em>MAY</em> consider highlighting
@@ -3813,56 +3790,6 @@ non-empty files that end without
 a preceding end-of-line sequence.
 </p>
 
-
-<h3 id="semicolon">Special semicolon values for an unsweetener</h3>
-
-<p>
-As described in the specification,
-a tool (called an &#8220;unsweetener&#8221;)
-that reads sweet-expressions and writes out
-s-expressions <em>SHOULD</em> specially treat certain lines
-that begin with semicolons.
-</p>
-
-<p>
-The initial-semicolon rules for &#8220;;&#8221; followed by space or semicolon
-are given so that some comments - particularly
-the ones about major new components -
-are likely to be included in a translation from sweet-expressions to
-s-expressions (namely, any comments that precede an expression).
-This can greatly simplify examining the generated s-expression.
-The rules about &#8220;;#&#8221;, &#8220;;!&#8221;, and &#8220;;_&#8221;
-make it easier to write shell scripts and similar constructs
-with embedded sweet-expressions; these
-lines can invoke some Scheme interpreter, possibly via a shell.
-</p>
-
-<p>
-This text is limited to only apply to lines outside of any sweet-expression.
-This is intentional, because this makes it easy to implement
-an unsweetener on top of an existing existing sweet-expression reader.
-The top-level unsweetener
-tool can simply see if a line begins with semicolon, and if
-it does, handle it specially;
-if it starts with an end-of-line, it can just copy it, and
-if a line starts with any other character it can call the sweet-expression
-reader to handle it.
-There is no requirement to copy block comments, or comments inside
-a sweet-expression datum, because this would be much more complicated to do;
-handling block comments is non-trivial functionality that a sweet-expression
-reader must perform, and there is no standard way to return comments
-inside a datum.
-Semicolon comments immediately after a datum need not be copied or
-processed specially, because a sweet-expression reader
-has to consume them to see if it&#8217;s reached the end of the datum.
-A Scheme implementation with unlimited unread could do more with relative ease,
-but since many Scheme implementations do not have unlimited unread, these
-limitations make implementation of such tools much simpler.
-</p>
-
-<p>
-These rules are based on the <i>unsweeten</i> tool.
-</p>
 
 <h2 id="specific-constructs">Other specific sweet-expression constructs</h2>
 <p>
