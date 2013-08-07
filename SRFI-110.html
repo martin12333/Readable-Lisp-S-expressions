@@ -1101,7 +1101,9 @@ A sweet-expression reader <em>MUST</em> implement the productions
 below unless otherwise noted.
 The BNF is an LL(1) grammar, written using
 <a href="http://www.antlr3.org/">ANTLR version 3</a>.
-The action rules inside {...} are in Scheme syntax.
+However, the action rules inside {...} are in Scheme syntax, and
+value-producing productions omit the text
+"returns [Object v]".
 You can also separately view the
 <a href="sweet.g">full ANTLR BNF definition of sweet-expressions
 with Java action rules</a>, along with a support Java class
@@ -1394,7 +1396,7 @@ hs      : (options {greedy=true} : hspace)* ;
 separator_initial_indent: hspace+ ;
 
 // Production "abbrevw" is an abbreviation with a following whitespace:
-abbrevw returns [Object v]
+abbrevw
   : QUOTEW          {'quote}
   | QUASIQUOTEW     {'quasiquote}
   | UNQUOTE_SPLICEW {'unquote-splicing}
@@ -1424,18 +1426,18 @@ Here are the key BNF productions for sweet-expressions:
 // Postcondition: Consumed the matching COLLECTING_END.
 // FF = formfeed (\f aka \u000c), VT = vertical tab (\v aka \u000b)
 
-collecting_content returns [Object v]
+collecting_content
   : it_expr more=collecting_content {(conse $it_expr $more)}
   | comment_eol    retry1=collecting_content {$retry1}
   | (FF | VT)+ EOL retry2=collecting_content {$retry2}
   | COLLECTING_END {'()} ;
 
-collecting_list returns [Object v]
+collecting_list
   : COLLECTING hs cc=collecting_content hs {$cc} ;
 
 // Process line after ". hspace+" sequence.  Does not go past current line.
 
-post_period returns [Object v]
+post_period
   : skippable retry=post_period {$retry}
     | pn=n_expr hs skippable* (n_expr error)? {$pn}
     | cl=collecting_list skippable* (n_expr error)? {$cl}
@@ -1447,7 +1449,7 @@ post_period returns [Object v]
 // Precondition: At beginning of line after indent
 // Postcondition: At unconsumed EOL
 
-line_exprs returns [Object v]
+line_exprs
   : PERIOD /* Leading ".": escape following datum like an n-expression. */
       (hspace+ pp=post_period {(list $pp)}
        | /*empty*/    {(list '.)} )
@@ -1464,7 +1466,7 @@ line_exprs returns [Object v]
 // Precondition: At beginning of non-first expression on line (past hspace)
 // Postcondition: At unconsumed EOL
 
-rest_of_line returns [Object v]
+rest_of_line
   : PERIOD hspace+ pp=post_period {$pp} /* Improper list */
   | skippable (retry=rest_of_line {$retry} | /*empty*/ {'()})
   | cl=collecting_list
@@ -1479,7 +1481,7 @@ rest_of_line returns [Object v]
 // (e.g., after "line_expr"), each of which is itself an it_expr.
 // It returns the list of expressions in the body.
 
-body returns [Object v]
+body
   : i=it_expr
      (same
        ( {(isperiodp $i)}? =&gt;   f=it_expr DEDENT {$f} // Improper list
@@ -1489,7 +1491,7 @@ body returns [Object v]
 
 // Production "normal_it_expr" is an it_expr without a special prefix.
 
-normal_it_expr returns [Object v] 
+normal_it_expr
   : line_exprs (
      GROUP_SPLIT hs {(monify $line_exprs)} // split
      | SUBLIST hs sub_i=it_expr {(appende $line_exprs (list1e $sub_i))}
@@ -1499,21 +1501,21 @@ normal_it_expr returns [Object v]
 
 // These are it_expr's with a special prefix like \\ or $:
 
-datum_comment_line returns [Object v]
+datum_comment_line
   : DATUM_COMMENTW hs
     (is_i=it_expr | comment_eol INDENT body ) {empty_value} ;
 
-group_line returns [Object v]
+group_line
   : (GROUP_SPLIT | scomment) hs /* Initial; Interpet as group */
       (group_i=it_expr {$group_i} /* Ignore initial GROUP/scomment */
        | comment_eol
          (INDENT g_body=body {$g_body} /* Normal GROUP use */
           | /*empty*/ {empty_value} )) ;
 
-sublist_line returns [Object v] // "$" first on line
+sublist_line // "$" first on line
   : SUBLIST hs is_i=it_expr {(list1e $is_i)} ;
 
-abbrevw_line returns [Object v]
+abbrevw_line
   : abbrevw hs
       (comment_eol INDENT ab=body {(appende (list $abbrevw) $ab)}
        | ai=it_expr               {(list2e $abbrevw $ai)} ) ;
@@ -1523,7 +1525,7 @@ abbrevw_line returns [Object v]
 // Precondition: At beginning of line after indent, NOT at an EOL char
 // Postcondition: it-expr ended by consuming EOL + examining indent
 
-it_expr returns [Object v]
+it_expr
   : normal_it_expr     {$normal_it_expr}
   | datum_comment_line {$datum_comment_line}
   | group_line         {$group_line}
@@ -1532,14 +1534,14 @@ it_expr returns [Object v]
 
 // Production "initial_indent_expr" is for an expression starting with indent.
 
-initial_indent_expr returns [Object v]
+initial_indent_expr
   : (INITIAL_INDENT | separator_initial_indent) (scomment hs)*
     (n_expr {$n_expr}
      | comment_eol {empty_value} ) ;
 
 // Production "t_expr_real" handles special cases, else it invokes it_expr.
 
-t_expr_real returns [Object v]
+t_expr_real
   : comment_eol    r1=t_expr_real {$r1} // Skip initial blank lines
   | (FF | VT)+ EOL r2=t_expr_real {$r2} // Skip initial FF|VT lines
   | EOF                           {(generate_eof)} // End of file
@@ -1548,7 +1550,7 @@ t_expr_real returns [Object v]
 
 // Production "t_expr" is the top-level production for sweet-expressions.
 
-t_expr returns [Object v]
+t_expr
   : te=t_expr_real	
       {(if (isemptyvaluep $te) (t_expr) $te)} ; retry if empty_value.
 </pre>
@@ -4925,7 +4927,7 @@ have a draft BNF construction that would do that:
 </p>
 <pre>
 ...
-it_expr returns [Object v]
+it_expr
   : head
     (options {greedy=true;} : (
      GROUP_SPLIT hspace* /* Not initial; interpret as split */
@@ -6775,7 +6777,7 @@ DEDENT RE_INDENT body...
 The BNF was then changed so that SUBLIST allowed more constructs:
 </p>
 <pre>
-it_expr returns [Object v]
+it_expr
   : head
     ...
      | SUBLIST hspace* /* head SUBLIST ... case */

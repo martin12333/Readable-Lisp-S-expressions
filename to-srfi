@@ -52,6 +52,8 @@ while (<>) {
     s/{greedy=false}/{greedy=false;}/g;
   }
 
+  s/ returns \[Object v\]//;
+
   s/\&/&amp;/g;
   s/</&lt;/g;
   s/>/&gt;/g;
