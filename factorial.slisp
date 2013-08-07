@@ -1,7 +1,7 @@
 ; This is a trivial demo of sweet-expressions in Common Lisp.  Run as:
-;    sweet-clisp f.slisp
+;    sweet-clisp factorial.slisp
 ; To run the NOT installed readable version, run as:
-;    CL_SOURCE_REGISTRY="$PWD" ./sweet-clisp f.slisp
+;    CL_SOURCE_REGISTRY="$PWD" ./sweet-clisp factorial.slisp
 
 
 defun fact (x)
