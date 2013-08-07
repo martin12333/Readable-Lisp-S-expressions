@@ -4923,21 +4923,20 @@ as a line continuation; we even
 have a draft BNF construction that would do that:
 </p>
 <pre>
-...
-it_expr
-  : head
-    (options {greedy=true;} : (
-     GROUP_SPLIT hspace* /* Not initial; interpret as split */
+normal_it_expr
+  : line_exprs (
+     GROUP_SPLIT hs
       (options {greedy=true;} :
-        // To allow \\ EOL as line-continuation, instead do:
-        //   comment_eol same more=it_expr {$v = (append $head $more)}
-        comment_eol error
+       comment_eol same more=it_expr {$v = appende($line_exprs.v, $more.v);}
+       | /*empty*/ {$v = monify($line_exprs.v);} )
+    ...
 </pre>
 
 <p>
 However,
 we&#8217;ve tried to <i>minimize</i> the number of mechanisms in the notation,
-and there didn&#8217;t seem to be a strong use case for line continutations.
+and there didn&#8217;t seem to be a strong use case for line continuations
+for Scheme.
 If the sub-components have structure you can just use
 indentation as intended,
 and if it&#8217;s just a long list of items, using
@@ -4945,7 +4944,8 @@ parentheses to surround a list works just fine.
 There were also concerns by some
 that &#8220;\\&#8221; at the end of a line would be confusing.
 It would be easy to add &#8220;\\&#8221; as a line continuation in some future
-version if it proves to be necessary.
+version if it proves to be necessary, and implementations could
+choose to add it as an extension.
 </p>
 
 <h2 id="comparisons">Comparisons to other notations</h2>
