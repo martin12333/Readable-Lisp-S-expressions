@@ -1561,19 +1561,42 @@ terminate a collecting list.
 <h2 id="other-requirements">Other requirements</h2>
 
 <p>
-An implementation of this SRFI <em>MUST</em> accept
-a line beginning with the un-indented
-directive <code>#!sweet</code> followed by a newline
-in its standard datum readers (e.g., <code>read</code> and, if applicable,
-the default implementation REPL).
-An implementation <em>MAY</em> signal an error if this directive is not
-at the beginning of a line or cannot terminate all sweet-expressions
-(e.g., because it is inside parentheses or a collecting list).
-After reading this directive, the reader <em>MUST</em> accept
-sweet-expressions in subsequent datums read from the same port,
+A <code>#!sweet</code> directive is valid if it begins
+at the beginning of a line, is terminated by an end of line, and is
+not contained inside an expression
+(e.g., inside parentheses or a collecting list).
+Portable Scheme applications <em>SHOULD</em> include a valid
+<code>#!sweet</code> directive before using sweet-expressions.
+Portable applications <em>SHOULD NOT</em>
+use this directive as the very first characters of a file
+because they might be misinterpreted on some platforms
+as an executable script header;
+preceding this directive with an end of line avoids this problem.
+Scheme applications
+<em>MUST NOT</em> include an non-valid <code>#!sweet</code> directive.
+A sweet-expression reader (native or not)
+<em>MUST</em> accept and ignore the <code>#!sweet</code> directive
+once sweet-expression reading is active.
+</p>
+
+<p>
+The standard datum readers are <code>read</code>,
+the code that implements <code>load</code>,
+and if applicable, the default implementation REPL.
+Implementations of this SRFI <em>MAY</em>
+implement sweet-expressions in their standard datum readers by default,
+even when the <code>#!sweet</code> directive is not (yet) received.
+</p>
+
+<p>
+An implementation of this SRFI may claim to
+be a <em>native</em> implementation.
+To be a native implementation of this SRFI, an implementation
+<em>MUST</em> accept, in its standard datum readers,
+a valid <code>#!sweet</code> directive.
+After reading this directive, that reader <em>MUST</em> accept
+sweet-expressions in subsequent datums read from the same port
 until some other conflicting directive is given.
-Once a sweet-expression reader is enabled,
-the <code>#!sweet</code> directive <em>MUST</em> be accepted and ignored.
 </p>
 
 <p>
@@ -1637,24 +1660,10 @@ directly read using a sweet-expression reader.
 </p>
 
 <p>
-Implementations of this SRFI <em>MAY</em>
-implement sweet-expressions in their datum readers by default,
-even when the <code>#!sweet</code> directive is not (yet) received.
-Portable Scheme applications <em>SHOULD</em> include the <code>#!sweet</code>
-directive before using sweet-expressions, typically near the top of a file.
-Portable applications <em>SHOULD NOT</em>
-use this directive as the very first characters of a file
-because they might be misinterpreted on some platforms
-as an executable script header; preceding this directive with a newline
-avoids this problem.
-</p>
-
-<p>
-Implementations <em>MAY</em> provide the procedures
+Implementations <em>MUST</em> provide the procedures
 <var>sweet-read</var> as a sweet-expression reader and/or
 <var>neoteric-read</var> as a neoteric-expression reader.
-If provided, these procedures
-<em>SHOULD</em> support an optional port parameter.
+These procedures <em>MUST</em> support an optional port parameter.
 </p>
 
 <p>
@@ -1669,8 +1678,8 @@ when writing portable Scheme programs using sweet-expressions.
 Implementations <em>MUST</em> provide the procedures
 <var>curly-write</var> and <var>neoteric-write</var>
 as writers that can write c-expressions and n-expressions respectively.
-If provided, these procedures <em>MUST</em>
-at least take a parameter (the object to write)
+These procedures <em>MUST</em>
+accept a first parameter (the object to write)
 and an optional second parameter (the port).
 Implementations that provide R7RS semantics
 (<var>write</var> with cycle detection,
