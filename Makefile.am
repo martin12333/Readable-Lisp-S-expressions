@@ -107,8 +107,8 @@ bin_SCRIPTS += bin/sweet-run bin/sweet-scsh
 bin_SCRIPTS += bin/diff-s-sweet
 CLEANFILES  += $(bin_SCRIPTS)
 
-# This is a script that's just copied straight.
-dist_bin_SCRIPTS = sweet-clisp
+# These are scripts that are just copied straight.
+dist_bin_SCRIPTS = sweet-clisp sweet-sbcl
 
 # These are the local scripts, for testing, and are not installed.
 noinst_SCRIPTS = ./sweeten ./unsweeten \
