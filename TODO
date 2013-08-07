@@ -1,0 +1,10 @@
+
+* Common Lisp - fix adjacent initial-indent
+   1 2 3
+   4 5 6
+  Currently 5 and 6 not returned
+
+* eval-when: Do we need it?  When? Can we embed it?
+  (Need to test with sbcl)
+
+
