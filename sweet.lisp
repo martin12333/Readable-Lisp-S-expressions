@@ -709,7 +709,23 @@
           ((member results-stopper '(scomment datum-commentw))
             (skippable results-stopper stream)
             (initial-indent-expr-tail stream))
-          (t results-value))) ; Normal n-expr, return one value.
+          (t ; Normal n-expr, return one value.
+            ; The following "if" is a work-around for a bug in clisp's REPL.
+            ; Without it, in sequential initial-indent lines like this:
+            ;   1 2 3
+            ;   4 5 6
+            ; the 2nd line's non-first n-expressions are skipped (e.g., 5 6).
+            ; We work around this by consuming an EOL immediately following
+            ; the last n-expression on an initial indent line.
+            ; This work-around fails if the first line ends in space or tab,
+            ; but clisp REPL users are highly unlikely to notice this.
+            ; This work-around won't affect correctly-working systems
+            ; because without this code, it'd just skip a blank EOL anyway.
+            ; Correctly-working systems include clisp's file-execution code
+            ; and a clisp loop of (write (read)), interestingly enough.
+            (if (member (my-peek-char stream) initial-comment-eol)
+              (my-read-char stream))
+            results-value)))
       (progn
         (consume-to-eol stream)
         (consume-end-of-line stream)
@@ -736,8 +752,8 @@
             (let-splitter (results results-indent results-value)
                           (it-expr stream "^")
               (if (string= results-indent "")
-                  (read-error "Closing *> without preceding matching <*.")
-                  results-value))))))
+                  (read-error "Closing *> without preceding matching <*."))
+              results-value)))))
 
 (defun t-expr (stream)
   (let* ((te (t-expr-real stream)))
