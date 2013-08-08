@@ -12,6 +12,9 @@
 #    CL_SOURCE_REGISTRY="$PWD" ./sweet-clisp ...
 
 clisp_options=""
+origfile=""
+# Use clisp standard repl:
+crepl=0
 
 setup_commands='
 (require "asdf")
@@ -20,6 +23,7 @@ setup_commands='
 (readable:enable-sweet)
 '
 
+# Process command line arguments
 while [ $# -gt 0 ]
 do
   case "$1" in
@@ -28,6 +32,9 @@ do
     (--)
       shift
       break 2 ;;
+    (-CREPL) # Special added "-CREPL" option
+      crepl=1
+      shift ;;
     (-B|-K|-M|-m|-L|-N|-p|-lp|-i|-c|-o|-x)
       # Options with parameters.
       clisp_options="$clisp_options $1 $2"
@@ -40,24 +47,39 @@ do
       break 2 ;;
   esac
 done
-
 if [ $# -gt 0 ] ; then
-
   origfile="$1"
   shift
+fi
 
-  commandfile="$(mktemp)"
-  printf "$setup_commands" > "$commandfile"
-  cat -- "$origfile" >> "$commandfile"
+# If it weren't for a bug in the clisp REPL, we could just do this:
+#   clisp $clisp_options -x "$setup_commands" -repl
+# But if two t-expressions are not separated by a newline, then
+# clisp REPL throws away the first line of the second t-expression.
+# Solution: If the user wants a REPL, we'll normally use our own.
 
-  clisp --quiet --quiet $clisp_options "$commandfile" "$@"
-
-  # Clean up.
-  rm -fr "$commandfile"
-
+fill_command_file () {  # Parameters: origfile commandfile
+printf "$setup_commands" > "$2"
+if [ -n "$1" ] ; then
+  cat -- "$1" >> "$2"
 else
+  cat >> "$2" << "DONE"
+format t "clisp sweet-expression REPL, use quit() to exit.~%~%"
+loop
+  do \\ progn
+    write $ eval $ read()
+    format t "~%"
+DONE
+fi
+}
 
+
+if [ $crepl = 1 ] ; then
   clisp $clisp_options -x "$setup_commands" -repl
-
+else
+  commandfile="$(mktemp)"
+  fill_command_file "$origfile" "$commandfile"
+  clisp --quiet --quiet $clisp_options "$commandfile" "$@"
+  rm -fr "$commandfile"
 fi
 

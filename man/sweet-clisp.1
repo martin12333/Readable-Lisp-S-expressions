@@ -3,7 +3,7 @@
 sweet-clisp \- Run clisp using sweet-expressions
 .SH SYNOPSIS
 .ll +8
-.B sweet-clisp [clisp-options] [FILE.slisp [args]]
+.B sweet-clisp [clisp-options [-CREPL]] [FILE.slisp [args]]
 .ll -8
 .br
 .SH DESCRIPTION
@@ -25,6 +25,16 @@ If you want a result displayed, use functions that do so such as
 It accepts clisp-options (which begin with "-"), such as "-modern".
 To execute a filename, make sure it does not begin with "-"
 (e.g., prefix it with "./").
+.PP
+The "-CREPL" option forces this program to use the standard clisp REPL instead.
+This generally works fine, but due to a bug in the clisp standard REPL,
+sweet-expressions that are not initially indented
+must be separated by a blank line.
+If they aren't separated, then the first line of the second
+sweet-expression will be skipped.
+Note that this does not affect files run by clisp,
+reimplmentations of the REPL on clisp, or other Common Lisp
+implementations (e.g., SBCL doesn't have this problem).
 .PP
 This command uses whatever version of the "readable" library that asdf finds.
 You can override the usual readable library location by setting
