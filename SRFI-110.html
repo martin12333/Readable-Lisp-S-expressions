@@ -1561,9 +1561,12 @@ terminate a collecting list.
 <h2 id="other-requirements">Other requirements</h2>
 
 <p>
-A <code>#!sweet</code> directive is valid if it begins
-at the beginning of a line, is terminated by an end of line, and is
-not contained inside an expression
+The directives <code>#!sweet</code>,
+<code>#!curly-infix</code>, and <code>#!no-sweet</code>
+are <i>parsing directives</i>
+A parsing directive is <i>valid</i> if and only if it begins
+at the beginning of a line, it is terminated by an end of line,
+and it is not contained inside an expression
 (e.g., inside parentheses or a collecting list).
 The standard datum readers are <code>read</code>,
 <code>load</code>, <code>get-datum</code> (where applicable),
@@ -1583,8 +1586,10 @@ Scheme applications
 </p>
 
 <p>
-A reader
-<em>MUST</em> accept and ignore a valid <code>#!sweet</code> directive
+An implementation <em>MAY</em> signal an error if a parsing
+directive is not valid.
+An implementation <em>MUST</em> accept
+and ignore a valid <code>#!sweet</code> directive
 when sweet-expression reading is active.
 Implementations of this SRFI <em>MAY</em>
 implement sweet-expressions in their standard datum readers by default,
@@ -1602,16 +1607,13 @@ sweet-expressions from the same port
 </p>
 
 <p>
-A <code>#!curly-infix</code>
+A valid <code>#!curly-infix</code> directive
 <em>SHOULD</em> cause the current port to switch to SRFI-105
 semantics (e.g., sweet-expression processing is disabled).
-A <code>#!no-sweet</code>
+A valid <code>#!no-sweet</code> directive
 <em>SHOULD</em> cause the current port to
 disable sweet-expression processing and
 <em>MAY</em> also disable curly-infix expression processing.
-An implementation <em>MAY</em> signal an error if the directives
-<code>#!curly-infix</code> or <code>#!no-sweet</code>
-are not at the beginning of a line or cannot terminate all sweet-expressions.
 </p>
 
 <p>
