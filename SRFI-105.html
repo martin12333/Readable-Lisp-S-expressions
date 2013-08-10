@@ -1,60 +1,73 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
 <head>
-<title>Draft SRFI 105: Curly-infix-expressions</title>
+<title>SRFI 105: Curly-infix-expressions</title>
 <meta content="text/html; charset=us-ascii" http-equiv="content-type">
-<meta name="description" content="Definition curly-infix-expressions (c-expressions) for Scheme.  Includes a definition of neoteric-expressions (n-expressions). This defines an approach to making Scheme more 'readable' by supporting infix and functions whose names precede the opening parenthesis.">
-<meta name="keywords" content="curly-infix, curly-infix-expression, c-expression, infix, Scheme, Lisp, neoteric-expression, n-expression, readable, notation, s-expression, s-expr, M-expression, precedence, SRFI, SRFI-105, SRFI 105, implementation, SIX, Racket, guile, gauche, David Wheeler, David A. Wheeler, Alan Manuel Gloria, Alan Manuel K. Gloria">
-<meta name="generator" content="vim">
-<!-- Copy CSS style of SRFI-64; credits to Per Bothner. -->
-<!-- Note: "style" isn't in HTML 3.2, but SRFI-64 set a precedent
-     for allowing this: -->
-<style type="text/css">
-  div.title h1 { font-size: small; color: blue }
-  div.title { font-size: xx-large; color: blue; font-weight: bold }
-  h1 { font-size: x-large; color: blue }
-  h2 { font-size: large; color: blue }
-  /* So var inside pre gets same font as var in paragraphs. */
-  var { font-family: monospace; }
-</style>
 </head>
 <body>
 
-<!-- Note: "class" isn't in HTML 3.2, but SRFI-64 set a precedent
-     for allowing this: -->
-<div class="title">
-<h1><a name="title">Title</a></h1>
-<p>Curly-infix-expressions</p>
-</div>
+<!-- This commented out text is for the brittle SRFI tools -->
+<!--
+<H1>Title</H1>
 
-<!-- Some old browsers have problem with empty names. Work around here: -->
-<h1><a name="authors">Authors</a><a name="author">&nbsp;</a></h1>
+Curly-infix-expressions
+
+<H1>Author</H1>
+
+David A. Wheeler, Alan Manuel K. Gloria
+
+<H1>Status</H1>
+
+This SRFI is in ``final'' status.
+-->
+<h1 id="title">Title</h1>
+<p>Curly-infix-expressions</p>
+
+<h1 id="author" id="authors">Authors</h1>
 <p><a href="http://www.dwheeler.com">David A. Wheeler</a></p>
 <p>Alan Manuel K. Gloria</p>
 
-<h1><a name="status">Status</a></h1>
-<p>This is a draft Scheme Request for Implementation (SRFI) for
-SRFI 105. To see an explanation of each status that
-a SRFI can hold, see <a href=
-"http://srfi.schemers.org/srfi-process.html" rel=
-"nofollow">here</a>.</p>
-<p>To provide input on this SRFI, please <a href=
-"mailto:srfi%20minus%20105%20at%20srfi%20dot%20schemers%20dot%20org">
-mail to <code>&lt;srfi minus 105 at srfi dot schemers dot
-org&gt;</code></a>. See <a href=
-"http://srfi.schemers.org/srfi-list-subscribe.html" rel=
-"nofollow">instructions here</a> to subscribe to the list. You can
-access previous messages via <a href=
-"http://srfi.schemers.org/srfi-105/mail-archive/maillist.html" rel=
-"nofollow">the archive of the mailing list</a>.
-This SRFI contains all the required sections, including
-an <a href="#abstract">abstract</a>,
-<a href="#rationale">rationale</a>,
-<a href="#specification">specification</a>,
-<a href="#design-rationale">design rationale</a>,
-and
-<a href="#reference-implementation">reference implementation</a>.
+<h1 id="status">Status</h1>
+<p>
+This SRFI is in ``final'' status.  To see an explanation of
+each status that a SRFI can hold, see <a
+href="http://srfi.schemers.org/srfi-process.html">here</a>.
+
+To provide input on this SRFI, please
+<a href="mailto:srfi minus 105 at srfi dot schemers dot org">mail to
+<code>&lt;srfi minus 105 at srfi dot schemers dot org&gt;</code></a>.  See
+<a href="../srfi-list-subscribe.html">instructions here</a> to
+subscribe to the list.  You can access previous messages via
+<a href="mail-archive/maillist.html">the archive of the mailing list</a>.
+You can access
+post-finalization messages via
+<a href="http://srfi.schemers.org/srfi-105/post-mail-archive/maillist.html">
+the archive of the mailing list</a>.
 </p>
+
+<ul>
+      <li>
+	Received: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.2">2012/08/22</a></li>
+
+      <li>Draft: 2012/08/22-2012/10/22</li>
+      <li>Revision: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.3">2012/09/03</a></li>
+      <li>Revision: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.4">2012/09/08</a></li>
+      <li>Revision: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.5">2012/09/17</a></li>
+      <li>Revision: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.6">2012/09/19</a></li>
+      <li>Revision: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.7">2012/09/27</a></li>
+      <li>Revision: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.8">2012/10/02</a></li>
+      <li>Revision: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.9">2012/10/15</a></li>
+      <li>Revision: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.10">2012/10/16</a></li>
+      <li>Revision: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.11">2012/10/20</a></li>
+      <li>Revision: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.12">2012/10/21</a></li>
+      <li>Revision: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.13">2012/10/25</a></li>
+      <li>Revision: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.14">2012/10/27</a></li>
+      <li>Revision: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.15">2012/10/30</a></li>
+      <li>Revision: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.16">2012/10/31</a></li>
+      <li>Revision: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.17">2012/11/01</a></li>
+      <li>Revision: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.18">2012/11/01</a></li>
+      <li>Finalized: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-105/srfi-105.html?rev=1.19">2012/11/01</a></li>
+</ul>
 
 <h1><a name="related-srfis">Related SRFIs</a></h1>
 <p>None</p>
@@ -2428,57 +2441,37 @@ including John Cowan, Shiro Kawai, Per Bothner, Mark H. Weaver,
 and many others whose names
 should be here but aren&#8217;t.</p>
 
-<h1><a name="copyright">Copyright</a></h1>
-<p>Copyright (C) 2012 <a href="http://www.dwheeler.com">David A. Wheeler</a>
-and Alan Manuel K. Gloria.
+<h1 id="copyright">Copyright</h1>
+<p>Copyright (C) 2012 David A. Wheeler and Alan Manuel K. Gloria.
 All Rights Reserved.</p>
-<pre>
-Permission is hereby granted, free of charge, to any person
+<p>Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without
 restriction, including without limitation the rights to use, copy,
 modify, merge, publish, distribute, sublicense, and/or sell copies
 of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-</pre>
-<pre>
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-</pre>
-<pre>
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY
+furnished to do so, subject to the following conditions:</p>
+<p>The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.</p>
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY
 OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
 WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
 BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
 ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-</pre>
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+    <hr/>
+    <address>Editor: <a href="mailto:srfi-editors at srfi dot schemers dot org">
+             Mike Sperber</a></address>
 </body>
 </html>
 <!--
-Notes on HTML 3.2:
-* HTML 3.2 has no attribute "id", so we use <a name="ID">...</a> instead.
-* HTML 3.2 doesn't include CSS "style", so a table is is used to format
-  the curly-infix list BNF.
-* HTML 3.2 lacks many named entities, so we use numbered entities.
-  Although HTML 3.2 includes a mechanism to define new entities inline
-  (as part of the DOCTYPE), this is not supported by more modern
-  systems (e.g., Firefox).  In contrast, *EVERYONE* supports HTML
-  numbered entities.
-* The character ' is fine in HTML and XML, but the "quoter" tool
-  (that automatically convert single and double quotes into curly quotes)
-  will convert them.  That's fine for constructs like "doesn't", but
-  is wrong when referring to Scheme's "quote" abbreviation.
-  A useful solution is to represent it as an HTML entity.
-  The named entity &apos; is in XML 1.0 and HTML 4.0, but not in HTML 3.2,
-  so we cannot use "&apos;" to represent it.  Instead, this file
-  uses &#39; for single vertical apostrophe.  That way, it will
-  not be converted later to curly quotes by "quoter" and similar tools.
-* HTML 3.2 doesn't allow <style...> in the head; but this is
-  commonly-implemented, and implementations that don't will just
-  back off to a less-pretty format.
-* HTML 3.2 doesn't allow <div> to declare a class, but this is
-  widely implemented, and helpful for the CSS.  Systems that
-  don't implement it can trivially back off of it.
+Note: HTML 3.2 has no attribute "id", so using <a name="ID">...</a>.
 -->
+<!--
+Note: &apos; is in XML 1.0 and HTML 4.0, but not in HTML 3.2, so
+we cannot use "&apos;" to represent it.  Instead, this file
+uses &#39; for single vertical apostrophe.  That way, it will
+not be converted later to curly quotes by "quoter" and similar tools.
+-->
+
