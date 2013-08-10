@@ -1,7 +1,8 @@
 ; This is a trivial demo of sweet-expressions in Common Lisp.  Run as:
 ;     clisp -q -q factorial.lisp
-; To run the NOT installed readable version, prepend that with:
+; To use the NOT installed version of the readable library, prepend with:
 ;     CL_SOURCE_REGISTRY="$PWD" 
+; where $PWD is wherever the files sweet.lisp (etc.) are installed.
 
 (require "asdf")
 (asdf:load-system :readable)
