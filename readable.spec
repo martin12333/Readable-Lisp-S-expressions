@@ -199,7 +199,7 @@ Summary: *All* the files for the "readable" notation for Lisp-based languages.
 Requires: readable guile-readable readable-tools
 Requires: cl-readable
 Requires: readable-scsh
-Requires: readable-clisp
+Requires: readable-clisp readable-sbcl
 
 %description all
 Provides all the files that support the "readable" notation for
