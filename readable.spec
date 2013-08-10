@@ -1,12 +1,12 @@
 # This RPM spec file uses the Fedora conventions and makes subpackages.
-Name:           readable
-Version:        0.9.2
-Release:        1%{?dist}
-Summary:        Improve Lisp readability (infix, sweet-expression indentation)
-Group:		Development/Libraries
-License:        MIT
-URL:            http://readable.sourceforge.net/
-Source0:        http://downloads.sourceforge.net/%{name}/%{name}-%{version}.tar.gz
+Name:    readable
+Version: 0.9.2
+Release: 1%{?dist}
+Summary: Improve Lisp readability (infix, sweet-expression indentation)
+Group:   Development/Libraries
+License: MIT
+URL:     http://readable.sourceforge.net/
+Source0: http://downloads.sourceforge.net/%{name}/%{name}-%{version}.tar.gz
 
 # guile is required to build the "unsweeten" tool.
 # clisp is required for "make check" to work.
