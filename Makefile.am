@@ -67,12 +67,6 @@ dist_common_lisp_source_pkg_DATA = \
 
 dist_common_lisp_source_pkg_DATA += $(pkg_asd_file)
 
-# Trivial example of a Common Lisp program.
-EXTRA_DIST += factorial.lisp
-
-# Trivial example of a Common Lisp .slisp program.
-EXTRA_DIST += factorial.slisp
-
 # Install symlink so asdf can find these files. See:
 # http://www.gnu.org/software/automake/manual/html_node/Extending.html
 # We first try to "rm" the symlink, in case it already exists.
@@ -289,13 +283,18 @@ dist_doc_DATA += readable-s-expressions.odp
 # Include SRFI specifications as documentation:
 dist_doc_DATA += SRFI-105.html SRFI-110.html
 
-# We no longer distribute these obsolete specs (see git if you want them).
-# dist_doc_DATA += spec-indent.txt spec-almkglor.txt
+# Include in documentation some trivial example of a Common Lisp program,
+# in ".lisp" and ".slisp" formats:
+dist_doc_DATA += factorial.lisp
+dist_doc_DATA += factorial.slisp
 
 # This is an odd case.  Since we're distributing a tool for developers,
 # it's useful to have worked examples.  So here we install the
 # "sweeten.sscm" file as a worked example.
 dist_doc_DATA += src/sweeten.sscm
+
+# We no longer distribute these obsolete specs (see git if you want them).
+# dist_doc_DATA += spec-indent.txt spec-almkglor.txt
 
 # Distribute test drivers and testsuites.
 EXTRA_DIST += \
