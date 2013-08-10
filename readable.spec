@@ -179,6 +179,19 @@ An extra tool to help clisp users use the readable notation.
 %{_mandir}/man1/sweet-clisp*
 
 
+# Subpackage readable-sbcl
+%package sbcl
+Summary: An extra tool to help sbcl users use the readable notation.
+Requires: cl-readable
+Requires: sbcl
+
+%description sbcl
+An extra tool to help sbcl users use the readable notation.
+
+%files sbcl
+%{_bindir}/sweet-sbcl
+
+
 
 # Subpackage readable-all... for those who want it all.
 %package all
