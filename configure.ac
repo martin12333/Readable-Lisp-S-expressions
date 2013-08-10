@@ -3,6 +3,7 @@
 # For autotools info, see: http://www.dwheeler.com/autotools
 
 # Initialize, but use more options.  Note parameters brackets and whitespace:
+# To change version#, edit this and readable.spec:
 AC_INIT([readable], [0.9.2], [dwheeler@dwheeler.com],
         [readable], [http://readable.sourceforge.net/])
 # Force autoconf to be more recent.
