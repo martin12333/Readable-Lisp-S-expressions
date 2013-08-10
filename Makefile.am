@@ -401,7 +401,9 @@ srfi_110_fileset = SRFI-110.html sweet.g src/kernel.scm output/scheme/Pair.java
 SPECFILE = readable.spec
 EXTRA_DIST += $(SPECFILE) readable-simple.spec
 
-rpm:
+rpm: $(DIST_ARCHIVES) $(SPECFILE)
+	cp -p $(DIST_ARCHIVES) ~/rpmbuild/SOURCES/
+	cp -p $(SPECFILE) ~/rpmbuild/SPECS/
 	rpmbuild -ba $(SPECFILE)
 	-rpmlint $(SPECFILE)
 
