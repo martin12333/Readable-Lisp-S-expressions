@@ -1,4 +1,4 @@
-# This starter RPM spec file uses the Fedora conventions.
+# This RPM spec file uses the Fedora conventions and makes subpackages.
 Name:           readable
 Version:        0.9.2
 Release:        1%{?dist}
@@ -8,20 +8,12 @@ License:        MIT
 URL:            http://readable.sourceforge.net/
 Source0:        http://downloads.sourceforge.net/%{name}/%{name}-%{version}.tar.gz
 
+# guile is required to build the "unsweeten" tool.
+# clisp is required for "make check" to work.
 BuildRequires:  guile clisp
-Requires:       guile clisp
+BuildRequires:  common-lisp-controller
 
-BuildRequires:   common-lisp-controller
-Requires:        common-lisp-controller
-Requires(post):  common-lisp-controller
-Requires(preun): common-lisp-controller
-
-
-# TODO: This is a single package; it would probably be better
-# to split this into subpackages.  In particular, it currently doesn't
-# follow the Common Lisp naming conventions of:
-#   http://fedoraproject.org/wiki/Packaging:Lisp
-# where the package name would be "cl-readable".
+# RPM variables
 
 %global mydocs %{_defaultdocdir}/%{name}
 
@@ -55,9 +47,9 @@ are general (the notation is independent from any underlying semantic)
 and homoiconic (the underlying data structure is clear from the syntax).
 They are also backwards-compatible; well-formatted traditional
 s-expressions continue work normally.  Thus, it's easy to transition to
-these, and you can use traditional forms whenever it's convenient.
+these notations, and you can use traditional forms whenever it's convenient.
 
-This implementation supports Scheme and Common Lisp.
+Both Scheme and Common Lisp are supported.
 For Scheme these notations are defined in SRFI-105 and SRFI-110.
 
 For more information, see: http://readable.sourceforge.net
@@ -66,11 +58,12 @@ For more information, see: http://readable.sourceforge.net
 %prep
 %setup -q
 
-
 %build
 %configure
 make %{?_smp_mflags}
 
+%check
+make check
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -80,24 +73,125 @@ make DESTDIR=$RPM_BUILD_ROOT install
 # This "clean" section is defined for EPEL and really old Fedora:
 rm -rf $RPM_BUILD_ROOT
 
-%post
-/usr/sbin/register-common-lisp-source %{cl_name}
 
-%preun
-/usr/sbin/unregister-common-lisp-source %{cl_NAME}
-
+# Main package just has documentation, since we have more than
+# one implementation.
 %files
 %doc %{mydocs}/
 
-%{_bindir}/*
-%{_mandir}/*
 
-# Scheme
+########## SUBPACKAGES ############
+# This is broken into several subpackages so people
+# don't get unneeded dependencies
+
+
+# Subpackage guile-readable
+%package -n guile-readable
+Summary: GNU guile library that implements the "readable" notations.
+
+Requires: guile
+Requires: readable
+
+%description -n guile-readable
+GNU guile library that implements the "readable" notations.
+
+%files -n guile-readable
 %{readable_libdir}/*
 
-# Common Lisp
+
+
+# Subpackage readable-tools
+%package tools
+Summary: Tools to support the "readable" notations for Lisp-based languages.
+
+Requires: guile-readable
+
+%description tools
+Various tools (general-purpose and guile-specific)
+for the "readable" notation for Lisp-based languages
+(Common Lisp, Scheme, etc.).
+
+%files tools
+%{_bindir}/diff-s-sweet
+%{_bindir}/sweeten
+%{_bindir}/unsweeten
+
+%{_bindir}/curly-guile
+%{_bindir}/neoteric-guile
+%{_bindir}/sweet-guile
+%{_bindir}/sweet-run
+
+%{_mandir}/man1/diff-s-sweet.1.gz
+%{_mandir}/man1/sweeten.1.gz
+%{_mandir}/man1/unsweeten.1.gz
+%{_mandir}/man1/sweet-run.1.gz
+
+
+
+# Subpackage cl-readable
+# The following follows the conventions (package name, etc.) of
+# http://fedoraproject.org/wiki/Packaging:Lisp
+%package -n cl-readable
+Summary: Common Lisp library that implements the "readable" notations.
+
+Requires: readable
+Requires:        common-lisp-controller
+Requires(post):  common-lisp-controller
+Requires(preun): common-lisp-controller
+
+%description -n cl-readable
+A portable Common Lisp library that implements the "readable" notations.
+
+%post -n cl-readable
+/usr/sbin/register-common-lisp-source %{cl_name}
+
+%preun -n cl-readable
+/usr/sbin/unregister-common-lisp-source %{cl_NAME}
+
+%files -n cl-readable
 %{common_lisp_source_pkgdir}/*
 %{common_lisp_systemsdir}/%{pkg_asd_file}
+
+
+# Subpackage readable-scsh
+%package scsh
+Summary: An extra tool to help scsh users use the readable notation.
+Requires: readable-guile scsh
+
+%description scsh
+An extra tool to help scsh users use the readable notation.
+
+%files scsh
+%{_bindir}/sweet-scsh
+
+
+# Subpackage readable-clisp
+%package clisp
+Summary: An extra tool to help clisp users use the readable notation.
+Requires: cl-readable
+Requires: clisp
+
+%description clisp
+An extra tool to help clisp users use the readable notation.
+
+%files clisp
+%{_bindir}/sweet-clisp
+%{_mandir}/man1/sweet-clisp*
+
+
+
+# Subpackage readable-all... for those who want it all.
+%package all
+Summary: *All* the files for the "readable" notation for Lisp-based languages.
+Requires: readable guile-readable readable-tools
+Requires: cl-readable
+Requires: readable-scsh
+Requires: readable-clisp
+
+%description all
+Provides all the files that support the "readable" notation for
+various Lisp-based languages.
+
 
 %changelog
 

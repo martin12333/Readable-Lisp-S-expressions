@@ -399,7 +399,7 @@ srfi_110_fileset = SRFI-110.html sweet.g src/kernel.scm output/scheme/Pair.java
 # Note that the results will be in "~/rpmbuild/RPMS/".
 
 SPECFILE = readable.spec
-EXTRA_DIST += $(SPECFILE)
+EXTRA_DIST += $(SPECFILE) readable-simple.spec
 
 rpm:
 	rpmbuild -ba $(SPECFILE)
