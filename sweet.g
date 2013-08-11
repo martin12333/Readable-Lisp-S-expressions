@@ -1024,7 +1024,7 @@ n_expr_noabbrev returns [Object v]
 
 hspace  : SPACE | TAB ;        // horizontal space
 // INCLUDE IN SRFI
-hs      : (options {greedy=true;} : hspace)* ;
+hs      : (options {greedy=true;} : hspace)* ; // Greedy hspace*
 
 // A "separator_initial_indent" separates n-expressions in initial indent.
 // An implementation MAY implement this as "(hspace | '!')+"

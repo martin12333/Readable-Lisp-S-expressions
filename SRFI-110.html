@@ -1384,7 +1384,7 @@ SHARP_BANG_FILE : '#!' ('/' | '.') (options {greedy=false;} : .)* '!#' ;
 SHARP_BANG_DIRECTIVE : '#!' ('a'..'z'|'A'..'Z'|'_')
                        ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'-')* ;
 
-hs      : (options {greedy=true} : hspace)* ;
+hs      : (options {greedy=true} : hspace)* ; // Greedy hspace*
 
 // A "separator_initial_indent" separates n-expressions in initial indent.
 // An implementation MAY implement this as "(hspace | '!')+"
