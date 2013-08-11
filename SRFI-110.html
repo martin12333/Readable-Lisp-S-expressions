@@ -528,16 +528,11 @@ are completely ignored - their indentation (if any) is irrelevant,
 and they do not end an expression.</li>
 <li>Special comments are non-whitespace sequences
 other than ;-comments that do not return a datum; they include
-datum comments (<code>#;</code><i>datum</i>) and
-block comments (<code>#|</code>...<code>|#</code>).
+block comments (<code>#|</code>...<code>|#</code>) and
+datum comments (<code>#;</code><i>datum</i>).
 <a href="#block-comment-indent-significant">If a special comment
 begins immediately after the indent,
 the indentation of the special comment is used</a>.
-</li>
-<li>The datum comment marker (<code>#;</code>)
-at the beginning of a line, followed by whitespace,
-comments out the next <i>sweet-expression</i>;
-otherwise it comments out the next <i>neoteric-expression</i>.
 </li>
 <li>
 A single delimited period (.) still sets the value of the cdr field of a pair.
@@ -598,23 +593,6 @@ ff ; Demo block comments
   (t1 t2)
   (t3 t4
     (t5 t6)))
-</pre>
-</td>
-</tr>
-
-<tr>
-<td align="left" valign="top">
-<pre>
-t7 #;t8(q) t9 ; Demo datum comments
-  stuff #; a(b) here
-  #; this is
-     all ignored
-</pre>
-</td>
-<td align="left" valign="top">
-<pre>
-(t7 t9
-  (stuff here))
 </pre>
 </td>
 </tr>
@@ -914,8 +892,9 @@ A
 located at the beginning of a line (after indentation),
 and also followed by space, tab, or the end-of-line</a>,
 is interpreted as that operator applied to
-the entire sweet-expression that follows.
-Note that datum comments (<code>#;</code>) do the same thing.
+the entire sweet-expression that follows (otherwise they apply
+only to the following neoteric-expression).
+Datum comments (<code>#;</code>) do the same thing.
 For example:
 </p>
 
@@ -929,16 +908,36 @@ For example:
 <td align="left" valign="top">
 <pre>
 ' a b ; Demo abbreviations
-  c d
+  c 'd e
 </pre>
 </td>
 <td align="left" valign="top">
 <pre>
 (quote (a b
-  (c d)))
+  (c (quote d) e)))
 </pre>
 </td>
 </tr>
+
+<tr>
+<td align="left" valign="top">
+<pre>
+t7 #;t8(q) t9 ; Demo datum comments
+  #;x y
+  stuff #; a(b) here
+  #; this is
+     all ignored
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(t7 t9
+  y
+  (stuff here))
+</pre>
+</td>
+</tr>
+
 </table>
 </blockquote>
 
