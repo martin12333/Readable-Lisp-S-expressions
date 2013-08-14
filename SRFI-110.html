@@ -1563,30 +1563,26 @@ terminate a collecting list.
 The directives <code>#!sweet</code>,
 <code>#!curly-infix</code>, and <code>#!no-sweet</code>
 are <i>parsing directives</i>.
-A parsing directive is <i>valid</i> if and only if it begins
-at the beginning of a line, it is terminated by an end of line,
-and it is not contained inside an expression
-(e.g., inside parentheses or a collecting list).
+A parsing directive <em>MUST</em>
+begin at the beginning of a line, be terminated by an end of line,
+and not be contained inside an expression
+(e.g., inside parentheses or a collecting list); otherwise it is an error.
 The standard datum readers are <code>read</code>,
 <code>load</code>, <code>get-datum</code> (where applicable),
 and the default implementation REPL (where applicable).
 </p>
 
 <p>
-Portable Scheme applications <em>SHOULD</em> include a valid
+Portable Scheme applications <em>SHOULD</em> include a
 <code>#!sweet</code> directive before using sweet-expressions.
 Portable applications <em>SHOULD NOT</em>
 use this directive as the very first characters of a file
 because they might be misinterpreted on some platforms
 as an executable script header;
 an end of line before the directive avoids this problem.
-Scheme applications
-<em>MUST NOT</em> include a non-valid <code>#!sweet</code> directive.
 </p>
 
 <p>
-An implementation <em>MAY</em> signal an error if a parsing
-directive is not valid.
 An implementation <em>MUST</em> accept
 and ignore a valid <code>#!sweet</code> directive
 when sweet-expression reading is active.
@@ -1597,19 +1593,20 @@ even when a valid <code>#!sweet</code> directive is not (yet) received.
 
 <p>
 An implementation may be a "native implementation".
-A native implementation <em>MUST</em> also accept,
+In addition to all other requirements, a native implementation
+<em>MUST</em> accept,
 in its standard datum readers,
-a valid <code>#!sweet</code> directive,
+a <code>#!sweet</code> parsing directive,
 and from then on it <em>MUST</em> accept
 sweet-expressions from the same port
 (until some conflicting directive or instruction is given).
 </p>
 
 <p>
-A valid <code>#!curly-infix</code> directive
+A <code>#!curly-infix</code> directive
 <em>SHOULD</em> cause the current port to switch to SRFI-105
 semantics (e.g., sweet-expression processing is disabled).
-A valid <code>#!no-sweet</code> directive
+A <code>#!no-sweet</code> directive
 <em>SHOULD</em> cause the current port to
 disable sweet-expression processing and
 <em>MAY</em> also disable curly-infix expression processing.
