@@ -79,7 +79,7 @@
     (terpri *standard-output*))
   (error 'readable-parse-error :text message))
 
-; Unfortuntely, clisp will write all symbols with |...| around them
+; Unfortunately, clisp will write all symbols with |...| around them
 ; when neoteric- or sweet-expressions are enabled.
 ; The issue is in clisp file "src/io.d" function "pr_symbol_part".
 ; We hope to be able to modify clisp in the future so it can be disabled,
