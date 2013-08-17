@@ -105,9 +105,12 @@
 
 (defun my-peek-char (stream)
   (let ((c (peek-char nil stream nil my-eof-marker)))
-    ; (princ "DEBUG: my-peek-char returned=") (write c) (terpri)
+    ; (format t "DEBUG: my-peek-char: ~@C~%" c)
     c))
-(defun my-read-char (stream) (read-char stream t nil nil))
+(defun my-read-char (stream)
+  (let ((c (read-char stream t nil nil)))
+    ; (format t "DEBUG: my-read-char: ~@C~%" c)
+    c))
 
 
 ; Consume an end-of-line sequence, ('\r' '\n'? | '\n')
