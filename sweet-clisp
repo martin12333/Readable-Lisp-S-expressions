@@ -1,25 +1,24 @@
 #!/bin/sh
-# sweet-clisp [clisp-options] [FILE-TO-RUN.slisp [args]]
+#   sweet-clisp [clisp-options] [FILE-TO-RUN.slisp [args]]
+# Start up clisp in "sweet-expression" reading mode.
+# To use un-installed sweet-expr implementation, set CL_SOURCE_REGISTRY. E.G.:
+#    CL_SOURCE_REGISTRY="$PWD" ./sweet-clisp ...
 
-# By David A. Wheeler. Start up clisp in "sweet-expression" reading mode,
-# so you can try it out.  A useful "clisp-option" is "-modern".
+# A useful "clisp-option" is "-modern".
 # This sets *print-escape*; this isn't ideal, but
 # in most circumstances it works well, and clisp has no better way
 # of disabling its unnecessary escapes which otherwise look ugly.
 
-# If you want to use un-installed sweet-expression implementation, you
-# need to set CL_SOURCE_REGISTRY to point to it.  E.G.:
-#    CL_SOURCE_REGISTRY="$PWD" ./sweet-clisp ...
 
 clisp_options=""
 origfile=""
-# Use clisp standard repl:
+# Use clisp standard repl (no internal overrides):
 crepl=0
 
 setup_commands='
 (require "asdf")
 (asdf:load-system :readable)
-(setq *print-escape* nil)
+(setq *print-escape* t)
 (readable:enable-sweet)
 '
 
@@ -47,39 +46,117 @@ do
       break 2 ;;
   esac
 done
-if [ $# -gt 0 ] ; then
-  origfile="$1"
-  shift
-fi
+
 
 # If it weren't for a bug in the clisp REPL, we could just do this:
 #   clisp $clisp_options -x "$setup_commands" -repl
 # But if two t-expressions are not separated by a newline, then
 # clisp REPL throws away the first line of the second t-expression.
-# Solution: If the user wants a REPL, we'll normally use our own.
+# Solution: We'll override sys::read-form.
+# Unfortunately, read-eval-print directly calls read-form in a way that
+# cannot be overridden... so we have to override it, too.
 
-fill_command_file () {  # Parameters: origfile commandfile
-printf "$setup_commands" > "$2"
-if [ -n "$1" ] ; then
-  cat -- "$1" >> "$2"
-else
-  cat >> "$2" << "DONE"
-format t "clisp sweet-expression REPL, use quit() to exit.~%~%"
-loop
-  do \\ progn
-    write $ eval $ read()
-    format t "~%"
-DONE
-fi
-}
+
+# NOTE: The code below in "override" is derived from clisp,
+# which is GPL-licensed.  This is a small amount of code, and it's
+# heavily modified, so it's not clear to me that it's GPL-licensed...
+# but you should be aware of that.
+override='
+; Temporarily unlocks packages
+(ext:without-package-lock ("SYSTEM" "SYS") 
+
+(defun sys::read-form (ostream istream prompt &optional (command-list nil))
+  ; (format t "DEBUG9: Entering rewritten read-form~%")
+  ; (format t "command-list= ~S ~%~%" command-list)
+  ; (format t "DEBUG: command-list is: ") (write command-list) (format t "~%")
+  (defun my-assoc (item alist &key key test test-not)
+    (when (not test)
+      (error "Test required."))
+    (if (not (consp alist))
+        nil
+        (dolist (row alist nil)
+          ; (format t "DEBUG my-assoc row ~S~%" row)
+          (when (and (consp row) (funcall test item (car row)))
+              (return row)))))
+  (loop
+    (let ((raw (sys::terminal-raw istream nil)))
+      (when (interactive-stream-p istream)
+        (fresh-line ostream)
+        (write-string prompt ostream)
+        (force-output ostream))
+      (let* ((eof-value "EOF")
+             (*read-suppress* nil)
+             (sys::*key-bindings* (nreconc command-list sys::*key-bindings*))
+             (possible-form (read istream nil eof-value nil))
+             (form
+                  ; TODO: What if :keyword is car of a list?
+                  (if (and (symbolp possible-form)
+                      (eql (symbol-package possible-form) (find-package "KEYWORD")))
+                      (let ((keystring
+                              (concatenate (quote string) ":"
+                                           (symbol-name possible-form))))
+                        ; (format t "DEBUG - found keyword, key-bindings = ~S~%" *key-bindings*)
+                        ; Note: using the *cdr* of *key-bindings*
+                        ; (format t "DEBUG found keyword, key-bindings is: ") (write keystring) (write (cdr sys::*key-bindings*)) (format t "~%~%~%")
+                        (let ((h (my-assoc keystring sys::*key-bindings* :test (function string-equal))))
+                           ; (format t "DEBUG: function to call = <~S>~%" (cdr h))
+                           (cond
+                              (h (funcall (cdr h) "") (return t))
+                              (t possible-form))))
+                      possible-form)))
+
+        (sys::terminal-raw istream raw)
+        ; (format t "DEBUG: RESULT IS") (write form)
+        ; (when (symbolp form) (format t "DEBUG: IS SYMBOL, PACKAGE ~S~%" (symbol-package form)))
+        (if (eql form eof-value)
+          (progn (clear-input istream) (setq istream *debug-io*))
+          (progn ; CHANGED HERE!!: (sys::clear-input-upto-newline istream)
+                 (return (values form nil))))))))
+
+(defun sys::read-eval-print (prompt &optional (command-list nil))
+   ; (format t "DEBUG1: Entering rewritten read-eval-print~%")
+   (multiple-value-bind (form flag)
+       (sys::read-form *standard-output* *standard-input* prompt command-list)
+     (if flag
+       form ; return T
+       (progn
+         (setq +++ ++ ++ + + - - form)
+         ; TODO: eval was eval-env
+         (let ((vals (multiple-value-list (eval form))))
+           (setq /// // // / / vals)
+           (setq *** ** ** * * (first vals))
+           (let ((ostream *standard-output*))
+             (fresh-line ostream)
+             (when (consp vals)
+               (write (car vals) :stream ostream)
+               (do ((L (cdr vals) (cdr L)))
+                   ((atom L))
+                 (write-string " ;" ostream)
+                 (terpri ostream)
+                 (write (car L) :stream ostream)))
+             (elastic-newline ostream)))
+         nil))))
+(values)
+)
+'
 
 
 if [ $crepl = 1 ] ; then
-  clisp $clisp_options -x "$setup_commands" -repl
-else
+  override='
+(values)
+'
+fi
+
+
+if [ $# -gt 0 ] ; then
+  origfile="$1"
+  shift
   commandfile="$(mktemp)"
-  fill_command_file "$origfile" "$commandfile"
+  printf "$setup_commands" > "$commandfile"
+  cat -- "$origfile" >> "$commandfile"
   clisp --quiet --quiet $clisp_options "$commandfile" "$@"
   rm -fr "$commandfile"
+else
+  clisp $clisp_options -x "$setup_commands" -x "$override" -repl
 fi
 
