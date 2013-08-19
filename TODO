@@ -1,14 +1,5 @@
 
-- Improve sweet-expression handling in the clisp REPL.
-  clisp's built-in REPL has a bug (which does not affect its "load"
-  or a rewritten REPL) where it sometimes skips text to be read.
-  The sweet-expression implementation has a work-around for
-  adjacent initial-indents that resolves it for this case, but
-  the native REPL still cannot handle adjacent indentable t-expressions
-  without an intervening blank line. This can triggered as easily as
-  entering "1 ENTER 2 ENTER 3 ENTER" - it will produce "1" then "3".
-  The current work-around is to make sweet-clisp invoke its
-  own rewritten REPL.  This bug is specific to clisp; sbcl works just fine.
-
 - Get at least one editor mode implemented, e.g., in emacs.
+  Making it work with Paredit would be especially nice.
+
 
