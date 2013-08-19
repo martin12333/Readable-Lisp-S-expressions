@@ -6037,7 +6037,13 @@ two blank lines).
 Wisp does not have a mechanism to restart at the left-hand-side
 for long stretches of code, as sweet-expressions does, and this omission
 raises some concerns.
-Alan Manuel Gloria notes,
+<a href="http://docutils.sourceforge.net/docs/dev/rst/problems.html">Forcing
+indentation on very long sequences
+was a problem with the StructuredText markup notation</a>;
+the authors of that commentary on StructuredText
+did not abandon indentation-sensitive syntax, but
+created a variant where indentation was not used for very long sections.
+As Alan Manuel Gloria notes,
 &#8220;In Scheme, usually you just put a bunch of definitions (unindented)
 in a file, then load them in your favorite Scheme system.
 After you&#8217;ve hacked on the definitions on the file a bit,
@@ -6213,7 +6219,8 @@ inviting error.
 </ol>
 
 <p>
-Wisp emphasizes a simple notation, but this can make certain constructs
+Wisp emphasizes a simple notation to describe and implement,
+but this can make <i>using</i> it with certain constructs
 more complicated (and less readable) compared to sweet-expressions.
 E.G., this sweet-expression:
 </p>
@@ -6236,7 +6243,8 @@ Can also be written in sweet-expressions to conserve vertical space as:
   
 <p>
 This could be written in wisp, but it would have to be written using
-a longer format such as:
+a longer format such as
+(and note that all singletons must be prefixed with a period):
 </p>
 
 <pre>
@@ -6277,7 +6285,7 @@ for a variety of Lisp variants.
 Sweet-expressions have also been implemented at least four times
 (original implementation in Scheme, ANTLR implementation,
 the reference SRFI implementation in Scheme, and a
-Common Lisp implementation loosely derived from the SRFI implementation).
+Common Lisp implementation derived from the SRFI implementation).
 There is also no BNF of wisp notation at this time;
 in contrast, sweet-expressions has a BNF that has been automatically
 checked (by ANTLR).
@@ -6603,8 +6611,8 @@ in part because it could be added later if desired.
 </p>
 <p>
 In this alternative, a &#8220;$&#8221; can be closed by an unmatched partial
-dedent, but only if the &#8220;$&#8221; is at the end of a line and there is
-other text besides any indentation characters.
+dedent, but only if the &#8220;$&#8221; is at the end of a line and it is
+preceded by text other than indentation characters.
 The primary argument given for this variant is that it
 covers the primary use cases David A. Wheeler had seen, and
 it is possible to formulate this limited variant while continuing
@@ -6811,10 +6819,11 @@ This demonstration provides evidence that the sweet-expression
 notation is sufficiently general and expressive.
 </p>
 <p>
-The sweet-expression notation itself has been implemented at least twice;
-one in ANTLR (an LL(*) parser generator)
-and one in Scheme (as a recursive descent parser).
-Since it has been implemented two different ways, it is less likely to
+The sweet-expression notation itself has been implemented
+in ANTLR (an LL(*) parser generator),
+in Scheme (twice, both times as a recursive descent parser),
+and in Common Lisp (based on the second Scheme implementation).
+Since it has been implemented different ways, it is less likely to
 be extremely difficult to implement.
 The ANTLR grammar itself has been checked by ANTLR&#8217;s grammar checker
 for ambiguities and other problems.
