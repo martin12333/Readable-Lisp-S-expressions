@@ -1548,13 +1548,18 @@ t_expr_real
 
 t_expr
   : te=t_expr_real	
-      {(if (isemptyvaluep $te) (t_expr) $te)} ; retry if empty_value.
+      {(if (isemptyvaluep $te) (t_expr) $te)} ; // retry if empty_value.
 </pre>
 
 <p>
 Note that per these definitions, a blank line normally terminates
 a sweet-expression once it has begun, but a blank line does not
 terminate a collecting list.
+Also note that
+<a href="#trailing-hspace">1+ hspaces are ignored at the end of a line
+if a line contains non-indent characters</a>
+(except in special circumstances, e.g., if the characters are
+inside a string <tt>"..."</tt>).
 </p>
 
 <h2 id="other-requirements">Other requirements</h2>

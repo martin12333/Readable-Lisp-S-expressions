@@ -1281,7 +1281,7 @@ t_expr returns [Object v]
       }
     /*
 // INCLUDE IN SRFI
-      {(if (isemptyvaluep $te.v) (t_expr) $te.v)} ; retry if empty_value.
+      {(if (isemptyvaluep $te.v) (t_expr) $te.v)} ; // retry if empty_value.
 // STOP INCLUDING IN SRFI
     */
     } ;
