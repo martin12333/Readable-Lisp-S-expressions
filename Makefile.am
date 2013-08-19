@@ -271,7 +271,7 @@ dist_man_MANS = man/unsweeten.1 man/sweet-run.1 \
 # in markdown format.  The website has the updated version, but for
 # those who just have this file, it'd be useful to have SOME useful
 # information on what this code is trying to do and how to use it.
-dist_doc_DATA = README COPYING AUTHORS ChangeLog
+dist_doc_DATA = README COPYING COPYING.GPL AUTHORS ChangeLog
 
 dist_doc_DATA += README-ANTLR README-files
 dist_doc_DATA += solution.md

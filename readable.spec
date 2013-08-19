@@ -52,6 +52,9 @@ these notations, and you can use traditional forms whenever it's convenient.
 Both Scheme and Common Lisp are supported.
 For Scheme these notations are defined in SRFI-105 and SRFI-110.
 
+Note: *ONLY* the file sweet-clisp contains GPLv2 code; all other
+files are licensed using the MIT license.
+
 For more information, see: http://readable.sourceforge.net
 
 
@@ -170,6 +173,7 @@ An extra tool to help scsh users use the readable notation.
 Summary: An extra tool to help clisp users use the readable notation.
 Requires: cl-readable
 Requires: clisp
+License: MIT and GPLv2
 
 %description clisp
 An extra tool to help clisp users use the readable notation.

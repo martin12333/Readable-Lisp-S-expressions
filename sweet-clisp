@@ -9,6 +9,11 @@
 # in most circumstances it works well, and clisp has no better way
 # of disabling its unnecessary escapes which otherwise look ugly.
 
+# Except as otherwise marked, this code is licensed under the "MIT license".
+# However, the "override" code that patches clisp is derived
+# from clisp, which is GPLv2.
+# Thus consider the work as a whole as "MIT and GPLv2".
+
 
 clisp_options=""
 origfile=""
@@ -18,7 +23,7 @@ crepl=0
 setup_commands='
 (require "asdf")
 (asdf:load-system :readable)
-(setq *print-escape* t)
+(setq *print-escape* nil)
 (readable:enable-sweet)
 '
 
@@ -60,22 +65,22 @@ done
 # NOTE: The code below in "override" is derived from clisp,
 # which is GPL-licensed.  This is a small amount of code, and it's
 # heavily modified, so it's not clear to me that it's GPL-licensed...
-# but you should be aware of that.
+# but you should be aware of that.  You can conservatively treat
+# the override code as GPLv2:
+# === begin GPLv2 ===
 override='
 ; Temporarily unlocks packages
 (ext:without-package-lock ("SYSTEM" "SYS") 
 
 (defun sys::read-form (ostream istream prompt &optional (command-list nil))
-  ; (format t "DEBUG9: Entering rewritten read-form~%")
+  ; (format t "DEBUG: Entering rewritten read-form~%")
   ; (format t "command-list= ~S ~%~%" command-list)
-  ; (format t "DEBUG: command-list is: ") (write command-list) (format t "~%")
   (defun my-assoc (item alist &key key test test-not)
     (when (not test)
       (error "Test required."))
     (if (not (consp alist))
         nil
         (dolist (row alist nil)
-          ; (format t "DEBUG my-assoc row ~S~%" row)
           (when (and (consp row) (funcall test item (car row)))
               (return row)))))
   (loop
@@ -95,9 +100,9 @@ override='
                       (let ((keystring
                               (concatenate (quote string) ":"
                                            (symbol-name possible-form))))
-                        ; (format t "DEBUG - found keyword, key-bindings = ~S~%" *key-bindings*)
+                        ; (format t "DEBUG: found keyword, key-bindings = ~S~%" *key-bindings*)
                         ; Note: using the *cdr* of *key-bindings*
-                        ; (format t "DEBUG found keyword, key-bindings is: ") (write keystring) (write (cdr sys::*key-bindings*)) (format t "~%~%~%")
+                        ; (format t "DEBUG: found keyword, key-bindings is: ") (write keystring) (write (cdr sys::*key-bindings*)) (format t "~%~%~%")
                         (let ((h (my-assoc keystring sys::*key-bindings* :test (function string-equal))))
                            ; (format t "DEBUG: function to call = <~S>~%" (cdr h))
                            (cond
@@ -139,6 +144,7 @@ override='
 (values)
 )
 '
+# === end GPLv2 ===
 
 
 if [ $crepl = 1 ] ; then

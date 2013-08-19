@@ -65,12 +65,22 @@ extensive test suite.
 License
 =======
 
-The software is released under the MIT license, which permits practically
-any use.  The MIT license is an open source software / Free Software
+With one exception, the software is released under the
+"MIT license", which permits practically any use.
+The MIT license is an open source software / Free Software
 license approved by both the OSI (opensource.org) as an open source software
 license, and by the FSF (fsf.org) as a Free software license.
-
 See the COPYING file for the license text.
+
+The one exception is the file "sweet-clisp", which interfaces to clisp.
+Most of this file is also licensed under the MIT license.
+However, that file contains code derived from the "clisp" program.
+Clisp is licensed under the "GNU General Public License version 2 (GPLv2)",
+so those parts are also under the GPLv2 (see the file for details).
+The GPLv2 is also an open source software / Free Software license approved
+by both the OSI (opensource.org) as an open source software license,
+and by the FSF (fsf.org) as a Free software license.
+See the COPYING.GPL file for those conditions.
 
 
 Getting, building, and installing

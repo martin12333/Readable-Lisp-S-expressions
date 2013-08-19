@@ -4,7 +4,7 @@ Version:        0.9.2
 Release:        1%{?dist}
 Summary:        Improve Lisp readability (infix, sweet-expression indentation)
 Group:		Development/Libraries
-License:        MIT
+License:        MIT and GPLv2
 URL:            http://readable.sourceforge.net/
 Source0:        http://downloads.sourceforge.net/%{name}/%{name}-%{version}.tar.gz
 
@@ -59,6 +59,9 @@ these, and you can use traditional forms whenever it's convenient.
 
 This implementation supports Scheme and Common Lisp.
 For Scheme these notations are defined in SRFI-105 and SRFI-110.
+
+Note: *ONLY* the file sweet-clisp contains GPLv2 code; all other
+files are licensed using the MIT license.
 
 For more information, see: http://readable.sourceforge.net
 
