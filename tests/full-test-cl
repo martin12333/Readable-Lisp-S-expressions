@@ -281,6 +281,10 @@ ab1 ab2
 *>
   '(aa1 (ab1 ab2))
 
+mytest
+  179/104
+  {11/13 + 7/8}
+
 (disable-readable)
 (princ "Tests complete!")
 (exit 0)
