@@ -4963,14 +4963,21 @@ The fundamental problem with M-expressions was that they were not general.
 When a new syntactic structure was created
 (e.g., with a macro), the new construct could easily be
 accessed using s-expressions, but not with M-expressions.
-Also, M-expressions were never widely implemented;
-if you wanted to actually use a Lisp-based language, you had to
-use s-expressions.
+Also, M-expressions were never widely implemented.
+One problem was that, as originally defined, they
+could not be used on common equipment available at the time
+(&#8220;A machine readable M-notation would have required redefinition,
+because the pencil-and-paper M-notation used characters
+unavailable on the IBM 026 key punch&#8221;).
+Thus, if you wanted to actually <i>use</i> a Lisp-based language
+with its full capabilities, you had to use s-expressions.
 </p>
 
 <p>
 Sweet-expressions avoid these problems of M-expressions.
 The sweet-expression notation is not tied to any particular semantic,
+it is designed to use character sequences available to typical (and even
+low-powered) equipment,
 and it has been implemented multiple times.
 </p>
 
