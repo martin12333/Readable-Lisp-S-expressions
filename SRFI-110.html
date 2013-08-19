@@ -1244,7 +1244,8 @@ If no match is found, it is an error.</li>
 Markers are a small set of special terminals.
 Markers <em>MUST</em> be recognized if and only if
 the reader is in indentation processing mode,
-the marker is preceded by indentation or hspace,
+the marker is at the beginning of the line
+or preceded by indentation or hspace,
 the marker is followed by an hspace or EOL,
 and the marker starts with the character shown
 (e.g., neither <tt>|$|</tt> nor <tt>'$</tt> contains a marker).
