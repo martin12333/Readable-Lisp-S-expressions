@@ -4866,10 +4866,7 @@ mechanism.
 
 <p>
 One could be easily added.
-One approach would be to consider &#8220;.&#8221; at the beginning
-of a line, with expressions after it,
-as meaning &#8220;this continues the previous line&#8221;.
-Another approach would be to interpret &#8220;\\&#8221; at the
+One approach would be to interpret &#8220;\\&#8221; at the
 end of a line (after at least one n-expression)
 as a line continuation; we even
 have a draft BNF construction that would do that:
@@ -4879,10 +4876,16 @@ normal_it_expr
   : line_exprs (
      GROUP_SPLIT hs
       (options {greedy=true;} :
-       comment_eol same more=it_expr {$v = appende($line_exprs.v, $more.v);}
-       | /*empty*/ {$v = monify($line_exprs.v);} )
+       comment_eol same more=it_expr {(appende $line_exprs $more)}
+       | /*empty*/ {(monify $line_exprs)} )
     ...
 </pre>
+
+<p>
+Another approach would be to consider &#8220;.&#8221; at the beginning
+of a line, with expressions after it,
+as meaning &#8220;this continues the previous line&#8221;.
+</p>
 
 <p>
 However,
@@ -4897,7 +4900,8 @@ There were also concerns by some
 that &#8220;\\&#8221; at the end of a line would be confusing.
 It would be easy to add &#8220;\\&#8221; as a line continuation in some future
 version if it proves to be necessary, and implementations could
-choose to add it as an extension.
+choose to add it (e.g., a &#8220;\\&#8221; at the end of the line)
+as an extension.
 </p>
 
 <h2 id="comparisons">Comparisons to other notations</h2>
