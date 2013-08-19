@@ -6732,19 +6732,20 @@ DEDENT RE_INDENT body...
 The BNF was then changed so that SUBLIST allowed more constructs:
 </p>
 <pre>
-it_expr
-  : head
+normal_it_expr
+  : line_exprs
     ...
-     | SUBLIST hspace* /* head SUBLIST ... case */
-       (sub_i=it_expr {(append $head (list $sub_i))}
+     | SUBLIST hs /* head SUBLIST ... case */
+       (sub_i=it_expr {(appende $head (list1e $sub_i))}
         | comment_eol indent sub_b=body
           ( re_indent partial_out=body
-             {(append (append $head (list $sub_b)) $partial_out)}
-           | /*empty*/ {(append $head (list $sub_b))} ) )
+             {(appende (appende $head (list1e $sub_b)) $partial_out)}
+           | /*empty*/ {(appende $head (list1e $sub_b))} ) )
   ...
-  | SUBLIST hspace* /* "$" first on line */
-    (is_i=it_expr {(list $is_i)}
-     | comment_eol indent sub_body=body {(list $sub_body)} )
+sublist_line // "$" first on line
+  | SUBLIST hs
+    (is_i=it_expr {(list1e $is_i)}
+     | comment_eol indent sub_body=body {(liste $sub_body)} )
 </pre>
 
 
