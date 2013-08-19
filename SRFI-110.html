@@ -179,7 +179,7 @@ define fibfast(n)   ; Typical function notation
   <li><a href="#srfi-49">What is the relationship between sweet-expressions and SRFI-49 (I-expressions)?</a></li>
   <li><a href="#separate-105">Why are sweet-expression separate from curly-infix and neoteric-expressions as defined in SRFI-105?</a></li>
   <li><a href="#writing-out-results">Writing out results</a></li>
-  <li><a href="#backwards-compatibility">Backwards compatibility (well-formatted s-expressions)</a></li>
+  <li><a href="#backwards-compatibility">Backwards compatibility (nicely-formatted/polyglot s-expressions)</a></li>
   <li><a href="#ease-of-implementation">Ease of implementation</a></li>
   <li><a href="#simplicity">Simplicity</a></li>
   </ul>
@@ -1658,15 +1658,16 @@ as a label for a sweet-expression
 </p>
 
 <p>
-A <i>well-formatted</i> s-expression is an expression interpreted
+A <i>nicely-formatted</i> (aka <i>polyglot</i>)
+s-expression is an expression interpreted
 identically by both traditional s-expressions and by sweet-expressions.
-A well-formatted file is a file interpreted identically
+A nicely-formatted file is a file interpreted identically
 by both traditional s-expressions and sweet-expressions.
 (In practice, it appears that
 <a href="#backwards-compatibility">most real s-expression files
-in Scheme are well-formatted</a>.)
+in Scheme are nicely-formatted</a>.)
 It is <em>RECOMMENDED</em> that files in traditional
-s-expression notation be well-formatted so that they can be
+s-expression notation be nicely-formatted so that they can be
 directly read using a sweet-expression reader.
 </p>
 
@@ -2446,6 +2447,19 @@ with the notation, then the notation itself is a problem.
 </p>
 
 <p>
+Since sweet-expressions are simply additional abbreviations for s-expressions,
+an IDE or text editor could support sweet-expressions
+with all the capabilities that they currently provide for s-expressions,
+such as moving to the next/previous expression.
+Tools could even support
+<a href="http://www.emacswiki.org/emacs/ParEdit">ParEdit</a>-like
+capabilities to move around and manipulate s-expressions
+(e.g., split, join, raise, slurp, barf, and convolute),
+since sweet-expressions are simply an extended
+notation for s-expression constructs.
+</p>
+
+<p>
 Some obvious &#8220;solutions&#8221; do not work well enough:
 </p>
 <ol>
@@ -2827,7 +2841,7 @@ characters or a special symbol (<var>and</var>, <var>or</var>, or
 <var>xor</var>), and there are 3-6 elements in the (proper) list.
 </p>
 
-<h3 id="backwards-compatibility">Backwards compatibility (well-formatted s-expressions)</h3>
+<h3 id="backwards-compatibility">Backwards compatibility (nicely-formatted/polyglot s-expressions)</h3>
 
 <p>Backwards compatibility with traditional Lisp notation is helpful.
 A reader that can also read traditional s-expressions, formatted
@@ -2836,14 +2850,20 @@ conventionally, is much easier to switch to.
 
 <p>
 The sweet-expression notation is fully backwards-compatible with
-<em>well-formatted</em> Lisp s-expressions.
-In practice, most s-expressions used in real programs are well-formatted.
+<em>nicely-formatted</em> (aka <em>polyglot</em>) Lisp s-expressions.
+In practice, most s-expressions used in real programs are nicely-formatted.
 Thus, a user can enable sweet-expressions and continue to read and
 process traditionally-formatted s-expressions as well.
 If an s-expression is so badly formatted that it
 would be interpreted differently, that s-expression can
 be processed by a traditional s-expression pretty-printer
 and have the problem resolved.
+The term <em>polyglot</em> is already used for a similar meaning, namely,
+<a href="http://www.w3.org/TR/html-polyglot/">
+documents that are interpreted identically as both HTML and XHTML</a>.
+However, the term <em>polyglot</em> is rather technical, so we use the terms
+<em>nicely-formatted</em> and <em>polyglot</em> interchangeably
+to mean the same thing.
 </p>
 <p>
 The changes that can cause a difference in interpretation are due
