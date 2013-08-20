@@ -306,7 +306,7 @@ But as
 &#8220;I&#8217;m always somewhat amazed by the claim that the
 parens &#8216;just disappear&#8217;, as if this is a good thing.
 Bugs live in the difference between the code in your head
-and the code on the screen - and having the parens
+and the code on the screen &mdash; and having the parens
 in the wrong place causes bugs.
 And autoindenting isn&#8217;t the answer -
 I don&#8217;t want the indenting to follow the parens,
@@ -524,7 +524,7 @@ Here are a few clarifications:
 <li>An unescaped &#8220;;&#8221; not in a string still introduces comments
 that end at the end of the line.</li>
 <li>Lines with only a ;-comment (preceded by 0 or more indent characters)
-are completely ignored - their indentation (if any) is irrelevant,
+are completely ignored &mdash; their indentation (if any) is irrelevant,
 and they do not end an expression.</li>
 <li>Special comments are non-whitespace sequences
 other than ;-comments that do not return a datum; they include
@@ -2209,7 +2209,7 @@ macros, without a homoiconic format. Yet many past readability efforts
 made it difficult to determine exactly what structures were being
 created by the notation.
 Typical infix notations with precedence were
-especially common examples of this problem - they would quietly create
+especially common examples of this problem &mdash; they would quietly create
 multiple lists without obvious indications that this was happening.
 <a href="http://javascript.crockford.com/tdop/tdop.html">
 Top Down Operator Precedence by Douglas Crockford
@@ -2237,7 +2237,7 @@ See
 for a longer discussion on past efforts.
 In any case, now that
 this pattern has been identified, new notations can be devised that are
-general and homoiconic - avoiding the problems of past efforts.
+general and homoiconic &mdash; avoiding the problems of past efforts.
 </p>
 
 <p>
@@ -2268,7 +2268,7 @@ s-expression notation, and our replies.
 <p>
 The Common Lisp FAQ says that people <i>&#8220;wonder why Lisp can&#8217;t
 use a more &#8216;normal&#8217; syntax.
-It&#8217;s not because Lispers have never thought of the idea - indeed,
+It&#8217;s not because Lispers have never thought of the idea &mdash; indeed,
 Lisp was originally intended to have a syntax much like FORTRAN...&#8221;</i>.
 </p>
 </blockquote>
@@ -2314,7 +2314,7 @@ and it is not difficult to assign one special character to each and
 be done with it. But Lisp has a much richer domain of discourse,
 and a Lisp programmer often approaches an application as yet another
 exercise in language design; the style typically involves designing new
-data structures and new functions to operate on them - perhaps dozens
+data structures and new functions to operate on them &mdash; perhaps dozens
 or hundreds&#8221; and it&#8217;s just too hard to invent that many distinct
 symbols (though the APL community certainly has tried). Ultimately
 one must always fall back on a general function-call notation; it&#8217;s
@@ -2373,7 +2373,7 @@ But what Gabriel and Steele failed to appreciate in their paper is that
 it&#8217;s possible to have a notation that is
 general, homoiconic, and easier to read.
 Now that we understand why past efforts failed, we can devise notations
-that are general and homoiconic - and succeed!
+that are general and homoiconic &mdash; and succeed!
 </p>
 
 <p>
@@ -2384,7 +2384,7 @@ it would be better to fix the notation.
 The resulting notation could be easier to read, and you could focus your
 tools on solving problems that were not self-inflicted.
 In particular, &#8220;stopping to see the parentheses&#8221; is a sign of a
-serious problem - the placement of parentheses fundamentally affects
+serious problem &mdash; the placement of parentheses fundamentally affects
 interpretation, and serious bugs can hide there.
 </p>
 <p>
@@ -2429,8 +2429,8 @@ not match the parentheses. bhurt&#8217;s response to that article is telling:
 &#8220;I&#8217;m always somewhat amazed by the claim that the parens
 &#8216;just disappear&#8217;, as if this is a good thing.
 Bugs live in the difference between the code in your head and the code on the
-screen - and having the parens in the wrong place causes bugs.
-And autoindenting isn&#8217;t the answer - I don&#8217;t want the
+screen &mdash; and having the parens in the wrong place causes bugs.
+And autoindenting isn&#8217;t the answer &mdash; I don&#8217;t want the
 indenting to follow the parens, I want the parens to follow the indenting.
 The indenting I can see, and can see is correct.&#8221;</p>
 
@@ -2667,7 +2667,7 @@ href="http://lists.canonical.org/pipermail/kragen-tol/2002-January/000666.html"
 rel="nofollow">Kragen Sitaker&#8217;s notes on Graham and Arc</a>
 discusses how indentation can really help (in this notation,
 functions with no parameters need to be surrounded by parentheses, to
-distinguish them from atoms - &#8220;oh well&#8221;).  Graham&#8217;s <a
+distinguish them from atoms &mdash; &#8220;oh well&#8221;).  Graham&#8217;s <a
 href="http://en.wikipedia.org/wiki/RTML" rel="nofollow">RTML</a> is
 implemented using Lisp, but uses indentation instead of parentheses to
 define structure.  RTML is a proprietary programming language that at
@@ -2688,7 +2688,7 @@ of the colon in various Lisp-like languages).</li>
 <li><a href="http://www.lispin.org/">Lispin</a>
 discusses a way to get S-expressions with indentation.</li>
 <li><a href="http://srfi.schemers.org/srfi-49/srfi-49.html">Scheme
-SRFI-49, I-expressions</a> - which are discussed next.
+SRFI-49, I-expressions</a> &mdash; which are discussed next.
 </ul>
 
 <h3 id="srfi-49">What is the relationship between sweet-expressions and SRFI-49 (I-expressions)?</h3>
@@ -3050,8 +3050,8 @@ with the original SRFI-49 (I-expression) spec, in which two sequential
 blank lines before an expression surprisingly returned ().
 This was a serious usability problem.
 The sample SRFI-49
-implementation <em>did</em> end expressions on a blank line - the problem
-was that the spec didn&#8217;t clearly capture this.
+implementation <em>did</em> end expressions on a blank line &mdash;
+the problem was that the spec didn&#8217;t clearly capture this.
 </p>
 
 <p>
@@ -5035,7 +5035,7 @@ enforestation.
 Enforestation is not merely a preprocessing of program text;
 it is integrated into the macro-expansion machinery so
 that it obeys and leverages binding information to support hygiene,
-macro-generating macros, and local macro binding - facilities that
+macro-generating macros, and local macro binding &mdash; facilities that
 have proven important for building expressive and composable language
 extensions in Lisp, Scheme, and Racket.&#8221;
 An example of its syntax, per its paper, is:
@@ -5201,9 +5201,9 @@ sweet-expressions, a zero-argument function name is called by adding
 <li>&#8220;Flexible token format&#8221;
 - both require operators to be delimited.</li>
 <li>&#8220;Use indentation
-for grouping&#8221; - both use indentation for grouping</li>
+for grouping&#8221; &mdash; both use indentation for grouping</li>
 <li>&#8220;Block
-expressions yield multiple values&#8221; - In sweet-expressions, you use
+expressions yield multiple values&#8221; &mdash; In sweet-expressions, you use
 usual Scheme procedures, including value, instead of having special
 syntax.</li>
 <li>REPL: In sweet-expressions, you usually end a line
@@ -5400,7 +5400,7 @@ callable and eval to [themselves]...
 In fact it&#8217;s much cleverer, though that&#8217;s irrelevant for us.
 All objects are actually macros
 (&#8220;lazy functions&#8221; in the manual&#8217;s
-terminology). What objects do if called with arguments - e.g.
+terminology). What objects do if called with arguments &mdash; e.g.
 (&#8220;foo&#8221; arg1 arg2) -
 is evaluate those arguments in a dynamic-binding env enriched by
 the object&#8217;s methods, and return the last value.
@@ -6000,7 +6000,8 @@ newline is not followed by () as it would be in sweet-expressions):
 
 <p>
 Arne states,
-&#8220;This uses more vertical space - and I don&#8217;t mind (so it is a design
+&#8220;This uses more vertical space &mdash;
+and I don&#8217;t mind (so it is a design
 choice not to try very hard to minimize vertical space).&#8221;
 For the single gigantic top-level datum, you just indent the rest
 (as in class definitions in Python):
@@ -6085,11 +6086,12 @@ A flat file of definitions would usually work portably across Scheme systems.
 So Schemers generally have the habit of putting module
 annotations as the last step just prior to publishing their code.
 Those interested in cross-Scheme compatibility for their published code might
-very well keep the definitions unindented - some Schemes require modules to
+very well keep the definitions unindented &mdash;
+some Schemes require modules to
 be a single large datum (MzScheme, R6RS, R7RS) others require module
 annotations as a separate datum(s) before definitions (Guile), and a
 Schemer maintaining a cross-platform library might get bug reports from
-different segments of their users - including patches.
+different segments of their users &mdash; including patches.
 </p>
 
 <p>
