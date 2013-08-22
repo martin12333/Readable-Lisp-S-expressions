@@ -60,12 +60,17 @@ common_lisp_sourcedir = $(common_lispdir)/source
 common_lisp_source_pkgdir = $(common_lisp_sourcedir)/readable
 common_lisp_systemsdir = $(common_lispdir)/systems
 
+# The pkg_asd_file is generated from its ".in" file.
+# That way we don't need to keep repeating information like version numbers.
 pkg_asd_file=readable.asd
+pkg_asd_file_in=$(pkg_asd_file).in
+$(pkg_asd_file_in): $(pkg_asd_file)
 
 dist_common_lisp_source_pkg_DATA = \
  basic-curly.lisp neoteric.lisp backquote.lisp sweet.lisp
 
-dist_common_lisp_source_pkg_DATA += $(pkg_asd_file)
+# Distribute both the .asd and .asd.in files to simplify repackaging.
+dist_common_lisp_source_pkg_DATA += $(pkg_asd_file_in) $(pkg_asd_file)
 
 # Install symlink so asdf can find these files. See:
 # http://www.gnu.org/software/automake/manual/html_node/Extending.html
