@@ -75,8 +75,6 @@ AS_IF([test x"$CLISP_INSTALLED" == x],[#then
 ])
 AC_SUBST([CLISP])
 
-# Generate readable.asd, in particular, so its version number matches.
-AC_CONFIG_FILES([readable.asd])
 
 # Perhaps check for: (more) programs, libraries, header files, types,
 # structures, compiler characteristics, library functions, system services.
