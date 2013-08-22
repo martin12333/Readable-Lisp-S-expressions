@@ -119,7 +119,7 @@ Sweet-expressions and traditionally formatted s-expressions
 can be freely mixed; this provides backwards compatibility,
 simplifies transition, and enables developers to maximize readability.
 Here is an example of a sweet-expression and its equivalent s-expression
-(note that a sweet-expression reader would accept <i>either</i> format):
+(note that a sweet-expression reader would accept <em>either</em> format):
 </p>
 
 <table border="1" cellpadding="4">
@@ -323,7 +323,7 @@ general (i.e., the notation is independent of an underlying semantic) or
 homoiconic (i.e., the underlying data structure is clear from the syntax).
 We believe
 <a href="#general-and-homoiconic">a Lisp-based notation
-<i>needs</i> to be general and homoiconic</a>.
+<em>needs</em> to be general and homoiconic</a>.
 For example, Lisp-based languages can trivially create new semantic constructs
 (e.g., with macros) or be used to process other constructs;
 a Lisp notation that is not general will typically be unable
@@ -365,7 +365,7 @@ discussion on how and why it is designed this way.
 </p>
 
 <p>
-Sweet-expressions <i>are</i> general and homoiconic,
+Sweet-expressions <em>are</em> general and homoiconic,
 and thus can be easily used with other constructs
 such as quasiquoting and macros.
 In short, if a capability can be accessed using s-expressions, then they
@@ -422,7 +422,8 @@ Sweet-expressions add the ability to
 In sweet-expressions, a line representing a value normally has
 one or more n-expressions, separated by one or more spaces or tabs.
 If a line is indented more than the previous line, that line is
-a <i>child</i> line, and the previous line is a <i>parent</i> to that child.
+a <dfn>child line</dfn>, and the previous line is a <dfn>parent line</dfn>
+to that child.
 Later lines with the same indentation as the child are also children
 of that parent, until there is an intervening line with the parent&#8217;s
 indentation or less.
@@ -529,7 +530,7 @@ and they do not end an expression.</li>
 <li>Special comments are non-whitespace sequences
 other than ;-comments that do not return a datum; they include
 block comments (<code>#|</code>...<code>|#</code>) and
-datum comments (<code>#;</code><i>datum</i>).
+datum comments (<code>#;</code><var>datum</var>).
 <a href="#block-comment-indent-significant">If a special comment
 begins immediately after the indent,
 the indentation of the special comment is used</a>.
@@ -676,7 +677,7 @@ leading traditional abbreviations
 (quote, comma, backquote, or comma-at) with following whitespace,
 and the pair of
 markers &#8220;&lt;*&#8221; and &#8220;*&gt;&#8221;
-(which surround a <i>collecting list</i>).
+(which surround a <dfn>collecting list</dfn>).
 Below is an explanation of each.
 </p>
 
@@ -945,7 +946,7 @@ t7 #;t8(q) t9 ; Demo datum comments
 The
 <a href="#collecting-lists">markers &#8220;&lt;*&#8221;
 and &#8220;*&gt;&#8221; surround a
-<i>collecting list</i></a>.
+<dfn>collecting list</dfn></a>.
 This represents a list, but unlike (...),
 the reader stays in indentation processing mode,
 the indentation level is temporarily restarted
@@ -1033,11 +1034,11 @@ As an alternative, consider trying out the
 sample implementation and tools, including:
 </p>
 <ul>
-<li><i>unsweeten</i>, which translates sweet-expressions to s-expressions</li>
-<li><i>sweeten</i>, which translates s-expressions to sweet-expressions
+<li><dfn>unsweeten</dfn>, which translates sweet-expressions to s-expressions</li>
+<li><dfn>sweeten</dfn>, which translates s-expressions to sweet-expressions
 (so you can switch to sweet-expressions) and is itself
 written using sweet-expressions</li>
-<li><i>diff-s-sweet</i>, which reports semantic differences between
+<li><dfn>diff-s-sweet</dfn>, which reports semantic differences between
 a file of s-expressions and a file of sweet-expressions.
 It can even detect those rare s-expression files that would be
 interpreted differently by a sweet-expression reader.</li>
@@ -1297,7 +1298,7 @@ DATUM_COMMENTW  : '#;' (' ' | '\t' | '\n' | '\r') ;  // start datum comment
 </pre>
 
 <p>
-The <i>syntax-case related abbreviations</i> are
+The <dfn>syntax-case related abbreviations</dfn> are
 &#8220;<tt>#'</tt>&#8221;, &#8220;<tt>#`</tt>&#8221;,
 &#8220;<tt>#,</tt>&#8221;, and &#8220;<tt>#,@</tt>&#8221;,
 which stand for
@@ -1573,7 +1574,7 @@ inside a string <tt>"..."</tt>).
 <p>
 The directives <code>#!sweet</code>,
 <code>#!curly-infix</code>, and <code>#!no-sweet</code>
-are <i>parsing directives</i>.
+are <dfn>parsing directives</dfn>.
 A parsing directive <em>MUST</em>
 begin at the beginning of a line, be terminated by an end of line,
 and not be contained inside an expression
@@ -1646,19 +1647,19 @@ and the formats
 
 <p>
 A sweet-expression reader <em>MAY</em> implement datum labels
-with syntax <code>#<i>number</i>=<i>datum</i></code>.
+with syntax <code>#<var>number</var>=<var>datum</var></code>.
 If the first character after the equal sign is not whitespace,
 such a reader <em>SHOULD</em> read it as a neoteric-expression.
 If the equal sign is followed by whitespace,
 a datum reader <em>MAY</em> reject it;
 the reader <em>MAY</em> also
-consider the datum an <i>it_expr</i>, and thus
+consider the datum an <var>it_expr</var>, and thus
 as a label for a sweet-expression
 (the sample implementation does not do this).
 </p>
 
 <p>
-A <i>nicely-formatted</i> (aka <i>polyglot</i>)
+A <dfn>nicely-formatted</dfn> (aka <dfn>polyglot</dfn>)
 s-expression is an expression interpreted
 identically by both traditional s-expressions and by sweet-expressions.
 A nicely-formatted file is a file interpreted identically
@@ -2241,7 +2242,7 @@ general and homoiconic &mdash; avoiding the problems of past efforts.
 </p>
 
 <p>
-Sweet-expressions were <i>specifically</i> designed to be
+Sweet-expressions were <em>specifically</em> designed to be
 general and homoiconic, and thus have the possibility of succeeding
 where past efforts have failed.</p>
 
@@ -2252,7 +2253,7 @@ where past efforts have failed.</p>
 Some Lisp developers act as if Lisp notation descended from the gods,
 and thus is impossible to improve.
 The authors do not agree, and instead believe that Lisp
-notation <i>can</i> be improved beyond the notation created in the 1950s.
+notation <em>can</em> be improved beyond the notation created in the 1950s.
 The following is a summary of a
 <a href="http://sourceforge.net/p/readable/wiki/Retort/">retort</a>
 to those who believe Lisp notation cannot be improved, based on the
@@ -2266,10 +2267,10 @@ s-expression notation, and our replies.
 
 <blockquote>
 <p>
-The Common Lisp FAQ says that people <i>&#8220;wonder why Lisp can&#8217;t
+The Common Lisp FAQ says that people <em>&#8220;wonder why Lisp can&#8217;t
 use a more &#8216;normal&#8217; syntax.
 It&#8217;s not because Lispers have never thought of the idea &mdash; indeed,
-Lisp was originally intended to have a syntax much like FORTRAN...&#8221;</i>.
+Lisp was originally intended to have a syntax much like FORTRAN...&#8221;</em>.
 </p>
 </blockquote>
 <p>
@@ -2286,12 +2287,12 @@ this is strong evidence that traditional s-expression notation has problems.
 <a href="http://www.dreamsongs.com/Files/Hopl2.pdf">
 &#8220;The Evolution of Lisp&#8221; by Guy Steele and Richard Gabriel
 (HOPL2 edition)</a> says that,
-<i>&#8220;The idea of introducing Algol-like syntax into Lisp keeps popping up
+<em>&#8220;The idea of introducing Algol-like syntax into Lisp keeps popping up
 and has seldom failed to create enormous controversy between those who
 find the universal use of S-expressions a technical advantage (and don&#8217;t
 mind the admitted relative clumsiness of S-expressions for numerical
 expressions) and those who are certain that algebraic syntax is more
-concise, more convenient, or even more natural...&#8221;.</i>
+concise, more convenient, or even more natural...&#8221;.</em>
 </p>
 </blockquote>
 <p>
@@ -2306,7 +2307,7 @@ and not tied to a particular semantic at all.
 <blockquote>
 <p>
 That paper continues,
-<i>&#8220;We conjecture that Algol-style syntax has not really caught on in the
+<em>&#8220;We conjecture that Algol-style syntax has not really caught on in the
 Lisp community as a whole for two reasons. First, there are not enough
 special symbols to go around. When your domain of discourse is limited
 to numbers or characters, there are only so many operations of interest,
@@ -2318,7 +2319,7 @@ data structures and new functions to operate on them &mdash; perhaps dozens
 or hundreds&#8221; and it&#8217;s just too hard to invent that many distinct
 symbols (though the APL community certainly has tried). Ultimately
 one must always fall back on a general function-call notation; it&#8217;s
-just that Lisp programmers don&#8217;t wait until they fail.&#8221;</i>
+just that Lisp programmers don&#8217;t wait until they fail.&#8221;</em>
 </p>
 </blockquote>
 <p>
@@ -2337,7 +2338,7 @@ semantic or requiring a massive set of special symbols.
 
 <blockquote>
 <p>
-<i>
+<em>
 &#8220;Second, and
 perhaps more important, Algol-style syntax makes programs look less
 like the data structures used to represent them. In a culture where the
@@ -2346,11 +2347,11 @@ a notation that distances the appearance of a program from the appearance
 of its representation as data is not likely to be warmly received (and
 this was, and is, one of the principal objections to the inclusion
 of loop in Common Lisp).&#8221;
-</i>
+</em>
 </p>
 </blockquote>
 <p>
-Here Steele and Gabriel are <b>extremely</b> insightful.
+Here Steele and Gabriel are <strong>extremely</strong> insightful.
 Today we would say that s-expressions are &#8220;homoiconic&#8221;.
 Homoiconic notations are extremely rare,
 and this property (homoiconicity) is an important reason that
@@ -2414,8 +2415,8 @@ statement groups, and (...) are widely used to group infix operators
 in expressions.
 The problem with Lisp s-expression notation is that parentheses
 (and possibly other paired characters)
-are the <i>only</i> way to group constructs,
-<i>and</i> that almost <i>every</i> construct requires a grouping construct.
+are the <em>only</em> way to group constructs,
+<em>and</em> that almost <em>every</em> construct requires a grouping construct.
 As a result, Lisp programs have a large number of parentheses,
 far more than many developers prefer.
 </p>
@@ -2498,13 +2499,13 @@ So this &#8220;usual solution&#8221; doesn&#8217;t well work for Lisps
 <p>
 Thankfully, making indentation syntactically meaningful
 can be general; that is,
-it does <i>not</i> need to be tied to any particular semantic.
+it does <em>not</em> need to be tied to any particular semantic.
 A notation where indentation is syntactically meaningful
 can also be homoiconic.
 As noted earlier, a Lisp notation needs to be
 <em>general</em> and <em>homoiconic</em>.
 Yet indentation can represent complexly-nested structures
-<i>and</i> do it in a way that is
+<em>and</em> do it in a way that is
 visually distinct from parentheses.
 An indentation-sensitive approach is also
 easy to define in a way that retains backwards compatibility.
@@ -2514,7 +2515,7 @@ easy to define in a way that retains backwards compatibility.
 Making indentation syntactically meaningful eliminates many
 parentheses, making it much simpler for humans to determine
 which datums are in which expression.
-Lisp programs <i>already</i> use indentation to show structure,
+Lisp programs <em>already</em> use indentation to show structure,
 indeed, developers in nearly all languages already
 use indentation to show structure even when it is ignored by
 the underlying system.
@@ -2538,7 +2539,7 @@ A related term is the
 (from
 <a href="http://web.archive.org/web/20070417180907/http://www.cs.utah.edu/~eeide/compilers/old/papers/p157-landin.pdf">
 &#8220;The Next 700 Programming Languages&#8221; by P. J. Landin,
-<i>Communications of the ACM</i>,
+<cite>Communications of the ACM</cite>,
 Volume 9 / Number 3, March 1966</a>,
 describing the ISWIM (If you See What I Mean) language family).
 The original definition of the off-side rule,
@@ -2603,7 +2604,7 @@ notation, and potentially serves as a cautionary tale that
 mechanisms other than indentation are needed in a practical notation.
 As noted in
 <a href="http://docutils.sourceforge.net/docs/dev/rst/problems.html">
-<i>Problems With StructuredText</i></a>,
+<cite>Problems With StructuredText</cite></a>,
 the
 &#8220;original StructuredText and StructuredTextNG require that
 section structure be indicated through indentation,
@@ -3066,7 +3067,7 @@ that the next expression began on the left column.
 This would work well in files.
 However, this would be hideous to use in a REPL, because it would mean
 that the results of an expression would only be evaluated after the
-first (and possibly only) line of the <i>next</i> expression was entered.
+first (and possibly only) line of the <em>next</em> expression was entered.
 This is absurdly confusing and unacceptable.
 Early Pascal I/O had similar problems.
 </li>
@@ -3097,11 +3098,11 @@ Beni Cherniavsky-Paskin observed on the readable-discuss mailing list
 until I add a ;&#8221;.
 </li>
 <li>
-An expression could end at <i>two</i> blank lines instead of one.
+An expression could end at <em>two</em> blank lines instead of one.
 This would allow easy insertion of single blank lines.
 But it would be easy to make mistakes, since the difference of adding
 an extra blank line would be less obvious than adding one blank line,
-and it would require pressing Enter <i>three</i> times in typical REPL use
+and it would require pressing Enter <em>three</em> times in typical REPL use
 (which would be less pleasant).
 It would also use up a lot of vertical real estate in a REPL, and vertical
 space is relatively precious.
@@ -3243,7 +3244,7 @@ indentation characters and includes a &#8220;!&#8221; ?
 Originally it meant the same thing (&#8220;blank line&#8221;),
 because it was a line with only indent characters.
 However, that interpretation seemed odd, because you
-<i>can</i> see a difference compared to a line with no characters.
+<em>can</em> see a difference compared to a line with no characters.
 That semantic was confusing, so Wheeler changed this to
 being illegal.
 </p>
@@ -3269,7 +3270,7 @@ Isn&#8217;t this the cleanest thing possible:&#8221;
 <p>
 On May 2, 2013, David Vanderson said he was for allowing &#8220;!&#8221;
 in an indentation-character-only line, but noted
-that there were good reasons to <i>not</i> enforce indentation matching.
+that there were good reasons to <em>not</em> enforce indentation matching.
 He gave this code example:
 </p>
 <pre>
@@ -3705,7 +3706,7 @@ even if the child lines together produce an empty value.
 
 <p>
 The rationale is that if you comment out later lines that are
-parameters of a procedure, you probably <i>still</i> want to
+parameters of a procedure, you probably <em>still</em> want to
 treat it as a procedure. E.G., given:
 </p>
 <pre>
@@ -3773,7 +3774,7 @@ The same problem applies to PS, which is not used in practice.
 CR by itself is obsolescent.
 However, CR by itself has been used on many historical systems,
 so we expect that there are older files which still use it.
-Lone CR <i>is</i> permitted by various Scheme specifications,
+Lone CR <em>is</em> permitted by various Scheme specifications,
 and it is easy to implement too.
 Thus, we believe it is worth including in the specification.
 </p>
@@ -3846,12 +3847,12 @@ way they are.
 
 <p>
 Just like SRFI-49, a single neoteric expression on a line with no child
-lines (a <i>singleton</i>) represents itself.
+lines (a <dfn>singleton</dfn>) represents itself.
 In contrast, if there are multiple expressions (on a line or via a child),
 they are wrapped into a list.
-An alternative would be to <i>always</i> wrap a line into a list,
+An alternative would be to <em>always</em> wrap a line into a list,
 and then require some special marker to indicate that a singleton
-should <i>not</i> be wrapped in a list.
+should <em>not</em> be wrapped in a list.
 </p>
 
 <p>
@@ -3902,7 +3903,7 @@ Implementations are only required to support these directives if
 they are at the beginning of a line and they can end a sweet-expression
 (e.g., they are not in the middle of a pair of parentheses or
 a collecting list).
-It is not hard to <i>parse</i> the directive (indeed, the BNF
+It is not hard to <em>parse</em> the directive (indeed, the BNF
 describes how to do so), but many implementations may have difficulty
 switching modes in the middle of processing a sweet-expression, and
 there is no strong reason to require this functionality.
@@ -3910,7 +3911,7 @@ there is no strong reason to require this functionality.
 
 <p>
 A list expression such as <code>(srfi&nbsp;110)</code>
-was intentionally <i>not</i> used.
+was intentionally <em>not</em> used.
 If this was used, a reader would not be able to easily
 distinguish between (1) a list to read and
 (2) a command to change modes.
@@ -4166,7 +4167,7 @@ does not provide support for |...|.
 (In scsh, -i is a symbol, not a number.)
 </li>
 <li>
-R5RS and R6RS do not require support for <i>any</i>
+R5RS and R6RS do not require support for <em>any</em>
 symbols that directly start with &#8220;-&#8221;,
 other than &#8220;-&#8221; itself
 (as they are not in the set of defined <code>&lt;initial&gt;</code>).
@@ -4354,7 +4355,7 @@ However, this is actually more consistent and produces better results.
 SUBLIST (<code>$</code>) does not imply
 that the succeeding text should be a list;
 instead, it denotes that the succeeding text
-is the <i>last argument</i> of the current line.
+is the <em>last argument</em> of the current line.
 </p>
 <p>
 More concretely, consider this code:
@@ -4909,7 +4910,7 @@ as meaning &#8220;this continues the previous line&#8221;.
 
 <p>
 However,
-we&#8217;ve tried to <i>minimize</i> the number of mechanisms in the notation,
+we&#8217;ve tried to <em>minimize</em> the number of mechanisms in the notation,
 and there didn&#8217;t seem to be a strong use case for line continuations
 for Scheme.
 If the sub-components have structure you can just use
@@ -4994,7 +4995,7 @@ could not be used on common equipment available at the time
 (&#8220;A machine readable M-notation would have required redefinition,
 because the pencil-and-paper M-notation used characters
 unavailable on the IBM 026 key punch&#8221;).
-Thus, if you wanted to actually <i>use</i> a Lisp-based language
+Thus, if you wanted to actually <em>use</em> a Lisp-based language
 with its full capabilities, you had to use s-expressions.
 </p>
 
@@ -5109,7 +5110,7 @@ Note that this definition is more than simply the definition of a list
 in terms of syntax; the notion of how to calculate it seems to be
 embedded in the syntax.
 Honu&#8217;s approach seems to be at odds with the idea that a notation
-should be <i>independent</i> of the evaluation approach.
+should be <em>independent</em> of the evaluation approach.
 </p>
 
 <p>
@@ -5353,7 +5354,7 @@ changing &#8220;fie&#8221; to &#8220;faction&#8221; would produce
 </pre>
 which would be interpreted as <tt>(fee (faction (foe fum) (foo bar)))</tt>.
 </li>
-<li>It may be <i>especially</i> easy to make a mistake with this
+<li>It may be <em>especially</em> easy to make a mistake with this
 notation in a lisp.
 Writing &#8220;cons a b&#8221; would seem reasonable enough,
 but would be interpreted as (cons (a b)).
@@ -5908,10 +5909,10 @@ You can learn more about wisp at the
 <p>
 The key distinguishing factor between wisp and sweet-expressions
 is a difference of emphasis.
-The design of wisp focuses on having a simple <i>definition</i> as the most
+The design of wisp focuses on having a simple <em>definition</em> as the most
 important factor.
 The design of sweet-expressions focuses on having simpler and clearer
-<i>code</i> that <i>uses</i> the notation
+<em>code</em> that <em>uses</em> the notation
 (having &#8220;readable&#8221; code), even for large code sizes,
 at the cost of having have a slightly more complex definition.
 Below is a more detailed discussion of these differences.
@@ -5930,13 +5931,13 @@ and blank lines do not terminate the expression.
 The main change in wisp compared to the
 <a href="#arne">Arne&#8217;s initial approach</a>
 is that sublist with inline (&#8220;:&#8221; in wisp notation)
-<i>always</i> ends at the end of the line
+<em>always</em> ends at the end of the line
 (thanks to feedback from Alan Manuel K. Gloria).
 This completely eliminates the width-of-characters problem of the
 initial proposal (see below).
 At the time of this writing,
 inconsistent dedents produce broken code in the wisp implementation
-(they <i>should</i> throw an error instead).
+(they <em>should</em> throw an error instead).
 However, this is an implementation issue and not fundamental to the notation.
 </p>
 
@@ -6051,7 +6052,7 @@ But this actually creates problems when pasting a python
 script file into an interactive shell, so I see the point.
 Note, though, that there is no interactive wisp shell (yet).
 I think I would end a statement at 2 empty lines,
-which would mean that you <i>should not</i> use
+which would mean that you <em>should not</em> use
 2 consecutive empty lines in a script (but you could).&#8221;
 Using two blank lines is a plausible alternative, but note that this makes
 interactive use less appealing; users would actually have to press
@@ -6072,7 +6073,7 @@ As Alan Manuel Gloria notes,
 &#8220;In Scheme, usually you just put a bunch of definitions (unindented)
 in a file, then load them in your favorite Scheme system.
 After you&#8217;ve hacked on the definitions on the file a bit,
-<i>then</i> you put the module annotations.
+<em>then</em> you put the module annotations.
 This is largely the rationale for (include ...) in R7RS
 (define-library ...) forms: the expected Scheme workflow is to start with a
 bunch of top-level, non-module definitions, hack on them until they work,
@@ -6183,18 +6184,18 @@ because he believes that:
 </p>
 <ol>
 <li>
-<i>It produces simpler code</i>.
+<em>It produces simpler code</em>.
 Common cases should be simpler than less-common cases.
 Many procedures involve case/cond statements that break a problem into
 components, eventually leading to simple base cases.
 These base cases are often simple expressions (e.g., a number, the empty list,
-and so on) that are <i>not</i> in a list.
+and so on) that are <em>not</em> in a list.
 Lists with single elements occur, e.g., &#8220;(newline)&#8221;,
 but they are less common.
 Wheeler believes we should optimize for the more common case.
 </li>
 <li>
-<i>It is more familiar to Lisp developers</i>.
+<em>It is more familiar to Lisp developers</em>.
 A &#8220;.&#8221; in a list traditionally means that the following item
 is the cdr of a list, potentially creating an improper list.
 In the wisp approach, it may also indicate a normal list element,
@@ -6219,13 +6220,13 @@ The same could be expressed using sweet-expressions as:
 </blockquote>
 </li>
 <li>
-<i>It is more familiar to non-Lisp developers</i>.
+<em>It is more familiar to non-Lisp developers</em>.
 Developers who have never even seen Scheme can correctly
 guess what &#8220;newline()&#8221; means,
 while &#8220;. 1&#8221; will require explanation.
 </li>
 <li>
-<i>It is less error-prone</i>.
+<em>It is less error-prone</em>.
 Because it looks less familiar, developers are more likely to
 write the wrong code and miss errors with the wisp formulation.
 This is especially because &#8220;.&#8221; has another meaning
@@ -6246,7 +6247,7 @@ inviting error.
 
 <p>
 Wisp emphasizes a simple notation to describe and implement,
-but this can make <i>using</i> it with certain constructs
+but this can make <em>using</em> it with certain constructs
 more complicated (and less readable) compared to sweet-expressions.
 E.G., this sweet-expression:
 </p>
@@ -6332,7 +6333,7 @@ Perhaps the strongest distinguishing factor is a difference of emphasis.
 The design of wisp focuses on having a simple definition as the most
 important factor.
 The design of sweet-expressions focuses on having simpler and clearer code
-when <i>using</i> the notation, even for large code sizes,
+when <em>using</em> the notation, even for large code sizes,
 at the cost of having have a slightly more complex definition
 (because it includes additional abbreviations).
 Several of the sweet-expression BNF branches were specifically added so
@@ -6573,7 +6574,7 @@ It is unclear that the reduction in line count is fair compensation.
 </li>
 <li>
 It&#8217;s not clear (at least to David A. Wheeler)
-that there&#8217;s enough <i>value</i> to adding it.
+that there&#8217;s enough <em>value</em> to adding it.
 &#8220;There *ARE* use cases, and these use cases are
 definitely common enough to discuss doing something special with them.
 But I worry that the contravening downsides will overwhelm it.
@@ -6591,7 +6592,7 @@ ways to handle this construct.
 <li>
 This &#8220;partial dedenting&#8221; approach is
 backwards-compatible with the current specification,
-and thus could be added <i>later</i> if desired.
+and thus could be added <em>later</em> if desired.
 </li>
 </ol>
 
@@ -6807,14 +6808,14 @@ a future version could add these capabilities.
 <p>
 At least two programs have been written using sweet-expressions:
 <ul>
-<li><a href="http://readable.sourceforge.net"><i>sweeten</i></a>
+<li><a href="http://readable.sourceforge.net"><cite>sweeten</cite></a>
 by David A. Wheeler is
 a program that reads traditionally-formatted
 s-expressions and writes sweet-expressions.
 This program performs a great deal of traditional list processing, and
 is part of the &#8220;readable&#8221; project&#8217;s git repository.
 </li>
-<li><a href="https://github.com/AmkG/letterfall"><i>letterfall</i></a>
+<li><a href="https://github.com/AmkG/letterfall"><cite>letterfall</cite></a>
 by Alan Manuel K. Gloria is a graphical
 real-time touch typing game to improve typing skills, which uses
 GNOME libraries.
@@ -6865,9 +6866,9 @@ with hundreds of test cases.
 <p>
 The <a href="http://readable.sourceforge.net">Readable Lisp S-expressions Project</a> developed these notations and implementations of them.
 In particular, the project distributes the programs
-<i>unsweeten</i> (which takes sweet-expressions and transforms them
+<em>unsweeten</em> (which takes sweet-expressions and transforms them
 into s-expressions) and
-<i>sweeten</i> (which takes s-expressions and transforms them into
+<em>sweeten</em> (which takes s-expressions and transforms them into
 sweet-expressions), as well as other related tools.
 </p>
 
@@ -7003,7 +7004,7 @@ Consider using &#8220;!&#8221; followed by space if you&#8217;re using a medium
 that hides indentation,
 or want to highlight a particular vertical group.
 However, beware if you start a paired expression and let it continue to
-the next line; the &#8220;!&#8221; is <i>not</i>
+the next line; the &#8220;!&#8221; is <em>not</em>
 an indent character inside parentheses, braces, or brackets.
 </p>
 
@@ -7049,11 +7050,11 @@ Many Scheme implementations and text editor infrastructures
 support multi-character lookahead, and in those cases
 their implementations could be even simpler.
 That said, note that sweet-expressions do not
-<i>require</i> multi-character lookahead for a fully-correct implementation.
+<em>require</em> multi-character lookahead for a fully-correct implementation.
 </p>
 <p>
-<b>See <a href="kernel.scm">the Scheme source code
-for the reference implementation</a></b>.
+<strong>See <a href="kernel.scm">the Scheme source code
+for the reference implementation</a></strong>.
 </p>
 
 <h1><a name="references">References</a></h1>
