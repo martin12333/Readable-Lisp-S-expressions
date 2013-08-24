@@ -88,6 +88,7 @@ rm -rf $RPM_BUILD_ROOT
 # don't get unneeded dependencies.  I use "-n" everywhere to make it
 # obvious what the final names are.
 
+# SCHEME SUBPACKAGES
 
 # Subpackage guile-readable, for the guile library.
 %package -n guile-readable
@@ -131,6 +132,19 @@ for the "readable" notation for Lisp-based languages
 %{_mandir}/man1/sweet-run.1.gz
 
 
+# Subpackage readable-scsh, tool for scsh.
+%package -n readable-scsh
+Summary: An extra tool to help scsh users use the readable notation.
+Requires: guile-readable scsh
+
+%description -n readable-scsh
+An extra tool to help scsh users use the readable notation.
+
+%files -n readable-scsh
+%{_bindir}/sweet-scsh
+
+
+# Common Lisp subpackages
 
 # Subpackage cl-readable, library for Common Lisp.
 # The following follows the conventions (package name, etc.) of
@@ -155,18 +169,6 @@ A portable Common Lisp library that implements the "readable" notations.
 %files -n cl-readable
 %{common_lisp_source_pkgdir}/*
 %{common_lisp_systemsdir}/%{pkg_asd_file}
-
-
-# Subpackage readable-scsh, tool for scsh.
-%package -n readable-scsh
-Summary: An extra tool to help scsh users use the readable notation.
-Requires: guile-readable scsh
-
-%description -n readable-scsh
-An extra tool to help scsh users use the readable notation.
-
-%files -n readable-scsh
-%{_bindir}/sweet-scsh
 
 
 # Subpackage readable-clisp
