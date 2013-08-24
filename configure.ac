@@ -3,8 +3,10 @@
 # For autotools info, see: http://www.dwheeler.com/autotools
 
 # Initialize, but use more options.  Note parameter brackets and whitespace.
+# All version numbers should follow the Semantic Versioning
+# convention, as documented here: http://semver.org/
 # TO CHANGE VERSION NUMBER: edit this, readable*.spec, and readable.asd:
-AC_INIT([readable], [0.9.2], [dwheeler@dwheeler.com],
+AC_INIT([readable], [0.9.2-develop], [dwheeler@dwheeler.com],
         [readable], [http://readable.sourceforge.net/])
 # Force autoconf to be more recent.
 AC_PREREQ([2.67])

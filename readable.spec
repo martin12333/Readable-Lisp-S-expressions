@@ -1,6 +1,6 @@
 # This RPM spec file uses the Fedora conventions and makes subpackages.
 Name:    readable
-Version: 0.9.2
+Version: 0.9.2-develop
 Release: 1%{?dist}
 Summary: Improve Lisp readability (infix, sweet-expression indentation)
 Group:   Development/Libraries
