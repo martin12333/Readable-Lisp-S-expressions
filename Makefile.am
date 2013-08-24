@@ -93,22 +93,34 @@ script_sources = src/sweeten.sscm src/unsweeten \
 
 EXTRA_DIST += $(script_sources)
 
+if WITH_GUILE
 # These scripts are generated at build time, so they're not distributed
 # (there's no dist_ prefix for bin_SCRIPTS here):
 bin_SCRIPTS  = bin/sweeten bin/unsweeten
 bin_SCRIPTS += bin/curly-guile bin/neoteric-guile bin/sweet-guile
 bin_SCRIPTS += bin/sweet-run bin/sweet-scsh
 bin_SCRIPTS += bin/diff-s-sweet
-CLEANFILES  += $(bin_SCRIPTS)
-
-# These are scripts that are just copied straight.
-dist_bin_SCRIPTS = sweet-clisp sweet-sbcl
 
 # These are the local scripts, for testing, and are not installed.
 noinst_SCRIPTS = ./sweeten ./unsweeten \
                  ./curly-guile ./neoteric-guile ./sweet-guile \
                  ./sweet-scsh ./sweet-run ./diff-s-sweet
+else !WITH_GUILE
+bin_SCRIPTS =
+noinst_SCRIPTS =
+endif !WITH_GUILE
 
+if WITH_CLISP
+# These are scripts that are just copied straight.
+bin_SCRIPTS += sweet-clisp sweet-sbcl
+else !WITH_CLISP
+bin_SCRIPTS +=
+endif !WITH_CLISP
+
+# Not generated
+EXTRA_DIST += sweet-clisp sweet-sbcl
+
+CLEANFILES += $(bin_SCRIPTS)
 CLEANFILES += $(noinst_SCRIPTS)
 
 
@@ -136,6 +148,7 @@ MY_SUBST = $(srcdir)/my-subst "$(GUILE)" "$(GUILE_READLINE_AVAILABLE)"
 
 EXTRA_DIST += $(srcdir)/my-subst
 
+if WITH_GUILE
 bin/sweeten: src/sweeten.sscm ./unsweeten my-subst
 	$(MKDIR_P) bin
 	$(MY_SUBST) "$(readable_libdir)" "" \
@@ -235,12 +248,12 @@ bin/diff-s-sweet: src/diff-s-sweet my-subst
 	chmod a+x $@
 	chmod a-w $@
 
-
 # Not directly used; useful if you want to generate JUST this file:
 ,sweeten.scm : src/sweeten.sscm $(UNSWEETEN)
 	$(RM) -f $@
 	$(UNSWEETEN) $< > $@
 	chmod a-w $@
+endif WITH_GUILE
 
 # Implementation and test cases for ANTLR implementation
 # of sweet-expressions.  Again, don't install.
@@ -323,14 +336,24 @@ EXTRA_DIST += \
 # TODO: Improve test harness & integration into overall system.
 
 EXTRA_DIST += my-realpath
-check: readable/kernel.scm my-realpath
-	@echo "Starting tests"
+check: check-clisp check-guile
+
+if WITH_CLISP
+check-clisp: my-realpath
+	@echo "Starting tests for CLISP"
 	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
 	  $(CLISP) -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
 	        $(srcdir)/tests/curly-infix-test-cl
 	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
 	  $(CLISP) -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
 	        $(srcdir)/tests/full-test-cl
+else !WITH_CLISP
+check-clisp:
+endif !WITH_CLISP
+
+if WITH_GUILE
+check-guile: readable/kernel.scm my-realpath
+	@echo "Starting tests for GUILE"
 	@echo "About to run guile curly-infix tests"
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/curly-infix-test-scm \
 	            < $(srcdir)/tests/curly-infix-testsuite-scm
@@ -358,8 +381,12 @@ check: readable/kernel.scm my-realpath
 	@echo "Running sweeten, showing differences from correct results:"
 	"$(builddir)/sweeten" < "$(srcdir)/tests/sweeten-testsuite" | \
 	     diff -u "$(srcdir)/tests/sweeten-correct" -
+	@echo "About to run roundtrip-test"
 	PATH="$(builddir):$(srcdir)/tests:${PATH}" \
 	     $(srcdir)/tests/roundtrip-test $(srcdir)/tests/roundtrip-testsuite
+else !WITH_GUILE
+check-guile:
+endif !WITH_GUILE
 
 # Developer conveniences:
 # "make push" interpreted as "git push" when current branch is "develop".
@@ -406,5 +433,5 @@ rpm: $(DIST_ARCHIVES) $(SPECFILE)
 	rpmbuild -ba $(SPECFILE)
 	-rpmlint $(SPECFILE)
 
-.PHONY: push pull test 110 rpm
+.PHONY: push pull test 110 rpm check-clisp check-guile
 
