@@ -2,8 +2,8 @@
 # For more information on the project, see: http://readable.sourceforge.net.
 # For autotools info, see: http://www.dwheeler.com/autotools
 
-# Initialize, but use more options.  Note parameters brackets and whitespace:
-# To change version#, edit this and readable.spec:
+# Initialize, but use more options.  Note parameter brackets and whitespace.
+# TO CHANGE VERSION NUMBER: edit this, readable*.spec, and readable.asd:
 AC_INIT([readable], [0.9.2], [dwheeler@dwheeler.com],
         [readable], [http://readable.sourceforge.net/])
 # Force autoconf to be more recent.
