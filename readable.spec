@@ -1,6 +1,6 @@
 # This RPM spec file uses the Fedora conventions and makes subpackages.
 Name:    readable
-Version: 0.9.2-develop
+Version: 0.9.2_develop
 Release: 1%{?dist}
 Summary: Improve Lisp readability (infix, sweet-expression indentation)
 Group:   Development/Libraries
@@ -85,10 +85,11 @@ rm -rf $RPM_BUILD_ROOT
 
 ########## SUBPACKAGES ############
 # This is broken into several subpackages so people
-# don't get unneeded dependencies
+# don't get unneeded dependencies.  I use "-n" everywhere to make it
+# obvious what the final names are.
 
 
-# Subpackage guile-readable
+# Subpackage guile-readable, for the guile library.
 %package -n guile-readable
 Summary: GNU guile library that implements the "readable" notations.
 
@@ -103,18 +104,18 @@ GNU guile library that implements the "readable" notations.
 
 
 
-# Subpackage readable-tools
-%package tools
+# Subpackage readable-tools, for the tools that use Scheme.
+%package -n readable-tools
 Summary: Tools to support the "readable" notations for Lisp-based languages.
 
 Requires: guile-readable
 
-%description tools
+%description -n readable-tools
 Various tools (general-purpose and guile-specific)
 for the "readable" notation for Lisp-based languages
 (Common Lisp, Scheme, etc.).
 
-%files tools
+%files -n readable-tools
 %{_bindir}/diff-s-sweet
 %{_bindir}/sweeten
 %{_bindir}/unsweeten
@@ -131,7 +132,7 @@ for the "readable" notation for Lisp-based languages
 
 
 
-# Subpackage cl-readable
+# Subpackage cl-readable, library for Common Lisp.
 # The following follows the conventions (package name, etc.) of
 # http://fedoraproject.org/wiki/Packaging:Lisp
 %package -n cl-readable
@@ -156,56 +157,56 @@ A portable Common Lisp library that implements the "readable" notations.
 %{common_lisp_systemsdir}/%{pkg_asd_file}
 
 
-# Subpackage readable-scsh
-%package scsh
+# Subpackage readable-scsh, tool for scsh.
+%package -n readable-scsh
 Summary: An extra tool to help scsh users use the readable notation.
-Requires: readable-guile scsh
+Requires: guile-readable scsh
 
-%description scsh
+%description -n readable-scsh
 An extra tool to help scsh users use the readable notation.
 
-%files scsh
+%files -n readable-scsh
 %{_bindir}/sweet-scsh
 
 
 # Subpackage readable-clisp
-%package clisp
+%package -n readable-clisp
 Summary: An extra tool to help clisp users use the readable notation.
 Requires: cl-readable
 Requires: clisp
 License: MIT and GPLv2
 
-%description clisp
+%description -n readable-clisp
 An extra tool to help clisp users use the readable notation.
 
-%files clisp
+%files -n readable-clisp
 %{_bindir}/sweet-clisp
 %{_mandir}/man1/sweet-clisp*
 
 
 # Subpackage readable-sbcl
-%package sbcl
+%package -n readable-sbcl
 Summary: An extra tool to help sbcl users use the readable notation.
 Requires: cl-readable
 Requires: sbcl
 
-%description sbcl
+%description -n readable-sbcl
 An extra tool to help sbcl users use the readable notation.
 
-%files sbcl
+%files -n readable-sbcl
 %{_bindir}/sweet-sbcl
 
 
 
 # Subpackage readable-all... for those who want it all.
-%package all
+%package -n readable-all
 Summary: *All* the files for the "readable" notation for Lisp-based languages.
 Requires: readable guile-readable readable-tools
 Requires: cl-readable
 Requires: readable-scsh
 Requires: readable-clisp readable-sbcl
 
-%description all
+%description -n readable-all
 Provides all the files that support the "readable" notation for
 various Lisp-based languages.
 
