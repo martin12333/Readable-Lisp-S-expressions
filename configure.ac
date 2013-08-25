@@ -2,11 +2,16 @@
 # For more information on the project, see: http://readable.sourceforge.net.
 # For autotools info, see: http://www.dwheeler.com/autotools
 
+# Version numbers generally follow the Semantic Versioning convention
+# (MAJOR.MINOR.PATCH) as documented here: http://semver.org/
+# There's a key exception: pre-release values DO NOT INCLUDE a hyphen,
+# because hyphens are specifically forbidden by RPM-based tools
+# (used by Red Hat Enterprise Linux, Fedora, CentOS, SuSE, etc.).
+
 # Initialize, but use more options.  Note parameter brackets and whitespace.
-# All version numbers should follow the Semantic Versioning
-# convention, as documented here: http://semver.org/
-# TO CHANGE VERSION NUMBER: edit this, readable*.spec, and readable.asd:
-AC_INIT([readable], [0.9.2-develop], [dwheeler@dwheeler.com],
+# TO CHANGE THE VERSION NUMBER: Edit readable-simple.spec, readable.spec,
+# readable.asd, and the line below:
+AC_INIT([readable], [0.9.2develop], [dwheeler@dwheeler.com],
         [readable], [http://readable.sourceforge.net/])
 # Force autoconf to be more recent.
 AC_PREREQ([2.67])
