@@ -46,7 +46,7 @@
 
 (defsystem readable
   :name "readable"
-  :version "0.9.2develop"
+  :version "0.9.2"  ; ONLY digits and periods allowed.
   :maintainer "David A. Wheeler"
   :author "David A. Wheeler"
   :license "MIT"
