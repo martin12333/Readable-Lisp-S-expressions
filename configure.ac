@@ -24,7 +24,7 @@ AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.11 -Wall -Werror])
 AC_CONFIG_FILES([Makefile])
 
-# Create the --without-guile and --without-clisp arguments.
+# Create arguments --without-guile and --without-clisp
 AC_ARG_WITH([guile],
   [AS_HELP_STRING([--without-guile], [disable support for guile])],
   [], [with_guile=yes])  # By default, with_guile.
@@ -32,12 +32,32 @@ AC_ARG_WITH([clisp],
   [AS_HELP_STRING([--without-clisp], [disable support for clisp])],
   [], [with_clisp=yes])  # By default, with_clisp.
 
-AS_IF([test x"$with_guile" = xno -a x"$with_clisp" = xno],[
+
+# Sanity-check arguments.
+is_enabled () {
+  test "x$1" != "xno"
+}
+yes_or_no () { # Returns TRUE if $1 is "yes" or "no".
+  if test "x$1" = "xyes" ; then
+    true
+  elif test "x$1" = "xno" ; then
+    true
+  else
+    false
+  fi
+}
+AS_IF([! yes_or_no "$with_guile"],[
+  AC_MSG_ERROR([with_guile must be 'yes' or 'no'])
+])
+AS_IF([! yes_or_no "$with_clisp"],[
+  AC_MSG_ERROR([with_clisp must be 'yes' or 'no'])
+])
+AS_IF([test "$with_guile" = no -a "$with_clisp" = no],[
   AC_MSG_ERROR([Both --without-guile and --without-clisp specified - nothing to install])
 ])
 
 # Look for Guile if necessary.
-AS_IF([test x"$with_guile" != xno],[
+AS_IF([is_enabled "$with_guile"],[
   # Look for the program "guile" and its site directory:
   # (Don't use the guile.m4 macros, as they require guile-config,
   # but we aren't linking into guile, and guile-config doesn't
@@ -77,7 +97,7 @@ AS_IF([test x"$with_guile" != xno],[
   AC_SUBST([GUILE_READLINE_AVAILABLE])
 ])
 
-AS_IF([test x"$with_clisp" != xno], [
+AS_IF([is_enabled "$with_clisp"], [
   # Determine if "clisp" is available and has asdf properly installed.
   AC_PATH_PROG([CLISP_INSTALLED], [clisp])
   AS_IF([test x"$CLISP_INSTALLED" = x],[#then
@@ -101,8 +121,8 @@ AS_IF([test x"$with_clisp" != xno], [
 ])
 
 # Set up automake conditionals
-AM_CONDITIONAL([WITH_GUILE], [test x"$with_guile" != xno])
-AM_CONDITIONAL([WITH_CLISP], [test x"$with_clisp" != xno])
+AM_CONDITIONAL([WITH_GUILE], [is_enabled "$with_guile"])
+AM_CONDITIONAL([WITH_CLISP], [is_enabled "$with_clisp"])
 
 
 # Perhaps check for: (more) programs, libraries, header files, types,
