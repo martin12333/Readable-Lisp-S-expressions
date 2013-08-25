@@ -32,7 +32,7 @@ AC_ARG_WITH([clisp],
   [AS_HELP_STRING([--without-clisp], [disable support for clisp])],
   [], [with_clisp=yes])  # By default, with_clisp.
 
-AS_IF([test x"$with_guile" == xno -a x"$with_clisp" == xno],[
+AS_IF([test x"$with_guile" = xno -a x"$with_clisp" = xno],[
   AC_MSG_ERROR([Both --without-guile and --without-clisp specified - nothing to install])
 ])
 
@@ -80,7 +80,7 @@ AS_IF([test x"$with_guile" != xno],[
 AS_IF([test x"$with_clisp" != xno], [
   # Determine if "clisp" is available and has asdf properly installed.
   AC_PATH_PROG([CLISP_INSTALLED], [clisp])
-  AS_IF([test x"$CLISP_INSTALLED" == x],[#then
+  AS_IF([test x"$CLISP_INSTALLED" = x],[#then
     AC_MSG_ERROR([clisp required but not found (--without-clisp to skip clisp+asdf checking)])
   ],[#else
     # check if asdf is installed with clisp.
