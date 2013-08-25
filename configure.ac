@@ -27,10 +27,13 @@ AC_CONFIG_FILES([Makefile])
 # Create arguments --without-guile and --without-clisp
 AC_ARG_WITH([guile],
   [AS_HELP_STRING([--without-guile], [disable support for guile])],
-  [], [with_guile=yes])  # By default, with_guile.
+  [], [with_guile=yes])  # By default, with_guile
+AC_ARG_WITH([common-lisp],
+  [AS_HELP_STRING([--without-common-lisp], [disable support for Common Lisp])],
+  [], [with_common_lisp=yes])  # By default, with_common_lisp
 AC_ARG_WITH([clisp],
   [AS_HELP_STRING([--without-clisp], [disable support for clisp])],
-  [], [with_clisp=yes])  # By default, with_clisp.
+  [], [with_clisp="$with_common_lisp"])
 
 
 # Sanity-check arguments.
@@ -49,11 +52,18 @@ yes_or_no () { # Returns TRUE if $1 is "yes" or "no".
 AS_IF([! yes_or_no "$with_guile"],[
   AC_MSG_ERROR([with_guile must be 'yes' or 'no'])
 ])
+AS_IF([! yes_or_no "$with_common_lisp"],[
+  AC_MSG_ERROR([with_common_lisp must be 'yes' or 'no'])
+])
 AS_IF([! yes_or_no "$with_clisp"],[
   AC_MSG_ERROR([with_clisp must be 'yes' or 'no'])
 ])
-AS_IF([test "$with_guile" = no -a "$with_clisp" = no],[
-  AC_MSG_ERROR([Both --without-guile and --without-clisp specified - nothing to install])
+
+AS_IF([test "$with_guile" = no -a "$with_common_lisp" = no],[
+  AC_MSG_ERROR([Both --without-guile and --without-common-lisp specified - nothing to install])
+])
+AS_IF([test "$with_common_lisp" = no -a "$with_clisp" = yes],[
+  AC_MSG_ERROR([clisp requires common lisp])
 ])
 
 # Look for Guile if necessary.
@@ -121,8 +131,9 @@ AS_IF([is_enabled "$with_clisp"], [
 ])
 
 # Set up automake conditionals
-AM_CONDITIONAL([WITH_GUILE], [is_enabled "$with_guile"])
-AM_CONDITIONAL([WITH_CLISP], [is_enabled "$with_clisp"])
+AM_CONDITIONAL([WITH_GUILE],       [is_enabled "$with_guile"])
+AM_CONDITIONAL([WITH_COMMON_LISP], [is_enabled "$with_common_lisp"])
+AM_CONDITIONAL([WITH_CLISP],       [is_enabled "$with_clisp"])
 
 
 # Perhaps check for: (more) programs, libraries, header files, types,

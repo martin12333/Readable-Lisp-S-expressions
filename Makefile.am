@@ -66,6 +66,7 @@ common_lisp_systemsdir = $(common_lispdir)/systems
 
 pkg_asd_file=readable.asd
 
+if WITH_COMMON_LISP
 dist_common_lisp_source_pkg_DATA = \
  basic-curly.lisp neoteric.lisp backquote.lisp sweet.lisp
 
@@ -84,6 +85,7 @@ install-exec-hook-cl:
 	         "$(DESTDIR)$(common_lisp_systemsdir)/$(pkg_asd_file)"
 
 install-exec-hook: install-exec-hook-cl
+endif WITH_COMMON_LISP
 
 
 # Scripts
@@ -97,31 +99,34 @@ script_sources = src/sweeten.sscm src/unsweeten \
 
 EXTRA_DIST += $(script_sources)
 
+bin_SCRIPTS  =
+noinst_SCRIPTS =
+
 if WITH_GUILE
 # These scripts are generated at build time, so they're not distributed
 # (there's no dist_ prefix for bin_SCRIPTS here):
-bin_SCRIPTS  = bin/sweeten bin/unsweeten
+bin_SCRIPTS += bin/sweeten bin/unsweeten
 bin_SCRIPTS += bin/curly-guile bin/neoteric-guile bin/sweet-guile
 bin_SCRIPTS += bin/sweet-run bin/sweet-scsh
 bin_SCRIPTS += bin/diff-s-sweet
 
 # These are the local scripts, for testing, and are not installed.
-noinst_SCRIPTS = ./sweeten ./unsweeten \
-                 ./curly-guile ./neoteric-guile ./sweet-guile \
-                 ./sweet-scsh ./sweet-run ./diff-s-sweet
-else !WITH_GUILE
-bin_SCRIPTS =
-noinst_SCRIPTS =
-endif !WITH_GUILE
+noinst_SCRIPTS += ./sweeten ./unsweeten \
+                  ./curly-guile ./neoteric-guile ./sweet-guile \
+                  ./sweet-scsh ./sweet-run ./diff-s-sweet
+endif WITH_GUILE
+
+if WITH_COMMON_LISP
+# These are scripts that are just copied straight.
+bin_SCRIPTS += sweet-sbcl
+endif WITH_COMMON_LISP
 
 if WITH_CLISP
 # These are scripts that are just copied straight.
-bin_SCRIPTS += sweet-clisp sweet-sbcl
-else !WITH_CLISP
-bin_SCRIPTS +=
-endif !WITH_CLISP
+bin_SCRIPTS += sweet-clisp
+endif WITH_CLISP
 
-# Not generated
+# Not generated, so always distribute
 EXTRA_DIST += sweet-clisp sweet-sbcl
 
 CLEANFILES += $(bin_SCRIPTS)
