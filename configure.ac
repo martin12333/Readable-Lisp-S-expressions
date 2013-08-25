@@ -44,7 +44,7 @@ yes_or_no () { # Returns TRUE if $1 is "yes" or "no".
 }
 
 
-# Create arguments --without-guile and --without-clisp
+# Create arguments --without-guile, --without-common-lisp, and --without-clisp
 AC_ARG_WITH([guile],
   [AS_HELP_STRING([--without-guile], [disable support for guile])],
   [], [with_guile=yes])  # By default, with_guile
@@ -73,6 +73,7 @@ AS_IF([test "$with_guile" = no -a "$with_common_lisp" = no],[
 AS_IF([test "$with_common_lisp" = no -a "$with_clisp" = yes],[
   AC_MSG_ERROR([clisp requires common lisp])
 ])
+
 
 # Look for Guile if necessary.
 AS_IF([is_enabled "$with_guile"],[
@@ -114,6 +115,7 @@ AS_IF([is_enabled "$with_guile"],[
   AC_MSG_RESULT($GUILE_READLINE_AVAILABLE)
   AC_SUBST([GUILE_READLINE_AVAILABLE])
 ])
+
 
 AS_IF([is_enabled "$with_clisp"], [
   # Determine if "clisp" is available and has asdf properly installed.
