@@ -27,12 +27,10 @@ AC_CONFIG_FILES([Makefile])
 # Create the --without-guile and --without-clisp arguments.
 AC_ARG_WITH([guile],
   [AS_HELP_STRING([--without-guile], [disable support for guile])],
-  [],
-  [with_guile=yes])
+  [], [with_guile=yes])  # By default, with_guile.
 AC_ARG_WITH([clisp],
   [AS_HELP_STRING([--without-clisp], [disable support for clisp])],
-  [],
-  [with_clisp=yes])
+  [], [with_clisp=yes])  # By default, with_clisp.
 
 AS_IF([test x"$with_guile" == xno -a x"$with_clisp" == xno],[
   AC_MSG_ERROR([Both --without-guile and --without-clisp specified - nothing to install])
