@@ -11,7 +11,7 @@
 # Initialize, but use more options.  Note parameter brackets and whitespace.
 # TO CHANGE THE VERSION NUMBER: Edit readable-simple.spec, readable.spec,
 # readable.asd, and the line below:
-AC_INIT([readable], [0.9.2develop], [dwheeler@dwheeler.com],
+AC_INIT([readable], [0.9.2], [dwheeler@dwheeler.com],
         [readable], [http://readable.sourceforge.net/])
 # Force autoconf to be more recent.
 AC_PREREQ([2.67])
