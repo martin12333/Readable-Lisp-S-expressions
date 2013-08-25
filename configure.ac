@@ -24,6 +24,26 @@ AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.11 -Wall -Werror])
 AC_CONFIG_FILES([Makefile])
 
+# Supporting shell functions
+is_enabled () {
+  test "x$1" != "xno"
+}
+
+is_empty () {
+  test "x$1" = "x"
+}
+
+yes_or_no () { # Returns TRUE if $1 is "yes" or "no".
+  if test "x$1" = "xyes" ; then
+    true
+  elif test "x$1" = "xno" ; then
+    true
+  else
+    false
+  fi
+}
+
+
 # Create arguments --without-guile and --without-clisp
 AC_ARG_WITH([guile],
   [AS_HELP_STRING([--without-guile], [disable support for guile])],
@@ -37,21 +57,6 @@ AC_ARG_WITH([clisp],
 
 
 # Sanity-check arguments.
-is_enabled () {
-  test "x$1" != "xno"
-}
-is_empty () {
-  test "x$1" = "x"
-}
-yes_or_no () { # Returns TRUE if $1 is "yes" or "no".
-  if test "x$1" = "xyes" ; then
-    true
-  elif test "x$1" = "xno" ; then
-    true
-  else
-    false
-  fi
-}
 AS_IF([! yes_or_no "$with_guile"],[
   AC_MSG_ERROR([with_guile must be 'yes' or 'no'])
 ])
