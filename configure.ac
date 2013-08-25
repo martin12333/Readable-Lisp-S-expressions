@@ -40,6 +40,9 @@ AC_ARG_WITH([clisp],
 is_enabled () {
   test "x$1" != "xno"
 }
+is_empty () {
+  test "x$1" = "x"
+}
 yes_or_no () { # Returns TRUE if $1 is "yes" or "no".
   if test "x$1" = "xyes" ; then
     true
@@ -73,7 +76,7 @@ AS_IF([is_enabled "$with_guile"],[
   # but we aren't linking into guile, and guile-config doesn't
   # come standard on all "guile" packages on all distros)
   AC_PATH_PROG(GUILE,guile)
-  AS_IF([test x"$GUILE" = x],[#then
+  AS_IF([is_empty "$GUILE"],[#then
     AC_MSG_ERROR([guile required but not found (--without-guile to disable most tools)])
   ],[#else
     :
@@ -110,7 +113,7 @@ AS_IF([is_enabled "$with_guile"],[
 AS_IF([is_enabled "$with_clisp"], [
   # Determine if "clisp" is available and has asdf properly installed.
   AC_PATH_PROG([CLISP_INSTALLED], [clisp])
-  AS_IF([test x"$CLISP_INSTALLED" = x],[#then
+  AS_IF([is_empty "$CLISP_INSTALLED"],[#then
     AC_MSG_ERROR([clisp required but not found (--without-clisp to skip clisp+asdf checking)])
   ],[#else
     # check if asdf is installed with clisp.
