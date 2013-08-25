@@ -24,6 +24,8 @@ SHELL = /bin/sh
 
 UNSWEETEN = ./unsweeten
 
+CLEANFILES =
+
 # Here is the usual POSIX-portable inference rule for unsweetening:
 # .sscm.scm:
 #	$(UNSWEETEN) < $< > $@
@@ -37,6 +39,7 @@ UNSWEETEN = ./unsweeten
 
 # Guile libraries.
 
+if WITH_GUILE
 readable_libdir = $(GUILE_SITE)/readable
 
 readable_lib_DATA = readable/kernel.scm
@@ -46,7 +49,8 @@ readable/kernel.scm: src/kernel.scm
 	$(MKDIR_P) readable
 	cp -p "$(srcdir)/src/kernel.scm" readable/kernel.scm
 
-CLEANFILES = readable/kernel.scm
+CLEANFILES += readable/kernel.scm
+endif WITH_GUILE
 
 
 # Common Lisp files.  We'll install source code in conventional places,
