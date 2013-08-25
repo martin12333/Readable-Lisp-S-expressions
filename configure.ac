@@ -117,6 +117,12 @@ AS_IF([is_enabled "$with_guile"],[
 ])
 
 
+AS_IF([is_enabled "$with_common_lisp"], [
+  # We'll use LN_S to install Common Lisp ASDF files:
+  AC_PROG_LN_S
+])
+
+
 AS_IF([is_enabled "$with_clisp"], [
   # Determine if "clisp" is available and has asdf properly installed.
   AC_PATH_PROG([CLISP_INSTALLED], [clisp])
@@ -140,6 +146,7 @@ AS_IF([is_enabled "$with_clisp"], [
   AC_SUBST([CLISP])
 ])
 
+
 # Set up automake conditionals
 AM_CONDITIONAL([WITH_GUILE],       [is_enabled "$with_guile"])
 AM_CONDITIONAL([WITH_COMMON_LISP], [is_enabled "$with_common_lisp"])
@@ -148,9 +155,6 @@ AM_CONDITIONAL([WITH_CLISP],       [is_enabled "$with_clisp"])
 
 # Perhaps check for: (more) programs, libraries, header files, types,
 # structures, compiler characteristics, library functions, system services.
-
-# We'll use LN_S to install Common Lisp ASDF files:
-AC_PROG_LN_S
 
 # Do final output.
 AC_OUTPUT
