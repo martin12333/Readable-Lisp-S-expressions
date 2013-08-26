@@ -29,7 +29,7 @@ while (<>) {
   s!\(memv\b!(member!g;
 
   s!\(char-ci=\?!(char-equal!g;
-  s!\(char=\? !(char=! g;
+  s!\(char=\? !(char=!g;
 
   s!\(list->string\b!(concatenate 'string!g;
   s!\(integer->char\b!(code-char!g;
@@ -37,13 +37,13 @@ while (<>) {
   s!\(string->symbol\b!(intern!g;
   s!\(symbol->string\b!(symbol-name!g;
 
-  s!\(set\! !setq!;
+  s!\(set\! !(setq!;
   s!\(map\b!(mapcar!g;
   s!\(for-each\b!(mapc!g;
   s!\(vector-ref\b!(aref!g;
 
-  s!\(set-car\!!rplaca!g;
-  s!\(set-cdr\!!rplacd!g;
+  s!\(set-car\!!(rplaca!g;
+  s!\(set-cdr\!!(rplacd!g;
 
   s!#t\b!t!g;
   s!#f\b!nil!g;

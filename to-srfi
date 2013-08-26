@@ -26,16 +26,9 @@ while (<>) {
     $include_in_srfi = 0;
   }
   if ($translate && /[{}]/) {
-    s/list\(/(list /g;
-    s/cons\(/(cons /g;
-    s/append\(/(append /g;
 
-    s/monify\(/(monify /g;
-    s/process_curly\(/(process_curly /g;
-
-    # No parameters, so no space at end
-    s/generate_eof\(\)/(generate_eof)/g;
-    s/indent_processing\(\)/(indent_processing)/g;
+    s/([a-z0-9_]+)\(\)/(\1)/g;
+    s/([a-z0-9_]+)\(/(\1 /g;
 
     s/{ ?\$v ?= ?/{/g;
     s/ ?; ?}/}/g;
@@ -55,8 +48,11 @@ while (<>) {
 
     # Special case.
     s/\(list "."\)/(list '.)/g;
+    s/\{"."\}/{'.}/g;
     s/{greedy=false}/{greedy=false;}/g;
   }
+
+  s/ returns \[Object v\]//;
 
   s/\&/&amp;/g;
   s/</&lt;/g;

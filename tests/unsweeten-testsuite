@@ -79,4 +79,77 @@ b
 
 |.|
 
+
+; initial-indent tests
+
+  a1 #; hi b1
+
+  a2 #; hi #; bye b2  #; zz #; zz2
+
+  a3 #;hi #|ugly|# b3  #;zz #|ugly2|#
+
+  a4 #|junk|##|junk2|# b4 #|junk3|##|junk4|#  
+
+1
+
+; terminating whitespace tests
+foo1    foo2   
+  bar1    bar2  
+  car1    car2    <*   a1    a2   *>   <*  b1  b2  *>  
+  $    c1  c2   
+  \\      
+  \\   d1  d2   
+  \\  
+     e1  e2   
+
+; Errors
+a(b)WRONG
+
+
+#\NOT-A-VALID-CHARNAME
+
+*>
+
+x #;
+
+#;
+
+$$$
+
+<*
+   bad-initial-indent
+
+<*
+bad-datum-after-ff-in-collecting-list
+
+bad-datum-after-ff
+
+
+. x y
+
+aa . bb cc
+
+dd .
+
+vertical-dot-test
+  aa
+  .
+  bb
+  cc
+
+
+aa
+  bb cc \\
+
+$  
+
+'  
+
+bad-indentation-example
+     hello
+  partial-indent-invalid
+
+
+fin
+
 ; Comment at end of file.

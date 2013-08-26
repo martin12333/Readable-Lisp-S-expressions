@@ -880,46 +880,80 @@ x
  |#
 x
 
-(x y)
-  #| shouldn't disable t-expression mode
+(x88 y88)
+#| shouldn't disable t-expression mode
    #|
     |#
    |#
-x y
+x88 y88
 
-x
-x #|
+x89
+x89 #|
    #|
     |#
    |#
 
-(x
-  y)
-x
+(x91
+  y91)
+x91
  #|
   #|
    |#
-  |# y
+  |# y91
 
-(y z)
-#; x y z
+(x93 y93)
+x93 y93
+  #|  hello1  |#
+  #|  hello2  |#
 
-(x z)
-x #; y z
+(yaa zaa)
+yaa zaa
+  #; x y z
 
-(x y)
-x #|comment|# y
+(ya1 za1 zb3)
+ya1
+  za1
+  #; this line is ignored
+  zb3
+
+
+(m1 p1 p2)
+m1
+  p1
+  #;
+    q1 q2
+    r1 r2 r3
+      f4
+  p2
+
+(m7 p8 p9)
+m7
+  p8
+  p9
+  #; n1 n2
+    q1 q2
+    r1 r2 r3
+      f4
+
+(x1 z1)
+x1 #; y z1
+
+(a88 . b89)
+a88 . #; qqq b89
+
+(x2 y2)
+x2 #|comment|# y2
 
 (f
- (x y))
+ (x3 y3))
 f
-  x #|comment|# y
+  x3 #|comment|# y3
 
 
-(define (f x) x x)
-define f(x)
-  x
-  x
+(define (f x4) x5 x6)
+define f(x4)
+  x5
+  x6
 
 (define (f x) x)
 define f(x) x
@@ -2075,4 +2109,55 @@ inside
 (syntax (q1 q2 (q3 q4)))
 #' q1 q2
   q3 q4
+
+(a7 b7 . c7)
+a7 b7 #; ignore1 . #; ignore2 c7 #; ignore3
+
+(a8 b8)
+a8 b8 #; ignorethis #; (ignore this too)
+
+(xyzz (stuff) last-one)
+xyzz <* stuff *>  #; ignore11 #; ignore12 last-one
+
+(!x1 !x2 (!x2a !x2b) !x3 . !x4)
+|!x1|   !x2  (  !x2a  !x2b  )   #; stuff  !x3  . !x4
+
+(module mod (define (z a) (* 2 a)))
+<* module \\ mod
+define z(a) {2 * a}
+*>
+
+(a1 ())
+a1 <* #; hello *>
+
+
+(a2 ())
+a2 <* #; hello  
+*>
+
+(a3 ())
+a3 <* #; hello stuff  
+*>
+
+(a4 (stuff))
+a4 <* #; hello
+stuff  
+*>
+
+(a5 (stuff))
+a5 <* #;hello stuff  
+*>
+
+(a6 (stuff))
+a6 <* stuff #; hello
+*>
+
+(a () (b))
+a <* #; hi *> <* b *>
+
+(() () ())
+<* #; 1 *> <* #; 2 *> <* #; 3 *>
+
+(+ 11/13 7/8)
+{11/13 + 7/8}
 

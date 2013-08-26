@@ -65,12 +65,22 @@ extensive test suite.
 License
 =======
 
-The software is released under the MIT license, which permits practically
-any use.  The MIT license is an open source software / Free Software
+With one exception, the software is released under the
+"MIT license", which permits practically any use.
+The MIT license is an open source software / Free Software
 license approved by both the OSI (opensource.org) as an open source software
 license, and by the FSF (fsf.org) as a Free software license.
-
 See the COPYING file for the license text.
+
+The one exception is the file "sweet-clisp", which interfaces to clisp.
+Most of this file is also licensed under the MIT license.
+However, that file contains code derived from the "clisp" program.
+Clisp is licensed under the "GNU General Public License version 2 (GPLv2)",
+so those parts are also under the GPLv2 (see the file for details).
+The GPLv2 is also an open source software / Free Software license approved
+by both the OSI (opensource.org) as an open source software license,
+and by the FSF (fsf.org) as a Free software license.
+See the COPYING.GPL file for those conditions.
 
 
 Getting, building, and installing
@@ -147,16 +157,24 @@ usual ASDF system.  A "make install" puts files in the usual place,
 $PREFIX/share/common-lisp/source (where $PREFIX is /usr/local by default).
 
 You need ASDF.  Most Common Lisp users already have that ready to go.
-If you don't have it, get it here:
+You can quickly install ASDF on many Linux distributions (such as Fedora,
+Debian, and Ubuntu) by installing the package "cl-asdf".
+If you don't have asdf, get it here:
   http://common-lisp.net/project/asdf/
-Cygin's clisp doesn't have asdf by default; you can install it with:
+
+Many clisp packages don't include asdf, or its support, by default.
+If you use Cygin's clisp, install asdf by doing this:
   mkdir -p ~/lisp/asdf
-  cp asdf.lisp ~/lisp/asdf
+  cp asdf.lisp ~/lisp/asdf     # See below.
   clisp
   (load (compile-file "asdf.lisp"))
   (exit)
+If you use clisp and a Linux distribution's asdf package, follow the above
+steps, but instead of the "cp asdf.lisp ~/lisp/asdf" command do this:
+  ln -s /usr/share/common-lisp/source/cl-asdf/asdf.lisp ~/lisp/asdf/
+That way, updates to your Linux distribution's asdf will be used automagically.
 
-Configure ASDF so it knows what directories to look at, e.g.,
+Ensure ASDF is configured so it knows what directories to look at, e.g.,
 put this in file "/etc/common-lisp/source-registry.conf":
  (:source-registry
    (:tree (:home "cl")) ;; will expand to e.g. "/home/joeluser/cl/"
@@ -167,13 +185,26 @@ to set the environment variable to the current directory and run sbcl:
 CL_SOURCE_REGISTRY="`realpath .`" sbcl
 
 Now fire up a Common Lisp (e.g., "clisp" or "sbcl") and run:
- (require 'asdf) ; or (load "tests/my-asdf.lisp")  if asdf isn't installed.
+ (require "asdf") ; or (load "tests/my-asdf.lisp")  if asdf isn't installed.
  (asdf:load-system :readable)
  (readable:enable-basic-curly) ; or enable-sweet or whatever.
 
 ; now you can do:
 {3 + 4}
 
+
+Specification
+====================
+
+For Scheme, SRFI-105 is the official definition of
+full curly-infix notation, and it also defines neoteric-expressions.
+SRFI-110 defines sweet-expressions.  It has an especially rigorous BNF.
+
+The solution.md is the official definition for all other Lisps.
+If it's unclear what something means, look at SRFI-105 and SRFI-110
+for clarification, but note that the SRFIs include various
+Scheme-specific material (e.g., #!sweet is a Scheme-specific mechanism
+for enabling sweet-expressions).
 
 
 Transitioning

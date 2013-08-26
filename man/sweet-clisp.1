@@ -3,15 +3,15 @@
 sweet-clisp \- Run clisp using sweet-expressions
 .SH SYNOPSIS
 .ll +8
-.B sweet-clisp [FILE]
+.B sweet-clisp [clisp-options [-CREPL]] [FILE.slisp [args]]
 .ll -8
 .br
 .SH DESCRIPTION
 .PP
 .I sweet-clisp
 runs the Common Lisp "clisp" implementation,
-but first enables "sweet-expressions".
-If given a file, it will run that file (expressed using sweet-expressions);
+and enables "sweet-expressions" in its reader.
+If given a filename, it will run that file (expressed using sweet-expressions);
 a file name of "-" means the standard input.
 If no file is given, then an interactive mode is enabled
 (normally this means that the clisp REPL is run with readline enabled).
@@ -21,6 +21,47 @@ If given a file, it will not normally display the results of each
 expression.
 If you want a result displayed, use functions that do so such as
 "print", "princ", "write", and so on.
+.PP
+It accepts clisp-options (which begin with "-").
+To execute a filename, make sure it does not begin with "-"
+(e.g., prefix it with "./").
+.PP
+This program, by default, works around a bug in the clisp standard REPL.
+Without the workaround, in the clisp standard REPL any
+top-level sweet-expressions that are not initially indented
+must be separated by a blank line.
+If they aren't separated, then the first line of the second
+sweet-expression would be skipped (they are consumed by the REPL reader).
+Note that this bug does not affect files run by clisp,
+re-implementations of the REPL on clisp, or other Common Lisp
+implementations (e.g., SBCL doesn't have this problem).
+The work-around overrides some system function definitions when the
+REPL is invoked, and triggers some warnings that look like this:
+
+  WARNING: DEFUN/DEFMACRO: redefining function
+           |SYSTEM|::|READ-FORM| in top-level, was defined in C
+  WARNING: DEFUN/DEFMACRO: redefining function
+           |SYSTEM|::|READ-EVAL-PRINT| in top-level, was defined in C
+
+.PP
+If you do not want the work-around performed, use the
+"-CREPL" option, which forces this program to use the
+standard clisp REPL (without a work-around) instead.
+
+.PP
+The clisp program notices that this overrides the reader, and as
+a "safety" measure it normally displays all symbols
+with vertical bars around them.
+This is not required or even suggested by the Common Lisp specification,
+but it technically is consistent with it.
+Unfortunately, this produces technically-correct but ugly symbol displays.
+To work around this, sweet-clisp sets *print-escape* to false.
+This makes the symbols look nicer, but it does create some ambiguities,
+and it means that keywords are not printed with a leading colon character.
+If you do not like this, then set *print-escape* to true:
+
+  setq *print-escape* t
+
 .PP
 This command uses whatever version of the "readable" library that asdf finds.
 You can override the usual readable library location by setting
@@ -32,7 +73,6 @@ For example:
 .PP
 This command requires clisp, and it also requires
 that asdf be set up properly for clisp.
-The interactive mode also requires a properly-installed "expect" command.
 .PP
 The
 .I sweet-clisp
@@ -56,7 +96,8 @@ http://readable.sourceforge.net.
 
 .SH OPTIONS
 .PP
-None.
+See clisp(1).
+A particularly useful option is -modern.
 
 .\" .SH "ENVIRONMENT"
 .\" .PP
@@ -112,4 +153,7 @@ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
+.PP
+However, small portions of the sweet-clisp program are actually
+under the GNU GPLv2 license; see the file for details.
 

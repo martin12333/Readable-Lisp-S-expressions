@@ -84,14 +84,15 @@ If you plan to use the development (not stable) version, you'll also need:
 *   git (to download the software)
 *   autoconf and automake (to build it)
 
-You should be running on a POSIX system; if you use Windows, you may need to install Cygwin first. Any modern GNU/Linux system will do nicely.
+The following instructions assume you're using a POSIX system (such as Linux, MacOS, *BSDs, and so on).  If you use Windows, install Cygwin first. Any modern GNU/Linux system will do nicely.
+
 
 ASDF
 ----
 
-You'll need Another System Definition Facility (asdf), which is usually included in your Common Lisp implementation.  If you don't already have it, you can download it here:  http://common-lisp.net/project/asdf/
+You'll need Another System Definition Facility (asdf), which is usually included in your Common Lisp implementation.  Many Linux distributions include asdf; just install package "cl-asdf".  (Fedora, Debian, and Ubuntu are all known to include cl-asdf, and there are probably more that do as well.)  If you don't already have asdf, you can download it here:  http://common-lisp.net/project/asdf/
 
-The clisp of Cygwin does not (as of this writing) include asdf.  For that, download the asdf.lisp file, then install asdf on clisp for this user by doing:
+The clisp of Cygwin does not (as of this writing) include asdf.  If you are using clisp on Cygwin, one you way you can install it is to download the asdf.lisp file (from http://common-lisp.net/project/asdf/), then install asdf on clisp for this user by doing:
 
     mkdir -p ~/lisp/asdf
     cp asdf.lisp ~/lisp/asdf
@@ -99,7 +100,14 @@ The clisp of Cygwin does not (as of this writing) include asdf.  For that, downl
     (load (compile-file "asdf.lisp"))
     (exit)
 
-After this point '(require "asdf")' will work.
+If you use clisp and a Linux distribution's asdf package, follow the above
+steps, but instead of the "cp asdf.lisp ~/lisp/asdf" command do this:
+
+    ln -s /usr/share/common-lisp/source/cl-asdf/asdf.lisp ~/lisp/asdf/
+
+The "ln -s" means that updates to your Linux distribution's asdf will be used automagically.
+
+After this point '(require "asdf")' should work.
 
 
 Download and prepare to configure
@@ -112,7 +120,7 @@ To get the current "stable" version, browse http://readable.sourceforge.net - cl
      tar xvzf readable-*.tar.gz
      cd readable-*
 
-If you *instead* want to get the *development* version (as you should do for now), do this instead:
+If you *instead* want to get the *development* version, do this instead:
 
      git clone git://git.code.sf.net/p/readable/code readable-code
      cd readable-code
@@ -134,6 +142,9 @@ If you want it to install to /usr (e.g., programs go in /usr/bin):
 
 It will probably be easier for you if you install in /usr.
 
+By default "configure" will try to build for everything the "readable" code supports.  Use "--without-guile" to disable guile support (e.g., if you don't have guile), and/or "--without-clisp" to disable clisp support.
+
+
 Build
 ------
 
@@ -148,7 +159,7 @@ You actually don't have to install it to use it, if you just want to play with i
 
     make install
 
-If your system uses the "common-lisp-controller" (including Debian, Ubunutu, and Fedora), then run during *final* installation:
+If your system uses the "common-lisp-controller" (including Debian, Ubunutu, and Fedora), then run after its installation to its final location (a final-location installation does NOT set DESTDIR):
 
     register-common-lisp-source readable
 
@@ -162,24 +173,43 @@ Starting Common Lisp implementation and loading the readable library
 
 You need to run your Common Lisp implementation and load the "readable" library.
 
-If you've installed the "readable" library (as discussed above), and you already have the standard "ASDF" library system installed, this is easy. Here's how you do it for clisp at the command line:
+If you've installed the "readable" library (as discussed above), and you already have the standard "ASDF" library system installed, this is easy.
 
-    clisp  # Run the "clisp" program; feel free to add the "-modern" option
-    (require 'asdf)  ; Load "adsf", the standard system for loading libraries
-    (asdf:load-system :readable)  ; Load the "readable" library
 
-Replace "clisp" with whatever Common Lisp you want (e.g., sbcl).
+*First*, start up up your Common Lisp implementation.  E.G., for clisp, this is normally:
 
-If you don't have asdf installed, well, you need to get it.  This is particularly an issue with Cygwin, where clisp doesn't come with asdf.  Just download asdf (from http://common-lisp.net/project/asdf/ ) - and if you don't want to formally install it, you can put the .lisp file somewhere, and instead of require "asdf", use:
+    clisp  # Use "sbcl" to run sbcl instead, obviously.
 
-    (load "/your/path/to/asdf.lisp")
-
-If you don't want to install the "readable" library in the standard central place, you can work around that too, but you need to give both asdf and the underlying Lisp information on where to load it from.  If your current directory ($PWD) contains the readable .lisp files, you can replace the "clisp" command with the following to do this:
+However, if you didn't install the "readable" library source files in the standard central place (above), you will need to provide more information to both the Common Lisp implementation *and* the asdf library that we're about to use.  Basically, we need to tell them the directory name that the readable .lisp files are.  If you use clisp, your current directory ($PWD) contains the readable .lisp files, you can replace the "clisp" command with the following to do this (replace $PWD in both places for a different directory):
 
     CL_SOURCE_REGISTRY="$PWD" clisp -lp "$PWD"
 
 
-After you've loaded the readable library, you can use it.  The instructions below assume that you don't "use" the package, so you'll have to include the name of the package to invoke anything in it.  If you find that inconvenient, you can omit all the "readable:" prefixes by first using the standard Common Lisp "use-package" command:
+*Second*, you need start asdf.  Usually this is just:
+
+    (require "asdf")  ; Load "asdf", the standard system for loading libraries
+
+However, if you chose to not formally install asdf, you can put the asdf.lisp file somewhere, and use this to start up asdf instead:
+
+    (load "/your/path/to/asdf.lisp")
+
+*Third*, you need to load the actual readable library.  That's easy:
+
+    (asdf:load-system :readable)  ; Load the "readable" library
+
+After you've loaded the readable library, you can use it.  Generally, you run (readable:enable-...) where "..." selects the readable notation you want to use.  E.G., (readable:enable-sweet) enables sweet-expression processing as described below.  The text below will show the various options.  When you're all done, you can use (readable:disable-readable) to restore the readtable to the state before you enabled any readable notations.  You can enable a different readable notation at any time; you don't need to disable the current notation first.
+
+*RECAP*: The normal sequence after you start up your Common Lisp implementation (e.g., at the top of a file) is:
+
+    (require "asdf")
+    (asdf:load-system :readable)
+    (readable:enable-sweet) ; or whichever notation you've chosen.
+
+... and at the end of the file you can insert:
+
+    (readable:disable-readable)
+
+The instructions below assume that you don't "use" the package, so you'll have to include the name of the package to invoke anything in it.  If you find that inconvenient, you can omit all the "readable:" prefixes by first using the standard Common Lisp "use-package" command:
 
     (use-package :readable)
 
@@ -225,7 +255,7 @@ Note that curly-infix-expressions intentionally do not force a particular preced
 
 The main advantage of basic c-expressions is that they're really simple in concept, and very simple to implement.  They have almost no chance of conflicting with anything else; they only redefine "{" and "}" in the readtable, for example.  In particular, that's all there is to basic c-expressions, they're really easy.
 
-To disable basic curly-expressions (or any other readable notation) just run this, which restores the previous readtable:
+You can disable basic curly-expressions (or any other readable notation) by just running this, which restores the previous readtable:
 
     (readable:disable-readable)
 
@@ -243,9 +273,7 @@ In neoteric-expressions, an expression of the form f(...) is treated the same as
 
     {cos(0) + 1}
 
-We can explain more about neoteric-expressions... but let's learn more by disabling full-curly-infix, and switching to neoteric-expressions entirely:
-
-    (readable:disable-readable)
+We can explain more about neoteric-expressions... but let's learn more switching to neoteric-expressions entirely.  You can run "(readable:disable-readable)" if you want, but you don't have to; you can just enable a different readable notation directly, and it'll switch correctly.
 
 
 Using neoteric-expressions (n-expressions)
@@ -533,6 +561,17 @@ But that's the point - the results look much more familiar (and thus are more ac
 
 Closing Remarks
 ===============
+
+
+*RECAP*: The normal sequence after you start up your Common Lisp implementation (e.g., at the top of a file) is:
+
+    (require "asdf")
+    (asdf:load-system :readable)
+    (readable:enable-sweet) ; or whichever notation you've chosen.
+
+... and at the end of the file you can insert:
+
+    (readable:disable-readable)
 
 These notations can take a few minutes to learn how to use, just like anything else new, but they are worth it.
 

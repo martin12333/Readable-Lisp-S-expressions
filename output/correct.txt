@@ -213,4 +213,27 @@ c
 (define x5 (define x6 2) (define x8 3))
 (dog . cat)
 (fickle (abc def . ghi) (jkl mno . pqr) (another . line))
+(z1 z2)
+(foo1 a1 b2)
+(foo2 a2 b2)
+(foo3 a3)
+(foo4 a4)
+(foo5-body-only-comments)
+(foo6 a6)
+(collect1 ())
+(collect2 ())
+(collect3 ((a b) (c d)))
+aaa
+()
+bbb
+()
+()
+ccc
+(this is a test)
+(this is a test of the emergency broadcast system)
+(had this been (an actual . emergency))
+(you would have (a . donut))
+(a7 b7 . c7)
+(a8 b8)
+(a ())
 fin

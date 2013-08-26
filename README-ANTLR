@@ -8,7 +8,13 @@ of implementations (including recursive descent parsers) as
 well as being very efficient.  ANTLR can detect ambiguities
 (which we want to avoid where possible, and if they must occur,
 we want to ensure that they are resolved in a reasonable
-and deterministic way).  Currently there are no ambiguities.
+and deterministic way).
+
+We intentionally use ANTLR version 3; version 4 was not ready
+when we started, and ANTLR version 4 provides many advanced
+capabilities that we want to *avoid* because we want to design
+a grammar that is relatively easy to parse (as well as being
+easy to read).
 
 
 ANTLR-based grammar
@@ -61,8 +67,9 @@ The ANTLRWorks GUI is released under the BSD 3-clause license,
 and it includes the ANTLR tool version 3.4, which is also
 released under the BSD 3-clause license:
 http://www.antlr3.org/license.html
-IF you cannot find a copy, check:
+If you cannot find a copy, check:
 http://sourceforge.net/projects/readable/files/
+
 
 
 For more information

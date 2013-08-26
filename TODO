@@ -1,0 +1,48 @@
+NOTE: To change the version number, modify configure.ac and then
+follow the instructions there.
+
+TODOs:
+
+- Get at least one editor mode implemented, e.g., in emacs.
+  Making it work with Paredit would be especially nice.
+
+- Get this working in ACL2.
+  In theory, you could modify "~/acl2-init.lsp" to include:
+    (require "asdf")
+    (asdf:load-system :readable)
+    (readable:enable-sweet) ; or (readable:enable-curly-infix)
+  or alternatively from its command prompt:
+    :q
+    (require "asdf")
+    (asdf:load-system :readable)
+    (readable:enable-sweet) ; or (readable:enable-curly-infix)
+    (lp)
+
+  Unfortunately this doesn't work.  These are accepted easily enough,
+  but the modified "read" is ignored by ACL2's REPL loop.
+  The problem seems to be in function "read-object" in file "axioms.lisp".
+
+  An example that *should* work would be the Lisp:
+    (thm (equal (+ a b c) (+ c b a)))
+  Which could then be the curly-infix:
+    {thm equal{{a + b + c} {c + b + a}}}
+  Or the sweet-expression:
+    thm $ equal {a + b + c} {c + b + a}
+
+  You could also use the http://tryacl2.org/ example:
+    (thm (equal (append (append xs ys) zs)
+                (append xs (append ys zs))))
+  With curly-expressions this could be:
+    {thm equal(append(append(xs ys) zs)
+               append(xs append(ys zs)))}
+  In sweet-expressions this could be:
+    thm
+      equal
+        append append(xs ys) zs
+        append xs append(ys zs)
+  Or alternatively:
+    thm $ equal
+      append append(xs ys) zs
+      append xs append(ys zs)
+
+

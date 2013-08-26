@@ -43,7 +43,7 @@
 ; be the only thing on the line, and in that case it should
 ; operate as a placeholder for that indentation position.
 ; Thus, we'll specially wrap such cases and return a
-; distinctive cons value "empty-values", to represent the "no value" case.
+; distinctive value "no-neoteric-value", to represent the "no value" case.
 (defvar *underlying-sweet-readtable*
   "This table is basically neoteric-expressions with some tweaks")
 
@@ -76,7 +76,12 @@
 ; performs actions that we can't intercept.  So we'll override the "empty"
 ; returns with this instead, so that they will get passed back to us
 ; and allow us to override the reader.
-(define-constant empty-values (make-symbol "empty-values"))
+(define-constant no-neoteric-value (make-symbol "no-neoteric-value"))
+
+; Represent no value at all, in the sweet-expression processing.
+(define-constant empty-value (make-symbol "empty-value"))
+
+(define-constant datum-commentw-tag (make-symbol "datum-commentw"))
 
 (define-constant vertical-tab (code-char 11)) ; VT is decimal 11.
 (define-constant form-feed #\page)            ; FF is decimal 12.
@@ -100,9 +105,12 @@
 
 (defun my-peek-char (stream)
   (let ((c (peek-char nil stream nil my-eof-marker)))
-    ; (princ "DEBUG: my-peek-char returned=") (write c) (terpri)
+    ; (format t "DEBUG: my-peek-char: ~@C~%" c)
     c))
-(defun my-read-char (stream) (read-char stream t nil nil))
+(defun my-read-char (stream)
+  (let ((c (read-char stream t nil nil)))
+    ; (format t "DEBUG: my-read-char: ~@C~%" c)
+    c))
 
 
 ; Consume an end-of-line sequence, ('\r' '\n'? | '\n')
@@ -126,137 +134,19 @@
         (my-read-char stream)
         (consume-to-eol stream))))
 
-
-;   (defun consume-to-whitespace (stream)
-;     ; Consume to whitespace
-;     (let ((c (my-peek-char stream)))
-;       (cond
-;         ((eof-objectp c) c)
-;         ((my-char-whitespacep c)
-;           '())
-;         (t
-;           (my-read-char stream)
-;           (consume-to-whitespace stream)))))
-; 
-;   (setq debugger-output nil)
-;   ; Quick utility for debugging.  Display marker, show data, return data.
-;   (defun debug-show (marker data)
-;     (cond
-;       (debugger-output
-;         (princ "DEBUG: ")
-;         (princ marker)
-;         (princ " = ")
-;         (write data)
-;         (princ "\n")))
-;     data)
-; 
-;   (defun consume-whitespace (stream)
-;     (let ((char (my-peek-char stream)))
-;       (cond
-;         ((eof-objectp char))
-;         ((eql char #\;)
-;           (consume-to-eol stream)
-;           (consume-whitespace stream))
-;         ((my-char-whitespacep char)
-;           (my-read-char stream)
-;           (consume-whitespace stream)))))
-; 
-;   (defun read-until-delim (stream delims)
-;     ; Read characters until eof or a character in "delims" is seen.
-;     ; Do not consume the eof or delimiter.
-;     ; Returns the list of chars that were read.
-;     (let ((c (my-peek-char stream)))
-;       (cond
-;          ((eof-objectp c) '())
-;          ((member c delims) '())
-;          (t (my-read-char stream) (cons c (read-until-delim stream delims))))))
-; 
-;   (defun read-error (message)
-;     (princ "Error: " (current-error-stream))
-;     (princ message (current-error-stream))
-;     (terpri (current-error-stream))
-;     ; Guile extension, but many Schemes have exceptions
-;     (throw 'readable)
-;     '())
-; 
-;   ; Return the number by reading from stream, and prepending starting-lyst.
-;   ; Returns nil if it's not a number.
-;   (defun read-number (stream starting-lyst)
-;     (string->number (concatenate 'string
-;       (append starting-lyst
-;         (read-until-delim stream neoteric-delimiters)))))
-; 
-;   ; Return list of digits read from stream; may be empty.
-;   (defun read-digits (stream)
-;     (let ((c (my-peek-char stream)))
-;       (cond
-;         ((member c digits)
-;           (cons (my-read-char stream) (read-digits stream)))
-;         (t '()))))
-; 
-; 
-; 
-;   ; Consume characters until "!#"
-;   (defun non-nest-comment (stream)
-;     (let ((c (my-read-char stream)))
-;       (cond
-;         ((eof-objectp c)
-;           (values))
-;         ((char=p c #\!)
-;           (let ((c2 (my-peek-char stream)))
-;             (if (char=p c2 #\#)
-;                 (progn
-;                   (my-read-char stream)
-;                   (values))
-;                 (non-nest-comment stream))))
-;         (t
-;           (non-nest-comment stream)))))
-; 
-;   (defun process-sharp-bang (stream)
-;     (let ((c (my-peek-char stream)))
-;       (cond
-;         ((char=p c #\space) ; SRFI-22
-;           (consume-to-eol stream)
-;           (consume-end-of-line stream)
-;           scomment-result) ; Treat as comment.
-;         ((member c '(#\/ #\.)) ; Multi-line, non-nesting #!/ ... !# or #!. ...!#
-;           (non-nest-comment stream)
-;           scomment-result) ; Treat as comment.
-;         ((char-alphabeticp c)  ; #!directive
-;           (process-directive
-;             (concatenate 'string (read-until-delim stream neoteric-delimiters)))
-;           scomment-result)
-;         ((or (eql c carriage-return) (eql c #\linefeed))
-;           ; Extension: Ignore lone #!
-;           (consume-to-eol stream)
-;           (consume-end-of-line stream)
-;           scomment-result) ; Treat as comment.
-;         (t (read-error "Unsupported #! combination")))))
-; 
-;   ; Gobble up the to-gobble characters from stream, and return # ungobbled.
-;   (defun gobble-chars (stream to-gobble)
-;     (if (null to-gobble)
-;         0
-;         (cond
-;           ((char-equal (my-peek-char stream) (car to-gobble))
-;             (my-read-char stream)
-;             (gobble-chars stream (cdr to-gobble)))
-;           (t (string-length to-gobble)))))
-
-
 ; detect #| or |#
 (define-constant hash-pipe-comment-nestsp t)
 (defun nest-comment (stream)
   (let ((c (my-read-char stream)))
     (cond
       ((eof-objectp c)
-        empty-values)
+        no-neoteric-value)
       ((char= c #\|)
         (let ((c2 (my-peek-char stream)))
           (if (and (not (eof-objectp c2)) (char= c2 #\#))
               (progn
                 (my-read-char stream)
-                empty-values)
+                no-neoteric-value)
               (nest-comment stream))))
       ((and hash-pipe-comment-nestsp (char= c #\#))
         (let ((c2 (my-peek-char stream)))
@@ -264,7 +154,7 @@
               (progn
                 (my-read-char stream)
                 (nest-comment stream))
-              empty-values)
+              no-neoteric-value)
           (nest-comment stream)))
       (t
         (nest-comment stream)))))
@@ -278,10 +168,10 @@
 (defun wrap-comment-datum (stream sub-char int)
   (declare (ignore sub-char int))
   (if (my-char-whitespacep (my-peek-char stream))
-    (read-error "Sequence #; must not be followed by whitespace.")
+    datum-commentw-tag
     (let ((junk (neoteric-read-nocomment stream)))
       (declare (ignore junk))
-      empty-values)))
+      no-neoteric-value)))
 
 ; There is no standard mechanism to unread multiple characters.
 ; Therefore, the key productions and some of their supporting procedures
@@ -296,7 +186,8 @@
 ;     read past the of a line (outside of paired characters and strings).
 ;     It is 'normal if it ended normally (e.g., at end of line); else it's
 ;     'sublist-marker ($), 'group-split-marker (\\), 'collecting (<*),
-;     'collecting-end (*>), 'scomment (special comments like #|...|#), or
+;     'collecting-end (*>), 'scomment (special comments like #|...|#),
+;     'datum-commentw, or
 ;     'abbrevw (initial abbreviation with whitespace after it).
 ; - "new-indent" - this is returned by productions etc. that DO read
 ;     past the end of a line.  Such productions typically read the
@@ -307,6 +198,12 @@
 ;     all normal indents with "^", and "*>" generates a length-0 indent
 ;     (which is thus shorter than even an indent of 0 characters).
 
+; Define let-splitter macro to simplify common code pattern.
+(defmacro let-splitter ((full first-value second-value) expr &rest body)
+  `(let* ((,full ,expr)
+          (,first-value (car ,full))
+          (,second-value (cadr ,full)))
+         ,@body))
 
 (define-constant group-split '\\)
 (define-constant group-split-char #\\ ) ; First character of split symbol.
@@ -319,31 +216,33 @@
 
 (defun indentation>p (indentation1 indentation2)
   (let ((len1 (string-length indentation1))
-          (len2 (string-length indentation2)))
+        (len2 (string-length indentation2)))
     (and (> len1 len2)
-           (string= indentation2 (subseq indentation1 0 len2)))))
+         (string= indentation2 (subseq indentation1 0 len2)))))
 
 ; Return t if char is space or tab.
+(declaim (inline char-hspacep))
 (defun char-hspacep (char)
   (or (eql char #\space)
       (eql char #\tab)))
 
-; Consume 0+ spaces or tabs
+; Consume 0+ spaces or tabs.  Uses direct iteraction, not tail recursion.
 (defun hspaces (stream)
-  (when (char-hspacep (my-peek-char stream))
-      (my-read-char stream)
-      (hspaces stream)))
+  (loop
+     while (char-hspacep (my-peek-char stream))
+     do (my-read-char stream)))
 
 ; Return t if char is space, tab, or !
+(declaim (inline char-icharp))
 (defun char-icharp (char)
   (or (eql char #\space)
       (eql char #\tab)
       (eql char non-whitespace-indent)))
 
+(declaim (inline accumulate-ichar))
 (defun accumulate-ichar (stream)
-  (if (char-icharp (my-peek-char stream))
-      (cons (my-read-char stream) (accumulate-ichar stream))
-      '()))
+  (loop while (char-icharp (my-peek-char stream))
+        collect (my-read-char stream)))
 
 (defun consume-ff-vt (stream)
   (let ((c (my-peek-char stream)))
@@ -355,24 +254,31 @@
 ; Do 2-item append, but report read-error if the LHS is not a proper list.
 ; Don't use this if the lhs *must* be a list (e.g., if we have (list x)).
 (defun my-append (lhs rhs)
-  (if (listp lhs)
-      (append lhs rhs)
-      (read-error "Must have proper list on left-hand-side to append data.")))
+  (cond
+    ((eq lhs empty-value) rhs)
+    ((eq rhs empty-value) lhs)
+    ((listp lhs) (append lhs rhs))
+    (t
+      (read-error "Must have proper list on left-hand-side to append data"))))
 
 ; Read an n-expression.  Returns ('scomment '()) if it's an scomment,
 ; else returns ('normal n-expr).
 (defun n-expr-or-scomment (stream)
   (let ((result (my-read-datum stream))) ; Make it possible to return ".".
-    (if (eq result empty-values)
-      scomment-result
-      (list 'normal result))))
+    (cond
+      ((eq result no-neoteric-value) scomment-result)
+      ((eq result datum-commentw-tag) '(datum-commentw ()))
+      (t (list 'normal result)))))
 
 ; Read a straight-up n-expression.  Skip scomments.
 (defun neoteric-read-nocomment (stream)
   (let ((result (my-read-datum stream))) ; Make it possible to return ".".
-  (if (eq result empty-values)
-      (neoteric-read-nocomment stream)
-      result)))
+    (cond
+      ((eq result no-neoteric-value) (neoteric-read-nocomment stream))
+      ((eq result datum-commentw-tag)
+        (neoteric-read-nocomment stream) ; Consume the next n-expression.
+        (neoteric-read-nocomment stream))
+      (t result))))
 
 ; Read an n-expression.  Returns ('normal n-expr) in most cases;
 ; if it's a special marker, the car is the marker name instead of 'normal.
@@ -380,32 +286,31 @@
 ; the "normal" character, e.g., {$} is not a sublist.
 ; Call "process-sharp" if first char is "#".
 (defun n-expr (stream)
-  (let* ((c (my-peek-char stream))
-         (results (n-expr-or-scomment stream))
-         (type (car results))
-         (expr (cadr results)))
-    (declare (ignore type))
-    ; (princ "DEBUG: n-expr, results=") (write results) (terpri)
-    ; (princ "DEBUG: n-expr, car results=") (write (car results)) (terpri)
-    ; (princ "DEBUG: n-expr, car results scomment=") (write (eq (car results) 'scomment)) (terpri)
-    (if (eq (car results) 'scomment)
-        results
-        (cond
-          ; TODO: Improve Workaround for symbol packaging:
-          ((and (eql c sublist-char) (string= (symbol-name expr) "$"))
-            (list 'sublist-marker '()))
-          ((and (eql c group-split-char) (string= (symbol-name expr) "\\"))
-            (list 'group-split-marker '()))
-          ((and (eql c #\<) (string= (symbol-name expr) "<*"))
-            (list 'collecting '()))
-          ((and (eql c #\*) (string= (symbol-name expr) "*>"))
-            (list 'collecting-end '()))
-          ((and (eql c #\$) (string= (symbol-name expr) "$$$"))
-            (read-error "$$$ is reserved."))
-          ((and (eql c #\.) (string= (symbol-name expr) "."))
-            (list 'period-marker '()))
-          (t
-            results)))))
+  (let ((c (my-peek-char stream)))
+    (let-splitter (results type expr)
+                  (n-expr-or-scomment stream)
+      (declare (ignore type))
+      ; (princ "DEBUG: n-expr, results=") (write results) (terpri)
+      ; (princ "DEBUG: n-expr, car results=") (write (car results)) (terpri)
+      ; (princ "DEBUG: n-expr, car results scomment=") (write (eq (car results) 'scomment)) (terpri)
+      (if (eq (car results) 'scomment)
+          results
+          (cond
+            ; TODO: Improve Workaround for symbol packaging:
+            ((and (eql c sublist-char) (string= (symbol-name expr) "$"))
+              (list 'sublist-marker '()))
+            ((and (eql c group-split-char) (string= (symbol-name expr) "\\"))
+              (list 'group-split-marker '()))
+            ((and (eql c #\<) (string= (symbol-name expr) "<*"))
+              (list 'collecting '()))
+            ((and (eql c #\*) (string= (symbol-name expr) "*>"))
+              (list 'collecting-end '()))
+            ((and (eql c #\$) (string= (symbol-name expr) "$$$"))
+              (read-error "$$$ is reserved."))
+            ((and (eql c #\.) (string= (symbol-name expr) "."))
+              (list 'period-marker '()))
+            (t
+              results))))))
 
 ; Check if we have abbrev+whitespace.  If the current peeked character
 ; is one of certain whitespace chars,
@@ -463,7 +368,45 @@
             "^"))
       (t (concatenate 'string indentation-as-list)))))
 
-; Utility function:
+(defun skippable (stopper stream)
+  (cond
+  ((eq stopper 'scomment)
+    (hspaces stream))
+  ((eq stopper 'datum-commentw)
+    (hspaces stream)
+    (if (not (lcomment-eolp (my-peek-char stream)))
+      (progn
+        (n-expr stream)
+        (hspaces stream))
+      (read-error "Datum comment start not followed a datum (EOL instead)")))
+  (t (read-error "skippable: Impossible case"))))
+
+; Utility declarations and functions
+
+(defun conse (x y) ; cons, but handle "empty" values
+  (cond
+    ((eq y empty-value) x)
+    ((eq x empty-value) y)
+    (t (cons x y))))
+
+(defun appende (x y) ; append, but handle "empty" values
+  (cond
+    ((eq y empty-value) x)
+    ((eq x empty-value) y)
+    (t (append y))))
+
+(defun list1e (x) ; list, but handle "empty" values
+  (if (eq x empty-value)
+      '()
+      (list x)))
+
+(defun list2e (x y) ; list, but handle "empty" values
+  (if (eq x empty-value)
+      y
+      (if (eq y empty-value)
+         x
+         (list x y))))
+
 ; If x is a 1-element list, return (car x), else return x
 (defun monify (x)
   (cond
@@ -471,9 +414,10 @@
     ((null (cdr x)) (car x))
     (t x)))
 
-; Return contents (value) of collecting-tail.  It does *not* report a
+
+; Return contents (value) of collecting-content.  It does *not* report a
 ; stopper or ending indent, because it is *ONLY* stopped by collecting-end
-(defun collecting-tail (stream)
+(defun collecting-content (stream)
   (let* ((c (my-peek-char stream)))
     (cond
       ((eof-objectp c)
@@ -481,28 +425,22 @@
       ((lcomment-eolp c)
         (consume-to-eol stream)
         (consume-end-of-line stream)
-        (collecting-tail stream))
+        (collecting-content stream))
       ((char-icharp c)
         (let* ((indentation (accumulate-ichar stream))
                (c (my-peek-char stream)))
-          (cond
-            ((eql c #\;)
-              (collecting-tail stream))
-            ((lcomment-eolp c)
-              (if (member #\! indentation)
-                  (read-error "Collecting tail: False empty line with !.")
-                  (collecting-tail stream)))
-            (t
-              (read-error "Collecting tail: Only ; after indent.")))))
+          (declare (ignore indentation))
+          (if (lcomment-eolp c)
+              (collecting-content stream)
+              (read-error "Collecting tail: Only ; after indent."))))
       ((or (eql c form-feed) (eql c vertical-tab))
         (consume-ff-vt stream)
         (if (lcomment-eolp (my-peek-char stream))
-            (collecting-tail stream)
+            (collecting-content stream)
             (read-error "Collecting tail: FF and VT must be alone on line.")))
       (t
-        (let* ((it-full-results (it-expr stream "^"))
-               (it-new-indent   (car it-full-results))
-               (it-value        (cadr it-full-results)))
+        (let-splitter (it-full-results it-new-indent it-value)
+                      (it-expr stream "^")
           (cond
             ((string= it-new-indent "")
               ; Specially compensate for "*>" at the end of a line if it's
@@ -510,10 +448,11 @@
               ; which would cons a () after the result.
               ; Directly calling list for a non-null it-value has
               ; the same effect, but is a lot quicker and simpler.
-              (if (null it-value)
-                  it-value
-                  (list it-value)))
-            (t (cons it-value (collecting-tail stream)))))))))
+              (cond
+                ((null it-value) it-value)
+                ((eq it-value empty-value) '())
+                (t (list it-value))))
+            (t (conse it-value (collecting-content stream)))))))))
 
 ; Skip scomments and error out if we have a normal n-expr;
 ; Basically implement this BNF:
@@ -524,13 +463,12 @@
       (read-error "BUG! n-expr-error called but stopper not normal."))
   (if (lcomment-eolp (my-peek-char stream))
       full ; All done!
-      (let* ((n-full-results (n-expr stream))
-             (n-stopper      (car n-full-results))
-             (n-value        (cadr n-full-results)))
+      (let-splitter (n-full-results n-stopper n-value)
+                    (n-expr stream)
         (declare (ignore n-value))
         (cond
-          ((eq n-stopper 'scomment) ; Consume scomments.
-            (hspaces stream)
+          ((or (eq n-stopper 'scomment) (eq n-stopper 'datum-commentw))
+            (skippable n-stopper stream)
             (n-expr-error stream full))
           ((eq n-stopper 'normal)
             (read-error "Illegal second value after '.'."))
@@ -540,22 +478,21 @@
 ; Returns (stopper value-after-period)
 (defun post-period (stream)
   (if (not (lcomment-eolp (my-peek-char stream)))
-      (let* ((pn-full-results (n-expr stream))
-             (pn-stopper      (car pn-full-results))
-             (pn-value        (cadr pn-full-results)))
+      (let-splitter (pn-full-results pn-stopper pn-value)
+                    (n-expr stream)
         (declare (ignore pn-value))
         (cond
-          ((eq pn-stopper 'scomment)
-            (hspaces stream)
+          ((or (eq pn-stopper 'scomment) (eq pn-stopper 'datum-commentw))
+            (skippable pn-stopper stream)
             (post-period stream))
           ((eq pn-stopper 'normal)
             (hspaces stream)
             (n-expr-error stream pn-full-results))
           ((eq pn-stopper 'collecting)
             (hspaces stream)
-            (let ((ct (collecting-tail stream)))
+            (let ((cl (collecting-content stream)))
               (hspaces stream)
-              (n-expr-error stream (list 'normal ct))))
+              (n-expr-error stream (list 'normal cl))))
           ((eq pn-stopper 'period-marker)
             (list 'normal period-symbol))
           (t ; Different stopper; respond as empty branch with that stopper
@@ -565,38 +502,34 @@
 ; Returns (stopper computed-value).
 ; The stopper may be 'normal, 'scomment (special comment),
 ; 'abbrevw (initial abbreviation), 'sublist-marker, or 'group-split-marker
-(defun head (stream)
-  (let* ((basic-full-results (n-expr-first stream))
-         (basic-special      (car basic-full-results))
-         (basic-value        (cadr basic-full-results)))
-    ; (princ "DEBUG: head=") (write basic-full-results) (terpri)
+(defun line-exprs (stream)
+  (let-splitter (basic-full-results basic-special basic-value)
+                (n-expr-first stream)
+    ; (princ "DEBUG: line-exprs=") (write basic-full-results) (terpri)
     (cond
       ((eq basic-special 'collecting)
         (hspaces stream)
-        (let* ((ct-results (collecting-tail stream)))
+        (let* ((cl-results (collecting-content stream)))
           (hspaces stream)
           (if (not (lcomment-eolp (my-peek-char stream)))
-              (let* ((rr-full-results (sweet-rest stream))
-                     (rr-stopper      (car rr-full-results))
-                     (rr-value        (cadr rr-full-results)))
-                (list rr-stopper (cons ct-results rr-value)))
-              (list 'normal (list ct-results)))))
+              (let-splitter (rr-full-results rr-stopper rr-value)
+                            (rest-of-line stream)
+                (list rr-stopper (cons cl-results rr-value)))
+              (list 'normal (list cl-results)))))
       ((eq basic-special 'period-marker)
         (if (char-hspacep (my-peek-char stream))
             (progn
               (hspaces stream)
-              (let* ((ct-full-results (post-period stream))
-                     (ct-stopper      (car ct-full-results))
-                     (ct-value        (cadr ct-full-results)))
-                (list ct-stopper (list ct-value))))
+              (let-splitter (cl-full-results cl-stopper cl-value)
+                            (post-period stream)
+                (list cl-stopper (list cl-value))))
             (list 'normal (list period-symbol))))
       ((not (eq basic-special 'normal)) basic-full-results)
       ((char-hspacep (my-peek-char stream))
         (hspaces stream)
         (if (not (lcomment-eolp (my-peek-char stream)))
-            (let* ((br-full-results (sweet-rest stream))
-                   (br-stopper      (car br-full-results))
-                   (br-value        (cadr br-full-results)))
+            (let-splitter (br-full-results br-stopper br-value)
+                          (rest-of-line stream)
               (list br-stopper (cons basic-value br-value)))
             (list 'normal (list basic-value))))
       (t 
@@ -604,103 +537,125 @@
 
 ; Returns (stopper computed-value); stopper may be 'normal, etc.
 ; Read in one n-expr, then process based on whether or not it's special.
-; NOTE: This non-terminal renamed from "rest" to avoid conflict with CL.
-(defun sweet-rest (stream)
-  (let* ((basic-full-results (n-expr stream))
-         (basic-special      (car basic-full-results))
-         (basic-value        (cadr basic-full-results)))
+(defun rest-of-line (stream)
+  (let-splitter (basic-full-results basic-special basic-value)
+                (n-expr stream)
     (cond
-      ((eq basic-special 'scomment)
-        (hspaces stream)
+      ((or (eq basic-special 'scomment) (eq basic-special 'datum-commentw))
+        (skippable basic-special stream)
         (if (not (lcomment-eolp (my-peek-char stream)))
-            (sweet-rest stream)
+            (rest-of-line stream)
             (list 'normal '())))
       ((eq basic-special 'collecting)
         (hspaces stream)
-        (let* ((ct-results (collecting-tail stream)))
+        (let* ((cl-results (collecting-content stream)))
           (hspaces stream)
           (if (not (lcomment-eolp (my-peek-char stream)))
-              (let* ((rr-full-results (sweet-rest stream))
-                     (rr-stopper      (car rr-full-results))
-                     (rr-value        (cadr rr-full-results)))
-                (list rr-stopper (cons ct-results rr-value)))
-              (list 'normal (list ct-results)))))
+              (let-splitter (rr-full-results rr-stopper rr-value)
+                            (rest-of-line stream)
+                (list rr-stopper (cons cl-results rr-value)))
+              (list 'normal (list cl-results)))))
       ((eq basic-special 'period-marker)
         (if (char-hspacep (my-peek-char stream))
             (progn
               (hspaces stream)
               (post-period stream))
-            (list 'normal (list period-symbol))))
+            ; (list 'normal (list period-symbol)) ; To interpret as |.|
+            (read-error "Cannot end line with '.'")))
       ((not (eq basic-special 'normal)) (list basic-special '())) 
       ((char-hspacep (my-peek-char stream))
         (hspaces stream)
         (if (not (lcomment-eolp (my-peek-char stream)))
-            (let* ((br-full-results (sweet-rest stream))
-                   (br-stopper      (car br-full-results))
-                   (br-value        (cadr br-full-results)))
+            (let-splitter (br-full-results br-stopper br-value)
+                          (rest-of-line stream)
               (list br-stopper (cons basic-value br-value)))
             (list 'normal (list basic-value))))
       (t (list 'normal (list basic-value))))))
 
 ; Returns (new-indent computed-value)
 (defun body (stream starting-indent)
-  (let* ((i-full-results (it-expr stream starting-indent))
-         (i-new-indent   (car i-full-results))
-         (i-value        (cadr i-full-results)))
+  (let-splitter (i-full-results i-new-indent i-value)
+                (it-expr stream starting-indent)
     (if (string= starting-indent i-new-indent)
         (if (eq i-value period-symbol)
-            (let* ((f-full-results (it-expr stream i-new-indent))
-                   (f-new-indent   (car f-full-results))
-                   (f-value        (cadr f-full-results)))
+            (let-splitter (f-full-results f-new-indent f-value)
+                          (it-expr stream i-new-indent)
               (if (not (indentation>p starting-indent f-new-indent))
                   (read-error "Dedent required after lone . and value line."))
               (list f-new-indent f-value)) ; final value of improper list
-            (let* ((nxt-full-results (body stream i-new-indent))
-                   (nxt-new-indent   (car nxt-full-results))
-                   (nxt-value        (cadr nxt-full-results)))
-              (list nxt-new-indent (cons i-value nxt-value))))
-        (list i-new-indent (list i-value))))) ; dedent - end list.
+            (if (eq i-value empty-value)
+                (body stream i-new-indent)
+                (let-splitter (nxt-full-results nxt-new-indent nxt-value)
+                              (body stream i-new-indent)
+                  (list nxt-new-indent (conse i-value nxt-value)))))
+        (list i-new-indent (list1e i-value))))) ; dedent - end list.
 
 ; Returns (new-indent computed-value)
 (defun it-expr-real (stream starting-indent)
-  (let* ((head-full-results (head stream))
-         (head-stopper      (car head-full-results))
-         (head-value        (cadr head-full-results)))
-; (princ "DEBUG: it-expr-real: head result=") (write head-full-results) (terpri)
-    (if (and (not (null head-value)) (not (eq head-stopper 'abbrevw)))
-        ; The head... branches:
+  (let-splitter (line-full-results line-stopper line-value)
+                (line-exprs stream)
+    ; (princ "DEBUG: it-expr-real: line-exprs result=") (write line-full-results) (terpri)
+    (if (and (not (null line-value)) (not (eq line-stopper 'abbrevw)))
+        ; Production line-exprs produced at least one n-expression:
         (cond
-          ((eq head-stopper 'group-split-marker)
+          ((eq line-stopper 'group-split-marker)
             (hspaces stream)
             (if (lcomment-eolp (my-peek-char stream))
-                (read-error "Cannot follow split with end of line.")
-                (list starting-indent (monify head-value))))
-          ((eq head-stopper 'sublist-marker)
+                ; Local extension - allow \\ as line-continuation, a
+                ; capability more useful in Common Lisp than in Scheme.
+                ; To error out instead, replace with:
+                ; (read-error "Cannot follow split with end of line.")
+                (let ((new-indent (get-next-indent stream)))
+                  (if (string= new-indent starting-indent)
+                    (let-splitter (more-full-results more-new-indent more-value)
+                                  (it-expr stream new-indent)
+                      (list more-new-indent
+                        (my-append line-value more-value)))
+                    (read-error "Continue without same-indent line.")))
+                (list starting-indent (monify line-value))))
+          ((eq line-stopper 'sublist-marker)
             (hspaces stream)
             (if (lcomment-eolp (my-peek-char stream))
                 (read-error "EOL illegal immediately after sublist."))
-            (let* ((sub-i-full-results (it-expr stream starting-indent))
-                   (sub-i-new-indent   (car sub-i-full-results))
-                   (sub-i-value        (cadr sub-i-full-results)))
+            (let-splitter (sub-i-full-results sub-i-new-indent sub-i-value)
+                          (it-expr stream starting-indent)
               (list sub-i-new-indent
-                (my-append head-value (list sub-i-value)))))
-          ((eq head-stopper 'collecting-end)
+                (my-append line-value (list sub-i-value)))))
+          ((eq line-stopper 'collecting-end)
             ; Note that indent is "", forcing dedent all the way out.
-            (list "" (monify head-value)))
+            (list ""
+              (if (eq line-value empty-value)
+                '()
+                (monify line-value))))
           ((lcomment-eolp (my-peek-char stream))
             (let ((new-indent (get-next-indent stream)))
               (if (indentation>p new-indent starting-indent)
-                  (let* ((body-full-results (body stream new-indent))
-                         (body-new-indent (car body-full-results))
-                         (body-value      (cadr body-full-results)))
-                    (list body-new-indent (my-append head-value body-value)))
-                  (list new-indent (monify head-value)))))
+                  (let-splitter (body-full-results body-new-indent body-value)
+                                (body stream new-indent)
+                    (list body-new-indent (my-append line-value body-value)))
+                  (list new-indent (monify line-value)))))
           (t
-            (read-error "Must end line with end-of-line sequence.")))
-        ; Here, head begins with something special like GROUP-SPLIT:
+            (read-error "Unexpected text after n-expression")))
+        ; Here, line-exprs begins with something special like GROUP-SPLIT:
         (cond
-          ((or (eq head-stopper 'group-split-marker)
-               (eq head-stopper 'scomment))
+          ((eq line-stopper 'datum-commentw)
+            (hspaces stream)
+            (cond
+              ((not (lcomment-eolp (my-peek-char stream)))
+                (let-splitter (is-i-full-results is-i-new-indent is-i-value)
+                              (it-expr stream starting-indent)
+                  (declare (ignore is-i-value))
+                  (list is-i-new-indent empty-value)))
+              (t
+                (let ((new-indent (get-next-indent stream)))
+                  (if (indentation>p new-indent starting-indent)
+                    (let-splitter (body-full-results body-new-indent body-value)
+                                  (body stream new-indent)
+                      (declare (ignore body-value))
+                      (list body-new-indent empty-value))
+                    (read-error "#;+EOL must be followed by indent"))))))
+          ((or (eq line-stopper 'group-split-marker)
+               (eq line-stopper 'scomment))
             (hspaces stream)
             (if (not (lcomment-eolp (my-peek-char stream)))
                 (it-expr stream starting-indent) ; Skip and try again.
@@ -708,107 +663,106 @@
                   (cond
                     ((indentation>p new-indent starting-indent)
                       (body stream new-indent))
-                    ((string= starting-indent new-indent)
-                      (if (not (lcomment-eolp (my-peek-char stream)))
-                        (it-expr stream new-indent)
-                        (list new-indent (t-expr stream)))) ; Restart
                     (t
-                      (read-error "GROUP-SPLIT EOL DEDENT illegal."))))))
-          ((eq head-stopper 'sublist-marker)
+                      (list new-indent empty-value))))))
+          ((eq line-stopper 'sublist-marker)
             (hspaces stream)
             (if (lcomment-eolp (my-peek-char stream))
                 (read-error "EOL illegal immediately after solo sublist."))
-            (let* ((is-i-full-results (it-expr stream starting-indent))
-                   (is-i-new-indent   (car is-i-full-results))
-                   (is-i-value        (cadr is-i-full-results)))
+            (let-splitter (is-i-full-results is-i-new-indent is-i-value)
+                          (it-expr stream starting-indent)
               (list is-i-new-indent
-                (list is-i-value))))
-          ((eq head-stopper 'abbrevw)
+                (list1e is-i-value))))
+          ((eq line-stopper 'abbrevw)
             (hspaces stream)
             (if (lcomment-eolp (my-peek-char stream))
                 (progn
                   (let ((new-indent (get-next-indent stream)))
                     (if (not (indentation>p new-indent starting-indent))
                         (read-error "Indent required after abbreviation."))
-                    (let* ((ab-full-results (body stream new-indent))
-                           (ab-new-indent   (car ab-full-results))
-                           (ab-value      (cadr ab-full-results)))
+                    (let-splitter (ab-full-results ab-new-indent ab-value)
+                                  (body stream new-indent)
                       (list ab-new-indent
-                        (append (list head-value) ab-value)))))
-                (let* ((ai-full-results (it-expr stream starting-indent))
-                       (ai-new-indent (car ai-full-results))
-                       (ai-value    (cadr ai-full-results)))
+                        (append (list line-value) ab-value)))))
+                (let-splitter (ai-full-results ai-new-indent ai-value)
+                              (it-expr stream starting-indent)
                   (list ai-new-indent
-                    (list head-value ai-value)))))
-          ((eq head-stopper 'collecting-end)
-            (list "" head-value))
+                    (list2e line-value ai-value)))))
+          ((eq line-stopper 'collecting-end)
+            (list "" line-value))
           (t 
-            (read-error "Initial head error."))))))
+            (read-error "Initial line-expression error."))))))
 
 ; Read it-expr.  This is a wrapper that attaches source info
 ; and checks for consistent indentation results.
 (defun it-expr (stream starting-indent)
-  (let* ((pos (get-sourceinfo stream))
-         (results (it-expr-real stream starting-indent))
-         (results-indent (car results))
-         (results-value (cadr results)))
-    (if (indentation>p results-indent starting-indent)
-        (read-error "Inconsistent indentation."))
-    (list results-indent (attach-sourceinfo pos results-value))))
+  (let ((pos (get-sourceinfo stream)))
+    (let-splitter (results results-indent results-value)
+                  (it-expr-real stream starting-indent)
+      (if (indentation>p results-indent starting-indent)
+          (read-error "Inconsistent indentation."))
+      (list results-indent (attach-sourceinfo pos results-value)))))
+
+ 
+(defun initial-indent-expr-tail (stream)
+  (if (not (member (my-peek-char stream) initial-comment-eol))
+      (let-splitter (results results-stopper results-value)
+                    (n-expr-or-scomment stream)
+        (cond
+          ((member results-stopper '(scomment datum-commentw))
+            (skippable results-stopper stream)
+            (initial-indent-expr-tail stream))
+          (t ; Normal n-expr, return one value.
+            ; The following "if" is a work-around for a bug in clisp's REPL.
+            ; Without it, in sequential initial-indent lines like this:
+            ;   1 2 3
+            ;   4 5 6
+            ; the 2nd line's non-first n-expressions are skipped (e.g., 5 6).
+            ; We work around this by consuming an EOL immediately following
+            ; the last n-expression on an initial indent line.
+            ; This work-around fails if the first line ends in space or tab,
+            ; but clisp REPL users are highly unlikely to notice this.
+            ; This work-around won't affect correctly-working systems
+            ; because without this code, it'd just skip a blank EOL anyway.
+            ; Correctly-working systems include clisp's file-execution code
+            ; and a clisp loop of (write (read)), interestingly enough.
+            (if (member (my-peek-char stream) initial-comment-eol)
+              (my-read-char stream))
+            results-value)))
+      (progn
+        (consume-to-eol stream)
+        (consume-end-of-line stream)
+        empty-value))) ; (t-expr-real stream)
 
 ; Top level - read a sweet-expression (t-expression).  Handle special
 ; cases, such as initial indent; call it-expr for normal case.
-(defun t-expr (stream)
+(defun t-expr-real (stream)
   (let* ((c (my-peek-char stream)))
         (cond
           ((lcomment-eolp c)
             (consume-to-eol stream)
             (consume-end-of-line stream)
-            (t-expr stream))
+            (t-expr-real stream))
           ((or (eql c form-feed) (eql c vertical-tab))
             (consume-ff-vt stream)
-            (t-expr stream))
-          ((char-icharp c)
-            (let ((indentation-list (cons #\^ (accumulate-ichar stream))))
-              (declare (ignore indentation-list))
-              (if (not (member (my-peek-char stream) initial-comment-eol))
-                  (let ((results (n-expr-or-scomment stream)))
-                    (if (not (eq (car results) 'scomment))
-                        (cadr results) ; Normal n-expr, return one value.
-                        (progn ; We have an scomment; skip and try again.
-                          (hspaces stream)
-                          (t-expr stream))))
-                  (progn ; Indented comment-eol, consume and try again.
-                    (consume-to-eol stream)
-                    (consume-end-of-line stream)
-                    (t-expr stream)))))
+            (if (not (lcomment-eolp (my-peek-char stream)))
+              (read-error "FF and VT must be alone on line in a sweet-expr"))
+            (t-expr-real stream))
+          ((char-icharp c) ; initial-indent-expr
+            (accumulate-ichar stream) ; consume and throw away ichars
+            (initial-indent-expr-tail stream))
           (t
-            (let* ((results (it-expr stream "^"))
-                   (results-indent (car results))
-                   (results-value (cadr results)))
+            (let-splitter (results results-indent results-value)
+                          (it-expr stream "^")
               (if (string= results-indent "")
-                  (read-error "Closing *> without preceding matching <*.")
-                  results-value))))))
+                  (read-error "Closing *> without preceding matching <*."))
+              results-value)))))
 
-;   ; Skip until we find a completely empty line (not even initial space/tab).
-;   ; We use this after read error to resync to good input.
-;   (defun read-to-blank-line (stream)
-;     (consume-to-eol stream)
-;     (consume-end-of-line stream)
-;     (let* ((c (my-peek-char stream)))
-;       (if (not (or (eof-objectp c) (char-line-endingp c)))
-;         (read-to-blank-line stream))))
-; 
-;   ; Call on sweet-expression reader - use guile's nonstandard catch/throw
-;   ; so that errors will force a restart.
-;   (defun t-expr-catch (stream)
-; 
-;    ; Default guile stack size is FAR too small
-;    (debug-set! stack 500000)
-;
-;    (catch 'readable
-;      (lambda () (t-expr stream))
-;      (lambda (key . args) (read-to-blank-line stream) (t-expr-catch stream))))
+(defun t-expr (stream)
+  (let* ((te (t-expr-real stream)))
+    (if (eq te empty-value)
+        (t-expr stream)
+        te)))
 
 (defun t-expr-entry (stream char)
   (unread-char char stream)

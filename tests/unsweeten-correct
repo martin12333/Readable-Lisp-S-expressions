@@ -104,4 +104,47 @@ b
 
 |.|
 
+
+; initial-indent tests
+
+a1
+b1
+
+
+a2
+b2
+a3
+b3
+a4
+b4
+1
+
+; terminating whitespace tests
+(foo1 foo2
+      (bar1 bar2)
+      (car1 car2 ((a1 a2)) ((b1 b2)))
+      ((c1 c2))
+      (d1 d2)
+      ((e1 e2)))
+
+; Errors
+Error: Unexpected text after n-expression
+Error: Invalid character name
+Error: Closing *> without preceding matching <*
+Error: Datum comment start not followed a datum (EOL instead)
+Error: #;+EOL must be followed by indent
+Error: $$$ is reserved
+Error: Collecting tail: Only ; after indent
+Error: Collecting tail: FF and VT must be alone on line
+Error: FF and VT must be alone on line in a sweet-expr
+Error: Illegal second value after .
+Error: Illegal second value after .
+Error: Cannot end line with '.'
+Error: Dedent required after lone . and value line
+Error: Cannot follow split with end of line
+Error: EOL illegal immediately after solo sublist
+Error: Indent required after abbreviation
+Error: Inconsistent indentation
+fin
+
 ; Comment at end of file.

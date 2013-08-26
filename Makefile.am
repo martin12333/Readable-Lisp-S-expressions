@@ -24,6 +24,8 @@ SHELL = /bin/sh
 
 UNSWEETEN = ./unsweeten
 
+CLEANFILES =
+
 # Here is the usual POSIX-portable inference rule for unsweetening:
 # .sscm.scm:
 #	$(UNSWEETEN) < $< > $@
@@ -37,6 +39,7 @@ UNSWEETEN = ./unsweeten
 
 # Guile libraries.
 
+if WITH_GUILE
 readable_libdir = $(GUILE_SITE)/readable
 
 readable_lib_DATA = readable/kernel.scm
@@ -46,12 +49,15 @@ readable/kernel.scm: src/kernel.scm
 	$(MKDIR_P) readable
 	cp -p "$(srcdir)/src/kernel.scm" readable/kernel.scm
 
-CLEANFILES = readable/kernel.scm
+CLEANFILES += readable/kernel.scm
+endif WITH_GUILE
 
 
 # Common Lisp files.  We'll install source code in conventional places,
 # and let the usual Common Lisp mechanisms (e.g., asdf) handle compiling
 # as needed.
+
+CLISP = @CLISP@
 
 common_lispdir = $(datadir)/common-lisp
 common_lisp_sourcedir = $(common_lispdir)/source
@@ -60,30 +66,26 @@ common_lisp_systemsdir = $(common_lispdir)/systems
 
 pkg_asd_file=readable.asd
 
+if WITH_COMMON_LISP
 dist_common_lisp_source_pkg_DATA = \
  basic-curly.lisp neoteric.lisp backquote.lisp sweet.lisp
 
 dist_common_lisp_source_pkg_DATA += $(pkg_asd_file)
 
-# For now, install sweet-clisp specially, because it cannot currently
-# be "installed" and work as expected... but it's still useful for testing.
-EXTRA_DIST += sweet-clisp
-
-# Trivial example of a Common Lisp program.
-EXTRA_DIST += factorial.lisp
-
 # Install symlink so asdf can find these files. See:
 # http://www.gnu.org/software/automake/manual/html_node/Extending.html
-# Note that the LN_S does *not* use DESTDIR.
+# We first try to "rm" the symlink, in case it already exists.
+# Note that the LN_S must *not* use DESTDIR in its first parameter.
 
 install-exec-hook-cl:
 	$(MKDIR_P) "$(DESTDIR)$(common_lisp_source_pkgdir)"
 	$(MKDIR_P) "$(DESTDIR)$(common_lisp_systemsdir)"
-	$(RM) -f "$(common_lisp_systemsdir)/$(pkg_asd_file)"
-	cd "$(DESTDIR)$(common_lisp_source_pkgdir)" && \
-	  $(LN_S) "$(common_lisp_source_pkgdir)/$(pkg_asd_file)" ../../systems
+	$(RM) -f "$(DESTDIR)$(common_lisp_systemsdir)/$(pkg_asd_file)"
+	$(LN_S)  "$(common_lisp_source_pkgdir)/$(pkg_asd_file)" \
+	         "$(DESTDIR)$(common_lisp_systemsdir)/$(pkg_asd_file)"
 
 install-exec-hook: install-exec-hook-cl
+endif WITH_COMMON_LISP
 
 
 # Scripts
@@ -97,22 +99,37 @@ script_sources = src/sweeten.sscm src/unsweeten \
 
 EXTRA_DIST += $(script_sources)
 
+bin_SCRIPTS  =
+noinst_SCRIPTS =
+
+if WITH_GUILE
 # These scripts are generated at build time, so they're not distributed
 # (there's no dist_ prefix for bin_SCRIPTS here):
-bin_SCRIPTS  = bin/sweeten bin/unsweeten
+bin_SCRIPTS += bin/sweeten bin/unsweeten
 bin_SCRIPTS += bin/curly-guile bin/neoteric-guile bin/sweet-guile
 bin_SCRIPTS += bin/sweet-run bin/sweet-scsh
 bin_SCRIPTS += bin/diff-s-sweet
-CLEANFILES  += $(bin_SCRIPTS)
-
-# This is a script that's just copied straight.
-bin_SCRIPTS += sweet-clisp
 
 # These are the local scripts, for testing, and are not installed.
-noinst_SCRIPTS = ./sweeten ./unsweeten \
-                 ./curly-guile ./neoteric-guile ./sweet-guile \
-                 ./sweet-scsh ./sweet-run ./diff-s-sweet
+noinst_SCRIPTS += ./sweeten ./unsweeten \
+                  ./curly-guile ./neoteric-guile ./sweet-guile \
+                  ./sweet-scsh ./sweet-run ./diff-s-sweet
+endif WITH_GUILE
 
+if WITH_COMMON_LISP
+# These are scripts that are just copied straight.
+bin_SCRIPTS += sweet-sbcl
+endif WITH_COMMON_LISP
+
+if WITH_CLISP
+# These are scripts that are just copied straight.
+bin_SCRIPTS += sweet-clisp
+endif WITH_CLISP
+
+# Not generated, so always distribute
+EXTRA_DIST += sweet-clisp sweet-sbcl
+
+CLEANFILES += $(bin_SCRIPTS)
 CLEANFILES += $(noinst_SCRIPTS)
 
 
@@ -140,6 +157,7 @@ MY_SUBST = $(srcdir)/my-subst "$(GUILE)" "$(GUILE_READLINE_AVAILABLE)"
 
 EXTRA_DIST += $(srcdir)/my-subst
 
+if WITH_GUILE
 bin/sweeten: src/sweeten.sscm ./unsweeten my-subst
 	$(MKDIR_P) bin
 	$(MY_SUBST) "$(readable_libdir)" "" \
@@ -166,7 +184,7 @@ bin/sweet-guile: src/sweet-guile my-subst
 	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
 	chmod a+x $@
 
-bin/sweet-scsh: src/sweet-scsh
+bin/sweet-scsh: src/sweet-scsh my-subst
 	$(MKDIR_P) bin
 	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
 	chmod a+x $@
@@ -239,12 +257,12 @@ bin/diff-s-sweet: src/diff-s-sweet my-subst
 	chmod a+x $@
 	chmod a-w $@
 
-
 # Not directly used; useful if you want to generate JUST this file:
 ,sweeten.scm : src/sweeten.sscm $(UNSWEETEN)
 	$(RM) -f $@
 	$(UNSWEETEN) $< > $@
 	chmod a-w $@
+endif WITH_GUILE
 
 # Implementation and test cases for ANTLR implementation
 # of sweet-expressions.  Again, don't install.
@@ -265,9 +283,15 @@ EXTRA_DIST += \
  examples/README
 
 # Man pages
-dist_man_MANS = man/unsweeten.1 man/sweet-run.1 \
-                man/sweeten.1 man/diff-s-sweet.1 \
-                man/sweet-clisp.1
+dist_man_MANS =
+
+if WITH_GUILE
+dist_man_MANS += man/unsweeten.1 man/sweet-run.1 \
+                 man/sweeten.1 man/diff-s-sweet.1
+endif WITH_GUILE
+if WITH_CLISP
+dist_man_MANS += man/sweet-clisp.1
+endif WITH_CLISP
 
 # Distribute some documentation.
 # README is distributed anyway; this just makes it clearer.
@@ -275,7 +299,7 @@ dist_man_MANS = man/unsweeten.1 man/sweet-run.1 \
 # in markdown format.  The website has the updated version, but for
 # those who just have this file, it'd be useful to have SOME useful
 # information on what this code is trying to do and how to use it.
-dist_doc_DATA = README COPYING AUTHORS ChangeLog
+dist_doc_DATA = README COPYING COPYING.GPL AUTHORS ChangeLog
 
 dist_doc_DATA += README-ANTLR README-files
 dist_doc_DATA += solution.md
@@ -287,13 +311,18 @@ dist_doc_DATA += readable-s-expressions.odp
 # Include SRFI specifications as documentation:
 dist_doc_DATA += SRFI-105.html SRFI-110.html
 
-# We no longer distribute these obsolete specs (see git if you want them).
-# dist_doc_DATA += spec-indent.txt spec-almkglor.txt
+# Include in documentation some trivial example of a Common Lisp program,
+# in ".lisp" and ".slisp" formats:
+dist_doc_DATA += factorial.lisp
+dist_doc_DATA += factorial.slisp
 
 # This is an odd case.  Since we're distributing a tool for developers,
 # it's useful to have worked examples.  So here we install the
 # "sweeten.sscm" file as a worked example.
 dist_doc_DATA += src/sweeten.sscm
+
+# We no longer distribute these obsolete specs (see git if you want them).
+# dist_doc_DATA += spec-indent.txt spec-almkglor.txt
 
 # Distribute test drivers and testsuites.
 EXTRA_DIST += \
@@ -321,14 +350,25 @@ EXTRA_DIST += \
 
 # TODO: Improve test harness & integration into overall system.
 
-check: readable/kernel.scm
-	@echo "Starting tests"
-	CL_SOURCE_REGISTRY="`realpath $(srcdir)`"/ \
-	  clisp -lp "`realpath $(srcdir)`/tests/" \
+EXTRA_DIST += my-realpath
+check: check-clisp check-guile
+
+if WITH_CLISP
+check-clisp: my-realpath
+	@echo "Starting tests for CLISP"
+	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
+	  $(CLISP) -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
 	        $(srcdir)/tests/curly-infix-test-cl
-	CL_SOURCE_REGISTRY="`realpath $(srcdir)`"/ \
-	  clisp -lp "`realpath $(srcdir)`/tests/" \
+	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
+	  $(CLISP) -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
 	        $(srcdir)/tests/full-test-cl
+else !WITH_CLISP
+check-clisp:
+endif !WITH_CLISP
+
+if WITH_GUILE
+check-guile: readable/kernel.scm my-realpath
+	@echo "Starting tests for GUILE"
 	@echo "About to run guile curly-infix tests"
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/curly-infix-test-scm \
 	            < $(srcdir)/tests/curly-infix-testsuite-scm
@@ -340,24 +380,28 @@ check: readable/kernel.scm
 	            < $(srcdir)/tests/sweet-testsuite
 	@echo "About to run write-test"
 	GUILE_LOAD_PATH="$(builddir)" $(srcdir)/tests/write-test \
-             | diff -b -u - "$(srcdir)/tests/write-test-correct"
+             | diff -b -u "$(srcdir)/tests/write-test-correct" -
 	@echo "Running srfi-curly-infix, showing diffs from correct results:"
 	GUILE_LOAD_PATH="$(builddir)" guile \
 	            $(srcdir)/src/srfi-curly-infix.scm < \
 	            $(srcdir)/tests/curly-infix-testsuite2 | \
-	          diff -u - "$(srcdir)/tests/curly-infix-correct2"
+	          diff -u "$(srcdir)/tests/curly-infix-correct2" -
 	@echo "Running unsweeten, showing differences from correct results:"
-	"$(builddir)/unsweeten" < "$(srcdir)/tests/unsweeten-testsuite" | \
-	     diff -b -u - "$(srcdir)/tests/unsweeten-correct"
+	"$(builddir)/unsweeten" < "$(srcdir)/tests/unsweeten-testsuite" 2>&1 | \
+	     diff -b -u "$(srcdir)/tests/unsweeten-correct" -
 	test "`printf '\140(a b c ,d)\n' | \"$(builddir)/unsweeten\" -C`" = \
 	     '`(a b c ,d)'
 	"$(builddir)/unsweeten" -C < "$(srcdir)/tests/unsweeten-cl-testsuite" \
-             | diff -b -u - "$(srcdir)/tests/unsweeten-cl-correct"
+             | diff -b -u "$(srcdir)/tests/unsweeten-cl-correct" -
 	@echo "Running sweeten, showing differences from correct results:"
 	"$(builddir)/sweeten" < "$(srcdir)/tests/sweeten-testsuite" | \
-	     diff -u - "$(srcdir)/tests/sweeten-correct"
+	     diff -u "$(srcdir)/tests/sweeten-correct" -
+	@echo "About to run roundtrip-test"
 	PATH="$(builddir):$(srcdir)/tests:${PATH}" \
 	     $(srcdir)/tests/roundtrip-test $(srcdir)/tests/roundtrip-testsuite
+else !WITH_GUILE
+check-guile:
+endif !WITH_GUILE
 
 # Developer conveniences:
 # "make push" interpreted as "git push" when current branch is "develop".
@@ -372,3 +416,37 @@ pull:
 
 test:
 	make check
+
+# SRFI-110 files to distribute.
+srfi_110_fileset = SRFI-110.html sweet.g src/kernel.scm output/scheme/Pair.java
+110.tar.gz: $(srfi_110_fileset)
+	rm -fr 110/
+	mkdir  110/
+	cp -p $(srfi_110_fileset) 110/
+	tar cvzf 110.tar.gz 110/
+	rm -fr 110/
+
+110: 110.tar.gz
+
+
+# The following creates an "rpm" package, using an rpm spec file.
+# It focuses on Fedora, but it should be a good starting point for
+# other packages.  If you package for Fedora, be sure to set up your system:
+# - yum install @development-tools
+# - yum install fedora-packager
+# For more information on RPM and Fedora, see:
+# - http://fedoraproject.org/wiki/How_to_create_an_RPM_package
+# - http://fedoraproject.org/wiki/Packaging:Guidelines
+# Note that the results will be in "~/rpmbuild/RPMS/".
+
+SPECFILE = readable.spec
+EXTRA_DIST += $(SPECFILE) readable-simple.spec
+
+rpm: $(DIST_ARCHIVES) $(SPECFILE)
+	cp -p $(DIST_ARCHIVES) ~/rpmbuild/SOURCES/
+	cp -p $(SPECFILE) ~/rpmbuild/SPECS/
+	rpmbuild -ba $(SPECFILE)
+	-rpmlint $(SPECFILE)
+
+.PHONY: push pull test 110 rpm check-clisp check-guile
+
