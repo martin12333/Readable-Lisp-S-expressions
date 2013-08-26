@@ -193,6 +193,19 @@ Now fire up a Common Lisp (e.g., "clisp" or "sbcl") and run:
 {3 + 4}
 
 
+Specification
+====================
+
+For Scheme, SRFI-105 is the official definition of
+full curly-infix notation, and it also defines neoteric-expressions.
+SRFI-110 defines sweet-expressions.  It has an especially rigorous BNF.
+
+The solution.md is the official definition for all other Lisps.
+If it's unclear what something means, look at SRFI-105 and SRFI-110
+for clarification, but note that the SRFIs include various
+Scheme-specific material (e.g., #!sweet is a Scheme-specific mechanism
+for enabling sweet-expressions).
+
 
 Transitioning
 =============
