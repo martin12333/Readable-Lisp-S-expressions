@@ -185,7 +185,7 @@ to set the environment variable to the current directory and run sbcl:
 CL_SOURCE_REGISTRY="`realpath .`" sbcl
 
 Now fire up a Common Lisp (e.g., "clisp" or "sbcl") and run:
- (require 'asdf) ; or (load "tests/my-asdf.lisp")  if asdf isn't installed.
+ (require "asdf") ; or (load "tests/my-asdf.lisp")  if asdf isn't installed.
  (asdf:load-system :readable)
  (readable:enable-basic-curly) ; or enable-sweet or whatever.
 
