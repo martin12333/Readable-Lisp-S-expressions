@@ -19,7 +19,7 @@ These tiers are (oversimplified):
 Unlike nearly all past efforts to improve s-expression readability, these
 are general (the notation is independent from any underlying semantic)
 and homoiconic (the underlying data structure is clear from the syntax).
-They are also backwards-compatible; well-formatted traditional
+They are also backwards-compatible; nicely-formatted traditional
 s-expressions continue work normally.  Thus, it's easy to transition to
 these, and you can use traditional forms whenever it's convenient.
 
@@ -145,52 +145,16 @@ Scheme Tutorial
 ==============
 
 File "scheme-tutorial.md" is the Scheme tutorial on how to use it.
+You need guile to follow it.
 
 
 Common Lisp Tutorial
 ====================
 
 File "common-lisp-tutorial.md" is the Common Lisp tutorial for how to use it.
-
-The Common Lisp implementation creates a package :readable and uses the
-usual ASDF system.  A "make install" puts files in the usual place,
+Any Common Lisp implementation should do, but you need the widely-used system
+definition facility asdf.  A "make install" puts files in the usual place,
 $PREFIX/share/common-lisp/source (where $PREFIX is /usr/local by default).
-
-You need ASDF.  Most Common Lisp users already have that ready to go.
-You can quickly install ASDF on many Linux distributions (such as Fedora,
-Debian, and Ubuntu) by installing the package "cl-asdf".
-If you don't have asdf, get it here:
-  http://common-lisp.net/project/asdf/
-
-Many clisp packages don't include asdf, or its support, by default.
-If you use Cygin's clisp, install asdf by doing this:
-  mkdir -p ~/lisp/asdf
-  cp asdf.lisp ~/lisp/asdf     # See below.
-  clisp
-  (load (compile-file "asdf.lisp"))
-  (exit)
-If you use clisp and a Linux distribution's asdf package, follow the above
-steps, but instead of the "cp asdf.lisp ~/lisp/asdf" command do this:
-  ln -s /usr/share/common-lisp/source/cl-asdf/asdf.lisp ~/lisp/asdf/
-That way, updates to your Linux distribution's asdf will be used automagically.
-
-Ensure ASDF is configured so it knows what directories to look at, e.g.,
-put this in file "/etc/common-lisp/source-registry.conf":
- (:source-registry
-   (:tree (:home "cl")) ;; will expand to e.g. "/home/joeluser/cl/"
-   (:tree "/usr/share/common-lisp/source/")
-   :inherit-configuration)
-Alternatively, you can set the environment variable CL_SOURCE_REGISTRY, e.g.,
-to set the environment variable to the current directory and run sbcl:
-CL_SOURCE_REGISTRY="`realpath .`" sbcl
-
-Now fire up a Common Lisp (e.g., "clisp" or "sbcl") and run:
- (require "asdf") ; or (load "tests/my-asdf.lisp")  if asdf isn't installed.
- (asdf:load-system :readable)
- (readable:enable-basic-curly) ; or enable-sweet or whatever.
-
-; now you can do:
-{3 + 4}
 
 
 Specification
