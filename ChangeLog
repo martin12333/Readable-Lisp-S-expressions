@@ -1,3 +1,69 @@
+2013-08-25 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Release of readable software version 0.9.2
+	  - Modify grammar and implementation to support "#;"+space|tab
+	    the same way as abbreviation+space|tab.
+	    Now "#;", followed by space or tab, comments out the
+	    next *sweet-expression* (not the next *neoteric-expression*).
+	    This is per a comment by Mark H. Weaver.
+	  - Add code+grammar rules, and supporting procedures,
+	    to handle empty cases (for #;+space|tab handling)
+	  - Better error detection: Forbid lines with >1 n-expr on a line
+	    where the last expression is "."
+	  - Better error detection: In guile implementation forbid unescaped
+	    FF/VT when not on their own line (when outside a collecting list).
+	    This has been forbidden in the grammar for a long time,
+	    but now the guile implementation detects it and complains about it
+	  - Better Common Lisp performance. Several tail recursions were
+	    turned into loops, which speeds up some implementations.
+	    The switch from tail recursion to "loop" in neoteric.lisp's
+	    symbol reading, all by itself, produced a 5% performance
+	    improvement when using clisp.
+	  - Lots of changes to SRFI-110 to make it simpler, clearer, and
+	    even more precise.  In several places tried to create
+	    consistent terminology, e.g., rename "empty tag" to "empty value",
+	    and change "empty line" to "blank line" (so that an empty line
+	    is not confused with other "empty" things).  The phrase
+	    "returns [Object v]" is no longer repeated in every rule
+	    that produces a result, which makes it easier to read.
+	    Many of these changes originate in comments
+	    by Mark H. Weaver and John Cowan.
+	  - SRFI-110 now *REQUIRES* SRFI-30 (#|...|#) and SRFI-62 (#;datum),
+	    instead of being a SHOULD.  The sample implementations
+	    implement them anyway, but by requiring them, SRFI-110 users
+	    can depend on them.
+	  - Added code to work around clisp REPL bug in initial-indent mode
+	    (the code has no effect, but also causes no harm, in
+	    other implementations like SBCL).
+	  - Modified sweet-clisp to patch its REPL (by default) to work
+	    around other clisp REPL bugs, and added an option to inhibit
+	    this behavior.  Otherwise clisp will throw away a second t-expr
+	    if there is no blank line between the first and second t-expr.
+	  - Changed code in several places to make them easier to follow.
+	    In particular, new macro let-splitter simplifies code.
+	  - Modified sweet.g to eliminate spurious ANTLR warning message
+	  - Overall simpler grammar (in draft SRFI-110 and in implementation).
+	    This is in part a response to comments by Mark H. Weaver.
+	    There are more production rules, but each one is simpler,
+	    and "hspaces*" became "hs" (good because it happens often)
+	  - Change production names in a few cases to make them clearer.
+	    E.G., "head" -> "line_exprs", "rest" -> "rest_of_line",
+	    "collecting_tail" -> "collecting_content".
+	  - Rename production "ignorable" into "skippable".  Common Lisp
+	    uses "ignorable" for something else, and having 2 meanings for
+	    one phrase - while possible - was confusing.  It's easier to
+	    just rename things, so that one term works everywhere.
+	  - Added "sweet-sbcl" convenience script
+	  - Include final version of SRFI-105
+	  - "make distcheck" bugs fixed
+	  - Add sample *.spec files for rpm-based distributions
+	  - Add new "configure" options:
+	    * --without-guile         disable support for guile
+	    * --without-common-lisp   disable support for Common Lisp
+	    * --without-clisp         disable support for clisp
+	  - As always, more tests.  In particular, there are now a number
+	    of tests for error conditions, to make sure they produce errors
+
+
 2013-06-17 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Release of readable software version 0.9.1
 	  - Fixes Common Lisp tutorial, in particular, an
