@@ -6954,39 +6954,8 @@ state the function followed by space-separated parameters.
 Both SUBLIST (<code>$</code>) and GROUP/SPLIT (inline <code>\\</code>)
 allow some limited freedom in laying out the program text
 without disabling indentation processing; feel free to use them.
-For example, in a
-<code>cond</code> construct, you can combine on one line
-a clause&#8217;s test and expression by separating them with <code>$</code>.
-Similarly, the common sequence &#8220;(define (f x) (cond ...))&#8221;
-can be represented by putting <code>define</code> and <code>cond</code>
-on one line and putting <code>$</code> before <code>cond</code>.
-Below are some examples:
 </p>
-<pre>
-define polymorphic-function(a) $ cond
-  type1?(a) $ handle-type1 a
-  type2?(a) $ handle-type2 a
-  type3?(a)
-    display "type3 handling not yet fully operational\n"
-    log-possible-error a
-    handle-type3 a
-  type4?(a) $ cond
-    type4-subtype1?(a) $ handle-type4-subtype1 a
-    type4-subtype2?(a) $ handle-type4-subtype2 a
-    else               $ error 'polymorphic-function "impossible!" a
-  else      $ error 'polymorphic-function "unrecognized type" a
 
-define probe(x)
-  display "probe: " \\ write x \\ newline()
-
-define buggy-function(a) $ probe $ let ()
-  define buggy-sub-function(b) $ short-call b
-  body
-  ...
-
-define func-w/return(a) $ call/cc $ lambda (return)
-  body ... return(whatever) ...
-</pre>
 
 <h3>Indentation</h3>
 <p>
