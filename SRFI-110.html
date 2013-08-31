@@ -6970,7 +6970,7 @@ define polymorphic-function(a) $ cond
     display "type3 handling not yet fully operational\n"
     log-possible-error a
     handle-type3 a
-  type4?(a) $ cond ; cond-in-cond - very clear
+  type4?(a) $ cond
     type4-subtype1?(a) $ handle-type4-subtype1 a
     type4-subtype2?(a) $ handle-type4-subtype2 a
     else               $ error 'polymorphic-function "impossible!" a
