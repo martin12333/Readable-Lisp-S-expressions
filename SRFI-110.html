@@ -5957,7 +5957,7 @@ In wisp this would be:
 </p>
 
 <pre>
-  let 
+  let
     : 
       x : compute 'x
       y : compute 'y
@@ -5980,7 +5980,7 @@ In contrast, Arne believes it would be more likely be written this way:
 </p>
 
 <pre>
-  begin
+  begin ; wisp
     display "Welcome, "
     display player
     display ", to Chicago!"
@@ -5988,12 +5988,11 @@ In contrast, Arne believes it would be more likely be written this way:
 </pre>
 
 <p>
-Or like this, if you want more complex expressions (note that in wisp,
-newline is not followed by () as it would be in sweet-expressions):
+Or like this, if you want more complex expressions:
 </p>
 
 <pre>
-  begin
+  begin ; wisp
     display 
       concat "Welcome, " player 
            . ", to Chicago!"
@@ -6060,6 +6059,7 @@ interactive use less appealing; users would actually have to press
 Enter three times (once to end a line, and twice more to create
 two blank lines).
 </p>
+
 <p>
 Wisp does not have a mechanism to restart at the left-hand-side
 for long stretches of code, as sweet-expressions does, and this omission
@@ -6248,7 +6248,7 @@ inviting error.
 
 <p>
 Wisp emphasizes a simple notation to describe and implement,
-but this can make <em>using</em> it with certain constructs
+but this can make <em>using</em> wisp with certain constructs
 more complicated (and less readable) compared to sweet-expressions.
 E.G., this sweet-expression:
 </p>
