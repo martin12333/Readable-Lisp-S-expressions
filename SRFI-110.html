@@ -1849,6 +1849,34 @@ define line-tail(x)
 </tr>
 
 <tr>
+<!-- From "streams.sscm" -->
+<td align="left" valign="top">
+<pre>
+define stream-cdr(x)
+  let*
+    \\
+      promise   stream-unwrap(x)
+      cell      xforce(promise)
+      promise-d cdr(cell)
+      d         stream-wrap(promise-d)
+    d
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(define (stream-cdr x)
+  (let*
+    (
+      (promise (stream-unwrap x))
+      (cell (xforce promise))
+      (promise-d (cdr cell))
+      (d (stream-wrap promise-d)))
+    d))
+</pre>
+</td>
+</tr>
+
+<tr>
 <td align="left" valign="top">
 <pre>
 g factorial(7) my-pi() #f() -i -(cos(0))
