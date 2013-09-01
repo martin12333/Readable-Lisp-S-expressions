@@ -6895,13 +6895,13 @@ and loops (e.g., &#8220;loop&#8221;).
 <h3>Use infix notation</h3>
 
 <p>
-If the function is typically written as infix
+If the procedure is traditionally written using infix notation
 (including &#8220;+&#8221;, &#8220;*&#8221;,
 &#8220;or&#8221;, and &#8220;&lt;&#8221;),
 use {...} to write it as an infix value.
 Generally these operators will be &#8220;and&#8221;, &#8220;or&#8221;,
 or an operator that only uses punctuation.
-If you&#8217;re calling a function with only one parameter, and
+If you&#8217;re calling a procedure with only one parameter, and
 that parameter is calculated with an infix operation, use the f{...} shorthand.
 </p>
 
@@ -6918,15 +6918,17 @@ if you&#8217;re using a functional programming style.
 
 <p>
 If parameters will easily fit on a line if
-you use function notation such as y(z), then use it.
-When you&#8217;re calling a procedure with no parameters, use function call
-format with &#8220;()&#8221; at the end, e.g., &#8220;f()&#8221;.
+you use function call notation such as y(z), then use it.
+When you&#8217;re calling a procedure with no parameters,
+use function call notation with &#8220;()&#8221; at the end,
+e.g., &#8220;f()&#8221;.
 Use -( ... ) to negate something.
 </p>
 
 <p>
-If you are providing a list of data (and not performing a function/method
-call), then use the traditional list notation such as
+If you are providing a list of data (and not performing a
+call to a procedure or method),
+then use the traditional list notation such as
 &#8220;(a&nbsp;b&nbsp;c)&#8221;.
 This is exactly equivalent to &#8220;a(b&nbsp;c)&#8221;,
 but expressing it as a list will give the human reader
@@ -6937,7 +6939,7 @@ program, and use function call notation.
 
 <p>
 In general, indentation is used for the major &#8220;structural&#8221; elements
-of a program, and function calls get used once you&#8217;re
+of a program, and function call notation is often used once you&#8217;re
 &#8220;near the leaf&#8221;
 of the structure and the text won&#8217;t go beyond the end of the line.
 </p>
@@ -6946,9 +6948,11 @@ of the structure and the text won&#8217;t go beyond the end of the line.
 
 <p>
 Where it&#8217;s understandable, don&#8217;t include unnecessary parentheses.
-In particular, when indentation processing is active, the name of the
-function is right after the indent, and there are no child lines, simply
-state the function followed by space-separated parameters.
+In particular, when indentation processing is active,
+and you are calling a procedure where the name of the procedure
+is right after the indent, simply
+state the procedure name followed by space-separated parameters
+(using child lines or function call notation as appropriate).
 </p>
 
 <p>
