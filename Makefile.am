@@ -282,6 +282,10 @@ EXTRA_DIST += \
  examples/Makefile.example \
  examples/README
 
+# Similarly, distribute demo Makefile.
+EXTRA_DIST += Makefile-demo
+
+
 # Man pages
 dist_man_MANS =
 
