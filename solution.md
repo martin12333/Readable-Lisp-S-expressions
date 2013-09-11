@@ -55,7 +55,7 @@ Beginning an expression with indentation causes that line's indentation to be ig
 
 Individual implementations may have *additional* abbreviations that are useful for their semantics; our goal is to devise general abbreviations that others can build on if they choose.
 
-This is version 0.9.2 of our notation specification.  We aren't expecting major changes from here on, but there is certainly the possibility of small refinements.
+This is version 1.0.0 of our notation specification.
 
 
 Quick Examples
