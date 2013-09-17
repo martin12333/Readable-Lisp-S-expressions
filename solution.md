@@ -55,7 +55,7 @@ Beginning an expression with indentation causes that line's indentation to be ig
 
 Individual implementations may have *additional* abbreviations that are useful for their semantics; our goal is to devise general abbreviations that others can build on if they choose.
 
-This is version 1.0.0 of our notation specification.
+This is version 1.0 of our notation specification.
 
 
 Quick Examples
@@ -152,4 +152,10 @@ Also, thanks to the many other mailing list participants who provided feedback.
 Trying them out
 =============
 
-See the [Tutorial] page for information on how you can try out these notations.  We think you'll like them.
+We have two tutorials so you can try them out:
+
+* [Scheme-tutorial] - Scheme-focused tutorial
+* [Common-lisp-tutorial] - Common-Lisp-focused tutorial
+
+We think you'll like them once you try them.
+
