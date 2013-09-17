@@ -87,7 +87,8 @@ Getting, building, and installing
 =================================
 
 This software supports the usual GNU Build System conventions.
-Here are the steps, spelled out.
+The Scheme and Common Lisp tutorials explain how to build them in detail,
+but here are the steps that work for most people.
 
 1. Download/Prepare to configure
 
@@ -162,9 +163,9 @@ Specification
 
 For Scheme, SRFI-105 is the official definition of
 full curly-infix notation, and it also defines neoteric-expressions.
-SRFI-110 defines sweet-expressions.  It has an especially rigorous BNF.
+SRFI-110 defines sweet-expressions.  SRFI-110 has an especially rigorous BNF.
 
-The solution.md is the official definition for all other Lisps.
+The file solution.md is the official definition for all other Lisps.
 If it's unclear what something means, look at SRFI-105 and SRFI-110
 for clarification, but note that the SRFIs include various
 Scheme-specific material (e.g., #!sweet is a Scheme-specific mechanism
