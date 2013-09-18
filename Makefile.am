@@ -41,16 +41,19 @@ CLEANFILES =
 # Rules for translating markdown (.md) files into HTML.
 # The markdown2.py file was copied on 2013-09-17 from:
 #   https://raw.github.com/trentm/python-markdown2/master/lib/markdown2.py
-# It's copied into this directory so we can be certain to have one;
-# set "MARKDOWN" to use your own markdown processor:
-MARKDOWN = python markdown2.py
+# (MIT license.)
+# We have a copy in our directory so we can be certain to have one;
+# set "MARKDOWN" to use your own markdown processor instead:
+MARKDOWN = python ./markdown2.py -x link-patterns \
+                  --link-patterns-file markdown-urls
 SUFFIXES = .md .html
 .md.html:
 	sed -e "s/@TITLE@/"$*"/g" head.html > $@
-	$(MARKDOWN) < $< >> $@
+	$(MARKDOWN) $< >> $@
 	cat tail.html >> $@
 
-EXTRA_DIST += head.html tail.html markdown2.py
+EXTRA_DIST += head.html tail.html markdown-urls
+EXTRA_DIST += markdown2.py
 
 # Guile libraries.
 
