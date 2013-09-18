@@ -44,7 +44,7 @@ We have three notation tiers, each of which builds on the previous one. Curly-in
     - A \\\\ (aka SPLIT) starts a new line at the current indentation.  If it's immediately after indentation (aka GROUP in that case), it represents no symbol at all (at that indentation) - this is useful for lists of lists.
     - A $ (aka SUBLIST) in the middle of list restarts list processing; the right-hand-side (including its sub-blocks) is the last parameter of the left-hand side (of just that line). If there's no left-hand-side, the right-hand-side is put in a list.
     - A leading traditional abbreviation (quote, comma, backquote, or comma-at) or datum comment "#;", at the beginning of a sweet-expression line, and followed by space or tab or end-of-line, is that operator applied to the following sweet-expression.   Otherwise, it applies to the next neoteric-expression.
-    - The markers &#8220;&lt;*&#8221; and &#8220;*&gt;&#8221; surround a <i>collecting list</i>, and <em>MUST</em> accept a list of 0 or more un-indented sweet-expressions.
+    - The markers &#8220;&lt;&#42;&#8221; and &#8220;&#42;&gt;&#8221; surround a <i>collecting list</i>, and <em>MUST</em> accept a list of 0 or more un-indented sweet-expressions.
     - The marker &#8220;$$$&#8221; is reserved for future use.
 
     Sweet-expression examples are shown below.  For Scheme, sweet-expressions are defined in [SRFI 110](http://srfi.schemers.org/srfi-110/).
