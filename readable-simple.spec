@@ -9,6 +9,7 @@ URL:            http://readable.sourceforge.net/
 Source0:        http://downloads.sourceforge.net/%{name}/%{name}-%{version}.tar.gz
 
 BuildRequires:  guile clisp
+BuildRequires:  python
 Requires:       guile clisp
 
 BuildRequires:   common-lisp-controller

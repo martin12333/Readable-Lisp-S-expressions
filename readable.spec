@@ -12,6 +12,7 @@ Source0: http://downloads.sourceforge.net/%{name}/%{name}-%{version}.tar.gz
 # guile is required to build the "unsweeten" tool.
 # clisp is required for "make check" to work.
 BuildRequires:  guile clisp
+BuildRequires:  python
 BuildRequires:  common-lisp-controller
 
 # RPM variables
