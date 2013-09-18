@@ -325,12 +325,11 @@ dist_doc_DATA = README COPYING COPYING.GPL AUTHORS ChangeLog
 
 dist_doc_DATA += README-ANTLR README-files
 
-dist_doc_DATA += solution.md
-dist_doc_DATA += scheme-tutorial.md common-lisp-tutorial.md
+MDFILES = solution.md scheme-tutorial.md common-lisp-tutorial.md
+dist_doc_DATA += $(MDFILES)
 
-# Distribute, and install, generated HTML files
-dist_doc_DATA += solution.html
-dist_doc_DATA += scheme-tutorial.html common-lisp-tutorial.html
+# Generate, distribute, and install HTML files generated from .md files:
+dist_doc_DATA += $(MDFILES:.md=.html)
 
 # Presentation in Open Document Format (.odp) about these formats:
 dist_doc_DATA += readable-s-expressions.odp
