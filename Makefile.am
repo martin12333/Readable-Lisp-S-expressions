@@ -37,6 +37,21 @@ CLEANFILES =
 # but here we'll use the more portable approach of giving separate rules
 # for each target.
 
+
+# Rules for translating markdown (.md) files into HTML.
+# The markdown2.py file was copied on 2013-09-17 from:
+#   https://raw.github.com/trentm/python-markdown2/master/lib/markdown2.py
+# It's copied into this directory so we can be certain to have one;
+# set "MARKDOWN" to use your own markdown processor:
+MARKDOWN = python markdown2.py
+SUFFIXES = .md .html
+.md.html:
+	sed -e "s/@TITLE@/"$*"/g" head.html > $@
+	$(MARKDOWN) < $< >> $@
+	cat tail.html >> $@
+
+EXTRA_DIST += head.html tail.html markdown2.py
+
 # Guile libraries.
 
 if WITH_GUILE
@@ -306,8 +321,13 @@ endif WITH_CLISP
 dist_doc_DATA = README COPYING COPYING.GPL AUTHORS ChangeLog
 
 dist_doc_DATA += README-ANTLR README-files
+
 dist_doc_DATA += solution.md
 dist_doc_DATA += scheme-tutorial.md common-lisp-tutorial.md
+
+# Distribute, and install, generated HTML files
+dist_doc_DATA += solution.html
+dist_doc_DATA += scheme-tutorial.html common-lisp-tutorial.html
 
 # Presentation in Open Document Format (.odp) about these formats:
 dist_doc_DATA += readable-s-expressions.odp
