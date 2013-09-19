@@ -60,8 +60,9 @@ AC_ARG_WITH([clisp],
 #   https://raw.github.com/trentm/python-markdown2/master/lib/markdown2.py
 # We have our own copy in our directory so we can be certain to have one.
 AC_ARG_WITH([markdown-command],
-  [AS_HELP_STRING([--with-markdown-command=VALUE],
-                  [command to translate markdown into HTML])],
+  [AS_HELP_STRING(
+    [--with-markdown-command=COMMAND | --without-markdown-command],
+    ["with" option gives command to translate markdown into HTML; "without" option disables generating HTML from markdown])],
   [],
   [with_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"])
 
