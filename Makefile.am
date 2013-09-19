@@ -39,13 +39,6 @@ CLEANFILES =
 
 
 # Rules for translating markdown (.md) files into HTML.
-# The markdown2.py file was copied on 2013-09-17 from:
-#   https://raw.github.com/trentm/python-markdown2/master/lib/markdown2.py
-# (MIT license.)
-# We have a copy in our directory so we can be certain to have one;
-# set "MARKDOWN" to use your own markdown processor instead:
-MARKDOWN = python ./markdown2.py -x link-patterns \
-                  --link-patterns-file markdown-urls
 SUFFIXES = .md .html
 .md.html:
 	sed -e "s/@TITLE@/"$*"/g" head.html > $@
@@ -329,7 +322,9 @@ MDFILES = Solution.md Scheme-tutorial.md Common-lisp-tutorial.md
 dist_doc_DATA += $(MDFILES)
 
 # Generate, distribute, and install HTML files generated from .md files:
+if ENABLE_HTML_FROM_MARKDOWN
 dist_doc_DATA += $(MDFILES:.md=.html)
+endif ENABLE_HTML_FROM_MARKDOWN
 
 # Presentation in Open Document Format (.odp) about these formats:
 dist_doc_DATA += readable-s-expressions.odp

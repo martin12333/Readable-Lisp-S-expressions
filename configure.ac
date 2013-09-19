@@ -44,7 +44,8 @@ yes_or_no () { # Returns TRUE if $1 is "yes" or "no".
 }
 
 
-# Create arguments --without-guile, --without-common-lisp, and --without-clisp
+# Create arguments --without-guile, --without-common-lisp, --without-clisp,
+# --with-markdown-command=VALUE / --without-markdown-command
 AC_ARG_WITH([guile],
   [AS_HELP_STRING([--without-guile], [disable support for guile])],
   [], [with_guile=yes])  # By default, with_guile
@@ -54,9 +55,17 @@ AC_ARG_WITH([common-lisp],
 AC_ARG_WITH([clisp],
   [AS_HELP_STRING([--without-clisp], [disable support for clisp])],
   [], [with_clisp="$with_common_lisp"])
+# We generate HTML files from markdown files. By default we do this
+# using the markdown2.py file (MIT license), copied on 2013-09-17 from:
+#   https://raw.github.com/trentm/python-markdown2/master/lib/markdown2.py
+# We have our own copy in our directory so we can be certain to have one.
+AC_ARG_WITH([markdown-command],
+  [AS_HELP_STRING([--with-markdown-command=VALUE],
+                  [command to translate markdown into HTML])],
+  [],
+  [with_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"])
 
-
-# Sanity-check arguments.
+# Sanity-check argument values.
 AS_IF([! yes_or_no "$with_guile"],[
   AC_MSG_ERROR([with_guile must be 'yes' or 'no'])
 ])
@@ -67,12 +76,14 @@ AS_IF([! yes_or_no "$with_clisp"],[
   AC_MSG_ERROR([with_clisp must be 'yes' or 'no'])
 ])
 
+# Sanity-check combinations of argument values.
 AS_IF([test "$with_guile" = no -a "$with_common_lisp" = no],[
   AC_MSG_ERROR([Both --without-guile and --without-common-lisp specified - nothing to install])
 ])
 AS_IF([test "$with_common_lisp" = no -a "$with_clisp" = yes],[
   AC_MSG_ERROR([clisp requires common lisp])
 ])
+
 
 
 # Look for Guile if necessary.
@@ -146,11 +157,20 @@ AS_IF([is_enabled "$with_clisp"], [
   AC_SUBST([CLISP])
 ])
 
+# Fail if we need python but it's not available.
+AS_CASE([$with_markdown_command], [python\ *], [
+  AC_PATH_PROG([PYTHON_INSTALLED], [python])
+  AS_IF([is_empty "$PYTHON_INSTALLED"],[#then
+    AC_MSG_ERROR([python not found; install it, use --with-markdown-command=COMMAND, or use --without-markdown-command])
+  ])])
 
 # Set up automake conditionals
 AM_CONDITIONAL([WITH_GUILE],       [is_enabled "$with_guile"])
 AM_CONDITIONAL([WITH_COMMON_LISP], [is_enabled "$with_common_lisp"])
 AM_CONDITIONAL([WITH_CLISP],       [is_enabled "$with_clisp"])
+AM_CONDITIONAL([ENABLE_HTML_FROM_MARKDOWN],
+                                   [is_enabled "$with_markdown_command"])
+AC_SUBST(MARKDOWN, [$with_markdown_command])
 
 
 # Perhaps check for: (more) programs, libraries, header files, types,
