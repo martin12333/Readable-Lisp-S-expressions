@@ -7,13 +7,43 @@ cases you can install it using the usual commmands:
   make
   make install
 
-For more about installation and use, see the README file and tutorials.
+For more about typical installation and use, see the README file
+and the hands-on tutorials in the files
+"Scheme-tutorial.html" and "Common-lisp-tutorial.html".
 
-
-
-Below is the conventional installation instructions for
-any autoconf-based system, which explain some of the more advanced options.
+Below are detailed descriptions of the advanced configure options specific
+to this package, followed by the conventional
+installation instructions for any autoconf-based system.
 Most people will not need the information below.
+
+
+Special configure options
+=========================
+
+As with any autoconf-based system, "./configure --help" shows help.
+
+The specialized configure options are as follows:
+
+--without-guile
+  disable support for guile.
+  This prevents installation of the guile (Scheme) library
+  and all tools that depend on the library (e.g., sweeten and unsweeten).
+
+--without-common-lisp
+  disable support for Common Lisp.
+  This prevents installation of the Common Lisp library
+  and all tools that depend on the library (e.g., sweet-clisp).
+
+--without-clisp
+  disable support for clisp.
+  This inhibits just the installation of sweet-clisp.
+
+--with-markdown-command=COMMAND | --without-markdown-command
+  By default HTML files are generated from markdown (.md) files
+  using the command "python markdown2.py ...", where markdown2.py
+  is a file included with this package.  You can use --with-markdown-command
+  to select a different markdown processor (say, one on your system).
+  The "without" option completely disables generating HTML from markdown.
 
 
 
