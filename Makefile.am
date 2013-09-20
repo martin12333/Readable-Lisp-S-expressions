@@ -41,9 +41,8 @@ CLEANFILES =
 # Rules for translating markdown (.md) files into HTML.
 SUFFIXES = .md .html
 .md.html:
-	sed -e "s/@TITLE@/"$*"/g" head.html > $@
-	$(MARKDOWN) $< >> $@
-	cat tail.html >> $@
+	( cat head.html ; $(MARKDOWN) $< ; cat tail.html ) | \
+	  sed -e "s/@TITLE@/"$*"/g" > $@
 
 EXTRA_DIST += head.html tail.html markdown-urls
 EXTRA_DIST += markdown2.py
@@ -318,7 +317,13 @@ dist_doc_DATA = README COPYING COPYING.GPL AUTHORS ChangeLog
 
 dist_doc_DATA += README-ANTLR README-files
 
-MDFILES = Problem.md Solution.md Scheme-tutorial.md Common-lisp-tutorial.md
+# These are stub files that link to the website:
+MDSTUBS = Rationale.md Retort.md Examples.md
+
+# These are all markdown (.md) files, including stubs:
+MDFILES = Problem.md Solution.md Scheme-tutorial.md Common-lisp-tutorial.md \
+          $(MDSTUBS)
+
 dist_doc_DATA += $(MDFILES)
 
 # Generate, distribute, and install HTML files generated from .md files:
