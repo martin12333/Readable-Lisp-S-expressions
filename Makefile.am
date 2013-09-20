@@ -318,7 +318,7 @@ dist_doc_DATA = README COPYING COPYING.GPL AUTHORS ChangeLog
 
 dist_doc_DATA += README-ANTLR README-files
 
-MDFILES = Solution.md Scheme-tutorial.md Common-lisp-tutorial.md
+MDFILES = Problem.md Solution.md Scheme-tutorial.md Common-lisp-tutorial.md
 dist_doc_DATA += $(MDFILES)
 
 # Generate, distribute, and install HTML files generated from .md files:

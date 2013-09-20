@@ -31,7 +31,8 @@ For Scheme these notations are defined in SRFI-105 and SRFI-110.
 At this time, the tools focus on Scheme and Common Lisp, but
 some of the tools can be easily used with many other Lisps.
 
-The file "Solution.html" describes these notations; hands-on tutorials are in
+The file "Problem.html" describes the problem this is intended to solve, and
+"Solution.html" describes these notations. Hands-on tutorials are in
 "Scheme-tutorial.html" and "Common-lisp-tutorial.html".
 
 For more information, see:
