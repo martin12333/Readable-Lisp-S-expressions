@@ -108,9 +108,9 @@ AS_IF([is_enabled "$with_guile"],[
   # Patch GUILE_SITE so that $prefix and $datarootdir are honored;
   # this is necessary for "make distcheck" to work properly.
   # The funny assignment format is because sharp is also the m4 comment char.
-  AS_CASE([$GUILE_SITE], [/usr/share/*],
-    [GUILE_SITE="\$(datarootdir)${GUILE_SITE#/usr/share}"
-    ])
+  # AS_CASE([$GUILE_SITE], [/usr/share/*],
+  #   [GUILE_SITE="\$(datarootdir)${GUILE_SITE#/usr/share}"
+  #   ])
   AC_MSG_RESULT($GUILE_SITE)
   AC_SUBST(GUILE_SITE)
 
