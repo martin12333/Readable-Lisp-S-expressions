@@ -18,6 +18,7 @@ If you plan to use the development (not stable) version, you'll also need:
 
 *   git (to download the software)
 *   autoconf and automake (to build it)
+*   python (to generate some HTML files from markdown)
 
 The following instructions assume you're using a POSIX system (such as Linux, MacOS, *BSDs, and so on).  If you use Windows, install Cygwin first. Any modern GNU/Linux system will do nicely.
 

@@ -20,6 +20,7 @@ If you plan to use the development (not stable) version, you'll also need:
 *   git (to download the software)
 *   autoconf and automake (to build it)
 *   guile development libraries (e.g., "guile-devel" on Fedora and Cygwin)
+*   python (to generate some HTML files from markdown)
 
 You should be running on a POSIX system; if you use Windows, you may need to install Cygwin first. Any modern GNU/Linux system will do nicely.
 
