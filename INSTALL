@@ -53,6 +53,11 @@ The specialized configure options are as follows:
   is a file included with this package.  You can use --with-markdown-command
   to select a different markdown processor (say, one on your system).
   The "without" option completely disables generating HTML from markdown.
+  Users who start with the tarball can easily do this as long as they
+  don't change the ".md" files, since the generated files are included
+  as well.  We don't do this automatically, though, because it could
+  easily lead to outdated files getting distributed, and requiring
+  python is usually not a problem.
 
 GUILE=pathname
   Use this guile executable instead of the one that would normally
