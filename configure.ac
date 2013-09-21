@@ -118,9 +118,17 @@ AS_IF([is_enabled "$with_guile"],[
   AS_IF([is_empty "$GUILE_SITE"],
     [GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`])
   AC_MSG_RESULT([$GUILE_SITE])
-  AC_SUBST([GUILE_SITE])
   AS_IF([! test -d "$GUILE_SITE"],
     [AC_MSG_WARN([GUILE_SITE $GUILE_SITE is not an existing directory])])
+
+  # Patch GUILE_SITE so that $prefix and $datarootdir are honored;
+  # this is necessary for "make distcheck" to work properly.
+  AC_MSG_CHECKING([for patched Guile site directory])
+  AS_CASE([$GUILE_SITE], [/usr/share/*],
+    [GUILE_SITE="\${datarootdir}${GUILE_SITE#/usr/share}"
+    ])
+  AC_MSG_RESULT([$GUILE_SITE])
+  AC_SUBST([GUILE_SITE])
 
   # Below is GUILE_MODULE_AVAILABLE code, but expanded and
   # with AC_REQUIRE([GUILE_PROGS]) removed.
