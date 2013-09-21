@@ -24,6 +24,8 @@ Special configure options
 
 As with any autoconf-based system, "./configure --help" shows help.
 
+The "configure" program tries to auto-detect what to do, but
+various specialized configuration options can override its decisions.
 The specialized configure options are as follows:
 
 --without-guile
@@ -47,6 +49,10 @@ The specialized configure options are as follows:
   to select a different markdown processor (say, one on your system).
   The "without" option completely disables generating HTML from markdown.
 
+GUILE=pathname
+  Use this guile executable instead of the one that would normally
+  be found.
+
 GUILE_SITE=directory_name
   By default, if guile is enabled, configure will automatically locate
   the "guile site" using guile; it is typically "/usr/share/guile/site".
@@ -59,6 +65,7 @@ GUILE_READLINE_AVAILABLE=yes|no
   is available, and if so, use it.  This option forceably sets guile
   to use or not use readline, skipping the configure check.
   If you set this to "yes" be sure that readline will actually be available!
+
 
 
 Traditional Installation Instructions
