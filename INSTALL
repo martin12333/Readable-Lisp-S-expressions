@@ -11,6 +11,8 @@ For more about typical installation and use, see the README file
 and the hands-on tutorials in the files
 "Scheme-tutorial.html" and "Common-lisp-tutorial.html".
 
+The command "./configure --help" gives an overview of configuration options.
+
 Below are detailed descriptions of the advanced configure options specific
 to this package, followed by the conventional
 installation instructions for any autoconf-based system.
@@ -45,6 +47,12 @@ The specialized configure options are as follows:
   to select a different markdown processor (say, one on your system).
   The "without" option completely disables generating HTML from markdown.
 
+GUILE_SITE=directory_name
+  By default, if guile is enabled, configure will automatically locate
+  the "guile site" using guile; it is typically "/usr/share/guile/site".
+  If GUILE_SITE=... is set on the configure command line, or is set
+  as an environment variable when configure is run, then that value
+  is used as the directory instead.
 
 
 Traditional Installation Instructions

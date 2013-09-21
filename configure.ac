@@ -65,6 +65,7 @@ AC_ARG_WITH([markdown-command],
     ["with" option gives command to translate markdown into HTML; "without" option disables generating HTML from markdown])],
   [],
   [with_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"])
+AC_ARG_VAR([GUILE_SITE], [Guile site directory, usually /usr/share/guile/site])
 
 # Sanity-check argument values.
 AS_IF([! yes_or_no "$with_guile"],[
@@ -110,14 +111,9 @@ AS_IF([is_enabled "$with_guile"],[
   # to guile's "site" directory (usually $prefix/share/guile/site).
   # Here we query the guile interpreter itself directly to get the info.
   AC_MSG_CHECKING([for Guile site directory])
-  GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
-  # Patch GUILE_SITE so that $prefix and $datarootdir are honored;
-  # this is necessary for "make distcheck" to work properly.
-  # The funny assignment format is because sharp is also the m4 comment char.
-  # AS_CASE([$GUILE_SITE], [/usr/share/*],
-  #   [GUILE_SITE="\$(datarootdir)${GUILE_SITE#/usr/share}"
-  #   ])
-  AC_MSG_RESULT($GUILE_SITE)
+  AS_IF([is_empty "$GUILE_SITE"],
+    [GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`])
+  AC_MSG_RESULT([$GUILE_SITE])
   AC_SUBST(GUILE_SITE)
 
   # Below is GUILE_MODULE_AVAILABLE code, but expanded and
