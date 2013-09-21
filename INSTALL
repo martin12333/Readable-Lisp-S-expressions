@@ -13,10 +13,15 @@ and the hands-on tutorials in the files
 
 The command "./configure --help" gives an overview of configuration options.
 
-Below are detailed descriptions of the advanced configure options specific
-to this package, followed by the conventional
-installation instructions for any autoconf-based system.
-Most people will not need the information below.
+Below are more details about installation configuration for
+unusual situations, including:
+- Detailed descriptions of the advanced configure options specific
+  to this package.
+- Make options
+- Information about Common Lisp's ASDF.
+- The traditional installation instructions for any autoconf-based system.
+
+Most people will *NOT* need the information below.
 
 
 Special configure options
@@ -65,6 +70,49 @@ GUILE_READLINE_AVAILABLE=yes|no
   is available, and if so, use it.  This option forceably sets guile
   to use or not use readline, skipping the configure check.
   If you set this to "yes" be sure that readline will actually be available!
+
+
+Make options
+============
+
+As usual, you can override values used by "make" as parameters.
+If you separately run "make" and "make install", you normally need to use
+the same parameters each time.
+
+A plausible value to override is "common_lispdir", the directory
+used for common lisp information.  This defaults to "$(datadir)/common-lisp".
+You could override this, e.g.:
+  make common_lispdir=/usr/share/common-lisp
+  make common_lispdir=/usr/share/common-lisp install
+
+
+
+Common Lisp ASDF
+================
+
+The Common Lisp implementation uses ASDF.
+
+ASDF must be configured so it can find the "readable" library
+once the library is installed.  So install the library in a place
+where ASDF will currently find it, or modify the ASDF configuration
+so ASDF can find the library.
+
+ASDF is normally configured so that, if you set the configuration "prefix"
+(see below) "/usr", everything will just work.
+However, if you do not set the prefix, the Common Lisp source files
+will normally be installed in "/usr/local/share/common-lisp/sources";
+this won't work if ASDF doesn't know to look there.
+
+You might want to modify the system configuration file
+"/etc/common-lisp/source-registry.conf" so that it can
+find files in common locations.  Here are plausible contents of
+"/etc/common-lisp/source-registry.conf":
+(:source-registry
+  (:tree (:home "common-lisp")) ;; expands to e.g., "$HOME/common-lisp/"
+  (:tree (:home "common-lisp")) ;; expands to e.g., "$HOME/cl/"
+  (:tree "/usr/share/common-lisp/source/")
+  (:tree "/usr/local/share/common-lisp/source/")
+  :inherit-configuration)
 
 
 
