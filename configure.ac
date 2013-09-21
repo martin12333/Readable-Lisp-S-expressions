@@ -102,13 +102,13 @@ AS_IF([is_enabled "$with_guile"],[
   # Since we aren't linking into guile, this isn't hard to do.
 
   # Look for the program "guile":
-  AC_PATH_PROG(GUILE,guile)
+  AC_PATH_PROG([GUILE],[guile])
   AS_IF([is_empty "$GUILE"],[#then
     AC_MSG_ERROR([guile required but not found (--without-guile to disable most tools)])
   ],[#else
     :
   ])
-  AC_SUBST(GUILE)
+  AC_SUBST([GUILE])
 
   # Guile's autoconf macro "GUILE_SITE_DIR" sets GUILE_SITE
   # to guile's "site" directory (usually $prefix/share/guile/site).
@@ -117,7 +117,7 @@ AS_IF([is_enabled "$with_guile"],[
   AS_IF([is_empty "$GUILE_SITE"],
     [GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`])
   AC_MSG_RESULT([$GUILE_SITE])
-  AC_SUBST(GUILE_SITE)
+  AC_SUBST([GUILE_SITE])
 
   # Below is GUILE_MODULE_AVAILABLE code, but expanded and
   # with AC_REQUIRE([GUILE_PROGS]) removed.
@@ -181,7 +181,7 @@ AM_CONDITIONAL([WITH_COMMON_LISP], [is_enabled "$with_common_lisp"])
 AM_CONDITIONAL([WITH_CLISP],       [is_enabled "$with_clisp"])
 AM_CONDITIONAL([ENABLE_HTML_FROM_MARKDOWN],
                                    [is_enabled "$with_markdown_command"])
-AC_SUBST(MARKDOWN, [$with_markdown_command])
+AC_SUBST([MARKDOWN], [$with_markdown_command])
 
 
 # Perhaps check for: (more) programs, libraries, header files, types,
