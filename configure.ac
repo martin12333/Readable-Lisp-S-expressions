@@ -108,10 +108,7 @@ AS_IF([is_enabled "$with_guile"],[
   AS_IF([is_empty "$GUILE"],[#then
     AC_PATH_PROG([GUILE],[guile])])
   AS_IF([is_empty "$GUILE"],[#then
-    AC_MSG_ERROR([guile required but not found (--without-guile to disable most tools)])
-  ],[#else
-    :
-  ])
+    AC_MSG_ERROR([guile required but not found (--without-guile to disable most tools)])])
   AC_SUBST([GUILE])
 
   # Guile's autoconf macro "GUILE_SITE_DIR" sets GUILE_SITE
