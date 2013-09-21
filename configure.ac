@@ -65,7 +65,7 @@ AC_ARG_WITH([markdown-command],
     ["with" option gives command to translate markdown into HTML; "without" option disables generating HTML from markdown])],
   [],
   [with_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"])
-AC_ARG_VAR([GUILE_SITE], [Guile site directory, usually /usr/share/guile/site])
+AC_ARG_VAR([GUILE_SITE], [Force Guile site directory, usually /usr/share/guile/site])
 
 # Sanity-check argument values.
 AS_IF([! yes_or_no "$with_guile"],[
