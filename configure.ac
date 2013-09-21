@@ -4,7 +4,7 @@
 
 # Version numbers generally follow the Semantic Versioning convention
 # (MAJOR.MINOR.PATCH) as documented here: http://semver.org/
-# There's a key exception: pre-release values DO NOT INCLUDE a hyphen,
+# Pre-release values DO NOT INCLUDE a hyphen,
 # because hyphens are specifically forbidden by RPM-based tools
 # (used by Red Hat Enterprise Linux, Fedora, CentOS, SuSE, etc.).
 
@@ -13,6 +13,7 @@
 # readable.asd, and the line below:
 AC_INIT([readable], [0.9.3], [dwheeler@dwheeler.com],
         [readable], [http://readable.sourceforge.net/])
+
 # Force autoconf to be more recent.
 AC_PREREQ([2.67])
 # Safety check - list a source file that wouldn't be in other projects:
@@ -43,7 +44,6 @@ yes_or_no () { # Returns TRUE if $1 is "yes" or "no".
   fi
 }
 
-
 # Create arguments --without-guile, --without-common-lisp, --without-clisp,
 # --with-markdown-command=VALUE / --without-markdown-command
 AC_ARG_WITH([guile],
@@ -65,7 +65,8 @@ AC_ARG_WITH([markdown-command],
     ["with" option gives command to translate markdown into HTML; "without" option disables generating HTML from markdown])],
   [],
   [with_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"])
-AC_ARG_VAR([GUILE_SITE], [Force Guile site directory, usually /usr/share/guile/site])
+AC_ARG_VAR([GUILE_SITE],
+           [Force Guile site directory, usually /usr/share/guile/site])
 
 # Sanity-check argument values.
 AS_IF([! yes_or_no "$with_guile"],[
