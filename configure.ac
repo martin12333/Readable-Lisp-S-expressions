@@ -65,6 +65,9 @@ AC_ARG_WITH([markdown-command],
     ["with" option gives command to translate markdown into HTML; "without" option disables generating HTML from markdown])],
   [],
   [with_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"])
+
+# Special environment variables/command-line variables
+AC_ARG_VAR([GUILE], [Path to guile executable])
 AC_ARG_VAR([GUILE_SITE],
            [Force Guile site directory, usually /usr/share/guile/site])
 AC_ARG_VAR([GUILE_READLINE_AVAILABLE],
@@ -102,7 +105,8 @@ AS_IF([is_enabled "$with_guile"],[
   # Since we aren't linking into guile, this isn't hard to do.
 
   # Look for the program "guile":
-  AC_PATH_PROG([GUILE],[guile])
+  AS_IF([is_empty "$GUILE"],[#then
+    AC_PATH_PROG([GUILE],[guile])])
   AS_IF([is_empty "$GUILE"],[#then
     AC_MSG_ERROR([guile required but not found (--without-guile to disable most tools)])
   ],[#else
