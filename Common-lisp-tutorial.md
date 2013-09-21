@@ -32,7 +32,7 @@ ASDF must be configured so it can find the "readable" library once the library i
 
     (:source-registry
       (:tree (:home "common-lisp")) ;; expands to e.g., "$HOME/common-lisp/"
-      (:tree (:home "common-lisp")) ;; expands to e.g., "$HOME/cl/"
+      (:tree (:home "cl")) ;; expands to e.g., "$HOME/cl/"
       (:tree "/usr/share/common-lisp/source/")
       (:tree "/usr/local/share/common-lisp/source/")
       :inherit-configuration)
