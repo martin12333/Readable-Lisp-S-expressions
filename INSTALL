@@ -110,8 +110,8 @@ find files in common locations.  Here are plausible contents of
 (:source-registry
   (:tree (:home "common-lisp")) ;; expands to e.g., "$HOME/common-lisp/"
   (:tree (:home "cl")) ;; expands to e.g., "$HOME/cl/"
-  (:tree "/usr/share/common-lisp/source/")
   (:tree "/usr/local/share/common-lisp/source/")
+  (:tree "/usr/share/common-lisp/source/")
   :inherit-configuration)
 
 

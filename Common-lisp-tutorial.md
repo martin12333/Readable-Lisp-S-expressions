@@ -33,8 +33,8 @@ ASDF must be configured so it can find the "readable" library once the library i
     (:source-registry
       (:tree (:home "common-lisp")) ;; expands to e.g., "$HOME/common-lisp/"
       (:tree (:home "cl")) ;; expands to e.g., "$HOME/cl/"
-      (:tree "/usr/share/common-lisp/source/")
       (:tree "/usr/local/share/common-lisp/source/")
+      (:tree "/usr/share/common-lisp/source/")
       :inherit-configuration)
 
 The clisp of Cygwin does not (as of this writing) include asdf.  If you are using clisp on Cygwin, one you way you can install it is to download the asdf.lisp file (from http://common-lisp.net/project/asdf/), then install asdf on clisp for this user by doing:
