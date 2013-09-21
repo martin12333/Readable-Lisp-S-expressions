@@ -87,12 +87,17 @@ AS_IF([test "$with_common_lisp" = no -a "$with_clisp" = yes],[
 
 
 
-# Look for Guile if necessary.
+# Look for Guile and guile-related information if necessary.
 AS_IF([is_enabled "$with_guile"],[
-  # Look for the program "guile" and its site directory:
-  # (Don't use the guile.m4 macros, as they require guile-config,
-  # but we aren't linking into guile, and guile-config doesn't
-  # come standard on all "guile" packages on all distros)
+
+  # Guile provides autoconf macros in guile.m4, but they require guile-config.
+  # Sadly, guile-config doesn't come standard on all "guile" packages on all
+  # distros, so using guile-config makes our package harder to install.
+  # Instead, we implement these searches directly, making our package
+  # much easier to install.
+  # Since we aren't linking into guile, this isn't hard to do.
+
+  # Look for the program "guile":
   AC_PATH_PROG(GUILE,guile)
   AS_IF([is_empty "$GUILE"],[#then
     AC_MSG_ERROR([guile required but not found (--without-guile to disable most tools)])
@@ -101,8 +106,9 @@ AS_IF([is_enabled "$with_guile"],[
   ])
   AC_SUBST(GUILE)
 
-  # Normally GUILE_SITE_DIR computes using guile-config, but
-  # we can query the guile interpreter itself directly anyway.
+  # Guile's autoconf macro "GUILE_SITE_DIR" sets GUILE_SITE
+  # to guile's "site" directory (usually $prefix/share/guile/site).
+  # Here we query the guile interpreter itself directly to get the info.
   AC_MSG_CHECKING([for Guile site directory])
   GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
   # Patch GUILE_SITE so that $prefix and $datarootdir are honored;
@@ -114,7 +120,7 @@ AS_IF([is_enabled "$with_guile"],[
   AC_MSG_RESULT($GUILE_SITE)
   AC_SUBST(GUILE_SITE)
 
-  # The below is GUILE_MODULE_AVAILABLE code, but expanded and
+  # Below is GUILE_MODULE_AVAILABLE code, but expanded and
   # with AC_REQUIRE([GUILE_PROGS]) removed.
   AC_MSG_CHECKING([if (ice-9 readline) is available])
   [$GUILE] -q -c "(use-modules (ice-9 readline)) (exit ((lambda () 0)))" > /dev/null 2>&1
