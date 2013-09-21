@@ -26,12 +26,12 @@ AM_INIT_AUTOMAKE([1.11 -Wall -Werror])
 AC_CONFIG_FILES([Makefile])
 
 # Supporting shell functions
-is_enabled () {
-  test "x$1" != "xno"
-}
-
 is_empty () {
   test "x$1" = "x"
+}
+
+is_enabled () { # Return TRUE if $1 has non-no value; empty considered enabled
+  test "x$1" != "xno"
 }
 
 yes_or_no () { # Returns TRUE if $1 is "yes" or "no".
