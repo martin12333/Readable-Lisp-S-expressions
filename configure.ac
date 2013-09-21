@@ -67,6 +67,8 @@ AC_ARG_WITH([markdown-command],
   [with_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"])
 AC_ARG_VAR([GUILE_SITE],
            [Force Guile site directory, usually /usr/share/guile/site])
+AC_ARG_VAR([GUILE_READLINE_AVAILABLE],
+           [Force readline to be used or avoided in guile])
 
 # Sanity-check argument values.
 AS_IF([! yes_or_no "$with_guile"],[
@@ -120,14 +122,19 @@ AS_IF([is_enabled "$with_guile"],[
   # Below is GUILE_MODULE_AVAILABLE code, but expanded and
   # with AC_REQUIRE([GUILE_PROGS]) removed.
   AC_MSG_CHECKING([if (ice-9 readline) is available])
-  [$GUILE] -q -c "(use-modules (ice-9 readline)) (exit ((lambda () 0)))" > /dev/null 2>&1
-  GUILE_READLINE_AVAILABLE=$?
-  AS_IF([test "$GUILE_READLINE_AVAILABLE" = "0"],[#then
-    GUILE_READLINE_AVAILABLE=yes
-  ],[#else
-    GUILE_READLINE_AVAILABLE=no
+  AS_IF([is_empty "$GUILE_READLINE_AVAILABLE"], [
+    [$GUILE] -q -c "(use-modules (ice-9 readline)) (exit ((lambda () 0)))" > /dev/null 2>&1
+    GUILE_READLINE_AVAILABLE=$?
+    AS_IF([test "$GUILE_READLINE_AVAILABLE" = "0"],[#then
+      GUILE_READLINE_AVAILABLE=yes
+    ],[#else
+      GUILE_READLINE_AVAILABLE=no
+    ])
   ])
-  AC_MSG_RESULT($GUILE_READLINE_AVAILABLE)
+  AS_IF([! yes_or_no "$GUILE_READLINE_AVAILABLE"],[
+    AC_MSG_ERROR([GUILE_READLINE_AVAILABLE must be 'yes' or 'no'])
+  ])
+  AC_MSG_RESULT([$GUILE_READLINE_AVAILABLE])
   AC_SUBST([GUILE_READLINE_AVAILABLE])
 ])
 

@@ -54,6 +54,12 @@ GUILE_SITE=directory_name
   as an environment variable when configure is run, then that value
   is used as the directory instead.
 
+GUILE_READLINE_AVAILABLE=yes|no
+  By default, if guile is enabled, configure will determine if readline
+  is available, and if so, use it.  This option forceably sets guile
+  to use or not use readline, skipping the configure check.
+  If you set this to "yes" be sure that readline will actually be available!
+
 
 Traditional Installation Instructions
 =====================================
