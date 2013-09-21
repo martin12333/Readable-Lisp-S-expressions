@@ -28,6 +28,15 @@ ASDF
 
 You'll need Another System Definition Facility (asdf), which is usually included in your Common Lisp implementation.  Many Linux distributions include asdf; just install package "cl-asdf".  (Fedora, Debian, and Ubuntu are all known to include cl-asdf, and there are probably more that do as well.)  If you don't already have asdf, you can download it here:  http://common-lisp.net/project/asdf/
 
+ASDF must be configured so it can find the "readable" library once the library is installed.  So install the library in a place where ASDF will currently find it, or modify the ASDF configuration so ASDF can find the library.  You might want to modify the ASDF system configuration file "/etc/common-lisp/source-registry.conf" so that it can find files in common locations; here are plausible contents of "/etc/common-lisp/source-registry.conf":
+
+    (:source-registry
+      (:tree (:home "common-lisp")) ;; expands to e.g., "$HOME/common-lisp/"
+      (:tree (:home "common-lisp")) ;; expands to e.g., "$HOME/cl/"
+      (:tree "/usr/share/common-lisp/source/")
+      (:tree "/usr/local/share/common-lisp/source/")
+      :inherit-configuration)
+
 The clisp of Cygwin does not (as of this writing) include asdf.  If you are using clisp on Cygwin, one you way you can install it is to download the asdf.lisp file (from http://common-lisp.net/project/asdf/), then install asdf on clisp for this user by doing:
 
     mkdir -p ~/lisp/asdf
@@ -76,9 +85,11 @@ If you want it to install to /usr (e.g., programs go in /usr/bin):
 
     ./configure --prefix=/usr
 
-It will probably be easier for you if you install in /usr.
+It will probably be easier for you if you set the prefix to /usr.  If you don't set the prefix, be sure that your ASDF installation will look there (as described above).  In particular, some ASDF installations do not look in /usr/local by default, so you'll probably want to either modify the ASDF configuration or change the configuration prefix.
 
 By default "configure" will try to build for everything the "readable" code supports.  Use "--without-guile" to disable guile support (e.g., if you don't have guile), and/or "--without-clisp" to disable clisp support.
+
+If you have unusual configuration needs, see the INSTALL file for more information.  The configuration tries to be relatively automatic, so most people shouldn't need it.
 
 
 Build
