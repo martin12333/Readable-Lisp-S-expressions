@@ -127,10 +127,17 @@ AS_IF([is_enabled "$with_guile"],[
 
     # Patch GUILE_SITE so that $prefix and $datarootdir are honored;
     # this is necessary for "make distcheck" to work properly.
+    # This is a guess, but it usually works.
     AC_MSG_CHECKING([for patched Guile site directory])
-    AS_CASE([$GUILE_SITE], [/usr/share/*],
-      [GUILE_SITE="\${datarootdir}${GUILE_SITE#/usr/share}"
-      ])
+    AS_CASE(["$prefix"],
+      [NONE|/usr|/usr/],
+        [AS_CASE([$GUILE_SITE], [/usr/share/*],
+          [GUILE_SITE="\${datarootdir}${GUILE_SITE#/usr/share}"
+        ])],
+      [/usr/local|/usr/local/],
+        [AS_CASE([$GUILE_SITE], [/usr/local/share/*],
+          [GUILE_SITE="\${datarootdir}${GUILE_SITE#/usr/local/share}"
+        ])])
     AC_MSG_RESULT([$GUILE_SITE])
   ], [
     AC_MSG_RESULT([$GUILE_SITE])
