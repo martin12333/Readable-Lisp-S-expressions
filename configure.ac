@@ -111,39 +111,48 @@ AS_IF([is_enabled "$with_guile"],[
     AC_MSG_ERROR([guile required but not found (--without-guile to disable most tools)])])
   AC_SUBST([GUILE])
 
-  # Determine Guile's "site" directory (usually $prefix/share/guile/site).
-  # Guile's autoconf macro "GUILE_SITE_DIR" sets GUILE_SITE to the value of
-  # the site directory, but as noted above, users often don't have
-  # the guile autoconf macros installed.
-  # Here we query the guile interpreter itself, directly, to get the info.
-  AC_MSG_CHECKING([for Guile site directory])
   AS_IF([is_empty "$GUILE_SITE"], [
-    GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
-    AC_MSG_RESULT([$GUILE_SITE])
-    AS_IF([is_empty "$GUILE_SITE"],[
-      AC_MSG_ERROR([guile reported an empty GUILE_SITE value])])
-    AS_IF([! test -d "$GUILE_SITE"],
-      [AC_MSG_WARN([GUILE_SITE $GUILE_SITE is not an existing directory])])
+    # Determine Guile's "site" directory, where libraries are stored.
+    # Guile's autoconf macro "GUILE_SITE_DIR" sets GUILE_SITE to the value of
+    # the site directory, but as noted above, users often don't have
+    # the guile autoconf macros installed.  In addition,
+    # GUILE_SITE_DIR doesn't honor the $prefix value anyway, which causes
+    # "make distcheck" to always fail, making GUILE_SITE_DIR problematic:
+    #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00049.html
+    #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00048.html
 
-    # Patch GUILE_SITE so that $prefix and $datarootdir are honored;
-    # this is necessary for "make distcheck" to work properly.
-    AC_MSG_CHECKING([for patched Guile site directory])
+    # Below we query the guile interpreter itself, directly, to get the info.
+    # We then get a calculated value based on $prefix, expand it, and compare
+    # that to the value obtained from guile.  If they're the same, great.
+    # If not, we'll use the calculated one (distcheck will fail otherwise),
+    # but warn the user to adjust the configuration or set GUILE_SITE.
+
+    AC_MSG_CHECKING([for reported Guile site directory])
+    REPORTED_GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
+    AC_MSG_RESULT([$REPORTED_GUILE_SITE])
+    AS_IF([is_empty "$REPORTED_GUILE_SITE"],[
+     AC_MSG_WARN([guile reported an empty GUILE_SITE value])])
+
+    AC_MSG_CHECKING([for calculated Guile site directory])
+    GUILE_SITE='${datarootdir}/guile/site'
+    AC_MSG_RESULT([$GUILE_SITE])
+
+    AC_MSG_CHECKING([for expanded calculated Guile site directory])
+    AS_IF([test "$prefix" = 'NONE'], [
+      real_prefix='/usr/local'
+    ], [
+      real_prefix="$prefix"
+    ])
     AS_IF([test "$datarootdir" = '${prefix}/share'], [
-      AS_CASE(["$prefix"],
-        [NONE|/usr|/usr/],
-          [AS_CASE([$GUILE_SITE], [/usr/share/*],
-            [GUILE_SITE="\${datarootdir}${GUILE_SITE#/usr/share}"
-          ])],
-        [/usr/local|/usr/local/],
-          [AS_CASE([$GUILE_SITE], [/usr/local/share/*],
-            [GUILE_SITE="\${datarootdir}${GUILE_SITE#/usr/local/share}"
-          ])])])
-    AC_MSG_RESULT([$GUILE_SITE])
-  ], [
-    AC_MSG_RESULT([$GUILE_SITE])
-    AS_IF([! test -d "$GUILE_SITE"],
-      [AC_MSG_WARN(
-        [Forced GUILE_SITE $GUILE_SITE is not an existing directory])])
+      real_datarootdir="$real_prefix/share"
+    ], [
+      real_datarootdir="$datarootdir"
+    ])
+    EXPANDED_GUILE_SITE="$real_datarootdir/guile/site"
+    AC_MSG_RESULT([$EXPANDED_GUILE_SITE])
+
+    AS_IF([test "$REPORTED_GUILE_SITE" != "$EXPANDED_GUILE_SITE"], [
+     AC_MSG_WARN([Guile site directory (as reported by guile) does not match the expanded Guile site directory.  Set the prefix (using --prefix) so that they match, set GUILE_SITE as a configuration option to the Guile site directory as reported by guile, or ensure that Guile is configured to also look at directory $EXPANDED_GUILE_SITE])])
   ])
   AC_SUBST([GUILE_SITE])
 
