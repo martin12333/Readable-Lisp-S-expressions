@@ -18,6 +18,7 @@ unusual situations, including:
 - Detailed descriptions of the advanced configure options specific
   to this package.
 - Make options
+- Guile site directory
 - Information about Common Lisp's ASDF.
 - The traditional installation instructions for any autoconf-based system.
 
@@ -59,6 +60,12 @@ The specialized configure options are as follows:
   easily lead to outdated files getting distributed, and requiring
   python is usually not a problem.
 
+--enable-reported-guile-site
+  By default, if GUILE_SITE is unset, configure uses an algorithm to
+  estimate the correct value of the Guile site directory (see below).
+  With this option, if GUILE_SITE is unset, the value "guile" reports
+  as the guile site directory is always used.
+
 GUILE=pathname
   Use this guile executable instead of the one that would normally
   be found.
@@ -77,6 +84,7 @@ GUILE_READLINE_AVAILABLE=yes|no
   If you set this to "yes" be sure that readline will actually be available!
 
 
+
 Make options
 ============
 
@@ -90,6 +98,40 @@ You could override this, e.g.:
   make common_lispdir=/usr/share/common-lisp
   make common_lispdir=/usr/share/common-lisp install
 
+
+Guile site directory
+====================
+
+Guile records all libraries inside a "guile site directory".
+We need to know this value so we can put the guile library files
+in the right place (so guile can find them).
+
+Finding the correct value for the guile site directory is trickier
+than it first appears.  The guile site directory is often
+/usr/share/guile/site, which is not within the default prefix /usr/local.
+Always using the value from guile will mean that autotools'
+"make distcheck" will fail; this check requires that installers
+honor $prefix in many cases.   Also, many distributions do not package
+"guile-config" with guile, so trying to use guile-config will make
+the program harder to install.
+
+To deal with this, configure makes a guess that works nearly all the time,
+and provides control options to override wrong guesses.
+If it fails, you can often use "--enable-reported-guile-site" to fix it;
+if that doesn't work, you may want to use GUILE_SITE.
+
+Currently, the guile site directory is determined by this algorithm:
+* If GUILE_SITE is set, use that.
+* If option --enable-reported-guile-site is provided to configure,
+  use whatever value Guile reports.
+* If the dataroot dir expands to "/usr/local/share" (the default),
+  and Guile reports the Guile site directory as "/usr/share/guile/site"
+  (the typical case), use the guile-reported value "/usr/share/guile/site".
+* Otherwise, use "${datarootdir}/guile/site" as the guile site.
+  Note that if guile is stored under /usr/local, and prefix is /usr/local,
+  this will work just fine.
+  If the expanded version of this value is inconsistent with the
+  guile reported value, a warning is reported with some suggestions.
 
 
 Common Lisp ASDF

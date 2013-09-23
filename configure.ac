@@ -66,6 +66,10 @@ AC_ARG_WITH([markdown-command],
   [],
   [with_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"])
 
+AC_ARG_ENABLE([reported-guile-site],
+  [AS_HELP_STRING([--enable-reported-guile-site], [force use of the guile site value as reported by guile])],
+  [reported_guile_site=${enableval}], [reported_guile_site=no])
+
 # Special environment variables/command-line variables
 AC_ARG_VAR([GUILE], [Path to guile executable])
 AC_ARG_VAR([GUILE_SITE],
@@ -83,6 +87,9 @@ AS_IF([! yes_or_no "$with_common_lisp"],[
 AS_IF([! yes_or_no "$with_clisp"],[
   AC_MSG_ERROR([with_clisp must be 'yes' or 'no'])
 ])
+AS_IF([! yes_or_no "$reported_guile_site"],[
+  AC_MSG_ERROR([reported_guile_site must be 'yes' or 'no'])
+])
 
 # Sanity-check combinations of argument values.
 AS_IF([test "$with_guile" = no -a "$with_common_lisp" = no],[
@@ -93,13 +100,12 @@ AS_IF([test "$with_common_lisp" = no -a "$with_clisp" = yes],[
 ])
 
 
-
 # Look for Guile and guile-related information if necessary.
 AS_IF([is_enabled "$with_guile"],[
 
   # Guile provides autoconf macros in guile.m4, but they require guile-config.
   # Sadly, guile-config doesn't come standard on all "guile" packages on all
-  # distros, so using guile-config makes our package harder to install.
+  # distros, so using guile-config would make our package harder to install.
   # Instead, we implement these searches directly, making our package
   # much easier to install.
   # Since we aren't linking into guile, this isn't hard to do.
@@ -121,48 +127,61 @@ AS_IF([is_enabled "$with_guile"],[
     #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00049.html
     #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00048.html
 
-    # Below we query the guile interpreter itself, directly, to get the info.
-    # We then get a calculated value based on $prefix, expand it, and compare
-    # that to the value obtained from guile.  If they're the same, great.
-    # If not, we'll use the calculated one (distcheck will fail otherwise),
-    # but warn the user to adjust the configuration or set GUILE_SITE.
+    # Below we query the guile interpreter itself, directly, to get info.
 
     AC_MSG_CHECKING([for reported Guile site directory])
     REPORTED_GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
     AC_MSG_RESULT([$REPORTED_GUILE_SITE])
-    AS_IF([is_empty "$REPORTED_GUILE_SITE"],[
-     AC_MSG_WARN([guile reported an empty GUILE_SITE value])])
 
-    AS_IF([test "$prefix" = 'NONE'], [
-      real_prefix='/usr/local'
-    ], [
-      real_prefix="$prefix"
-    ])
-    AS_IF([test "$datarootdir" = '${prefix}/share'], [
-      real_datarootdir="$real_prefix/share"
-    ], [
-      real_datarootdir="$datarootdir"
-    ])
+    AS_IF([is_enabled "$reported_guile_site"], [
+      AS_IF([is_empty "$REPORTED_GUILE_SITE"],[
+       AC_MSG_ERROR([guile reported an empty GUILE_SITE value, yet we are forced to use it])])
 
-    # Handle specially the common case where --prefix=/usr/local
-    # (including unspecified) yet GUILE_SITE is /usr/share/guile/site.
-    AS_IF([test "$real_datarootdir" =  '/usr/local/share' && \
-           test "$REPORTED_GUILE_SITE" = '/usr/share/guile/site'], [
+      # Force use of reported guile site
       GUILE_SITE="$REPORTED_GUILE_SITE"
-      EXPANDED_GUILE_SITE="$GUILE_SITE"
+      # Add space at the end to line up with previous line
+      AC_MSG_CHECKING([for forced Guile site directory  ])
+      AC_MSG_RESULT([$GUILE_SITE])
     ], [
-      GUILE_SITE='${datarootdir}/guile/site'
-      EXPANDED_GUILE_SITE="$real_datarootdir/guile/site"
+      # We then get a calculated value based on $prefix, expand it, and compare
+      # that to the value obtained from guile.  If they're the same, great.
+      # If not, we'll use the calculated one (distcheck will fail otherwise),
+      # but warn the user to adjust the configuration or set GUILE_SITE.
+      # Estimate the correct GUILE_SITE, and report suspicious differences
+
+      AS_IF([is_empty "$REPORTED_GUILE_SITE"],[
+       AC_MSG_WARN([guile reported an empty GUILE_SITE value])])
+      AS_IF([test "$prefix" = 'NONE'], [
+        real_prefix='/usr/local'
+      ], [
+        real_prefix="$prefix"
+      ])
+      AS_IF([test "$datarootdir" = '${prefix}/share'], [
+        real_datarootdir="$real_prefix/share"
+      ], [
+        real_datarootdir="$datarootdir"
+      ])
+  
+      # Handle specially the common case where --prefix=/usr/local
+      # (including unspecified) yet GUILE_SITE is /usr/share/guile/site.
+      AS_IF([test "$real_datarootdir" =  '/usr/local/share' && \
+             test "$REPORTED_GUILE_SITE" = '/usr/share/guile/site'], [
+        GUILE_SITE="$REPORTED_GUILE_SITE"
+        EXPANDED_GUILE_SITE="$GUILE_SITE"
+      ], [
+        GUILE_SITE='${datarootdir}/guile/site'
+        EXPANDED_GUILE_SITE="$real_datarootdir/guile/site"
+      ])
+  
+      AC_MSG_CHECKING([for calculated Guile site directory])
+      AC_MSG_RESULT([$GUILE_SITE])
+  
+      AC_MSG_CHECKING([for expanded calculated Guile site directory])
+      AC_MSG_RESULT([$EXPANDED_GUILE_SITE])
+  
+      AS_IF([test "$REPORTED_GUILE_SITE" != "$EXPANDED_GUILE_SITE"], [
+        AC_MSG_WARN([Guile site directory (as reported by guile) does not match the expanded Guile site directory.  This may cause problems.  Use --enable-reported-guile-site to force use of the guile site value as reported by guile, set the prefix (using --prefix) so that the guile site and prefix match, set GUILE_SITE as a configuration option to a valid Guile site directory (such as the one reported by guile), or ensure that Guile is configured to also look at directory $EXPANDED_GUILE_SITE])])
     ])
-
-    AC_MSG_CHECKING([for calculated Guile site directory])
-    AC_MSG_RESULT([$GUILE_SITE])
-
-    AC_MSG_CHECKING([for expanded calculated Guile site directory])
-    AC_MSG_RESULT([$EXPANDED_GUILE_SITE])
-
-    AS_IF([test "$REPORTED_GUILE_SITE" != "$EXPANDED_GUILE_SITE"], [
-     AC_MSG_WARN([Guile site directory (as reported by guile) does not match the expanded Guile site directory.  Set the prefix (using --prefix) so that they match, set GUILE_SITE as a configuration option to the Guile site directory as reported by guile, or ensure that Guile is configured to also look at directory $EXPANDED_GUILE_SITE])])
   ])
   AC_SUBST([GUILE_SITE])
 
