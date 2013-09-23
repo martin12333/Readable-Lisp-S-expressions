@@ -133,11 +133,6 @@ AS_IF([is_enabled "$with_guile"],[
     AS_IF([is_empty "$REPORTED_GUILE_SITE"],[
      AC_MSG_WARN([guile reported an empty GUILE_SITE value])])
 
-    AC_MSG_CHECKING([for calculated Guile site directory])
-    GUILE_SITE='${datarootdir}/guile/site'
-    AC_MSG_RESULT([$GUILE_SITE])
-
-    AC_MSG_CHECKING([for expanded calculated Guile site directory])
     AS_IF([test "$prefix" = 'NONE'], [
       real_prefix='/usr/local'
     ], [
@@ -148,7 +143,22 @@ AS_IF([is_enabled "$with_guile"],[
     ], [
       real_datarootdir="$datarootdir"
     ])
-    EXPANDED_GUILE_SITE="$real_datarootdir/guile/site"
+
+    # Handle specially the common case where --prefix=/usr/local
+    # (including unspecified) yet GUILE_SITE is /usr/share/guile/site.
+    AS_IF([test "$real_datarootdir" =  '/usr/local/share' && \
+           test "$REPORTED_GUILE_SITE" = '/usr/share/guile/site'], [
+      GUILE_SITE="$REPORTED_GUILE_SITE"
+      EXPANDED_GUILE_SITE="$GUILE_SITE"
+    ], [
+      GUILE_SITE='${datarootdir}/guile/site'
+      EXPANDED_GUILE_SITE="$real_datarootdir/guile/site"
+    ])
+
+    AC_MSG_CHECKING([for calculated Guile site directory])
+    AC_MSG_RESULT([$GUILE_SITE])
+
+    AC_MSG_CHECKING([for expanded calculated Guile site directory])
     AC_MSG_RESULT([$EXPANDED_GUILE_SITE])
 
     AS_IF([test "$REPORTED_GUILE_SITE" != "$EXPANDED_GUILE_SITE"], [
