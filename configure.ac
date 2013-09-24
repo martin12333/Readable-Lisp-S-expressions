@@ -154,32 +154,9 @@ AS_IF([is_enabled "$with_guile"],[
     ], [
       # Use, for GUILE_SITE, a calculated value based on $prefix.
       # This is necesary for "make distcheck" to work, for example.
-      # As a sanity check, we'll expand the calculated value, compare
-      # that to the value obtained from guile, and then warn if
-      # the expanded calculated value differs from guile's reported value.
-
       GUILE_SITE='${datarootdir}/guile/site'
       AC_MSG_CHECKING([for calculated Guile site directory])
       AC_MSG_RESULT([$GUILE_SITE])
-
-      AS_IF([test "$prefix" = 'NONE'], [
-        real_prefix='/usr/local'
-      ], [
-        real_prefix="$prefix"
-      ])
-      AS_IF([test "$datarootdir" = '${prefix}/share'], [
-        real_datarootdir="$real_prefix/share"
-      ], [
-        real_datarootdir="$datarootdir"
-      ])
-      EXPANDED_GUILE_SITE="$real_datarootdir/guile/site"
-      AC_MSG_CHECKING([for expanded calculated Guile site directory])
-      AC_MSG_RESULT([$EXPANDED_GUILE_SITE])
-  
-      AS_IF([is_empty "$REPORTED_GUILE_SITE"],[], [
-        AS_IF([test "$REPORTED_GUILE_SITE" != "$EXPANDED_GUILE_SITE"], [
-          AC_MSG_WARN([Guile site directory (as reported by guile) does not match the expanded Guile site directory.  This is expected behavior during make distcheck, but in other cases this may cause problems.  Use --enable-reported-guile-site to force use of the guile site value as reported by guile, set the prefix (using --prefix) so that the guile site and prefix match, set GUILE_SITE as a configuration option to a valid Guile site directory (such as the one reported by guile), or ensure that Guile is configured to also look at directory $EXPANDED_GUILE_SITE])])
-      ])
     ])
   ])
   AC_SUBST([GUILE_SITE])
