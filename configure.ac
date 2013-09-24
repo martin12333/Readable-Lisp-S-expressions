@@ -104,19 +104,19 @@ AC_ARG_VAR([GUILE_READLINE_AVAILABLE],
 
 # Sanity-check argument values.
 AS_IF([yes_or_no "$with_guile"],[], [
-  AC_MSG_ERROR([with_guile must be 'yes' or 'no'])
+  AC_MSG_ERROR([with-guile must be 'yes' or 'no'])
 ])
 AS_IF([yes_or_no "$with_scsh"],[], [
-  AC_MSG_ERROR([with_scsh must be 'yes' or 'no'])
+  AC_MSG_ERROR([with-scsh must be 'yes' or 'no'])
 ])
 AS_IF([yes_or_no "$with_common_lisp"],[], [
-  AC_MSG_ERROR([with_common_lisp must be 'yes' or 'no'])
+  AC_MSG_ERROR([with-common-lisp must be 'yes' or 'no'])
 ])
 AS_IF([yes_or_no "$with_clisp"],[], [
-  AC_MSG_ERROR([with_clisp must be 'yes' or 'no'])
+  AC_MSG_ERROR([with-clisp must be 'yes' or 'no'])
 ])
 AS_IF([yes_or_no "$reported_guile_site"],[], [
-  AC_MSG_ERROR([reported_guile_site must be 'yes' or 'no'])
+  AC_MSG_ERROR([reported-guile-site must be 'yes' or 'no'])
 ])
 
 # Sanity-check combinations of argument values.
