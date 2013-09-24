@@ -136,10 +136,8 @@ AS_IF([is_enabled "$with_guile"],[
     # use the reported guile site value only if forced.
     # In most cases we use the guile site directory value reported by guile.
     AS_CASE([$prefix],
-            [*_inst], [use_reported_site="$reported_guile_site"
-                      ],
-            [*],      [use_reported_site='yes'
-                      ])
+            [*_inst], [use_reported_site="$reported_guile_site"],
+            [*],      [use_reported_site='yes'])
 
     AS_IF([is_empty "$REPORTED_GUILE_SITE"],[
       use_reported_site='no' # Don't use a useless value!
