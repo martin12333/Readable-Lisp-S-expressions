@@ -501,6 +501,7 @@ SPECFILE = readable.spec
 EXTRA_DIST += $(SPECFILE) readable-simple.spec
 
 rpm: $(DIST_ARCHIVES) $(SPECFILE)
+	@echo "REMINDER: Run 'make dist' if you have updated the distribution"
 	cp -p $(DIST_ARCHIVES) ~/rpmbuild/SOURCES/
 	cp -p $(SPECFILE) ~/rpmbuild/SPECS/
 	rpmbuild -ba $(SPECFILE)
