@@ -5,8 +5,9 @@
 ACLOCAL_AMFLAGS = -I m4 --install
 EXTRA_DIST = m4/DUMMY
 
-# Incantation per GNU Standards "General Conventions for Makefiles":
-SHELL = /bin/sh
+# GNU Standards "General Conventions for Makefiles" says set SHELL.  The
+# autoconf documentation section "The Make Macro SHELL" says do it this way:
+SHELL = @SHELL@
 
 # The original source files are in "src/".  At build time we create
 # the guile library files in "readable/" and user-executable scripts in
