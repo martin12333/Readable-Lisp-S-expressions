@@ -78,16 +78,16 @@ AC_ARG_VAR([GUILE_READLINE_AVAILABLE],
            [Force readline to be used or avoided in guile])
 
 # Sanity-check argument values.
-AS_IF([! yes_or_no "$with_guile"],[
+AS_IF([yes_or_no "$with_guile"],[], [
   AC_MSG_ERROR([with_guile must be 'yes' or 'no'])
 ])
-AS_IF([! yes_or_no "$with_common_lisp"],[
+AS_IF([yes_or_no "$with_common_lisp"],[], [
   AC_MSG_ERROR([with_common_lisp must be 'yes' or 'no'])
 ])
-AS_IF([! yes_or_no "$with_clisp"],[
+AS_IF([yes_or_no "$with_clisp"],[], [
   AC_MSG_ERROR([with_clisp must be 'yes' or 'no'])
 ])
-AS_IF([! yes_or_no "$reported_guile_site"],[
+AS_IF([yes_or_no "$reported_guile_site"],[], [
   AC_MSG_ERROR([reported_guile_site must be 'yes' or 'no'])
 ])
 
@@ -176,7 +176,7 @@ AS_IF([is_enabled "$with_guile"],[
       AC_MSG_CHECKING([for expanded calculated Guile site directory])
       AC_MSG_RESULT([$EXPANDED_GUILE_SITE])
   
-      AS_IF([! is_empty "$REPORTED_GUILE_SITE"],[
+      AS_IF([is_empty "$REPORTED_GUILE_SITE"],[], [
         AS_IF([test "$REPORTED_GUILE_SITE" != "$EXPANDED_GUILE_SITE"], [
           AC_MSG_WARN([Guile site directory (as reported by guile) does not match the expanded Guile site directory.  This is expected behavior during make distcheck, but in other cases this may cause problems.  Use --enable-reported-guile-site to force use of the guile site value as reported by guile, set the prefix (using --prefix) so that the guile site and prefix match, set GUILE_SITE as a configuration option to a valid Guile site directory (such as the one reported by guile), or ensure that Guile is configured to also look at directory $EXPANDED_GUILE_SITE])])
       ])
@@ -197,7 +197,7 @@ AS_IF([is_enabled "$with_guile"],[
     ])
   ])
   AC_MSG_RESULT([$GUILE_READLINE_AVAILABLE])
-  AS_IF([! yes_or_no "$GUILE_READLINE_AVAILABLE"],[
+  AS_IF([yes_or_no "$GUILE_READLINE_AVAILABLE"],[], [
     AC_MSG_ERROR([GUILE_READLINE_AVAILABLE must be 'yes' or 'no'])
   ])
   AC_SUBST([GUILE_READLINE_AVAILABLE])
