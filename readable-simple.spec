@@ -88,7 +88,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/sbin/register-common-lisp-source %{cl_name}
 
 %preun
-/usr/sbin/unregister-common-lisp-source %{cl_NAME}
+/usr/sbin/unregister-common-lisp-source %{cl_name}
 
 %files
 %doc %{mydocs}/

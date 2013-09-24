@@ -166,7 +166,7 @@ A portable Common Lisp library that implements the "readable" notations.
 /usr/sbin/register-common-lisp-source %{cl_name}
 
 %preun -n cl-readable
-/usr/sbin/unregister-common-lisp-source %{cl_NAME}
+/usr/sbin/unregister-common-lisp-source %{cl_name}
 
 %files -n cl-readable
 %{common_lisp_source_pkgdir}/*
