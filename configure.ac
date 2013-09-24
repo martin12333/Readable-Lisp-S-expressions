@@ -181,6 +181,7 @@ AS_IF([is_enabled "$with_guile"],[
   ])
   AC_SUBST([GUILE_SITE])
 
+  # Determine if "readline" is available in guile.
   # Below is code similar to GUILE_MODULE_AVAILABLE, but expanded and
   # with AC_REQUIRE([GUILE_PROGS]) removed:
   AC_MSG_CHECKING([if (ice-9 readline) is available])
