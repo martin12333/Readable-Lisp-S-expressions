@@ -2,6 +2,28 @@
 # For more information on the project, see: http://readable.sourceforge.net.
 # For autotools info, see: http://www.dwheeler.com/autotools
 
+# Copyright (C) 2007-2013 by David A. Wheeler and Alan Manuel K. Gloria.
+#
+# This software is released as open source software under the "MIT" license:
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+
 # Version numbers generally follow the Semantic Versioning convention
 # (MAJOR.MINOR.PATCH) as documented here: http://semver.org/
 # Pre-release values DO NOT INCLUDE a hyphen,
@@ -159,15 +181,15 @@ AS_IF([is_enabled "$with_guile"],[
   ])
   AC_SUBST([GUILE_SITE])
 
-  # Below is GUILE_MODULE_AVAILABLE code, but expanded and
-  # with AC_REQUIRE([GUILE_PROGS]) removed.
+  # Below is code similar to GUILE_MODULE_AVAILABLE, but expanded and
+  # with AC_REQUIRE([GUILE_PROGS]) removed:
   AC_MSG_CHECKING([if (ice-9 readline) is available])
   AS_IF([is_empty "$GUILE_READLINE_AVAILABLE"], [
     [$GUILE] -q -c "(use-modules (ice-9 readline)) (exit ((lambda () 0)))" > /dev/null 2>&1
     GUILE_READLINE_AVAILABLE=$?
-    AS_IF([test "$GUILE_READLINE_AVAILABLE" = "0"],[#then
+    AS_IF([test "$GUILE_READLINE_AVAILABLE" = "0"],[
       GUILE_READLINE_AVAILABLE=yes
-    ],[#else
+    ],[
       GUILE_READLINE_AVAILABLE=no
     ])
   ])
