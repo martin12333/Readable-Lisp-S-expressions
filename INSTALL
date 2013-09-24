@@ -38,6 +38,10 @@ The specialized configure options are as follows:
   disable support for guile.
   This prevents installation of the guile (Scheme) library
   and all tools that depend on the library (e.g., sweeten and unsweeten).
+  This also disables scsh support, since the scsh support uses guile.
+
+--without-scsh
+  disable support for scsh.
 
 --without-common-lisp
   disable support for Common Lisp.
