@@ -58,8 +58,8 @@ CLEANFILES =
 # allow us to portably declare a dependency in inference rules.
 # Since we're *building* unsweeten, we *do* have such a dependency.
 # A lot of makes will let you do it anyway, as an obvious extension,
-# but here we'll use the more portable approach of giving separate rules
-# for each target.
+# but in this Makefile we'll use the more portable approach
+# of giving separate rules for each target.
 
 
 # Rules for translating markdown (.md) files into HTML.
