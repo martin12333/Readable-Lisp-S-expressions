@@ -139,8 +139,8 @@ AS_IF([is_enabled "$with_guile"],[
     AC_MSG_ERROR([guile required but not found (--without-guile to disable most tools)])])
   AC_SUBST([GUILE])
 
+  # Determine Guile's "site" directory, where libraries are stored.
   AS_IF([is_empty "$GUILE_SITE"], [
-    # Determine Guile's "site" directory, where libraries are stored.
     # Guile's autoconf macro "GUILE_SITE_DIR" sets GUILE_SITE to the value of
     # the site directory, but as noted above, users often don't have
     # the guile autoconf macros installed.  In addition,
