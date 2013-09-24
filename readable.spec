@@ -19,6 +19,10 @@ BuildRequires:  common-lisp-controller
 
 %global mydocs %{_defaultdocdir}/%{name}
 
+# Set to "1" to enable creating the scsh package.
+# More-recent versions of Fedora don't provide scsh packages.
+%global enable_scsh 0
+
 # Scheme
 %global GUILE_SITE %{_datadir}/guile/site/
 %global readable_libdir %{GUILE_SITE}/readable
@@ -30,6 +34,13 @@ BuildRequires:  common-lisp-controller
 %global common_lisp_source_pkgdir %{common_lisp_sourcedir}/%{cl_name}
 %global common_lisp_systemsdir    %{common_lispdir}/systems
 %global pkg_asd_file %{cl_name}.asd
+
+# Compute scsh options, based on whether or not it's configured in.
+%if "%{enable_scsh}" == "1"
+%global configure_enable_scsh
+%else
+%global configure_enable_scsh --without-scsh
+%endif
 
 %description
 This "readable" software improves the readability of Lisp S-expressions
@@ -64,7 +75,7 @@ For more information, see: http://readable.sourceforge.net
 %setup -q
 
 %build
-%configure
+%configure %{configure_enable_scsh}
 make %{?_smp_mflags}
 
 %check
@@ -134,6 +145,7 @@ for the "readable" notation for Lisp-based languages
 %{_mandir}/man1/sweet-run.1.gz
 
 
+%if %{enable_scsh} == 1
 # Subpackage readable-scsh, tool for scsh.
 %package -n readable-scsh
 Summary: An extra tool to help scsh users use the readable notation.
@@ -144,6 +156,7 @@ An extra tool to help scsh users use the readable notation.
 
 %files -n readable-scsh
 %{_bindir}/sweet-scsh
+%endif
 
 
 # Common Lisp subpackages
