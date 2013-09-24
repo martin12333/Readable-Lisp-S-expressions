@@ -18,11 +18,9 @@ Requires(post):  common-lisp-controller
 Requires(preun): common-lisp-controller
 
 
-# TODO: This is a single package; it would probably be better
-# to split this into subpackages.  In particular, it currently doesn't
-# follow the Common Lisp naming conventions of:
-#   http://fedoraproject.org/wiki/Packaging:Lisp
-# where the package name would be "cl-readable".
+# This is a single package; see "readable.spec" for a package spec
+# that divides up the software into several smaller packages,
+# which is helpful if someone doesn't want to install everything.
 
 %global mydocs %{_defaultdocdir}/%{name}
 
