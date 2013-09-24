@@ -71,6 +71,9 @@ yes_or_no () { # Returns TRUE if $1 is "yes" or "no".
 AC_ARG_WITH([guile],
   [AS_HELP_STRING([--without-guile], [disable support for guile])],
   [], [with_guile=yes])  # By default, with_guile
+AC_ARG_WITH([scsh],
+  [AS_HELP_STRING([--without-scsh], [disable support for scsh])],
+  [], [with_scsh=yes])  # By default, with_scsh
 AC_ARG_WITH([common-lisp],
   [AS_HELP_STRING([--without-common-lisp], [disable support for Common Lisp])],
   [], [with_common_lisp=yes])  # By default, with_common_lisp
@@ -102,6 +105,9 @@ AC_ARG_VAR([GUILE_READLINE_AVAILABLE],
 # Sanity-check argument values.
 AS_IF([yes_or_no "$with_guile"],[], [
   AC_MSG_ERROR([with_guile must be 'yes' or 'no'])
+])
+AS_IF([yes_or_no "$with_scsh"],[], [
+  AC_MSG_ERROR([with_scsh must be 'yes' or 'no'])
 ])
 AS_IF([yes_or_no "$with_common_lisp"],[], [
   AC_MSG_ERROR([with_common_lisp must be 'yes' or 'no'])
@@ -240,6 +246,7 @@ AS_CASE([$with_markdown_command], [python\ *], [
 
 # Set up automake conditionals
 AM_CONDITIONAL([WITH_GUILE],       [is_enabled "$with_guile"])
+AM_CONDITIONAL([WITH_SCSH],        [is_enabled "$with_scsh"])
 AM_CONDITIONAL([WITH_COMMON_LISP], [is_enabled "$with_common_lisp"])
 AM_CONDITIONAL([WITH_CLISP],       [is_enabled "$with_clisp"])
 AM_CONDITIONAL([ENABLE_HTML_FROM_MARKDOWN],

@@ -141,13 +141,21 @@ if WITH_GUILE
 # (there's no dist_ prefix for bin_SCRIPTS here):
 bin_SCRIPTS += bin/sweeten bin/unsweeten
 bin_SCRIPTS += bin/curly-guile bin/neoteric-guile bin/sweet-guile
-bin_SCRIPTS += bin/sweet-run bin/sweet-scsh
+bin_SCRIPTS += bin/sweet-run
 bin_SCRIPTS += bin/diff-s-sweet
+
+if WITH_SCSH
+bin_SCRIPTS += bin/sweet-scsh
+endif WITH_SCSH
 
 # These are the local scripts, for testing, and are not installed.
 noinst_SCRIPTS += ./sweeten ./unsweeten \
                   ./curly-guile ./neoteric-guile ./sweet-guile \
-                  ./sweet-scsh ./sweet-run ./diff-s-sweet
+                  ./sweet-run ./diff-s-sweet
+
+if WITH_SCSH
+noinst_SCRIPTS += ./sweet-scsh
+endif WITH_SCSH
 endif WITH_GUILE
 
 if WITH_COMMON_LISP
