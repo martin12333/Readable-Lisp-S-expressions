@@ -127,30 +127,41 @@ AS_IF([is_enabled "$with_guile"],[
     #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00049.html
     #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00048.html
 
-    # Below we query the guile interpreter itself, directly, to get info.
-
+    # Query the guile interpreter directly to find guile site directory
     AC_MSG_CHECKING([for reported Guile site directory])
     REPORTED_GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
     AC_MSG_RESULT([$REPORTED_GUILE_SITE])
 
-    AS_IF([is_enabled "$reported_guile_site"], [
-      AS_IF([is_empty "$REPORTED_GUILE_SITE"],[
-       AC_MSG_ERROR([guile reported an empty GUILE_SITE value, yet we are forced to use it])])
+    # If prefix ends in "_inst" (as happens in "make distcheck"),
+    # use the reported guile site value only if forced.
+    # In most cases we use the guile site directory value reported by guile.
+    AS_CASE([$prefix],
+            [*_inst], [use_reported_site="$reported_guile_site"
+                      ],
+            [*],      [use_reported_site='yes'
+                      ])
 
-      # Force use of reported guile site
+    AS_IF([is_empty "$REPORTED_GUILE_SITE"],[
+      use_reported_site='no' # Don't use a useless value!
+      AC_MSG_WARN([guile reported an empty GUILE_SITE value, using calculated value to compensate])])
+
+    AS_IF([test "$use_reported_site" = 'yes'], [
+      # Use guile site value as reported by guile
       GUILE_SITE="$REPORTED_GUILE_SITE"
       # Add space at the end to line up with previous line
-      AC_MSG_CHECKING([for forced Guile site directory  ])
+      AC_MSG_CHECKING([using same Guile site directory  ])
       AC_MSG_RESULT([$GUILE_SITE])
     ], [
-      # We then get a calculated value based on $prefix, expand it, and compare
-      # that to the value obtained from guile.  If they're the same, great.
-      # If not, we'll use the calculated one (distcheck will fail otherwise),
-      # but warn the user to adjust the configuration or set GUILE_SITE.
-      # Estimate the correct GUILE_SITE, and report suspicious differences
+      # Use, for GUILE_SITE, a calculated value based on $prefix.
+      # This is necesary for "make distcheck" to work, for example.
+      # As a sanity check, we'll expand the calculated value, compare
+      # that to the value obtained from guile, and then warn if
+      # the expanded calculated value differs from guile's reported value.
 
-      AS_IF([is_empty "$REPORTED_GUILE_SITE"],[
-       AC_MSG_WARN([guile reported an empty GUILE_SITE value])])
+      GUILE_SITE='${datarootdir}/guile/site'
+      AC_MSG_CHECKING([for calculated Guile site directory])
+      AC_MSG_RESULT([$GUILE_SITE])
+
       AS_IF([test "$prefix" = 'NONE'], [
         real_prefix='/usr/local'
       ], [
@@ -161,26 +172,14 @@ AS_IF([is_enabled "$with_guile"],[
       ], [
         real_datarootdir="$datarootdir"
       ])
-  
-      # Handle specially the common case where --prefix=/usr/local
-      # (including unspecified) yet GUILE_SITE is /usr/share/guile/site.
-      AS_IF([test "$real_datarootdir" =  '/usr/local/share' && \
-             test "$REPORTED_GUILE_SITE" = '/usr/share/guile/site'], [
-        GUILE_SITE="$REPORTED_GUILE_SITE"
-        EXPANDED_GUILE_SITE="$GUILE_SITE"
-      ], [
-        GUILE_SITE='${datarootdir}/guile/site'
-        EXPANDED_GUILE_SITE="$real_datarootdir/guile/site"
-      ])
-  
-      AC_MSG_CHECKING([for calculated Guile site directory])
-      AC_MSG_RESULT([$GUILE_SITE])
-  
+      EXPANDED_GUILE_SITE="$real_datarootdir/guile/site"
       AC_MSG_CHECKING([for expanded calculated Guile site directory])
       AC_MSG_RESULT([$EXPANDED_GUILE_SITE])
   
-      AS_IF([test "$REPORTED_GUILE_SITE" != "$EXPANDED_GUILE_SITE"], [
-        AC_MSG_WARN([Guile site directory (as reported by guile) does not match the expanded Guile site directory.  This may cause problems.  Use --enable-reported-guile-site to force use of the guile site value as reported by guile, set the prefix (using --prefix) so that the guile site and prefix match, set GUILE_SITE as a configuration option to a valid Guile site directory (such as the one reported by guile), or ensure that Guile is configured to also look at directory $EXPANDED_GUILE_SITE])])
+      AS_IF([! is_empty "$REPORTED_GUILE_SITE"],[
+        AS_IF([test "$REPORTED_GUILE_SITE" != "$EXPANDED_GUILE_SITE"], [
+          AC_MSG_WARN([Guile site directory (as reported by guile) does not match the expanded Guile site directory.  This is expected behavior during make distcheck, but in other cases this may cause problems.  Use --enable-reported-guile-site to force use of the guile site value as reported by guile, set the prefix (using --prefix) so that the guile site and prefix match, set GUILE_SITE as a configuration option to a valid Guile site directory (such as the one reported by guile), or ensure that Guile is configured to also look at directory $EXPANDED_GUILE_SITE])])
+      ])
     ])
   ])
   AC_SUBST([GUILE_SITE])
