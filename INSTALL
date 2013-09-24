@@ -61,10 +61,11 @@ The specialized configure options are as follows:
   python is usually not a problem.
 
 --enable-reported-guile-site
-  By default, if GUILE_SITE is unset, configure uses an algorithm to
-  estimate the correct value of the Guile site directory (see below).
-  With this option, if GUILE_SITE is unset, the value "guile" reports
-  as the guile site directory is always used.
+  Force use of guile's reported guile site directory, even in (rare)
+  cases where it normally would not be used.  This option has no
+  effect if GUILE_SITE is set (GUILE_SITE always takes precedence),
+  and it has no effect if guile reports an empty value for the
+  guile site directory (an empty value is not a valid directory).
 
 GUILE=pathname
   Use this guile executable instead of the one that would normally
@@ -117,8 +118,6 @@ the program harder to install.
 
 To deal with this, configure makes a guess that works nearly all the time,
 and provides control options to override wrong guesses.
-If it fails, you can often use "--enable-reported-guile-site" to fix it;
-if that doesn't work, you may want to use GUILE_SITE.
 
 Currently, the guile site directory is determined by this algorithm:
 * If GUILE_SITE is set, use that.
