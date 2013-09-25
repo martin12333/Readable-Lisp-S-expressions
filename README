@@ -107,24 +107,46 @@ If you want to get the current stable version, go to:
      tar xvzf readable-*.tar.gz
      cd readable-*
 
-If you want to get the latest developmental version, download the
-files from our git code repository & prepare it to be configured:
+If you want to get the latest developmental version, you'll first
+need to install some additional software.   Specifically, you need
+git, autoconf (this includes autoreconf), and automake.
+Then download the files from our git code repository and
+prepare it to be configured:
 
    git clone git://git.code.sf.net/p/readable/code readable-code
    cd readable-code
    git checkout develop  # The "master" branch is for final releases
    autoreconf -i
 
+You need at least one Lisp-based language installed.  We recommend installing
+guile, since several tools (including all the Scheme tools) require it.
+You might also install a Common Lisp implementation, such as clisp or sbcl.
+
+
 2. Configure
 
-As usual, configure.  To accept all the defaults, installing to /usr/local:
+As usual, configure.  To accept all the defaults, installing to
+the directory "/usr/local" (e.g., commands will be put in "/usr/local/bin"):
 
     ./configure
 
-If you want it to install to /usr (e.g., programs go in /usr/bin),
-which many will want:
+Many people will want to install to the directory "/usr"
+(e.g., so commands will be put in "/usr/bin").  To do this, instead run:
 
     ./configure --prefix=/usr
+
+
+The tutorials describe some configure options.
+Here are some configure options you might want to use:
+
+    --without-guile         disable support for guile
+    --without-scsh          disable support for scsh
+    --without-common-lisp   disable support for Common Lisp
+
+If you need more information (to configure it for unusual circumstances),
+run "./configure --help" or read the file "INSTALL".
+
+
 
 3. Build ("make") / test
 

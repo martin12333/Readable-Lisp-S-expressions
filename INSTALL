@@ -1,11 +1,13 @@
 Installation Instructions
 =========================
 
-This package follows the usual GNU package conventions, so in most
-cases you can install it using the usual commmands:
-  ./configure --prefix=/usr
-  make
-  make install
+This package follows the usual GNU package conventions.
+In most cases, if you installed from a tarball (.tar.gz file),
+you can install it using the usual commmands:
+
+    ./configure --prefix=/usr
+    make
+    make install
 
 For more about typical installation and use, see the README file
 and the hands-on tutorials in the files
