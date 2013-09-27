@@ -1,6 +1,6 @@
 # This starter RPM spec file uses the Fedora conventions.
 Name:           readable
-Version:        0.9.3
+Version:        0.9.4
 Release:        1%{?dist}
 Summary:        Improve Lisp readability (infix, sweet-expression indentation)
 Group:		Development/Libraries
