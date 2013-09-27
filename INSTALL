@@ -1,19 +1,176 @@
 Installation Instructions
 =========================
 
-This package follows the usual GNU package conventions, so in most
-cases you can install it using the usual commmands:
-  ./configure --prefix=/usr
-  make
-  make install
+STOP!
 
-For more about installation and use, see the README file and tutorials.
+For information about typical installation and use, see the file
+"Install-howto.md" or its HTML format version "Install-howto.html".
+
+You do *NOT* need this "INSTALL" file for normal situations.
+This "INSTALL" file provides more details about installation configuration
+for unusual situations, including:
+
+- Detailed descriptions of this package's advanced configure options
+- Make options
+- Guile site directory
+- Information about Common Lisp's ASDF.
+- The traditional installation instructions for any autoconf-based system.
+
+Most people will *NOT* need the information below.
+
+Ok - still here?  Sorry about that, you must have some unusual
+issue that was not answered in the usual guide (Install-howto.md).
+Here's more information, in the hopes that it will help you.
+
+
+Special configure options
+=========================
+
+The configuration and build system follows the usual GNU Build System
+conventions, and is based on the autotools (e.g., autoconf and automake).
+
+You can rebuild the "configure" program using the usual:
+
+    autoreconf -i
+
+As with any autoconf-based system, once "configure" exists, you can run
+"./configure --help" to show help.
+
+The "configure" program tries to auto-detect what to do, but
+various specialized configuration options can override its decisions.
+The specialized configure options are as follows:
+
+--without-guile
+  disable support for guile.
+  This prevents installation of the guile (Scheme) library
+  and all tools that depend on the library (e.g., sweeten and unsweeten).
+  This also disables scsh support, since the scsh support uses guile.
+
+--without-scsh
+  disable support for scsh.
+
+--without-common-lisp
+  disable support for Common Lisp.
+  This prevents installation of the Common Lisp library
+  and all tools that depend on the library (e.g., sweet-clisp).
+
+--without-clisp
+  disable support for clisp.
+  This inhibits just the installation of sweet-clisp.
+
+--with-markdown-command=COMMAND | --without-markdown-command
+  By default HTML files are generated from markdown (.md) files
+  using the command "python markdown2.py ...", where markdown2.py
+  is a file included with this package.  You can use --with-markdown-command
+  to select a different markdown processor (say, one on your system).
+  The "without" option completely disables generating HTML from markdown.
+  Users who start with the tarball can easily do this as long as they
+  don't change the ".md" files, since the generated files are included
+  as well.  We don't do this automatically, though, because it could
+  easily lead to outdated files getting distributed, and requiring
+  python is usually not a problem.
+
+--enable-reported-guile-site
+  Force use of guile's reported guile site directory, even in (rare)
+  cases where it normally would not be used.  This option has no
+  effect if GUILE_SITE is set (GUILE_SITE always takes precedence),
+  and it has no effect if guile reports an empty value for the
+  guile site directory (an empty value is not a valid directory).
+
+GUILE=pathname
+  Use this guile executable instead of the one that would normally
+  be found.
+
+GUILE_SITE=directory_name
+  By default, if guile is enabled, configure will automatically locate
+  the "guile site" using guile; it is typically "/usr/share/guile/site".
+  If GUILE_SITE=... is set on the configure command line, or is set
+  as an environment variable when configure is run, then that value
+  is used as the directory instead.
+
+GUILE_READLINE_AVAILABLE=yes|no
+  By default, if guile is enabled, configure will determine if readline
+  is available, and if so, use it.  This option forceably sets guile
+  to use or not use readline, skipping the configure check.
+  If you set this to "yes" be sure that readline will actually be available!
 
 
 
-Below is the conventional installation instructions for
-any autoconf-based system, which explain some of the more advanced options.
-Most people will not need the information below.
+Make options
+============
+
+As usual, you can override values used by "make" as parameters.
+If you separately run "make" and "make install", you normally need to use
+the same parameters each time.
+
+A plausible value to override is "common_lispdir", the directory
+used for common lisp information.  This defaults to "$(datadir)/common-lisp".
+You could override this, e.g.:
+  make common_lispdir=/usr/share/common-lisp
+  make common_lispdir=/usr/share/common-lisp install
+
+
+Guile site directory
+====================
+
+Guile records all libraries inside a "guile site directory".
+We need to know this value so we can put the guile library files
+in the right place (so guile can find them).
+
+Finding the correct value for the guile site directory is trickier
+than it first appears.  The guile site directory is often
+/usr/share/guile/site, which is not within the default prefix /usr/local.
+Always using the value from guile will mean that autotools'
+"make distcheck" will fail; this check requires that installers
+honor $prefix.   Also, many distributions do not package
+"guile-config" with guile, so trying to use guile-config will make
+the program harder to install.
+
+To deal with this, configure makes a guess that works nearly all the time,
+and provides control options to override wrong guesses.
+
+Currently, the guile site directory is determined by this algorithm:
+* If GUILE_SITE is set, use that.
+* If guile reports a non-empty value for the guile site directory:
+  + If the prefix doesn't end in "/_inst", use the value guile reports.
+    This will be what happens in nearly all cases.  Note that
+    "make distcheck" creates a prefix that ends in "/_inst".
+  + If option --enable-reported-guile-site is provided to configure,
+    use the value reported by guile.
+* Otherwise, use '${datarootdir}/guile/site' as the guile site;
+  this is called the "calculated value".
+  This value works inside "make distcheck", and in other circumstances
+  it's not a bad guess.  As a sanity check, if guile reports a
+  non-empty value, and the expansion of the calculated value is
+  different, a warning is reported with some suggestions.
+
+
+Common Lisp ASDF
+================
+
+The Common Lisp implementation uses ASDF.
+
+ASDF must be configured so it can find the "readable" library
+once the library is installed.  So install the library in a place
+where ASDF will currently find it, or modify the ASDF configuration
+so ASDF can find the library.
+
+ASDF is normally configured so that, if you set the configuration "prefix"
+(see below) "/usr", everything will just work.
+However, if you do not set the prefix, the Common Lisp source files
+will normally be installed in "/usr/local/share/common-lisp/sources";
+this won't work if ASDF doesn't know to look there.
+
+You might want to modify the system configuration file
+"/etc/common-lisp/source-registry.conf" so that it can
+find files in common locations.  Here are plausible contents of
+"/etc/common-lisp/source-registry.conf":
+(:source-registry
+  (:tree (:home "common-lisp")) ;; expands to e.g., "$HOME/common-lisp/"
+  (:tree (:home "cl")) ;; expands to e.g., "$HOME/cl/"
+  (:tree "/usr/local/share/common-lisp/source/")
+  (:tree "/usr/share/common-lisp/source/")
+  :inherit-configuration)
 
 
 

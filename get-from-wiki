@@ -1,0 +1,62 @@
+#!/bin/sh
+
+# Get current wiki markdown (.md) files from our host (SourceForge)
+# and put any updated files in the current directory.
+# The parameters are the list of local filenames (ending in .md) to update.
+
+set -e -u
+
+TDIR="from-web"
+WIKI="http://sourceforge.net/rest/p/readable/wiki"
+
+# SourceForge provides data in JSON format, so we'll use Python's "json"
+# library to convert it.  An example is here:
+# http://stackoverflow.com/questions/1955505/parsing-json-with-sed-and-awk
+# echo '{"hostname":"test","domainname":"example.com"}' | \
+#   python -c 'import json,sys;obj=json.load(sys.stdin);print obj["hostname"]'
+# We import print_function so we can use either python 2.7 or python 3.
+JSON2TEXT='from __future__ import print_function; import json, sys; obj=json.load(sys.stdin); print(obj["text"], end="")'
+
+echo "Starting to get wiki files from $WIKI"
+echo "Will convert to simple markdown files using:"
+which dos2unix  # Error out if these programs don't exist
+which wget
+which python
+
+# Create clean temporary directory
+rm -fr "$TDIR/"
+mkdir -p "$TDIR/"
+
+echo
+echo "Processing..."
+for raw_item in "$@" ; do
+  printf '%s' "$raw_item: "
+
+  item="${raw_item%.md}"
+
+  # We'll get data from SourceForge using its REST API, as documented here:
+  # https://sourceforge.net/p/forge/documentation/Allura%20API/
+  wget --quiet -O "$TDIR/${item}.json" "$WIKI/${item}/"
+
+  # Convert JSON to raw text.
+  # We set PYTHONIOENCODING="UTF-8" or we may crash with the dreaded:
+  #   UnicodeEncodeError: 'ascii' codec can't encode character u'\u201c'
+  #   in position ...: ordinal not in range(128)
+  PYTHONIOENCODING="UTF-8" python -c "$JSON2TEXT" \
+     < "$TDIR/${item}.json" > "$TDIR/${item}.md"
+
+  # Use Unix text format everywhere:
+  dos2unix --quiet "$TDIR/${item}.md"
+
+  # If the files differ, we update:
+  if cmp -s "$item.md" "$TDIR/$item.md"
+  then
+    echo 'unchanged'
+  else
+    echo 'UPDATED'
+    mv "$TDIR/$item.md" "$item.md"
+  fi
+done
+
+rm -fr "$TDIR/"
+

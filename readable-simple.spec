@@ -1,6 +1,6 @@
 # This starter RPM spec file uses the Fedora conventions.
 Name:           readable
-Version:        0.9.2
+Version:        0.9.3
 Release:        1%{?dist}
 Summary:        Improve Lisp readability (infix, sweet-expression indentation)
 Group:		Development/Libraries
@@ -9,6 +9,7 @@ URL:            http://readable.sourceforge.net/
 Source0:        http://downloads.sourceforge.net/%{name}/%{name}-%{version}.tar.gz
 
 BuildRequires:  guile clisp
+BuildRequires:  python
 Requires:       guile clisp
 
 BuildRequires:   common-lisp-controller
@@ -17,11 +18,9 @@ Requires(post):  common-lisp-controller
 Requires(preun): common-lisp-controller
 
 
-# TODO: This is a single package; it would probably be better
-# to split this into subpackages.  In particular, it currently doesn't
-# follow the Common Lisp naming conventions of:
-#   http://fedoraproject.org/wiki/Packaging:Lisp
-# where the package name would be "cl-readable".
+# This is a single package; see "readable.spec" for a package spec
+# that divides up the software into several smaller packages,
+# which is helpful if someone doesn't want to install everything.
 
 %global mydocs %{_defaultdocdir}/%{name}
 
@@ -87,7 +86,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/sbin/register-common-lisp-source %{cl_name}
 
 %preun
-/usr/sbin/unregister-common-lisp-source %{cl_NAME}
+/usr/sbin/unregister-common-lisp-source %{cl_name}
 
 %files
 %doc %{mydocs}/

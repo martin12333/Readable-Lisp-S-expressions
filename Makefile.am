@@ -1,12 +1,36 @@
 # Makefile.am for "readable" project
 
+# Copyright (C) 2007-2013 by David A. Wheeler and Alan Manuel K. Gloria.
+#
+# This software is released as open source software under the "MIT" license:
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+
+
 # Usual automake header, so some auxilliary files are tucked into m4/:
 
 ACLOCAL_AMFLAGS = -I m4 --install
 EXTRA_DIST = m4/DUMMY
 
-# Incantation per GNU Standards "General Conventions for Makefiles":
-SHELL = /bin/sh
+# GNU Standards "General Conventions for Makefiles" says set SHELL.  The
+# autoconf documentation section "The Make Macro SHELL" says do it this way:
+SHELL = @SHELL@
 
 # The original source files are in "src/".  At build time we create
 # the guile library files in "readable/" and user-executable scripts in
@@ -34,8 +58,18 @@ CLEANFILES =
 # allow us to portably declare a dependency in inference rules.
 # Since we're *building* unsweeten, we *do* have such a dependency.
 # A lot of makes will let you do it anyway, as an obvious extension,
-# but here we'll use the more portable approach of giving separate rules
-# for each target.
+# but in this Makefile we'll use the more portable approach
+# of giving separate rules for each target.
+
+
+# Rules for translating markdown (.md) files into HTML.
+SUFFIXES = .md .html
+.md.html:
+	( cat head.html ; $(MARKDOWN) $< ; cat tail.html ) | \
+	  sed -e "s/@TITLE@/"$*"/g" > $@
+
+EXTRA_DIST += head.html tail.html markdown-urls
+EXTRA_DIST += markdown2.py
 
 # Guile libraries.
 
@@ -107,13 +141,21 @@ if WITH_GUILE
 # (there's no dist_ prefix for bin_SCRIPTS here):
 bin_SCRIPTS += bin/sweeten bin/unsweeten
 bin_SCRIPTS += bin/curly-guile bin/neoteric-guile bin/sweet-guile
-bin_SCRIPTS += bin/sweet-run bin/sweet-scsh
+bin_SCRIPTS += bin/sweet-run
 bin_SCRIPTS += bin/diff-s-sweet
+
+if WITH_SCSH
+bin_SCRIPTS += bin/sweet-scsh
+endif WITH_SCSH
 
 # These are the local scripts, for testing, and are not installed.
 noinst_SCRIPTS += ./sweeten ./unsweeten \
                   ./curly-guile ./neoteric-guile ./sweet-guile \
-                  ./sweet-scsh ./sweet-run ./diff-s-sweet
+                  ./sweet-run ./diff-s-sweet
+
+if WITH_SCSH
+noinst_SCRIPTS += ./sweet-scsh
+endif WITH_SCSH
 endif WITH_GUILE
 
 if WITH_COMMON_LISP
@@ -282,6 +324,10 @@ EXTRA_DIST += \
  examples/Makefile.example \
  examples/README
 
+# Similarly, distribute demo Makefile.
+EXTRA_DIST += Makefile-demo
+
+
 # Man pages
 dist_man_MANS =
 
@@ -302,8 +348,24 @@ endif WITH_CLISP
 dist_doc_DATA = README COPYING COPYING.GPL AUTHORS ChangeLog
 
 dist_doc_DATA += README-ANTLR README-files
-dist_doc_DATA += solution.md
-dist_doc_DATA += scheme-tutorial.md common-lisp-tutorial.md
+
+# These the markdown (.md) files that are on the Wiki and we'll
+# duplicate in the distributed package:
+MDMIRRORS = Problem.md Solution.md Install-howto.md \
+            Scheme-tutorial.md Common-lisp-tutorial.md
+
+# These are stub files that link to the website:
+MDSTUBS = Rationale.md Retort.md Examples.md
+
+# These are all markdown (.md) files, including stubs:
+MDFILES = $(MDMIRRORS) $(MDSTUBS)
+
+dist_doc_DATA += $(MDFILES)
+
+# Generate, distribute, and install HTML files generated from .md files:
+if ENABLE_HTML_FROM_MARKDOWN
+dist_doc_DATA += $(MDFILES:.md=.html)
+endif ENABLE_HTML_FROM_MARKDOWN
 
 # Presentation in Open Document Format (.odp) about these formats:
 dist_doc_DATA += readable-s-expressions.odp
@@ -443,10 +505,15 @@ SPECFILE = readable.spec
 EXTRA_DIST += $(SPECFILE) readable-simple.spec
 
 rpm: $(DIST_ARCHIVES) $(SPECFILE)
+	@echo "REMINDER: Run 'make dist' if you have updated the distribution"
 	cp -p $(DIST_ARCHIVES) ~/rpmbuild/SOURCES/
 	cp -p $(SPECFILE) ~/rpmbuild/SPECS/
 	rpmbuild -ba $(SPECFILE)
 	-rpmlint $(SPECFILE)
 
-.PHONY: push pull test 110 rpm check-clisp check-guile
+# Extract possibly-updated .md files from the wiki:
+from-wiki:
+	./get-from-wiki $(MDMIRRORS)
+
+.PHONY: push pull test 110 rpm check-clisp check-guile from-wiki
 

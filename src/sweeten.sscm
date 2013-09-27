@@ -1179,8 +1179,8 @@ define getdent(indent-already indent)
 ; the column position starting from 0)?
 define posdent(indent-already indent)
   if indent-already
-    length(indent-already)
-    length(indent)
+    length indent-already
+    length indent
 
 ; Return #t if a sequence of characters (length newlen) will fit within
 ; maxlen, given indent-already and indent.  Else returns #f.

@@ -17,7 +17,7 @@ David A. Wheeler, Alan Manuel K. Gloria
 
 <H1>Status</H1>
 
-This SRFI is currently in ``draft'' status.
+This SRFI is currently in ``final'' status.
 -->
 <meta name="description" content="This defines sweet-expressions (t-expressions) for Scheme, building on neoteric-expressions (n-expressions) and curly-infix-expressions (c-expressions). This defines an approach to making Scheme more 'readable' by adding syntactically-meaningful indentation, as well as supporting infix and functions whose names precede the opening parenthesis.">
 <meta name="keywords" content="sweet, sweet-expression, sweet-expressions, t-expression, Scheme, Lisp, Common Lisp, neoteric-expression, n-expression, readable, notation, s-expression, s-expr, M-expressions, SRFI, implementation, David Wheeler, David A. Wheeler, Alan Manuel Gloria, Alan Manuel K. Gloria">
@@ -54,7 +54,7 @@ This SRFI is currently in ``draft'' status.
 <h1 id="status">Status</h1>
 <p>
 <p>
-This SRFI is currently in &#8220;draft&#8221; status.  To see an explanation of
+This SRFI is currently in &#8220;final&#8221; status.  To see an explanation of
 each status that a SRFI can hold, see <a
 href="http://srfi.schemers.org/srfi-process.html">here</a>.
 
@@ -64,6 +64,10 @@ To provide input on this SRFI, please
 <a href="../srfi-list-subscribe.html">instructions here</a> to
 subscribe to the list.  You can access previous messages via
 <a href="mail-archive/maillist.html">the archive of the mailing list</a>.
+You can access
+post-finalization messages via
+<a href="http://srfi.schemers.org/srfi-110/post-mail-archive/maillist.html">
+the archive of the mailing list</a>.
 </p>
 
 <ul>
@@ -79,6 +83,10 @@ subscribe to the list.  You can access previous messages via
       <li>Revised: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-110/srfi-110.html?rev=1.10">2013/05/01</a></li>
       <li>Revised: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-110/srfi-110.html?rev=1.11">2013/05/24</a></li>
       <li>Revised: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-110/srfi-110.html?rev=1.12">2013/07/29</a></li>
+      <li>Revised: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-110/srfi-110.html?rev=1.13">2013/08/05</a></li>
+      <li>Revised: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-110/srfi-110.html?rev=1.14">2013/08/07</a></li>
+      <li>Revised: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-110/srfi-110.html?rev=1.15">2013/09/02</a></li>
+      <li>Finalized: <a href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-110/srfi-110.html?rev=1.16">2013/09/09</a></li>
       <li>Draft: 2013/03/06-2013/05/06</li>
     </ul>
 
@@ -1844,6 +1852,34 @@ define line-tail(x)
         (line-tail (cdr x))))
     (#t
       (append LISTSP.SP (exposed-unit x)))))
+</pre>
+</td>
+</tr>
+
+<tr>
+<!-- From "streams.sscm" -->
+<td align="left" valign="top">
+<pre>
+define stream-cdr(x)
+  let*
+    \\
+      promise   stream-unwrap(x)
+      cell      xforce(promise)
+      promise-d cdr(cell)
+      d         stream-wrap(promise-d)
+    d
+</pre>
+</td>
+<td align="left" valign="top">
+<pre>
+(define (stream-cdr x)
+  (let*
+    (
+      (promise (stream-unwrap x))
+      (cell (xforce promise))
+      (promise-d (cdr cell))
+      (d (stream-wrap promise-d)))
+    d))
 </pre>
 </td>
 </tr>
@@ -5957,7 +5993,7 @@ In wisp this would be:
 </p>
 
 <pre>
-  let 
+  let
     : 
       x : compute 'x
       y : compute 'y
@@ -5965,7 +6001,8 @@ In wisp this would be:
 </pre>
 
 <p>
-In comparing to SUBLIST, you could write it this way:
+Sometimes you may wish to put several expressions on a single line,
+which in wisp would be:
 </p>
 
 <pre>
@@ -5979,7 +6016,7 @@ In contrast, Arne believes it would be more likely be written this way:
 </p>
 
 <pre>
-  begin
+  begin ; wisp
     display "Welcome, "
     display player
     display ", to Chicago!"
@@ -5987,12 +6024,11 @@ In contrast, Arne believes it would be more likely be written this way:
 </pre>
 
 <p>
-Or like this, if you want more complex expressions (note that in wisp,
-newline is not followed by () as it would be in sweet-expressions):
+Or like this, if you want more complex expressions:
 </p>
 
 <pre>
-  begin
+  begin ; wisp
     display 
       concat "Welcome, " player 
            . ", to Chicago!"
@@ -6028,7 +6064,7 @@ library : example
 </pre>
 
 <p>
-Note the similarity to the similar Python syntax:
+Note the similarity to Python syntax:
 </p>
 
 <pre>
@@ -6059,6 +6095,7 @@ interactive use less appealing; users would actually have to press
 Enter three times (once to end a line, and twice more to create
 two blank lines).
 </p>
+
 <p>
 Wisp does not have a mechanism to restart at the left-hand-side
 for long stretches of code, as sweet-expressions does, and this omission
@@ -6247,7 +6284,7 @@ inviting error.
 
 <p>
 Wisp emphasizes a simple notation to describe and implement,
-but this can make <em>using</em> it with certain constructs
+but this can make <em>using</em> wisp with certain constructs
 more complicated (and less readable) compared to sweet-expressions.
 E.G., this sweet-expression:
 </p>
@@ -6894,13 +6931,13 @@ and loops (e.g., &#8220;loop&#8221;).
 <h3>Use infix notation</h3>
 
 <p>
-If the function is typically written as infix
+If the procedure is traditionally written using infix notation
 (including &#8220;+&#8221;, &#8220;*&#8221;,
 &#8220;or&#8221;, and &#8220;&lt;&#8221;),
 use {...} to write it as an infix value.
 Generally these operators will be &#8220;and&#8221;, &#8220;or&#8221;,
 or an operator that only uses punctuation.
-If you&#8217;re calling a function with only one parameter, and
+If you&#8217;re calling a procedure with only one parameter, and
 that parameter is calculated with an infix operation, use the f{...} shorthand.
 </p>
 
@@ -6917,15 +6954,17 @@ if you&#8217;re using a functional programming style.
 
 <p>
 If parameters will easily fit on a line if
-you use function notation such as y(z), then use it.
-When you&#8217;re calling a procedure with no parameters, use function call
-format with &#8220;()&#8221; at the end, e.g., &#8220;f()&#8221;.
+you use function call notation such as y(z), then use it.
+When you&#8217;re calling a procedure with no parameters,
+use function call notation with &#8220;()&#8221; at the end,
+e.g., &#8220;f()&#8221;.
 Use -( ... ) to negate something.
 </p>
 
 <p>
-If you are providing a list of data (and not performing a function/method
-call), then use the traditional list notation such as
+If you are providing a list of data (and not performing a
+call to a procedure or method),
+then use the traditional list notation such as
 &#8220;(a&nbsp;b&nbsp;c)&#8221;.
 This is exactly equivalent to &#8220;a(b&nbsp;c)&#8221;,
 but expressing it as a list will give the human reader
@@ -6936,7 +6975,7 @@ program, and use function call notation.
 
 <p>
 In general, indentation is used for the major &#8220;structural&#8221; elements
-of a program, and function calls get used once you&#8217;re
+of a program, and function call notation is often used once you&#8217;re
 &#8220;near the leaf&#8221;
 of the structure and the text won&#8217;t go beyond the end of the line.
 </p>
@@ -6945,48 +6984,19 @@ of the structure and the text won&#8217;t go beyond the end of the line.
 
 <p>
 Where it&#8217;s understandable, don&#8217;t include unnecessary parentheses.
-In particular, when indentation processing is active, the name of the
-function is right after the indent, and there are no child lines, simply
-state the function followed by space-separated parameters.
+In particular, when indentation processing is active,
+and you are calling a procedure where the name of the procedure
+is right after the indent, simply
+state the procedure name followed by space-separated parameters
+(using child lines or function call notation as appropriate).
 </p>
 
 <p>
 Both SUBLIST (<code>$</code>) and GROUP/SPLIT (inline <code>\\</code>)
 allow some limited freedom in laying out the program text
 without disabling indentation processing; feel free to use them.
-For example, in a
-<code>cond</code> construct, you can combine on one line
-a clause&#8217;s test and expression by separating them with <code>$</code>.
-Similarly, the common sequence &#8220;(define (f x) (cond ...))&#8221;
-can be represented by putting <code>define</code> and <code>cond</code>
-on one line and putting <code>$</code> before <code>cond</code>.
-Below are some examples:
 </p>
-<pre>
-define polymorphic-function(a) $ cond
-  type1?(a) $ handle-type1 a
-  type2?(a) $ handle-type2 a
-  type3?(a)
-    display "type3 handling not yet fully operational\n"
-    log-possible-error a
-    handle-type3 a
-  type4?(a) $ cond ; cond-in-cond - very clear
-    type4-subtype1?(a) $ handle-type4-subtype1 a
-    type4-subtype2?(a) $ handle-type4-subtype2 a
-    else               $ error 'polymorphic-function "impossible!" a
-  else      $ error 'polymorphic-function "unrecognized type" a
 
-define probe(x)
-  display "probe: " \\ write x \\ newline()
-
-define buggy-function(a) $ probe $ let ()
-  define buggy-sub-function(b) $ short-call b
-  body
-  ...
-
-define func-w/return(a) $ call/cc $ lambda (return)
-  body ... return(whatever) ...
-</pre>
 
 <h3>Indentation</h3>
 <p>

@@ -19,7 +19,7 @@ These tiers are (oversimplified):
 Unlike nearly all past efforts to improve s-expression readability, these
 are general (the notation is independent from any underlying semantic)
 and homoiconic (the underlying data structure is clear from the syntax).
-They are also backwards-compatible; well-formatted traditional
+They are also backwards-compatible; nicely-formatted traditional
 s-expressions continue work normally.  Thus, it's easy to transition to
 these, and you can use traditional forms whenever it's convenient.
 
@@ -30,6 +30,10 @@ Satisfiability Modulo Theories Library (SMT-LIB), NewLisp, and ISLisp.
 For Scheme these notations are defined in SRFI-105 and SRFI-110.
 At this time, the tools focus on Scheme and Common Lisp, but
 some of the tools can be easily used with many other Lisps.
+
+The file "Problem.html" describes the problem this is intended to solve, and
+"Solution.html" describes these notations. Hands-on tutorials are in
+"Scheme-tutorial.html" and "Common-lisp-tutorial.html".
 
 For more information, see:
   http://readable.sourceforge.net
@@ -86,121 +90,55 @@ See the COPYING.GPL file for those conditions.
 Getting, building, and installing
 =================================
 
-This software supports the usual GNU Build System conventions.
-Here are the steps, spelled out.
+Most people should get the current stable version.  To get it:
 
-1. Download/Prepare to configure
+* Use your web browser to view http://readable.sourceforge.net
+* Click on "Download files"
+* Download the current version.
 
-You need to get the files.  You've probably done that, since you're
-reading this, but here are the basics.
+You'll then need to uncompress it.  One way is via the command line:
 
-If you want to get the current stable version, go to:
+    tar xvzf readable-*.tar.gz
+    cd readable-*
 
-   http://readable.sourceforge.net
-   Click on "Download files", and download the current version.
-   Then uncompress them; one way is via the command line:
-     tar xvzf readable-*.tar.gz
-     cd readable-*
+Then follow the installation instructions in the file
+"Install-howto.md".  Stable versions also have a file named
+"Install-howto.html", which is exactly the same thing but in HTML format
+(use your web browser!).  The installation instructions are also at:
+https://sourceforge.net/p/readable/wiki/Install-howto/
 
-If you want to get the latest developmental version, download the
-files from our git code repository & prepare it to be configured:
+This software supports the usual GNU Build System conventions, and
+it should be easy to install on most systems.  If you have very
+exotic needs, the file INSTALL gives details on how to precisely control
+installation.
 
-   git clone git://git.code.sf.net/p/readable/code readable-code
-   cd readable-code
-   git checkout develop  # The "master" branch is for final releases
-   autoreconf -i
-
-2. Configure
-
-As usual, configure.  To accept all the defaults, installing to /usr/local:
-
-    ./configure
-
-If you want it to install to /usr (e.g., programs go in /usr/bin),
-which many will want:
-
-    ./configure --prefix=/usr
-
-3. Build ("make") / test
-
-Now build the code.
-
-    make
-
-You can optionally run the testsuite; it's a very good idea (you need
-guile, clisp, a correctly-installed adsf, and expect to run the tests):
-
-    make check
-
-4. Install ("make install")
-
-You actually don't *have* to install the software.  Just run
-"./unsweeten", "./sweeten", "./sweet-guile", and it'll work.
-But it's often more convenient to install.  Do this with:
-
-    make install
 
 
 Scheme Tutorial
 ==============
 
-File "scheme-tutorial.md" is the Scheme tutorial on how to use it.
+File "Scheme-tutorial.html" is the Scheme tutorial on how to use it.
+You need guile to follow it.
 
 
 Common Lisp Tutorial
 ====================
 
-File "common-lisp-tutorial.md" is the Common Lisp tutorial for how to use it.
-
-The Common Lisp implementation creates a package :readable and uses the
-usual ASDF system.  A "make install" puts files in the usual place,
+File "Common-lisp-tutorial.html" is the Common Lisp tutorial for how to use it.
+Any Common Lisp implementation should do, but you need the widely-used system
+definition facility asdf.  A "make install" puts files in the usual place,
 $PREFIX/share/common-lisp/source (where $PREFIX is /usr/local by default).
-
-You need ASDF.  Most Common Lisp users already have that ready to go.
-You can quickly install ASDF on many Linux distributions (such as Fedora,
-Debian, and Ubuntu) by installing the package "cl-asdf".
-If you don't have asdf, get it here:
-  http://common-lisp.net/project/asdf/
-
-Many clisp packages don't include asdf, or its support, by default.
-If you use Cygin's clisp, install asdf by doing this:
-  mkdir -p ~/lisp/asdf
-  cp asdf.lisp ~/lisp/asdf     # See below.
-  clisp
-  (load (compile-file "asdf.lisp"))
-  (exit)
-If you use clisp and a Linux distribution's asdf package, follow the above
-steps, but instead of the "cp asdf.lisp ~/lisp/asdf" command do this:
-  ln -s /usr/share/common-lisp/source/cl-asdf/asdf.lisp ~/lisp/asdf/
-That way, updates to your Linux distribution's asdf will be used automagically.
-
-Ensure ASDF is configured so it knows what directories to look at, e.g.,
-put this in file "/etc/common-lisp/source-registry.conf":
- (:source-registry
-   (:tree (:home "cl")) ;; will expand to e.g. "/home/joeluser/cl/"
-   (:tree "/usr/share/common-lisp/source/")
-   :inherit-configuration)
-Alternatively, you can set the environment variable CL_SOURCE_REGISTRY, e.g.,
-to set the environment variable to the current directory and run sbcl:
-CL_SOURCE_REGISTRY="`realpath .`" sbcl
-
-Now fire up a Common Lisp (e.g., "clisp" or "sbcl") and run:
- (require "asdf") ; or (load "tests/my-asdf.lisp")  if asdf isn't installed.
- (asdf:load-system :readable)
- (readable:enable-basic-curly) ; or enable-sweet or whatever.
-
-; now you can do:
-{3 + 4}
 
 
 Specification
 ====================
 
-For Scheme, SRFI-105 is the official definition of
+For Scheme, SRFI-105 (in file "SRFI-105.html") is the official definition of
 full curly-infix notation, and it also defines neoteric-expressions.
-SRFI-110 defines sweet-expressions.  It has an especially rigorous BNF.
+SRFI-110 (in file "SRFI-110.html" defines sweet-expressions.
+SRFI-110 has an especially rigorous BNF.
 
-The solution.md is the official definition for all other Lisps.
+The file "Solution.html" is the official definition for all other Lisps.
 If it's unclear what something means, look at SRFI-105 and SRFI-110
 for clarification, but note that the SRFIs include various
 Scheme-specific material (e.g., #!sweet is a Scheme-specific mechanism

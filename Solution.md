@@ -44,7 +44,7 @@ We have three notation tiers, each of which builds on the previous one. Curly-in
     - A \\\\ (aka SPLIT) starts a new line at the current indentation.  If it's immediately after indentation (aka GROUP in that case), it represents no symbol at all (at that indentation) - this is useful for lists of lists.
     - A $ (aka SUBLIST) in the middle of list restarts list processing; the right-hand-side (including its sub-blocks) is the last parameter of the left-hand side (of just that line). If there's no left-hand-side, the right-hand-side is put in a list.
     - A leading traditional abbreviation (quote, comma, backquote, or comma-at) or datum comment "#;", at the beginning of a sweet-expression line, and followed by space or tab or end-of-line, is that operator applied to the following sweet-expression.   Otherwise, it applies to the next neoteric-expression.
-    - The markers &#8220;&lt;*&#8221; and &#8220;*&gt;&#8221; surround a <i>collecting list</i>, and <em>MUST</em> accept a list of 0 or more un-indented sweet-expressions.
+    - The markers &#8220;&lt;&#42;&#8221; and &#8220;&#42;&gt;&#8221; surround a <i>collecting list</i>, and <em>MUST</em> accept a list of 0 or more un-indented sweet-expressions.
     - The marker &#8220;$$$&#8221; is reserved for future use.
 
     Sweet-expression examples are shown below.  For Scheme, sweet-expressions are defined in [SRFI 110](http://srfi.schemers.org/srfi-110/).
@@ -55,7 +55,7 @@ Beginning an expression with indentation causes that line's indentation to be ig
 
 Individual implementations may have *additional* abbreviations that are useful for their semantics; our goal is to devise general abbreviations that others can build on if they choose.
 
-This is version 0.9.2 of our notation specification.  We aren't expecting major changes from here on, but there is certainly the possibility of small refinements.
+This is version 1.0 of our notation specification.
 
 
 Quick Examples
@@ -152,4 +152,12 @@ Also, thanks to the many other mailing list participants who provided feedback.
 Trying them out
 =============
 
-See the [Tutorial] page for information on how you can try out these notations.  We think you'll like them.
+Read the [Install-howto] to learn how to install the software.
+
+Then look one of our two tutorials:
+
+* [Scheme-tutorial] - Scheme-focused tutorial
+* [Common-lisp-tutorial] - Common-Lisp-focused tutorial
+
+We think you'll like these notations once you try them.
+

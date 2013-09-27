@@ -1,0 +1,10 @@
+# This shows how to create a Makefile that can automatically
+# convert .sscm (sweet-Scheme) into Scheme, using make "pattern rules".
+# Just put this into your "Makefile":
+
+UNSWEETEN = unsweeten
+
+%.scm : %.sscm
+	$(UNSWEETEN) < $< > $@
+
+
