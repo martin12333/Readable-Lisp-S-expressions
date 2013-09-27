@@ -28,9 +28,11 @@ rm -fr "$TDIR/"
 mkdir -p "$TDIR/"
 
 echo
+echo "Processing..."
 for raw_item in "$@" ; do
+  printf '%s' "$raw_item: "
+
   item="${raw_item%.md}"
-  echo "Processing $item"
 
   # We'll get data from SourceForge using its REST API, as documented here:
   # https://sourceforge.net/p/forge/documentation/Allura%20API/
@@ -49,9 +51,9 @@ for raw_item in "$@" ; do
   # If the files differ, we update:
   if cmp -s "$item.md" "$TDIR/$item.md"
   then
-    echo "  unchanged $item"
+    echo 'unchanged'
   else
-    echo "  UPDATED $item"
+    echo 'UPDATED'
     mv "$TDIR/$item.md" "$item.md"
   fi
 done
