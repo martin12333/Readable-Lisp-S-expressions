@@ -237,6 +237,14 @@ AS_IF([is_enabled "$with_clisp"], [
   AC_SUBST([CLISP])
 ])
 
+# Warn if we don't have expect.
+AC_PATH_PROG([EXPECT_INSTALLED], [expect])
+AS_IF([is_empty "$EXPECT_INSTALLED"],[
+  echo >&2
+  AC_MSG_WARN([expect not found; please install expect, or many command-line tools will fail])
+  echo >&2
+])
+
 # Fail if we need python but it's not available.
 AS_CASE([$with_markdown_command], [python\ *], [
   AC_PATH_PROG([PYTHON_INSTALLED], [python])
