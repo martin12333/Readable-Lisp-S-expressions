@@ -108,7 +108,7 @@ Many people will want to install to the directory "/usr" (e.g., so commands will
     ./configure --prefix=/usr
 
 
-The tutorials describe some configure options. Here are some configure options you might want to use:
+The configure program supports many options, though most are only useful for special situations.  Here are some configure options you might want to use:
 
     --without-guile         disable support for guile
     --without-scsh          disable support for scsh
@@ -123,7 +123,9 @@ Now build the code, using:
 
     make
 
-You can optionally run the testsuite; it's a good idea (you need guile, clisp, a correctly-installed adsf, and expect to run the tests):
+This will do the minimum necessary, so depending on the circumstance it may appear to do nothing (and that's fine).
+
+You can optionally run the testsuite.  To run the tests you need guile, clisp, a correctly-installed asdf.  Run the testsuite by typing:
 
     make check
 
@@ -139,7 +141,7 @@ This will probably require privileges, so you may need to run "su" first or use 
 
     sudo make install
 
-If you're installing the Common Lisp libraries to the system-wide locations, and your system uses the "common-lisp-controller" (including Debian, Ubunutu, and Fedora), then there's one more step.  After you install a Common Lisp library to its final system-wide location, you need to tell common-lisp-controller that you've done so.  Note: If you set DESTDIR as part of "make install", this is *not* an installation to its final location.  This is also usually a privileged command, so again, you'll probably prefix this command with "sudo".  Anyway, just do this:
+If you're installing the Common Lisp libraries to the system-wide locations, and your system uses the "common-lisp-controller" (including Debian, Ubunutu, and Fedora), then there's one more step.  After you install a Common Lisp library to its final system-wide location, you need to tell common-lisp-controller that you've done so.  Note: If you set DESTDIR as part of "make install", this is *not* an installation to its final location.  This is also usually a privileged command, so again, you'll probably prefix this command with "sudo":
 
     register-common-lisp-source readable
 
