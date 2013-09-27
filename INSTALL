@@ -1,24 +1,16 @@
 Installation Instructions
 =========================
 
-This package follows the usual GNU package conventions.
-In most cases, if you installed from a tarball (.tar.gz file),
-you can install it using the usual commmands:
+STOP!
 
-    ./configure --prefix=/usr
-    make
-    make install
+For information about typical installation and use, see the file
+"Install-howto.md" or its HTML format version "Install-howto.html".
 
-For more about typical installation and use, see the README file
-and the hands-on tutorials in the files
-"Scheme-tutorial.html" and "Common-lisp-tutorial.html".
+You do *NOT* need this "INSTALL" file for normal situations.
+This "INSTALL" file provides more details about installation configuration
+for unusual situations, including:
 
-The command "./configure --help" gives an overview of configuration options.
-
-Below are more details about installation configuration for
-unusual situations, including:
-- Detailed descriptions of the advanced configure options specific
-  to this package.
+- Detailed descriptions of this package's advanced configure options
 - Make options
 - Guile site directory
 - Information about Common Lisp's ASDF.
@@ -26,11 +18,23 @@ unusual situations, including:
 
 Most people will *NOT* need the information below.
 
+Ok - still here?  Sorry about that, you must have some unusual
+issue that was not answered in the usual guide (Install-howto.md).
+Here's more information, in the hopes that it will help you.
+
 
 Special configure options
 =========================
 
-As with any autoconf-based system, "./configure --help" shows help.
+The configuration and build system follows the usual GNU Build System
+conventions, and is based on the autotools (e.g., autoconf and automake).
+
+You can rebuild the "configure" program using the usual:
+
+    autoreconf -i
+
+As with any autoconf-based system, once "configure" exists, you can run
+"./configure --help" to show help.
 
 The "configure" program tries to auto-detect what to do, but
 various specialized configuration options can override its decisions.

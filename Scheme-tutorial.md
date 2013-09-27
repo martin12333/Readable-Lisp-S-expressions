@@ -1,85 +1,19 @@
-This tutorial describes shows how to download and use free-libre/open source software that makes Lisp notation more readable.
+This tutorial describes how to use free-libre/open source software that makes Lisp notation more readable.
 
 This tutorial focuses on Scheme; if you're using Common Lisp, look at the [Common-lisp-tutorial].  You don't need to be familiar with Lisp-like languages to understand this tutorial, though it helps.
 
-Historically Lisp-derived systems represent programs as *s-expressions*, where an operation and its parameters is surrounded by parentheses in that order.  Thus, “2+3” is written as “(+ 2 3)” in a Lisp-derived language. Lisp notation is simple, but most people find it hard to read.  For more information on the problems of traditional Lisp notation, see [Problem].
+Historically Lisp-derived systems represent programs as *s-expressions*, where an operation and its parameters is surrounded by parentheses in that order.  Thus, “2+3” is written as “(+ 2 3)” in a Lisp-derived language. Lisp notation is simple, but most people find it hard to read.  For more information on the problems of traditional Lisp notation, see [Problem].
 
 To solve this, we've developed three tiers of notation, each building on the previous. These are simply new abbreviations for common cases; you can continue to use normally-formatted s-expressions wherever you want to. Curly-infix-expressions add infix notation; neoteric-expressions add the ability to write f(x) instead of (f x), and sweet-expressions deduce parentheses from indentation.  For more details, see [Solution].
 
-
-Getting our implementations
-===========================
-
-To try all the Scheme demos, make sure you have:
-
-*   [GNU Guile](http://www.gnu.org/software/guile/guile.html) (an implementation of the *Scheme* dialect of Lisp).  It's best if you use a guile with built-in readline support (normally it is), but the demos will work if it isn't.
-*   expect
-
-If you plan to use the development (not stable) version, you'll also need:
-
-*   git (to download the software)
-*   autoconf and automake (to build it)
-*   guile development libraries (e.g., "guile-devel" on Fedora and Cygwin)
-*   python (to generate some HTML files from markdown)
-
-You should be running on a POSIX system; if you use Windows, you may need to install Cygwin first. Any modern GNU/Linux system will do nicely.
-
-Download and prepare to configure
------------------------------------
-
-First, download the latest version of the demo and related files and get them ready to configure.  To get the current "stable" version, browse http://readable.sourceforge.net - click on "download files" - and download the current version.  Then uncompress and cd into them, e.g., at the command line:
-
-     tar xvzf readable-*.tar.gz
-     cd readable-*
-
-If you *instead* want to get the *development* version, do this instead:
-
-     git clone git://git.code.sf.net/p/readable/code readable-code
-     cd readable-code
-     git checkout develop  # Switch to "develop" branch
-     autoreconf -i
-
-If you use one of the rare systems that doesn't support /usr/bin/env, then you'll need to install one ("ln -s /bin/env /usr/bin/env") or change the first lines of some of the scripts.
-
-Configure
----------
-
-As usual, configure.  To accept all the defaults, installing to /usr/local:
-
-    ./configure
-
-If you want it to install to /usr (e.g., programs go in /usr/bin):
-
-    ./configure --prefix=/usr
-
-Build
-------
-
-Now build the code, using:
-
-    make
-
-Install
--------
-
-You actually don't have to install it to use it, if you just want to play with it.  But if you're using this software seriously, you should probably install it to "real" locations.  If you do, just type:
-
-    make install
-
-This will probably require privileges, so you may need to run "su" first or use sudo ("sudo make install") to get those privileges.
-
-The instructions below assume you haven't installed it.  If you *have* installed it, you don't need to include the "./" prefixes in the command names below.  Another way you can avoid the "./" prefixes is to include, in your PATH, the directory that contains these commands in your PATH. On a Bourne-like shell (the usual kind), you can do this to fix your path if your current directory has the commands:
-
-    export PATH="$(pwd)/$PATH"
-
-
+See [Install-howto] for how to download and install the software that this tutorial describes how to use.
 
 Using curly-infix-expressions (c-expressions)
 =============================================
 
 Let's first try out "curly-infix-expressions" (c-expressions). Let's use guile (a Scheme implementation) to do this.
 
-Just run "./curly-guile".
+To start, just run "./curly-guile" (if you installed the programs in their system locations, you can just run "curly-guile").
 
 Any of these three new notations (curly-infix-expressions, neoteric-expressions, and sweet-expressions) can also accept normally-formatted s-expressions. To demonstrate that, type at the command line:
 
@@ -101,7 +35,7 @@ There is intentionally no support for precedence between different operators. Wh
 
     {2 + {3 * 4}}
 
-You *can* "chain" the same infix operator, e.g., {2 + 3 + 4} is fine, and it will map to (+ 2 3 4). This works with comparisons, too, as long as the comparisons are the same.  Here's an example:
+You *can* "chain" the same infix operator, e.g., {2 + 3 + 4} is fine, and it will map to (+ 2 3 4). This works with comparisons, too, as long as the comparisons are the same.  Here's an example:
 
     {5 <= 7 <= 10}
 
@@ -133,7 +67,7 @@ We have reports that guile version 2.0's "autocompilation" feature can cause tro
 
 Neoteric-expressions support curly-infix-expressions, including normally-formatted s-expressions.  In addition, neoteric-expressions add special meanings to the grouping symbols ( ), [ ], and { } if they *immediately* follow an expression (instead of being separated by whitespace).  In particular, any e( ... ) is mapped to (e ...), and any e{ ... } is mapped to (e { ... }).
 
-This means that you can use more "traditional" functional notation, e.g., f(1 2) maps to (f 1 2). Just type in the name of a function, an opening "(", its parameters (space-separated), and a closing ")". Make sure that you do *not* have a space before the (prefixed) function name and the following "(". For example, type this in:
+This means that you can use more "traditional" functional notation, e.g., f(1 2) maps to (f 1 2). Just type in the name of a function, an opening "(", its parameters (space-separated), and a closing ")". Make sure that you do *not* have a space before the (prefixed) function name and the following "(". For example, type this in:
 
      cos(0)
 
@@ -147,7 +81,7 @@ You can nest them, just as you'd expect:
 
     substring("Hello" 1 string-length("xyz"))
 
-Using function name prefixes is a nice way of showing negation, e.g., -(x) computes the value of 0 - x. So while curly infix by itself doesn't handle prefix functions, neoteric-expressions can handle them nicely:
+Using function name prefixes is a nice way of showing negation, e.g., -(x) computes the value of 0 - x. So while curly infix by itself doesn't handle prefix functions, neoteric-expressions can handle them nicely:
 
     define(n 12)
     {-(n) / 2}
@@ -160,15 +94,15 @@ This works with zero parameters, too; if you have a command called "help" (guile
 
     help()
 
-It's actually quite common to have a function call pass one parameter, where the parameter is calculated using infix notation, so there's a rule to simplify this common case. You can use f{x + 1}, which maps to (f {x + 1}) which then maps to (f (+ x 1)). This makes it easy to pass a single parameter which happens to be calculated using infix. For example, factorial{n - 1} maps to factorial({n - 1}) which maps to (factorial (- n 1)).  You can try out this simple example:
+It's actually quite common to have a function call pass one parameter, where the parameter is calculated using infix notation, so there's a rule to simplify this common case. You can use f{x + 1}, which maps to (f {x + 1}) which then maps to (f (+ x 1)). This makes it easy to pass a single parameter which happens to be calculated using infix. For example, factorial{n - 1} maps to factorial({n - 1}) which maps to (factorial (- n 1)).  You can try out this simple example:
 
      not{#t and #f}
 
 Just like traditional s-expressions, spaces separate parameters, so it's *important* that there be *no* space between the function name and the opening "(". Since spaces separate parameters, a space between the function name and the opening "(" would create two parameters instead of a single function call. The same is basically true for traditional s-expressions, too; (a b) and (ab) are not the same thing.
 
-Here's the real rule: in neoteric-expressions, e(...) maps to (e ...), e{} maps to (e), other e{...} maps to (e {...}), e[ ... ] maps to ($bracket-apply$ e), and (. e) maps to e. The "$bracket-apply$" is so that you can write a macro to access arrays and other mappings.  The (. e) rule lets you escape expressions (e.g., for the sweet-expressions we'll describe next).  Note that "neoteric-expressions" used be called "modern-expressions"; you may see some older documents using that name.
+Here's the real rule: in neoteric-expressions, e(...) maps to (e ...), e{} maps to (e), other e{...} maps to (e {...}), e[ ... ] maps to ($bracket-apply$ e), and (. e) maps to e. The "$bracket-apply$" is so that you can write a macro to access arrays and other mappings.  The (. e) rule lets you escape expressions (e.g., for the sweet-expressions we'll describe next).  Note that "neoteric-expressions" used be called "modern-expressions"; you may see some older documents using that name.
 
-Normally, people and pretty-printers will format Lisp code so that parameters inside a list are *separated* by whitespace, e.g., (a b c), so it turns out that this change in interpretation doesn't change the meaning of typically-formatted modern Lisp code (and you can pretty-print code to fix it in the rare cases you need to). What's more, typical Lisp-aware text editors can often work with neoteric-expressions as they are, without change... so if you don't want to change the way you work, but have a somewhat more readable notation, neoteric-expressions can help. But we still have to do all that parentheses-balancing, which hinders readability. Sweet-expressions, our next stop, address this.  To get out of this demo, type *exit()* *Enter* or *control-D* *Enter*.
+Normally, people and pretty-printers will format Lisp code so that parameters inside a list are *separated* by whitespace, e.g., (a b c), so it turns out that this change in interpretation doesn't change the meaning of typically-formatted modern Lisp code (and you can pretty-print code to fix it in the rare cases you need to). What's more, typical Lisp-aware text editors can often work with neoteric-expressions as they are, without change... so if you don't want to change the way you work, but have a somewhat more readable notation, neoteric-expressions can help. But we still have to do all that parentheses-balancing, which hinders readability. Sweet-expressions, our next stop, address this.  To get out of this demo, type *exit()* *Enter* or *control-D* *Enter*.
 
 
 Using Sweet-expressions (t-expressions) 

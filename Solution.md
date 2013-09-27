@@ -152,10 +152,12 @@ Also, thanks to the many other mailing list participants who provided feedback.
 Trying them out
 =============
 
-We have two tutorials so you can try them out:
+Read the [Install-howto] to learn how to install the software.
+
+Then look one of our two tutorials:
 
 * [Scheme-tutorial] - Scheme-focused tutorial
 * [Common-lisp-tutorial] - Common-Lisp-focused tutorial
 
-We think you'll like them once you try them.
+We think you'll like these notations once you try them.
 

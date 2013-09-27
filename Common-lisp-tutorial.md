@@ -6,128 +6,18 @@ Historically Lisp-derived systems represent programs as *s-expressions*, where a
 
 To solve this, we've developed three tiers of notation, each building on the previous. These are simply new abbreviations for common cases; you can continue to use normally-formatted s-expressions wherever you want to. Curly-infix-expressions add infix notation; neoteric-expressions add the ability to write f(x) instead of (f x), and sweet-expressions deduce parentheses from indentation.  For more details, see [Solution].
 
-
-Getting our implementations
-===========================
-
-We've created implementations of curly infix, neoteric-expressions, and sweet-expressions as a Common Lisp library called "readable".
-
-To try the Common Lisp demos, make sure you have a Common Lisp implementation.  We primarily use clisp and SBCL, but it should port to any implementation.  (If it doesn't, please help us fix that!)  For tutorial purposes, we'll focus on using clisp.
-
-If you plan to use the development (not stable) version, you'll also need:
-
-*   git (to download the software)
-*   autoconf and automake (to build it)
-*   python (to generate some HTML files from markdown)
-
-The following instructions assume you're using a POSIX system (such as Linux, MacOS, *BSDs, and so on).  If you use Windows, install Cygwin first. Any modern GNU/Linux system will do nicely.
-
-
-ASDF
-----
-
-You'll need Another System Definition Facility (asdf), which is usually included in your Common Lisp implementation.  Many Linux distributions include asdf; just install package "cl-asdf".  (Fedora, Debian, and Ubuntu are all known to include cl-asdf, and there are probably more that do as well.)  If you don't already have asdf, you can download it here:  http://common-lisp.net/project/asdf/
-
-ASDF must be configured so it can find the "readable" library once the library is installed.  So install the library in a place where ASDF will currently find it, or modify the ASDF configuration so ASDF can find the library.  You might want to modify the ASDF system configuration file "/etc/common-lisp/source-registry.conf" so that it can find files in common locations; here are plausible contents of "/etc/common-lisp/source-registry.conf":
-
-    (:source-registry
-      (:tree (:home "common-lisp")) ;; expands to e.g., "$HOME/common-lisp/"
-      (:tree (:home "cl")) ;; expands to e.g., "$HOME/cl/"
-      (:tree "/usr/local/share/common-lisp/source/")
-      (:tree "/usr/share/common-lisp/source/")
-      :inherit-configuration)
-
-The clisp of Cygwin does not (as of this writing) include asdf.  If you are using clisp on Cygwin, one you way you can install it is to download the asdf.lisp file (from http://common-lisp.net/project/asdf/), then install asdf on clisp for this user by doing:
-
-    mkdir -p ~/lisp/asdf
-    cp asdf.lisp ~/lisp/asdf
-    clisp
-    (load (compile-file "asdf.lisp"))
-    (exit)
-
-If you use clisp and a Linux distribution's asdf package, follow the above
-steps, but instead of the "cp asdf.lisp ~/lisp/asdf" command do this:
-
-    ln -s /usr/share/common-lisp/source/cl-asdf/asdf.lisp ~/lisp/asdf/
-
-The "ln -s" means that updates to your Linux distribution's asdf will be used automagically.
-
-After this point '(require "asdf")' should work.
-
-
-Download and prepare to configure
------------------------------------
-
-First, download the latest version of the demo and related files and get them ready to configure.
-
-To get the current "stable" version, browse http://readable.sourceforge.net - click on "download files" - and download the current version.  Then uncompress and cd into them, e.g., at the command line:
-
-     tar xvzf readable-*.tar.gz
-     cd readable-*
-
-If you *instead* want to get the *development* version, do this instead:
-
-     git clone git://git.code.sf.net/p/readable/code readable-code
-     cd readable-code
-     git checkout develop  # Switch to "develop" branch
-     autoreconf -i
-
-If you use one of the rare systems that doesn't support /usr/bin/env, then you'll need to install one ("ln -s /bin/env /usr/bin/env") or change the first lines of some of the scripts.
-
-Configure
----------
-
-As usual, configure.  To accept all the defaults, installing to /usr/local:
-
-    ./configure
-
-If you want it to install to /usr (e.g., programs go in /usr/bin):
-
-    ./configure --prefix=/usr
-
-It will probably be easier for you if you set the prefix to /usr.  If you don't set the prefix, be sure that your ASDF installation will look there (as described above).  In particular, some ASDF installations do not look in /usr/local by default, so you'll probably want to either modify the ASDF configuration or change the configuration prefix.
-
-By default "configure" will try to build for everything the "readable" code supports.  Use "--without-guile" to disable guile support (e.g., if you don't have guile), and/or "--without-clisp" to disable clisp support.
-
-If you have unusual configuration needs, see the INSTALL file for more information.  The configuration tries to be relatively automatic, so most people shouldn't need it.
-
-
-Build
-------
-
-Now build the code, using:
-
-    make
-
-Install
--------
-
-You actually don't have to install it to use it, if you just want to play with it.  But if you're using this software seriously, you should probably install it to "real" locations.  If you do, just type:
-
-    make install
-
-If your system uses the "common-lisp-controller" (including Debian, Ubunutu, and Fedora), then run after its installation to its final location (a final-location installation does NOT set DESTDIR):
-
-    register-common-lisp-source readable
-
-Both of these commands will probably require privileges, so you may need to run "su" first or use sudo ("sudo make install") to get those privileges.
-
-It's a lot easier to use if you install it, but if you have not (or can't), the text below will explain how to work around that.
-
+See [Install-howto] for how to download and install the software that this tutorial describes how to use.
 
 Starting Common Lisp implementation and loading the readable library
 ====================================================================
 
 You need to run your Common Lisp implementation and load the "readable" library.
 
-If you've installed the "readable" library (as discussed above), and you already have the standard "ASDF" library system installed, this is easy.
-
-
 *First*, start up up your Common Lisp implementation.  E.G., for clisp, this is normally:
 
     clisp  # Use "sbcl" to run sbcl instead, obviously.
 
-However, if you didn't install the "readable" library source files in the standard central place (above), you will need to provide more information to both the Common Lisp implementation *and* the asdf library that we're about to use.  Basically, we need to tell them the directory name that the readable .lisp files are.  If you use clisp, your current directory ($PWD) contains the readable .lisp files, you can replace the "clisp" command with the following to do this (replace $PWD in both places for a different directory):
+But... if you didn't install the "readable" library source files in the standard central place, you will need to provide more information to both the Common Lisp implementation *and* the asdf library that we're about to use.  Basically, we need to tell them the directory name that the readable .lisp files are.  If you use clisp, your current directory ($PWD) contains the readable .lisp files, you can replace the "clisp" command with the following to do this (replace $PWD in both places for a different directory):
 
     CL_SOURCE_REGISTRY="$PWD" clisp -lp "$PWD"
 
@@ -136,7 +26,7 @@ However, if you didn't install the "readable" library source files in the standa
 
     (require "asdf")  ; Load "asdf", the standard system for loading libraries
 
-However, if you chose to not formally install asdf, you can put the asdf.lisp file somewhere, and use this to start up asdf instead:
+However, if you chose to not install asdf in the system location, you'll need to tell your Lisp where to get it:
 
     (load "/your/path/to/asdf.lisp")
 

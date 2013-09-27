@@ -90,82 +90,28 @@ See the COPYING.GPL file for those conditions.
 Getting, building, and installing
 =================================
 
-This software supports the usual GNU Build System conventions.
-The Scheme and Common Lisp tutorials explain how to build them in detail,
-but here are the steps that work for most people.
+Most people should get the current stable version.  To get it:
 
-1. Download/Prepare to configure
+* Use your web browser to view http://readable.sourceforge.net
+* Click on "Download files"
+* Download the current version.
 
-You need to get the files.  You've probably done that, since you're
-reading this, but here are the basics.
+You'll then need to uncompress it.  One way is via the command line:
 
-If you want to get the current stable version, go to:
+    tar xvzf readable-*.tar.gz
+    cd readable-*
 
-   http://readable.sourceforge.net
-   Click on "Download files", and download the current version.
-   Then uncompress them; one way is via the command line:
-     tar xvzf readable-*.tar.gz
-     cd readable-*
+Then follow the installation instructions in the file
+"Install-howto.md".  Stable versions also have a file named
+"Install-howto.html", which is exactly the same thing but in HTML format
+(use your web browser!).  The installation instructions are also at:
+https://sourceforge.net/p/readable/wiki/Install-howto/
 
-If you want to get the latest developmental version, you'll first
-need to install some additional software.   Specifically, you need
-git, autoconf (this includes autoreconf), and automake.
-Then download the files from our git code repository and
-prepare it to be configured:
+This software supports the usual GNU Build System conventions, and
+it should be easy to install on most systems.  If you have very
+exotic needs, the file INSTALL gives details on how to precisely control
+installation.
 
-   git clone git://git.code.sf.net/p/readable/code readable-code
-   cd readable-code
-   git checkout develop  # The "master" branch is for final releases
-   autoreconf -i
-
-You need at least one Lisp-based language installed.  We recommend installing
-guile, since several tools (including all the Scheme tools) require it.
-You might also install a Common Lisp implementation, such as clisp or sbcl.
-
-
-2. Configure
-
-As usual, configure.  To accept all the defaults, installing to
-the directory "/usr/local" (e.g., commands will be put in "/usr/local/bin"):
-
-    ./configure
-
-Many people will want to install to the directory "/usr"
-(e.g., so commands will be put in "/usr/bin").  To do this, instead run:
-
-    ./configure --prefix=/usr
-
-
-The tutorials describe some configure options.
-Here are some configure options you might want to use:
-
-    --without-guile         disable support for guile
-    --without-scsh          disable support for scsh
-    --without-common-lisp   disable support for Common Lisp
-
-If you need more information (to configure it for unusual circumstances),
-run "./configure --help" or read the file "INSTALL".
-
-
-
-3. Build ("make") / test
-
-Now build the code.
-
-    make
-
-You can optionally run the testsuite; it's a very good idea (you need
-guile, clisp, a correctly-installed adsf, and expect to run the tests):
-
-    make check
-
-4. Install ("make install")
-
-You actually don't *have* to install the software.  Just run
-"./unsweeten", "./sweeten", "./sweet-guile", and it'll work.
-But it's often more convenient to install.  Do this with:
-
-    make install
 
 
 Scheme Tutorial
