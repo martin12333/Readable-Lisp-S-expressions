@@ -1,5 +1,23 @@
+2013-09-26 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Clearer installation instructions.
+	* Placed normal installation instructions in a single
+	  separate file "Install-howto.md". Previously this was duplicated
+	  badly in multiple files (README and both tutorials).
+	  Technical details are still in INSTALL.
+	* Much better auto-detection of guile "site" directory (GUILE_SITE);
+	* it should now "just work" for both normal cases
+	   and with "make distcheck".
+	* New "make from-wiki" command makes it easier to keep mirrored
+	  markdown files up-to-date with the wiki.
+	* Fixed rpm .spec file error in the common lisp uninstall script.
+	* New configure options, such as "--without-scsh" and GUILE_SITE.
+	* Generate HTML from the markdown (.md) files, so that people can
+	  read the prettier-to-view HTML files.
+	* Include generated HTML from markdown in tarball and installation.
+	* Modify rpm .spec files to fix preun error in Common Lisp library.
+
 2013-09-10 David A. Wheeler <dwheeler, at, dwheeler.com>
-	* Includes the final verfsion of SRFI-110, which defines
+	* Includes the final version of SRFI-110, which defines
 	  sweet-expressions for Scheme.  The final SRFI-110 includes a
 	  few minor improvements (e.g., improved examples).
 	* Add "Makefile-demo" to tarball distribution
