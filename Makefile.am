@@ -351,7 +351,8 @@ dist_doc_DATA += README-ANTLR README-files
 
 # These the markdown (.md) files that are on the Wiki and we'll
 # duplicate in the distributed package:
-MDMIRRORS = Problem.md Solution.md Scheme-tutorial.md Common-lisp-tutorial.md
+MDMIRRORS = Problem.md Solution.md Install-howto.md \
+            Scheme-tutorial.md Common-lisp-tutorial.md
 
 # These are stub files that link to the website:
 MDSTUBS = Rationale.md Retort.md Examples.md
