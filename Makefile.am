@@ -349,12 +349,15 @@ dist_doc_DATA = README COPYING COPYING.GPL AUTHORS ChangeLog
 
 dist_doc_DATA += README-ANTLR README-files
 
+# These the markdown (.md) files that are on the Wiki and we'll
+# duplicate in the distributed package:
+MDMIRRORS = Problem.md Solution.md Scheme-tutorial.md Common-lisp-tutorial.md
+
 # These are stub files that link to the website:
 MDSTUBS = Rationale.md Retort.md Examples.md
 
 # These are all markdown (.md) files, including stubs:
-MDFILES = Problem.md Solution.md Scheme-tutorial.md Common-lisp-tutorial.md \
-          $(MDSTUBS)
+MDFILES = $(MDMIRRORS) $(MDSTUBS)
 
 dist_doc_DATA += $(MDFILES)
 
@@ -507,5 +510,9 @@ rpm: $(DIST_ARCHIVES) $(SPECFILE)
 	rpmbuild -ba $(SPECFILE)
 	-rpmlint $(SPECFILE)
 
-.PHONY: push pull test 110 rpm check-clisp check-guile
+
+from-wiki:
+	./get-from-wiki $(MDMIRRORS)
+
+.PHONY: push pull test 110 rpm check-clisp check-guile from-wiki
 
