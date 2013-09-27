@@ -511,7 +511,7 @@ rpm: $(DIST_ARCHIVES) $(SPECFILE)
 	rpmbuild -ba $(SPECFILE)
 	-rpmlint $(SPECFILE)
 
-
+# Extract possibly-updated .md files from the wiki:
 from-wiki:
 	./get-from-wiki $(MDMIRRORS)
 
