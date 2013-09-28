@@ -333,9 +333,6 @@ EXTRA_DIST += \
  examples/Makefile.example \
  examples/README
 
-# Similarly, distribute demo Makefile.
-EXTRA_DIST += Makefile-demo
-
 
 # Man pages
 dist_man_MANS =
@@ -355,6 +352,9 @@ endif WITH_CLISP
 # those who just have this file, it'd be useful to have SOME useful
 # information on what this code is trying to do and how to use it.
 dist_doc_DATA = README COPYING COPYING.GPL AUTHORS ChangeLog
+
+# Distribute demo Makefile as documentation, to help ease use.
+dist_doc_DATA += Makefile-demo
 
 dist_doc_DATA += README-ANTLR README-files
 
