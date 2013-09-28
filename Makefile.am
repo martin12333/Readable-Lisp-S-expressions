@@ -65,8 +65,10 @@ CLEANFILES =
 # Rules for translating markdown (.md) files into HTML.
 SUFFIXES = .md .html
 .md.html:
+	rm -f "$@"
 	( cat head.html ; $(MARKDOWN) $< ; cat tail.html ) | \
 	  sed -e "s/@TITLE@/"$*"/g" > $@
+	chmod a-w "$@"
 
 EXTRA_DIST += head.html tail.html markdown-urls
 EXTRA_DIST += markdown2.py
