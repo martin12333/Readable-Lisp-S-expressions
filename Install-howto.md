@@ -9,37 +9,61 @@ If you're completely impatient,  just install the packages guile, expect, clisp,
     sudo make install
     sudo register-common-lisp-source readable
 
-Below are more details about each of those steps, including various options you can use.  For example, you can choose to install just the Scheme (guile) implementation, or just the Common Lisp implementation.
+Below are more details about each of those steps, including various options you can use.  You don't need to install to system-wide locations (so you *could* skip the last two steps), though it's easier to use if you do.
+
+The "readable" software supports both Scheme (guile) and Common Lisp.  If you want, you can choose to install just the Scheme (guile) or just the Common Lisp portion.  In particular, if you don't already have an implementation of Common Lisp installed, you might try using the configuration option "--without-common-lisp"; setting up a usable Common Lisp system typically takes a few more steps as described below.
+
 
 Prerequisites
 =============
 
 You need a Unix-like (POSIX) system such as a Linux distribution, *BSD, MacOS, etc.  On Windows, just install and use Cygwin; that works very well.  Any modern GNU/Linux system should do nicely.
 
-The "readable" package includes support for both [GNU Guile](http://www.gnu.org/software/guile/guile.html) (a Scheme implementation) and Common Lisp.  The readable package also includes some optional support tools that internally use guile.
+The following packages are required or strongly recommended:
 
-Thus, you *must* install [GNU Guile](http://www.gnu.org/software/guile/guile.html) if you want to use Scheme, and we *recommend* that all users install guile so you can use some of our handy support tools.  You can use the configure option "--without-guile" if you don't want any of the Guile materials.
+*   *[GNU Guile](http://www.gnu.org/software/guile/guile.html)* (a Scheme implementation).  This is *required* if you want to use Scheme, and we *recommend* all users install guile because some of our handy support tools require guile.  If you interact with guile it's more convenient to use a guile with built-in readline support (most everything except Cygwin has this support), but this is optional.  You can use the configure option "--without-guile" if you don't want any of the Guile materials.
+*   *expect*.  This is *required* by several of the command-line interface tools, for both Scheme and Common Lisp.  It's not required for the underlying libraries (e.g., the Common Lisp library), though, so the installer will merely give you a warning if you don't have it.
 
-If you plan to use Scheme, you also need to install expect (in addition to guile).  If you use Scheme it's more convenient to use a guile with built-in readline support (most everything except Cygwin does), but this is optional.
+If you're going to use Common Lisp, you also need:
 
-If you plan to use Common Lisp, you *must* have an implementation of Common Lisp.  Both clisp and SBCL are known to work, but the library should work on any implementation of Common Lisp.  (If it doesn't, please help us fix that!)  The tutorial uses clisp, but it doesn't have to be clisp.  You'll also need ASDF, as discussed below.  You can use the configure option "--without-common-lisp" (discussed below) if you don't want Common Lisp, in which case you don't need to install or configure ASDF as described below.
+*   *clisp*, *sbcl*, or some other implementation of Common Lisp.   You need clisp if you want to run our self-test suite.  Cygwin includes a clisp package, so if you use Cygwin, that's the easiest option.  The "readable" software should work with any implementation of Common Lisp; please let us know if there's a problem.
+*   *[ASDF](http://common-lisp.net/project/asdf/)* (typically packaged with the name "cl-asdf").  You may need to configure ASDF, as discussed below.
 
+In most cases, users of Linux distributions can just use their package managers (such as yum, apt-get, or a GUI front-end for them) to easily install the relevant packages and any dependencies.
+
+Below are some additional tips about prerequisites for the development version, RHEL and CentOS, ASDF, using ASDF in clisp, and weird systems without /usr/bin/env.
 
 Prerequisites if you use the development version
 ------------------------------------------------
 
-If you plan to use the development (not stable) version, you'll also need:
+If you plan to use the development (not stable) version directly from our git repository, you'll also need:
 
-*   git (to download the software)
-*   autoconf and automake (to build it).  You need autoconf version 2.67 or later.
-*   guile development libraries (e.g., "guile-devel" on Fedora and Cygwin)
-*   python (to generate some HTML files from markdown)
+*   *git* (to download the software).
+*   *autoconf*. You need autoconf version 2.67 or later.
+*   *automake*.  You should use version 1.14 or later; we haven't tested older versions.
+*   *guile development libraries* (e.g., package "guile-devel" on Fedora and Cygwin).  These need to match the version of guile you're using.
+*   *python* (to generate some HTML files from markdown).  You need version 2.7+ or version 3+.
+
+Red Hat Enterprise Linux (RHEL), CentOS, and Scientific Linux
+-------------------------------------------------------------
+
+The standard repositories of [Red Hat Enterprise Linux (RHEL)](http://www.redhat.com/products/enterprise-linux/), [CentOS](http://www.centos.org/), and [Scientific Linux](https://www.scientificlinux.org/) do not, at the time of this writing, include many Lisp-related packages.  The easy solution is to add additional repositories with such packages to your list of repositories.  Here are three likely additional repositories specifically designed for RHEL and CentOS; see their sites for instructions on how to add them to your list of repositories:
+
+*   [RepoForge](http://repoforge.org/), formerly known as RPMForge.
+*   [Extra Packages for Enterprise Linux (EPEL)](http://fedoraproject.org/wiki/EPEL), a Fedora Special Interest Group that creates, maintains, and manages packages for Enterprise Linux.  EPEL packages are usually based on their Fedora counterparts and will never conflict with or replace packages in the base Enterprise Linux distributions.
+*   [ATRPMS](http://atrpms.net/)
+
+You should normally pick only *one* of these additional repositories; there are [reports that these additional repositories do not mix well](http://www.scientificlinuxforum.org/?showtopic=266).  Of the three, you might look at RepoForge first; many have had good success with its predecessor RPMForge.  But all three have their supporters and adherents.
+
+The [CentOS list of additional repositories](http://wiki.centos.org/AdditionalResources/Repositories) may be helpful, too.
+
+You can also download the source code to the various projects and build them yourself.  If you choose to download and build clisp from source code, you will probably need to first download and build [libsigsegv](http://www.gnu.org/software/libsigsegv/), since building clisp requires libsigsegv.
 
 
 ASDF
 ----
 
-If you use the Common Lisp implementation you'll need Another System Definition Facility (asdf), which is usually included in your implementation of Common Lisp.  Many Linux distributions include asdf; just install package "cl-asdf".  Fedora, Debian, and Ubuntu are all known to include asdf as the package "cl-asdf", and there are probably more that do as well.  If you don't already have asdf, you can download it here:  http://common-lisp.net/project/asdf/
+If you use the Common Lisp implementation you'll need Another System Definition Facility ([ASDF](http://common-lisp.net/project/asdf/)), which is usually included in your implementation of Common Lisp.  Many Linux distributions include ASDF; just install package "cl-asdf".  Fedora, Debian, and Ubuntu are all known to include ASDF as the package "cl-asdf", and others probably use the same name too.  If you don't already have ASDF, you can download it here:  http://common-lisp.net/project/asdf/
 
 ASDF must be configured so it can find the "readable" library once the library is installed.  So you must install the "readable" library in a place where ASDF will currently find it, or modify the ASDF configuration so ASDF can find the "readable" library.  If you set the "prefix" value to "/usr" during configuration, as discussed below, that happens automatically (ASDF normally looks there).
 
@@ -52,12 +76,12 @@ If you are going to install the software using a prefix other than "/usr", you m
       (:tree "/usr/share/common-lisp/source/")
       :inherit-configuration)
 
-clisp
------
+Using ASDF in clisp
+-------------------
 
-If you're using clisp (a Common Lisp implementation), you may need an additional step so that clisp can use asdf.
+If you're using clisp (a Common Lisp implementation), you may need an additional step so that clisp can use ASDF.
 
-The clisp of Cygwin does not (as of this writing) include asdf.  If you are using clisp on Cygwin, one you way you can install it is to download the asdf.lisp file (from http://common-lisp.net/project/asdf/), then install asdf on clisp for this user by doing:
+The clisp of Cygwin does not (as of this writing) include ASDF.  If you are using clisp on Cygwin, one you way you can install it is to download the asdf.lisp file (from http://common-lisp.net/project/asdf/), then install asdf on clisp for this user by doing:
 
     mkdir -p ~/lisp/asdf
     cp asdf.lisp ~/lisp/asdf
@@ -65,16 +89,23 @@ The clisp of Cygwin does not (as of this writing) include asdf.  If you are usin
     (load (compile-file "asdf.lisp"))
     (exit)
 
-If you use clisp and a Linux distribution's asdf package, follow the above steps, but instead of the "cp asdf.lisp ~/lisp/asdf" command do this:
+If you use clisp and a Linux distribution's ASDF package (usually named "cl-asdf"), follow the above steps, but instead of the "cp asdf.lisp ~/lisp/asdf" command do this:
 
     ln -s /usr/share/common-lisp/source/cl-asdf/asdf.lisp ~/lisp/asdf/
 
-The "ln -s" means that updates to your Linux distribution's asdf will be used automagically.
+The "ln -s" means that updates to your Linux distribution's ASDF will be used automagically.
 
-After this point '(require "asdf")' should work from clisp.
+After this point *(require "asdf")* should work from clisp.
 
 
+Weird systems without /usr/bin/env
+----------------------------------
 
+If you use one of the rare systems that doesn't have the command "/usr/bin/env", then you'll need to install one.  Presuming that you have "/bin/env", and that "sudo" will give you administrator privileges, the following will fix that problem:
+
+    sudo ln -s /bin/env /usr/bin/env
+
+You could also modify the relevant scripts... but fixing your system is the better solution.
 
 Download and uncompress
 =======================
@@ -92,8 +123,6 @@ If you *instead* want to get the *development* version instead of the stable ver
      cd readable-code
      git checkout develop  # Switch to "develop" branch
      autoreconf -i
-
-If you use one of the rare systems that doesn't support /usr/bin/env, then you'll need to install one ("sudo ln -s /bin/env /usr/bin/env") or change the first lines of some of the scripts.
 
 
 Configure
@@ -113,6 +142,10 @@ The configure program supports many options, though most are only useful for spe
     --without-guile         disable support for guile
     --without-scsh          disable support for scsh
     --without-common-lisp   disable support for Common Lisp
+
+In particular, if you won't be using Common Lisp, consider using the configure option "--without-common-lisp"... in which case you don't need to install and configure either ASDF or an implementation of Common Lisp.
+
+If you change your mind later about your configuration options, just re-run configure with your new configuration options, and then run the later steps as described below (in particular, "make" and "make install").
 
 If you need more information (to configure it for unusual circumstances), run "./configure --help" or read the file "INSTALL".
 
