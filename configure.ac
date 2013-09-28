@@ -237,6 +237,8 @@ AS_IF([is_enabled "$with_clisp"], [
   AC_SUBST([CLISP])
 ])
 
+AC_PROG_SED
+
 # Warn if we don't have expect.
 AC_PATH_PROG([EXPECT_INSTALLED], [expect])
 AS_IF([is_empty "$EXPECT_INSTALLED"],[
