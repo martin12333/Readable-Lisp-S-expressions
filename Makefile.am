@@ -153,7 +153,8 @@ generated_bin_scripts += bin/sweeten bin/unsweeten \
 # for testing and ease-of-use (so people don't have to install things).
 # These files are *not* directly installed.
 # It's the same list as above, with "." instead of "bin", but there doesn't
-# seem to be a standard way in make to change *prefixes*.
+# seem to be a standard way in make to change *prefixes* without using
+# GNU make extensions like $(NAME:...%...=...%...) or $(addprefix ...).
 noinst_SCRIPTS += ./sweeten ./unsweeten \
                   ./curly-guile ./neoteric-guile ./sweet-guile \
                   ./sweet-run ./diff-s-sweet
