@@ -47,7 +47,7 @@ If you plan to use the development (not stable) version directly from our git re
 Red Hat Enterprise Linux (RHEL), CentOS, and Scientific Linux
 -------------------------------------------------------------
 
-The standard repositories of [Red Hat Enterprise Linux (RHEL)](http://www.redhat.com/products/enterprise-linux/), [CentOS](http://www.centos.org/), and [Scientific Linux](https://www.scientificlinux.org/) do not, at the time of this writing, include many Lisp-related packages.  The easy solution is to add additional repositories with such packages to your list of repositories.  Here are three likely additional repositories specifically designed for RHEL and CentOS; see their sites for instructions on how to add them to your list of repositories:
+The standard repositories of [Red Hat Enterprise Linux (RHEL)](http://www.redhat.com/products/enterprise-linux/), [CentOS](http://www.centos.org/), and [Scientific Linux](http://www.scientificlinux.org/) do not, at the time of this writing, include many Lisp-related packages.  The easy solution is to add additional repositories with such packages to your list of repositories.  Here are three likely additional repositories specifically designed for RHEL and CentOS; see their sites for instructions on how to add them to your list of repositories:
 
 *   [RepoForge](http://repoforge.org/), formerly known as RPMForge.
 *   [Extra Packages for Enterprise Linux (EPEL)](http://fedoraproject.org/wiki/EPEL), a Fedora Special Interest Group that creates, maintains, and manages packages for Enterprise Linux.  EPEL packages are usually based on their Fedora counterparts and will never conflict with or replace packages in the base Enterprise Linux distributions.
@@ -141,13 +141,17 @@ The configure program supports many options, though most are only useful for spe
 
     --without-guile         disable support for guile
     --without-scsh          disable support for scsh
-    --without-common-lisp   disable support for Common Lisp
+    --without-clisp         disable support for clisp
+    --without-common-lisp   disable support for Common Lisp (including clisp and sbcl)
 
 In particular, if you won't be using Common Lisp, consider using the configure option "--without-common-lisp"... in which case you don't need to install and configure either ASDF or an implementation of Common Lisp.
 
+If you're using guile, configure should automagically figure out where to put libraries (aka the "guile site" directory).  If it gets the wrong value, you can add GUILE_SITE=directory_name on the configure command line.  See the INSTALL file for more details if you need them.
+
 If you change your mind later about your configuration options, just re-run configure with your new configuration options, and then run the later steps as described below (in particular, "make" and "make install").
 
-If you need more information (to configure it for unusual circumstances), run "./configure --help" or read the file "INSTALL".
+If you need more information (to configure it for unusual circumstances), run "./configure --help" or read the file "INSTALL".  The file "config.log" logs what configure does, which can help you if configuration doesn't work as expected.
+
 
 Build
 =====
