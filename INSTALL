@@ -3,17 +3,17 @@ Installation Instructions
 
 STOP!
 
-For information about typical installation and use, see the file
+For information about *typical* installation and use, see the file
 "Install-howto.md" or its HTML format version "Install-howto.html".
 
 You do *NOT* need this "INSTALL" file for normal situations.
+
 This "INSTALL" file provides more details about installation configuration
 for unusual situations, including:
 
 - Detailed descriptions of this package's advanced configure options
 - Make options
 - Guile site directory
-- Information about Common Lisp's ASDF.
 - The traditional installation instructions for any autoconf-based system.
 
 Most people will *NOT* need the information below.
@@ -22,6 +22,19 @@ Ok - still here?  Sorry about that, you must have some unusual
 issue that was not answered in the usual guide (Install-howto.md).
 Here's more information, in the hopes that it will help you.
 
+Rebuilding "configure"
+======================
+
+If you download the tarball, you should have a working configure.
+But if you download from the git repo, or for some reason you
+suspect the generated configure file isn't properly generated,
+you can rebuild the configure program.
+
+You can rebuild the "configure" program if you have
+a recent version of autoconf and automake, by using the usual command:
+
+    autoreconf -i
+
 
 Special configure options
 =========================
@@ -29,12 +42,10 @@ Special configure options
 The configuration and build system follows the usual GNU Build System
 conventions, and is based on the autotools (e.g., autoconf and automake).
 
-You can rebuild the "configure" program using the usual:
-
-    autoreconf -i
-
 As with any autoconf-based system, once "configure" exists, you can run
-"./configure --help" to show help.
+"./configure --help" to show help.  If you're confused about what
+it's decided to do or why, view the file "config.log" (which is a
+log file produced when "configure" runs).
 
 The "configure" program tries to auto-detect what to do, but
 various specialized configuration options can override its decisions.
@@ -143,34 +154,6 @@ Currently, the guile site directory is determined by this algorithm:
   it's not a bad guess.  As a sanity check, if guile reports a
   non-empty value, and the expansion of the calculated value is
   different, a warning is reported with some suggestions.
-
-
-Common Lisp ASDF
-================
-
-The Common Lisp implementation uses ASDF.
-
-ASDF must be configured so it can find the "readable" library
-once the library is installed.  So install the library in a place
-where ASDF will currently find it, or modify the ASDF configuration
-so ASDF can find the library.
-
-ASDF is normally configured so that, if you set the configuration "prefix"
-(see below) "/usr", everything will just work.
-However, if you do not set the prefix, the Common Lisp source files
-will normally be installed in "/usr/local/share/common-lisp/sources";
-this won't work if ASDF doesn't know to look there.
-
-You might want to modify the system configuration file
-"/etc/common-lisp/source-registry.conf" so that it can
-find files in common locations.  Here are plausible contents of
-"/etc/common-lisp/source-registry.conf":
-(:source-registry
-  (:tree (:home "common-lisp")) ;; expands to e.g., "$HOME/common-lisp/"
-  (:tree (:home "cl")) ;; expands to e.g., "$HOME/cl/"
-  (:tree "/usr/local/share/common-lisp/source/")
-  (:tree "/usr/share/common-lisp/source/")
-  :inherit-configuration)
 
 
 
