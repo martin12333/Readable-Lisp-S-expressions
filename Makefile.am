@@ -187,12 +187,9 @@ if WITH_CLISP
 dist_bin_SCRIPTS += sweet-clisp
 endif WITH_CLISP
 
-# Clean up generated scripts, but don't clean up *all* scripts,
-# since sweet-sbcl and sweet-clisp are not generated.
-CLEANFILES += $(generated_bin_scripts)
-CLEANFILES += $(noinst_SCRIPTS)
-
-
+# Clean up generated scripts. Don't clean up *all* scripts,
+# since some (like sweet-sbcl and sweet-clisp) are not generated.
+CLEANFILES += $(generated_bin_scripts) $(generated_local_scripts)
 
 # my-subst substitutes info, esp. the library directory, which is different
 # between the files in bin/ and the top-level directory.
