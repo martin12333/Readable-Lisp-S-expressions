@@ -463,8 +463,8 @@ push:
 pull:
 	git pull
 
-test:
-	make check
+# Use this so "make test" is just a synonym for "make check"
+test: check
 
 # SRFI-110 files to distribute.
 srfi_110_fileset = SRFI-110.html sweet.g src/kernel.scm output/scheme/Pair.java
