@@ -191,31 +191,12 @@ endif WITH_CLISP
 # since some (like sweet-sbcl and sweet-clisp) are not generated.
 CLEANFILES += $(generated_bin_scripts) $(generated_local_scripts)
 
-# my-subst substitutes info, esp. the library directory, which is different
-# between the files in bin/ and the top-level directory.
-# We could use autoconf's substitution engine, but that runs at *configure*
-# time, which is the wrong time; per the GNU guidelines you're supposed to
-# also be able to change the directory at the later *build* time.
-# So we create a trivial script to do the substitutions, and run it
-# at build time (e.g., "make" with no options).
-# The setting GUILE_READLINE_AVAILABLE is from autoconf-generated configure.
-# To add a substitution, add it here and in my-subst.
-
-MY_SUBST = $(srcdir)/my-subst "$(GUILE)" "$(GUILE_READLINE_AVAILABLE)"
-
-
-
 # For now, we'll just generate the "sweeten" script with traditional
 # Scheme.  Eventually probably want to put sweeten into the library.
 
 EXTRA_DIST += $(srcdir)/my-subst
 
 if WITH_GUILE
-bin/sweeten: src/sweeten.sscm ./unsweeten my-subst
-	$(MKDIR_P) bin
-	$(MY_SUBST) "$(readable_libdir)" "" \
-	   < "$(srcdir)/src/sweeten.sscm" | ./unsweeten > $@
-	chmod a+x $@
 
 # The following assumes that none of these values have "!" in them.
 # The [@] trick is described in "Autotools" by John Calcote,
@@ -224,7 +205,15 @@ generate_bin_command_sed = $(SED) \
   -e "s!@GUILE[@]!$(GUILE)!g" \
   -e "s!@GUILE_READLINE_AVAILABLE[@]!$(GUILE_READLINE_AVAILABLE)!g" \
   -e "s!@LIBRARY_DIRECTORY[@]!$(readable_libdir)!g" \
-  -e "s!@PATH_PREFIX[@]!!g"
+  -e "s!@PATH_PREFIX[@]!!g" \
+  -e "s|@WARNING_MESSAGE[@]|Generated automatically by my-subst, DO NOT EDIT!|g"
+
+generate_local_command_sed = $(SED) \
+  -e "s!@GUILE[@]!$(GUILE)!g" \
+  -e "s!@GUILE_READLINE_AVAILABLE[@]!$(GUILE_READLINE_AVAILABLE)!g" \
+  -e "s!@LIBRARY_DIRECTORY[@]!$${PWD}!g" \
+  -e "s!@PATH_PREFIX[@]!$(builddir)$(PATH_SEPARATOR)!g" \
+  -e "s|@WARNING_MESSAGE[@]|Generated automatically by my-subst, DO NOT EDIT!|g"
 
 # Unfortunately "$<" is only portable inside inference rules (see POSIX).
 # So, we'll use $? instead.  That means we *cannot* portably state
@@ -233,15 +222,21 @@ generate_bin_command_sed = $(SED) \
 
 generate_bin_command = \
   $(MKDIR_P) bin ; \
-  $(MY_SUBST) "$(readable_libdir)" "" < $?  > $@ ; \
+  $(generate_bin_command_sed) < $?  > $@ ; \
   chmod a+x $@
 
 generate_local_command = \
   $(RM) -f $@ ; \
-  $(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $?  > $@ ; \
+  $(generate_local_command_sed) < $?  > $@ ; \
   chmod a+x $@ ; \
   chmod a-w $@
 
+
+bin/sweeten: src/sweeten.sscm ./unsweeten
+	$(MKDIR_P) bin
+	$(generate_bin_command_sed) \
+	   < "$(srcdir)/src/sweeten.sscm" | ./unsweeten > $@
+	chmod a+x $@
 
 bin/unsweeten: src/unsweeten
 	$(generate_bin_command)
@@ -264,9 +259,9 @@ bin/sweet-run: src/sweet-run
 bin/diff-s-sweet: src/diff-s-sweet
 	$(generate_bin_command)
 
-./sweeten: src/sweeten.sscm ./unsweeten my-subst
+./sweeten: src/sweeten.sscm ./unsweeten
 	$(RM) -f $@
-	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" \
+	$(generate_local_command_sed) \
            < "$(srcdir)/src/sweeten.sscm" | ./unsweeten > $@
 	chmod a+x $@
 
@@ -274,9 +269,9 @@ bin/diff-s-sweet: src/diff-s-sweet
 # That way, once "./unsweeten" is created, we know that it's ready to use
 # (because its dependencies have been installed). Then other rules can just
 # depend on "./unsweeten", and they won't start until unsweeten is ready.
-./unsweeten: src/unsweeten my-subst readable/kernel.scm
+./unsweeten: src/unsweeten readable/kernel.scm
 	$(RM) -f $@
-	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" \
+	$(generate_local_command_sed) \
 	    < "$(srcdir)/src/unsweeten" > $@
 	chmod a+x $@
 	chmod a-w $@
