@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# NOTE: If you change this, run "make clean" to clean out old stuff
+
 GUILE="$1"
 GUILE_READLINE_AVAILABLE="$2"
 LIBRARY_DIRECTORY="$3"

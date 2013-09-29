@@ -216,30 +216,35 @@ bin/sweeten: src/sweeten.sscm ./unsweeten my-subst
 	   < "$(srcdir)/src/sweeten.sscm" | ./unsweeten > $@
 	chmod a+x $@
 
+# Unfortunately "$<" is only portable inside inference rules.
+# So, we'll use $? instead.  That means we *cannot* portably state
+# that these generation commands depend on my_subst.  If you change
+# my_subst, you'll have to "make clean" to ensure that they get regenerated.
+
 generate_bin_command = \
   $(MKDIR_P) bin ; \
-  $(MY_SUBST) "$(readable_libdir)" "" < $<  > $@ ; \
+  $(MY_SUBST) "$(readable_libdir)" "" < $?  > $@ ; \
   chmod a+x $@
 
-bin/unsweeten: src/unsweeten my-subst
+bin/unsweeten: src/unsweeten
 	$(generate_bin_command)
 
-bin/curly-guile: src/curly-guile my-subst
+bin/curly-guile: src/curly-guile
 	$(generate_bin_command)
 
-bin/neoteric-guile: src/neoteric-guile my-subst
+bin/neoteric-guile: src/neoteric-guile
 	$(generate_bin_command)
 
-bin/sweet-guile: src/sweet-guile my-subst
+bin/sweet-guile: src/sweet-guile
 	$(generate_bin_command)
 
-bin/sweet-scsh: src/sweet-scsh my-subst
+bin/sweet-scsh: src/sweet-scsh
 	$(generate_bin_command)
 
-bin/sweet-run: src/sweet-run my-subst
+bin/sweet-run: src/sweet-run
 	$(generate_bin_command)
 
-bin/diff-s-sweet: src/diff-s-sweet my-subst
+bin/diff-s-sweet: src/diff-s-sweet
 	$(generate_bin_command)
 
 ./sweeten: src/sweeten.sscm ./unsweeten my-subst
