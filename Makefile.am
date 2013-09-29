@@ -167,7 +167,7 @@ endif WITH_GUILE
 
 # These bindir scripts are generated at build time, so they're not distributed
 # (there's no dist_ prefix for bin_SCRIPTS here):
-bin_SCRIPTS += $(generated_scripts)
+bin_SCRIPTS += $(generated_bin_scripts)
 
 if WITH_COMMON_LISP
 # These are scripts that are just copied straight.
