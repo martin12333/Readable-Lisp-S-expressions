@@ -247,6 +247,10 @@ AS_IF([is_empty "$EXPECT_INSTALLED"],[
   echo >&2
 ])
 
+AC_CHECK_FILE([/usr/bin/env], [], [
+  AC_MSG_ERROR([No /usr/bin/env available.])
+])
+
 # Fail if we need python but it's not available.
 AS_CASE([$with_markdown_command], [python\ *], [
   AC_PATH_PROG([PYTHON_INSTALLED], [python])
