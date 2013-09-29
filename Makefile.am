@@ -212,15 +212,22 @@ bin/sweeten: src/sweeten.sscm ./unsweeten my-subst
 	   < "$(srcdir)/src/sweeten.sscm" | ./unsweeten > $@
 	chmod a+x $@
 
-# Unfortunately "$<" is only portable inside inference rules.
+# Unfortunately "$<" is only portable inside inference rules (see POSIX).
 # So, we'll use $? instead.  That means we *cannot* portably state
-# that these generation commands depend on my_subst.  If you change
+# that these generation commands depend on my_subst.  Result; If you change
 # my_subst, you'll have to "make clean" to ensure that they get regenerated.
 
 generate_bin_command = \
   $(MKDIR_P) bin ; \
   $(MY_SUBST) "$(readable_libdir)" "" < $?  > $@ ; \
   chmod a+x $@
+
+generate_local_command = \
+  $(RM) -f $@ ; \
+  $(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $?  > $@ ; \
+  chmod a+x $@ ; \
+  chmod a-w $@
+
 
 bin/unsweeten: src/unsweeten
 	$(generate_bin_command)
@@ -249,12 +256,6 @@ bin/diff-s-sweet: src/diff-s-sweet
            < "$(srcdir)/src/sweeten.sscm" | ./unsweeten > $@
 	chmod a+x $@
 
-generate_local_command = \
-  $(RM) -f $@ ; \
-  $(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@ ; \
-  chmod a+x $@ ; \
-  chmod a-w $@
-
 # Make "unsweeten" depend on the underlying library.
 # That way, once "./unsweeten" is created, we know that it's ready to use
 # (because its dependencies have been installed). Then other rules can just
@@ -266,32 +267,27 @@ generate_local_command = \
 	chmod a+x $@
 	chmod a-w $@
 
-./curly-guile: src/curly-guile my-subst
+./curly-guile: src/curly-guile
 	$(generate_local_command)
 
-./neoteric-guile: src/neoteric-guile my-subst
+./neoteric-guile: src/neoteric-guile
 	$(generate_local_command)
 
-./sweet-guile: src/sweet-guile my-subst
+./sweet-guile: src/sweet-guile
 	$(generate_local_command)
 
-./sweet-scsh: src/sweet-scsh my-subst
+./sweet-scsh: src/sweet-scsh
 	$(generate_local_command)
 
-./sweet-run: src/sweet-run my-subst
+./sweet-run: src/sweet-run
 	$(generate_local_command)
 
-./diff-s-sweet: src/diff-s-sweet my-subst
+./diff-s-sweet: src/diff-s-sweet
 	$(generate_local_command)
 
-./sweeten.sscm: src/sweeten.sscm my-subst
+./sweeten.sscm: src/sweeten.sscm
 	$(generate_local_command)
 
-# Not directly used; useful if you want to generate JUST this file:
-,sweeten.scm : src/sweeten.sscm $(UNSWEETEN)
-	$(RM) -f $@
-	$(UNSWEETEN) $< > $@
-	chmod a-w $@
 endif WITH_GUILE
 
 # Implementation and test cases for ANTLR implementation
