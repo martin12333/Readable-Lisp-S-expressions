@@ -482,6 +482,7 @@ srfi_110_fileset = SRFI-110.html sweet.g src/kernel.scm output/scheme/Pair.java
 # These are useful for ensuring that changes to file generation mechanism
 # only produce expected changes.  The "$$" escapes shell variables for make.
 record-generated:
+	rm -fr rd/
 	$(MKDIR_P) rd/bin/
 	for file in $(generated_bin_scripts) $(generated_local_scripts) ; \
 	    do cp -p "$${file}" "rd/$${file}" ; done
