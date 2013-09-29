@@ -373,9 +373,6 @@ dist_doc_DATA += factorial.slisp
 # "sweeten.sscm" file as a worked example.
 dist_doc_DATA += src/sweeten.sscm
 
-# We no longer distribute these obsolete specs (see git if you want them).
-# dist_doc_DATA += spec-indent.txt spec-almkglor.txt
-
 # Distribute test drivers and testsuites.
 EXTRA_DIST += \
  tests/curly-infix-test-cl \
