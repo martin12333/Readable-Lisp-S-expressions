@@ -488,6 +488,19 @@ srfi_110_fileset = SRFI-110.html sweet.g src/kernel.scm output/scheme/Pair.java
 
 110: 110.tar.gz
 
+# Development test convenience targets.
+# The following record, and show diffs, of generated files.
+# These are useful for ensuring that changes to file generation mechanism
+# only produce expected changes.  The "$$" escapes shell variables for make.
+record-generated:
+	$(MKDIR_P) rd/bin/
+	for file in $(generated_bin_scripts) $(generated_local_scripts) ; \
+	    do cp -p "$${file}" "rd/$${file}" ; done
+
+diff-generated:
+	test -d rd/bin/
+	for file in $(generated_bin_scripts) $(generated_local_scripts) ; \
+	    do diff -u "$${file}" "rd/$${file}" ; done
 
 # The following creates an "rpm" package, using an rpm spec file.
 # It focuses on Fedora, but it should be a good starting point for
@@ -513,5 +526,6 @@ rpm: $(DIST_ARCHIVES) $(SPECFILE)
 from-wiki:
 	./get-from-wiki $(MDMIRRORS)
 
-.PHONY: push pull test 110 rpm check-clisp check-guile from-wiki
+.PHONY: push pull test 110 rpm check-clisp check-guile \
+        record-generated diff-generated from-wiki
 
