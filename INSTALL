@@ -105,6 +105,12 @@ GUILE_READLINE_AVAILABLE=yes|no
   to use or not use readline, skipping the configure check.
   If you set this to "yes" be sure that readline will actually be available!
 
+COMMON_LISP_LIB_DIR
+  Force value of Common Lisp library directory, usually
+  "$(datadir)/common-lisp".  This directory should have
+  "source" and "systems" subdirectories.  The Common Lisp library will
+  be stored in "$COMMON_LISP_LIB_DIR/source/readable".
+
 
 
 Make options
@@ -112,13 +118,8 @@ Make options
 
 As usual, you can override values used by "make" as parameters.
 If you separately run "make" and "make install", you normally need to use
-the same parameters each time.
-
-A plausible value to override is "common_lispdir", the directory
-used for common lisp information.  This defaults to "$(datadir)/common-lisp".
-You could override this, e.g.:
-  make common_lispdir=/usr/share/common-lisp
-  make common_lispdir=/usr/share/common-lisp install
+the same parameters each time.  The exception (as usual) is DESTDIR;
+you can set DESTDIR just when you "make install" the program.
 
 
 Guile site directory

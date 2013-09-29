@@ -95,7 +95,7 @@ endif WITH_GUILE
 
 CLISP = @CLISP@
 
-common_lispdir = $(datadir)/common-lisp
+common_lispdir = @COMMON_LISP_LIB_DIR@
 common_lisp_sourcedir = $(common_lispdir)/source
 common_lisp_source_pkgdir = $(common_lisp_sourcedir)/readable
 common_lisp_systemsdir = $(common_lispdir)/systems

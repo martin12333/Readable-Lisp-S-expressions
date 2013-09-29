@@ -101,6 +101,8 @@ AC_ARG_VAR([GUILE_SITE],
            [Force Guile site directory, usually /usr/share/guile/site])
 AC_ARG_VAR([GUILE_READLINE_AVAILABLE],
            [Force readline to be used or avoided in guile])
+AC_ARG_VAR([COMMON_LISP_LIB_DIR],
+           [Force value of Common Lisp library directory, usually $(datadir)/common-lisp])
 
 # Sanity-check argument values.
 AS_IF([yes_or_no "$with_guile"],[], [
@@ -213,6 +215,10 @@ AS_IF([is_enabled "$with_common_lisp"], [
   AC_PROG_LN_S
 ])
 
+AS_IF([is_empty "$COMMON_LISP_LIB_DIR"], [
+  COMMON_LISP_LIB_DIR='$(datadir)/common-lisp'
+])
+AC_SUBST([COMMON_LISP_LIB_DIR])
 
 AS_IF([is_enabled "$with_clisp"], [
   # Determine if "clisp" is available and has asdf properly installed.
