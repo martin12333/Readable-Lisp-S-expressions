@@ -191,12 +191,10 @@ endif WITH_CLISP
 # since some (like sweet-sbcl and sweet-clisp) are not generated.
 CLEANFILES += $(generated_bin_scripts) $(generated_local_scripts)
 
-# For now, we'll just generate the "sweeten" script with traditional
-# Scheme.  Eventually probably want to put sweeten into the library.
-
-EXTRA_DIST += $(srcdir)/my-subst
-
 if WITH_GUILE
+
+# Note: If you change how scripts are generated, run "make clean && make"
+# to forceably regenerate them.
 
 # The following assumes that none of these values have "!" in them.
 # The [@] trick is described in "Autotools" by John Calcote,
