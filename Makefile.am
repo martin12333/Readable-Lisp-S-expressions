@@ -217,6 +217,15 @@ bin/sweeten: src/sweeten.sscm ./unsweeten my-subst
 	   < "$(srcdir)/src/sweeten.sscm" | ./unsweeten > $@
 	chmod a+x $@
 
+# The following assumes that none of these values have "!" in them.
+# The [@] trick is described in "Autotools" by John Calcote,
+# "Emulating Autoconf Text Replacement Techniques", pg 297:
+generate_bin_command_sed = $(SED) \
+  -e "s!@GUILE[@]!$(GUILE)!g" \
+  -e "s!@GUILE_READLINE_AVAILABLE[@]!$(GUILE_READLINE_AVAILABLE)!g" \
+  -e "s!@LIBRARY_DIRECTORY[@]!$(readable_libdir)!g" \
+  -e "s!@PATH_PREFIX[@]!!g"
+
 # Unfortunately "$<" is only portable inside inference rules (see POSIX).
 # So, we'll use $? instead.  That means we *cannot* portably state
 # that these generation commands depend on my_subst.  Result; If you change
