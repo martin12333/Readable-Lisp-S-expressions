@@ -67,7 +67,7 @@ SUFFIXES = .md .html
 .md.html:
 	rm -f "$@"
 	( cat head.html ; $(MARKDOWN) $< ; cat tail.html ) | \
-	  $(SED) -e "s/@TITLE@/"$*"/g" > $@
+	  $(SED) -e "s/@TITLE[@]/"$*"/g" > $@
 	chmod a-w "$@"
 
 EXTRA_DIST += head.html tail.html markdown-urls
