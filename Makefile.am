@@ -202,7 +202,7 @@ if WITH_GUILE
 generate_some_command_sed = $(SED) \
   -e "s!@GUILE[@]!$(GUILE)!g" \
   -e "s!@GUILE_READLINE_AVAILABLE[@]!$(GUILE_READLINE_AVAILABLE)!g" \
-  -e "s|@WARNING_MESSAGE[@]|Generated automatically by my-subst, DO NOT EDIT!|g"
+  -e "s|@WARNING_MESSAGE[@]|Generated automatically, DO NOT EDIT!|g"
 
 generate_bin_command_sed = $(generate_some_command_sed) \
   -e "s!@LIBRARY_DIRECTORY[@]!$(readable_libdir)!g" \
