@@ -264,6 +264,11 @@ AS_CASE([$with_markdown_command], [python\ *], [
     AC_MSG_ERROR([python not found; install it, use --with-markdown-command=COMMAND, or use --without-markdown-command])
   ])])
 
+
+# Other automake substitutions that haven't been done yet:
+AC_SUBST([MARKDOWN], [$with_markdown_command])
+
+
 # Set up automake conditionals
 AM_CONDITIONAL([WITH_GUILE],       [is_enabled "$with_guile"])
 AM_CONDITIONAL([WITH_SCSH],        [is_enabled "$with_scsh"])
@@ -271,8 +276,12 @@ AM_CONDITIONAL([WITH_COMMON_LISP], [is_enabled "$with_common_lisp"])
 AM_CONDITIONAL([WITH_CLISP],       [is_enabled "$with_clisp"])
 AM_CONDITIONAL([ENABLE_HTML_FROM_MARKDOWN],
                                    [is_enabled "$with_markdown_command"])
-AC_SUBST([MARKDOWN], [$with_markdown_command])
-
+AM_CONDITIONAL([EVERYTHING_INCLUDED],
+  [is_enabled "$with_guile" && \
+   is_enabled "$with_scsh" && \
+   is_enabled "$with_common_lisp" && \
+   is_enabled "$with_clisp" && \
+   is_enabled "$with_markdown_command"])
 
 # Perhaps check for: (more) programs, libraries, header files, types,
 # structures, compiler characteristics, library functions, system services.

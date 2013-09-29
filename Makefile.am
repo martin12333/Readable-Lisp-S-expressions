@@ -452,6 +452,20 @@ else !WITH_GUILE
 check-guile:
 endif !WITH_GUILE
 
+if EVERYTHING_INCLUDED
+dist-hook:
+	@echo "Everything included in distribution."
+else !EVERYTHING_INCLUDED
+dist-hook:
+	@echo
+	@echo "FAILURE!!!"
+	@echo "Everything has NOT been included in the distribution."
+	@echo "This configuration excludes some components, so the distribution excludes them."
+	@echo "Re-run configure without excluding any components before distributing."
+	@echo
+	false
+endif !EVERYTHING_INCLUDED
+
 # Developer conveniences:
 # "make push" interpreted as "git push" when current branch is "develop".
 # "make pull" interpreted as "git pull"
