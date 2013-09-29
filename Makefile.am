@@ -216,40 +216,31 @@ bin/sweeten: src/sweeten.sscm ./unsweeten my-subst
 	   < "$(srcdir)/src/sweeten.sscm" | ./unsweeten > $@
 	chmod a+x $@
 
+generate_bin_command = \
+  $(MKDIR_P) bin ; \
+  $(MY_SUBST) "$(readable_libdir)" "" < $<  > $@ ; \
+  chmod a+x $@
+
 bin/unsweeten: src/unsweeten my-subst
-	$(MKDIR_P) bin
-	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
-	chmod a+x $@
+	$(generate_bin_command)
 
 bin/curly-guile: src/curly-guile my-subst
-	$(MKDIR_P) bin
-	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
-	chmod a+x $@
+	$(generate_bin_command)
 
 bin/neoteric-guile: src/neoteric-guile my-subst
-	$(MKDIR_P) bin
-	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
-	chmod a+x $@
+	$(generate_bin_command)
 
 bin/sweet-guile: src/sweet-guile my-subst
-	$(MKDIR_P) bin
-	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
-	chmod a+x $@
+	$(generate_bin_command)
 
 bin/sweet-scsh: src/sweet-scsh my-subst
-	$(MKDIR_P) bin
-	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
-	chmod a+x $@
+	$(generate_bin_command)
 
 bin/sweet-run: src/sweet-run my-subst
-	$(MKDIR_P) bin
-	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
-	chmod a+x $@
+	$(generate_bin_command)
 
 bin/diff-s-sweet: src/diff-s-sweet my-subst
-	$(MKDIR_P) bin
-	$(MY_SUBST) "$(readable_libdir)" "" < $<  > $@
-	chmod a+x $@
+	$(generate_bin_command)
 
 ./sweeten: src/sweeten.sscm ./unsweeten my-subst
 	$(RM) -f $@
