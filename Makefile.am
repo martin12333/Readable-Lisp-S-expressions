@@ -203,10 +203,6 @@ MY_SUBST = $(srcdir)/my-subst "$(GUILE)" "$(GUILE_READLINE_AVAILABLE)"
 # For now, we'll just generate the "sweeten" script with traditional
 # Scheme.  Eventually probably want to put sweeten into the library.
 
-# The repetition below is annoying.  Need to look up a better way to
-# do this.  If it weren't for my-subst, we could just do "cp -p $< $@".
-
-
 EXTRA_DIST += $(srcdir)/my-subst
 
 if WITH_GUILE
@@ -253,57 +249,43 @@ bin/diff-s-sweet: src/diff-s-sweet
            < "$(srcdir)/src/sweeten.sscm" | ./unsweeten > $@
 	chmod a+x $@
 
+generate_local_command = \
+  $(RM) -f $@ ; \
+  $(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@ ; \
+  chmod a+x $@ ; \
+  chmod a-w $@
+
 # Make "unsweeten" depend on the underlying library.
 # That way, once "./unsweeten" is created, we know that it's ready to use
 # (because its dependencies have been installed). Then other rules can just
 # depend on "./unsweeten", and they won't start until unsweeten is ready.
 ./unsweeten: src/unsweeten my-subst readable/kernel.scm
 	$(RM) -f $@
-	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
+	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" \
+	    < "$(srcdir)/src/unsweeten" > $@
 	chmod a+x $@
 	chmod a-w $@
 
 ./curly-guile: src/curly-guile my-subst
-	$(RM) -f $@
-	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
-	chmod a+x $@
-	chmod a-w $@
+	$(generate_local_command)
 
 ./neoteric-guile: src/neoteric-guile my-subst
-	$(RM) -f $@
-	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
-	chmod a+x $@
-	chmod a-w $@
+	$(generate_local_command)
 
 ./sweet-guile: src/sweet-guile my-subst
-	$(RM) -f $@
-	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
-	chmod a+x $@
-	chmod a-w $@
+	$(generate_local_command)
 
 ./sweet-scsh: src/sweet-scsh my-subst
-	$(RM) -f $@
-	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
-	chmod a+x $@
-	chmod a-w $@
+	$(generate_local_command)
 
 ./sweet-run: src/sweet-run my-subst
-	$(RM) -f $@
-	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
-	chmod a+x $@
-	chmod a-w $@
+	$(generate_local_command)
 
 ./diff-s-sweet: src/diff-s-sweet my-subst
-	$(RM) -f $@
-	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
-	chmod a+x $@
-	chmod a-w $@
+	$(generate_local_command)
 
 ./sweeten.sscm: src/sweeten.sscm my-subst
-	$(RM) -f $@
-	$(MY_SUBST) "" "$(builddir)$(PATH_SEPARATOR)" < $<  > $@
-	chmod a+x $@
-	chmod a-w $@
+	$(generate_local_command)
 
 # Not directly used; useful if you want to generate JUST this file:
 ,sweeten.scm : src/sweeten.sscm $(UNSWEETEN)
