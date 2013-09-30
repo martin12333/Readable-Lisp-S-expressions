@@ -158,7 +158,7 @@ AS_IF([is_enabled "$with_guile"],[
     #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00048.html
 
     # Query the guile interpreter directly to find guile site directory
-    AC_MSG_CHECKING([for reported Guile site directory])
+    AC_MSG_CHECKING([for reported GUILE_SITE directory])
     REPORTED_GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
     AC_MSG_RESULT([$REPORTED_GUILE_SITE])
 
@@ -177,13 +177,13 @@ AS_IF([is_enabled "$with_guile"],[
       # Use guile site value as reported by guile
       GUILE_SITE="$REPORTED_GUILE_SITE"
       # Add space at the end to line up with previous line
-      AC_MSG_CHECKING([using same Guile site directory  ])
+      AC_MSG_CHECKING([using same GUILE_SITE directory  ])
       AC_MSG_RESULT([$GUILE_SITE])
     ], [
       # Use, for GUILE_SITE, a calculated value based on $prefix.
       # This is necesary for "make distcheck" to work, for example.
       GUILE_SITE='${datarootdir}/guile/site'
-      AC_MSG_CHECKING([for calculated Guile site directory])
+      AC_MSG_CHECKING([for calculated GUILE_SITE directory])
       AC_MSG_RESULT([$GUILE_SITE])
     ])
   ])
@@ -215,9 +215,12 @@ AS_IF([is_enabled "$with_common_lisp"], [
   AC_PROG_LN_S
 ])
 
+
+AC_MSG_CHECKING([Common Lisp lib dir (COMMON_LISP_LIB_DIR)])
 AS_IF([is_empty "$COMMON_LISP_LIB_DIR"], [
   COMMON_LISP_LIB_DIR='$(datadir)/common-lisp'
 ])
+AC_MSG_RESULT([$COMMON_LISP_LIB_DIR])
 AC_SUBST([COMMON_LISP_LIB_DIR])
 
 AS_IF([is_enabled "$with_clisp"], [
