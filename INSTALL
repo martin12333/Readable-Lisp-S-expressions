@@ -45,7 +45,8 @@ conventions, and is based on the autotools (e.g., autoconf and automake).
 As with any autoconf-based system, once "configure" exists, you can run
 "./configure --help" to show help.  If you're confused about what
 it's decided to do or why, view the file "config.log" (which is a
-log file produced when "configure" runs).
+log file produced when "configure" runs).  You can change configuration
+options by just re-running "configure" with the new options.
 
 The "configure" program tries to auto-detect what to do, but
 various specialized configuration options can override its decisions.
@@ -118,8 +119,15 @@ Make options
 
 As usual, you can override values used by "make" as parameters.
 If you separately run "make" and "make install", you normally need to use
-the same parameters each time.  The exception (as usual) is DESTDIR;
+the same parameters each time.
+
+One exception (as usual) is DESTDIR;
 you can set DESTDIR just when you "make install" the program.
+
+You can incrementally install (re-install only changed files)
+through this command:
+
+    make install "INSTALL=${PWD}/build-aux/install-sh -C"
 
 
 Guile site directory
