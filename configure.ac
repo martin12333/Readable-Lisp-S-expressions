@@ -230,7 +230,7 @@ AS_IF([is_enabled "$with_clisp"], [
     AC_MSG_ERROR([clisp required but not found (--without-clisp to skip clisp+asdf checking)])
   ],[#else
     # check if asdf is installed with clisp.
-    AC_MSG_CHECKING([if (require :asdf) is available])
+    AC_MSG_CHECKING([if (require "asdf") is available])
     echo '(require "asdf")' > asdf-check.lisp
     [$CLISP_INSTALLED] asdf-check.lisp > /dev/null 2>&1
     AS_IF([test "$?" = 0],[#then
