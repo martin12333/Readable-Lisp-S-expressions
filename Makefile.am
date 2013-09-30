@@ -494,12 +494,12 @@ dist-hook:
 else !EVERYTHING_INCLUDED
 dist-hook:
 	@echo
-	@echo "FAILURE!!!"
+	@echo "WARNING!!! WARNING!!! WARNING!!!"
 	@echo "Everything has NOT been included in the distribution."
 	@echo "This configuration excludes some components, so the distribution excludes them."
 	@echo "Re-run configure without excluding any components before distributing."
+	@echo "WARNING!!! WARNING!!! WARNING!!!"
 	@echo
-	false
 endif !EVERYTHING_INCLUDED
 
 
