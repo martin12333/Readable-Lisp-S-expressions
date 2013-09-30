@@ -276,12 +276,6 @@ AM_CONDITIONAL([WITH_COMMON_LISP], [is_enabled "$with_common_lisp"])
 AM_CONDITIONAL([WITH_CLISP],       [is_enabled "$with_clisp"])
 AM_CONDITIONAL([ENABLE_HTML_FROM_MARKDOWN],
                                    [is_enabled "$with_markdown_command"])
-AM_CONDITIONAL([EVERYTHING_INCLUDED],
-  [is_enabled "$with_guile" && \
-   is_enabled "$with_scsh" && \
-   is_enabled "$with_common_lisp" && \
-   is_enabled "$with_clisp" && \
-   is_enabled "$with_markdown_command"])
 
 # Perhaps check for: (more) programs, libraries, header files, types,
 # structures, compiler characteristics, library functions, system services.

@@ -477,26 +477,6 @@ check-guile:
 endif !WITH_GUILE
 
 
-# ####################################################
-# Extras to control distribution ("make dist")
-# ####################################################
-
-
-# Sanity check for "make dist"
-if EVERYTHING_INCLUDED
-dist-hook:
-	@echo "Everything included in distribution."
-else !EVERYTHING_INCLUDED
-dist-hook:
-	@echo
-	@echo "WARNING!!! WARNING!!! WARNING!!!"
-	@echo "Everything has NOT been included in the distribution."
-	@echo "This configuration excludes some components, so the distribution excludes them."
-	@echo "Re-run configure without excluding any components before distributing."
-	@echo "WARNING!!! WARNING!!! WARNING!!!"
-	@echo
-endif !EVERYTHING_INCLUDED
-
 
 # ####################################################
 # Create RPM files
