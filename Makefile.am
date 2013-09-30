@@ -175,9 +175,7 @@ generate_local_command_sed = $(generate_some_command_sed) \
   -e "s!@PATH_PREFIX[@]!$(builddir)$(PATH_SEPARATOR)!g"
 
 # Unfortunately "$<" is only portable inside inference rules (see POSIX).
-# So, we'll use $? instead.  That means we *cannot* portably state
-# that these generation commands depend on my_subst.  Result; If you change
-# my_subst, you'll have to "make clean" to ensure that they get regenerated.
+# So, we'll use $? instead.
 
 generate_bin_command = \
   $(MKDIR_P) bin ; \
