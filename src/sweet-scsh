@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# If "unsweeten" isn't avaiable but is in ".", add "." to PATH.
+# If "unsweeten" isn't available but is in ".", add "." to PATH.
 
 location="`command -v unsweeten`"
 if [ -z "$location" ] ; then
