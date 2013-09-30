@@ -256,6 +256,8 @@ bin/sweet-run: src/sweet-run
 bin/diff-s-sweet: src/diff-s-sweet
 	$(generate_bin_command)
 
+# Rules for making local versions.
+
 ./sweeten: src/sweeten.sscm ./unsweeten
 	$(RM) -f $@
 	$(generate_local_command_sed) \
