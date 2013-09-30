@@ -254,7 +254,7 @@ AS_IF([is_empty "$EXPECT_INSTALLED"],[
 ])
 
 AC_CHECK_FILE([/usr/bin/env], [], [
-  AC_MSG_ERROR([No /usr/bin/env available.])
+  AC_MSG_ERROR([No /usr/bin/env available. Perhaps run sudo ln -s /bin/env /usr/bin/env])
 ])
 
 # Fail if we need python but it's not available.
