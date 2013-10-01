@@ -29,8 +29,11 @@ ACLOCAL_AMFLAGS = -I m4 --install
 EXTRA_DIST = m4/DUMMY
 
 # GNU Standards "General Conventions for Makefiles" says set SHELL.  The
-# autoconf documentation section "The Make Macro SHELL" says do it this way:
+# autoconf documentation section "The Make Macro SHELL" says do it this way
+# (automake will do this automatically, but doing this here will force
+# automake to generate definitions in a more reasonable order):
 SHELL = @SHELL@
+
 
 # Guile original source files are in "src/".  At build time we create
 # the guile library files in "readable/" and user-executable scripts in
@@ -72,6 +75,11 @@ EXTRA_DIST += head.html tail.html markdown-urls
 EXTRA_DIST += markdown2.py
 
 
+# Below we generate scripts, and install some of them.
+# We id the sources in EXTRA_DIST, generated files in [dist_]bin_SCRIPTS,
+# and all generated files are in CLEANFILES;
+# see the automake documentation's section titled "Executable Scripts".
+
 # It's easier to vary what's installed, based on configuration options,
 # by setting some values to empty and using +=.
 
@@ -89,7 +97,7 @@ generated_local_scripts =
 # Guile library and scripts/tools that depend on it
 # ####################################################
 
-if WITH_GUILE
+if HAVE_GUILE
 readable_libdir = $(GUILE_SITE)/readable
 
 readable_lib_DATA = readable/kernel.scm
@@ -100,7 +108,7 @@ readable/kernel.scm: src/kernel.scm
 	cp -p "$(srcdir)/src/kernel.scm" readable/kernel.scm
 
 CLEANFILES += readable/kernel.scm
-endif WITH_GUILE
+endif HAVE_GUILE
 
 
 # Scripts that use Guile.
@@ -115,7 +123,7 @@ script_sources = src/sweeten.sscm src/unsweeten \
 
 EXTRA_DIST += $(script_sources)
 
-if WITH_GUILE
+if HAVE_GUILE
 
 # These are generated for eventual installation in the bindir:
 
@@ -253,7 +261,7 @@ noinst_SCRIPTS += $(generated_local_scripts)
 # since some (like sweet-sbcl and sweet-clisp) are not generated.
 CLEANFILES += $(generated_bin_scripts) $(generated_local_scripts)
 
-endif WITH_GUILE
+endif HAVE_GUILE
 
 
 # ####################################################
@@ -365,10 +373,10 @@ endif ENABLE_HTML_FROM_MARKDOWN
 # Man pages
 dist_man_MANS =
 
-if WITH_GUILE
+if HAVE_GUILE
 dist_man_MANS += man/unsweeten.1 man/sweet-run.1 \
                  man/sweeten.1 man/diff-s-sweet.1
-endif WITH_GUILE
+endif HAVE_GUILE
 if WITH_CLISP
 dist_man_MANS += man/sweet-clisp.1
 endif WITH_CLISP
@@ -439,7 +447,7 @@ else !WITH_CLISP
 check-clisp:
 endif !WITH_CLISP
 
-if WITH_GUILE
+if HAVE_GUILE
 check-guile: readable/kernel.scm my-realpath
 	@echo "Starting tests for GUILE"
 	@echo "About to run guile curly-infix tests"
@@ -472,9 +480,9 @@ check-guile: readable/kernel.scm my-realpath
 	@echo "About to run roundtrip-test"
 	PATH="$(builddir):$(srcdir)/tests:${PATH}" \
 	     $(srcdir)/tests/roundtrip-test $(srcdir)/tests/roundtrip-testsuite
-else !WITH_GUILE
+else !HAVE_GUILE
 check-guile:
-endif !WITH_GUILE
+endif !HAVE_GUILE
 
 
 

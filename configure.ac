@@ -24,6 +24,16 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+
+# This "configure" script tries to "automagically" configure the software
+# for the user's system.
+# In general we will try to generate a "configure" that will
+# "work with what we have" but warn if major components aren't available.
+# We'll check for file existence for convenience (most users will configure
+# for their OWN system).  We'll also provide override mechanisms to skip that,
+# to support generation for other systems (cross-"compiling").
+
+
 # Version numbers generally follow the Semantic Versioning convention
 # (MAJOR.MINOR.PATCH) as documented here: http://semver.org/
 # Pre-release values DO NOT INCLUDE a hyphen,
@@ -35,6 +45,10 @@
 # readable.asd, and the line below:
 AC_INIT([readable], [0.9.4], [dwheeler@dwheeler.com],
         [readable], [http://readable.sourceforge.net/])
+AC_COPYRIGHT(
+[[Copyright (C) 2007-2013 by David A. Wheeler and Alan Manuel K. Gloria.
+This software is Free/libre/open source software and is
+released under the "MIT" license.]])
 
 # Force autoconf to be more recent.
 AC_PREREQ([2.67])
@@ -56,6 +70,10 @@ is_enabled () { # Return TRUE if $1 has non-no value; empty considered enabled
   test "x$1" != "xno"
 }
 
+is_permitted () { # Return TRUE if $1 has non-no value; empty = permitted
+  test "x$1" != "xno"
+}
+
 yes_or_no () { # Returns TRUE if $1 is "yes" or "no".
   if test "x$1" = "xyes" ; then
     true
@@ -66,11 +84,23 @@ yes_or_no () { # Returns TRUE if $1 is "yes" or "no".
   fi
 }
 
-# Create arguments --without-guile, --without-common-lisp, --without-clisp,
-# --with-markdown-command=VALUE / --without-markdown-command
+yes_no_empty () { # Returns TRUE if $1 is "yes", "no", or empty.
+  if test "x$1" = "xyes" ; then
+    true
+  elif test "x$1" = "xno" ; then
+    true
+  elif test "x$1" = "x" ; then
+    true
+  else
+    false
+  fi
+}
+
+
+# Create arguments for configure:
 AC_ARG_WITH([guile],
-  [AS_HELP_STRING([--without-guile], [disable support for guile])],
-  [], [with_guile=yes])  # By default, with_guile
+  [AS_HELP_STRING([--with-guile / --without-guile],
+                  [require/disable support for guile])])
 AC_ARG_WITH([scsh],
   [AS_HELP_STRING([--without-scsh], [disable support for scsh])],
   [], [with_scsh=yes])  # By default, with_scsh
@@ -96,17 +126,18 @@ AC_ARG_ENABLE([reported-guile-site],
   [reported_guile_site=${enableval}], [reported_guile_site=no])
 
 # Special environment variables/command-line variables
-AC_ARG_VAR([GUILE], [Path to guile executable])
+AC_ARG_VAR([GUILE], [Command to run guile])
 AC_ARG_VAR([GUILE_SITE],
            [Force Guile site directory, usually /usr/share/guile/site])
 AC_ARG_VAR([GUILE_READLINE_AVAILABLE],
            [Force readline to be used or avoided in guile])
 AC_ARG_VAR([COMMON_LISP_LIB_DIR],
            [Force value of Common Lisp library directory, usually $(datadir)/common-lisp])
+AC_ARG_VAR([BIN_ENV], [Forced value for "env" program])
 
 # Sanity-check argument values.
-AS_IF([yes_or_no "$with_guile"],[], [
-  AC_MSG_ERROR([with-guile must be 'yes' or 'no'])
+AS_IF([yes_no_empty "$with_guile"],[], [
+  AC_MSG_ERROR([with-guile must be 'yes', 'no', or no value])
 ])
 AS_IF([yes_or_no "$with_scsh"],[], [
   AC_MSG_ERROR([with-scsh must be 'yes' or 'no'])
@@ -123,29 +154,39 @@ AS_IF([yes_or_no "$reported_guile_site"],[], [
 
 # Sanity-check combinations of argument values.
 AS_IF([test "$with_guile" = no -a "$with_common_lisp" = no],[
-  AC_MSG_ERROR([Both --without-guile and --without-common-lisp specified - nothing to install])
+  AC_MSG_WARN([Both --without-guile and --without-common-lisp specified - nothing to install])
 ])
 AS_IF([test "$with_common_lisp" = no -a "$with_clisp" = yes],[
   AC_MSG_ERROR([clisp requires common lisp])
 ])
 
 
-# Look for Guile and guile-related information if necessary.
-AS_IF([is_enabled "$with_guile"],[
 
+
+# Setup basics
+AC_PROG_INSTALL
+AC_PROG_MKDIR_P
+AC_PROG_SED
+
+AC_PATH_PROG([BIN_ENV], [env])
+AS_IF([is_empty "$BIN_ENV"], [
+  AC_MSG_ERROR([No executable "env" available.])])
+
+# For purposes of configuration, do we have a working guile?
+have_guile=no
+AS_IF([is_permitted "$with_guile"],[
+  AC_PATH_PROG([GUILE],[guile])
+  AS_IF([is_empty "$GUILE"], [], [have_guile=yes])
+])
+AM_CONDITIONAL([HAVE_GUILE], [is_enabled "$have_guile"])
+
+AM_COND_IF([HAVE_GUILE], [
   # Guile provides autoconf macros in guile.m4, but they require guile-config.
   # Sadly, guile-config doesn't come standard on all "guile" packages on all
   # distros, so using guile-config would make our package harder to install.
   # Instead, we implement these searches directly, making our package
   # much easier to install.
   # Since we aren't linking into guile, this isn't hard to do.
-
-  # Look for the program "guile":
-  AS_IF([is_empty "$GUILE"],[#then
-    AC_PATH_PROG([GUILE],[guile])])
-  AS_IF([is_empty "$GUILE"],[#then
-    AC_MSG_ERROR([guile required but not found (--without-guile to disable most tools)])])
-  AC_SUBST([GUILE])
 
   # Determine Guile's "site" directory, where libraries are stored.
   AS_IF([is_empty "$GUILE_SITE"], [
@@ -207,6 +248,11 @@ AS_IF([is_enabled "$with_guile"],[
     AC_MSG_ERROR([GUILE_READLINE_AVAILABLE must be 'yes' or 'no'])
   ])
   AC_SUBST([GUILE_READLINE_AVAILABLE])
+], [
+  echo "DEBUG: HAVE_GUILE false"
+  AS_IF([test "x$with_guile" = "xyes"], 
+        [AC_MSG_ERROR([Guile required but unavailable.])],
+        [AC_MSG_WARN([GUILE NOT AVAILABLE.  Tools implemented with guile will not be available.])])
 ])
 
 
@@ -246,8 +292,6 @@ AS_IF([is_enabled "$with_clisp"], [
   AC_SUBST([CLISP])
 ])
 
-AC_PROG_SED
-
 # Warn if we don't have expect.
 AC_PATH_PROG([EXPECT_INSTALLED], [expect])
 AS_IF([is_empty "$EXPECT_INSTALLED"],[
@@ -256,15 +300,12 @@ AS_IF([is_empty "$EXPECT_INSTALLED"],[
   echo >&2
 ])
 
-AC_CHECK_FILE([/usr/bin/env], [], [
-  AC_MSG_ERROR([No /usr/bin/env available. Perhaps run sudo ln -s /bin/env /usr/bin/env])
-])
-
+# TODO: Use AM_PATH_PYTHON([2.7],,AC_MSG_WARN(...)); this sets PYTHON.
 # Fail if we need python but it's not available.
 AS_CASE([$with_markdown_command], [python\ *], [
   AC_PATH_PROG([PYTHON_INSTALLED], [python])
   AS_IF([is_empty "$PYTHON_INSTALLED"],[#then
-    AC_MSG_ERROR([python not found; install it, use --with-markdown-command=COMMAND, or use --without-markdown-command])
+    AC_MSG_WARN([python not found; install it, use --with-markdown-command=COMMAND, or use --without-markdown-command.  Otherwise we cannot regenerate HTML files from HTML])
   ])])
 
 
@@ -273,7 +314,6 @@ AC_SUBST([MARKDOWN], [$with_markdown_command])
 
 
 # Set up automake conditionals
-AM_CONDITIONAL([WITH_GUILE],       [is_enabled "$with_guile"])
 AM_CONDITIONAL([WITH_SCSH],        [is_enabled "$with_scsh"])
 AM_CONDITIONAL([WITH_COMMON_LISP], [is_enabled "$with_common_lisp"])
 AM_CONDITIONAL([WITH_CLISP],       [is_enabled "$with_clisp"])
