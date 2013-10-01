@@ -82,13 +82,6 @@ The specialized configure options are as follows:
   easily lead to outdated files getting distributed, and requiring
   python is usually not a problem.
 
---enable-reported-guile-site
-  Force use of guile's reported guile site directory, even in (rare)
-  cases where it normally would not be used.  This option has no
-  effect if GUILE_SITE is set (GUILE_SITE always takes precedence),
-  and it has no effect if guile reports an empty value for the
-  guile site directory (an empty value is not a valid directory).
-
 GUILE=pathname
   Use this guile executable instead of the one that would normally
   be found.
@@ -150,19 +143,10 @@ To deal with this, configure makes a guess that works nearly all the time,
 and provides control options to override wrong guesses.
 
 Currently, the guile site directory is determined by this algorithm:
-* If GUILE_SITE is set, use that.
-* If guile reports a non-empty value for the guile site directory:
-  + If the prefix doesn't end in "/_inst", use the value guile reports.
-    This will be what happens in nearly all cases.  Note that
-    "make distcheck" creates a prefix that ends in "/_inst".
-  + If option --enable-reported-guile-site is provided to configure,
-    use the value reported by guile.
-* Otherwise, use '${datarootdir}/guile/site' as the guile site;
-  this is called the "calculated value".
-  This value works inside "make distcheck", and in other circumstances
-  it's not a bad guess.  As a sanity check, if guile reports a
-  non-empty value, and the expansion of the calculated value is
-  different, a warning is reported with some suggestions.
+1. GUILE_SITE if set.  Otherwise,
+2. If prefix doesn't end in "/_inst" (a "make distcheck"), and
+   guile reports a non-empty value, use that value.  Otherwise,
+3. Use the value '${datarootdir}/guile/site'
 
 
 

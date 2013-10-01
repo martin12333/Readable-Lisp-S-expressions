@@ -121,10 +121,6 @@ AC_ARG_WITH([markdown-command],
   [],
   [with_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"])
 
-AC_ARG_ENABLE([reported-guile-site],
-  [AS_HELP_STRING([--enable-reported-guile-site], [force use of the guile site value as reported by guile])],
-  [reported_guile_site=${enableval}], [reported_guile_site=no])
-
 # Special environment variables/command-line variables
 AC_ARG_VAR([GUILE], [Command to run guile])
 AC_ARG_VAR([GUILE_SITE],
@@ -147,9 +143,6 @@ AS_IF([yes_or_no "$with_common_lisp"],[], [
 ])
 AS_IF([yes_or_no "$with_clisp"],[], [
   AC_MSG_ERROR([with-clisp must be 'yes' or 'no'])
-])
-AS_IF([yes_or_no "$reported_guile_site"],[], [
-  AC_MSG_ERROR([reported-guile-site must be 'yes' or 'no'])
 ])
 
 # Sanity-check combinations of argument values.
@@ -189,45 +182,32 @@ AM_COND_IF([HAVE_GUILE], [
   # Since we aren't linking into guile, this isn't hard to do.
 
   # Determine Guile's "site" directory, where libraries are stored.
+  # Guile's autoconf macro "GUILE_SITE_DIR" sets GUILE_SITE to the value of
+  # the site directory, but as noted above, users often don't have
+  # the guile autoconf macros installed.  In addition,
+  # GUILE_SITE_DIR doesn't honor the $prefix value anyway, which causes
+  # "make distcheck" to always fail, making GUILE_SITE_DIR problematic:
+  #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00049.html
+  #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00048.html
+  # We use:
+  # 1. GUILE_SITE if set.  Otherwise,
+  # 2. If prefix doesn't end in "/_inst" (a "make distcheck"), and
+  #    guile reports a non-empty value, use that value.  Otherwise,
+  # 3. Use the value '${datarootdir}/guile/site'
   AS_IF([is_empty "$GUILE_SITE"], [
-    # Guile's autoconf macro "GUILE_SITE_DIR" sets GUILE_SITE to the value of
-    # the site directory, but as noted above, users often don't have
-    # the guile autoconf macros installed.  In addition,
-    # GUILE_SITE_DIR doesn't honor the $prefix value anyway, which causes
-    # "make distcheck" to always fail, making GUILE_SITE_DIR problematic:
-    #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00049.html
-    #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00048.html
-
-    # Query the guile interpreter directly to find guile site directory
-    AC_MSG_CHECKING([for reported GUILE_SITE directory])
-    REPORTED_GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
-    AC_MSG_RESULT([$REPORTED_GUILE_SITE])
-
-    # If prefix ends in "_inst" (as happens in "make distcheck"),
-    # use the reported guile site value only if forced.
-    # In most cases we use the guile site directory value reported by guile.
     AS_CASE([$prefix],
-            [*/_inst], [use_reported_site="$reported_guile_site"],
-            [*],       [use_reported_site='yes'])
-
-    AS_IF([is_empty "$REPORTED_GUILE_SITE"],[
-      use_reported_site='no' # Don't use a useless value!
-      AC_MSG_WARN([guile reported an empty GUILE_SITE value, using calculated value to compensate])])
-
-    AS_IF([test "$use_reported_site" = 'yes'], [
-      # Use guile site value as reported by guile
-      GUILE_SITE="$REPORTED_GUILE_SITE"
-      # Add space at the end to line up with previous line
-      AC_MSG_CHECKING([using same GUILE_SITE directory  ])
-      AC_MSG_RESULT([$GUILE_SITE])
-    ], [
-      # Use, for GUILE_SITE, a calculated value based on $prefix.
-      # This is necesary for "make distcheck" to work, for example.
-      GUILE_SITE='${datarootdir}/guile/site'
-      AC_MSG_CHECKING([for calculated GUILE_SITE directory])
-      AC_MSG_RESULT([$GUILE_SITE])
+      [*/_inst], [
+        AC_MSG_WARN([Prefix ends in /_inst, so this is a 'make distcheck'. GUILE_SITE is unset, so using a value based on datarootdir.])],
+      [*], [
+        # Query the guile interpreter directly to find guile site directory
+        GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
     ])
   ])
+  AS_IF([is_empty "$GUILE_SITE"], [
+    GUILE_SITE='${datarootdir}/guile/site'
+  ])
+  AC_MSG_CHECKING([Guile site directory (GUILE_SITE)])
+  AC_MSG_RESULT([$GUILE_SITE])
   AC_SUBST([GUILE_SITE])
 
   # Determine if "readline" is available in guile.
