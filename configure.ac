@@ -102,11 +102,12 @@ AC_ARG_WITH([guile],
   [AS_HELP_STRING([--with-guile / --without-guile],
     [require/disable guile; many tools use guile (default: auto-detect)])])
 AC_ARG_ENABLE([guile-readline],
-  [AS_HELP_STRING([--with-guile-readline / --without-guile-readline],
+  [AS_HELP_STRING([--enable-guile-readline / --disable-guile-readline],
     [require/disable readline support within guile (default: auto-detect)])])
 AC_ARG_WITH([scsh],
-  [AS_HELP_STRING([--without-scsh], [disable support for scsh])],
-  [], [with_scsh=yes])  # By default, with_scsh
+  [AS_HELP_STRING([--with-scsh / --without-scsh],
+    [require/disable support for scsh (default: auto-detect)])])
+
 AC_ARG_WITH([common-lisp],
   [AS_HELP_STRING([--without-common-lisp], [disable support for Common Lisp])],
   [], [with_common_lisp=yes])  # By default, with_common_lisp
@@ -140,8 +141,8 @@ AS_IF([yes_no_empty "$with_guile"],[], [
 AS_IF([yes_no_empty "$enable_guile_readline"],[], [
   AC_MSG_ERROR([enable-guile-readline must be 'yes', 'no', or no value])
 ])
-AS_IF([yes_or_no "$with_scsh"],[], [
-  AC_MSG_ERROR([with-scsh must be 'yes' or 'no'])
+AS_IF([yes_no_empty "$with_scsh"],[], [
+  AC_MSG_ERROR([with-scsh must be 'yes', 'no', or no value])
 ])
 AS_IF([yes_or_no "$with_common_lisp"],[], [
   AC_MSG_ERROR([with-common-lisp must be 'yes' or 'no'])
