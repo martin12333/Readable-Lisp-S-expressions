@@ -125,19 +125,22 @@ AC_ARG_WITH([clisp],
 AC_ARG_WITH([markdown],
   [AS_HELP_STRING(
     [[--with-markdown[=COMMAND] | --without-markdown]],
-    ["with" option gives command to translate markdown into HTML; "without" option disables generating HTML from markdown])])
+    [require/forbid translating markdown into HTML (with COMMAND if given)])])
 
 # Special environment variables/command-line variables
-AC_ARG_VAR([BIN_ENV], [Command to run env (default: auto-detect, often /usr/bin/env)])
+AC_ARG_VAR([BIN_ENV],
+  [Command to run env (default: auto-detect, often /usr/bin/env)])
 AC_ARG_VAR([GUILE], [Command to run guile (default: auto-detect)])
 AC_ARG_VAR([GUILE_SITE],
   [Guile site directory (default: auto-detect; often /usr/share/guile/site)])
-AC_ARG_VAR([SCSH], [Command to run scsh (default: auto-detect; depends on guile)])
+AC_ARG_VAR([SCSH],
+  [Command to run scsh (default: auto-detect; depends on guile)])
 AC_ARG_VAR([COMMON_LISP_LIB_DIR],
   [Common Lisp library directory (default: $(datadir)/common-lisp)])
 AC_ARG_VAR([CLISP], [Command to run clisp (default: auto-detect)])
 AC_ARG_VAR([EXPECT], [Command to run expect (default: auto-detect)])
-AC_ARG_VAR([MARKDOWN], [Command to convert markdown to html (the default uses python)])
+AC_ARG_VAR([MARKDOWN],
+  [Command to convert markdown to html (the default uses python)])
 
 
 # Interpret argument values not yes/no/empty as setting relevant variables
