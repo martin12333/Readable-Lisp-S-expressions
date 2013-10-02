@@ -240,11 +240,10 @@ AM_COND_IF([HAVE_GUILE], [
     AC_PATH_PROG([SCSH], [scsh])
     AS_IF([is_empty "$SCSH"], [], [have_scsh=yes])
   ])
-
 ], [
-  AS_IF([test "x$with_guile" = "xyes"], 
-    [AC_MSG_ERROR([Guile required but unavailable.])],
-    [AC_MSG_WARN([GUILE NOT AVAILABLE.  Tools implemented with guile will not be available.])])
+  # No guile.  Is that a complete failure?
+  AS_IF([test "x$with_guile" = "xyes"], [
+    AC_MSG_ERROR([Guile required but unavailable.])])
 ])
 AC_SUBST([GUILE_SITE])
 AC_SUBST([GUILE_READLINE_AVAILABLE])
@@ -318,6 +317,13 @@ AM_CONDITIONAL([WITH_COMMON_LISP], [is_enabled "$with_common_lisp"])
 AM_CONDITIONAL([WITH_CLISP],       [is_enabled "$with_clisp"])
 AM_CONDITIONAL([ENABLE_HTML_FROM_MARKDOWN],
                                    [is_enabled "$with_markdown_command"])
+
+# Emit a separate warning LAST, so users are more likely to notice.
+AM_COND_IF([HAVE_GUILE], [], [
+  echo >&2
+  AC_MSG_WARN([GUILE NOT AVAILABLE.  Tools implemented with guile will not be available.])
+  echo >&2
+])
 
 # Perhaps check for: (more) programs, libraries, header files, types,
 # structures, compiler characteristics, library functions, system services.
