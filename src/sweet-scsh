@@ -9,5 +9,5 @@ if [ -z "$location" ] ; then
   fi
 fi
 
-unsweeten | scsh
+unsweeten | @SCSH@
 

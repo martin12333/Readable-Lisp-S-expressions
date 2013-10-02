@@ -163,6 +163,7 @@ generate_some_command_sed = $(SED) \
   -e "s!@GUILE_READLINE_AVAILABLE[@]!$(GUILE_READLINE_AVAILABLE)!g" \
   -e "s!@BIN_ENV[@]!$(BIN_ENV)!g" \
   -e "s!@EXPECT[@]!$(EXPECT)!g" \
+  -e "s!@SCSH[@]!$(SCSH)!g" \
   -e "s|@WARNING_MESSAGE[@]|Generated automatically, DO NOT EDIT!|g"
 
 generate_bin_command_sed = $(generate_some_command_sed) \
