@@ -175,6 +175,7 @@ AS_IF([is_empty "$BIN_ENV"], [
 
 
 ### GUILE ###
+echo >&2
 
 # For purposes of configuration, do we have a working guile?
 have_guile=no
@@ -262,6 +263,7 @@ AS_IF([test "$have_scsh" = no &&
 
 
 ### COMMON LISP ###
+echo >&2
 
 # Common Lisp by itself just installs to a directory, so we'll
 # always do it if permitted to do so:
@@ -315,6 +317,9 @@ AS_IF([is_permitted "$with_clisp"], [
 AM_CONDITIONAL([HAVE_CLISP],       [is_enabled "$have_clisp_asdf"])
 
 
+### Other stuff ###
+echo >&2
+
 # Warn if we don't have expect.
 AC_PATH_PROG([EXPECT_INSTALLED], [expect])
 AS_IF([is_empty "$EXPECT_INSTALLED"],[
@@ -338,6 +343,7 @@ AC_SUBST([MARKDOWN], [$with_markdown_command])
 
 AM_CONDITIONAL([ENABLE_HTML_FROM_MARKDOWN],
                                    [is_enabled "$with_markdown_command"])
+
 
 # Emit a separate warning LAST, so users are more likely to notice.
 AM_COND_IF([HAVE_GUILE], [], [
