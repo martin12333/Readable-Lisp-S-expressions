@@ -333,6 +333,10 @@ AS_IF([is_enabled "$have_guile" || is_enabled "$have_clisp_asdf"], [
     echo >&2
     AC_MSG_WARN([[expect not found; please install expect, or many command-line tools will fail]])
     echo >&2
+    # Set EXPECT to a plausible value, in case it's installed later
+    # or a later PATH makes "expect" visible.
+    # An empty value is *certain* to fail later.
+    EXPECT="$BIN_ENV expect"
   ])
 ])
 
