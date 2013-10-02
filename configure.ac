@@ -96,6 +96,9 @@ yes_no_empty () { # Returns TRUE if $1 is "yes", "no", or empty.
   fi
 }
 
+# Useful constants
+default_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"
+
 
 # Create arguments for configure:
 AC_ARG_WITH([guile],
@@ -114,6 +117,7 @@ AC_ARG_WITH([common-lisp],
 AC_ARG_WITH([clisp],
   [AS_HELP_STRING([--with-clisp / --without-clisp],
   [require/disable support for clisp])])
+
 # We generate HTML files from markdown files. By default we do this
 # using the markdown2.py file (MIT license), copied on 2013-09-17 from:
 #   https://raw.github.com/trentm/python-markdown2/master/lib/markdown2.py
@@ -134,8 +138,6 @@ AC_ARG_VAR([COMMON_LISP_LIB_DIR],
 AC_ARG_VAR([CLISP], [Command to run clisp (default: auto-detect)])
 AC_ARG_VAR([EXPECT], [Command to run expect (default: auto-detect)])
 AC_ARG_VAR([MARKDOWN], [Command to convert markdown to html (the default uses python)])
-
-default_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"
 
 # Sanity-check argument values.
 AS_IF([yes_no_empty "$with_guile"],[], [
@@ -161,7 +163,6 @@ AS_IF([test "$with_guile" = no -a "$with_common_lisp" = no],[
 AS_IF([test "$with_common_lisp" = no -a "$with_clisp" = yes],[
   AC_MSG_ERROR([clisp requires common lisp])
 ])
-
 
 
 
