@@ -100,7 +100,10 @@ yes_no_empty () { # Returns TRUE if $1 is "yes", "no", or empty.
 # Create arguments for configure:
 AC_ARG_WITH([guile],
   [AS_HELP_STRING([--with-guile / --without-guile],
-                  [require/disable support for guile])])
+    [require/disable guile; many tools use guile (default: auto-detect)])])
+AC_ARG_ENABLE([guile-readline],
+  [AS_HELP_STRING([--with-guile-readline / --without-guile-readline],
+    [require/disable readline support within guile (default: auto-detect)])])
 AC_ARG_WITH([scsh],
   [AS_HELP_STRING([--without-scsh], [disable support for scsh])],
   [], [with_scsh=yes])  # By default, with_scsh
@@ -125,8 +128,6 @@ AC_ARG_WITH([markdown-command],
 AC_ARG_VAR([GUILE], [Command to run guile])
 AC_ARG_VAR([GUILE_SITE],
            [Force Guile site directory, usually /usr/share/guile/site])
-AC_ARG_VAR([GUILE_READLINE_AVAILABLE],
-           [Force readline to be used or avoided in guile])
 AC_ARG_VAR([COMMON_LISP_LIB_DIR],
            [Force value of Common Lisp library directory, usually $(datadir)/common-lisp])
 AC_ARG_VAR([BIN_ENV], [Forced value for "env" program])
@@ -134,6 +135,9 @@ AC_ARG_VAR([BIN_ENV], [Forced value for "env" program])
 # Sanity-check argument values.
 AS_IF([yes_no_empty "$with_guile"],[], [
   AC_MSG_ERROR([with-guile must be 'yes', 'no', or no value])
+])
+AS_IF([yes_no_empty "$enable_guile_readline"],[], [
+  AC_MSG_ERROR([enable-guile-readline must be 'yes', 'no', or no value])
 ])
 AS_IF([yes_or_no "$with_scsh"],[], [
   AC_MSG_ERROR([with-scsh must be 'yes' or 'no'])
@@ -173,6 +177,8 @@ AS_IF([is_permitted "$with_guile"],[
 ])
 AM_CONDITIONAL([HAVE_GUILE], [is_enabled "$have_guile"])
 
+# If we have guile, configure it.
+GUILE_READLINE_AVAILABLE=no
 AM_COND_IF([HAVE_GUILE], [
   # Guile provides autoconf macros in guile.m4, but they require guile-config.
   # Sadly, guile-config doesn't come standard on all "guile" packages on all
@@ -208,14 +214,13 @@ AM_COND_IF([HAVE_GUILE], [
   ])
   AC_MSG_CHECKING([Guile site directory (GUILE_SITE)])
   AC_MSG_RESULT([$GUILE_SITE])
-  AC_SUBST([GUILE_SITE])
 
   # Determine if "readline" is available in guile.
-  # Below is code similar to GUILE_MODULE_AVAILABLE, but expanded and
-  # with AC_REQUIRE([GUILE_PROGS]) removed:
   AC_MSG_CHECKING([if (ice-9 readline) is available])
-  AS_IF([is_empty "$GUILE_READLINE_AVAILABLE"], [
-    [$GUILE] -q -c "(use-modules (ice-9 readline)) (exit ((lambda () 0)))" > /dev/null 2>&1
+  AS_IF([is_permitted "$enable_guile_readline"],[
+    [$GUILE] -q \
+      -c "(use-modules (ice-9 readline)) (exit ((lambda () 0)))" \
+      > /dev/null 2>&1
     GUILE_READLINE_AVAILABLE=$?
     AS_IF([test "$GUILE_READLINE_AVAILABLE" = "0"],[
       GUILE_READLINE_AVAILABLE=yes
@@ -224,16 +229,18 @@ AM_COND_IF([HAVE_GUILE], [
     ])
   ])
   AC_MSG_RESULT([$GUILE_READLINE_AVAILABLE])
-  AS_IF([yes_or_no "$GUILE_READLINE_AVAILABLE"],[], [
-    AC_MSG_ERROR([GUILE_READLINE_AVAILABLE must be 'yes' or 'no'])
+  AS_IF([test "$GUILE_READLINE_AVAILABLE" = no &&
+         test "x$enable_guile_readline" = "xyes"], [
+    AC_MSG_ERROR([Guile readline required but unavailable.])
   ])
-  AC_SUBST([GUILE_READLINE_AVAILABLE])
 ], [
   echo "DEBUG: HAVE_GUILE false"
   AS_IF([test "x$with_guile" = "xyes"], 
         [AC_MSG_ERROR([Guile required but unavailable.])],
         [AC_MSG_WARN([GUILE NOT AVAILABLE.  Tools implemented with guile will not be available.])])
 ])
+AC_SUBST([GUILE_SITE])
+AC_SUBST([GUILE_READLINE_AVAILABLE])
 
 
 AS_IF([is_enabled "$with_common_lisp"], [
