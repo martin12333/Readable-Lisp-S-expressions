@@ -162,10 +162,10 @@ AS_IF([yes_no_empty "$enable_guile_readline"],[], [
 
 
 # Sanity-check combinations of argument values.
-AS_IF([test "$with_guile" = no -a "$with_common_lisp" = no],[
+AS_IF([test "$with_guile" = no && test "$with_common_lisp" = no],[
   AC_MSG_WARN([Both --without-guile and --without-common-lisp specified - nothing to install])
 ])
-AS_IF([test "$with_common_lisp" = no -a "$with_clisp" = yes],[
+AS_IF([test "$with_common_lisp" = no && test "$with_clisp" = yes],[
   AC_MSG_ERROR([clisp requires common lisp])
 ])
 
