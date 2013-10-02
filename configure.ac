@@ -86,7 +86,11 @@ yes_no_empty () { # Returns TRUE if $1 is "yes", "no", or empty.
   fi
 }
 
-# Useful constants
+# We generate HTML files from markdown files. By default we do this
+# using the markdown2.py file (MIT license), copied from:
+#   https://raw.github.com/trentm/python-markdown2/master/lib/markdown2.py
+# We have our own copy in our directory so we can be certain to have one.
+# Users can use MARKDOWN=... or --markdown=... to use their own.
 default_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"
 
 
@@ -108,10 +112,6 @@ AC_ARG_WITH([clisp],
   [AS_HELP_STRING([[--with-clisp[=COMMAND] / --without-clisp]],
   [require/disable support for clisp])])
 
-# We generate HTML files from markdown files. By default we do this
-# using the markdown2.py file (MIT license), copied on 2013-09-17 from:
-#   https://raw.github.com/trentm/python-markdown2/master/lib/markdown2.py
-# We have our own copy in our directory so we can be certain to have one.
 AC_ARG_WITH([markdown],
   [AS_HELP_STRING(
     [[--with-markdown[=COMMAND] | --without-markdown]],
@@ -336,10 +336,13 @@ AS_IF([is_enabled "$have_guile" || is_enabled "$have_clisp_asdf"], [
   ])
 ])
 
-# We only need python if we use it to run the built-in markdown command or we
-# use get-from-wiki.  But get-from-wiki is a developer convenience, not
-# an end-user command, so we'll only worry about markdown2.
-# Markdown2 only requires a very old version of Python; it works with 3.
+# If users have not specified their own markdown processor,
+# we'll try to use the pre-supplied markdown2 implementation.
+# In that case, we'll look for python (which is required for markdown2).
+# Markdown2 only requires a very old version of Python and it works with 3.
+# Developers will need a more modern version of Python to use
+# get-from-wiki, but get-from-wiki is a developer convenience
+# (not a user command) so we won't worry about that here.
 have_markdown=no
 AS_IF([is_permitted "$with_markdown"], [
   AS_IF([is_empty "$MARKDOWN"], [
