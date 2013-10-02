@@ -219,16 +219,19 @@ AM_COND_IF([HAVE_GUILE], [
   AS_IF([is_empty "$GUILE_SITE"], [
     AS_CASE([$prefix],
       [*/_inst], [
-        AC_MSG_WARN([Prefix ends in /_inst, so this is a 'make distcheck'. GUILE_SITE is unset, so using a value based on datarootdir.])],
+        AC_MSG_NOTICE([[Prefix ends in /_inst, so this is a 'make distcheck'. GUILE_SITE is unset.]])],
       [*], [
         # Query the guile interpreter directly to find guile site directory
+        AC_MSG_CHECKING([asking guile for its site directory])
         GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
+        AC_MSG_RESULT([$GUILE_SITE])
     ])
   ])
   AS_IF([is_empty "$GUILE_SITE"], [
+    AC_MSG_NOTICE([[Setting GUILE_SITE to start with datarootdir (which is based on prefix)]])
     GUILE_SITE='${datarootdir}/guile/site'
   ])
-  AC_MSG_CHECKING([Guile site directory (GUILE_SITE)])
+  AC_MSG_CHECKING([[Guile site directory (GUILE_SITE)  ]])
   AC_MSG_RESULT([$GUILE_SITE])
 
   # Determine if "readline" is available in guile.
