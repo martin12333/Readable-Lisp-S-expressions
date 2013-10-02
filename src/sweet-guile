@@ -1,4 +1,4 @@
-#!/usr/bin/env expect
+#!@BIN_ENV@ expect
 
 # @WARNING_MESSAGE@
 
