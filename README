@@ -103,8 +103,8 @@ You'll then need to uncompress it.  One way is via the command line:
 
 Then follow the installation instructions in the file
 "Install-howto.md".  Stable versions also have a file named
-"Install-howto.html", which is exactly the same thing but in HTML format
-(use your web browser!).  The installation instructions are also at:
+"Install-howto.html", which are exactly the same instructions in HTML format
+(you can use your web browser!).  The installation instructions are also at:
 https://sourceforge.net/p/readable/wiki/Install-howto/
 
 This software supports the usual GNU Build System conventions, and
@@ -126,8 +126,7 @@ Common Lisp Tutorial
 
 File "Common-lisp-tutorial.html" is the Common Lisp tutorial for how to use it.
 Any Common Lisp implementation should do, but you need the widely-used system
-definition facility asdf.  A "make install" puts files in the usual place,
-$PREFIX/share/common-lisp/source (where $PREFIX is /usr/local by default).
+definition facility asdf, as described in "Install-howto".
 
 
 Specification
@@ -138,7 +137,8 @@ full curly-infix notation, and it also defines neoteric-expressions.
 SRFI-110 (in file "SRFI-110.html" defines sweet-expressions.
 SRFI-110 has an especially rigorous BNF.
 
-The file "Solution.html" is the official definition for all other Lisps.
+The file "Solution.md" is the official definition for all other Lisps.
+The file "Solution.html" is the same thing in HTML format.
 If it's unclear what something means, look at SRFI-105 and SRFI-110
 for clarification, but note that the SRFIs include various
 Scheme-specific material (e.g., #!sweet is a Scheme-specific mechanism
