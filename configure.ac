@@ -109,11 +109,11 @@ AC_ARG_WITH([scsh],
     [require/disable support for scsh (default: auto-detect)])])
 
 AC_ARG_WITH([common-lisp],
-  [AS_HELP_STRING([--without-common-lisp], [disable support for Common Lisp])],
-  [], [with_common_lisp=yes])  # By default, with_common_lisp
+  [AS_HELP_STRING([--without-common-lisp],
+    [disable support for Common Lisp])])
 AC_ARG_WITH([clisp],
-  [AS_HELP_STRING([--without-clisp], [disable support for clisp])],
-  [], [with_clisp="$with_common_lisp"])
+  [AS_HELP_STRING([--with-clisp / --without-clisp],
+  [require/disable support for clisp])])
 # We generate HTML files from markdown files. By default we do this
 # using the markdown2.py file (MIT license), copied on 2013-09-17 from:
 #   https://raw.github.com/trentm/python-markdown2/master/lib/markdown2.py
@@ -133,6 +133,8 @@ AC_ARG_VAR([GUILE_SITE],
 AC_ARG_VAR([SCSH], [Command to run scsh (default: auto-detect; depends on guile)])
 AC_ARG_VAR([COMMON_LISP_LIB_DIR],
   [Common Lisp library directory (default: $(datadir)/common-lisp)])
+AC_ARG_VAR([CLISP], [Command to run clisp (default: auto-detect)])
+
 
 # Sanity-check argument values.
 AS_IF([yes_no_empty "$with_guile"],[], [
@@ -144,11 +146,11 @@ AS_IF([yes_no_empty "$enable_guile_readline"],[], [
 AS_IF([yes_no_empty "$with_scsh"],[], [
   AC_MSG_ERROR([with-scsh must be 'yes', 'no', or no value])
 ])
-AS_IF([yes_or_no "$with_common_lisp"],[], [
-  AC_MSG_ERROR([with-common-lisp must be 'yes' or 'no'])
+AS_IF([yes_no_empty "$with_common_lisp"],[], [
+  AC_MSG_ERROR([with-common-lisp must be 'yes', 'no', or no value])
 ])
-AS_IF([yes_or_no "$with_clisp"],[], [
-  AC_MSG_ERROR([with-clisp must be 'yes' or 'no'])
+AS_IF([yes_no_empty "$with_clisp"],[], [
+  AC_MSG_ERROR([with-clisp must be 'yes', 'no', or no value])
 ])
 
 # Sanity-check combinations of argument values.
@@ -170,6 +172,9 @@ AC_PROG_SED
 AC_PATH_PROG([BIN_ENV], [env])
 AS_IF([is_empty "$BIN_ENV"], [
   AC_MSG_ERROR([No executable "env" available.])])
+
+
+### GUILE ###
 
 # For purposes of configuration, do we have a working guile?
 have_guile=no
@@ -255,41 +260,60 @@ AS_IF([test "$have_scsh" = no &&
 ])
 
 
-AS_IF([is_enabled "$with_common_lisp"], [
+
+### COMMON LISP ###
+
+# Common Lisp by itself just installs to a directory, so we'll
+# always do it if permitted to do so:
+AS_IF([is_permitted "$with_common_lisp"], [
+  with_common_lisp=yes
+
   # We'll use LN_S to install Common Lisp ASDF files:
   AC_PROG_LN_S
-])
 
-
-AC_MSG_CHECKING([Common Lisp lib dir (COMMON_LISP_LIB_DIR)])
-AS_IF([is_empty "$COMMON_LISP_LIB_DIR"], [
-  COMMON_LISP_LIB_DIR='$(datadir)/common-lisp'
-])
-AC_MSG_RESULT([$COMMON_LISP_LIB_DIR])
-AC_SUBST([COMMON_LISP_LIB_DIR])
-
-AS_IF([is_enabled "$with_clisp"], [
-  # Determine if "clisp" is available and has asdf properly installed.
-  AC_PATH_PROG([CLISP_INSTALLED], [clisp])
-  AS_IF([is_empty "$CLISP_INSTALLED"],[#then
-    AC_MSG_ERROR([clisp required but not found (--without-clisp to skip clisp+asdf checking)])
-  ],[#else
-    # check if asdf is installed with clisp.
-    AC_MSG_CHECKING([if (require "asdf") is available])
-    echo '(require "asdf")' > asdf-check.lisp
-    [$CLISP_INSTALLED] asdf-check.lisp > /dev/null 2>&1
-    AS_IF([test "$?" = 0],[#then
-      rm asdf-check.lisp
-      AC_MSG_RESULT([yes])
-      CLISP=$CLISP_INSTALLED
-    ],[#else
-      rm asdf-check.lisp
-      AC_MSG_RESULT([no])
-      AC_MSG_ERROR([clisp found but without asdf (--without-clisp to skip clisp+asdf checking)])
-    ])
+  AC_MSG_CHECKING([Common Lisp lib dir (COMMON_LISP_LIB_DIR)])
+  AS_IF([is_empty "$COMMON_LISP_LIB_DIR"], [
+    COMMON_LISP_LIB_DIR='$(datadir)/common-lisp'
   ])
-  AC_SUBST([CLISP])
+  AC_MSG_RESULT([$COMMON_LISP_LIB_DIR])
 ])
+AM_CONDITIONAL([HAVE_COMMON_LISP], [is_enabled "$with_common_lisp"])
+
+# If Common Lisp won't be installed, clisp possibilities are limited.
+AS_IF([test "$with_common_lisp" = no], [
+  AS_IF(
+    [is_empty "$with_clisp"],
+      [with_clisp=no],
+    [test "$with_clisp" = yes],
+      [AC_MSG_ERROR([Common Lisp forbidden yet Clisp required])])
+])
+
+have_clisp=no
+have_clisp_asdf=no
+AS_IF([is_permitted "$with_clisp"], [
+  AC_PATH_PROG([CLISP], [clisp])
+  AS_IF([is_empty "$CLISP"], [
+    AS_IF([test "with_clisp" = yes], [
+      AC_MSG_ERROR([clisp required but not found])])
+  ], [
+    have_clisp=yes
+    # check if asdf is installed with clisp.
+    AC_MSG_CHECKING([if (require "asdf") is available in clisp])
+    echo '(require "asdf")' > asdf-check.lisp
+    [$CLISP] asdf-check.lisp > /dev/null 2>&1
+    AS_IF([test "$?" = 0],[
+      have_clisp_asdf=yes
+      AC_MSG_RESULT([$have_clisp_asdf])
+    ],[
+      AC_MSG_RESULT([$have_clisp_asdf])
+      AC_MSG_WARN([clisp found but asdf does not work, so clisp disabled])
+    ])
+    rm -f asdf-check.lisp
+  ])
+])
+
+AM_CONDITIONAL([HAVE_CLISP],       [is_enabled "$have_clisp_asdf"])
+
 
 # Warn if we don't have expect.
 AC_PATH_PROG([EXPECT_INSTALLED], [expect])
@@ -312,9 +336,6 @@ AS_CASE([$with_markdown_command], [python\ *], [
 AC_SUBST([MARKDOWN], [$with_markdown_command])
 
 
-# Set up automake conditionals
-AM_CONDITIONAL([WITH_COMMON_LISP], [is_enabled "$with_common_lisp"])
-AM_CONDITIONAL([WITH_CLISP],       [is_enabled "$with_clisp"])
 AM_CONDITIONAL([ENABLE_HTML_FROM_MARKDOWN],
                                    [is_enabled "$with_markdown_command"])
 

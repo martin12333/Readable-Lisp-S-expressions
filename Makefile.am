@@ -281,7 +281,7 @@ common_lisp_systemsdir = $(common_lispdir)/systems
 
 pkg_asd_file=readable.asd
 
-if WITH_COMMON_LISP
+if HAVE_COMMON_LISP
 dist_common_lisp_source_pkg_DATA = \
  basic-curly.lisp neoteric.lisp backquote.lisp sweet.lisp
 
@@ -303,12 +303,12 @@ install-exec-hook: install-exec-hook-cl
 
 # These are scripts that are just copied straight.
 dist_bin_SCRIPTS += sweet-sbcl
-endif WITH_COMMON_LISP
+endif HAVE_COMMON_LISP
 
-if WITH_CLISP
+if HAVE_CLISP
 # These are scripts that are just copied straight.
 dist_bin_SCRIPTS += sweet-clisp
-endif WITH_CLISP
+endif HAVE_CLISP
 
 
 # ####################################################
@@ -377,9 +377,9 @@ if HAVE_GUILE
 dist_man_MANS += man/unsweeten.1 man/sweet-run.1 \
                  man/sweeten.1 man/diff-s-sweet.1
 endif HAVE_GUILE
-if WITH_CLISP
+if HAVE_CLISP
 dist_man_MANS += man/sweet-clisp.1
-endif WITH_CLISP
+endif HAVE_CLISP
 
 
 # Presentation in Open Document Format (.odp) about these formats:
@@ -434,7 +434,7 @@ EXTRA_DIST += \
 EXTRA_DIST += my-realpath
 check: check-clisp check-guile
 
-if WITH_CLISP
+if HAVE_CLISP
 check-clisp: my-realpath
 	@echo "Starting tests for CLISP"
 	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
@@ -443,9 +443,9 @@ check-clisp: my-realpath
 	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
 	  $(CLISP) -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
 	        $(srcdir)/tests/full-test-cl
-else !WITH_CLISP
+else !HAVE_CLISP
 check-clisp:
-endif !WITH_CLISP
+endif !HAVE_CLISP
 
 if HAVE_GUILE
 check-guile: readable/kernel.scm my-realpath
