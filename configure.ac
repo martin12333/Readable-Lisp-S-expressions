@@ -356,13 +356,14 @@ AS_IF([is_permitted "$with_markdown"], [
     MARKDOWN="$default_markdown_command"
     AM_PATH_PYTHON([2.4],
       [have_markdown=yes], [
-      AC_MSG_WARN([[python not found, and markdown requires it. HTML generation disabled]])])
+      AC_MSG_WARN([[Python not found, and markdown2 requires it. HTML generation disabled]])])
   ], [
     have_markdown=yes
   ])
 ])
+AS_IF([test "$with_markdown" = yes && test "$have_markdown" = no], [
+  AC_MSG_ERROR([[Cannot generate HTML, yet markdown processing required.]])])
 AM_CONDITIONAL([HAVE_MARKDOWN], [is_enabled "$have_markdown"])
-
 
 
 # Emit a separate warning LAST, so users are more likely to notice.
