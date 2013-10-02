@@ -74,16 +74,6 @@ is_permitted () { # Return TRUE if $1 has non-no value; empty = permitted
   test "x$1" != "xno"
 }
 
-yes_or_no () { # Returns TRUE if $1 is "yes" or "no".
-  if test "x$1" = "xyes" ; then
-    true
-  elif test "x$1" = "xno" ; then
-    true
-  else
-    false
-  fi
-}
-
 yes_no_empty () { # Returns TRUE if $1 is "yes", "no", or empty.
   if test "x$1" = "xyes" ; then
     true
