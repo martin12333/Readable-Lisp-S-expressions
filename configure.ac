@@ -102,20 +102,20 @@ default_markdown_command="python ./markdown2.py -x link-patterns --link-patterns
 
 # Create arguments for configure:
 AC_ARG_WITH([guile],
-  [AS_HELP_STRING([--with-guile / --without-guile],
+  [AS_HELP_STRING([[--with-guile[=COMMAND] / --without-guile]],
     [require/disable guile; many tools use guile (default: auto-detect)])])
 AC_ARG_ENABLE([guile-readline],
   [AS_HELP_STRING([--enable-guile-readline / --disable-guile-readline],
     [require/disable readline support within guile (default: auto-detect)])])
 AC_ARG_WITH([scsh],
-  [AS_HELP_STRING([--with-scsh / --without-scsh],
+  [AS_HELP_STRING([[--with-scsh[=COMMAND] / --without-scsh]],
     [require/disable support for scsh (default: auto-detect)])])
 
 AC_ARG_WITH([common-lisp],
-  [AS_HELP_STRING([--without-common-lisp],
-    [disable support for Common Lisp])])
+  [AS_HELP_STRING([[--with-common-lisp[=DIR] / --without-common-lisp]],
+    [[require/disable support for Common Lisp (DIR is library directory)]])])
 AC_ARG_WITH([clisp],
-  [AS_HELP_STRING([--with-clisp / --without-clisp],
+  [AS_HELP_STRING([[--with-clisp[=COMMAND] / --without-clisp]],
   [require/disable support for clisp])])
 
 # We generate HTML files from markdown files. By default we do this
@@ -124,7 +124,7 @@ AC_ARG_WITH([clisp],
 # We have our own copy in our directory so we can be certain to have one.
 AC_ARG_WITH([markdown],
   [AS_HELP_STRING(
-    [--with-markdown=COMMAND | --without-markdown],
+    [[--with-markdown[=COMMAND] | --without-markdown]],
     ["with" option gives command to translate markdown into HTML; "without" option disables generating HTML from markdown])])
 
 # Special environment variables/command-line variables
@@ -139,22 +139,34 @@ AC_ARG_VAR([CLISP], [Command to run clisp (default: auto-detect)])
 AC_ARG_VAR([EXPECT], [Command to run expect (default: auto-detect)])
 AC_ARG_VAR([MARKDOWN], [Command to convert markdown to html (the default uses python)])
 
-# Sanity-check argument values.
+
+# Interpret argument values not yes/no/empty as setting relevant variables
 AS_IF([yes_no_empty "$with_guile"],[], [
-  AC_MSG_ERROR([with-guile must be 'yes', 'no', or no value])
+  GUILE="$with_guile"
+  with_guile=yes
 ])
+AS_IF([yes_no_empty "$with_scsh"],[], [
+  SCSH="$with_scsh"
+  with_scsh=yes
+])
+AS_IF([yes_no_empty "$with_common_lisp"],[], [
+  COMMON_LISP_LIB_DIR="$with_common_lisp"
+  with_common_lisp=yes
+])
+AS_IF([yes_no_empty "$with_clisp"],[], [
+  CLISP="$with_clisp"
+  with_clisp=yes
+])
+AS_IF([yes_no_empty "$with_markdown"],[], [
+  MARKDOWN="$with_markdown"
+  with_markdown=yes
+])
+
+# Sanity-check argument values that MUST be yes/no/empty
 AS_IF([yes_no_empty "$enable_guile_readline"],[], [
   AC_MSG_ERROR([enable-guile-readline must be 'yes', 'no', or no value])
 ])
-AS_IF([yes_no_empty "$with_scsh"],[], [
-  AC_MSG_ERROR([with-scsh must be 'yes', 'no', or no value])
-])
-AS_IF([yes_no_empty "$with_common_lisp"],[], [
-  AC_MSG_ERROR([with-common-lisp must be 'yes', 'no', or no value])
-])
-AS_IF([yes_no_empty "$with_clisp"],[], [
-  AC_MSG_ERROR([with-clisp must be 'yes', 'no', or no value])
-])
+
 
 # Sanity-check combinations of argument values.
 AS_IF([test "$with_guile" = no -a "$with_common_lisp" = no],[
