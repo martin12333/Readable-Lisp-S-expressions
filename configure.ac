@@ -134,6 +134,7 @@ AC_ARG_VAR([SCSH], [Command to run scsh (default: auto-detect; depends on guile)
 AC_ARG_VAR([COMMON_LISP_LIB_DIR],
   [Common Lisp library directory (default: $(datadir)/common-lisp)])
 AC_ARG_VAR([CLISP], [Command to run clisp (default: auto-detect)])
+AC_ARG_VAR([EXPECT], [Command to run expect (default: auto-detect)])
 
 
 # Sanity-check argument values.
@@ -320,12 +321,13 @@ AM_CONDITIONAL([HAVE_CLISP],       [is_enabled "$have_clisp_asdf"])
 ### Other stuff ###
 echo >&2
 
-# Warn if we don't have expect.
-AC_PATH_PROG([EXPECT_INSTALLED], [expect])
-AS_IF([is_empty "$EXPECT_INSTALLED"],[
-  echo >&2
-  AC_MSG_WARN([expect not found; please install expect, or many command-line tools will fail])
-  echo >&2
+AS_IF([is_enabled "$have_guile" || is_enabled "$have_clisp_asdf"],
+  AC_PATH_PROG([EXPECT], [expect])
+  AS_IF([is_empty "$EXPECT"],[
+    echo >&2
+    AC_MSG_WARN([expect not found; please install expect, or many command-line tools will fail])
+    echo >&2
+  ])
 ])
 
 # TODO: Use AM_PATH_PYTHON([2.7],,AC_MSG_WARN(...)); this sets PYTHON.
