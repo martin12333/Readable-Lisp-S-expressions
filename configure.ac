@@ -126,13 +126,13 @@ AC_ARG_WITH([markdown-command],
   [with_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"])
 
 # Special environment variables/command-line variables
-AC_ARG_VAR([BIN_ENV], [Forced value for "env" program])
-AC_ARG_VAR([GUILE], [Command to run guile])
+AC_ARG_VAR([BIN_ENV], [Command to run env (default: auto-detect, often /usr/bin/env)])
+AC_ARG_VAR([GUILE], [Command to run guile (default: auto-detect)])
 AC_ARG_VAR([GUILE_SITE],
-           [Force Guile site directory, usually /usr/share/guile/site])
-AC_ARG_VAR([SCSH], [Command to run scsh])
+  [Guile site directory (default: auto-detect; often /usr/share/guile/site)])
+AC_ARG_VAR([SCSH], [Command to run scsh (default: auto-detect; depends on guile)])
 AC_ARG_VAR([COMMON_LISP_LIB_DIR],
-           [Force value of Common Lisp library directory, usually $(datadir)/common-lisp])
+  [Common Lisp library directory (default: $(datadir)/common-lisp)])
 
 # Sanity-check argument values.
 AS_IF([yes_no_empty "$with_guile"],[], [
