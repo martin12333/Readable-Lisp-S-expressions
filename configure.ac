@@ -301,7 +301,7 @@ AC_SUBST([MARKDOWN], [$with_markdown_command])
 
 
 # Set up automake conditionals
-AM_CONDITIONAL([WITH_SCSH],        [is_enabled "$with_scsh"])
+AM_CONDITIONAL([HAVE_SCSH],        [is_enabled "$with_scsh"])
 AM_CONDITIONAL([WITH_COMMON_LISP], [is_enabled "$with_common_lisp"])
 AM_CONDITIONAL([WITH_CLISP],       [is_enabled "$with_clisp"])
 AM_CONDITIONAL([ENABLE_HTML_FROM_MARKDOWN],

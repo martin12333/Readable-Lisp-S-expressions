@@ -144,10 +144,10 @@ generated_local_scripts += ./sweeten ./unsweeten \
                          ./sweet-run \
                          ./diff-s-sweet
 
-if WITH_SCSH
+if HAVE_SCSH
 generated_bin_scripts += bin/sweet-scsh
 generated_local_scripts += ./sweet-scsh
-endif WITH_SCSH
+endif HAVE_SCSH
 
 # Here we define how to generate these scripts and rules for when to do so.
 # Note: If you change how scripts are generated, run "make clean && make"
