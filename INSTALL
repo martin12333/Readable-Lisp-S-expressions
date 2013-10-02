@@ -87,17 +87,9 @@ GUILE=pathname
   be found.
 
 GUILE_SITE=directory_name
-  By default, if guile is enabled, configure will automatically locate
-  the "guile site" using guile; it is typically "/usr/share/guile/site".
   If GUILE_SITE=... is set on the configure command line, or is set
   as an environment variable when configure is run, then that value
-  is used as the directory instead.
-
-GUILE_READLINE_AVAILABLE=yes|no
-  By default, if guile is enabled, configure will determine if readline
-  is available, and if so, use it.  This option forceably sets guile
-  to use or not use readline, skipping the configure check.
-  If you set this to "yes" be sure that readline will actually be available!
+  is used as the guile site directory (overriding anything else).
 
 COMMON_LISP_LIB_DIR
   Force value of Common Lisp library directory, usually
@@ -143,7 +135,7 @@ To deal with this, configure makes a guess that works nearly all the time,
 and provides control options to override wrong guesses.
 
 Currently, the guile site directory is determined by this algorithm:
-1. GUILE_SITE if set.  Otherwise,
+1. GUILE_SITE if not empty.  Otherwise,
 2. If prefix doesn't end in "/_inst" (a "make distcheck"), and
    guile reports a non-empty value, use that value.  Otherwise,
 3. Use the value '${datarootdir}/guile/site'

@@ -196,7 +196,7 @@ AM_COND_IF([HAVE_GUILE], [
   #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00049.html
   #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00048.html
   # We use:
-  # 1. GUILE_SITE if set.  Otherwise,
+  # 1. GUILE_SITE if not empty.  Otherwise,
   # 2. If prefix doesn't end in "/_inst" (a "make distcheck"), and
   #    guile reports a non-empty value, use that value.  Otherwise,
   # 3. Use the value '${datarootdir}/guile/site'
