@@ -125,12 +125,13 @@ AC_ARG_WITH([markdown-command],
   [with_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"])
 
 # Special environment variables/command-line variables
+AC_ARG_VAR([BIN_ENV], [Forced value for "env" program])
 AC_ARG_VAR([GUILE], [Command to run guile])
 AC_ARG_VAR([GUILE_SITE],
            [Force Guile site directory, usually /usr/share/guile/site])
+AC_ARG_VAR([SCSH], [Command to run scsh])
 AC_ARG_VAR([COMMON_LISP_LIB_DIR],
            [Force value of Common Lisp library directory, usually $(datadir)/common-lisp])
-AC_ARG_VAR([BIN_ENV], [Forced value for "env" program])
 
 # Sanity-check argument values.
 AS_IF([yes_no_empty "$with_guile"],[], [
@@ -179,6 +180,7 @@ AM_CONDITIONAL([HAVE_GUILE], [is_enabled "$have_guile"])
 
 # If we have guile, configure it.
 GUILE_READLINE_AVAILABLE=no
+have_scsh=no
 AM_COND_IF([HAVE_GUILE], [
   # Guile provides autoconf macros in guile.m4, but they require guile-config.
   # Sadly, guile-config doesn't come standard on all "guile" packages on all
@@ -233,14 +235,25 @@ AM_COND_IF([HAVE_GUILE], [
          test "x$enable_guile_readline" = "xyes"], [
     AC_MSG_ERROR([Guile readline required but unavailable.])
   ])
+
+  AS_IF([is_permitted "$with_scsh"],[
+    AC_PATH_PROG([SCSH], [scsh])
+    AS_IF([is_empty "$SCSH"], [], [have_scsh=yes])
+  ])
+
 ], [
-  echo "DEBUG: HAVE_GUILE false"
   AS_IF([test "x$with_guile" = "xyes"], 
-        [AC_MSG_ERROR([Guile required but unavailable.])],
-        [AC_MSG_WARN([GUILE NOT AVAILABLE.  Tools implemented with guile will not be available.])])
+    [AC_MSG_ERROR([Guile required but unavailable.])],
+    [AC_MSG_WARN([GUILE NOT AVAILABLE.  Tools implemented with guile will not be available.])])
 ])
 AC_SUBST([GUILE_SITE])
 AC_SUBST([GUILE_READLINE_AVAILABLE])
+AM_CONDITIONAL([HAVE_SCSH], [is_enabled "$have_scsh"])
+
+AS_IF([test "$have_scsh" = no &&
+       test "x$enable_scsh" = "xyes"], [
+  AC_MSG_ERROR([scsh required but unavailable.])
+])
 
 
 AS_IF([is_enabled "$with_common_lisp"], [
@@ -301,7 +314,6 @@ AC_SUBST([MARKDOWN], [$with_markdown_command])
 
 
 # Set up automake conditionals
-AM_CONDITIONAL([HAVE_SCSH],        [is_enabled "$with_scsh"])
 AM_CONDITIONAL([WITH_COMMON_LISP], [is_enabled "$with_common_lisp"])
 AM_CONDITIONAL([WITH_CLISP],       [is_enabled "$with_clisp"])
 AM_CONDITIONAL([ENABLE_HTML_FROM_MARKDOWN],
