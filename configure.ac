@@ -176,11 +176,11 @@ AS_IF([is_empty "$BIN_ENV"], [
 
 
 ### GUILE ###
-echo >&2
 
 # For purposes of configuration, do we have a working guile?
 have_guile=no
 AS_IF([is_permitted "$with_guile"],[
+  echo >&2
   AC_PATH_PROG([GUILE],[guile])
   AS_IF([is_empty "$GUILE"], [], [have_guile=yes])
 ])
@@ -264,11 +264,11 @@ AS_IF([test "$have_scsh" = no &&
 
 
 ### COMMON LISP ###
-echo >&2
 
 # Common Lisp by itself just installs to a directory, so we'll
 # always do it if permitted to do so:
 AS_IF([is_permitted "$with_common_lisp"], [
+  echo >&2
   with_common_lisp=yes
 
   AC_MSG_CHECKING([Common Lisp lib dir (COMMON_LISP_LIB_DIR)])
