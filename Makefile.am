@@ -63,6 +63,7 @@ UNSWEETEN = ./unsweeten
 # of giving separate rules for each target.
 
 
+if HAVE_MARKDOWN
 # Rules for translating markdown (.md) files into HTML.
 SUFFIXES = .md .html
 .md.html:
@@ -70,6 +71,7 @@ SUFFIXES = .md .html
 	( cat head.html ; $(MARKDOWN) $< ; cat tail.html ) | \
 	  $(SED) -e "s/@TITLE[@]/"$*"/g" > $@
 	chmod a-w "$@"
+endif HAVE_MARKDOWN
 
 EXTRA_DIST += head.html tail.html markdown-urls
 EXTRA_DIST += markdown2.py
@@ -365,9 +367,7 @@ MDFILES = $(MDMIRRORS) $(MDSTUBS)
 dist_doc_DATA += $(MDFILES)
 
 # Generate, distribute, and install HTML files generated from .md files:
-if ENABLE_HTML_FROM_MARKDOWN
 dist_doc_DATA += $(MDFILES:.md=.html)
-endif ENABLE_HTML_FROM_MARKDOWN
 
 
 # Man pages

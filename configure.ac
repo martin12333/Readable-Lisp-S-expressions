@@ -118,12 +118,10 @@ AC_ARG_WITH([clisp],
 # using the markdown2.py file (MIT license), copied on 2013-09-17 from:
 #   https://raw.github.com/trentm/python-markdown2/master/lib/markdown2.py
 # We have our own copy in our directory so we can be certain to have one.
-AC_ARG_WITH([markdown-command],
+AC_ARG_WITH([markdown],
   [AS_HELP_STRING(
-    [--with-markdown-command=COMMAND | --without-markdown-command],
-    ["with" option gives command to translate markdown into HTML; "without" option disables generating HTML from markdown])],
-  [],
-  [with_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"])
+    [--with-markdown=COMMAND | --without-markdown],
+    ["with" option gives command to translate markdown into HTML; "without" option disables generating HTML from markdown])])
 
 # Special environment variables/command-line variables
 AC_ARG_VAR([BIN_ENV], [Command to run env (default: auto-detect, often /usr/bin/env)])
@@ -135,7 +133,9 @@ AC_ARG_VAR([COMMON_LISP_LIB_DIR],
   [Common Lisp library directory (default: $(datadir)/common-lisp)])
 AC_ARG_VAR([CLISP], [Command to run clisp (default: auto-detect)])
 AC_ARG_VAR([EXPECT], [Command to run expect (default: auto-detect)])
+AC_ARG_VAR([MARKDOWN], [Command to convert markdown to html (the default uses python)])
 
+default_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"
 
 # Sanity-check argument values.
 AS_IF([yes_no_empty "$with_guile"],[], [
@@ -321,30 +321,32 @@ AM_CONDITIONAL([HAVE_CLISP],       [is_enabled "$have_clisp_asdf"])
 ### Other stuff ###
 echo >&2
 
-AS_IF([is_enabled "$have_guile" || is_enabled "$have_clisp_asdf"],
+AS_IF([is_enabled "$have_guile" || is_enabled "$have_clisp_asdf"], [
   AC_PATH_PROG([EXPECT], [expect])
   AS_IF([is_empty "$EXPECT"],[
     echo >&2
-    AC_MSG_WARN([expect not found; please install expect, or many command-line tools will fail])
+    AC_MSG_WARN([[expect not found; please install expect, or many command-line tools will fail]])
     echo >&2
   ])
 ])
 
-# TODO: Use AM_PATH_PYTHON([2.7],,AC_MSG_WARN(...)); this sets PYTHON.
-# Fail if we need python but it's not available.
-AS_CASE([$with_markdown_command], [python\ *], [
-  AC_PATH_PROG([PYTHON_INSTALLED], [python])
-  AS_IF([is_empty "$PYTHON_INSTALLED"],[#then
-    AC_MSG_WARN([python not found; install it, use --with-markdown-command=COMMAND, or use --without-markdown-command.  Otherwise we cannot regenerate HTML files from HTML])
-  ])])
+# We only need python if we use it to run the built-in markdown command or we
+# use get-from-wiki.  But get-from-wiki is a developer convenience, not
+# an end-user command, so we'll only worry about markdown2.
+# Markdown2 only requires a very old version of Python; it works with 3.
+have_markdown=no
+AS_IF([is_permitted "$with_markdown"], [
+  AS_IF([is_empty "$MARKDOWN"], [
+    MARKDOWN="$default_markdown_command"
+    AM_PATH_PYTHON([2.4],
+      [have_markdown=yes], [
+      AC_MSG_WARN([[python not found, and markdown requires it. HTML generation disabled]])])
+  ], [
+    have_markdown=yes
+  ])
+])
+AM_CONDITIONAL([HAVE_MARKDOWN], [is_enabled "$have_markdown"])
 
-
-# Other automake substitutions that haven't been done yet:
-AC_SUBST([MARKDOWN], [$with_markdown_command])
-
-
-AM_CONDITIONAL([ENABLE_HTML_FROM_MARKDOWN],
-                                   [is_enabled "$with_markdown_command"])
 
 
 # Emit a separate warning LAST, so users are more likely to notice.
