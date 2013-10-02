@@ -1,5 +1,5 @@
 #!@EXPECT@
-# By David A. Wheeler. Start up guile in "neoteric-expressoin" reading mode,
+# By David A. Wheeler. Start up guile in "curly-infix-expression" reading mode,
 # so you can try it out.
 
 # @WARNING_MESSAGE@
