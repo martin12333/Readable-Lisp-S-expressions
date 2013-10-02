@@ -1,4 +1,4 @@
-#!@BIN_ENV@ expect
+#!@EXPECT@
 # By David A. Wheeler. Start up guile in "neoteric-expressoin" reading mode,
 # so you can try it out.
 

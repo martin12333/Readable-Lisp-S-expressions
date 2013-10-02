@@ -1,4 +1,4 @@
-#!@BIN_ENV@ expect
+#!@EXPECT@
 
 # @WARNING_MESSAGE@
 
