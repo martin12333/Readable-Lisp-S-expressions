@@ -246,7 +246,6 @@ AM_COND_IF([HAVE_GUILE], [
   AS_IF([test "x$with_guile" = "xyes"], [
     AC_MSG_ERROR([Guile required but unavailable.])])
 ])
-AC_SUBST([GUILE_SITE])
 AC_SUBST([GUILE_READLINE_AVAILABLE])
 AM_CONDITIONAL([HAVE_SCSH], [is_enabled "$have_scsh"])
 
