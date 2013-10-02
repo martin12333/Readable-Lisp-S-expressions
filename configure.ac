@@ -270,14 +270,14 @@ echo >&2
 AS_IF([is_permitted "$with_common_lisp"], [
   with_common_lisp=yes
 
-  # We'll use LN_S to install Common Lisp ASDF files:
-  AC_PROG_LN_S
-
   AC_MSG_CHECKING([Common Lisp lib dir (COMMON_LISP_LIB_DIR)])
   AS_IF([is_empty "$COMMON_LISP_LIB_DIR"], [
     COMMON_LISP_LIB_DIR='$(datadir)/common-lisp'
   ])
   AC_MSG_RESULT([$COMMON_LISP_LIB_DIR])
+
+  # We'll use LN_S to install Common Lisp ASDF files:
+  AC_PROG_LN_S
 ])
 AM_CONDITIONAL([HAVE_COMMON_LISP], [is_enabled "$with_common_lisp"])
 
