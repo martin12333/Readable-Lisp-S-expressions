@@ -42,7 +42,7 @@ If you plan to use the development (not stable) version directly from our git re
 *   *autoconf*. You need autoconf version 2.67 or later.
 *   *automake*.  You should use version 1.14 or later; we haven't tested older versions.
 *   *guile development libraries* (e.g., package "guile-devel" on Fedora and Cygwin).  These need to match the version of guile you're using.
-*   *python* (to generate some HTML files from markdown).  You need version 2.7+ or version 3+.
+*   *python* (to generate some HTML files from markdown).  You should have version 2.7+ or version 3+.  Version 2.4+ will do in a pinch (you need version 2.7 to auto-download markdown files, but only 2.4+ to generate HTML from them.)
 
 Red Hat Enterprise Linux (RHEL), CentOS, and Scientific Linux
 -------------------------------------------------------------
@@ -60,14 +60,24 @@ The [CentOS list of additional repositories](http://wiki.centos.org/AdditionalRe
 You can also download the source code to the various projects and build them yourself.  If you choose to download and build clisp from source code, you will probably need to first download and build [libsigsegv](http://www.gnu.org/software/libsigsegv/), since building clisp requires libsigsegv.
 
 
-ASDF
-----
+Installing ASDF (for Common Lisp)
+---------------------------------
 
-If you use the Common Lisp implementation you'll need Another System Definition Facility ([ASDF](http://common-lisp.net/project/asdf/)), which is usually included in your implementation of Common Lisp.  Many Linux distributions include ASDF; just install package "cl-asdf".  Fedora, Debian, and Ubuntu are all known to include ASDF as the package "cl-asdf", and others probably use the same name too.  If you don't already have ASDF, you can download it here:  http://common-lisp.net/project/asdf/
+If you use the Common Lisp implementation you'll normally need Another System Definition Facility ([ASDF](http://common-lisp.net/project/asdf/)), which is usually included in your implementation of Common Lisp.  Many Linux distributions include ASDF; just install package "cl-asdf".  Fedora, Debian, and Ubuntu are all known to include ASDF as the package "cl-asdf", and others probably use the same name too.
 
-ASDF must be configured so it can find the "readable" library once the library is installed.  So you must install the "readable" library in a place where ASDF will currently find it, or modify the ASDF configuration so ASDF can find the "readable" library.  If you set the "prefix" value to "/usr" during configuration, as discussed below, that happens automatically (ASDF normally looks there).
+If you don't already have ASDF, you can download it here and follow its installation instructions:  http://common-lisp.net/project/asdf/
 
-If you are going to install the software using a prefix other than "/usr", you might want to modify the ASDF system configuration file "/etc/common-lisp/source-registry.conf" so that it can find files in common locations.  Here are plausible contents of "/etc/common-lisp/source-registry.conf" that may serve as an example:
+As a convenience, a version of ASDF is included with the distribution, so that you can get started without looking for other libraries.  You do not have to use the included version.
+
+
+Configuring ASDF
+----------------
+
+Once your implementation of Common Lisp can find (and load) ASDF, you may need to configure ASDF so it can find the "readable" library (once the readable library is installed).  You must either install the "readable" library in a place where ASDF will find it using ASDF's current configuration, or modify the ASDF configuration so ASDF can find the "readable" library.
+
+If you set the "prefix" value to "/usr" during configuration, as discussed below, you don't need to change the ASDF configuration.  ASDF normally looks there.
+
+However, if you are going to install the software using a prefix other than "/usr", you might want to modify the ASDF system configuration file "/etc/common-lisp/source-registry.conf" so that it can find files in common locations.  Here are plausible contents of "/etc/common-lisp/source-registry.conf" that may serve as an example:
 
     (:source-registry
       (:tree (:home "common-lisp")) ;; expands to e.g., "$HOME/common-lisp/"
@@ -76,36 +86,6 @@ If you are going to install the software using a prefix other than "/usr", you m
       (:tree "/usr/share/common-lisp/source/")
       :inherit-configuration)
 
-Using ASDF in clisp
--------------------
-
-If you're using clisp (a Common Lisp implementation), you may need an additional step so that clisp can use ASDF.
-
-The clisp of Cygwin does not (as of this writing) include ASDF.  If you are using clisp on Cygwin, one you way you can install it is to download the asdf.lisp file (from http://common-lisp.net/project/asdf/), then install asdf on clisp for this user by doing:
-
-    mkdir -p ~/lisp/asdf
-    cp asdf.lisp ~/lisp/asdf
-    clisp
-    (load (compile-file "asdf.lisp"))
-    (exit)
-
-If you use clisp and a Linux distribution's ASDF package (usually named "cl-asdf"), follow the above steps, but instead of the "cp asdf.lisp ~/lisp/asdf" command do this:
-
-    ln -s /usr/share/common-lisp/source/cl-asdf/asdf.lisp ~/lisp/asdf/
-
-The "ln -s" means that updates to your Linux distribution's ASDF will be used automagically.
-
-After this point *(require "asdf")* should work from clisp.
-
-
-Weird systems without /usr/bin/env
-----------------------------------
-
-If you use one of the rare systems that doesn't have the command "/usr/bin/env", then you'll need to install one.  Presuming that you have "/bin/env", and that "sudo" will give you administrator privileges, the following will fix that problem:
-
-    sudo ln -s /bin/env /usr/bin/env
-
-You could also modify the relevant scripts... but fixing your system is the better solution.
 
 Download and uncompress
 =======================
@@ -136,21 +116,23 @@ Many people will want to install to the directory "/usr" (e.g., so commands will
 
     ./configure --prefix=/usr
 
-
-The configure program supports many options, though most are only useful for special situations.  Here are some configure options you might want to use:
+The configure program tries to automatically figure out what to do and then do it.  It supports many options, but most are only useful for special situations.  Here are some configure options you might want to use:
 
     --without-guile         disable support for guile
-    --without-scsh          disable support for scsh
     --without-clisp         disable support for clisp
     --without-common-lisp   disable support for Common Lisp (including clisp and sbcl)
 
-In particular, if you won't be using Common Lisp, consider using the configure option "--without-common-lisp"... in which case you don't need to install and configure either ASDF or an implementation of Common Lisp.
-
-If you're using guile, configure should automagically figure out where to put libraries (aka the "guile site" directory).  If it gets the wrong value, you can add GUILE_SITE=directory_name on the configure command line.  See the INSTALL file for more details if you need them.
+In particular, if you won't be using Common Lisp, consider using the configure option "--without-common-lisp".  Note that if you use --without-guile you'll disable several tools that depend on guile.
 
 If you change your mind later about your configuration options, just re-run configure with your new configuration options, and then run the later steps as described below (in particular, "make" and "make install").
 
 If you need more information (to configure it for unusual circumstances), run "./configure --help" or read the file "INSTALL".  The file "config.log" logs what configure does, which can help you if configuration doesn't work as expected.
+
+If you have clisp, but clisp has not been configured to be able to invoke ASDF, the build will detect and report the issue as a warning.  If this happens, you may run this command (after running ./configure) to fix the problem:
+
+    make clisp-asdf
+
+The "make clisp-asdf" command modifies the current user's configuration by creating (if necessary) the directory $(HOME)/lisp/asdf, putting a file or symbolic link there, compiling, and re-running configure.  See the INSTALL file for details if you're curious.
 
 
 Build
@@ -159,8 +141,6 @@ Build
 Now build the code, using:
 
     make
-
-This will do the minimum necessary, so depending on the circumstance it may appear to do nothing (and that's fine).
 
 You can optionally run the testsuite.  To run the tests you need guile, clisp, a correctly-installed asdf.  Run the testsuite by typing:
 
@@ -193,7 +173,6 @@ If you have installed it to system-wide locations, then in most cases the progra
 If you have not installed the files to system-wide locations, then you need to tell the system where the files are when you try to use them.  You can tell the system where the commands are by prefixing the name with "./" if the command is in the current directory.  Another approach is to modify your PATH. On a Bourne-like shell (the usual kind), if the current directory contains some of the programs you'd like to be able to run without prefixing them with "./", you can modify your PATH using:
 
     export PATH="$(pwd)/$PATH"
-
 
 
 Tutorials
