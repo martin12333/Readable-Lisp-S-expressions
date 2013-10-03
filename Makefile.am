@@ -509,17 +509,18 @@ clisp-asdf:
             echo "Creating link to system asdf file $(SYSTEM_ASDF_FILE)" ; \
             echo $(LN_S) "$(SYSTEM_ASDF_FILE)" "$(CLISP_ASDF_FILE)" ; \
             $(LN_S) "$(SYSTEM_ASDF_FILE)" "$(CLISP_ASDF_FILE)" ; \
-            echo "REMINDER: Re-run ./configure" ; \
           else \
             echo "Copying local asdf to $(CLISP_ASDF_FILE)" ; \
             echo cp -p "$(srcdir)/external/asdf.lisp" "$(CLISP_ASDF_FILE)" ; \
             cp -p "$(srcdir)/external/asdf.lisp" "$(CLISP_ASDF_FILE)" ; \
-            echo "REMINDER: Re-run ./configure" ; \
           fi ; \
 	 fi
 	@echo
 	@echo "Attempting to compile"
 	clisp -q -c "$(CLISP_ASDF_FILE)"
+	@echo
+	@echo "Attempting to re-run configure with same configuration options"
+	eval $(srcdir)/configure "`./config.status --config`" --srcdir=$(srcdir)
 
 PHONIES += clisp-asdf
 
