@@ -319,6 +319,8 @@ AS_IF([is_permitted "$with_clisp"], [
     ],[
       AC_MSG_RESULT([$have_clisp_asdf])
       AC_MSG_WARN([clisp found but asdf does not work, so clisp disabled])
+      AC_MSG_NOTICE([Consider running 'make clisp-asdf' to configure asdf for this user.])
+      AC_MSG_NOTICE([After running 'make clisp-asdf' you must re-run './configure'.])
     ])
     rm -f asdf-check.lisp
   ])
