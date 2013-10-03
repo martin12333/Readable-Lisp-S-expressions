@@ -302,6 +302,7 @@ AS_IF([test "$with_common_lisp" = no], [
 
 have_clisp=no
 have_clisp_asdf=no
+announce_make_clisp_asdf=no
 AS_IF([is_permitted "$with_clisp"], [
   AC_PATH_PROG([CLISP], [clisp])
   AS_IF([is_empty "$CLISP"], [
@@ -315,12 +316,10 @@ AS_IF([is_permitted "$with_clisp"], [
     [$CLISP] asdf-check.lisp > /dev/null 2>&1
     AS_IF([test "$?" = 0],[
       have_clisp_asdf=yes
-      AC_MSG_RESULT([$have_clisp_asdf])
     ],[
-      AC_MSG_RESULT([$have_clisp_asdf])
-      AC_MSG_WARN([clisp found but asdf does not work, so clisp disabled])
-      AC_MSG_NOTICE([Run 'make clisp-asdf' to configure clisp to use asdf for this user.])
+      announce_make_clisp_asdf=yes
     ])
+    AC_MSG_RESULT([$have_clisp_asdf])
     rm -f asdf-check.lisp
   ])
 ])
@@ -367,12 +366,20 @@ AS_IF([test "$with_markdown" = yes && test "$have_markdown" = no], [
 AM_CONDITIONAL([HAVE_MARKDOWN], [is_enabled "$have_markdown"])
 
 
-# Emit a separate warning LAST, so users are more likely to notice.
+# Emit key warnings LAST, so users are more likely to notice them.
 AM_COND_IF([HAVE_GUILE], [], [
   echo >&2
   AC_MSG_WARN([GUILE NOT AVAILABLE.  Tools implemented with guile will not be available.])
-  echo >&2
 ])
+
+AS_IF([test "$announce_make_clisp_asdf" = yes], [
+  echo >&2
+  AC_MSG_WARN([CLISP FOUND, but clisp cannot currently invoke ASDF.])
+  AC_MSG_NOTICE([Thus, clisp support is currently disabled.])
+  AC_MSG_NOTICE([Run 'make clisp-asdf' to configure clisp to use ASDF for this user.])
+])
+
+echo >&2
 
 # Perhaps check for: (more) programs, libraries, header files, types,
 # structures, compiler characteristics, library functions, system services.
