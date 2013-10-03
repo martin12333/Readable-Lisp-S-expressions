@@ -13,6 +13,7 @@ for unusual situations, including:
 
 - Detailed descriptions of this package's advanced configure options
 - Make options
+- Technical Detail: Using ASDF from clisp
 - Guile site directory
 - The traditional installation instructions for any autoconf-based system.
 
@@ -113,6 +114,70 @@ You can incrementally install (re-install only changed files)
 through this command:
 
     make install "INSTALL=${PWD}/build-aux/install-sh -C"
+
+
+Technical Detail: Using ASDF from clisp
+=======================================
+
+In most cases clisp (a Common Lisp implementation) cannot automatically
+find ASDF, even if ASDF is installed.  A symptom is that if you start
+clisp and run the following command it will fail (giving an error such as
+"no file name given"):
+
+    (require "asdf")
+
+So to make clisp work, the user's clisp configuration has to be
+modified so clisp can find ASDF.  The "readable" package includes code
+to automatically configure a given user's clisp configuration; you just
+need to run "make clisp-asdf" once configuration completes.
+
+But what does "make clisp-asdf" do?  Here are the technical details,
+if some reason you can't use "make clisp-asdf" and must do something
+similar by hand.
+
+First, it will create "~/lisp/asdf" if it does not already exist:
+
+    mkdir -p ~/lisp/asdf
+
+It then looks for an already-installed ASDF file, e.g., in
+"/usr/share/common-lisp/source/cl-asdf/asdf.lisp" (a typical situation if
+you install package "cl-asdf").  If if finds one, it creates a link to it:
+
+    ln -s /usr/share/common-lisp/source/cl-asdf/asdf.lisp ~/lisp/asdf/
+
+Alternatively, if it can't find an already-installed ASDF file, it copies
+a local copy from ~/external/asdf.lisp.
+
+It then compiles ASDF, by doing this:
+
+    clisp -q -c "~/lisp/asdf/asdf.lisp"
+
+That is roughly equivalent to:
+
+    clisp
+    (load (compile-file "asdf.lisp"))
+    (exit)
+
+One advantage of the "ln -s" command above, used when we can find an
+already-installed ASDF, is that when an installed ASDF is updated,
+the updated ASDF will be used automagically.  However, clisp does
+this by preferring new source (.lisp) files over older compiled (.fas)
+files... so after an update the compiled version is ignored.  Therefore,
+after an update to ASDF, consider "make clisp-asdf" or re-running the
+compilation line.  Using the compiled version makes startup slightly
+faster, but otherwise has no affect.  If your system doesn't support
+"ln -s", or you don't want ASDF to auto-update, you can use "cp" (copy)
+instead of "ls -s".
+
+After this point *(require "asdf")* should work from clisp.
+
+We haven't found an obvious way to make ASDF available automatically
+as part of a system-wide clisp configuration once ASDF is installed.
+clisp does have a value `CUSTOM:*LIB-DIRECTORY*` that's set to a global
+setting, but it's ignored by require.  The default clisp `*LOAD-PATHS*`
+does not include any global directories (and in fact prefers ".", which
+is a potential security issue).  If you have suggestions for how to make
+ASDF loading automatic in clisp, system-wide, please let us know.
 
 
 Guile site directory
