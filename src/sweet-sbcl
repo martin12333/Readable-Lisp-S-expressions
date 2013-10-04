@@ -2,6 +2,8 @@
 # Start up sbcl in "sweet-expression" mode.
 # sweet-sbcl [sbcl-options]
 
+# # @WARNING_MESSAGE@
+
 # You can run scripts, e.g.:
 #    ./sweet-sbcl --script FILE.slisp
 # To run an UNINSTALLED readable library, do this:
