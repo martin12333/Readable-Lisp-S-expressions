@@ -38,8 +38,6 @@ fi
 ;    `(a b c ,d)
 ; $ echo '`(a b c ,d)' | ./unsweeten  # This won't:
 ;   `(a b c (unquote d))
-;
-; TODO: Pass "-C" information to reader so that #'name => (function name)
 
 
 (define load-pretty-print #t)
