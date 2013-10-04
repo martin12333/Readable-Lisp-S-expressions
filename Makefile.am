@@ -68,7 +68,9 @@ if HAVE_MARKDOWN
 SUFFIXES = .md .html
 .md.html:
 	rm -f "$@"
-	( cat head.html ; $(MARKDOWN) $< ; cat tail.html ) | \
+	(    cat $(srcdir)/head.html ; \
+	     $(MARKDOWN) $< ; \
+	     cat $(srcdir)/tail.html ) | \
 	  $(SED) -e "s/@TITLE[@]/"$*"/g" > $@
 	chmod a-w "$@"
 endif HAVE_MARKDOWN
@@ -135,7 +137,7 @@ generated_bin_scripts += bin/sweeten bin/unsweeten \
                          bin/sweet-run \
                          bin/diff-s-sweet
 
-# These generated into the local (.) directory,
+# These generated into the local build directory (.),
 # for testing and ease-of-use (so people don't have to install things).
 # These files are *not* directly installed.
 # It's the same list as above, with "." instead of "bin", but there doesn't
@@ -172,8 +174,8 @@ generate_bin_command_sed = $(generate_some_command_sed) \
   -e "s!@PATH_PREFIX[@]!!g"
 
 generate_local_command_sed = $(generate_some_command_sed) \
-  -e "s!@LIBRARY_DIRECTORY[@]!$${PWD}!g" \
-  -e "s!@PATH_PREFIX[@]!$(builddir)$(PATH_SEPARATOR)!g"
+  -e "s!@LIBRARY_DIRECTORY[@]!$(abs_builddir)!g" \
+  -e "s!@PATH_PREFIX[@]!$(abs_builddir)$(PATH_SEPARATOR)!g"
 
 # Unfortunately "$<" is only portable inside inference rules (see POSIX).
 # So, we'll use $? instead.
@@ -221,6 +223,8 @@ bin/diff-s-sweet: src/diff-s-sweet
 
 ./sweeten: src/sweeten.sscm ./unsweeten
 	$(RM) -f $@
+	@echo "Generating local sweeting in build directory $(builddir)"
+	@echo "Whose absolute location is $(abs_builddir)"
 	$(generate_local_command_sed) \
            < "$(srcdir)/src/sweeten.sscm" | ./unsweeten > $@
 	chmod a+x $@
@@ -293,6 +297,28 @@ dist_common_lisp_source_pkg_DATA = \
 
 dist_common_lisp_source_pkg_DATA += $(pkg_asd_file)
 
+if HAVE_REGISTER_COMMON_LISP_SOURCE
+# We have a register-common-lisp-source program available.
+# If we're doing a "real" install (no DESTDIR) to /usr, use it:
+MAYBE_REGISTER_CL = \
+  test "$(DESTDIR)" != ""  || \
+  test "$(prefix)" != '/usr' || \
+  ( echo "Registering Common Lisp files" ; \
+    @REGISTER_COMMON_LISP_SOURCE@ readable )
+else !HAVE_REGISTER_COMMON_LISP_SOURCE
+MAYBE_REGISTER_CL = echo "Note: No registration performed."
+endif !HAVE_REGISTER_COMMON_LISP_SOURCE
+
+if HAVE_UNREGISTER_COMMON_LISP_SOURCE
+MAYBE_UNREGISTER_CL = \
+  test "$(DESTDIR)" != ""  || \
+  test "$(prefix)" != '/usr' || \
+  ( echo "Unregistering Common Lisp files" ; \
+    @UNREGISTER_COMMON_LISP_SOURCE@ readable )
+else !HAVE_UNREGISTER_COMMON_LISP_SOURCE
+MAYBE_UNREGISTER_CL = echo "Note: No unregistration performed."
+endif !HAVE_UNREGISTER_COMMON_LISP_SOURCE
+
 # Install symlink so asdf can find these files. See:
 # http://www.gnu.org/software/automake/manual/html_node/Extending.html
 # We first try to "rm" the symlink, in case it already exists.
@@ -304,8 +330,14 @@ install-exec-hook-cl:
 	$(RM) -f "$(DESTDIR)$(common_lisp_systemsdir)/$(pkg_asd_file)"
 	$(LN_S)  "$(common_lisp_source_pkgdir)/$(pkg_asd_file)" \
 	         "$(DESTDIR)$(common_lisp_systemsdir)/$(pkg_asd_file)"
+	@$(MAYBE_REGISTER_CL)
 
 install-exec-hook: install-exec-hook-cl
+
+uninstall-hook-cl:
+	@$(MAYBE_UNREGISTER_CL)
+
+uninstall-hook: uninstall-hook-cl
 
 # These are scripts that are just copied straight.
 dist_bin_SCRIPTS += sweet-sbcl

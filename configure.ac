@@ -91,47 +91,80 @@ yes_no_empty () { # Returns TRUE if $1 is "yes", "no", or empty.
 #   https://raw.github.com/trentm/python-markdown2/master/lib/markdown2.py
 # We have our own copy in our directory so we can be certain to have one.
 # Users can use MARKDOWN=... or --markdown=... to use their own.
-default_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"
+default_markdown_command='python "$(srcdir)/markdown2.py" -x link-patterns --link-patterns-file markdown-urls'
 
 
 # Create arguments for configure:
 AC_ARG_WITH([guile],
   [AS_HELP_STRING([[--with-guile[=COMMAND] / --without-guile]],
-    [require/disable guile; many tools use guile (default: auto-detect)])])
+    [require/disable guile; many tools use guile (default: auto-detect). COMMAND sets GUILE])])
+AC_ARG_VAR([GUILE], [Command to run guile (default: auto-detect)])
+
 AC_ARG_ENABLE([guile-readline],
   [AS_HELP_STRING([--enable-guile-readline / --disable-guile-readline],
     [require/disable readline support within guile (default: auto-detect)])])
+
 AC_ARG_WITH([scsh],
   [AS_HELP_STRING([[--with-scsh[=COMMAND] / --without-scsh]],
-    [require/disable support for scsh (default: auto-detect)])])
+    [require/disable support for scsh (default: auto-detect). COMMAND sets SCSH])])
+AC_ARG_VAR([SCSH],
+  [Command to run scsh (default: auto-detect; depends on guile)])
+
 
 AC_ARG_WITH([common-lisp],
   [AS_HELP_STRING([[--with-common-lisp[=DIR] / --without-common-lisp]],
-    [[require/disable support for Common Lisp (DIR is library directory)]])])
+    [require/disable installation of Common Lisp library (default: yes, install to $(datadir)/common-lisp).  DIR sets COMMON_LISP_LIB_DIR, the library directory])])
+AC_ARG_VAR([COMMON_LISP_LIB_DIR],
+  [Common Lisp library directory (default: $(datadir)/common-lisp)])
+
 AC_ARG_WITH([clisp],
   [AS_HELP_STRING([[--with-clisp[=COMMAND] / --without-clisp]],
-  [require/disable support for clisp])])
+  [require/disable support for clisp (default: auto-detect). This requires general Common Lisp support.  COMMAND sets CLISP])])
+AC_ARG_VAR([CLISP], [Command to run clisp (default: auto-detect)])
+
+AC_ARG_WITH([register-cl-source],
+  [AS_HELP_STRING([[--with-register-cl-source[=COMMAND] / --without-register-cl-source]],
+  [require/disable support for the utility to register Common Lisp source (default: auto-detect for register-common-lisp-source program in PATH unless specifically set).  COMMAND sets REGISTER_COMMON_LISP_SOURCE])])
+AC_ARG_VAR([REGISTER_COMMON_LISP_SOURCE], [Command to run register Common Lisp library source code (default: auto-detect)])
+
+AC_ARG_WITH([unregister-cl-source],
+  [AS_HELP_STRING([[--with-unregister-cl-source[=COMMAND] / --without-unregister-cl-source]],
+  [require/disable support for unregistering Common Lisp source (default: auto-detect.  If register-cl-source is 'no', this is too).  COMMAND sets UNREGISTER_COMMON_LISP_SOURCE])])
+AC_ARG_VAR([UNREGISTER_COMMON_LISP_SOURCE], [Command to run unregister Common Lisp library source code (default: auto-detect)])
+
 
 AC_ARG_WITH([markdown],
   [AS_HELP_STRING(
     [[--with-markdown[=COMMAND] | --without-markdown]],
-    [require/forbid translating markdown into HTML (with COMMAND if given)])])
+    [require/forbid translating markdown into HTML (default: Use included markdown2 implementation, which uses Python). COMMAND sets MARKDOWN])])
+AC_ARG_VAR([MARKDOWN],
+  [Command to convert markdown to html (default: use included markdown2])
 
-# Special environment variables/command-line variables
+# Other special environment variables/command-line variables
 AC_ARG_VAR([BIN_ENV],
   [Command to run env (default: auto-detect, often /usr/bin/env)])
-AC_ARG_VAR([GUILE], [Command to run guile (default: auto-detect)])
+AC_ARG_VAR([EXPECT], [Command to run expect (default: auto-detect)])
 AC_ARG_VAR([GUILE_SITE],
   [Guile site directory (default: auto-detect; often /usr/share/guile/site)])
-AC_ARG_VAR([SCSH],
-  [Command to run scsh (default: auto-detect; depends on guile)])
-AC_ARG_VAR([COMMON_LISP_LIB_DIR],
-  [Common Lisp library directory (default: $(datadir)/common-lisp)])
-AC_ARG_VAR([CLISP], [Command to run clisp (default: auto-detect)])
-AC_ARG_VAR([EXPECT], [Command to run expect (default: auto-detect)])
-AC_ARG_VAR([MARKDOWN],
-  [Command to convert markdown to html (the default uses python)])
 
+
+# Sanity check all AC_ARG_WITH, AC_ARG_VAR, and AC_ARG_ENABLE variables
+for input_variable in \
+  with_guile GUILE \
+  with_guile_readline \
+  with_scsh SCSH \
+  with_common_lisp COMMON_LISP_LIB_DIR \
+  with_clisp CLISP \
+  with_register_cl_source REGISTER_COMMON_LISP_SOURCE \
+  with_unregister_cl_source UNREGISTER_COMMON_LISP_SOURCE \
+  with_markdown MARKDOWN \
+  BIN_ENV EXPECT GUILE_SITE
+do
+  AS_VAR_COPY([received_value], [$input_variable])
+  AS_CASE(["$received_value"],
+    [[[-\ ]*]],
+      [AC_MSG_ERROR([Input $input_variable begins with dash or space: $received_value])])
+done
 
 # Interpret argument values not yes/no/empty as setting relevant variables
 AS_IF([yes_no_empty "$with_guile"],[], [
@@ -150,6 +183,20 @@ AS_IF([yes_no_empty "$with_clisp"],[], [
   CLISP="$with_clisp"
   with_clisp=yes
 ])
+AS_IF([yes_no_empty "$register_cl_source"],[], [
+  REGISTER_COMMON_LISP_SOURCE="$register_cl_source"
+  register_cl_source=yes
+])
+
+# If registering is forceably disabled, disable unregistering to match
+AS_IF([test "$unregister_cl_source" = "no"], [
+  unregister_cl_source=no
+])
+
+AS_IF([yes_no_empty "$unregister_cl_source"],[], [
+  UNREGISTER_COMMON_LISP_SOURCE="$unregister_cl_source"
+  unregister_cl_source=yes
+])
 AS_IF([yes_no_empty "$with_markdown"],[], [
   MARKDOWN="$with_markdown"
   with_markdown=yes
@@ -160,13 +207,12 @@ AS_IF([yes_no_empty "$enable_guile_readline"],[], [
   AC_MSG_ERROR([enable-guile-readline must be 'yes', 'no', or no value])
 ])
 
-
 # Sanity-check combinations of argument values.
 AS_IF([test "$with_guile" = no && test "$with_common_lisp" = no],[
-  AC_MSG_WARN([Both --without-guile and --without-common-lisp specified - nothing to install])
+  AC_MSG_WARN([Both --without-guile and --without-common-lisp specified, little to do])
 ])
 AS_IF([test "$with_common_lisp" = no && test "$with_clisp" = yes],[
-  AC_MSG_ERROR([clisp requires common lisp])
+  AC_MSG_ERROR([clisp requires Common Lisp support])
 ])
 
 
@@ -191,6 +237,8 @@ AS_IF([is_permitted "$with_guile"],[
   AS_IF([is_empty "$GUILE"], [], [have_guile=yes])
 ])
 AM_CONDITIONAL([HAVE_GUILE], [is_enabled "$have_guile"])
+AC_MSG_CHECKING([final decision HAVE_GUILE])
+AC_MSG_RESULT([$have_guile])
 
 # If we have guile, configure it.
 GUILE_READLINE_AVAILABLE=no
@@ -264,6 +312,8 @@ AM_COND_IF([HAVE_GUILE], [
 ])
 AC_SUBST([GUILE_READLINE_AVAILABLE])
 AM_CONDITIONAL([HAVE_SCSH], [is_enabled "$have_scsh"])
+AC_MSG_CHECKING([final decision HAVE_SCSH])
+AC_MSG_RESULT([$have_scsh])
 
 AS_IF([test "$have_scsh" = no &&
        test "x$enable_scsh" = "xyes"], [
@@ -276,8 +326,10 @@ AS_IF([test "$have_scsh" = no &&
 
 # Common Lisp by itself just installs to a directory, so we'll
 # always do it if permitted to do so:
+echo >&2
+have_register_cl_source=no
+have_unregister_cl_source=no
 AS_IF([is_permitted "$with_common_lisp"], [
-  echo >&2
   with_common_lisp=yes
 
   AC_MSG_CHECKING([Common Lisp lib dir (COMMON_LISP_LIB_DIR)])
@@ -288,8 +340,28 @@ AS_IF([is_permitted "$with_common_lisp"], [
 
   # We'll use LN_S to install Common Lisp ASDF files:
   AC_PROG_LN_S
+
+  AC_PATH_PROG([REGISTER_COMMON_LISP_SOURCE], [register-common-lisp-source])
+  AS_IF([is_empty "$REGISTER_COMMON_LISP_SOURCE"], [],
+    [have_register_cl_source=yes])
+
+  AC_PATH_PROG([UNREGISTER_COMMON_LISP_SOURCE], [unregister-common-lisp-source])
+  AS_IF([is_empty "$UNREGISTER_COMMON_LISP_SOURCE"], [],
+    [have_unregister_cl_source=yes])
 ])
 AM_CONDITIONAL([HAVE_COMMON_LISP], [is_enabled "$with_common_lisp"])
+AC_MSG_CHECKING([final decision HAVE_COMMON_LISP])
+AC_MSG_RESULT([$with_common_lisp])
+
+AM_CONDITIONAL([HAVE_REGISTER_COMMON_LISP_SOURCE],
+  [is_enabled "$have_register_cl_source"])
+AC_MSG_CHECKING([final decision HAVE_REGISTER_COMMON_LISP_SOURCE])
+AC_MSG_RESULT([$have_register_cl_source])
+
+AM_CONDITIONAL([HAVE_UNREGISTER_COMMON_LISP_SOURCE],
+  [is_enabled "$have_unregister_cl_source"])
+AC_MSG_CHECKING([final decision HAVE_UNREGISTER_COMMON_LISP_SOURCE])
+AC_MSG_RESULT([$have_unregister_cl_source])
 
 # If Common Lisp won't be installed, clisp possibilities are limited.
 AS_IF([test "$with_common_lisp" = no], [
@@ -301,7 +373,7 @@ AS_IF([test "$with_common_lisp" = no], [
 ])
 
 have_clisp=no
-have_clisp_asdf=no
+have_clisp_working_asdf=no
 announce_make_clisp_asdf=no
 AS_IF([is_permitted "$with_clisp"], [
   AC_PATH_PROG([CLISP], [clisp])
@@ -315,33 +387,22 @@ AS_IF([is_permitted "$with_clisp"], [
     echo '(require "asdf")' > asdf-check.lisp
     [$CLISP] asdf-check.lisp > /dev/null 2>&1
     AS_IF([test "$?" = 0],[
-      have_clisp_asdf=yes
+      have_clisp_working_asdf=yes
     ],[
-      announce_make_clisp_asdf=yes
+      announce_make_clisp_asdf=yes # Tell user how to fix the problem, later.
     ])
-    AC_MSG_RESULT([$have_clisp_asdf])
+    AC_MSG_RESULT([$have_clisp_working_asdf])
     rm -f asdf-check.lisp
   ])
 ])
 
-AM_CONDITIONAL([HAVE_CLISP],       [is_enabled "$have_clisp_asdf"])
+AM_CONDITIONAL([HAVE_CLISP], [is_enabled "$have_clisp_working_asdf"])
+AC_MSG_CHECKING([final decision HAVE_CLISP])
+AC_MSG_RESULT([$have_clisp_working_asdf])
 
 
 ### Other stuff ###
 echo >&2
-
-AS_IF([is_enabled "$have_guile" || is_enabled "$have_clisp_asdf"], [
-  AC_PATH_PROG([EXPECT], [expect])
-  AS_IF([is_empty "$EXPECT"],[
-    echo >&2
-    AC_MSG_WARN([[expect not found; please install expect, or many command-line tools will fail]])
-    echo >&2
-    # Set EXPECT to a plausible value, in case it's installed later
-    # or a later PATH makes "expect" visible.
-    # An empty value is *certain* to fail later.
-    EXPECT="$BIN_ENV expect"
-  ])
-])
 
 # If users have not specified their own markdown processor,
 # we'll try to use the pre-supplied markdown2 implementation.
@@ -363,7 +424,28 @@ AS_IF([is_permitted "$with_markdown"], [
 ])
 AS_IF([test "$with_markdown" = yes && test "$have_markdown" = no], [
   AC_MSG_ERROR([[Cannot generate HTML, yet markdown processing required.]])])
+
 AM_CONDITIONAL([HAVE_MARKDOWN], [is_enabled "$have_markdown"])
+AM_COND_IF([HAVE_MARKDOWN], [
+  AC_MSG_CHECKING([Markdown command])
+  AC_MSG_RESULT([$MARKDOWN])
+])
+AC_MSG_CHECKING([final decision HAVE_MARKDOWN])
+AC_MSG_RESULT([$have_markdown])
+
+
+AS_IF([is_enabled "$have_guile" || is_enabled "$have_clisp_working_asdf"], [
+  AC_PATH_PROG([EXPECT], [expect])
+  AS_IF([is_empty "$EXPECT"],[
+    echo >&2
+    AC_MSG_WARN([[expect not found; please install expect, or many command-line tools will fail]])
+    echo >&2
+    # Set EXPECT to a plausible value, in case it's installed later
+    # or a later PATH makes "expect" visible.
+    # An empty value is *certain* to fail later.
+    EXPECT="$BIN_ENV expect"
+  ])
+])
 
 
 # Emit key warnings LAST, so users are more likely to notice them.
