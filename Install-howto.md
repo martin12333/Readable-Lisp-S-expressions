@@ -1,23 +1,25 @@
 To install the "readable" software directly from our site, you need to have the right prerequisites, download and uncompress the software, configure it, build it, and then actually install it.  In most cases it should be easy, but we've provided some tips to help you avoid (or fix) problems.
 
-If you're completely impatient,  just install the packages guile, expect, clisp, and asdf (asdf is often the package "cl-asdf").  Then download the current stable version from http://readable.sourceforge.net and run the following command-line commands on your Unix-like system (including Cygwin):
+For the impatient
+=================
+
+If you're completely impatient,  just install the packages *guile*, *expect*, *clisp*, and *asdf* (asdf is often the package "cl-asdf").  You might also install *sbcl*.  Then download the current stable version from http://readable.sourceforge.net and run the following command-line commands on your Unix-like system (including Cygwin):
 
     tar xvzf readable-*.tar.gz
     cd readable-*
     ./configure --prefix=/usr
     make
     sudo make install
-    sudo register-common-lisp-source readable
 
 Below are more details about each of those steps, including various options you can use.  You don't need to install to system-wide locations (so you *could* skip the last two steps), though it's easier to use if you do.
 
-The "readable" software supports both Scheme (guile) and Common Lisp.  If you want, you can choose to install just the Scheme (guile) or just the Common Lisp portion.  In particular, if you don't already have an implementation of Common Lisp installed, you might try using the configuration option "--without-common-lisp"; setting up a usable Common Lisp system typically takes a few more steps as described below.
+The "readable" software supports both Scheme (guile) and Common Lisp.  If you want, you can choose to install just the Scheme (guile) or just the Common Lisp portion.  In particular, if you don't already have an implementation of Common Lisp installed, you might try using the configuration option "--without-common-lisp"; setting up a usable Common Lisp system can take a few more steps as described below.
 
 
 Prerequisites
 =============
 
-You need a Unix-like (POSIX) system such as a Linux distribution, *BSD, MacOS, etc.  On Windows, just install and use Cygwin; that works very well.  Any modern GNU/Linux system should do nicely.
+You need a Unix-like (POSIX) system such as a Linux distribution (such as Red Hat Enterprise Linux, CentOS, Fedora, Debian, Ubuntu, Gentoo, or Slackware), FreeBSD, NetBSD, OpenBSD, MacOS, etc.  On Windows, just install and use Cygwin; that works very well.  Any modern GNU/Linux system should do nicely.
 
 The following packages are required or strongly recommended:
 
@@ -65,9 +67,9 @@ Installing ASDF (for Common Lisp)
 
 If you use the Common Lisp implementation you'll normally need Another System Definition Facility ([ASDF](http://common-lisp.net/project/asdf/)), which is usually included in your implementation of Common Lisp.  Many Linux distributions include ASDF; just install package "cl-asdf".  Fedora, Debian, and Ubuntu are all known to include ASDF as the package "cl-asdf", and others probably use the same name too.
 
-If you don't already have ASDF, you can download it here and follow its installation instructions:  http://common-lisp.net/project/asdf/
+As a convenience, a copy of ASDF is included with the distribution (in file *external/asdf.lisp*), so that you can get started without downloading and installing other libraries.  As described below, the install process will even help you install ASDF in a way that makes clisp happy.
 
-As a convenience, a version of ASDF is included with the distribution, so that you can get started without looking for other libraries.  You do not have to use the included version.
+You do not have to use the included copy of ASDF.  If you don't already have ASDF, you can download it and follow its installation instructions.  The ASDF main page is: http://common-lisp.net/project/asdf/
 
 
 Configuring ASDF
@@ -112,7 +114,7 @@ As usual, configure.  To accept all the defaults, installing to the directory "/
 
     ./configure
 
-Many people will want to install to the directory "/usr" (e.g., so commands will be put in "/usr/bin").  To do this, instead run:
+Many people will want to install to the directory "/usr" (e.g., so commands will be put in "/usr/bin"), especially if you're installing Common Lisp files.  To do this, instead run:
 
     ./configure --prefix=/usr
 
@@ -122,7 +124,7 @@ The configure program tries to automatically figure out what to do and then do i
     --without-clisp         disable support for clisp
     --without-common-lisp   disable support for Common Lisp (including clisp and sbcl)
 
-In particular, if you won't be using Common Lisp, consider using the configure option "--without-common-lisp".  Note that if you use --without-guile you'll disable several tools that depend on guile.
+So if you won't be using Common Lisp, consider using the configure option "--without-common-lisp".  Note that if you use --without-guile you'll disable several tools that depend on guile.
 
 If you change your mind later about your configuration options, just re-run configure with your new configuration options, and then run the later steps as described below (in particular, "make" and "make install").
 
@@ -142,7 +144,7 @@ Now build the code, using:
 
     make
 
-You can optionally run the testsuite.  To run the tests you need guile, clisp, a correctly-installed asdf.  Run the testsuite by typing:
+You can optionally run the testsuite.  To run the tests you need /usr/bin/env (almost everyone has this).  The full testsuite requires guile and clisp, and clisp must be able to invoke ASDF.   Run the testsuite by typing:
 
     make check
 
@@ -154,11 +156,11 @@ You actually don't have to install it to system-wide locations to use it, if you
 
     make install
 
-This will probably require privileges, so you may need to run "su" first or use sudo ("sudo make install") to get those privileges.  Thus, on many system you'll really type:
+This will probably require privileges, so you may need to run "su" first or use sudo ("sudo make install") to get those privileges.  Thus, on many systems you'll really type:
 
     sudo make install
 
-If you're installing the Common Lisp libraries to the system-wide locations, and your system uses the "common-lisp-controller" (including Debian, Ubunutu, and Fedora), then there's one more step.  After you install a Common Lisp library to its final system-wide location, you need to tell common-lisp-controller that you've done so.  Note: If you set DESTDIR as part of "make install", this is *not* an installation to its final location.  This is also usually a privileged command, so again, you'll probably prefix this command with "sudo":
+Some systems use "common-lisp-controller", which requires registration of Common Lisp files that are installed to system-wide locations.  Such systems include Debian, Ubuntu, Fedora, Gentoo, and other systems with the installable command register-common-lisp-source.  A "make install" will *automatically* register your Common Lisp files for you, but only if you do a final install to /usr (this means the prefix is /usr and DESTDIR is not set).  If you install the software to a nonstandard system-wide location (e.g., /usr/local), you may need to separately register it using this privileged command:
 
     register-common-lisp-source readable
 
@@ -168,9 +170,10 @@ Do I need to install it to system-wide locations?
 
 Again, no; you don't need to install to system-wide locations.  Once it's built, you can use it.
 
-If you have installed it to system-wide locations, then in most cases the programs will automatically find the files when they need them, which makes things a little easier.  E.G., you don't need to include prefixes like "./" in the command names.
+If you have installed it to system-wide locations, then in most cases the programs will automatically find the files when they need them, which makes things a little easier.
 
-If you have not installed the files to system-wide locations, then you need to tell the system where the files are when you try to use them.  You can tell the system where the commands are by prefixing the name with "./" if the command is in the current directory.  Another approach is to modify your PATH. On a Bourne-like shell (the usual kind), if the current directory contains some of the programs you'd like to be able to run without prefixing them with "./", you can modify your PATH using:
+
+If you have not installed the files to system-wide locations, then you need to make sure the system can find commands when you type them.  You can tell the system where the commands are by prefixing the command name with the directory it's in, e.g., prefix the command with "./" if the command is in the current directory.  Another approach is to modify your PATH. On a Bourne-like shell (the usual kind), if the current directory contains some of the programs you'd like to be able to run without prefixing them with "./", you can modify your PATH using:
 
     export PATH="$(pwd)/$PATH"
 
