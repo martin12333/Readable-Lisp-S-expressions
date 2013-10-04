@@ -11,7 +11,8 @@ You do *NOT* need this "INSTALL" file for normal situations.
 This "INSTALL" file provides more details about installation configuration
 for unusual situations, including:
 
-- Detailed descriptions of this package's advanced configure options
+- Rebuilding "configure"
+- Comments about configure options
 - Make options
 - Technical Detail: Using ASDF from clisp
 - Guile site directory
@@ -37,66 +38,49 @@ a recent version of autoconf and automake, by using the usual command:
     autoreconf -i
 
 
-Special configure options
-=========================
+Comments about configure options
+================================
 
 The configuration and build system follows the usual GNU Build System
 conventions, and is based on the autotools (e.g., autoconf and automake).
 
 As with any autoconf-based system, once "configure" exists, you can run
-"./configure --help" to show help.  If you're confused about what
-it's decided to do or why, view the file "config.log" (which is a
-log file produced when "configure" runs).  You can change configuration
+"./configure --help" to show help.  You can change configuration
 options by just re-running "configure" with the new options.
+We do not list all the configure options here, because "./configure --help"
+already incldues that information.
 
-The "configure" program tries to auto-detect what to do, but
+If you're confused about what configure decided to do or why, view the file
+"config.log" (which is a log file produced when "configure" runs).
+
+The "configure" program tries to aggressively auto-detect what to do, but
 various specialized configuration options can override its decisions.
-The specialized configure options are as follows:
+In general, you can set --with-OPTION_NAME=VALUE where value can be yes, no,
+empty (which is usually considered the same as auto-detect), or some other
+value.  In most cases, the other value sets a named variable that
+is then later used when building the software (e.g., GUILE contains
+the command that is used to invoke guile).  A COMMAND may include spaces,
+which are interpreted as option separators (so you CAN include
+command line options if you want to).
 
---without-guile
-  disable support for guile.
-  This prevents installation of the guile (Scheme) library
-  and all tools that depend on the library (e.g., sweeten and unsweeten).
-  This also disables scsh support, since the scsh support uses guile.
+Disabling guile (--without-guile) disables many tools (such as
+sweeten and unsweeten) and scsh support.
 
---without-scsh
-  disable support for scsh.
+By default HTML files are generated from markdown (.md) files
+using the command "python markdown2.py ...", where markdown2.py
+is a file included with this package.  You can use --with-markdown-command
+to select a different markdown processor (say, one on your system).
+The "--without-markdown" option completely disables generating
+HTML from markdown.  Users who start with the tarball can easily do
+this as long as they don't change the ".md" files, since the generated
+files are included anyway.  We don't do this automatically, though,
+because it could easily lead to outdated files getting distributed,
+and requiring python is usually not a problem.
 
---without-common-lisp
-  disable support for Common Lisp.
-  This prevents installation of the Common Lisp library
-  and all tools that depend on the library (e.g., sweet-clisp).
-
---without-clisp
-  disable support for clisp.
-  This inhibits just the installation of sweet-clisp.
-
---with-markdown-command=COMMAND | --without-markdown-command
-  By default HTML files are generated from markdown (.md) files
-  using the command "python markdown2.py ...", where markdown2.py
-  is a file included with this package.  You can use --with-markdown-command
-  to select a different markdown processor (say, one on your system).
-  The "without" option completely disables generating HTML from markdown.
-  Users who start with the tarball can easily do this as long as they
-  don't change the ".md" files, since the generated files are included
-  as well.  We don't do this automatically, though, because it could
-  easily lead to outdated files getting distributed, and requiring
-  python is usually not a problem.
-
-GUILE=pathname
-  Use this guile executable instead of the one that would normally
-  be found.
-
-GUILE_SITE=directory_name
-  If GUILE_SITE=... is set on the configure command line, or is set
-  as an environment variable when configure is run, then that value
-  is used as the guile site directory (overriding anything else).
-
-COMMON_LISP_LIB_DIR
-  Force value of Common Lisp library directory, usually
-  "$(datadir)/common-lisp".  This directory should have
-  "source" and "systems" subdirectories.  The Common Lisp library will
-  be stored in "$COMMON_LISP_LIB_DIR/source/readable".
+The Common Lisp library directory (you can set this via COMMON_LISP_LIB_DIR)
+is usually "$(datadir)/common-lisp".  This directory should have
+"source" and "systems" subdirectories.  The Common Lisp information
+for this library will be stored in "$COMMON_LISP_LIB_DIR/source/readable".
 
 
 
@@ -171,7 +155,9 @@ instead of "ls -s".
 
 After this point *(require "asdf")* should work from clisp.
 
-We haven't found an obvious way to make ASDF available automatically
+This really should be something that can be easily and automatically
+configured to work system-wide.  Sadly,
+we haven't found an obvious way to make ASDF available automatically
 as part of a system-wide clisp configuration once ASDF is installed.
 clisp does have a value `CUSTOM:*LIB-DIRECTORY*` that's set to a global
 setting, but it's ignored by require.  The default clisp `*LOAD-PATHS*`
