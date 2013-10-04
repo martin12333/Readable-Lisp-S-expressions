@@ -15,6 +15,7 @@ for unusual situations, including:
 - Comments about configure options
 - Make options
 - Technical Detail: Using ASDF from clisp
+- Minimum files necessary for Common Lisp
 - Guile site directory
 - The traditional installation instructions for any autoconf-based system.
 
@@ -181,6 +182,27 @@ setting, but it's ignored by require.  The default clisp `*LOAD-PATHS*`
 does not include any global directories (and in fact prefers ".", which
 is a potential security issue).  If you have suggestions for how to make
 ASDF loading automatic in clisp, system-wide, please let us know.
+
+
+Minimum files necessary for Common Lisp
+=======================================
+
+If you just want to copy the minimum number of
+Common Lisp implementation files somewhere for use,
+and don't want to mess with the autotools etc., you can do that too.
+
+The minimum set of files, and when you need them, are:
+
+basic-curly.lisp ; Bare minimum, implements basic curly-infix.
+neoteric.lisp ; Needed if you use neoteric-expressions; needs basic-curly.lisp
+backquote.lisp
+sweet.lisp ; Need if you use sweet-expressions; needs {backquote,neoteric}.lisp
+readable.asd ; Need if you use ASDF to handle these other files.
+
+Thus, if you ONLY need basic-curly-infix, you can copy JUST the file
+basic-curly.lisp somewhere (e.g., into your project directory).
+However, since that would mean that you wouldn't automatically get
+updates, it's usually better to use it as an external library.
 
 
 Guile site directory
