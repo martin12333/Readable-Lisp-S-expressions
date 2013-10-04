@@ -120,7 +120,7 @@ generated_local_scripts =
 # The following assumes that none of these values have "!" in them.
 # The [@] trick is described in "Autotools" by John Calcote,
 # "Emulating Autoconf Text Replacement Techniques", pg 297:
-generate_some_command_sed = $(SED) \
+generate_some_command_sed = echo "Generating  $@" ; $(SED) \
   -e "s!@GUILE[@]!$(GUILE)!g" \
   -e "s!@GUILE_READLINE_AVAILABLE[@]!$(GUILE_READLINE_AVAILABLE)!g" \
   -e "s!@BIN_ENV[@]!$(BIN_ENV)!g" \
@@ -142,12 +142,12 @@ generate_local_command_sed = $(generate_some_command_sed) \
 # changes the values of prefix, etc., they need to "make clean" first.
 
 generate_bin_command = \
-  $(MKDIR_P) bin ; \
+  @$(MKDIR_P) bin ; \
   $(generate_bin_command_sed) < $?  > $@ ; \
   chmod a+x $@
 
 generate_local_command = \
-  $(RM) -f $@ ; \
+  @$(RM) -f $@ ; \
   $(generate_local_command_sed) < $?  > $@ ; \
   chmod a+x $@ ; \
   chmod a-w $@
@@ -203,10 +203,10 @@ endif HAVE_SCSH
 # Rules for creating scripts (when we need to do so)
 
 bin/sweeten: src/sweeten.sscm ./unsweeten
-	$(MKDIR_P) bin
-	$(generate_bin_command_sed) \
+	@$(MKDIR_P) bin
+	@$(generate_bin_command_sed) \
 	   < "$(srcdir)/src/sweeten.sscm" | ./unsweeten > $@
-	chmod a+x $@
+	@chmod a+x $@
 
 bin/unsweeten: src/unsweeten
 	$(generate_bin_command)
@@ -232,23 +232,21 @@ bin/diff-s-sweet: src/diff-s-sweet
 # Rules for making local versions.
 
 ./sweeten: src/sweeten.sscm ./unsweeten
-	$(RM) -f $@
-	@echo "Generating local sweeting in build directory $(builddir)"
-	@echo "Whose absolute location is $(abs_builddir)"
-	$(generate_local_command_sed) \
+	@$(RM) -f $@
+	@$(generate_local_command_sed) \
            < "$(srcdir)/src/sweeten.sscm" | ./unsweeten > $@
-	chmod a+x $@
+	@chmod a+x $@
 
 # Make "unsweeten" depend on the underlying library.
 # That way, once "./unsweeten" is created, we know that it's ready to use
 # (because its dependencies have been installed). Then other rules can just
 # depend on "./unsweeten", and they won't start until unsweeten is ready.
 ./unsweeten: src/unsweeten readable/kernel.scm
-	$(RM) -f $@
-	$(generate_local_command_sed) \
+	@$(RM) -f $@
+	@$(generate_local_command_sed) \
 	    < "$(srcdir)/src/unsweeten" > $@
-	chmod a+x $@
-	chmod a-w $@
+	@chmod a+x $@
+	@chmod a-w $@
 
 ./curly-guile: src/curly-guile
 	$(generate_local_command)
