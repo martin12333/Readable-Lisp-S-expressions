@@ -4,7 +4,7 @@
 
 # @WARNING_MESSAGE@
 
-spawn -noecho "@GUILE@" --debug -L "@LIBRARY_DIRECTORY@"
+spawn -noecho "@GUILE@" --debug -L "@GUILE_LIBRARY_DIRECTORY@"
 
 # Enable readline (for ease of interface). Do it separately, in case
 # readline isn't available.

@@ -129,11 +129,11 @@ generate_some_command_sed = echo "Generating  $@" ; $(SED) \
   -e "s|@WARNING_MESSAGE[@]|Generated automatically, DO NOT EDIT!|g"
 
 generate_bin_command_sed = $(generate_some_command_sed) \
-  -e "s!@LIBRARY_DIRECTORY[@]!$(readable_libdir)!g" \
+  -e "s!@GUILE_LIBRARY_DIRECTORY[@]!$(readable_libdir)!g" \
   -e "s!@PATH_PREFIX[@]!!g"
 
 generate_local_command_sed = $(generate_some_command_sed) \
-  -e "s!@LIBRARY_DIRECTORY[@]!$(abs_builddir)!g" \
+  -e "s!@GUILE_LIBRARY_DIRECTORY[@]!$(abs_builddir)!g" \
   -e "s!@PATH_PREFIX[@]!$(abs_builddir)$(PATH_SEPARATOR)!g"
 
 # Unfortunately "$<" is only portable inside inference rules (see POSIX).

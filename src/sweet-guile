@@ -5,7 +5,7 @@
 # By David A. Wheeler. Start up guile in sweet-enable mode,
 # so you can try it out.
 
-spawn -noecho "@GUILE@" --debug -L "@LIBRARY_DIRECTORY@"
+spawn -noecho "@GUILE@" --debug -L "@GUILE_LIBRARY_DIRECTORY@"
 
 # Enable readline (for ease of interface). Do it separately, in case
 # readline isn't available.
