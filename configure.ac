@@ -122,6 +122,12 @@ AC_ARG_WITH([clisp],
   [require/disable support for clisp (default: auto-detect). This requires general Common Lisp support.  COMMAND sets CLISP])])
 AC_ARG_VAR([CLISP], [Command to run clisp (default: auto-detect)])
 
+AC_ARG_WITH([sbcl],
+  [AS_HELP_STRING([[--with-sbcl[=COMMAND] / --without-sbcl]],
+    [require/disable support for sbcl (default: auto-detect). COMMAND sets SBCL])])
+AC_ARG_VAR([SBCL],
+  [Command to run sbcl (default: auto-detect)])
+
 AC_ARG_WITH([register-cl-source],
   [AS_HELP_STRING([[--with-register-cl-source[=COMMAND] / --without-register-cl-source]],
   [require/disable support for the utility to register Common Lisp source (default: auto-detect for register-common-lisp-source program in PATH unless specifically set).  COMMAND sets REGISTER_COMMON_LISP_SOURCE])])
@@ -155,6 +161,7 @@ for input_variable in \
   with_scsh SCSH \
   with_common_lisp COMMON_LISP_LIB_DIR \
   with_clisp CLISP \
+  with_sbcl SBCL \
   with_register_cl_source REGISTER_COMMON_LISP_SOURCE \
   with_unregister_cl_source UNREGISTER_COMMON_LISP_SOURCE \
   with_markdown MARKDOWN \
@@ -182,6 +189,10 @@ AS_IF([yes_no_empty "$with_common_lisp"],[], [
 AS_IF([yes_no_empty "$with_clisp"],[], [
   CLISP="$with_clisp"
   with_clisp=yes
+])
+AS_IF([yes_no_empty "$with_sbcl"],[], [
+  SBCL="$with_sbcl"
+  with_sbcl=yes
 ])
 AS_IF([yes_no_empty "$register_cl_source"],[], [
   REGISTER_COMMON_LISP_SOURCE="$register_cl_source"
@@ -213,6 +224,9 @@ AS_IF([test "$with_guile" = no && test "$with_common_lisp" = no],[
 ])
 AS_IF([test "$with_common_lisp" = no && test "$with_clisp" = yes],[
   AC_MSG_ERROR([clisp requires Common Lisp support])
+])
+AS_IF([test "$with_common_lisp" = no && test "$with_sbcl" = yes],[
+  AC_MSG_ERROR([sbcl requires Common Lisp support])
 ])
 
 
@@ -363,13 +377,18 @@ AM_CONDITIONAL([HAVE_UNREGISTER_COMMON_LISP_SOURCE],
 AC_MSG_CHECKING([final decision HAVE_UNREGISTER_COMMON_LISP_SOURCE])
 AC_MSG_RESULT([$have_unregister_cl_source])
 
-# If Common Lisp won't be installed, clisp possibilities are limited.
+# If Common Lisp won't be installed, clisp and sbcl possibilities are limited.
 AS_IF([test "$with_common_lisp" = no], [
   AS_IF(
     [is_empty "$with_clisp"],
       [with_clisp=no],
     [test "$with_clisp" = yes],
       [AC_MSG_ERROR([Common Lisp forbidden yet Clisp required])])
+  AS_IF(
+    [is_empty "$with_sbcl"],
+      [with_sbcl=no],
+    [test "$with_sbcl" = yes],
+      [AC_MSG_ERROR([Common Lisp forbidden yet sbcl required])])
 ])
 
 have_clisp=no
@@ -399,6 +418,24 @@ AS_IF([is_permitted "$with_clisp"], [
 AM_CONDITIONAL([HAVE_CLISP], [is_enabled "$have_clisp_working_asdf"])
 AC_MSG_CHECKING([final decision HAVE_CLISP])
 AC_MSG_RESULT([$have_clisp_working_asdf])
+
+
+have_sbcl=no
+AS_IF([is_permitted "$with_sbcl"], [
+  AC_PATH_PROG([SBCL], [sbcl])
+  AS_IF([is_empty "$SBCL"], [
+    AS_IF([test "with_sbcl" = yes], [
+      AC_MSG_ERROR([sbcl required but not found])])
+  ], [
+    have_sbcl=yes
+  ])
+])
+
+AM_CONDITIONAL([HAVE_SBCL], [is_enabled "$have_sbcl"])
+AC_MSG_CHECKING([final decision HAVE_SBCL])
+AC_MSG_RESULT([$have_sbcl])
+
+
 
 
 ### Other stuff ###
