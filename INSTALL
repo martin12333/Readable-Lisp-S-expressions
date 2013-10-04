@@ -162,6 +162,16 @@ instead of "ls -s".
 
 After this point *(require "asdf")* should work from clisp.
 
+clisp has a few options that can help.
+The "-lp" command-line option lets you identify directories to get
+libraries, e.g., if you don't want to install ASDF in ~/lisp/asdf
+you could do this:
+
+    clisp -lp "$(PWD)/external"
+
+Alternatively, instead of using "require", you could start up clisp and
+just run (load "path-to-your-copy-of-asdf").
+
 This really should be something that can be easily and automatically
 configured to work system-wide.  Sadly,
 we haven't found an obvious way to make ASDF available automatically
