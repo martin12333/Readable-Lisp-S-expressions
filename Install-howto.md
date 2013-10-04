@@ -3,7 +3,7 @@ To install the "readable" software directly from our site, you need to have the 
 For the impatient
 =================
 
-If you're completely impatient,  just install the packages *guile*, *expect*, *clisp*, and *asdf* (asdf is often the package "cl-asdf").  You might also install *sbcl*.  Then download the current stable version from http://readable.sourceforge.net and run the following command-line commands on your Unix-like system (including Cygwin):
+If you're completely impatient,  just install the packages *guile*, *expect*, *clisp*, and *asdf* (asdf is often the package "cl-asdf").  You might also install *sbcl*.  Then download the current stable version from [http://readable.sourceforge.net](http://readable.sourceforge.net) and run the following command-line commands on your Unix-like system (including Cygwin):
 
     tar xvzf readable-*.tar.gz
     cd readable-*
@@ -11,7 +11,7 @@ If you're completely impatient,  just install the packages *guile*, *expect*, *c
     make
     sudo make install
 
-Below are more details about each of those steps, including various options you can use.  You don't need to install to system-wide locations (so you *could* skip the last two steps), though it's easier to use if you do.
+Below are more details about each of those steps, including various options you can use.  You don't need to install to system-wide locations (so you *could* skip the last step), though it's slightly easier to use if you do.
 
 The "readable" software supports both Scheme (guile) and Common Lisp.  If you want, you can choose to install just the Scheme (guile) or just the Common Lisp portion.  In particular, if you don't already have an implementation of Common Lisp installed, you might try using the configuration option "--without-common-lisp"; setting up a usable Common Lisp system can take a few more steps as described below.
 
@@ -28,12 +28,12 @@ The following packages are required or strongly recommended:
 
 If you're going to use Common Lisp, you also need:
 
-*   *clisp*, *sbcl*, or some other implementation of Common Lisp.   You need clisp if you want to run our self-test suite.  Cygwin includes a clisp package, so if you use Cygwin, that's the easiest option.  The "readable" software should work with any implementation of Common Lisp; please let us know if there's a problem.
-*   *[ASDF](http://common-lisp.net/project/asdf/)* (typically packaged with the name "cl-asdf").  You may need to configure ASDF, as discussed below.
+*   *clisp*, *sbcl*, or some other implementation of Common Lisp.  Cygwin includes a clisp package, so if you use Cygwin, that's the easiest option.  The "readable" software should work with any implementation of Common Lisp; please let us know if there's a problem.
+*   *[ASDF](http://common-lisp.net/project/asdf/)* (typically packaged with the name "cl-asdf").  You may need to configure ASDF, as discussed below.  As a convenience, we include a copy if you don't have your own copy.
 
 In most cases, users of Linux distributions can just use their package managers (such as yum, apt-get, or a GUI front-end for them) to easily install the relevant packages and any dependencies.
 
-Below are some additional tips about prerequisites for the development version, RHEL and CentOS, ASDF, using ASDF in clisp, and weird systems without /usr/bin/env.
+Below are some additional tips about prerequisites and specific circumstances.
 
 Prerequisites if you use the development version
 ------------------------------------------------
@@ -46,8 +46,8 @@ If you plan to use the development (not stable) version directly from our git re
 *   *guile development libraries* (e.g., package "guile-devel" on Fedora and Cygwin).  These need to match the version of guile you're using.
 *   *python* (to generate some HTML files from markdown).  You should have version 2.7+ or version 3+.  Version 2.4+ will do in a pinch (you need version 2.7 to auto-download markdown files, but only 2.4+ to generate HTML from them.)
 
-Red Hat Enterprise Linux (RHEL), CentOS, and Scientific Linux
--------------------------------------------------------------
+Installing on Red Hat Enterprise Linux (RHEL), CentOS, and Scientific Linux
+---------------------------------------------------------------------------
 
 The standard repositories of [Red Hat Enterprise Linux (RHEL)](http://www.redhat.com/products/enterprise-linux/), [CentOS](http://www.centos.org/), and [Scientific Linux](http://www.scientificlinux.org/) do not, at the time of this writing, include many Lisp-related packages.  The easy solution is to add additional repositories with such packages to your list of repositories.  Here are three likely additional repositories specifically designed for RHEL and CentOS; see their sites for instructions on how to add them to your list of repositories:
 
@@ -69,7 +69,9 @@ If you use the Common Lisp implementation you'll normally need Another System De
 
 As a convenience, a copy of ASDF is included with the distribution (in file *external/asdf.lisp*), so that you can get started without downloading and installing other libraries.  As described below, the install process will even help you install ASDF in a way that makes clisp happy.
 
-You do not have to use the included copy of ASDF.  If you don't already have ASDF, you can download it and follow its installation instructions.  The ASDF main page is: http://common-lisp.net/project/asdf/
+You do not have to use the included copy of ASDF.  If you don't already have ASDF, you can download it and follow its installation instructions.  The ASDF main page is: [http://common-lisp.net/project/asdf/](http://common-lisp.net/project/asdf/)
+
+You can use the Common Lisp implementation files without ASDF or the normal installation script, if you want to.  You can even embed the files into your own project.  This isn't particularly recommended, since this may make it harder for your users to update their readable software.   See the INSTALL file if you're interested in applying this do-it-yourself approach.
 
 
 Configuring ASDF
