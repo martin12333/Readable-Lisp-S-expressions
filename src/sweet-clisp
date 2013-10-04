@@ -20,6 +20,12 @@ origfile=""
 # Use clisp standard repl (no internal overrides):
 crepl=0
 
+override_cl_source_registry="@OVERRIDE_CL_SOURCE_REGISTRY@"
+if [ -n "$override_cl_source_registry" ] ; then
+  CL_SOURCE_REGISTRY="$override_cl_source_registry"
+  export CL_SOURCE_REGISTRY
+fi
+
 setup_commands='
 (require "asdf")
 (asdf:load-system :readable)

@@ -130,11 +130,13 @@ generate_some_command_sed = echo "Generating  $@" ; $(SED) \
 
 generate_bin_command_sed = $(generate_some_command_sed) \
   -e "s!@GUILE_LIBRARY_DIRECTORY[@]!$(readable_libdir)!g" \
-  -e "s!@PATH_PREFIX[@]!!g"
+  -e "s!@PATH_PREFIX[@]!!g" \
+  -e "s!@OVERRIDE_CL_SOURCE_REGISTRY[@]!!g"
 
 generate_local_command_sed = $(generate_some_command_sed) \
   -e "s!@GUILE_LIBRARY_DIRECTORY[@]!$(abs_builddir)!g" \
-  -e "s!@PATH_PREFIX[@]!$(abs_builddir)$(PATH_SEPARATOR)!g"
+  -e "s!@PATH_PREFIX[@]!$(abs_builddir)$(PATH_SEPARATOR)!g" \
+  -e "s!@OVERRIDE_CL_SOURCE_REGISTRY[@]!$(abs_builddir)!g"
 
 # Unfortunately "$<" is only portable inside inference rules (see POSIX).
 # So, we'll use $? instead.  Unfortunately, this means that we cannot
