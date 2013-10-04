@@ -45,10 +45,17 @@ The configuration and build system follows the usual GNU Build System
 conventions, and is based on the autotools (e.g., autoconf and automake).
 
 As with any autoconf-based system, once "configure" exists, you can run
-"./configure --help" to show help.  You can change configuration
-options by just re-running "configure" with the new options.
+"./configure --help" to show help.
 We do not list all the configure options here, because "./configure --help"
-already incldues that information.
+already includes that information.
+
+You can change configuration options by just re-running
+"configure" with the new options, if it's just a matter of enabling
+or disabling features.  However, if run configure and make, and
+then change a configuration value (e.g., prefix), you have to run
+"make clean" manually and then run make.  I'd like to do this automatically,
+but the easy way to do that is to use "$<" in defined make rules;
+GNU make supports that but it's not portable to all makes.
 
 If you're confused about what configure decided to do or why, view the file
 "config.log" (which is a log file produced when "configure" runs).
