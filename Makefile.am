@@ -231,7 +231,7 @@ bin/diff-s-sweet: src/diff-s-sweet
 
 # Rules for making local versions.
 
-./sweeten: src/sweeten.sscm ./unsweeten
+sweeten: src/sweeten.sscm ./unsweeten
 	@$(RM) -f $@
 	@$(generate_local_command_sed) \
            < "$(srcdir)/src/sweeten.sscm" | ./unsweeten > $@
@@ -241,32 +241,32 @@ bin/diff-s-sweet: src/diff-s-sweet
 # That way, once "./unsweeten" is created, we know that it's ready to use
 # (because its dependencies have been installed). Then other rules can just
 # depend on "./unsweeten", and they won't start until unsweeten is ready.
-./unsweeten: src/unsweeten readable/kernel.scm
+unsweeten: src/unsweeten readable/kernel.scm
 	@$(RM) -f $@
 	@$(generate_local_command_sed) \
 	    < "$(srcdir)/src/unsweeten" > $@
 	@chmod a+x $@
 	@chmod a-w $@
 
-./curly-guile: src/curly-guile
+curly-guile: src/curly-guile
 	$(generate_local_command)
 
-./neoteric-guile: src/neoteric-guile
+neoteric-guile: src/neoteric-guile
 	$(generate_local_command)
 
-./sweet-guile: src/sweet-guile
+sweet-guile: src/sweet-guile
 	$(generate_local_command)
 
-./sweet-scsh: src/sweet-scsh
+sweet-scsh: src/sweet-scsh
 	$(generate_local_command)
 
-./sweet-run: src/sweet-run
+sweet-run: src/sweet-run
 	$(generate_local_command)
 
-./diff-s-sweet: src/diff-s-sweet
+diff-s-sweet: src/diff-s-sweet
 	$(generate_local_command)
 
-./sweeten.sscm: src/sweeten.sscm
+sweeten.sscm: src/sweeten.sscm
 	$(generate_local_command)
 
 endif HAVE_GUILE
@@ -348,7 +348,7 @@ generated_local_scripts += ./sweet-clisp
 bin/sweet-clisp: src/sweet-clisp
 	$(generate_bin_command)
 
-./sweet-clisp: src/sweet-clisp
+sweet-clisp: src/sweet-clisp
 	$(generate_local_command)
 endif HAVE_CLISP
 
