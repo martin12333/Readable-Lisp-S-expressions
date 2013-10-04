@@ -429,11 +429,14 @@ MDSTUBS = Rationale.md Retort.md Examples.md
 
 # These are all markdown (.md) files, including stubs:
 MDFILES = $(MDMIRRORS) $(MDSTUBS)
+HTML_FROM_MDFILES = $(MDFILES:.md=.html)
 
 dist_doc_DATA += $(MDFILES)
 
 # Generate, distribute, and install HTML files generated from .md files:
-dist_doc_DATA += $(MDFILES:.md=.html)
+dist_doc_DATA += $(HTML_FROM_MDFILES)
+# Set so "make maintainer-clean" will remove the generated HTML files:
+MAINTAINERCLEANFILES = $(HTML_FROM_MDFILES)
 
 
 # Man pages
