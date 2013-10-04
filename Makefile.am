@@ -103,7 +103,7 @@ script_sources = src/sweeten.sscm src/unsweeten \
                  src/diff-s-sweet \
                  src/kernel.scm \
                  src/srfi-curly-infix.scm \
-                 src/sweet-clisp
+                 src/sweet-clisp src/sweet-sbcl
 
 EXTRA_DIST += $(script_sources)
 
@@ -337,8 +337,6 @@ uninstall-hook-cl:
 
 uninstall-hook: uninstall-hook-cl
 
-# These are scripts that are just copied straight.
-dist_bin_SCRIPTS += sweet-sbcl
 endif HAVE_COMMON_LISP
 
 if HAVE_CLISP
@@ -352,6 +350,17 @@ sweet-clisp: src/sweet-clisp
 	$(generate_local_command)
 endif HAVE_CLISP
 
+if HAVE_SBCL
+generated_bin_scripts += bin/sweet-sbcl
+generated_local_scripts += ./sweet-sbcl
+
+bin/sweet-sbcl: src/sweet-sbcl
+	$(generate_bin_command)
+
+sweet-sbcl: src/sweet-sbcl
+	$(generate_local_command)
+endif HAVE_SBCL
+
 
 # #######################################################
 # Ensure that generated scripts are built and cleaned up.
@@ -361,10 +370,10 @@ endif HAVE_CLISP
 # (there's no dist_ prefix for bin_SCRIPTS here):
 bin_SCRIPTS += $(generated_bin_scripts)
 
+# The local scripts are not distributed nor installed:
 noinst_SCRIPTS += $(generated_local_scripts)
 
-# Clean up generated scripts. Don't clean up *all* scripts,
-# since some (like sweet-sbcl and sweet-clisp) are not generated.
+# Clean up generated scripts.
 CLEANFILES += $(generated_bin_scripts) $(generated_local_scripts)
 
 
