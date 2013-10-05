@@ -146,7 +146,6 @@ AC_ARG_WITH([unregister-cl-source],
     [require/disable support for unregistering Common Lisp source (default: auto-detect.  If register-cl-source is 'no', this is too)])],
   [UNREGISTER_COMMON_LISP_SOURCE="$withval"])
 
-
 AC_ARG_WITH([markdown],
   [AS_HELP_STRING(
     [[--with-markdown[=COMMAND] | --without-markdown]],
@@ -192,26 +191,20 @@ do
 done
 
 # If registering is forceably disabled, disable unregistering to match
-AS_IF([test "x$with_register_cl_source" = "xno"], [
-  with_unregister_cl_source=no
-])
+AS_IF([test "x$with_register_cl_source" = "xno"],
+  [with_unregister_cl_source=no])
 
 # Sanity-check argument values that MUST be yes/no/empty
-AS_IF([yes_no_empty "$enable_guile_readline"],[], [
-  AC_MSG_ERROR([enable-guile-readline must be 'yes', 'no', or no value])
-])
+AS_IF([yes_no_empty "$enable_guile_readline"],[],
+  [AC_MSG_ERROR([enable-guile-readline must be 'yes', 'no', or no value])])
 
 # Sanity-check combinations of argument values.
-AS_IF([test "$with_guile" = no && test "$with_common_lisp" = no],[
-  AC_MSG_WARN([Both --without-guile and --without-common-lisp specified, little to do])
-])
-AS_IF([test "$with_common_lisp" = no && test "$with_clisp" = yes],[
-  AC_MSG_ERROR([clisp requires Common Lisp support])
-])
-AS_IF([test "$with_common_lisp" = no && test "$with_sbcl" = yes],[
-  AC_MSG_ERROR([sbcl requires Common Lisp support])
-])
-
+AS_IF([test "$with_guile" = no && test "$with_common_lisp" = no],
+  [AC_MSG_WARN([Both --without-guile and --without-common-lisp specified, little to do])])
+AS_IF([test "$with_common_lisp" = no && test "$with_clisp" = yes],
+  [AC_MSG_ERROR([clisp requires Common Lisp support])])
+AS_IF([test "$with_common_lisp" = no && test "$with_sbcl" = yes],
+  [AC_MSG_ERROR([sbcl requires Common Lisp support])])
 
 
 # Setup basics
@@ -220,8 +213,8 @@ AC_PROG_MKDIR_P
 AC_PROG_SED
 
 AC_PATH_PROG([BIN_ENV], [env])
-AS_IF([is_empty "$BIN_ENV"], [
-  AC_MSG_ERROR([No executable "env" available.])])
+AS_IF([is_empty "$BIN_ENV"],
+  [AC_MSG_ERROR([No executable "env" available.])])
 
 
 ### GUILE ###
@@ -259,19 +252,16 @@ AM_COND_IF([HAVE_GUILE], [
   # 3. Use the value '${datarootdir}/guile/site'
   AS_IF([is_empty "$GUILE_SITE"], [
     AS_CASE([$prefix],
-      [*/_inst], [
-        AC_MSG_NOTICE([[Prefix ends in /_inst, so this is a 'make distcheck'. GUILE_SITE is unset.]])],
-      [*], [
-        # Query the guile interpreter directly to find guile site directory
+      [*/_inst],
+        [AC_MSG_NOTICE([[Prefix ends in /_inst, so this is a 'make distcheck'. GUILE_SITE is unset.]])],
+      [*],
+        [# Query the guile interpreter directly to find guile site directory
         AC_MSG_CHECKING([asking guile for its site directory])
         GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
-        AC_MSG_RESULT([$GUILE_SITE])
-    ])
-  ])
-  AS_IF([is_empty "$GUILE_SITE"], [
-    AC_MSG_NOTICE([[Setting GUILE_SITE to start with datarootdir (which is based on prefix)]])
-    GUILE_SITE='${datarootdir}/guile/site'
-  ])
+        AC_MSG_RESULT([$GUILE_SITE])])])
+  AS_IF([is_empty "$GUILE_SITE"],
+    [AC_MSG_NOTICE([[Setting GUILE_SITE to start with datarootdir (which is based on prefix)]])
+    GUILE_SITE='${datarootdir}/guile/site'])
   AC_MSG_CHECKING([[Guile site directory (GUILE_SITE)  ]])
   AC_MSG_RESULT([$GUILE_SITE])
 
@@ -282,17 +272,13 @@ AM_COND_IF([HAVE_GUILE], [
       -c "(use-modules (ice-9 readline)) (exit ((lambda () 0)))" \
       > /dev/null 2>&1
     GUILE_READLINE_AVAILABLE=$?
-    AS_IF([test "$GUILE_READLINE_AVAILABLE" = "0"],[
-      GUILE_READLINE_AVAILABLE=yes
-    ],[
-      GUILE_READLINE_AVAILABLE=no
-    ])
-  ])
+    AS_IF([test "$GUILE_READLINE_AVAILABLE" = "0"],
+      [GUILE_READLINE_AVAILABLE=yes],
+      [GUILE_READLINE_AVAILABLE=no])])
   AC_MSG_RESULT([$GUILE_READLINE_AVAILABLE])
-  AS_IF([test "$GUILE_READLINE_AVAILABLE" = no &&
-         test "x$enable_guile_readline" = "xyes"], [
-    AC_MSG_ERROR([Guile readline required but unavailable.])
-  ])
+  AS_IF([test "$GUILE_READLINE_AVAILABLE" = no && \
+         test "x$enable_guile_readline" = "xyes"],
+    [AC_MSG_ERROR([Guile readline required but unavailable.])])
 
   AS_IF([is_permitted "$with_scsh"],
     [AS_IF([is_useful "$SCSH"], [], [AC_PATH_PROG([SCSH],[scsh])])
