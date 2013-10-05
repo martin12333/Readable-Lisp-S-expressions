@@ -65,6 +65,7 @@ AC_CONFIG_FILES([Makefile])
 is_empty () {
   test "x$1" = "x"
 }
+
 is_enabled () { # Return TRUE if $1 has non-no value; empty considered enabled
   test "x$1" != "xno"
 }
@@ -254,9 +255,10 @@ AM_COND_IF([HAVE_GUILE],
   #    guile reports a non-empty value, use that value.  Otherwise,
   # 3. Use the value '${datarootdir}/guile/site'
   AS_IF([is_empty "$GUILE_SITE"],
-   [AS_CASE([$prefix],
+   [AC_MSG_NOTICE([No GUILE_SITE value has been forceably set.])
+    AS_CASE([$prefix],
       [*/_inst],
-        [AC_MSG_NOTICE([[Prefix ends in /_inst, so this is a 'make distcheck'. Also, GUILE_SITE has NOT been set.]])],
+        [AC_MSG_NOTICE([[Prefix ends in /_inst; this is a 'make distcheck'.]])],
       [*],
         [# Query the guile interpreter directly to find guile site directory
         AC_MSG_CHECKING([asking guile for its site directory])
@@ -279,7 +281,7 @@ AM_COND_IF([HAVE_GUILE],
       [GUILE_READLINE_AVAILABLE=yes],
       [GUILE_READLINE_AVAILABLE=no])])
   AC_MSG_RESULT([$GUILE_READLINE_AVAILABLE])
-  AS_IF([test "$GUILE_READLINE_AVAILABLE" = no && \
+  AS_IF([test "$GUILE_READLINE_AVAILABLE" = "no" && \
          test "$enable_guile_readline" = "yes"],
     [AC_MSG_ERROR([Guile readline required but unavailable.])])
 
