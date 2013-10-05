@@ -86,6 +86,18 @@ yes_no_empty () { # Returns TRUE if $1 is "yes", "no", or empty.
   fi
 }
 
+is_useful () { # Did we get something other than yes, no, or empty?
+  if test "x$1" = "xyes" ; then
+    false
+  elif test "x$1" = "xno" ; then
+    false
+  elif test "x$1" = "x" ; then
+    false
+  else
+    true
+  fi
+}
+
 # We generate HTML files from markdown files. By default we do this
 # using the markdown2.py file (MIT license), copied from:
 #   https://raw.github.com/trentm/python-markdown2/master/lib/markdown2.py
@@ -97,8 +109,8 @@ default_markdown_command='python "$(srcdir)/markdown2.py" -x link-patterns --lin
 # Create arguments for configure:
 AC_ARG_WITH([guile],
   [AS_HELP_STRING([[--with-guile[=COMMAND] / --without-guile]],
-    [require/disable guile; many tools use guile (default: auto-detect). COMMAND sets GUILE])])
-AC_ARG_VAR([GUILE], [Command to run guile (default: auto-detect)])
+    [require/disable guile; many tools use guile (default: auto-detect).])],
+  [GUILE="$withval"])
 
 AC_ARG_ENABLE([guile-readline],
   [AS_HELP_STRING([--enable-guile-readline / --disable-guile-readline],
@@ -106,10 +118,8 @@ AC_ARG_ENABLE([guile-readline],
 
 AC_ARG_WITH([scsh],
   [AS_HELP_STRING([[--with-scsh[=COMMAND] / --without-scsh]],
-    [require/disable support for scsh (default: auto-detect). COMMAND sets SCSH])])
-AC_ARG_VAR([SCSH],
-  [Command to run scsh (default: auto-detect; depends on guile)])
-
+    [require/disable support for scsh (default: auto-detect).])],
+  [SCSH="$withval"])
 
 AC_ARG_WITH([common-lisp],
   [AS_HELP_STRING([[--with-common-lisp[=DIR] / --without-common-lisp]],
@@ -154,6 +164,17 @@ AC_ARG_VAR([GUILE_SITE],
   [Guile site directory (default: auto-detect; often /usr/share/guile/site)])
 
 
+# TODO: Remove.  This a temporary testing shim to examine autoconf results
+# BEGIN MONKEY
+AC_ARG_WITH([monkey],
+  [AS_HELP_STRING([[--with-monkey[=COMMAND] / --without-moneky]],
+    [require/disable monkey (default: auto-detect)])],
+  [MONKEY=$withval])
+# END MONKEY
+echo "with_monkey=($with_monkey)"
+echo "MONKEY=($MONKEY)"
+
+
 # Sanity check all AC_ARG_WITH, AC_ARG_VAR, and AC_ARG_ENABLE variables
 for input_variable in \
   with_guile GUILE \
@@ -174,14 +195,6 @@ do
 done
 
 # Interpret argument values not yes/no/empty as setting relevant variables
-AS_IF([yes_no_empty "$with_guile"],[], [
-  GUILE="$with_guile"
-  with_guile=yes
-])
-AS_IF([yes_no_empty "$with_scsh"],[], [
-  SCSH="$with_scsh"
-  with_scsh=yes
-])
 AS_IF([yes_no_empty "$with_common_lisp"],[], [
   COMMON_LISP_LIB_DIR="$with_common_lisp"
   with_common_lisp=yes
@@ -244,19 +257,16 @@ AS_IF([is_empty "$BIN_ENV"], [
 ### GUILE ###
 
 # For purposes of configuration, do we have a working guile?
-have_guile=no
 AS_IF([is_permitted "$with_guile"],[
-  echo >&2
-  AC_PATH_PROG([GUILE],[guile])
-  AS_IF([is_empty "$GUILE"], [], [have_guile=yes])
+  AS_IF([is_useful "$GUILE"], [], [AC_PATH_PROG([GUILE],[guile])])
+  AS_IF([is_useful "$GUILE"], [AC_SUBST([GUILE])])
 ])
-AM_CONDITIONAL([HAVE_GUILE], [is_enabled "$have_guile"])
-AC_MSG_CHECKING([final decision HAVE_GUILE])
-AC_MSG_RESULT([$have_guile])
+AM_CONDITIONAL([HAVE_GUILE], [is_useful "$GUILE"])
+AC_MSG_CHECKING([final result HAVE_GUILE])
+AM_COND_IF([HAVE_GUILE], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 # If we have guile, configure it.
 GUILE_READLINE_AVAILABLE=no
-have_scsh=no
 AM_COND_IF([HAVE_GUILE], [
   # Guile provides autoconf macros in guile.m4, but they require guile-config.
   # Sadly, guile-config doesn't come standard on all "guile" packages on all
@@ -315,25 +325,21 @@ AM_COND_IF([HAVE_GUILE], [
     AC_MSG_ERROR([Guile readline required but unavailable.])
   ])
 
-  AS_IF([is_permitted "$with_scsh"],[
-    AC_PATH_PROG([SCSH], [scsh])
-    AS_IF([is_empty "$SCSH"], [], [have_scsh=yes])
-  ])
-], [
-  # No guile.  Is that a complete failure?
-  AS_IF([test "x$with_guile" = "xyes"], [
-    AC_MSG_ERROR([Guile required but unavailable.])])
-])
+  AS_IF([is_permitted "$with_scsh"],
+    [AS_IF([is_useful "$SCSH"], [], [AC_PATH_PROG([SCSH],[scsh])])
+     AS_IF([is_useful "$SCSH"], [AC_SUBST([SCSH])])
+  ])])
 AC_SUBST([GUILE_READLINE_AVAILABLE])
-AM_CONDITIONAL([HAVE_SCSH], [is_enabled "$have_scsh"])
-AC_MSG_CHECKING([final decision HAVE_SCSH])
-AC_MSG_RESULT([$have_scsh])
+AM_CONDITIONAL([HAVE_SCSH], [is_useful "$SCSH"])
+AC_MSG_CHECKING([final result HAVE_SCSH])
+AM_COND_IF([HAVE_SCSH], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
-AS_IF([test "$have_scsh" = no &&
-       test "x$enable_scsh" = "xyes"], [
-  AC_MSG_ERROR([scsh required but unavailable.])
-])
-
+AM_COND_IF([HAVE_GUILE], [],
+  [AS_IF([test "x$with_guile" = "xyes"],
+    [AC_MSG_ERROR([guile required but unavailable.])])])
+AM_COND_IF([HAVE_SCSH], []
+  [AS_IF([test "x$with_scsh" = "xyes"],
+    [AC_MSG_ERROR([scsh required but unavailable.])])])
 
 
 ### COMMON LISP ###
