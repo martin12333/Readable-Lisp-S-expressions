@@ -159,17 +159,6 @@ AC_ARG_VAR([GUILE_SITE],
   [Guile site directory (default: auto-detect; often /usr/share/guile/site)])
 
 
-# TODO: Remove.  This a temporary testing shim to examine autoconf results
-# BEGIN MONKEY
-AC_ARG_WITH([monkey],
-  [AS_HELP_STRING([[--with-monkey[=COMMAND] / --without-moneky]],
-    [require/disable monkey (default: auto-detect)])],
-  [MONKEY=$withval])
-# END MONKEY
-echo "with_monkey=($with_monkey)"
-echo "MONKEY=($MONKEY)"
-
-
 # Sanity check all AC_ARG_WITH, AC_ARG_VAR, and AC_ARG_ENABLE variables
 # so they don't begin with "-" or space.  Then we can use "test" without
 # "x" prefixes, even on systems that aren't POSIX 2008.
