@@ -265,8 +265,9 @@ AM_COND_IF([HAVE_GUILE],
         GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
         AC_MSG_RESULT([$GUILE_SITE])])])
   AS_IF([is_empty "$GUILE_SITE"],
-    [AC_MSG_NOTICE([[Setting GUILE_SITE to start with datarootdir (which is based on prefix)]])
-    GUILE_SITE='${datarootdir}/guile/site'])
+    [AC_MSG_NOTICE([[Setting GUILE_SITE using datarootdir (which uses prefix)]])
+     GUILE_SITE='${datarootdir}/guile/site'])
+  # Add spaces at end to make results line up in the usual situation:
   AC_MSG_CHECKING([[Guile site directory (GUILE_SITE)  ]])
   AC_MSG_RESULT([$GUILE_SITE])
 
@@ -287,8 +288,8 @@ AM_COND_IF([HAVE_GUILE],
 
   AS_IF([is_permitted "$with_scsh"],
     [AS_IF([is_useful "$SCSH"], [], [AC_PATH_PROG([SCSH],[scsh])])
-     AS_IF([is_useful "$SCSH"], [AC_SUBST([SCSH])])
-  ])])
+     AS_IF([is_useful "$SCSH"], [AC_SUBST([SCSH])])])
+])
 AC_SUBST([GUILE_READLINE_AVAILABLE])
 AM_CONDITIONAL([HAVE_SCSH], [is_useful "$SCSH"])
 AC_MSG_CHECKING([final decision HAVE_SCSH])
@@ -344,10 +345,10 @@ AM_COND_IF([HAVE_UNREGISTER_COMMON_LISP_SOURCE],
 AM_COND_IF([HAVE_COMMON_LISP], [],
  [AS_IF([is_no_or_empty "$with_clisp"],
     [with_clisp=no],
-    [AC_MSG_ERROR([Common Lisp forbidden yet Clisp required])])
+    [AC_MSG_ERROR([Common Lisp not available yet clisp required])])
   AS_IF([is_no_or_empty "$with_sbcl"],
     [with_sbcl=no],
-    [AC_MSG_ERROR([Common Lisp forbidden yet sbcl required])])])
+    [AC_MSG_ERROR([Common Lisp not available yet sbcl required])])])
 
 
 have_clisp_working_asdf=no
@@ -377,6 +378,9 @@ AM_CONDITIONAL([HAVE_SBCL], [is_useful "$SBCL"])
 AC_MSG_CHECKING([final decision HAVE_SBCL])
 AM_COND_IF([HAVE_SBCL], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
+AM_COND_IF([HAVE_SBCL], [],
+  [AS_IF([test "$with_sbcl" = "yes"],
+    [AC_MSG_ERROR([sbcl required but unavailable.])])])
 
 
 
