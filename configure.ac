@@ -355,7 +355,7 @@ AM_COND_IF([HAVE_COMMON_LISP], [],
     [with_sbcl=no],
     [AC_MSG_ERROR([Common Lisp not available yet sbcl required])])])
 
-
+# Check clisp
 have_clisp_working_asdf=no
 announce_make_clisp_asdf=no
 AS_IF([is_permitted "$with_clisp"],
@@ -376,6 +376,7 @@ AM_CONDITIONAL([HAVE_CLISP], [is_enabled "$have_clisp_working_asdf"])
 AC_MSG_CHECKING([final decision HAVE_CLISP])
 AC_MSG_RESULT([$have_clisp_working_asdf])
 
+# Check sbcl.
 AS_IF([is_permitted "$with_sbcl"],
   [AS_IF([is_useful "$SBCL"], [], [AC_PATH_PROG([SBCL],[sbcl])])
    AS_IF([is_useful "$SBCL"], [AC_SUBST([SBCL])])])
