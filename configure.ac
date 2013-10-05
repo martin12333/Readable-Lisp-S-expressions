@@ -425,32 +425,28 @@ AC_MSG_CHECKING([final result HAVE_MARKDOWN])
 AM_COND_IF([HAVE_MARKDOWN], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 
-AS_IF([is_enabled "$have_guile" || is_enabled "$have_clisp_working_asdf"], [
-  AC_PATH_PROG([EXPECT], [expect])
-  AS_IF([is_empty "$EXPECT"],[
-    echo >&2
-    AC_MSG_WARN([[expect not found; please install expect, or many command-line tools will fail]])
-    echo >&2
-    # Set EXPECT to a plausible value, in case it's installed later
-    # or a later PATH makes "expect" visible.
-    # An empty value is *certain* to fail later.
-    EXPECT="$BIN_ENV expect"
-  ])
-])
+AS_IF([is_enabled "$have_guile" || is_enabled "$have_clisp_working_asdf"],
+  [AC_PATH_PROG([EXPECT], [expect])
+   AS_IF([is_empty "$EXPECT"],
+     [echo >&2
+      AC_MSG_WARN([[expect not found; please install expect, or many command-line tools will fail]])
+      echo >&2
+      # Set EXPECT to a plausible value, in case it's installed later
+      # or a later PATH makes "expect" visible.
+      # An empty value is *certain* to fail later.
+      EXPECT="$BIN_ENV expect"])])
 
 
 # Emit key warnings LAST, so users are more likely to notice them.
-AM_COND_IF([HAVE_GUILE], [], [
-  echo >&2
-  AC_MSG_WARN([GUILE NOT AVAILABLE.  Tools implemented with guile will not be available.])
-])
+AM_COND_IF([HAVE_GUILE], [],
+  [echo >&2
+   AC_MSG_WARN([GUILE NOT AVAILABLE.  Tools implemented with guile will not be available.])])
 
-AS_IF([test "$announce_make_clisp_asdf" = yes], [
-  echo >&2
-  AC_MSG_WARN([CLISP FOUND, but clisp cannot currently invoke ASDF.])
-  AC_MSG_NOTICE([Thus, clisp support is currently disabled.])
-  AC_MSG_NOTICE([Run 'make clisp-asdf' to configure clisp to use ASDF for this user.])
-])
+AS_IF([test "$announce_make_clisp_asdf" = yes],
+  [echo >&2
+   AC_MSG_WARN([CLISP FOUND, but clisp cannot currently invoke ASDF.])
+   AC_MSG_NOTICE([Thus, clisp support is currently disabled.])
+   AC_MSG_NOTICE([Run 'make clisp-asdf' to configure clisp to use ASDF for this user.])])
 
 echo >&2
 
