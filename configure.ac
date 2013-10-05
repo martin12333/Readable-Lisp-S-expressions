@@ -248,10 +248,9 @@ AS_IF([is_empty "$BIN_ENV"], [
 ### GUILE ###
 
 # For purposes of configuration, do we have a working guile?
-AS_IF([is_permitted "$with_guile"],[
-  AS_IF([is_useful "$GUILE"], [], [AC_PATH_PROG([GUILE],[guile])])
-  AS_IF([is_useful "$GUILE"], [AC_SUBST([GUILE])])
-])
+AS_IF([is_permitted "$with_guile"],
+  [AS_IF([is_useful "$GUILE"], [], [AC_PATH_PROG([GUILE],[guile])])
+   AS_IF([is_useful "$GUILE"], [AC_SUBST([GUILE])])])
 AM_CONDITIONAL([HAVE_GUILE], [is_useful "$GUILE"])
 AC_MSG_CHECKING([final result HAVE_GUILE])
 AM_COND_IF([HAVE_GUILE], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
