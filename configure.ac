@@ -84,19 +84,8 @@ is_permitted () { # Return TRUE if $1 has non-no value; empty = permitted
   test "x$1" != "xno"
 }
 
-yes_no_empty () { # Returns TRUE if $1 is "yes", "no", or empty.
-  if test "x$1" = "xyes" ; then
-    true
-  elif test "x$1" = "xno" ; then
-    true
-  elif test "x$1" = "x" ; then
-    true
-  else
-    false
-  fi
-}
-
-is_useful () { # Did we get something other than yes, no, or empty?
+# Report if given a "useful" value (something other than yes, no, or empty)
+is_useful () {
   if test "x$1" = "xyes" ; then
     false
   elif test "x$1" = "xno" ; then
@@ -204,8 +193,8 @@ done
 AS_IF([test "x$with_register_cl_source" = "xno"],
   [with_unregister_cl_source=no])
 
-# Sanity-check argument values that MUST be yes/no/empty
-AS_IF([yes_no_empty "$enable_guile_readline"],[],
+# It doesn't make sense to provide a "useful" value for these:
+AS_IF([is_useful "$enable_guile_readline"],
   [AC_MSG_ERROR([enable-guile-readline must be 'yes', 'no', or no value])])
 
 # Sanity-check combinations of argument values.
