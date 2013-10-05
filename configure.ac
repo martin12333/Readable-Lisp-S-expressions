@@ -139,20 +139,19 @@ AC_ARG_WITH([sbcl],
 AC_ARG_WITH([register-cl-source],
   [AS_HELP_STRING([[--with-register-cl-source[=COMMAND] / --without-register-cl-source]],
     [require/disable support for the utility to register Common Lisp source (default: auto-detect for register-common-lisp-source program in PATH).])],
-  [REGISTER_COMMON_LISP_SOURCE="withval"])
+  [REGISTER_COMMON_LISP_SOURCE="$withval"])
 
 AC_ARG_WITH([unregister-cl-source],
   [AS_HELP_STRING([[--with-unregister-cl-source[=COMMAND] / --without-unregister-cl-source]],
     [require/disable support for unregistering Common Lisp source (default: auto-detect.  If register-cl-source is 'no', this is too)])],
-  [UNREGISTER_COMMON_LISP_SOURCE="withval"])
+  [UNREGISTER_COMMON_LISP_SOURCE="$withval"])
 
 
 AC_ARG_WITH([markdown],
   [AS_HELP_STRING(
     [[--with-markdown[=COMMAND] | --without-markdown]],
-    [require/forbid translating markdown into HTML (default: Use included markdown2 implementation, which uses Python). COMMAND sets MARKDOWN])])
-AC_ARG_VAR([MARKDOWN],
-  [Command to convert markdown to html (default: use included markdown2])
+    [require/forbid translating markdown into HTML (default: Use included markdown2 implementation, which uses Python).])],
+  [MARKDOWN="$withval"])
 
 # Other special environment variables/command-line variables
 AC_ARG_VAR([BIN_ENV],
@@ -195,11 +194,6 @@ done
 # If registering is forceably disabled, disable unregistering to match
 AS_IF([test "x$with_register_cl_source" = "xno"], [
   with_unregister_cl_source=no
-])
-
-AS_IF([yes_no_empty "$with_markdown"],[], [
-  MARKDOWN="$with_markdown"
-  with_markdown=yes
 ])
 
 # Sanity-check argument values that MUST be yes/no/empty
@@ -412,27 +406,23 @@ echo >&2
 # Developers will need a more modern version of Python to use
 # get-from-wiki, but get-from-wiki is a developer convenience
 # (not a user command) so we won't worry about that here.
-have_markdown=no
-AS_IF([is_permitted "$with_markdown"], [
-  AS_IF([is_empty "$MARKDOWN"], [
-    MARKDOWN="$default_markdown_command"
-    AM_PATH_PYTHON([2.4],
-      [have_markdown=yes], [
-      AC_MSG_WARN([[Python not found, and markdown2 requires it. HTML generation disabled]])])
-  ], [
-    have_markdown=yes
-  ])
-])
-AS_IF([test "$with_markdown" = yes && test "$have_markdown" = no], [
-  AC_MSG_ERROR([[Cannot generate HTML, yet markdown processing required.]])])
+AS_IF([is_permitted "$with_markdown"],
+  [AS_IF([is_useful "$MARKDOWN"],
+    [AC_MSG_CHECKING([Markdown command])
+     AC_MSG_RESULT([$MARKDOWN])],
+    [MARKDOWN="$default_markdown_command"
+     AC_MSG_CHECKING([default markdown command])
+     AC_MSG_RESULT([$MARKDOWN])
+     AM_PATH_PYTHON([2.4], [],
+       [AS_IF([test "$with_markdown" = yes],
+          [AC_MSG_ERROR([Python not found, and markdown2 required.])])
+        with_markdown=no
+        AC_MSG_WARN([Python not found, and markdown2 requires it. HTML generation disabled])])])])
 
-AM_CONDITIONAL([HAVE_MARKDOWN], [is_enabled "$have_markdown"])
-AM_COND_IF([HAVE_MARKDOWN], [
-  AC_MSG_CHECKING([Markdown command])
-  AC_MSG_RESULT([$MARKDOWN])
-])
-AC_MSG_CHECKING([final decision HAVE_MARKDOWN])
-AC_MSG_RESULT([$have_markdown])
+AM_CONDITIONAL([HAVE_MARKDOWN], [is_permitted "$with_markdown"])
+AM_COND_IF([HAVE_MARKDOWN], [AC_SUBST([MARKDOWN])])
+AC_MSG_CHECKING([final result HAVE_MARKDOWN])
+AM_COND_IF([HAVE_MARKDOWN], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 
 AS_IF([is_enabled "$have_guile" || is_enabled "$have_clisp_working_asdf"], [
