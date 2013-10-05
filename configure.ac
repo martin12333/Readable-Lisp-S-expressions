@@ -128,8 +128,8 @@ AC_ARG_WITH([common-lisp],
 
 AC_ARG_WITH([clisp],
   [AS_HELP_STRING([[--with-clisp[=COMMAND] / --without-clisp]],
-  [require/disable support for clisp (default: auto-detect). This requires general Common Lisp support.  COMMAND sets CLISP])])
-AC_ARG_VAR([CLISP], [Command to run clisp (default: auto-detect)])
+  [require/disable support for clisp (default: auto-detect). This requires general Common Lisp support.  COMMAND sets CLISP])],
+  [CLISP="$withval"])
 
 AC_ARG_WITH([sbcl],
   [AS_HELP_STRING([[--with-sbcl[=COMMAND] / --without-sbcl]],
@@ -194,10 +194,6 @@ do
 done
 
 # Interpret argument values not yes/no/empty as setting relevant variables
-AS_IF([yes_no_empty "$with_clisp"],[], [
-  CLISP="$with_clisp"
-  with_clisp=yes
-])
 AS_IF([yes_no_empty "$with_sbcl"],[], [
   SBCL="$with_sbcl"
   with_sbcl=yes
@@ -392,30 +388,23 @@ AS_IF([test "$with_common_lisp" = no], [
       [AC_MSG_ERROR([Common Lisp forbidden yet sbcl required])])
 ])
 
-have_clisp=no
-have_clisp_working_asdf=no
-announce_make_clisp_asdf=no
-AS_IF([is_permitted "$with_clisp"], [
-  AC_PATH_PROG([CLISP], [clisp])
-  AS_IF([is_empty "$CLISP"], [
-    AS_IF([test "with_clisp" = yes], [
-      AC_MSG_ERROR([clisp required but not found])])
-  ], [
-    have_clisp=yes
-    # check if asdf is installed with clisp.
-    AC_MSG_CHECKING([if (require "asdf") is available in clisp])
-    echo '(require "asdf")' > asdf-check.lisp
-    [$CLISP] asdf-check.lisp > /dev/null 2>&1
-    AS_IF([test "$?" = 0],[
-      have_clisp_working_asdf=yes
-    ],[
-      announce_make_clisp_asdf=yes # Tell user how to fix the problem, later.
-    ])
-    AC_MSG_RESULT([$have_clisp_working_asdf])
-    rm -f asdf-check.lisp
-  ])
-])
 
+announce_make_clisp_asdf=no
+AS_IF([is_permitted "$with_clisp"],
+  [AS_IF([is_useful "$CLISP"], [], [AC_PATH_PROG([CLISP],[clisp])])
+   AS_IF([is_useful "$CLISP"],
+    [AC_SUBST([CLISP])
+     AC_MSG_CHECKING([if (require "asdf") is available in clisp])
+     echo '(require "asdf")' > asdf-check.lisp
+     [$CLISP] asdf-check.lisp > /dev/null 2>&1
+     AS_IF([test "$?" = 0],
+       [have_clisp_working_asdf=yes],
+       [have_clisp_working_asdf=no
+        announce_make_clisp_asdf=yes])
+     AC_MSG_RESULT([$have_clisp_working_asdf])
+     rm -f asdf-check.lisp],
+    [AS_IF([test "with_clisp" = yes],
+     [AC_MSG_ERROR([clisp required but not found])])])])
 AM_CONDITIONAL([HAVE_CLISP], [is_enabled "$have_clisp_working_asdf"])
 AC_MSG_CHECKING([final decision HAVE_CLISP])
 AC_MSG_RESULT([$have_clisp_working_asdf])
