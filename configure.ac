@@ -171,6 +171,7 @@ echo "MONKEY=($MONKEY)"
 
 
 # Sanity check all AC_ARG_WITH, AC_ARG_VAR, and AC_ARG_ENABLE variables
+# so they don't begin with "-" or space.
 for input_variable in \
   with_guile GUILE \
   with_guile_readline \
