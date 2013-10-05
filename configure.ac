@@ -128,7 +128,7 @@ AC_ARG_WITH([common-lisp],
 
 AC_ARG_WITH([clisp],
   [AS_HELP_STRING([[--with-clisp[=COMMAND] / --without-clisp]],
-  [require/disable support for clisp (default: auto-detect). This requires general Common Lisp support.  COMMAND sets CLISP])],
+    [require/disable support for clisp (default: auto-detect). This requires general Common Lisp support.  COMMAND sets CLISP])],
   [CLISP="$withval"])
 
 AC_ARG_WITH([sbcl],
@@ -138,13 +138,13 @@ AC_ARG_WITH([sbcl],
 
 AC_ARG_WITH([register-cl-source],
   [AS_HELP_STRING([[--with-register-cl-source[=COMMAND] / --without-register-cl-source]],
-  [require/disable support for the utility to register Common Lisp source (default: auto-detect for register-common-lisp-source program in PATH unless specifically set).  COMMAND sets REGISTER_COMMON_LISP_SOURCE])])
-AC_ARG_VAR([REGISTER_COMMON_LISP_SOURCE], [Command to run register Common Lisp library source code (default: auto-detect)])
+    [require/disable support for the utility to register Common Lisp source (default: auto-detect for register-common-lisp-source program in PATH).])],
+  [REGISTER_COMMON_LISP_SOURCE="withval"])
 
 AC_ARG_WITH([unregister-cl-source],
   [AS_HELP_STRING([[--with-unregister-cl-source[=COMMAND] / --without-unregister-cl-source]],
-  [require/disable support for unregistering Common Lisp source (default: auto-detect.  If register-cl-source is 'no', this is too).  COMMAND sets UNREGISTER_COMMON_LISP_SOURCE])])
-AC_ARG_VAR([UNREGISTER_COMMON_LISP_SOURCE], [Command to run unregister Common Lisp library source code (default: auto-detect)])
+    [require/disable support for unregistering Common Lisp source (default: auto-detect.  If register-cl-source is 'no', this is too)])],
+  [UNREGISTER_COMMON_LISP_SOURCE="withval"])
 
 
 AC_ARG_WITH([markdown],
@@ -192,21 +192,11 @@ do
       [AC_MSG_ERROR([Input $input_variable begins with dash or space: $received_value])])
 done
 
-# Interpret argument values not yes/no/empty as setting relevant variables
-AS_IF([yes_no_empty "$register_cl_source"],[], [
-  REGISTER_COMMON_LISP_SOURCE="$register_cl_source"
-  register_cl_source=yes
-])
-
 # If registering is forceably disabled, disable unregistering to match
-AS_IF([test "$unregister_cl_source" = "no"], [
-  unregister_cl_source=no
+AS_IF([test "x$with_register_cl_source" = "xno"], [
+  with_unregister_cl_source=no
 ])
 
-AS_IF([yes_no_empty "$unregister_cl_source"],[], [
-  UNREGISTER_COMMON_LISP_SOURCE="$unregister_cl_source"
-  unregister_cl_source=yes
-])
 AS_IF([yes_no_empty "$with_markdown"],[], [
   MARKDOWN="$with_markdown"
   with_markdown=yes
@@ -346,30 +336,29 @@ AS_IF([is_permitted "$with_common_lisp"], [
   # We'll use LN_S to install Common Lisp ASDF files:
   AC_PROG_LN_S
 
-  AC_PATH_PROG([REGISTER_COMMON_LISP_SOURCE], [register-common-lisp-source])
-  AS_IF([is_empty "$REGISTER_COMMON_LISP_SOURCE"], [],
-    [have_register_cl_source=yes])
+  AS_IF([is_permitted "$with_register_cl_source"],
+    [AS_IF([is_useful "$REGISTER_COMMON_LISP_SOURCE"], [], [AC_PATH_PROG([REGISTER_COMMON_LISP_SOURCE],[register-common-lisp-source])])
+     AS_IF([is_useful "$REGISTER_COMMON_LISP_SOURCE"], [AC_SUBST([REGISTER_COMMON_LISP_SOURCE])])])
 
-  AC_PATH_PROG([UNREGISTER_COMMON_LISP_SOURCE], [unregister-common-lisp-source])
-  AS_IF([is_empty "$UNREGISTER_COMMON_LISP_SOURCE"], [],
-    [have_unregister_cl_source=yes])
+  AS_IF([is_permitted "$with_unregister_cl_source"],
+    [AS_IF([is_useful "$UNREGISTER_COMMON_LISP_SOURCE"], [], [AC_PATH_PROG([UNREGISTER_COMMON_LISP_SOURCE],[unregister-common-lisp-source])])
+     AS_IF([is_useful "$UNREGISTER_COMMON_LISP_SOURCE"], [AC_SUBST([UNREGISTER_COMMON_LISP_SOURCE])])])
 ])
 AM_CONDITIONAL([HAVE_COMMON_LISP], [is_enabled "$with_common_lisp"])
 AC_MSG_CHECKING([final decision HAVE_COMMON_LISP])
 AC_MSG_RESULT([$with_common_lisp])
 
 AM_CONDITIONAL([HAVE_REGISTER_COMMON_LISP_SOURCE],
-  [is_enabled "$have_register_cl_source"])
-AC_MSG_CHECKING([final decision HAVE_REGISTER_COMMON_LISP_SOURCE])
-AC_MSG_RESULT([$have_register_cl_source])
-
+               [is_useful "$REGISTER_COMMON_LISP_SOURCE"])
+AC_MSG_CHECKING([final result HAVE_REGISTER_COMMON_LISP_SOURCE])
+AM_COND_IF([HAVE_REGISTER_COMMON_LISP_SOURCE], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 AM_CONDITIONAL([HAVE_UNREGISTER_COMMON_LISP_SOURCE],
-  [is_enabled "$have_unregister_cl_source"])
-AC_MSG_CHECKING([final decision HAVE_UNREGISTER_COMMON_LISP_SOURCE])
-AC_MSG_RESULT([$have_unregister_cl_source])
+               [is_useful "$UNREGISTER_COMMON_LISP_SOURCE"])
+AC_MSG_CHECKING([final result HAVE_UNREGISTER_COMMON_LISP_SOURCE])
+AM_COND_IF([HAVE_UNREGISTER_COMMON_LISP_SOURCE], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 # If Common Lisp won't be installed, clisp and sbcl possibilities are limited.
-AS_IF([test "$with_common_lisp" = no], [
+AM_COND_IF([HAVE_COMMON_LISP], [], [
   AS_IF(
     [is_empty "$with_clisp"],
       [with_clisp=no],
