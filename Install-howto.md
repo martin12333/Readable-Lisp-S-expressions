@@ -122,9 +122,9 @@ Many people will want to install to the directory "/usr" (e.g., so commands will
 
 The configure program tries to automatically figure out what to do and then do it.  It supports many options, but most are only useful for special situations.  Here are some configure options you might want to use:
 
-    --without-guile         disable support for guile
+    --without-guile         disable support for guile (and tools that depend on guile)
     --without-clisp         disable support for clisp
-    --without-common-lisp   disable support for Common Lisp (including clisp and sbcl)
+    --without-common-lisp   disable support for Common Lisp (this disables clisp and sbcl)
 
 So if you won't be using Common Lisp, consider using the configure option "--without-common-lisp".  Note that if you use --without-guile you'll disable several tools that depend on guile.
 
