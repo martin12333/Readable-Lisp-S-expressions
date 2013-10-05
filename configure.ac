@@ -292,7 +292,7 @@ AM_COND_IF([HAVE_SCSH], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 AM_COND_IF([HAVE_GUILE], [],
   [AS_IF([test "x$with_guile" = "xyes"],
     [AC_MSG_ERROR([guile required but unavailable.])])])
-AM_COND_IF([HAVE_SCSH], []
+AM_COND_IF([HAVE_SCSH], [],
   [AS_IF([test "x$with_scsh" = "xyes"],
     [AC_MSG_ERROR([scsh required but unavailable.])])])
 
