@@ -66,6 +66,16 @@ is_empty () {
   test "x$1" = "x"
 }
 
+is_no_or_empty () {
+  if "x$1" = "xno" ; then
+    true
+  elif test "x$1" = "x" ; then
+    true
+  else
+    false
+  fi
+}
+
 is_enabled () { # Return TRUE if $1 has non-no value; empty considered enabled
   test "x$1" != "xno"
 }
@@ -339,16 +349,12 @@ AM_COND_IF([HAVE_UNREGISTER_COMMON_LISP_SOURCE], [AC_MSG_RESULT([yes])], [AC_MSG
 
 # If Common Lisp won't be installed, clisp and sbcl possibilities are limited.
 AM_COND_IF([HAVE_COMMON_LISP], [],
- [AS_IF(
-    [is_empty "$with_clisp"],
-      [with_clisp=no],
-    [test "$with_clisp" = yes],
-      [AC_MSG_ERROR([Common Lisp forbidden yet Clisp required])])
-  AS_IF([is_empty "$with_sbcl"],
+ [AS_IF([is_no_or_empty "$with_clisp"],
+    [with_clisp=no],
+    [AC_MSG_ERROR([Common Lisp forbidden yet Clisp required])])
+  AS_IF([is_no_or_empty "$with_sbcl"],
     [with_sbcl=no],
-    [test "$with_sbcl" = yes],
-      [AC_MSG_ERROR([Common Lisp forbidden yet sbcl required])])
-])
+    [AC_MSG_ERROR([Common Lisp forbidden yet sbcl required])])])
 
 
 announce_make_clisp_asdf=no
