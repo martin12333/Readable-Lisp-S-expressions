@@ -229,8 +229,8 @@ AM_COND_IF([HAVE_GUILE], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 # If we have guile, configure it.
 GUILE_READLINE_AVAILABLE=no
-AM_COND_IF([HAVE_GUILE], [
-  # Guile provides autoconf macros in guile.m4, but they require guile-config.
+AM_COND_IF([HAVE_GUILE],
+ [# Guile provides autoconf macros in guile.m4, but they require guile-config.
   # Sadly, guile-config doesn't come standard on all "guile" packages on all
   # distros, so using guile-config would make our package harder to install.
   # Instead, we implement these searches directly, making our package
@@ -250,8 +250,8 @@ AM_COND_IF([HAVE_GUILE], [
   # 2. If prefix doesn't end in "/_inst" (a "make distcheck"), and
   #    guile reports a non-empty value, use that value.  Otherwise,
   # 3. Use the value '${datarootdir}/guile/site'
-  AS_IF([is_empty "$GUILE_SITE"], [
-    AS_CASE([$prefix],
+  AS_IF([is_empty "$GUILE_SITE"],
+   [AS_CASE([$prefix],
       [*/_inst],
         [AC_MSG_NOTICE([[Prefix ends in /_inst, so this is a 'make distcheck'. GUILE_SITE is unset.]])],
       [*],
@@ -267,8 +267,8 @@ AM_COND_IF([HAVE_GUILE], [
 
   # Determine if "readline" is available in guile.
   AC_MSG_CHECKING([if (ice-9 readline) is available])
-  AS_IF([is_permitted "$enable_guile_readline"],[
-    [$GUILE] -q \
+  AS_IF([is_permitted "$enable_guile_readline"],
+   [[$GUILE] -q \
       -c "(use-modules (ice-9 readline)) (exit ((lambda () 0)))" \
       > /dev/null 2>&1
     GUILE_READLINE_AVAILABLE=$?
@@ -304,8 +304,8 @@ AM_COND_IF([HAVE_SCSH], [],
 echo >&2
 have_register_cl_source=no
 have_unregister_cl_source=no
-AS_IF([is_permitted "$with_common_lisp"], [
-  with_common_lisp=yes
+AS_IF([is_permitted "$with_common_lisp"],
+ [with_common_lisp=yes
 
   AC_MSG_CHECKING([Common Lisp lib dir (COMMON_LISP_LIB_DIR)])
   AS_IF([is_useful "$COMMON_LISP_LIB_DIR"], [],
@@ -338,15 +338,14 @@ AC_MSG_CHECKING([final result HAVE_UNREGISTER_COMMON_LISP_SOURCE])
 AM_COND_IF([HAVE_UNREGISTER_COMMON_LISP_SOURCE], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 # If Common Lisp won't be installed, clisp and sbcl possibilities are limited.
-AM_COND_IF([HAVE_COMMON_LISP], [], [
-  AS_IF(
+AM_COND_IF([HAVE_COMMON_LISP], [],
+ [AS_IF(
     [is_empty "$with_clisp"],
       [with_clisp=no],
     [test "$with_clisp" = yes],
       [AC_MSG_ERROR([Common Lisp forbidden yet Clisp required])])
-  AS_IF(
-    [is_empty "$with_sbcl"],
-      [with_sbcl=no],
+  AS_IF([is_empty "$with_sbcl"],
+    [with_sbcl=no],
     [test "$with_sbcl" = yes],
       [AC_MSG_ERROR([Common Lisp forbidden yet sbcl required])])
 ])
