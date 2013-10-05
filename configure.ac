@@ -133,9 +133,8 @@ AC_ARG_WITH([clisp],
 
 AC_ARG_WITH([sbcl],
   [AS_HELP_STRING([[--with-sbcl[=COMMAND] / --without-sbcl]],
-    [require/disable support for sbcl (default: auto-detect). COMMAND sets SBCL])])
-AC_ARG_VAR([SBCL],
-  [Command to run sbcl (default: auto-detect)])
+    [require/disable support for sbcl (default: auto-detect).])],
+  [SBCL="$withval"])
 
 AC_ARG_WITH([register-cl-source],
   [AS_HELP_STRING([[--with-register-cl-source[=COMMAND] / --without-register-cl-source]],
@@ -194,10 +193,6 @@ do
 done
 
 # Interpret argument values not yes/no/empty as setting relevant variables
-AS_IF([yes_no_empty "$with_sbcl"],[], [
-  SBCL="$with_sbcl"
-  with_sbcl=yes
-])
 AS_IF([yes_no_empty "$register_cl_source"],[], [
   REGISTER_COMMON_LISP_SOURCE="$register_cl_source"
   register_cl_source=yes
@@ -408,21 +403,12 @@ AM_CONDITIONAL([HAVE_CLISP], [is_enabled "$have_clisp_working_asdf"])
 AC_MSG_CHECKING([final decision HAVE_CLISP])
 AC_MSG_RESULT([$have_clisp_working_asdf])
 
-
-have_sbcl=no
-AS_IF([is_permitted "$with_sbcl"], [
-  AC_PATH_PROG([SBCL], [sbcl])
-  AS_IF([is_empty "$SBCL"], [
-    AS_IF([test "with_sbcl" = yes], [
-      AC_MSG_ERROR([sbcl required but not found])])
-  ], [
-    have_sbcl=yes
-  ])
-])
-
-AM_CONDITIONAL([HAVE_SBCL], [is_enabled "$have_sbcl"])
-AC_MSG_CHECKING([final decision HAVE_SBCL])
-AC_MSG_RESULT([$have_sbcl])
+AS_IF([is_permitted "$with_sbcl"],
+  [AS_IF([is_useful "$SBCL"], [], [AC_PATH_PROG([SBCL],[sbcl])])
+   AS_IF([is_useful "$SBCL"], [AC_SUBST([SBCL])])])
+AM_CONDITIONAL([HAVE_SBCL], [is_useful "$SBCL"])
+AC_MSG_CHECKING([final result HAVE_SBCL])
+AM_COND_IF([HAVE_SBCL], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 
 
