@@ -304,15 +304,11 @@ AM_COND_IF([HAVE_SCSH], [],
 echo >&2
 AS_IF([is_permitted "$with_common_lisp"],
  [with_common_lisp=yes
-
   AC_MSG_CHECKING([Common Lisp lib dir (COMMON_LISP_LIB_DIR)])
   AS_IF([is_useful "$COMMON_LISP_LIB_DIR"], [],
     [COMMON_LISP_LIB_DIR='$(datadir)/common-lisp'])
   AC_MSG_RESULT([$COMMON_LISP_LIB_DIR])
   AC_SUBST([COMMON_LISP_LIB_DIR])
-
-  # We'll use LN_S to install Common Lisp ASDF files:
-  AC_PROG_LN_S
 
   AS_IF([is_permitted "$with_register_cl_source"],
     [AS_IF([is_useful "$REGISTER_COMMON_LISP_SOURCE"], [], [AC_PATH_PROG([REGISTER_COMMON_LISP_SOURCE],[register-common-lisp-source])])
@@ -321,7 +317,9 @@ AS_IF([is_permitted "$with_common_lisp"],
   AS_IF([is_permitted "$with_unregister_cl_source"],
     [AS_IF([is_useful "$UNREGISTER_COMMON_LISP_SOURCE"], [], [AC_PATH_PROG([UNREGISTER_COMMON_LISP_SOURCE],[unregister-common-lisp-source])])
      AS_IF([is_useful "$UNREGISTER_COMMON_LISP_SOURCE"], [AC_SUBST([UNREGISTER_COMMON_LISP_SOURCE])])])
-])
+
+  # We'll use LN_S to install Common Lisp ASDF files:
+  AC_PROG_LN_S])
 AM_CONDITIONAL([HAVE_COMMON_LISP], [is_enabled "$with_common_lisp"])
 AC_MSG_CHECKING([final decision HAVE_COMMON_LISP])
 AC_MSG_RESULT([$with_common_lisp])
@@ -329,11 +327,13 @@ AC_MSG_RESULT([$with_common_lisp])
 AM_CONDITIONAL([HAVE_REGISTER_COMMON_LISP_SOURCE],
                [is_useful "$REGISTER_COMMON_LISP_SOURCE"])
 AC_MSG_CHECKING([final decision HAVE_REGISTER_COMMON_LISP_SOURCE])
-AM_COND_IF([HAVE_REGISTER_COMMON_LISP_SOURCE], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
+AM_COND_IF([HAVE_REGISTER_COMMON_LISP_SOURCE],
+           [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 AM_CONDITIONAL([HAVE_UNREGISTER_COMMON_LISP_SOURCE],
                [is_useful "$UNREGISTER_COMMON_LISP_SOURCE"])
 AC_MSG_CHECKING([final decision HAVE_UNREGISTER_COMMON_LISP_SOURCE])
-AM_COND_IF([HAVE_UNREGISTER_COMMON_LISP_SOURCE], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
+AM_COND_IF([HAVE_UNREGISTER_COMMON_LISP_SOURCE],
+           [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 # If Common Lisp won't be installed, clisp and sbcl possibilities are limited.
 AM_COND_IF([HAVE_COMMON_LISP], [],
