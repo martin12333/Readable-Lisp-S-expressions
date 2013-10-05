@@ -301,8 +301,6 @@ AM_COND_IF([HAVE_SCSH], [],
 # Common Lisp by itself just installs to a directory, so we'll
 # always do it if permitted to do so:
 echo >&2
-have_register_cl_source=no
-have_unregister_cl_source=no
 AS_IF([is_permitted "$with_common_lisp"],
  [with_common_lisp=yes
 
@@ -346,6 +344,7 @@ AM_COND_IF([HAVE_COMMON_LISP], [],
     [AC_MSG_ERROR([Common Lisp forbidden yet sbcl required])])])
 
 
+have_clisp_working_asdf=no
 announce_make_clisp_asdf=no
 AS_IF([is_permitted "$with_clisp"],
   [AS_IF([is_useful "$CLISP"], [], [AC_PATH_PROG([CLISP],[clisp])])
@@ -356,8 +355,7 @@ AS_IF([is_permitted "$with_clisp"],
      [$CLISP] asdf-check.lisp > /dev/null 2>&1
      AS_IF([test "$?" = 0],
        [have_clisp_working_asdf=yes],
-       [have_clisp_working_asdf=no
-        announce_make_clisp_asdf=yes])
+       [announce_make_clisp_asdf=yes])
      AC_MSG_RESULT([$have_clisp_working_asdf])
      rm -f asdf-check.lisp],
     [AS_IF([test "with_clisp" = yes],
