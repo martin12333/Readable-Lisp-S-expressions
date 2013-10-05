@@ -123,9 +123,8 @@ AC_ARG_WITH([scsh],
 
 AC_ARG_WITH([common-lisp],
   [AS_HELP_STRING([[--with-common-lisp[=DIR] / --without-common-lisp]],
-    [require/disable installation of Common Lisp library (default: yes, install to $(datadir)/common-lisp).  DIR sets COMMON_LISP_LIB_DIR, the library directory])])
-AC_ARG_VAR([COMMON_LISP_LIB_DIR],
-  [Common Lisp library directory (default: $(datadir)/common-lisp)])
+    [require/disable Common Lisp library install to directory DIR (default: install to $(datadir)/common-lisp).])],
+  [COMMON_LISP_LIB_DIR="$withval"])
 
 AC_ARG_WITH([clisp],
   [AS_HELP_STRING([[--with-clisp[=COMMAND] / --without-clisp]],
@@ -195,10 +194,6 @@ do
 done
 
 # Interpret argument values not yes/no/empty as setting relevant variables
-AS_IF([yes_no_empty "$with_common_lisp"],[], [
-  COMMON_LISP_LIB_DIR="$with_common_lisp"
-  with_common_lisp=yes
-])
 AS_IF([yes_no_empty "$with_clisp"],[], [
   CLISP="$with_clisp"
   with_clisp=yes
@@ -353,10 +348,10 @@ AS_IF([is_permitted "$with_common_lisp"], [
   with_common_lisp=yes
 
   AC_MSG_CHECKING([Common Lisp lib dir (COMMON_LISP_LIB_DIR)])
-  AS_IF([is_empty "$COMMON_LISP_LIB_DIR"], [
-    COMMON_LISP_LIB_DIR='$(datadir)/common-lisp'
-  ])
+  AS_IF([is_useful "$COMMON_LISP_LIB_DIR"], [],
+    [COMMON_LISP_LIB_DIR='$(datadir)/common-lisp'])
   AC_MSG_RESULT([$COMMON_LISP_LIB_DIR])
+  AC_SUBST([COMMON_LISP_LIB_DIR])
 
   # We'll use LN_S to install Common Lisp ASDF files:
   AC_PROG_LN_S
