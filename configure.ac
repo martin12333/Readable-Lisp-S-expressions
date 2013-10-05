@@ -65,6 +65,13 @@ AC_CONFIG_FILES([Makefile])
 is_empty () {
   test "x$1" = "x"
 }
+is_enabled () { # Return TRUE if $1 has non-no value; empty considered enabled
+  test "x$1" != "xno"
+}
+
+is_permitted () { # Return TRUE if $1 has non-no value; empty = permitted
+  test "x$1" != "xno"
+}
 
 is_no_or_empty () {
   if "x$1" = "xno" ; then
@@ -74,14 +81,6 @@ is_no_or_empty () {
   else
     false
   fi
-}
-
-is_enabled () { # Return TRUE if $1 has non-no value; empty considered enabled
-  test "x$1" != "xno"
-}
-
-is_permitted () { # Return TRUE if $1 has non-no value; empty = permitted
-  test "x$1" != "xno"
 }
 
 # Report if given a "useful" value (something other than yes, no, or empty)
@@ -171,7 +170,11 @@ echo "MONKEY=($MONKEY)"
 
 
 # Sanity check all AC_ARG_WITH, AC_ARG_VAR, and AC_ARG_ENABLE variables
-# so they don't begin with "-" or space.
+# so they don't begin with "-" or space.  Then we can use "test" without
+# "x" prefixes, even on systems that aren't POSIX 2008.
+# Many autoconf files have text of the form test "x$variable" because
+# variable might begin with "-"; POSIX 2008 systems can handle this when
+# there are <=3 arguments, but a non-compliant system could get it wrong.
 for input_variable in \
   with_guile GUILE \
   with_guile_readline \
@@ -191,7 +194,7 @@ do
 done
 
 # If registering is forceably disabled, disable unregistering to match
-AS_IF([test "x$with_register_cl_source" = "xno"],
+AS_IF([test "$with_register_cl_source" = "no"],
   [with_unregister_cl_source=no])
 
 # It doesn't make sense to provide a "useful" value for these:
@@ -277,7 +280,7 @@ AM_COND_IF([HAVE_GUILE],
       [GUILE_READLINE_AVAILABLE=no])])
   AC_MSG_RESULT([$GUILE_READLINE_AVAILABLE])
   AS_IF([test "$GUILE_READLINE_AVAILABLE" = no && \
-         test "x$enable_guile_readline" = "xyes"],
+         test "$enable_guile_readline" = "yes"],
     [AC_MSG_ERROR([Guile readline required but unavailable.])])
 
   AS_IF([is_permitted "$with_scsh"],
@@ -290,10 +293,10 @@ AC_MSG_CHECKING([final decision HAVE_SCSH])
 AM_COND_IF([HAVE_SCSH], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 AM_COND_IF([HAVE_GUILE], [],
-  [AS_IF([test "x$with_guile" = "xyes"],
+  [AS_IF([test "$with_guile" = "yes"],
     [AC_MSG_ERROR([guile required but unavailable.])])])
 AM_COND_IF([HAVE_SCSH], [],
-  [AS_IF([test "x$with_scsh" = "xyes"],
+  [AS_IF([test "$with_scsh" = "yes"],
     [AC_MSG_ERROR([scsh required but unavailable.])])])
 
 
