@@ -359,7 +359,7 @@ AS_IF([is_permitted "$with_clisp"],
        [announce_make_clisp_asdf=yes])
      AC_MSG_RESULT([$have_clisp_working_asdf])
      rm -f asdf-check.lisp],
-    [AS_IF([test "with_clisp" = yes],
+    [AS_IF([test "$with_clisp" = yes],
      [AC_MSG_ERROR([clisp required but not found])])])])
 AM_CONDITIONAL([HAVE_CLISP], [is_enabled "$have_clisp_working_asdf"])
 AC_MSG_CHECKING([final decision HAVE_CLISP])
