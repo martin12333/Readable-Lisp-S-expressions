@@ -223,7 +223,7 @@ AS_IF([is_permitted "$with_guile"],
   [AS_IF([is_useful "$GUILE"], [], [AC_PATH_PROG([GUILE],[guile])])
    AS_IF([is_useful "$GUILE"], [AC_SUBST([GUILE])])])
 AM_CONDITIONAL([HAVE_GUILE], [is_useful "$GUILE"])
-AC_MSG_CHECKING([final result HAVE_GUILE])
+AC_MSG_CHECKING([final decision HAVE_GUILE])
 AM_COND_IF([HAVE_GUILE], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 # If we have guile, configure it.
@@ -285,7 +285,7 @@ AM_COND_IF([HAVE_GUILE],
   ])])
 AC_SUBST([GUILE_READLINE_AVAILABLE])
 AM_CONDITIONAL([HAVE_SCSH], [is_useful "$SCSH"])
-AC_MSG_CHECKING([final result HAVE_SCSH])
+AC_MSG_CHECKING([final decision HAVE_SCSH])
 AM_COND_IF([HAVE_SCSH], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 AM_COND_IF([HAVE_GUILE], [],
@@ -327,11 +327,11 @@ AC_MSG_RESULT([$with_common_lisp])
 
 AM_CONDITIONAL([HAVE_REGISTER_COMMON_LISP_SOURCE],
                [is_useful "$REGISTER_COMMON_LISP_SOURCE"])
-AC_MSG_CHECKING([final result HAVE_REGISTER_COMMON_LISP_SOURCE])
+AC_MSG_CHECKING([final decision HAVE_REGISTER_COMMON_LISP_SOURCE])
 AM_COND_IF([HAVE_REGISTER_COMMON_LISP_SOURCE], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 AM_CONDITIONAL([HAVE_UNREGISTER_COMMON_LISP_SOURCE],
                [is_useful "$UNREGISTER_COMMON_LISP_SOURCE"])
-AC_MSG_CHECKING([final result HAVE_UNREGISTER_COMMON_LISP_SOURCE])
+AC_MSG_CHECKING([final decision HAVE_UNREGISTER_COMMON_LISP_SOURCE])
 AM_COND_IF([HAVE_UNREGISTER_COMMON_LISP_SOURCE], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 # If Common Lisp won't be installed, clisp and sbcl possibilities are limited.
@@ -368,7 +368,7 @@ AS_IF([is_permitted "$with_sbcl"],
   [AS_IF([is_useful "$SBCL"], [], [AC_PATH_PROG([SBCL],[sbcl])])
    AS_IF([is_useful "$SBCL"], [AC_SUBST([SBCL])])])
 AM_CONDITIONAL([HAVE_SBCL], [is_useful "$SBCL"])
-AC_MSG_CHECKING([final result HAVE_SBCL])
+AC_MSG_CHECKING([final decision HAVE_SBCL])
 AM_COND_IF([HAVE_SBCL], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 
@@ -399,7 +399,7 @@ AS_IF([is_permitted "$with_markdown"],
 
 AM_CONDITIONAL([HAVE_MARKDOWN], [is_permitted "$with_markdown"])
 AM_COND_IF([HAVE_MARKDOWN], [AC_SUBST([MARKDOWN])])
-AC_MSG_CHECKING([final result HAVE_MARKDOWN])
+AC_MSG_CHECKING([final decision HAVE_MARKDOWN])
 AM_COND_IF([HAVE_MARKDOWN], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 
