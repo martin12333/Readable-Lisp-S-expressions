@@ -256,7 +256,7 @@ AM_COND_IF([HAVE_GUILE],
   AS_IF([is_empty "$GUILE_SITE"],
    [AS_CASE([$prefix],
       [*/_inst],
-        [AC_MSG_NOTICE([[Prefix ends in /_inst, so this is a 'make distcheck'. GUILE_SITE is unset.]])],
+        [AC_MSG_NOTICE([[Prefix ends in /_inst, so this is a 'make distcheck'. Also, GUILE_SITE has NOT been set.]])],
       [*],
         [# Query the guile interpreter directly to find guile site directory
         AC_MSG_CHECKING([asking guile for its site directory])
