@@ -265,7 +265,9 @@ AM_COND_IF([HAVE_GUILE],
         GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
         AC_MSG_RESULT([$GUILE_SITE])])])
   AS_IF([is_empty "$GUILE_SITE"],
-    [AC_MSG_NOTICE([[Setting GUILE_SITE using datarootdir (which uses prefix)]])
+    [# GUILE_SITE *still* has no value.  We must be in a "make distcheck"
+     # or we were unable to get a useful value from Guile.
+     AC_MSG_NOTICE([[Setting GUILE_SITE using datarootdir (which uses prefix)]])
      GUILE_SITE='${datarootdir}/guile/site'])
   # Add spaces at end to make results line up in the usual situation:
   AC_MSG_CHECKING([[Guile site directory (GUILE_SITE)  ]])
@@ -296,8 +298,11 @@ AC_MSG_CHECKING([final decision HAVE_SCSH])
 AM_COND_IF([HAVE_SCSH], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 AM_COND_IF([HAVE_GUILE], [],
-  [AS_IF([test "$with_guile" = "yes"],
-    [AC_MSG_ERROR([guile required but unavailable.])])])
+  [# We do not have guile.
+   AS_IF([test "$with_guile" = "yes"],
+    [AC_MSG_ERROR([guile required but unavailable.])])
+   AM_COND_IF([HAVE_SCSH],
+    [AC_MSG_ERROR([guile unavailable yet scsh given forced value.])])])
 AM_COND_IF([HAVE_SCSH], [],
   [AS_IF([test "$with_scsh" = "yes"],
     [AC_MSG_ERROR([scsh required but unavailable.])])])
