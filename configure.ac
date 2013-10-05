@@ -403,7 +403,7 @@ AC_MSG_CHECKING([final decision HAVE_MARKDOWN])
 AM_COND_IF([HAVE_MARKDOWN], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 
-AS_IF([is_enabled "$have_guile" || is_enabled "$have_clisp_working_asdf"],
+AM_COND_IF([HAVE_GUILE],
   [AC_PATH_PROG([EXPECT], [expect])
    AS_IF([is_empty "$EXPECT"],
      [echo >&2
