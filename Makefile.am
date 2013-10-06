@@ -570,7 +570,10 @@ else !HAVE_CLISP
 installcheck-clisp:
 endif !HAVE_CLISP
 
-installcheck-local: installcheck-clisp installcheck-guile
+# Don't call this "installcheck-local" because "make distcheck"
+# installs are unlikely to work.  Instead, create a separate
+# target that's a lot like installcheck, but can be invoked separately.
+installcheck-final: installcheck-clisp installcheck-guile
 
 
 # For convenience, we'll include a copy of the external asdf.lisp file from
