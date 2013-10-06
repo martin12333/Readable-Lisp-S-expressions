@@ -554,6 +554,25 @@ check-guile:
 endif !HAVE_GUILE
 
 
+if HAVE_GUILE
+installcheck-guile:
+	test "`printf 'a b {2 + 3}\n\n' | ./unsweeten | head -1`" = \
+	      '(a b (+ 2 3))'
+else !HAVE_GUILE
+installcheck-guile:
+endif !HAVE_GUILE
+
+if HAVE_CLISP
+installcheck-clisp:
+	printf 'princ {3 + 4}\n\n' > ,sweet-clisp-test
+	test 7 = "`sweet-clisp ,sweet-clisp-test 2> /dev/null | tail -n 1`"
+else !HAVE_CLISP
+installcheck-clisp:
+endif !HAVE_CLISP
+
+installcheck-local: installcheck-clisp installcheck-guile
+
+
 # For convenience, we'll include a copy of the external asdf.lisp file from
 # http://common-lisp.net/project/asdf/asdf.lisp as of 2013-10-02.
 # This is *NOT* changed from the external project, and users do *NOT*
