@@ -304,9 +304,11 @@ AM_COND_IF([HAVE_SCSH], [],
 echo >&2
 AS_IF([is_permitted "$with_common_lisp"],
  [with_common_lisp=yes
-  AC_MSG_CHECKING([Common Lisp lib dir (COMMON_LISP_LIB_DIR)])
   AS_IF([is_useful "$COMMON_LISP_LIB_DIR"], [],
-    [COMMON_LISP_LIB_DIR='$(datadir)/common-lisp'])
+    [COMMON_LISP_LIB_DIR='$(datadir)/common-lisp'
+     AS_IF([test "$prefix" = "/usr"], [],
+       [AC_MSG_WARN([Prefix is not /usr; ensure ASDF is configured to look at this Common Lisp dir.])])])
+  AC_MSG_CHECKING([Common Lisp lib dir (COMMON_LISP_LIB_DIR)])
   AC_MSG_RESULT([$COMMON_LISP_LIB_DIR])
   AC_SUBST([COMMON_LISP_LIB_DIR])
 
