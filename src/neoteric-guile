@@ -1,10 +1,10 @@
-#!/usr/bin/env expect
+#!@EXPECT@
 # By David A. Wheeler. Start up guile in "neoteric-expressoin" reading mode,
 # so you can try it out.
 
 # @WARNING_MESSAGE@
 
-spawn -noecho "@GUILE@" --debug -L "@LIBRARY_DIRECTORY@"
+spawn -noecho "@GUILE@" --debug -L "@GUILE_LIBRARY_DIRECTORY@"
 
 # Enable readline (for ease of interface). Do it separately, in case
 # readline isn't available.

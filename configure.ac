@@ -24,6 +24,16 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+
+# This "configure" script tries to "automagically" configure the software
+# for the user's system.
+# In general we will try to generate a "configure" that will
+# "work with what we have" but warn if major components aren't available.
+# We'll check for file existence for convenience (most users will configure
+# for their OWN system).  We'll also provide override mechanisms to skip that,
+# to support generation for other systems (cross-"compiling").
+
+
 # Version numbers generally follow the Semantic Versioning convention
 # (MAJOR.MINOR.PATCH) as documented here: http://semver.org/
 # Pre-release values DO NOT INCLUDE a hyphen,
@@ -33,8 +43,12 @@
 # Initialize, but use more options.  Note parameter brackets and whitespace.
 # TO CHANGE THE VERSION NUMBER: Edit readable-simple.spec, readable.spec,
 # readable.asd, and the line below:
-AC_INIT([readable], [0.9.3], [dwheeler@dwheeler.com],
+AC_INIT([readable], [0.9.4], [dwheeler@dwheeler.com],
         [readable], [http://readable.sourceforge.net/])
+AC_COPYRIGHT(
+[[Copyright (C) 2007-2013 by David A. Wheeler and Alan Manuel K. Gloria.
+This software is Free/libre/open source software and is
+released under the "MIT" license.]])
 
 # Force autoconf to be more recent.
 AC_PREREQ([2.67])
@@ -56,203 +70,370 @@ is_enabled () { # Return TRUE if $1 has non-no value; empty considered enabled
   test "x$1" != "xno"
 }
 
-yes_or_no () { # Returns TRUE if $1 is "yes" or "no".
-  if test "x$1" = "xyes" ; then
+is_permitted () { # Return TRUE if $1 has non-no value; empty = permitted
+  test "x$1" != "xno"
+}
+
+is_no_or_empty () {
+  if "x$1" = "xno" ; then
     true
-  elif test "x$1" = "xno" ; then
+  elif test "x$1" = "x" ; then
     true
   else
     false
   fi
 }
 
-# Create arguments --without-guile, --without-common-lisp, --without-clisp,
-# --with-markdown-command=VALUE / --without-markdown-command
-AC_ARG_WITH([guile],
-  [AS_HELP_STRING([--without-guile], [disable support for guile])],
-  [], [with_guile=yes])  # By default, with_guile
-AC_ARG_WITH([scsh],
-  [AS_HELP_STRING([--without-scsh], [disable support for scsh])],
-  [], [with_scsh=yes])  # By default, with_scsh
-AC_ARG_WITH([common-lisp],
-  [AS_HELP_STRING([--without-common-lisp], [disable support for Common Lisp])],
-  [], [with_common_lisp=yes])  # By default, with_common_lisp
-AC_ARG_WITH([clisp],
-  [AS_HELP_STRING([--without-clisp], [disable support for clisp])],
-  [], [with_clisp="$with_common_lisp"])
+# Report if given a "useful" value (something other than yes, no, or empty)
+is_useful () {
+  if test "x$1" = "xyes" ; then
+    false
+  elif test "x$1" = "xno" ; then
+    false
+  elif test "x$1" = "x" ; then
+    false
+  else
+    true
+  fi
+}
+
 # We generate HTML files from markdown files. By default we do this
-# using the markdown2.py file (MIT license), copied on 2013-09-17 from:
+# using the markdown2.py file (MIT license), copied from:
 #   https://raw.github.com/trentm/python-markdown2/master/lib/markdown2.py
 # We have our own copy in our directory so we can be certain to have one.
-AC_ARG_WITH([markdown-command],
+# Users can use MARKDOWN=... or --markdown=... to use their own.
+default_markdown_command='python "$(srcdir)/markdown2.py" -x link-patterns --link-patterns-file markdown-urls'
+
+
+# Create arguments for configure:
+AC_ARG_WITH([guile],
+  [AS_HELP_STRING([[--with-guile[=COMMAND] / --without-guile]],
+    [require/disable guile; many tools use guile (default: auto-detect).])],
+  [GUILE="$withval"])
+
+AC_ARG_ENABLE([guile-readline],
+  [AS_HELP_STRING([--enable-guile-readline / --disable-guile-readline],
+    [require/disable readline support within guile (default: auto-detect)])])
+
+AC_ARG_WITH([scsh],
+  [AS_HELP_STRING([[--with-scsh[=COMMAND] / --without-scsh]],
+    [require/disable support for scsh (default: auto-detect).])],
+  [SCSH="$withval"])
+
+AC_ARG_WITH([common-lisp],
+  [AS_HELP_STRING([[--with-common-lisp[=DIR] / --without-common-lisp]],
+    [require/disable Common Lisp library install to directory DIR (default: install to $(datadir)/common-lisp).])],
+  [COMMON_LISP_LIB_DIR="$withval"])
+
+AC_ARG_WITH([clisp],
+  [AS_HELP_STRING([[--with-clisp[=COMMAND] / --without-clisp]],
+    [require/disable support for clisp (default: auto-detect). This requires general Common Lisp support.  COMMAND sets CLISP])],
+  [CLISP="$withval"])
+
+AC_ARG_WITH([sbcl],
+  [AS_HELP_STRING([[--with-sbcl[=COMMAND] / --without-sbcl]],
+    [require/disable support for sbcl (default: auto-detect).])],
+  [SBCL="$withval"])
+
+AC_ARG_WITH([register-cl-source],
+  [AS_HELP_STRING([[--with-register-cl-source[=COMMAND] / --without-register-cl-source]],
+    [require/disable support for the utility to register Common Lisp source (default: auto-detect for register-common-lisp-source program in PATH).])],
+  [REGISTER_COMMON_LISP_SOURCE="$withval"])
+
+AC_ARG_WITH([unregister-cl-source],
+  [AS_HELP_STRING([[--with-unregister-cl-source[=COMMAND] / --without-unregister-cl-source]],
+    [require/disable support for unregistering Common Lisp source (default: auto-detect.  If register-cl-source is 'no', this is too)])],
+  [UNREGISTER_COMMON_LISP_SOURCE="$withval"])
+
+AC_ARG_WITH([markdown],
   [AS_HELP_STRING(
-    [--with-markdown-command=COMMAND | --without-markdown-command],
-    ["with" option gives command to translate markdown into HTML; "without" option disables generating HTML from markdown])],
-  [],
-  [with_markdown_command="python ./markdown2.py -x link-patterns --link-patterns-file markdown-urls"])
+    [[--with-markdown[=COMMAND] | --without-markdown]],
+    [require/forbid translating markdown into HTML (default: Use included markdown2 implementation, which uses Python).])],
+  [MARKDOWN="$withval"])
 
-AC_ARG_ENABLE([reported-guile-site],
-  [AS_HELP_STRING([--enable-reported-guile-site], [force use of the guile site value as reported by guile])],
-  [reported_guile_site=${enableval}], [reported_guile_site=no])
-
-# Special environment variables/command-line variables
-AC_ARG_VAR([GUILE], [Path to guile executable])
+# Other special environment variables/command-line variables
+AC_ARG_VAR([BIN_ENV],
+  [Command to run env (default: auto-detect, often /usr/bin/env)])
+AC_ARG_VAR([EXPECT], [Command to run expect (default: auto-detect)])
 AC_ARG_VAR([GUILE_SITE],
-           [Force Guile site directory, usually /usr/share/guile/site])
-AC_ARG_VAR([GUILE_READLINE_AVAILABLE],
-           [Force readline to be used or avoided in guile])
+  [Guile site directory (default: auto-detect; often /usr/share/guile/site)])
 
-# Sanity-check argument values.
-AS_IF([yes_or_no "$with_guile"],[], [
-  AC_MSG_ERROR([with-guile must be 'yes' or 'no'])
-])
-AS_IF([yes_or_no "$with_scsh"],[], [
-  AC_MSG_ERROR([with-scsh must be 'yes' or 'no'])
-])
-AS_IF([yes_or_no "$with_common_lisp"],[], [
-  AC_MSG_ERROR([with-common-lisp must be 'yes' or 'no'])
-])
-AS_IF([yes_or_no "$with_clisp"],[], [
-  AC_MSG_ERROR([with-clisp must be 'yes' or 'no'])
-])
-AS_IF([yes_or_no "$reported_guile_site"],[], [
-  AC_MSG_ERROR([reported-guile-site must be 'yes' or 'no'])
-])
+
+# Sanity check all AC_ARG_WITH, AC_ARG_VAR, and AC_ARG_ENABLE variables
+# so they don't begin with "-" or space.  Then we can use "test" without
+# "x" prefixes, even on systems that aren't POSIX 2008.
+# Many autoconf files have text of the form test "x$variable" because
+# variable might begin with "-"; POSIX 2008 systems can handle this when
+# there are <=3 arguments, but a non-compliant system could get it wrong.
+for input_variable in \
+  with_guile GUILE \
+  with_guile_readline \
+  with_scsh SCSH \
+  with_common_lisp COMMON_LISP_LIB_DIR \
+  with_clisp CLISP \
+  with_sbcl SBCL \
+  with_register_cl_source REGISTER_COMMON_LISP_SOURCE \
+  with_unregister_cl_source UNREGISTER_COMMON_LISP_SOURCE \
+  with_markdown MARKDOWN \
+  BIN_ENV EXPECT GUILE_SITE
+do
+  AS_VAR_COPY([received_value], [$input_variable])
+  AS_CASE(["$received_value"],
+    [[[-\ ]*]],
+      [AC_MSG_ERROR([Input $input_variable begins with dash or space: $received_value])])
+done
+
+# If registering is forceably disabled, disable unregistering to match
+AS_IF([test "$with_register_cl_source" = "no"],
+  [with_unregister_cl_source=no])
+
+# It doesn't make sense to provide a "useful" value for these:
+AS_IF([is_useful "$enable_guile_readline"],
+  [AC_MSG_ERROR([enable-guile-readline must be 'yes', 'no', or no value])])
 
 # Sanity-check combinations of argument values.
-AS_IF([test "$with_guile" = no -a "$with_common_lisp" = no],[
-  AC_MSG_ERROR([Both --without-guile and --without-common-lisp specified - nothing to install])
-])
-AS_IF([test "$with_common_lisp" = no -a "$with_clisp" = yes],[
-  AC_MSG_ERROR([clisp requires common lisp])
-])
+AS_IF([test "$with_guile" = no && test "$with_common_lisp" = no],
+  [AC_MSG_WARN([Both --without-guile and --without-common-lisp specified, little to do])])
+AS_IF([test "$with_common_lisp" = no && test "$with_clisp" = yes],
+  [AC_MSG_ERROR([clisp requires Common Lisp support])])
+AS_IF([test "$with_common_lisp" = no && test "$with_sbcl" = yes],
+  [AC_MSG_ERROR([sbcl requires Common Lisp support])])
 
 
-# Look for Guile and guile-related information if necessary.
-AS_IF([is_enabled "$with_guile"],[
+# Setup basics
+AC_PROG_INSTALL
+AC_PROG_MKDIR_P
+AC_PROG_SED
 
-  # Guile provides autoconf macros in guile.m4, but they require guile-config.
+AC_PATH_PROG([BIN_ENV], [env])
+AS_IF([is_empty "$BIN_ENV"],
+  [AC_MSG_ERROR([No executable "env" available.])])
+
+
+### GUILE ###
+
+# For purposes of configuration, do we have a working guile?
+AS_IF([is_permitted "$with_guile"],
+  [AS_IF([is_useful "$GUILE"], [], [AC_PATH_PROG([GUILE],[guile])])
+   AS_IF([is_useful "$GUILE"], [AC_SUBST([GUILE])])])
+AM_CONDITIONAL([HAVE_GUILE], [is_useful "$GUILE"])
+AC_MSG_CHECKING([final decision HAVE_GUILE])
+AM_COND_IF([HAVE_GUILE], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
+
+# If we have guile, configure it.
+GUILE_READLINE_AVAILABLE=no
+AM_COND_IF([HAVE_GUILE],
+ [# Guile provides autoconf macros in guile.m4, but they require guile-config.
   # Sadly, guile-config doesn't come standard on all "guile" packages on all
   # distros, so using guile-config would make our package harder to install.
   # Instead, we implement these searches directly, making our package
   # much easier to install.
   # Since we aren't linking into guile, this isn't hard to do.
 
-  # Look for the program "guile":
-  AS_IF([is_empty "$GUILE"],[#then
-    AC_PATH_PROG([GUILE],[guile])])
-  AS_IF([is_empty "$GUILE"],[#then
-    AC_MSG_ERROR([guile required but not found (--without-guile to disable most tools)])])
-  AC_SUBST([GUILE])
-
   # Determine Guile's "site" directory, where libraries are stored.
-  AS_IF([is_empty "$GUILE_SITE"], [
-    # Guile's autoconf macro "GUILE_SITE_DIR" sets GUILE_SITE to the value of
-    # the site directory, but as noted above, users often don't have
-    # the guile autoconf macros installed.  In addition,
-    # GUILE_SITE_DIR doesn't honor the $prefix value anyway, which causes
-    # "make distcheck" to always fail, making GUILE_SITE_DIR problematic:
-    #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00049.html
-    #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00048.html
-
-    # Query the guile interpreter directly to find guile site directory
-    AC_MSG_CHECKING([for reported Guile site directory])
-    REPORTED_GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
-    AC_MSG_RESULT([$REPORTED_GUILE_SITE])
-
-    # If prefix ends in "_inst" (as happens in "make distcheck"),
-    # use the reported guile site value only if forced.
-    # In most cases we use the guile site directory value reported by guile.
+  # Guile's autoconf macro "GUILE_SITE_DIR" sets GUILE_SITE to the value of
+  # the site directory, but as noted above, users often don't have
+  # the guile autoconf macros installed.  In addition,
+  # GUILE_SITE_DIR doesn't honor the $prefix value anyway, which causes
+  # "make distcheck" to always fail, making GUILE_SITE_DIR problematic:
+  #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00049.html
+  #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00048.html
+  # We use:
+  # 1. GUILE_SITE if not empty.  Otherwise,
+  # 2. If prefix doesn't end in "/_inst" (a "make distcheck"), and
+  #    guile reports a non-empty value, use that value.  Otherwise,
+  # 3. Use the value '${datarootdir}/guile/site'
+  AS_IF([is_empty "$GUILE_SITE"],
+   [AC_MSG_NOTICE([No GUILE_SITE value has been forceably set.])
     AS_CASE([$prefix],
-            [*/_inst], [use_reported_site="$reported_guile_site"],
-            [*],       [use_reported_site='yes'])
-
-    AS_IF([is_empty "$REPORTED_GUILE_SITE"],[
-      use_reported_site='no' # Don't use a useless value!
-      AC_MSG_WARN([guile reported an empty GUILE_SITE value, using calculated value to compensate])])
-
-    AS_IF([test "$use_reported_site" = 'yes'], [
-      # Use guile site value as reported by guile
-      GUILE_SITE="$REPORTED_GUILE_SITE"
-      # Add space at the end to line up with previous line
-      AC_MSG_CHECKING([using same Guile site directory  ])
-      AC_MSG_RESULT([$GUILE_SITE])
-    ], [
-      # Use, for GUILE_SITE, a calculated value based on $prefix.
-      # This is necesary for "make distcheck" to work, for example.
-      GUILE_SITE='${datarootdir}/guile/site'
-      AC_MSG_CHECKING([for calculated Guile site directory])
-      AC_MSG_RESULT([$GUILE_SITE])
-    ])
-  ])
-  AC_SUBST([GUILE_SITE])
+      [*/_inst],
+        [AC_MSG_NOTICE([[Prefix ends in /_inst; this is a 'make distcheck'.]])],
+      [*],
+        [# Query the guile interpreter directly to find guile site directory
+        AC_MSG_CHECKING([asking guile for its site directory])
+        GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
+        AC_MSG_RESULT([$GUILE_SITE])])])
+  AS_IF([is_empty "$GUILE_SITE"],
+    [# GUILE_SITE *still* has no value.  We must be in a "make distcheck"
+     # or we were unable to get a useful value from Guile.
+     AC_MSG_NOTICE([[Setting GUILE_SITE using datarootdir (which uses prefix)]])
+     GUILE_SITE='${datarootdir}/guile/site'])
+  # Add spaces at end to make results line up in the usual situation:
+  AC_MSG_CHECKING([[Guile site directory (GUILE_SITE)  ]])
+  AC_MSG_RESULT([$GUILE_SITE])
 
   # Determine if "readline" is available in guile.
-  # Below is code similar to GUILE_MODULE_AVAILABLE, but expanded and
-  # with AC_REQUIRE([GUILE_PROGS]) removed:
   AC_MSG_CHECKING([if (ice-9 readline) is available])
-  AS_IF([is_empty "$GUILE_READLINE_AVAILABLE"], [
-    [$GUILE] -q -c "(use-modules (ice-9 readline)) (exit ((lambda () 0)))" > /dev/null 2>&1
+  AS_IF([is_permitted "$enable_guile_readline"],
+   [[$GUILE] -q \
+      -c "(use-modules (ice-9 readline)) (exit ((lambda () 0)))" \
+      > /dev/null 2>&1
     GUILE_READLINE_AVAILABLE=$?
-    AS_IF([test "$GUILE_READLINE_AVAILABLE" = "0"],[
-      GUILE_READLINE_AVAILABLE=yes
-    ],[
-      GUILE_READLINE_AVAILABLE=no
-    ])
-  ])
+    AS_IF([test "$GUILE_READLINE_AVAILABLE" = "0"],
+      [GUILE_READLINE_AVAILABLE=yes],
+      [GUILE_READLINE_AVAILABLE=no])])
   AC_MSG_RESULT([$GUILE_READLINE_AVAILABLE])
-  AS_IF([yes_or_no "$GUILE_READLINE_AVAILABLE"],[], [
-    AC_MSG_ERROR([GUILE_READLINE_AVAILABLE must be 'yes' or 'no'])
-  ])
-  AC_SUBST([GUILE_READLINE_AVAILABLE])
+  AS_IF([test "$GUILE_READLINE_AVAILABLE" = "no" && \
+         test "$enable_guile_readline" = "yes"],
+    [AC_MSG_ERROR([Guile readline required but unavailable.])])
+
+  AS_IF([is_permitted "$with_scsh"],
+    [AS_IF([is_useful "$SCSH"], [], [AC_PATH_PROG([SCSH],[scsh])])
+     AS_IF([is_useful "$SCSH"], [AC_SUBST([SCSH])])])
 ])
+AC_SUBST([GUILE_READLINE_AVAILABLE])
+AM_CONDITIONAL([HAVE_SCSH], [is_useful "$SCSH"])
+AC_MSG_CHECKING([final decision HAVE_SCSH])
+AM_COND_IF([HAVE_SCSH], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
+
+AM_COND_IF([HAVE_GUILE], [],
+  [# We do not have guile.
+   AS_IF([test "$with_guile" = "yes"],
+    [AC_MSG_ERROR([guile required but unavailable.])])
+   AM_COND_IF([HAVE_SCSH],
+    [AC_MSG_ERROR([guile unavailable yet scsh given forced value.])])])
+AM_COND_IF([HAVE_SCSH], [],
+  [AS_IF([test "$with_scsh" = "yes"],
+    [AC_MSG_ERROR([scsh required but unavailable.])])])
 
 
-AS_IF([is_enabled "$with_common_lisp"], [
+### COMMON LISP ###
+
+# Common Lisp by itself just installs to a directory, so we'll
+# always do it if permitted to do so:
+echo >&2
+AS_IF([is_permitted "$with_common_lisp"],
+ [with_common_lisp=yes
+  AS_IF([is_useful "$COMMON_LISP_LIB_DIR"], [],
+    [COMMON_LISP_LIB_DIR='$(datadir)/common-lisp'
+     AS_IF([test "$prefix" = "/usr"], [],
+       [AC_MSG_WARN([Prefix is not /usr; ensure ASDF is configured to look at this Common Lisp dir.])])])
+  AC_MSG_CHECKING([Common Lisp lib dir (COMMON_LISP_LIB_DIR)])
+  AC_MSG_RESULT([$COMMON_LISP_LIB_DIR])
+  AC_SUBST([COMMON_LISP_LIB_DIR])
+
+  AS_IF([is_permitted "$with_register_cl_source"],
+    [AS_IF([is_useful "$REGISTER_COMMON_LISP_SOURCE"], [], [AC_PATH_PROG([REGISTER_COMMON_LISP_SOURCE],[register-common-lisp-source])])
+     AS_IF([is_useful "$REGISTER_COMMON_LISP_SOURCE"], [AC_SUBST([REGISTER_COMMON_LISP_SOURCE])])])
+
+  AS_IF([is_permitted "$with_unregister_cl_source"],
+    [AS_IF([is_useful "$UNREGISTER_COMMON_LISP_SOURCE"], [], [AC_PATH_PROG([UNREGISTER_COMMON_LISP_SOURCE],[unregister-common-lisp-source])])
+     AS_IF([is_useful "$UNREGISTER_COMMON_LISP_SOURCE"], [AC_SUBST([UNREGISTER_COMMON_LISP_SOURCE])])])
+
   # We'll use LN_S to install Common Lisp ASDF files:
-  AC_PROG_LN_S
-])
+  AC_PROG_LN_S])
+AM_CONDITIONAL([HAVE_COMMON_LISP], [is_enabled "$with_common_lisp"])
+AC_MSG_CHECKING([final decision HAVE_COMMON_LISP])
+AC_MSG_RESULT([$with_common_lisp])
+
+AM_CONDITIONAL([HAVE_REGISTER_COMMON_LISP_SOURCE],
+               [is_useful "$REGISTER_COMMON_LISP_SOURCE"])
+AC_MSG_CHECKING([final decision HAVE_REGISTER_COMMON_LISP_SOURCE])
+AM_COND_IF([HAVE_REGISTER_COMMON_LISP_SOURCE],
+           [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
+AM_CONDITIONAL([HAVE_UNREGISTER_COMMON_LISP_SOURCE],
+               [is_useful "$UNREGISTER_COMMON_LISP_SOURCE"])
+AC_MSG_CHECKING([final decision HAVE_UNREGISTER_COMMON_LISP_SOURCE])
+AM_COND_IF([HAVE_UNREGISTER_COMMON_LISP_SOURCE],
+           [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
+
+# If Common Lisp won't be installed, clisp and sbcl possibilities are limited.
+AM_COND_IF([HAVE_COMMON_LISP], [],
+ [AS_IF([is_no_or_empty "$with_clisp"],
+    [with_clisp=no],
+    [AC_MSG_ERROR([Common Lisp not available yet clisp required])])
+  AS_IF([is_no_or_empty "$with_sbcl"],
+    [with_sbcl=no],
+    [AC_MSG_ERROR([Common Lisp not available yet sbcl required])])])
+
+# Check clisp
+have_clisp_working_asdf=no
+announce_make_clisp_asdf=no
+AS_IF([is_permitted "$with_clisp"],
+  [AS_IF([is_useful "$CLISP"], [], [AC_PATH_PROG([CLISP],[clisp])])
+   AS_IF([is_useful "$CLISP"],
+    [AC_SUBST([CLISP])
+     AC_MSG_CHECKING([if (require "asdf") is available in clisp])
+     echo '(require "asdf")' > asdf-check.lisp
+     [$CLISP] asdf-check.lisp > /dev/null 2>&1
+     AS_IF([test "$?" = 0],
+       [have_clisp_working_asdf=yes],
+       [announce_make_clisp_asdf=yes])
+     AC_MSG_RESULT([$have_clisp_working_asdf])
+     rm -f asdf-check.lisp],
+    [AS_IF([test "$with_clisp" = yes],
+     [AC_MSG_ERROR([clisp required but not found])])])])
+AM_CONDITIONAL([HAVE_CLISP], [is_enabled "$have_clisp_working_asdf"])
+AC_MSG_CHECKING([final decision HAVE_CLISP])
+AC_MSG_RESULT([$have_clisp_working_asdf])
+
+# Check sbcl.
+AS_IF([is_permitted "$with_sbcl"],
+  [AS_IF([is_useful "$SBCL"], [], [AC_PATH_PROG([SBCL],[sbcl])])
+   AS_IF([is_useful "$SBCL"], [AC_SUBST([SBCL])])])
+AM_CONDITIONAL([HAVE_SBCL], [is_useful "$SBCL"])
+AC_MSG_CHECKING([final decision HAVE_SBCL])
+AM_COND_IF([HAVE_SBCL], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
+
+AM_COND_IF([HAVE_SBCL], [],
+  [AS_IF([test "$with_sbcl" = "yes"],
+    [AC_MSG_ERROR([sbcl required but unavailable.])])])
 
 
-AS_IF([is_enabled "$with_clisp"], [
-  # Determine if "clisp" is available and has asdf properly installed.
-  AC_PATH_PROG([CLISP_INSTALLED], [clisp])
-  AS_IF([is_empty "$CLISP_INSTALLED"],[#then
-    AC_MSG_ERROR([clisp required but not found (--without-clisp to skip clisp+asdf checking)])
-  ],[#else
-    # check if asdf is installed with clisp.
-    AC_MSG_CHECKING([if (require :asdf) is available])
-    echo '(require "asdf")' > asdf-check.lisp
-    [$CLISP_INSTALLED] asdf-check.lisp > /dev/null 2>&1
-    AS_IF([test "$?" = 0],[#then
-      rm asdf-check.lisp
-      AC_MSG_RESULT([yes])
-      CLISP=$CLISP_INSTALLED
-    ],[#else
-      rm asdf-check.lisp
-      AC_MSG_RESULT([no])
-      AC_MSG_ERROR([clisp found but without asdf (--without-clisp to skip clisp+asdf checking)])
-    ])
-  ])
-  AC_SUBST([CLISP])
-])
 
-# Fail if we need python but it's not available.
-AS_CASE([$with_markdown_command], [python\ *], [
-  AC_PATH_PROG([PYTHON_INSTALLED], [python])
-  AS_IF([is_empty "$PYTHON_INSTALLED"],[#then
-    AC_MSG_ERROR([python not found; install it, use --with-markdown-command=COMMAND, or use --without-markdown-command])
-  ])])
+### Other stuff ###
+echo >&2
 
-# Set up automake conditionals
-AM_CONDITIONAL([WITH_GUILE],       [is_enabled "$with_guile"])
-AM_CONDITIONAL([WITH_SCSH],        [is_enabled "$with_scsh"])
-AM_CONDITIONAL([WITH_COMMON_LISP], [is_enabled "$with_common_lisp"])
-AM_CONDITIONAL([WITH_CLISP],       [is_enabled "$with_clisp"])
-AM_CONDITIONAL([ENABLE_HTML_FROM_MARKDOWN],
-                                   [is_enabled "$with_markdown_command"])
-AC_SUBST([MARKDOWN], [$with_markdown_command])
+# If users have not specified their own markdown processor,
+# we'll try to use the pre-supplied markdown2 implementation.
+# In that case, we'll look for python (which is required for markdown2).
+# Markdown2 only requires a very old version of Python and it works with 3.
+# Developers will need a more modern version of Python to use
+# get-from-wiki, but get-from-wiki is a developer convenience
+# (not a user command) so we won't worry about that here.
+AS_IF([is_permitted "$with_markdown"],
+  [AS_IF([is_useful "$MARKDOWN"],
+    [AC_MSG_CHECKING([Markdown command])
+     AC_MSG_RESULT([$MARKDOWN])],
+    [MARKDOWN="$default_markdown_command"
+     AC_MSG_CHECKING([default markdown command])
+     AC_MSG_RESULT([$MARKDOWN])
+     AM_PATH_PYTHON([2.4], [],
+       [AS_IF([test "$with_markdown" = yes],
+          [AC_MSG_ERROR([Python not found, and markdown2 required.])])
+        with_markdown=no
+        AC_MSG_WARN([Python not found, and markdown2 requires it. HTML generation disabled])])])])
 
+AM_CONDITIONAL([HAVE_MARKDOWN], [is_permitted "$with_markdown"])
+AM_COND_IF([HAVE_MARKDOWN], [AC_SUBST([MARKDOWN])])
+AC_MSG_CHECKING([final decision HAVE_MARKDOWN])
+AM_COND_IF([HAVE_MARKDOWN], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
+
+
+AM_COND_IF([HAVE_GUILE],
+  [AC_PATH_PROG([EXPECT], [expect])
+   AS_IF([is_empty "$EXPECT"],
+     [echo >&2
+      AC_MSG_WARN([[expect not found; please install expect, or many command-line tools will fail]])
+      echo >&2
+      # Set EXPECT to a plausible value, in case it's installed later
+      # or a later PATH makes "expect" visible.
+      # An empty value is *certain* to fail later.
+      EXPECT="$BIN_ENV expect"])])
+
+
+# Emit key warnings LAST, so users are more likely to notice them.
+AM_COND_IF([HAVE_GUILE], [],
+  [echo >&2
+   AC_MSG_WARN([GUILE NOT AVAILABLE.  Tools implemented with guile will not be available.])])
+
+AS_IF([test "$announce_make_clisp_asdf" = yes],
+  [echo >&2
+   AC_MSG_WARN([CLISP FOUND, but clisp cannot currently invoke ASDF.])
+   AC_MSG_NOTICE([Thus, clisp support is currently disabled.])
+   AC_MSG_NOTICE([Run 'make clisp-asdf' to configure clisp to use ASDF for this user.])])
+
+echo >&2
 
 # Perhaps check for: (more) programs, libraries, header files, types,
 # structures, compiler characteristics, library functions, system services.

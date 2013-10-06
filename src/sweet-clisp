@@ -4,6 +4,8 @@
 # To use un-installed sweet-expr implementation, set CL_SOURCE_REGISTRY. E.G.:
 #    CL_SOURCE_REGISTRY="$PWD" ./sweet-clisp ...
 
+# @WARNING_MESSAGE@
+
 # A useful "clisp-option" is "-modern".
 # This sets *print-escape*; this isn't ideal, but
 # in most circumstances it works well, and clisp has no better way
@@ -19,6 +21,12 @@ clisp_options=""
 origfile=""
 # Use clisp standard repl (no internal overrides):
 crepl=0
+
+override_cl_source_registry="@OVERRIDE_CL_SOURCE_REGISTRY@"
+if [ -n "$override_cl_source_registry" ] ; then
+  CL_SOURCE_REGISTRY="$override_cl_source_registry"
+  export CL_SOURCE_REGISTRY
+fi
 
 setup_commands='
 (require "asdf")

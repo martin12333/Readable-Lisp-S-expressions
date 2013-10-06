@@ -10,9 +10,9 @@
 ;_  esac
 ;_done
 ;_if test "$#" = "0"; then
-;_  exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0" $OPTIONS
+;_  exec @BIN_ENV@ GUILE_LOAD_PATH="@GUILE_LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0" $OPTIONS
 ;_else
-;_  cat "$@" | /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0" $OPTIONS
+;_  cat "$@" | @BIN_ENV@ GUILE_LOAD_PATH="@GUILE_LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0" $OPTIONS
 ;_  exit $?
 ;_fi
 ;_

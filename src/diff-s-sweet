@@ -79,7 +79,7 @@ if [ "$common_lisp" = 1 ] ; then
   rm -f "$progfile"
 else
   sed -e 's/^#lang  *[-a-zA-Z0-9]*//' |   # Remove Racket-specific extension
-  guile -c '
+  @GUILE@ -c '
     (use-modules (ice-9 pretty-print))
      (do ((x (read) (read)))
        ((eof-object? x))

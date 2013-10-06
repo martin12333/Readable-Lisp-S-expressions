@@ -47,6 +47,7 @@ for raw_item in "$@" ; do
 
   # Use Unix text format everywhere:
   dos2unix --quiet "$TDIR/${item}.md"
+  chmod a-w "$TDIR/${item}.md"
 
   # If the files differ, we update:
   if cmp -s "$item.md" "$TDIR/$item.md"
@@ -54,6 +55,7 @@ for raw_item in "$@" ; do
     echo 'unchanged'
   else
     echo 'UPDATED'
+    rm -f "$item.md"
     mv "$TDIR/$item.md" "$item.md"
   fi
 done

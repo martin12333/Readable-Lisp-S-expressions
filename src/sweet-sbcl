@@ -2,10 +2,20 @@
 # Start up sbcl in "sweet-expression" mode.
 # sweet-sbcl [sbcl-options]
 
+# # @WARNING_MESSAGE@
+
+# You can run scripts, e.g.:
+#    ./sweet-sbcl --script FILE.slisp
 # To run an UNINSTALLED readable library, do this:
 #    CL_SOURCE_REGISTRY="$PWD" ./sweet-sbcl
-# You can run scripts, e.g.:
-#    CL_SOURCE_REGISTRY="$PWD" ./sweet-sbcl --script FILE.slisp
+
+
+override_cl_source_registry="@OVERRIDE_CL_SOURCE_REGISTRY@"
+if [ -n "$override_cl_source_registry" ] ; then
+  CL_SOURCE_REGISTRY="$override_cl_source_registry"
+  export CL_SOURCE_REGISTRY
+fi
+
 
 sbcl --eval '(require "asdf")' \
      --eval '(asdf:load-system :readable)' \

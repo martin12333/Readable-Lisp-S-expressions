@@ -1,3 +1,14 @@
+2013-10-05 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Version 0.9.4.
+	* Make configuration MUCH more automatic.  As much as possible,
+	  do everything automatically, and warn about problems during
+	  the configuration process.
+	* Improve portability, e.g., "env" need not be in /usr/bin.
+	* Provide 'make clisp-asdf' to configure clisp to use ASDF
+	  for this user.
+	* Create Common Lisp front-end programs that automatically work,
+	  just like the guile tools
+
 2013-09-26 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Clearer installation instructions.
 	* Placed normal installation instructions in a single

@@ -1,10 +1,16 @@
-# This shows how to create a Makefile that can automatically
-# convert .sscm (sweet-Scheme) into Scheme, using make "pattern rules".
-# Just put this into your "Makefile":
+# This demonstrates how to create a Makefile that can automatically
+# convert .sscm (sweet-Scheme) into .scm (Scheme).
+# Just put the following into your "Makefile".
 
 UNSWEETEN = unsweeten
 
-%.scm : %.sscm
+# You *must* set .SUFFIXES to be certain that the suffix rule will work.
+# If you're using automake, instead of ".SUFFIXES:" use
+# use "SUFFIXES = ..." or "SUFFIXES += ...":
+.SUFFIXES: .sscm .scm
+
+# The rule.  This is defined using the old POSIX-portable suffix rule format:
+.sscm.scm:
 	$(UNSWEETEN) < $< > $@
 
 

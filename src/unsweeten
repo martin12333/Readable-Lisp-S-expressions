@@ -10,9 +10,9 @@ while true ; do
   esac
 done
 if test "$#" = "0"; then
-  exec /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0" $OPTIONS
+  exec @BIN_ENV@ GUILE_LOAD_PATH="@GUILE_LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0" $OPTIONS
 else
-  cat "$@" | /usr/bin/env GUILE_LOAD_PATH="@LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0" $OPTIONS
+  cat "$@" | @BIN_ENV@ GUILE_LOAD_PATH="@GUILE_LIBRARY_DIRECTORY@" @GUILE@ --debug -q -s "$0" $OPTIONS
   exit $?
 fi
 
@@ -38,8 +38,6 @@ fi
 ;    `(a b c ,d)
 ; $ echo '`(a b c ,d)' | ./unsweeten  # This won't:
 ;   `(a b c (unquote d))
-;
-; TODO: Pass "-C" information to reader so that #'name => (function name)
 
 
 (define load-pretty-print #t)
