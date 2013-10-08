@@ -209,6 +209,16 @@ AC_PATH_PROG([BIN_ENV], [env])
 AS_IF([is_empty "$BIN_ENV"],
   [AC_MSG_ERROR([No executable "env" available.])])
 
+# Is this a normal install, or a "make distcheck"?  We need to disable
+# the tests in a "make distcheck" that won't work.
+is_make_distcheck=no
+AS_CASE([$prefix],
+  [*/_inst],
+    [AC_MSG_NOTICE([[Prefix ends in /_inst; this is a 'make distcheck'.]])
+     is_make_distcheck=yes])
+AM_CONDITIONAL([IS_MAKE_DISTCHECK], [is_enabled "$is_make_distcheck"])
+AC_MSG_CHECKING([final decision IS_MAKE_DISTCHECK (running "make distcheck"?)])
+AM_COND_IF([IS_MAKE_DISTCHECK], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 ### GUILE ###
 
@@ -240,19 +250,16 @@ AM_COND_IF([HAVE_GUILE],
   #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00048.html
   # We use:
   # 1. GUILE_SITE if not empty.  Otherwise,
-  # 2. If prefix doesn't end in "/_inst" (a "make distcheck"), and
+  # 2. If it's a normal install (not a "make distcheck"), and
   #    guile reports a non-empty value, use that value.  Otherwise,
   # 3. Use the value '${datarootdir}/guile/site'
   AS_IF([is_empty "$GUILE_SITE"],
    [AC_MSG_NOTICE([No GUILE_SITE value has been forceably set.])
-    AS_CASE([$prefix],
-      [*/_inst],
-        [AC_MSG_NOTICE([[Prefix ends in /_inst; this is a 'make distcheck'.]])],
-      [*],
-        [# Query the guile interpreter directly to find guile site directory
-        AC_MSG_CHECKING([asking guile for its site directory])
-        GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
-        AC_MSG_RESULT([$GUILE_SITE])])])
+    AM_COND_IF([IS_MAKE_DISTCHECK], [],
+      [# Query the guile interpreter directly to find guile site directory
+       AC_MSG_CHECKING([asking guile for its site directory])
+       GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
+       AC_MSG_RESULT([$GUILE_SITE])])])
   AS_IF([is_empty "$GUILE_SITE"],
     [# GUILE_SITE *still* has no value.  We must be in a "make distcheck"
      # or we were unable to get a useful value from Guile.

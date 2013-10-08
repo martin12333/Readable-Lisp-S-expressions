@@ -570,10 +570,14 @@ else !HAVE_CLISP
 installcheck-clisp:
 endif !HAVE_CLISP
 
-# Don't call this "installcheck-local" because "make distcheck"
-# installs are unlikely to work.  Instead, create a separate
-# target that's a lot like installcheck, but can be invoked separately.
-installcheck-final: installcheck-clisp installcheck-guile
+# The installchecks won't work in a "make distcheck", because
+# they won't be installed in the final location used by the tools.
+if IS_MAKE_DISTCHECK
+installcheck-local:
+	echo "Running 'make distcheck'; local installchecks disabled."
+else !IS_MAKE_DISTCHECK
+installcheck-local: installcheck-clisp installcheck-guile
+endif !IS_MAKE_DISTCHECK
 
 
 # For convenience, we'll include a copy of the external asdf.lisp file from
