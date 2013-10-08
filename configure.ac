@@ -122,7 +122,7 @@ AC_ARG_WITH([scsh],
 
 AC_ARG_WITH([common-lisp],
   [AS_HELP_STRING([[--with-common-lisp[=DIR] / --without-common-lisp]],
-    [require/disable Common Lisp library install to directory DIR (default: install to $(datadir)/common-lisp).])],
+    [require/disable Common Lisp library source code install to directory DIR (default: install to $(datadir)/common-lisp).])],
   [COMMON_LISP_LIB_DIR="$withval"])
 
 AC_ARG_WITH([clisp],
@@ -311,10 +311,11 @@ AM_COND_IF([HAVE_SCSH], [],
 echo >&2
 AS_IF([is_permitted "$with_common_lisp"],
  [with_common_lisp=yes
+  AC_MSG_NOTICE([Installing Common Lisp's library source code into a directory.])
   AS_IF([is_useful "$COMMON_LISP_LIB_DIR"], [],
     [COMMON_LISP_LIB_DIR='$(datadir)/common-lisp'
      AS_IF([test "$prefix" = "/usr"], [],
-       [AC_MSG_WARN([Prefix is not /usr; ensure ASDF is configured to look at this Common Lisp dir.])])])
+       [AC_MSG_WARN([Prefix is not /usr; ensure ASDF configuration looks here.])])])
   AC_MSG_CHECKING([Common Lisp lib dir (COMMON_LISP_LIB_DIR)])
   AC_MSG_RESULT([$COMMON_LISP_LIB_DIR])
   AC_SUBST([COMMON_LISP_LIB_DIR])
