@@ -291,7 +291,7 @@ common_lisp_systemsdir = $(common_lispdir)/systems
 
 pkg_asd_file=readable.asd
 
-if HAVE_COMMON_LISP
+if INSTALL_COMMON_LISP_LIB
 dist_common_lisp_source_pkg_DATA = \
  basic-curly.lisp neoteric.lisp backquote.lisp sweet.lisp
 
@@ -339,7 +339,7 @@ uninstall-hook-cl:
 
 uninstall-hook: uninstall-hook-cl
 
-endif HAVE_COMMON_LISP
+endif INSTALL_COMMON_LISP_LIB
 
 if HAVE_CLISP
 generated_bin_scripts += bin/sweet-clisp

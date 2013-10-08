@@ -330,8 +330,8 @@ AS_IF([is_permitted "$with_common_lisp"],
 
   # We'll use LN_S to install Common Lisp ASDF files:
   AC_PROG_LN_S])
-AM_CONDITIONAL([HAVE_COMMON_LISP], [is_enabled "$with_common_lisp"])
-AC_MSG_CHECKING([final decision HAVE_COMMON_LISP])
+AM_CONDITIONAL([INSTALL_COMMON_LISP_LIB], [is_enabled "$with_common_lisp"])
+AC_MSG_CHECKING([final decision INSTALL_COMMON_LISP_LIB])
 AC_MSG_RESULT([$with_common_lisp])
 
 AM_CONDITIONAL([HAVE_REGISTER_COMMON_LISP_SOURCE],
@@ -346,7 +346,7 @@ AM_COND_IF([HAVE_UNREGISTER_COMMON_LISP_SOURCE],
            [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 # If Common Lisp won't be installed, clisp and sbcl possibilities are limited.
-AM_COND_IF([HAVE_COMMON_LISP], [],
+AM_COND_IF([INSTALL_COMMON_LISP_LIB], [],
  [AS_IF([is_no_or_empty "$with_clisp"],
     [with_clisp=no],
     [AC_MSG_ERROR([Common Lisp not available yet clisp required])])
