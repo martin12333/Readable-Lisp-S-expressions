@@ -144,7 +144,7 @@ It then compiles ASDF, by doing this:
 
     clisp -q -c "~/lisp/asdf/asdf.lisp"
 
-That is roughly equivalent to:
+That clisp line uses "-c" (compile), and is roughly equivalent to:
 
     clisp
     (load (compile-file "asdf.lisp"))
@@ -194,9 +194,9 @@ and don't want to mess with the autotools etc., you can do that too.
 The minimum set of files, and when you need them, are:
 
 basic-curly.lisp ; Bare minimum, implements basic curly-infix.
-neoteric.lisp ; Needed if you use neoteric-expressions; needs basic-curly.lisp
-backquote.lisp
-sweet.lisp ; Need if you use sweet-expressions; needs {backquote,neoteric}.lisp
+neoteric.lisp ; Needed for neoteric-expressions; needs basic-curly.lisp
+backquote.lisp ; Needed by sweet.lisp, by Guy L. Steele Jr.
+sweet.lisp ; Need for sweet-expressions; needs {backquote,neoteric}.lisp
 readable.asd ; Need if you use ASDF to handle these other files.
 
 Thus, if you ONLY need basic-curly-infix, you can copy JUST the file
