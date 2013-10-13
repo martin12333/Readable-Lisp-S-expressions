@@ -28,8 +28,9 @@ include Scheme (including guile), Common Lisp, Emacs Lisp, Clojure, Arc,
 BitC, ACL2, SUO-KIF, the GCC MiddleEndLispTranslator (MELT),
 Satisfiability Modulo Theories Library (SMT-LIB), NewLisp, and ISLisp.
 For Scheme these notations are defined in SRFI-105 and SRFI-110.
-At this time, the tools focus on Scheme and Common Lisp, but
-some of the tools can be easily used with many other Lisps.
+
+At this time, the implementation and tools focus on Scheme and Common Lisp,
+but some of the tools can be easily used with many other Lisps.
 
 The file "Problem.html" describes the problem this is intended to solve, and
 "Solution.html" describes these notations. Hands-on tutorials are in
