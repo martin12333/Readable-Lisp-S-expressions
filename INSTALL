@@ -133,7 +133,7 @@ First, it will create "~/lisp/asdf" if it does not already exist:
 
 It then looks for an already-installed ASDF file, e.g., in
 "/usr/share/common-lisp/source/cl-asdf/asdf.lisp" (a typical situation if
-you install package "cl-asdf").  If if finds one, it creates a link to it:
+you install package "cl-asdf").  If it finds one, it creates a link to it:
 
     ln -s /usr/share/common-lisp/source/cl-asdf/asdf.lisp ~/lisp/asdf/
 
