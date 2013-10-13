@@ -21,13 +21,19 @@ The "readable" software supports both Scheme (guile) and Common Lisp.  If you wa
 For the impatient: QuickLisp Common Lisp library install
 ========================================================
 
-If you just want to *use* the "readable" library from Common Lisp code, QuickLisp is the easy solution.  This approach will not install tools such as "sweeten" or "unsweeten", but for a lot of Common Lisp users that may be okay.
+If you're completely impatient, and if you just want to *use* the "readable" library from Common Lisp code, QuickLisp is the easy solution.  This approach will not install tools (such as "sweeten" or "unsweeten"), but for a lot of Common Lisp users that may be okay.
 
-First, install *[ASDF](http://common-lisp.net/project/asdf/)* (clisp users see below) and *[QuickLisp](http://www.quicklisp.org/)*.  A QuickLisp install should simply involve starting your implementation of Common Lisp, downloading QuickLisp, then running *(load "quicklisp.lisp")* and then *(quicklisp-quickstart:install)*.  Then download and install readable as a library using:
+First, install *[QuickLisp](http://www.quicklisp.org/)*.  A QuickLisp install should simply involve starting your implementation of Common Lisp, downloading the [QuickLisp](http://www.quicklisp.org/) file, starting your implementation of Common Lisp (such as *clisp* or *sbcl*), then running:
+
+    (load "quicklisp.lisp")
+    (quicklisp-quickstart:install)  ; Install QuickLisp (also installs ASDF)
+    (ql:add-to-init-file)           ; Add QuickLisp to your Lisp init file
+
+That's it, QuickLisp is now installed!  As discussed in the Common Lisp tutorial, from now on you can load the "readable" library just by doing this:
 
     (ql:quickload "readable")
 
-That's it!  That will download the current "master" version using git, and by default put it under "~/quicklisp".  
+The first time you run *(ql:quickload "readable")* the QuickLisp system will download the current "master" version of the "readable" library using git.  By default QuickLisp will put the library code inside "~/quicklisp".
 
 If these impatient approaches aren't enough, let's go through it step-by-step.
 
