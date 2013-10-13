@@ -319,6 +319,17 @@ else !HAVE_UNREGISTER_COMMON_LISP_SOURCE
 MAYBE_UNREGISTER_CL = echo "Note: No unregistration performed."
 endif !HAVE_UNREGISTER_COMMON_LISP_SOURCE
 
+# Convenience target.  "make direct_cl_dir=DIR direct-common-lisp-install"
+# installs Common Lisp .lisp and .asd files directly to $direct_cl_dir, which
+# MUST be supplied.  This target is NOT used by anything else;
+# normally we put these files in special locations.
+direct-common-lisp-install:
+	$(MKDIR_P) "$(direct_cl_dir)" && \
+	cp -p $(dist_common_lisp_source_pkg_DATA) "$(direct_cl_dir)"
+
+PHONIES += direct-common-lisp-install
+
+
 # Install symlink so asdf can find these files. See:
 # http://www.gnu.org/software/automake/manual/html_node/Extending.html
 # We first try to "rm" the symlink, in case it already exists.
