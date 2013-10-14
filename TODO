@@ -45,7 +45,3 @@ TODOs:
       append append(xs ys) zs
       append xs append(ys zs)
 
-
-- Perhaps uppercase titles of generated HTML, e.g., using
-  awk '{print toupper(substr($1,1,1)) substr($1,2)}'
-
