@@ -33,8 +33,10 @@ At this time, the implementation and tools focus on Scheme and Common Lisp,
 but some of the tools can be easily used with many other Lisps.
 
 The file "Problem.html" describes the problem this is intended to solve, and
-"Solution.html" describes these notations. Hands-on tutorials are in
-"Scheme-tutorial.html" and "Common-lisp-tutorial.html".
+"Solution.html" describes these notations.  Installation instructions
+are in "Install-howto.html".  Hands-on tutorials are in
+"Scheme-tutorial.html" and "Common-lisp-tutorial.html".  These .html
+files are generated from the equivalent .md (markdown) files.
 
 For more information, see:
   http://readable.sourceforge.net
