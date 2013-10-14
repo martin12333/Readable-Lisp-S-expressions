@@ -437,7 +437,7 @@ MDMIRRORS = Problem.md Solution.md Install-howto.md Retort.md \
             Scheme-tutorial.md Common-lisp-tutorial.md
 
 # These are stub files that link to the website:
-MDSTUBS = Rationale.md
+MDSTUBS = Rationale.md Analysis.md
 
 # These are all markdown (.md) files, including stubs:
 MDFILES = $(MDMIRRORS) $(MDSTUBS)
