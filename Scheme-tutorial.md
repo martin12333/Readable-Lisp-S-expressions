@@ -414,7 +414,7 @@ But that's the point - the results look much more familiar (and thus are more ac
 Closing Remarks
 ===============
 
-You can see more Scheme-specific information about sweet-expressions in SRFI-110.
+See [Examples] for some additional examples. You can see more Scheme-specific information about sweet-expressions in SRFI-110.
 
 Although we used some specific implementations, note that these notations could be used with any Lisp-based system.
 
