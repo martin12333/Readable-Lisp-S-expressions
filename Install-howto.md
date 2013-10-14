@@ -33,9 +33,9 @@ That's it, QuickLisp is now installed!  As discussed in the Common Lisp tutorial
 
     (ql:quickload "readable")
 
-The first time you run *(ql:quickload "readable")* the QuickLisp system will download the current "master" version of the "readable" library using git.  By default QuickLisp will put the library code inside "~/quicklisp".
+The first time you run *(ql:quickload "readable")* the QuickLisp system will download the current "master" version of the "readable" library as it's stored in the QuickLisp repository.  By default QuickLisp will put the library code inside "~/quicklisp".
 
-If these impatient approaches aren't enough, let's go through it step-by-step.
+If these impatient approaches aren't enough, let's go through an installation from source, step-by-step.
 
 
 Prerequisites
