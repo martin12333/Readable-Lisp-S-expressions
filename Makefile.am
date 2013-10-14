@@ -600,7 +600,8 @@ endif !IS_MAKE_DISTCHECK
 EXTRA_DIST += external/asdf.lisp
 
 
-CLISP_ASDF_FILE = ${HOME}/lisp/asdf/asdf.lisp
+CLISP_ASDF_DIR = ${HOME}/lisp/asdf/asdf.lisp
+CLISP_ASDF_FILE = ${CLISP_ASDF_DIR}/asdf.lisp
 SYSTEM_ASDF_FILE = /usr/share/common-lisp/source/cl-asdf/asdf.lisp
 
 clisp-asdf:
@@ -608,6 +609,7 @@ clisp-asdf:
 	@if test -r "$(CLISP_ASDF_FILE)" ; then \
 	  echo "ASDF already installed for this user" ; \
 	 else \
+	  $(MKDIR_P) "${CLISP_ASDF_DIR}" ; \
 	  if test -r "$(SYSTEM_ASDF_FILE)" ; then \
             echo "Creating link to system asdf file $(SYSTEM_ASDF_FILE)" ; \
             echo $(LN_S) "$(SYSTEM_ASDF_FILE)" "$(CLISP_ASDF_FILE)" ; \
