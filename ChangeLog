@@ -1,7 +1,16 @@
+2013-10-14 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Version 1.0.0.
+	* Provide various minor improvements to the documentation.
+	  In particular, we explain how Common Lisp library users
+	  can use QuickLisp, and include more hypertext cross-links
+	  to help users find the information they want.
+	  Several places highlight the "Install-howto" files, to help
+	  people easily find the installation instructions.
+
 2013-10-05 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Version 0.9.4.
-	* Make configuration MUCH more automatic.  As much as possible,
-	  do everything automatically, and warn about problems during
+	* Make configuration is now MUCH more automatic.  As much as possible,
+	  we do everything automatically, and warn about problems during
 	  the configuration process.
 	* Improve portability, e.g., "env" need not be in /usr/bin.
 	* Provide 'make clisp-asdf' to configure clisp to use ASDF
