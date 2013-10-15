@@ -1,12 +1,13 @@
-This tutorial describes how to use free-libre/open source software that makes Lisp notation more readable.
+This tutorial describes shows how to use the "readable" free-libre/open source software with Scheme, especially the guile implementation of Scheme.  The "readable" software adds new abbreviations to traditional Lisp notation, to make it far more readable.  You don't need to be familiar with Lisp-like languages to understand this tutorial, though it greatly helps.
 
-This tutorial focuses on Scheme; if you're using Common Lisp, look at the [Common-lisp-tutorial].  You don't need to be familiar with Lisp-like languages to understand this tutorial, though it helps.
+But first, here are some related pages you might find useful:
 
-Historically Lisp-derived systems represent programs as *s-expressions*, where an operation and its parameters is surrounded by parentheses in that order.  Thus, “2+3” is written as “(+ 2 3)” in a Lisp-derived language. Lisp notation is simple, but most people find it hard to read.  For more information on the problems of traditional Lisp notation, see [Problem].
+* [Install-howto] describes how to download and install the software that this tutorial describes how to use.
+* [Common-lisp-tutorial] is a tutorial for Common Lisp (the tutorial you're reading focuses on Scheme)
+* [Problem] provides more information on the problems of traditional Lisp notation.  Historically Lisp-derived systems represent programs as *s-expressions*, where an operation and its parameters is surrounded by parentheses in that order.  Thus, “2+3” is written as “(+ 2 3)” in a Lisp-derived language. Lisp notation is simple, but most people find it hard to read.
+* [Solution] describes in more detail our solution to the [Problem] of traditional Lisp notation.  We've developed three tiers of notation, each building on the previous. These are simply new abbreviations for common cases; you can continue to use normally-formatted s-expressions wherever you want to. Curly-infix-expressions add infix notation; neoteric-expressions add the ability to write f(x) instead of (f x), and sweet-expressions deduce parentheses from indentation.
 
-To solve this, we've developed three tiers of notation, each building on the previous. These are simply new abbreviations for common cases; you can continue to use normally-formatted s-expressions wherever you want to. Curly-infix-expressions add infix notation; neoteric-expressions add the ability to write f(x) instead of (f x), and sweet-expressions deduce parentheses from indentation.  For more details, see [Solution].
-
-See [Install-howto] for how to download and install the software that this tutorial describes how to use.
+So let's get started!
 
 Using curly-infix-expressions (c-expressions)
 =============================================
@@ -31,7 +32,7 @@ and you will see 5. Look! You now have a calculator! In curly-infix expressions,
 
 it will respond with (+ 2 3).  That is, once it's read in, it will read in a quoted (+&nbsp;2&nbsp;3), and "executing" it will return the simple (+&nbsp;2&nbsp;3).  Note that the infix operator *must* be surrounded by whitespace - otherwise, it would have no way to know where the name of the operation begins or ends.
 
-There is intentionally no support for precedence between different operators. While precedence is useful in some circumstances, in typical uses for Lisp-derived languages and sweet-expressions, it doesn't help and is often harmful. In particular, precedence can hide where different lists occur.  This lack of precedence is not a problem at all; usually you can just use curly braces or parentheses when mixing different infix operators:
+There is intentionally no support for precedence between different operators. While precedence is useful in some circumstances, in typical uses for Lisp-derived languages, it doesn't help much and is often harmful. In particular, precedence can hide where different lists occur.  This lack of precedence is not a problem at all; usually you can just use curly braces or parentheses when mixing different infix operators:
 
     {2 + {3 * 4}}
 
@@ -53,8 +54,6 @@ The list elements inside {...} can be neoteric-expressions, not just ordinary li
 
 Just execute "(exit)" to get out.
 
-(Note: If you want to try the draft curly-infix implementation in Common Lisp, run a Common Lisp implementation such as clisp, and then execute (load "readable.cl").).
-
 
 Using Neoteric-expressions (n-expressions)
 ===========================================
@@ -63,7 +62,7 @@ Now let's do more with neoteric-expressions (which include curly-infix-expressio
 
       ./neoteric-guile
 
-We have reports that guile version 2.0's "autocompilation" feature can cause troubles.  If you see ";; compiling /blah/blah...", then just exit by typing **exit()** and **Enter**.  Then restart it (don't the clear cache first), and it should work.
+Again, you can omit the beginning "./" if you installed the programs to their final system locations.  We have reports that guile version 2.0's "autocompilation" feature can cause troubles.  If you see ";; compiling /blah/blah...", then just exit by typing **exit()** and **Enter**.  Then restart it (don't clear the cache first) with "./neoteric-guile", and it should work.
 
 Neoteric-expressions support curly-infix-expressions, including normally-formatted s-expressions.  In addition, neoteric-expressions add special meanings to the grouping symbols ( ), [ ], and { } if they *immediately* follow an expression (instead of being separated by whitespace).  In particular, any e( ... ) is mapped to (e ...), and any e{ ... } is mapped to (e { ... }).
 
@@ -415,8 +414,9 @@ But that's the point - the results look much more familiar (and thus are more ac
 Closing Remarks
 ===============
 
-These notations can take a few minutes to learn how to use, just like anything else new, but they are worth it.
-
-You can see more Scheme-specific information about sweet-expressions in SRFI-110.
+See [Examples] for some additional examples. You can see more Scheme-specific information about sweet-expressions in SRFI-110.
 
 Although we used some specific implementations, note that these notations could be used with any Lisp-based system.
+
+These notations can take a few minutes to learn how to use, just like anything else new, but we believe they are worth it.  We hope you like them and eventually believe it too.
+

@@ -291,7 +291,7 @@ common_lisp_systemsdir = $(common_lispdir)/systems
 
 pkg_asd_file=readable.asd
 
-if HAVE_COMMON_LISP
+if INSTALL_COMMON_LISP_LIB
 dist_common_lisp_source_pkg_DATA = \
  basic-curly.lisp neoteric.lisp backquote.lisp sweet.lisp
 
@@ -319,6 +319,17 @@ else !HAVE_UNREGISTER_COMMON_LISP_SOURCE
 MAYBE_UNREGISTER_CL = echo "Note: No unregistration performed."
 endif !HAVE_UNREGISTER_COMMON_LISP_SOURCE
 
+# Convenience target.  "make direct_cl_dir=DIR direct-common-lisp-install"
+# installs Common Lisp .lisp and .asd files directly to $direct_cl_dir, which
+# MUST be supplied.  This target is NOT used by anything else;
+# normally we put these files in special locations.
+direct-common-lisp-install:
+	$(MKDIR_P) "$(direct_cl_dir)" && \
+	cp -p $(dist_common_lisp_source_pkg_DATA) "$(direct_cl_dir)"
+
+PHONIES += direct-common-lisp-install
+
+
 # Install symlink so asdf can find these files. See:
 # http://www.gnu.org/software/automake/manual/html_node/Extending.html
 # We first try to "rm" the symlink, in case it already exists.
@@ -339,7 +350,7 @@ uninstall-hook-cl:
 
 uninstall-hook: uninstall-hook-cl
 
-endif HAVE_COMMON_LISP
+endif INSTALL_COMMON_LISP_LIB
 
 if HAVE_CLISP
 generated_bin_scripts += bin/sweet-clisp
@@ -421,11 +432,12 @@ dist_doc_DATA += README-ANTLR README-files
 
 # These the markdown (.md) files that are on the Wiki and we'll
 # duplicate in the distributed package:
-MDMIRRORS = Problem.md Solution.md Install-howto.md \
+MDMIRRORS = Problem.md Solution.md Install-howto.md Retort.md \
+            Examples.md Hunchentoot-make-docstrings.md \
             Scheme-tutorial.md Common-lisp-tutorial.md
 
 # These are stub files that link to the website:
-MDSTUBS = Rationale.md Retort.md Examples.md
+MDSTUBS = Rationale.md Analysis.md
 
 # These are all markdown (.md) files, including stubs:
 MDFILES = $(MDMIRRORS) $(MDSTUBS)
@@ -570,10 +582,14 @@ else !HAVE_CLISP
 installcheck-clisp:
 endif !HAVE_CLISP
 
-# Don't call this "installcheck-local" because "make distcheck"
-# installs are unlikely to work.  Instead, create a separate
-# target that's a lot like installcheck, but can be invoked separately.
-installcheck-final: installcheck-clisp installcheck-guile
+# The installchecks won't work in a "make distcheck", because
+# they won't be installed in the final location used by the tools.
+if IS_MAKE_DISTCHECK
+installcheck-local:
+	echo "Running 'make distcheck'; local installchecks disabled."
+else !IS_MAKE_DISTCHECK
+installcheck-local: installcheck-clisp installcheck-guile
+endif !IS_MAKE_DISTCHECK
 
 
 # For convenience, we'll include a copy of the external asdf.lisp file from
@@ -584,7 +600,8 @@ installcheck-final: installcheck-clisp installcheck-guile
 EXTRA_DIST += external/asdf.lisp
 
 
-CLISP_ASDF_FILE = ${HOME}/lisp/asdf/asdf.lisp
+CLISP_ASDF_DIR = ${HOME}/lisp/asdf/asdf.lisp
+CLISP_ASDF_FILE = ${CLISP_ASDF_DIR}/asdf.lisp
 SYSTEM_ASDF_FILE = /usr/share/common-lisp/source/cl-asdf/asdf.lisp
 
 clisp-asdf:
@@ -592,6 +609,7 @@ clisp-asdf:
 	@if test -r "$(CLISP_ASDF_FILE)" ; then \
 	  echo "ASDF already installed for this user" ; \
 	 else \
+	  $(MKDIR_P) "${CLISP_ASDF_DIR}" ; \
 	  if test -r "$(SYSTEM_ASDF_FILE)" ; then \
             echo "Creating link to system asdf file $(SYSTEM_ASDF_FILE)" ; \
             echo $(LN_S) "$(SYSTEM_ASDF_FILE)" "$(CLISP_ASDF_FILE)" ; \

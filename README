@@ -28,12 +28,15 @@ include Scheme (including guile), Common Lisp, Emacs Lisp, Clojure, Arc,
 BitC, ACL2, SUO-KIF, the GCC MiddleEndLispTranslator (MELT),
 Satisfiability Modulo Theories Library (SMT-LIB), NewLisp, and ISLisp.
 For Scheme these notations are defined in SRFI-105 and SRFI-110.
-At this time, the tools focus on Scheme and Common Lisp, but
-some of the tools can be easily used with many other Lisps.
+
+At this time, the implementation and tools focus on Scheme and Common Lisp,
+but some of the tools can be easily used with many other Lisps.
 
 The file "Problem.html" describes the problem this is intended to solve, and
-"Solution.html" describes these notations. Hands-on tutorials are in
-"Scheme-tutorial.html" and "Common-lisp-tutorial.html".
+"Solution.html" describes these notations.  Installation instructions
+are in "Install-howto.html".  Hands-on tutorials are in
+"Scheme-tutorial.html" and "Common-lisp-tutorial.html".  These .html
+files are generated from the equivalent .md (markdown) files.
 
 For more information, see:
   http://readable.sourceforge.net
@@ -62,8 +65,8 @@ A sweet-expression reader would accept *either* one.
 Maturity
 ========
 
-This code is *mature* and *production-ready*, and comes with an
-extensive test suite.
+This code is *mature* and *production-ready*.
+It comes with an extensive test suite, which it passes.
 
 
 License
@@ -78,13 +81,13 @@ See the COPYING file for the license text.
 
 The one exception is the file "sweet-clisp", which interfaces to clisp.
 Most of this file is also licensed under the MIT license.
-However, that file contains code derived from the "clisp" program.
+However, that file contains code derived from the "clisp" program itself.
 Clisp is licensed under the "GNU General Public License version 2 (GPLv2)",
 so those parts are also under the GPLv2 (see the file for details).
 The GPLv2 is also an open source software / Free Software license approved
 by both the OSI (opensource.org) as an open source software license,
 and by the FSF (fsf.org) as a Free software license.
-See the COPYING.GPL file for those conditions.
+See the COPYING.GPL file for the conditions for the "sweet-clisp" program.
 
 
 Getting, building, and installing
@@ -108,7 +111,8 @@ Then follow the installation instructions in the file
 https://sourceforge.net/p/readable/wiki/Install-howto/
 
 This software supports the usual GNU Build System conventions, and
-it should be easy to install on most systems.  If you have very
+it should be easy to install on most systems.  Users who only want to
+use the Common Lisp library can use QuickLisp instead.  If you have very
 exotic needs, the file INSTALL gives details on how to precisely control
 installation.
 
@@ -126,7 +130,7 @@ Common Lisp Tutorial
 
 File "Common-lisp-tutorial.html" is the Common Lisp tutorial for how to use it.
 Any Common Lisp implementation should do, but you need the widely-used system
-definition facility asdf, as described in "Install-howto".
+definition facility ASDF (or use QuickLisp), as described in "Install-howto".
 
 
 Specification

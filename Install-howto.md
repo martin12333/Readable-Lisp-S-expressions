@@ -1,9 +1,11 @@
+If your system has "readable" pre-packaged, it's easiest to use that.  But if that's not the case, here's how to install the "readable" software.
+
 To install the "readable" software directly from our site, you need to have the right prerequisites, download and uncompress the software, configure it, build it, and then actually install it.  In most cases it should be easy, but we've provided some tips to help you avoid (or fix) problems.
 
-For the impatient
-=================
+For the impatient: Source installs
+==================================
 
-If you're completely impatient,  just install the packages *guile*, *expect*, *clisp*, and *asdf* (asdf is often the package "cl-asdf").  You might also install *sbcl*.  Then download the current stable version from [http://readable.sourceforge.net](http://readable.sourceforge.net) and run the following command-line commands on your Unix-like system (including Cygwin):
+If you're completely impatient, and you want to install from source, just install the packages *guile*, *expect*, *clisp*, and *asdf* (asdf is often the package "cl-asdf").  You might also install *sbcl*.  Then download the current stable version from [http://readable.sourceforge.net](http://readable.sourceforge.net) and run the following command-line commands on your Unix-like system (including Cygwin):
 
     tar xvzf readable-*.tar.gz
     cd readable-*
@@ -14,6 +16,26 @@ If you're completely impatient,  just install the packages *guile*, *expect*, *c
 Below are more details about each of those steps, including various options you can use.  You don't need to install to system-wide locations (so you *could* skip the last step), though it's slightly easier to use if you do.
 
 The "readable" software supports both Scheme (guile) and Common Lisp.  If you want, you can choose to install just the Scheme (guile) or just the Common Lisp portion.  In particular, if you don't already have an implementation of Common Lisp installed, you might try using the configuration option "--without-common-lisp"; setting up a usable Common Lisp system can take a few more steps as described below.
+
+
+For the impatient: QuickLisp Common Lisp library install
+========================================================
+
+If you're completely impatient, and if you just want to *use* the "readable" library from Common Lisp code, QuickLisp is the easy solution.  This approach will not install tools (such as "sweeten" or "unsweeten"), but for a lot of Common Lisp users that may be okay.
+
+First, install *[QuickLisp](http://www.quicklisp.org/)*.  A QuickLisp install should simply involve starting your implementation of Common Lisp, downloading the [QuickLisp](http://www.quicklisp.org/) file, starting your implementation of Common Lisp (such as *clisp* or *sbcl*), then running:
+
+    (load "quicklisp.lisp")
+    (quicklisp-quickstart:install)  ; Install QuickLisp (also installs ASDF)
+    (ql:add-to-init-file)           ; Add QuickLisp to your Lisp init file
+
+That's it, QuickLisp is now installed!  As discussed in the Common Lisp tutorial, from now on you can load the "readable" library just by doing this:
+
+    (ql:quickload "readable")
+
+The first time you run *(ql:quickload "readable")* the QuickLisp system will download the current "master" version of the "readable" library as it's stored in the QuickLisp repository.  By default QuickLisp will put the library code inside "~/quicklisp".
+
+If these impatient approaches aren't enough, let's go through an installation from source, step-by-step.
 
 
 Prerequisites

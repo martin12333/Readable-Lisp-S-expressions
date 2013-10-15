@@ -43,7 +43,7 @@
 # Initialize, but use more options.  Note parameter brackets and whitespace.
 # TO CHANGE THE VERSION NUMBER: Edit readable-simple.spec, readable.spec,
 # readable.asd, and the line below:
-AC_INIT([readable], [0.9.4], [dwheeler@dwheeler.com],
+AC_INIT([readable], [1.0.0], [dwheeler@dwheeler.com],
         [readable], [http://readable.sourceforge.net/])
 AC_COPYRIGHT(
 [[Copyright (C) 2007-2013 by David A. Wheeler and Alan Manuel K. Gloria.
@@ -122,7 +122,7 @@ AC_ARG_WITH([scsh],
 
 AC_ARG_WITH([common-lisp],
   [AS_HELP_STRING([[--with-common-lisp[=DIR] / --without-common-lisp]],
-    [require/disable Common Lisp library install to directory DIR (default: install to $(datadir)/common-lisp).])],
+    [require/disable Common Lisp library source code install to directory DIR (default: install to $(datadir)/common-lisp).])],
   [COMMON_LISP_LIB_DIR="$withval"])
 
 AC_ARG_WITH([clisp],
@@ -209,6 +209,16 @@ AC_PATH_PROG([BIN_ENV], [env])
 AS_IF([is_empty "$BIN_ENV"],
   [AC_MSG_ERROR([No executable "env" available.])])
 
+# Is this a normal install, or a "make distcheck"?  We need to disable
+# the tests in a "make distcheck" that won't work.
+is_make_distcheck=no
+AS_CASE([$prefix],
+  [*/_inst],
+    [AC_MSG_NOTICE([[Prefix ends in /_inst; this is a 'make distcheck'.]])
+     is_make_distcheck=yes])
+AM_CONDITIONAL([IS_MAKE_DISTCHECK], [is_enabled "$is_make_distcheck"])
+AC_MSG_CHECKING([final decision IS_MAKE_DISTCHECK (running "make distcheck"?)])
+AM_COND_IF([IS_MAKE_DISTCHECK], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 ### GUILE ###
 
@@ -240,19 +250,16 @@ AM_COND_IF([HAVE_GUILE],
   #   http://lists.gnu.org/archive/html/guile-user/2009-01/msg00048.html
   # We use:
   # 1. GUILE_SITE if not empty.  Otherwise,
-  # 2. If prefix doesn't end in "/_inst" (a "make distcheck"), and
+  # 2. If it's a normal install (not a "make distcheck"), and
   #    guile reports a non-empty value, use that value.  Otherwise,
   # 3. Use the value '${datarootdir}/guile/site'
   AS_IF([is_empty "$GUILE_SITE"],
    [AC_MSG_NOTICE([No GUILE_SITE value has been forceably set.])
-    AS_CASE([$prefix],
-      [*/_inst],
-        [AC_MSG_NOTICE([[Prefix ends in /_inst; this is a 'make distcheck'.]])],
-      [*],
-        [# Query the guile interpreter directly to find guile site directory
-        AC_MSG_CHECKING([asking guile for its site directory])
-        GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
-        AC_MSG_RESULT([$GUILE_SITE])])])
+    AM_COND_IF([IS_MAKE_DISTCHECK], [],
+      [# Query the guile interpreter directly to find guile site directory
+       AC_MSG_CHECKING([asking guile for its site directory])
+       GUILE_SITE=`[$GUILE] -q -c "(display (%site-dir))"`
+       AC_MSG_RESULT([$GUILE_SITE])])])
   AS_IF([is_empty "$GUILE_SITE"],
     [# GUILE_SITE *still* has no value.  We must be in a "make distcheck"
      # or we were unable to get a useful value from Guile.
@@ -304,10 +311,11 @@ AM_COND_IF([HAVE_SCSH], [],
 echo >&2
 AS_IF([is_permitted "$with_common_lisp"],
  [with_common_lisp=yes
+  AC_MSG_NOTICE([Installing Common Lisp's library source code into a directory.])
   AS_IF([is_useful "$COMMON_LISP_LIB_DIR"], [],
     [COMMON_LISP_LIB_DIR='$(datadir)/common-lisp'
      AS_IF([test "$prefix" = "/usr"], [],
-       [AC_MSG_WARN([Prefix is not /usr; ensure ASDF is configured to look at this Common Lisp dir.])])])
+       [AC_MSG_WARN([Prefix is not /usr; ensure ASDF configuration looks here.])])])
   AC_MSG_CHECKING([Common Lisp lib dir (COMMON_LISP_LIB_DIR)])
   AC_MSG_RESULT([$COMMON_LISP_LIB_DIR])
   AC_SUBST([COMMON_LISP_LIB_DIR])
@@ -322,8 +330,8 @@ AS_IF([is_permitted "$with_common_lisp"],
 
   # We'll use LN_S to install Common Lisp ASDF files:
   AC_PROG_LN_S])
-AM_CONDITIONAL([HAVE_COMMON_LISP], [is_enabled "$with_common_lisp"])
-AC_MSG_CHECKING([final decision HAVE_COMMON_LISP])
+AM_CONDITIONAL([INSTALL_COMMON_LISP_LIB], [is_enabled "$with_common_lisp"])
+AC_MSG_CHECKING([final decision INSTALL_COMMON_LISP_LIB])
 AC_MSG_RESULT([$with_common_lisp])
 
 AM_CONDITIONAL([HAVE_REGISTER_COMMON_LISP_SOURCE],
@@ -338,7 +346,7 @@ AM_COND_IF([HAVE_UNREGISTER_COMMON_LISP_SOURCE],
            [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 # If Common Lisp won't be installed, clisp and sbcl possibilities are limited.
-AM_COND_IF([HAVE_COMMON_LISP], [],
+AM_COND_IF([INSTALL_COMMON_LISP_LIB], [],
  [AS_IF([is_no_or_empty "$with_clisp"],
     [with_clisp=no],
     [AC_MSG_ERROR([Common Lisp not available yet clisp required])])
