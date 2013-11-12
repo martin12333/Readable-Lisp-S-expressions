@@ -1139,7 +1139,7 @@
         ((eqv? c #\\)
           (let ((c2 (my-read-char port)))
             (cond
-              ((eof-object? c) '())
+              ((eof-object? c2) '())
               ((eqv? c2 #\|)   (cons #\| (read-symbol-elements port)))
               ((eqv? c2 #\\)   (cons #\\ (read-symbol-elements port)))
               ((eqv? c2 #\a)   (cons (integer->char #x0007)
@@ -1171,7 +1171,7 @@
         ((eqv? c #\|)    '(#\|)) ; Expected end of symbol elements
         ((eqv? c #\\)
           (let ((c2 (my-read-char port)))
-            (if (eof-object? c)
+            (if (eof-object? c2)
               (read-error "EOF after \\ in literal symbol")
               (cons c (cons c2 (read-literal-symbol port))))))
         (#t (cons c (read-literal-symbol port))))))
