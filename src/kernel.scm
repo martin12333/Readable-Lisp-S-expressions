@@ -173,7 +173,19 @@
     ; define the module
     ; this ensures that the user's module does not get contaminated with
     ; our compatibility procedures/macros
-    (define-module (readable kernel))))
+    (define-module (readable kernel)))
+  (else ))
+
+; Implementation specific extension to flush output on ports.
+(cond-expand
+ (guile ; Don't use define-syntax, that doesn't work on all guiles
+  (define (flush-output-port port) ; this is the only format we need.
+    (force-output port)))
+ (chicken
+  (define-syntax flush-output-port
+    (syntax-rules () ((_ port) (flush-output port)))))
+ (else ))
+
 (cond-expand
 ; -----------------------------------------------------------------------------
 ; Guile Compatibility
@@ -725,8 +737,7 @@
     (display "Error: " (current-error-port))
     (display message (current-error-port))
     (newline (current-error-port))
-    ; Guile extension to flush output on stderr
-    (force-output (current-error-port))
+    (flush-output-port (current-error-port))
     ; Guile extension, but many Schemes have exceptions
     (throw 'readable)
     '())
