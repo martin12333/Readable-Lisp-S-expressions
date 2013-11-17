@@ -234,6 +234,11 @@
            (lambda () body)
            (lambda (key . args) run-when-true ...)))))
 
+    (define (init-sweet)
+      ; Default guile stack size is FAR too small
+      (debug-set! stack 500000)
+      (values))
+
     ; Guile was the original development environment, so the algorithm
     ; practically acts as if it is in Guile.
     ; Needs to be lambdas because otherwise Guile 2.0 acts strangely,
@@ -453,6 +458,9 @@
       (syntax-rules ()
         ((readable-kernel-module-contents exports body ...)
           (begin body ...))))
+
+    ; A do-nothing.
+    (define (init-sweet) (values))
 
     ; We use my-* procedures so that the
     ; "port" automatically keeps track of source position.
@@ -2050,8 +2058,7 @@
   ; so that errors will force a restart.
   (define (t-expr-catch port)
 
-    ; Default guile stack size is FAR too small
-    (debug-set! stack 500000)
+    (init-sweet)
 
     (guard
       (exception
