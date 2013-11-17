@@ -205,6 +205,13 @@
     ; does not automatically provide it, but version 1.6+ enable it this way
     (use-syntax (ice-9 syncase))
 
+    ; Define R6RS/R7RS exception syntax for old versions of guile
+    ; that don't natively support it.
+    (define-syntax raise
+      (syntax-rules ()
+        ((raise exception)
+          (throw exception))))
+
     ; Guile was the original development environment, so the algorithm
     ; practically acts as if it is in Guile.
     ; Needs to be lambdas because otherwise Guile 2.0 acts strangely,
@@ -739,7 +746,7 @@
     (newline (current-error-port))
     (flush-output-port (current-error-port))
     ; Guile extension, but many Schemes have exceptions
-    (throw 'readable)
+    (raise 'readable)
     '())
 
   ; Return the number by reading from port, and prepending starting-lyst.
