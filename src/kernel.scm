@@ -205,12 +205,34 @@
     ; does not automatically provide it, but version 1.6+ enable it this way
     (use-syntax (ice-9 syncase))
 
-    ; Define R6RS/R7RS exception syntax for old versions of guile
-    ; that don't natively support it.
+    ; Implement R6RS/R7RS exception syntax using macros, so that we can use
+    ; it on old versions of guile that don't natively support this syntax.
+
     (define-syntax raise
       (syntax-rules ()
         ((raise exception)
           (throw exception))))
+
+    ; The following macro doesn't do a good job implementing R6RS/R7RS
+    ; "guard", but it doesn't need to.  It only needs to support one use:
+    ;(guard
+    ;  (exception
+    ;    ((eq exception 'readable)
+    ;     (read-to-unindented-line port) (t-expr-catch port)))
+    ;  (t-expr port))
+    ; =>
+    ; (catch 'readable
+    ;  (lambda () (t-expr port))
+    ;  (lambda (key . args) (read-to-unindented-line port) (t-expr-catch port)))
+
+    (define-syntax guard
+      (syntax-rules ()
+        ((guard
+            (exception ((eq exception2 value) run-when-true ...))
+            body)
+         (catch value
+           (lambda () body)
+           (lambda (key . args) run-when-true ...)))))
 
     ; Guile was the original development environment, so the algorithm
     ; practically acts as if it is in Guile.
@@ -2031,9 +2053,11 @@
     ; Default guile stack size is FAR too small
     (debug-set! stack 500000)
 
-    (catch 'readable
-      (lambda () (t-expr port))
-      (lambda (key . args) (read-to-unindented-line port) (t-expr-catch port))))
+    (guard
+      (exception
+        ((eq exception 'readable)
+         (read-to-unindented-line port) (t-expr-catch port)))
+      (t-expr port)))
 
 ; -----------------------------------------------------------------------------
 ; Write routines
