@@ -217,7 +217,7 @@
     ; "guard", but it doesn't need to.  It only needs to support one use:
     ;(guard
     ;  (exception
-    ;    ((eq exception 'readable)
+    ;    ((eq? exception 'readable)
     ;     (read-to-unindented-line port) (t-expr-catch port)))
     ;  (t-expr port))
     ; =>
@@ -228,7 +228,7 @@
     (define-syntax guard
       (syntax-rules ()
         ((guard
-            (exception ((eq exception2 value) run-when-true ...))
+            (exception ((eq? exception2 value) run-when-true ...))
             body)
          (catch value
            (lambda () body)
@@ -2062,7 +2062,7 @@
 
     (guard
       (exception
-        ((eq exception 'readable)
+        ((eq? exception 'readable)
          (read-to-unindented-line port) (t-expr-catch port)))
       (t-expr port)))
 
