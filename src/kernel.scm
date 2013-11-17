@@ -2046,7 +2046,7 @@
           (consume-end-of-line port)
           (read-to-unindented-line port)))))
 
-  ; Call on sweet-expression reader - use guile's nonstandard catch/throw
+  ; Call on sweet-expression reader - use exceptions
   ; so that errors will force a restart.
   (define (t-expr-catch port)
 
