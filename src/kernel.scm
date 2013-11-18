@@ -616,7 +616,7 @@
   (define literal-barred-symbol #f)
 
   ; Returns a true value (not necessarily #t)
-  (: char-line-ending? (* --> boolean))
+  (: char-line-ending? ((or char eof) --> boolean))
   (define (char-line-ending? char) (memv char line-ending-chars))
 
   ; Create own version, in case underlying implementation omits some.
@@ -1419,6 +1419,7 @@
   ; Return true if lyst has an even # of parameters, and the (alternating)
   ; first parameters are "op".  Used to determine if a longer lyst is infix.
   ; If passed empty list, returns true (so recursion works correctly).
+  (: even-and-op-prefix? (* list --> boolean))
   (define (even-and-op-prefix? op lyst)
     (cond
       ((null? lyst) #t)
@@ -1429,6 +1430,7 @@
 
   ; Return true if the lyst is in simple infix format
   ; (and thus should be reordered at read time).
+  (: simple-infix-list? (list --> boolean))
   (define (simple-infix-list? lyst)
     (and
       (pair? lyst)           ; Must have list;  '() doesn't count.
@@ -1438,6 +1440,7 @@
       (even-and-op-prefix? (cadr lyst) (cdr lyst)))) ; true if rest is simple
 
   ; Return alternating parameters in a list (1st, 3rd, 5th, etc.)
+  (: alternating-parameters (list --> list))
   (define (alternating-parameters lyst)
     (if (or (null? lyst) (null? (cdr lyst)))
         lyst
@@ -1445,6 +1448,7 @@
 
   ; Not a simple infix list - transform it.  Written as a separate procedure
   ; so that future experiments or SRFIs can easily replace just this piece.
+  (: transform-mixed-infix (list --> list))
   (define (transform-mixed-infix lyst)
      (cons '$nfx$ lyst))
 
@@ -1497,6 +1501,7 @@
   ; then the expression "prefix" is actually a prefix.
   ; Otherwise, just return the prefix and do not consume that next char.
   ; This recurses, to handle formats like f(x)(y).
+  (: neoteric-process-tail (input-port * -> *))
   (define (neoteric-process-tail port prefix)
       (let* ((pos (get-sourceinfo port))
              (c   (my-peek-char port)))
@@ -1527,6 +1532,7 @@
   ; This is the "real" implementation of neoteric-read.
   ; It directly implements unprefixed (), [], and {} so we retain control;
   ; it calls neoteric-process-tail so f(), f[], and f{} are implemented.
+  (: neoteric-read-real (input-port -> *))
   (define (neoteric-read-real port)
     (let*
       ((pos (get-sourceinfo port))
@@ -1558,6 +1564,7 @@
           result
           (neoteric-process-tail port result))))
 
+  (: neoteric-read-nocomment (input-port -> *))
   (define (neoteric-read-nocomment port)
     (neoteric-read-real port))
 
@@ -1625,6 +1632,7 @@
        (memv c initial-comment-eol)))
 
   ; Return #t if char is space or tab.
+  (: char-hspace? (char -> boolean))
   (define (char-hspace? char)
     (or (eqv? char #\space)
         (eqv? char tab)))
@@ -1638,11 +1646,13 @@
         (hspaces port))))
 
   ; Return #t if char is space, tab, or !
+  (: char-hspace? (char -> boolean))
   (define (char-ichar? char)
     (or (eqv? char #\space)
         (eqv? char tab)
         (eqv? char non-whitespace-indent)))
 
+  (: accumulate-ichar (input-port -> (list-of char)))
   (define (accumulate-ichar port)
     (if (char-ichar? (my-peek-char port))
         (cons (my-read-char port) (accumulate-ichar port))
