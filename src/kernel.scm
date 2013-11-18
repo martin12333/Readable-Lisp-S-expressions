@@ -738,8 +738,6 @@
   (define (enable-sweet)
     (replace-read sweet-read))
 
-  (define current-read-mode #f)  ;; OBSOLETE?
-  
   ; (: set-read-mode deprecated) ; Should it be deprecated?
   (define (set-read-mode mode port)
     ; TODO: Should be per-port
