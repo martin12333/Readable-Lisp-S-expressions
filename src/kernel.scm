@@ -633,13 +633,13 @@
     (let ((c (my-peek-char port)))
       (cond
         ((eqv? c carriage-return)
-	  (my-read-char port)
+          (my-read-char port)
           (if (eqv? (my-peek-char port) linefeed)
               (my-read-char port)))
         ((eqv? c linefeed)
           (my-read-char port)))))
 
-  (: consume-to-eol (input-port -> *))	; FIXME
+  (: consume-to-eol (input-port -> *))  ; FIXME
   (define (consume-to-eol port)
     ; Consume every non-eol character in the current line.
     ; End on EOF or end-of-line char.
@@ -737,7 +737,7 @@
   (define (enable-sweet)
     (replace-read sweet-read))
 
-  (define current-read-mode #f)		;; OBSOLETE?
+  (define current-read-mode #f)  ;; OBSOLETE?
   
   ; (: set-read-mode deprecated) ; Should it be deprecated?
   (define (set-read-mode mode port)
@@ -849,8 +849,8 @@
        ;; the compiler code the test inline like this:
        ;;
        ;; (case c
-       ;; 	 ((#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
-       ;; 	 (else #f))
+       ;;   ((#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
+       ;;   (else #f))
         ((memv c digits)
           (cons (my-read-char port) (read-digits port)))
         (else '()))))
@@ -1406,19 +1406,19 @@
                 ; Read |...| symbol (like Common Lisp and R7RS draft 9)
                 (get-barred-symbol port))
               (else ; Nothing else.  Must be a symbol or keyword start.
-	       (let ((s (fold-case-maybe port
+                (let ((s (fold-case-maybe port
                           (list->string
                             (read-until-delim port neoteric-delimiters)))))
-		 (cond
-		  ((and keyword-suffix
+                  (cond
+                    ((and keyword-suffix
                         (> (string-length s) 1)
-			(eq? (string-ref s (- (string-length s) 1)) #\:))
-		   (string->keyword (substring s 0 (- (string-length s) 1))))
-		  ((and keyword-prefix
-                        (> (string-length s) 1)
-			(eq? (string-ref s 0) #\:))
-		   (string->keyword (substring s 1 (string-length s))))
-		  (else (string->symbol s)))))))))))
+                        (eq? (string-ref s (- (string-length s) 1)) #\:))
+                     (string->keyword (substring s 0 (- (string-length s) 1))))
+                    ((and keyword-prefix
+                          (> (string-length s) 1)
+                          (eq? (string-ref s 0) #\:))
+                     (string->keyword (substring s 1 (string-length s))))
+                    (else (string->symbol s)))))))))))
 
 ; -----------------------------------------------------------------------------
 ; Curly Infix
