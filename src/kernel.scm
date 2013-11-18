@@ -843,17 +843,10 @@
   (: read-digits (input-port -> (or (pair (or eof char) *) null)))
   (define (read-digits port)
     (let ((c (my-peek-char port)))
-      (cond
-       ;; FIXME At this low level I bet it would be much better to have
-       ;; the compiler code the test inline like this:
-       ;;
-       ;; (case c
-       ;;   ((#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
-       ;;   (else #f))
-        ((memv c digits)
+      (case c
+        ((#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
           (cons (my-read-char port) (read-digits port)))
         (else '()))))
-
 
   ;; FIXME See comment in read-digits: It might be a good idea to use
   ;; something better than a-lists in such frequently executed code.
