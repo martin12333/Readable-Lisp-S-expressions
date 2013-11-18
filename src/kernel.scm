@@ -440,7 +440,10 @@
   (define (type-of x) #f)
   (define (type? x) #f)
 
-    )
+  (define (string->keyword s)
+    (symbol->keyword (string->symbol s)))
+
+  )
 ; -----------------------------------------------------------------------------
 ; R5RS Compatibility
 ; -----------------------------------------------------------------------------
@@ -545,6 +548,9 @@
   ; This doesn't affect character names; as an extension,
   ; We always accept arbitrary case for them, e.g., #\newline or #\NEWLINE.
   (define is-foldcase #f)
+
+  (define keyword-prefix #f) ; Accept ":STUFF" as keyword?  
+  (define keyword-suffix #f) ; Accept "STUFF:" as keyword?  
 
   ; special tag to denote comment return from hash-processing
 
@@ -712,8 +718,18 @@
         (set! is-foldcase #t) #t)
       ((eq? mode 'no-fold-case)
         (set! is-foldcase #f) #t)
+      ((eq? mode 'keyword-prefix)
+        (set! keyword-prefix #t) #t)
+      ((eq? mode 'no-keyword-prefix)
+        (set! keyword-prefix #f) #t)
+      ((eq? mode 'keyword-suffix)
+        (set! keyword-suffix #t) #t)
+      ((eq? mode 'no-keyword-suffix)
+        (set! keyword-suffix #f) #t)
       (else (display "Warning: Unknown mode") #f)))
 
+  (define keyword-prefix #f) ; Accept ":STUFF" as keyword?  
+  (define keyword-suffix #f) ; Accept "STUFF:" as keyword?  
 ; -----------------------------------------------------------------------------
 ; Scheme Reader re-implementation
 ; -----------------------------------------------------------------------------
@@ -890,6 +906,14 @@
         (set! is-foldcase #t))
       ((string-ci=? dir "no-fold-case")
         (set! is-foldcase #f))
+      ((string-ci=? dir "keyword-prefix")
+        (set! keyword-prefix #t))
+      ((string-ci=? dir "no-keyword-prefix")
+        (set! keyword-prefix #f))
+      ((string-ci=? dir "keyword-suffix")
+        (set! keyword-suffix #t))
+      ((string-ci=? dir "no-keyword-suffix")
+        (set! keyword-suffix #f))
       (else (display "Warning: Unknown process directive"))))
 
   ; Consume characters until "!#"
@@ -1316,10 +1340,20 @@
               ((char=? c #\| )
                 ; Read |...| symbol (like Common Lisp and R7RS draft 9)
                 (get-barred-symbol port))
-              (else ; Nothing else.  Must be a symbol start.
-                (string->symbol (fold-case-maybe port
-                  (list->string
-                    (read-until-delim port neoteric-delimiters)))))))))))
+              (else ; Nothing else.  Must be a symbol or keyword start.
+	       (let ((s (fold-case-maybe port
+                          (list->string
+                            (read-until-delim port neoteric-delimiters)))))
+		 (cond
+		  ((and keyword-suffix
+                        (> (string-length s) 1)
+			(eq? (string-ref s (- (string-length s) 1)) #\:))
+		   (string->keyword (substring s 0 (- (string-length s) 1))))
+		  ((and keyword-prefix
+                        (> (string-length s) 1)
+			(eq? (string-ref s 0) #\:))
+		   (string->keyword (substring s 1 (string-length s))))
+		  (else (string->symbol s)))))))))))
 
 ; -----------------------------------------------------------------------------
 ; Curly Infix
