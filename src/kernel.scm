@@ -1453,6 +1453,7 @@
      (cons '$nfx$ lyst))
 
   ; Given curly-infix lyst, map it to its final internal format.
+  (: process-curly (list --> list))
   (define (process-curly lyst)
     (cond
      ((not (pair? lyst)) lyst) ; E.G., map {} to ().
