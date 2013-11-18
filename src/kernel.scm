@@ -176,16 +176,6 @@
     (define-module (readable kernel)))
   (else ))
 
-; Implementation specific extension to flush output on ports.
-(cond-expand
- (guile ; Don't use define-syntax, that doesn't work on all guiles
-  (define (flush-output-port port) ; this is the only format we need.
-    (force-output port)))
- (chicken
-  (define-syntax flush-output-port
-    (syntax-rules () ((_ port) (flush-output port)))))
- (else ))
-
 (cond-expand
 ; -----------------------------------------------------------------------------
 ; Guile Compatibility
@@ -251,6 +241,10 @@
       ; Default guile stack size is FAR too small
       (debug-set! stack 500000)
       (values))
+
+    ; Implementation specific extension to flush output on ports.
+    (define (flush-output-port port) ; this is the only format we need.
+      (force-output port))
 
     ; Guile was the original development environment, so the algorithm
     ; practically acts as if it is in Guile.
@@ -488,6 +482,13 @@
 
     ; A do-nothing.
     (define (init-sweet) (values))
+
+    ; Implementation specific extension to flush output on ports.
+    (cond-expand
+     (chicken
+      (define-syntax flush-output-port
+        (syntax-rules () ((_ port) (flush-output port)))))
+     (else ))
 
     ; We use my-* procedures so that the
     ; "port" automatically keeps track of source position.
