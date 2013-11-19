@@ -203,6 +203,7 @@
 
     ; Ignore chicken-compatible type annotations (":")
     (defmacro : (x . y) '(values))
+    (define-syntax no-values (syntax-rules () ((_) (values))))
     ; We cannot use this definition:
     ;   (define-syntax : (syntax-rules ((_ . rest) #f)))
     ; Because guile 1.8 will complain:
@@ -240,7 +241,7 @@
     (define (init-sweet)
       ; Default guile stack size is FAR too small
       (debug-set! stack 500000)
-      (values))
+      (no-values))
 
     ; Implementation specific extension to flush output on ports.
     (define (flush-output-port port) ; this is the only format we need.
@@ -317,7 +318,7 @@
     (define (setup-primitive-load)
       (cond
         (primitive-load-replaced
-           (values))
+           (no-values))
         (else
           (module-set! (resolve-module '(guile)) 'primitive-load
             (lambda (filename)
@@ -426,7 +427,9 @@
   ; WARNING: (guile-user): imported module (srfi srfi-69)
   ;                         overrides core binding `hash-table?'
   (use-modules ((srfi srfi-69)
-               #:select ((make-hash-table . srfi-69-make-hash-table)
+                 ; (symbol->keyword 'select)  ; #:select
+                 #:select
+                        ((make-hash-table . srfi-69-make-hash-table)
                          (hash-table? . srfi-69-hash-table?)
                          hash-table-set!
                          hash-table-update!/default
@@ -476,12 +479,14 @@
       (define-type :reader-proc: (input-port -> *))
       (define-type :reader-token: (pair symbol *))
       (define-type :reader-indent-token: (list string *))
+      (define-syntax no-values (syntax-rules () ((_) (void))))
       )
      (else
-      (define-syntax : (syntax-rules ((_ . rest) #f)))))
+      (define-syntax : (syntax-rules ((_ . rest) #f)))
+      (define-syntax no-values (syntax-rules () ((_) (if #f #t))))))
 
     ; A do-nothing.
-    (define (init-sweet) (values))
+    (define (init-sweet) (no-values))
 
     ; Implementation specific extension to flush output on ports.
     (cond-expand
@@ -801,14 +806,14 @@
   (define (consume-whitespace port)
     (let ((char (my-peek-char port)))
       (cond
-        ((eof-object? char) (values))
+        ((eof-object? char) (no-values))
         ((eqv? char #\;)
           (consume-to-eol port)
           (consume-whitespace port))
         ((my-char-whitespace? char)
           (my-read-char port)
           (consume-whitespace port))
-        (else (values)))))
+        (else (no-values)))))
 
   (: read-until-delim (input-port (list-of char) -> (list-of char)))
   (define (read-until-delim port delims)
@@ -965,13 +970,13 @@
     (let ((c (my-read-char port)))
       (cond
         ((eof-object? c)
-          (values))
+          (no-values))
         ((char=? c #\!)
           (let ((c2 (my-peek-char port)))
             (if (char=? c2 #\#)
                 (begin
                   (my-read-char port)
-                  (values))
+                  (no-values))
                 (non-nest-comment port))))
         (else
           (non-nest-comment port)))))
@@ -1033,12 +1038,12 @@
         ((vector? position)
           (do ((len (vector-length position))
                (k 0 (+ k 1)))
-            ((>= k len) (values))
+            ((>= k len) (no-values))
             (let ((x (vector-ref position k)))
               (if (is-matching-label-tag? number x)
                   (vector-set! position k replace)
                   (patch-datum-label-tail number replace x new-skip)))))
-        (else (values)))))
+        (else (no-values)))))
 
   (define (patch-datum-label number starting-position)
     (if (is-matching-label-tag? number starting-position)
@@ -1199,13 +1204,13 @@
     (let ((c (my-read-char fake-port)))
       (cond
         ((eof-object? c)
-          (values))
+          (no-values))
         ((char=? c #\|)
           (let ((c2 (my-peek-char fake-port)))
             (if (char=? c2 #\#)
                 (begin
                   (my-read-char fake-port)
-                  (values))
+                  (no-values))
                 (nest-comment fake-port))))
         ((and hash-pipe-comment-nests? (char=? c #\#))
           (let ((c2 (my-peek-char fake-port)))
@@ -1213,7 +1218,7 @@
                 (begin
                   (my-read-char fake-port)
                   (nest-comment fake-port))
-                (values))
+                (no-values))
             (nest-comment fake-port)))
         (else
           (nest-comment fake-port)))))
@@ -2299,7 +2304,7 @@
   ; it will be surrounded by (...) so no indentation processing is relevant.
   (define (n-write-list-contents x port)
     (cond
-      ((null? x) (values))
+      ((null? x) (no-values))
       ((pair? x)
         (n-write-simple (car x) port)
         (cond ((not (null? (cdr x)))
@@ -2311,7 +2316,7 @@
 
   (define (c-write-list-contents x port)
     (cond
-      ((null? x) (values))
+      ((null? x) (no-values))
       ((pair? x)
         (c-write-simple (car x) port)
         (cond ((not (null? (cdr x)))
