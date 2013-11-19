@@ -419,16 +419,20 @@
       (string-downcase s))
 
   ; Here's how to import SRFI-69 in guile (for hash tables);
-  ; we have to invoke weird magic becuase guile will
+  ; we have to invoke weird "select" magic because otherwise guile will
   ; complain about merely importing a normal SRFI like this
-  ; (which I think is a big mistake, but can't fix guile 1.8):
+  ; (which I think is a big mistake, but I can't fix guile 1.8):
   ; WARNING: (guile-user): imported module (srfi srfi-69)
   ;                        overrides core binding `make-hash-table'
   ; WARNING: (guile-user): imported module (srfi srfi-69)
   ;                         overrides core binding `hash-table?'
-  (use-modules ((srfi srfi-69)
-                 ; (symbol->keyword 'select)  ; #:select
-                 #:select
+  ; But even the magic needs magic.  Guile wants the selector to be #:select.
+  ; We can't use #:select because other Schemes can't read that.
+  ; We can't use (symbol->keyword 'select)  because guile won't accept it.
+  ; So we temporarily switch to prefix keywords, use that, and switch back.
+  (define temp-saved-keywords (cadr (memq 'keywords (read-options))))
+  (read-set! keywords 'prefix)
+  (use-modules ((srfi srfi-69) :select
                         ((make-hash-table . srfi-69-make-hash-table)
                          (hash-table? . srfi-69-hash-table?)
                          hash-table-set!
@@ -437,6 +441,7 @@
                          hash-table-ref/default
                          hash-table-walk
                          hash-table-delete! )))
+  (read-set! keywords temp-saved-keywords)
 
   ; For "any"
   (use-modules (srfi srfi-1))
