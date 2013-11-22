@@ -477,7 +477,8 @@
         ((readable-kernel-module-contents exports body ...)
           (begin body ...))))
 
-    ; We include chicken compatible type annotations (":").
+    ; We include chicken compatible type annotations (":"), per
+    ; http://wiki.call-cc.org/man/4/Types
     ; These are ignored on other platforms.
     (cond-expand
      (chicken
@@ -626,7 +627,7 @@
   (define literal-barred-symbol #f)
 
   ; Returns a true value (not necessarily #t)
-  (: char-line-ending? ((or char eof) --> boolean))
+  (: char-line-ending? (* --> boolean))
   (define (char-line-ending? char) (memv char line-ending-chars))
 
   ; Create own version, in case underlying implementation omits some.
@@ -650,7 +651,7 @@
         ((eqv? c linefeed)
           (my-read-char port)))))
 
-  (: consume-to-eol (input-port -> *))  ; FIXME
+  (: consume-to-eol (input-port -> undefined))
   (define (consume-to-eol port)
     ; Consume every non-eol character in the current line.
     ; End on EOF or end-of-line char.
@@ -807,7 +808,7 @@
                    #\" #\;)                 ; Could add #\# or #\|
              whitespace-chars))
 
-  (: consume-whitespace (input-port ->))
+  (: consume-whitespace (input-port -> undefined))
   (define (consume-whitespace port)
     (let ((char (my-peek-char port)))
       (cond
@@ -837,7 +838,6 @@
     (display message (current-error-port))
     (newline (current-error-port))
     (flush-output-port (current-error-port))
-    ; Guile extension, but many Schemes have exceptions
     (raise 'readable)
     '())
 
@@ -944,7 +944,7 @@
         (my-string-foldcase s)
         s))
 
-  (: process-directive (string ->))
+  (: process-directive (string -> undefined))
   (define (process-directive dir)
     (cond
       ; TODO: These should be specific to the port.
@@ -970,7 +970,7 @@
 
   ; Consume characters until "!#"
   ;; FIXME other procedures skipping chars have names beginning with consume- here.!
-  (: non-nest-comment (input-port ->))
+  (: non-nest-comment (input-port -> undefined))
   (define (non-nest-comment port)
     (let ((c (my-read-char port)))
       (cond
@@ -1194,17 +1194,22 @@
 
   ; Translate "x" to Common Lisp representation if we're printing CL.
   ; Basically we use a very unusual representation, and then translate it back
-  (define (translate-cl x)
-    (if common-lisp
-      (case x
-        ((quasiquote)       '+++CL-QUASIQUOTE-abbreviation+++)
-        ((unquote)          '+++CL-UNQUOTE-abbreviation+++)
-        ((unquote-splicing) '+++CL-UNQUOTE-SPLICING-abbreviation+++)
-        (else x))
-      x))
+  (: translate-cl (* --> *))
+  (define translate-cl
+    (let ((qq (string->symbol "+++CL-QUASIQUOTE-abbreviation+++"))
+	  (uq (string->symbol "+++CL-UNQUOTE-abbreviation+++"))
+	  (us (string->symbol "+++CL-UNQUOTE-SPLICING-abbreviation+++")))
+      (lambda (x)
+	(if common-lisp
+	    (case x
+	      ((quasiquote)       qq)
+	      ((unquote)          uq)
+	      ((unquote-splicing) us)
+	      (else x))
+	    x))))
                   
   ; detect #| or |#
-  (: nest-comment (input-port ->))
+  (: nest-comment (input-port -> undefined))
   (define (nest-comment fake-port)
     (let ((c (my-read-char fake-port)))
       (cond
@@ -1458,7 +1463,7 @@
 
   ; Not a simple infix list - transform it.  Written as a separate procedure
   ; so that future experiments or SRFIs can easily replace just this piece.
-  (: transform-mixed-infix (list --> list))
+  (: transform-mixed-infix (list --> :reader-token:))
   (define (transform-mixed-infix lyst)
      (cons '$nfx$ lyst))
 
@@ -1643,7 +1648,7 @@
        (memv c initial-comment-eol)))
 
   ; Return #t if char is space or tab.
-  (: char-hspace? (char -> boolean))
+  (: char-hspace? (char --> boolean))
   (define (char-hspace? char)
     (or (eqv? char #\space)
         (eqv? char tab)))
@@ -1657,7 +1662,7 @@
         (hspaces port))))
 
   ; Return #t if char is space, tab, or !
-  (: char-hspace? (char -> boolean))
+  (: char-hspace? (char --> boolean))
   (define (char-ichar? char)
     (or (eqv? char #\space)
         (eqv? char tab)
