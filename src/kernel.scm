@@ -203,12 +203,10 @@
   (define-type :reader-proc: (input-port -> *))
   (define-type :reader-token: (pair symbol *))
   (define-type :reader-indent-token: (list string *))
-  (define-syntax no-values (syntax-rules () ((_) (void))))
-  )
+  (define-syntax no-values (syntax-rules () ((_) (void)))))
  (rscheme
   (define-macro (: . x) #f)
-  (define-macro (no-values) (values))
-  )
+  (define-macro (no-values) (values)))
  (guile
     ; We have to handle ":" specially, it looks like a keyword.  Trying to use:
     ;   (define-syntax : (syntax-rules ((_ . rest) #f)))
@@ -216,12 +214,10 @@
     ;   ERROR: invalid literals list in (syntax-case x ((_ . rest) #f))
     ; (defmacro \: (x . y) '(values))
     (define-macro (: x . y) '(values))
-    (define-syntax no-values (syntax-rules () ((_) (values))))
-  )
+    (define-syntax no-values (syntax-rules () ((_) (values)))))
  (else
   (define-syntax : (syntax-rules () ((_ . rest) #f)))
-  (define-syntax no-values (syntax-rules () ((_) (if #f #t))))
-  ))
+  (define-syntax no-values (syntax-rules () ((_) (if #f #t))))))
 
 ; Implementation specific extension to flush output on ports.
 (cond-expand
@@ -237,17 +233,14 @@
 ; support define-syntax.
 (cond-expand
  (rscheme
-
   (define-macro (readable-kernel-module-contents exports . body)
     `(begin ;; (export ,@exports)
 	    ,@body))
-
   (define-macro (let-splitter (full first-value second-value) expr . body)
     `(let* ((,full ,expr)
 	    (,first-value (car ,full))
 	    (,second-value (cadr ,full)))
-      . ,body))
-  )
+      . ,body)))
  (guile
     ; On Guile 1.x defmacro is the only thing supported out-of-the-box.
     ; This form still exists in Guile 2.x, fortunately.
@@ -261,8 +254,7 @@
           (let* ((full expr)
                  (first-value (car full))
                  (second-value (cadr full)))
-                 body ...))))
-   )
+                 body ...)))))
  (else
     ; assume R5RS with define-syntax
 
@@ -307,8 +299,7 @@
         (let* ((full expr)
                (first-value (car full))
                (second-value (cadr full)))
-               body ...))))
-  ))
+               body ...))))))
 
 (cond-expand
 ; -----------------------------------------------------------------------------
@@ -556,9 +547,7 @@
   ; what your Scheme supports.  Perhaps the "large" R7RS can add support
   ; for walking through arbitrary collections.
   (define (type-of x) #f)
-  (define (type? x) #f)
-
-  )
+  (define (type? x) #f))
 ; -----------------------------------------------------------------------------
 ; R5RS Compatibility
 ; -----------------------------------------------------------------------------
@@ -619,21 +608,18 @@
 (cond-expand
  (guile
     ; Handled in the guile specific section.
-  )
+    #f)
  (rscheme
     ; Not strictly R5RS but and RScheme complains.
     ; FIXME: figure out what to do.
     (define (replace-read-with f)
-      #f ;; (set! read f)
-      )
-  )
+      ;; (set! read f)
+      #f))
  (else
     ; Not strictly R5RS but we expect at least some Schemes
     ; to allow this somehow.
     (define (replace-read-with f)
-      (set! read f))
-
-  ))
+      (set! read f))))
 
 ; keyword creation
 (cond-expand
