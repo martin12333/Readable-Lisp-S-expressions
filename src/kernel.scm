@@ -176,38 +176,145 @@
     (define-module (readable kernel)))
   (else ))
 
+; Early setups, e.g., enable define-syntax
 (cond-expand
 ; -----------------------------------------------------------------------------
 ; Guile Compatibility
 ; -----------------------------------------------------------------------------
   (guile
-
-    ; properly get bindings
-    (use-modules (guile))
-
     ; We MUST set this early.  Otherwise, guile 1.8 will crash when trying
     ; to read in the below, typically on a random ":".  The ":" will
     ; eventually transform into nothing, but without a big stack,
     ; guile will fail before it realizes that.
     (debug-set! stack 50000)
 
+    ; properly get bindings, need this to be able to enable define-syntax.
+    (use-modules (guile))
+
+    ; Enable R5RS hygenic macro system (define-syntax) - guile 1.X
+    ; does not automatically provide it, but version 1.6+ enable it this way
+    (use-syntax (ice-9 syncase)))
+  (else ))
+
+; Type annotations (":" ...), chicken compatible format.
+; Ignored on other platforms. See: http://wiki.call-cc.org/man/4/Types
+(cond-expand
+ (chicken
+  (define-type :reader-proc: (input-port -> *))
+  (define-type :reader-token: (pair symbol *))
+  (define-type :reader-indent-token: (list string *))
+  (define-syntax no-values (syntax-rules () ((_) (void))))
+  )
+ (rscheme
+  (define-macro (: . x) #f)
+  (define-macro (no-values) (values))
+  )
+ (guile
+    ; We have to handle ":" specially, it looks like a keyword.  Trying to use:
+    ;   (define-syntax : (syntax-rules ((_ . rest) #f)))
+    ; will cause guile 1.8 to complain:
+    ;   ERROR: invalid literals list in (syntax-case x ((_ . rest) #f))
+    ; (defmacro \: (x . y) '(values))
+    (define-macro (: x . y) '(values))
+    (define-syntax no-values (syntax-rules () ((_) (values))))
+  )
+ (else
+  (define-syntax : (syntax-rules () ((_ . rest) #f)))
+  (define-syntax no-values (syntax-rules () ((_) (if #f #t))))
+  ))
+
+; Implementation specific extension to flush output on ports.
+(cond-expand
+ (guile ; Don't use define-syntax, that doesn't work on all guiles
+  (define (flush-output-port port) ; this is the only format we need.
+    (force-output port)))
+ (chicken
+  (define-syntax flush-output-port
+    (syntax-rules () ((_ port) (flush-output port)))))
+ (else ))
+
+; Special cases for those Scheme implementations which do that not
+; support define-syntax.
+(cond-expand
+ (rscheme
+
+  (define-macro (readable-kernel-module-contents exports . body)
+    `(begin ;; (export ,@exports)
+	    ,@body))
+
+  (define-macro (let-splitter (full first-value second-value) expr . body)
+    `(let* ((,full ,expr)
+	    (,first-value (car ,full))
+	    (,second-value (cadr ,full)))
+      . ,body))
+  )
+ (guile
     ; On Guile 1.x defmacro is the only thing supported out-of-the-box.
     ; This form still exists in Guile 2.x, fortunately.
     (defmacro readable-kernel-module-contents (exports . body)
       `(begin (export ,@exports)
               ,@body))
 
-    ; Enable R5RS hygenic macro system (define-syntax) - guile 1.X
-    ; does not automatically provide it, but version 1.6+ enable it this way
-    (use-syntax (ice-9 syncase))
+    (define-syntax let-splitter
+      (syntax-rules ()
+        ((let-splitter (full first-value second-value) expr body ...)
+          (let* ((full expr)
+                 (first-value (car full))
+                 (second-value (cadr full)))
+                 body ...))))
+   )
+ (else
+    ; assume R5RS with define-syntax
 
-    ; Ignore chicken-compatible type annotations (":")
-    (defmacro : (x . y) '(values))
-    (define-syntax no-values (syntax-rules () ((_) (values))))
-    ; We cannot use this definition:
-    ;   (define-syntax : (syntax-rules ((_ . rest) #f)))
-    ; Because guile 1.8 will complain:
-    ;   ERROR: invalid literals list in (syntax-case x ((_ . rest) #f))
+    ; On R6RS, and other Scheme's, module contents must
+    ; be entirely inside a top-level module structure.
+    ; Use module-contents to support that.  On Schemes
+    ; where module declarations are separate top-level
+    ; expressions, we expect module-contents to transform
+    ; to a simple (begin ...), and possibly include
+    ; whatever declares exported stuff on that Scheme.
+    (define-syntax readable-kernel-module-contents
+      (syntax-rules ()
+        ((readable-kernel-module-contents exports body ...)
+          (begin body ...))))
+  ; There is no standard Scheme mechanism to unread multiple characters.
+  ; Therefore, the key productions and some of their supporting procedures
+  ; return both the information on what ended their reading process,
+  ; as well the actual value (if any) they read before whatever stopped them.
+  ; That way, procedures can process the value as read, and then pass on
+  ; the ending information to whatever needs it next.  This approach,
+  ; which we call a "non-tokenizing" implementation, implements a tokenizer
+  ; via procedure calls instead of needing a separate tokenizer.
+  ; The ending information can be:
+  ; - "stopper" - this is returned by productions etc. that do NOT
+  ;     read past the of a line (outside of paired characters and strings).
+  ;     It is 'normal if it ended normally (e.g., at end of line); else it's
+  ;     'sublist-marker ($), 'group-split-marker (\\), 'collecting (<*),
+  ;     'collecting-end (*>), 'scomment (special comments like #|...|#), or
+  ;     'abbrevw (initial abbreviation with whitespace after it).
+  ; - "new-indent" - this is returned by productions etc. that DO read
+  ;     past the end of a line.  Such productions typically read the
+  ;     next line's indent to determine if they should return.
+  ;     If they should, they return the new indent so callers can
+  ;     determine what to do next.  A "*>" should return even though its
+  ;     visible indent level is length 0; we handle this by prepending
+  ;     all normal indents with "^", and "*>" generates a length-0 indent
+  ;     (which is thus shorter than even an indent of 0 characters).
+
+  (define-syntax let-splitter
+    (syntax-rules ()
+      ((let-splitter (full first-value second-value) expr body ...)
+        (let* ((full expr)
+               (first-value (car full))
+               (second-value (cadr full)))
+               body ...))))
+  ))
+
+(cond-expand
+; -----------------------------------------------------------------------------
+; Guile Compatibility
+; -----------------------------------------------------------------------------
+  (guile
 
     ; Implement R6RS/R7RS exception syntax using macros, so that we can use
     ; it on old versions of guile that don't natively support this syntax.
@@ -242,10 +349,6 @@
       ; Default guile stack size is FAR too small
       (debug-set! stack 500000)
       (no-values))
-
-    ; Implementation specific extension to flush output on ports.
-    (define (flush-output-port port) ; this is the only format we need.
-      (force-output port))
 
     ; Guile was the original development environment, so the algorithm
     ; practically acts as if it is in Guile.
@@ -455,51 +558,14 @@
   (define (type-of x) #f)
   (define (type? x) #f)
 
-  (define (string->keyword s)
-    (symbol->keyword (string->symbol s)))
-
   )
 ; -----------------------------------------------------------------------------
 ; R5RS Compatibility
 ; -----------------------------------------------------------------------------
   (else
-    ; assume R5RS with define-syntax
-
-    ; On R6RS, and other Scheme's, module contents must
-    ; be entirely inside a top-level module structure.
-    ; Use module-contents to support that.  On Schemes
-    ; where module declarations are separate top-level
-    ; expressions, we expect module-contents to transform
-    ; to a simple (begin ...), and possibly include
-    ; whatever declares exported stuff on that Scheme.
-    (define-syntax readable-kernel-module-contents
-      (syntax-rules ()
-        ((readable-kernel-module-contents exports body ...)
-          (begin body ...))))
-
-    ; We include chicken compatible type annotations (":"), per
-    ; http://wiki.call-cc.org/man/4/Types
-    ; These are ignored on other platforms.
-    (cond-expand
-     (chicken
-      (define-type :reader-proc: (input-port -> *))
-      (define-type :reader-token: (pair symbol *))
-      (define-type :reader-indent-token: (list string *))
-      (define-syntax no-values (syntax-rules () ((_) (void))))
-      )
-     (else
-      (define-syntax : (syntax-rules ((_ . rest) #f)))
-      (define-syntax no-values (syntax-rules () ((_) (if #f #t))))))
 
     ; A do-nothing.
     (define (init-sweet) (no-values))
-
-    ; Implementation specific extension to flush output on ports.
-    (cond-expand
-     (chicken
-      (define-syntax flush-output-port
-        (syntax-rules () ((_ port) (flush-output port)))))
-     (else ))
 
     ; We use my-* procedures so that the
     ; "port" automatically keeps track of source position.
@@ -535,11 +601,6 @@
     (define (get-sourceinfo _) #f)
     (define (attach-sourceinfo _ x) x)
 
-    ; Not strictly R5RS but we expect at least some Schemes
-    ; to allow this somehow.
-    (define (replace-read-with f)
-      (set! read f))
-
     ; R5RS has no hash extensions
     (define (parse-hash no-indent-read char fake-port) #f)
 
@@ -555,7 +616,31 @@
     ; Somehow get SRFI-69 and SRFI-1
     ))
 
+(cond-expand
+ (guile
+    ; Handled in the guile specific section.
+  )
+ (rscheme
+    ; Not strictly R5RS but and RScheme complains.
+    ; FIXME: figure out what to do.
+    (define (replace-read-with f)
+      #f ;; (set! read f)
+      )
+  )
+ (else
+    ; Not strictly R5RS but we expect at least some Schemes
+    ; to allow this somehow.
+    (define (replace-read-with f)
+      (set! read f))
 
+  ))
+
+; keyword creation
+(cond-expand
+ ((or guile rscheme)
+  (define (string->keyword s)
+    (symbol->keyword (string->symbol s))))
+ (else ))
 
 ; -----------------------------------------------------------------------------
 ; Module declaration and useful utilities
@@ -1588,37 +1673,6 @@
 ; Sweet Expressions (this implementation maps to the BNF)
 ; -----------------------------------------------------------------------------
 
-  ; There is no standard Scheme mechanism to unread multiple characters.
-  ; Therefore, the key productions and some of their supporting procedures
-  ; return both the information on what ended their reading process,
-  ; as well the actual value (if any) they read before whatever stopped them.
-  ; That way, procedures can process the value as read, and then pass on
-  ; the ending information to whatever needs it next.  This approach,
-  ; which we call a "non-tokenizing" implementation, implements a tokenizer
-  ; via procedure calls instead of needing a separate tokenizer.
-  ; The ending information can be:
-  ; - "stopper" - this is returned by productions etc. that do NOT
-  ;     read past the of a line (outside of paired characters and strings).
-  ;     It is 'normal if it ended normally (e.g., at end of line); else it's
-  ;     'sublist-marker ($), 'group-split-marker (\\), 'collecting (<*),
-  ;     'collecting-end (*>), 'scomment (special comments like #|...|#), or
-  ;     'abbrevw (initial abbreviation with whitespace after it).
-  ; - "new-indent" - this is returned by productions etc. that DO read
-  ;     past the end of a line.  Such productions typically read the
-  ;     next line's indent to determine if they should return.
-  ;     If they should, they return the new indent so callers can
-  ;     determine what to do next.  A "*>" should return even though its
-  ;     visible indent level is length 0; we handle this by prepending
-  ;     all normal indents with "^", and "*>" generates a length-0 indent
-  ;     (which is thus shorter than even an indent of 0 characters).
-
-  (define-syntax let-splitter
-    (syntax-rules ()
-      ((let-splitter (full first-value second-value) expr body ...)
-        (let* ((full expr)
-               (first-value (car full))
-               (second-value (cadr full)))
-               body ...))))
   ; Note: If your Lisp has macros, but doesn't support hygenic macros,
   ; it's probably trivial to reimplement this.  E.G., in Common Lisp:
   ; (defmacro let-splitter ((full first-value second-value) expr &rest body)
