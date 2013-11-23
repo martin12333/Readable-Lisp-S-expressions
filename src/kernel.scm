@@ -1703,13 +1703,13 @@
         (let* ((consumed-sharp (my-read-char port))
                (result (process-sharp neoteric-read-nocomment port)))
           (cond
+	    ((not (pair? result)) (read-error "Unsupported hash"))
             ((eq? (car result) 'normal)
               (list 'normal (neoteric-process-tail port (cadr result))))
             ((eq? (car result) 'abbrev)
               (list 'normal
                 (list (cadr result) (neoteric-read-nocomment port))))
-            ((pair? result) result)
-            (else (read-error "Unsupported hash"))))
+            (else result)))
         (list 'normal (neoteric-read-nocomment port))))
 
   ; Read an n-expression.  Returns ('normal n-expr) in most cases;
