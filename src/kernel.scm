@@ -2009,8 +2009,9 @@
         (else (list 'normal (list basic-value))))))
 
   ; Returns (new-indent computed-value)
-  (: body (input-port string -> :reader-token:))
-  (define (body port starting-indent)
+  ; We name this "read-body", not "body", to avoid a warning in rscheme.
+  (: read-body (input-port string -> :reader-token:))
+  (define (read-body port starting-indent)
     (let-splitter (i-full-results i-new-indent i-value)
                   (it-expr port starting-indent)
       (if (string=? starting-indent i-new-indent)
@@ -2021,9 +2022,9 @@
                     (read-error "Dedent required after lone . and value line"))
                 (list f-new-indent f-value)) ; final value of improper list
               (if (eq? i-value empty-value)
-                (body port i-new-indent)
+                (read-body port i-new-indent)
                 (let-splitter (nxt-full-results nxt-new-indent nxt-value)
-                              (body port i-new-indent)
+                              (read-body port i-new-indent)
                   (list nxt-new-indent (cons i-value nxt-value)))))
           (list i-new-indent (list1e i-value))))) ; dedent - end list.
 
@@ -2058,7 +2059,7 @@
               (let ((new-indent (get-next-indent port)))
                 (if (indentation>? new-indent starting-indent)
                     (let-splitter (body-full body-new-indent body-value)
-                                  (body port new-indent)
+                                  (read-body port new-indent)
                       (list body-new-indent (my-append line-value body-value)))
                     (list new-indent (monify line-value)))))
             (else
@@ -2077,7 +2078,7 @@
                     (if (indentation>? new-indent starting-indent)
                       (let-splitter
                            (body-full-results body-new-indent body-value)
-                           (body port new-indent)
+                           (read-body port new-indent)
                         (list body-new-indent empty-value))
                       (read-error "#;+EOL must be followed by indent"))))))
             ((or (eq? line-stopper 'group-split-marker)
@@ -2088,7 +2089,7 @@
                   (let ((new-indent (get-next-indent port)))
                     (cond
                       ((indentation>? new-indent starting-indent)
-                        (body port new-indent))
+                        (read-body port new-indent))
                       (else
                         (list new-indent empty-value))))))
             ((eq? line-stopper 'sublist-marker)
@@ -2105,7 +2106,7 @@
                     (if (not (indentation>? new-indent starting-indent))
                         (read-error "Indent required after abbreviation"))
                     (let-splitter (ab-full-results ab-new-indent ab-value)
-                                  (body port new-indent)
+                                  (read-body port new-indent)
                       (list ab-new-indent
                         (append (list line-value) ab-value))))
                   (let-splitter (ai-full-results ai-new-indent ai-value)
