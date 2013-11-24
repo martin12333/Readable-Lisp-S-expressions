@@ -1110,7 +1110,8 @@
               (patch-datum-label-tail number replace (car position) new-skip))
           (if (is-matching-label-tag? number (cdr position))
               (set-cdr! position replace) ; Yes, "set!" !!
-              (patch-datum-label-tail number replace (cdr position) new-skip)))
+              (patch-datum-label-tail number replace (cdr position) new-skip))
+	  (no-values))
         ((vector? position)
           (do ((len (vector-length position))
                (k 0 (+ k 1)))
@@ -2049,7 +2050,7 @@
         (else (list 'normal (list basic-value))))))
 
   ; Returns (new-indent computed-value)
-  ; We name this "read-body", not "body", to avoid a warning in rscheme.
+  ; We name this "read-body", not "body", to avoid an error in rscheme.
   (: read-body (input-port string -> :reader-token:))
   (define (read-body port starting-indent)
     (let-splitter (i-full-results i-new-indent i-value)
