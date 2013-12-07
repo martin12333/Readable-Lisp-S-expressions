@@ -876,7 +876,8 @@
   ; Also - R7RS draft 6 has "|" as delimiter, but we currently don't.
   (define neoteric-delimiters
      (append (list #\( #\) #\[ #\] #\{ #\}  ; Add [] {}
-                   #\" #\;)                 ; Could add #\# or #\|
+                   #\' #\` #\,  ; Not required delimiters; do for error check
+                   #\" #\;)     ; Could add #\# or #\|
              whitespace-chars))
 
   (: consume-whitespace (input-port -> undefined))
