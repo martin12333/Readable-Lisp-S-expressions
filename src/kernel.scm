@@ -864,7 +864,7 @@
   ; Identifying the list of delimiter characters is harder than you'd think.
   ; This list is based on R6RS section 4.2.1, while adding [] and {},
   ; but removing "#" from the delimiter set.
-  ; NOTE: R6RS has "#" has a delimiter.  However, R5RS does not, and
+  ; NOTE: R6RS has "#" as a delimiter.  However, R5RS does not, and
   ; R7RS probably will not - http://trac.sacrideo.us/wg/wiki/WG1Ballot3Results
   ; shows a strong vote AGAINST "#" being a delimiter.
   ; Having the "#" as a delimiter means that you cannot have "#" embedded
