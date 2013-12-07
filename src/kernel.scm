@@ -2105,7 +2105,14 @@
                       (list body-new-indent (my-append line-value body-value)))
                     (list new-indent (monify line-value)))))
             (else
-              (read-error "Unexpected text after n-expression")))
+              (read-error
+                (string-append
+                   "Unexpected text after n-expression around character "
+                   (let ((c (my-peek-char port)))
+                     (if (< (char->integer c) 32)
+                       (string-append "#\\x"
+                         (number->string (char->integer c) 16))
+                       (string c)))))))
           ; line-exprs begins with something special like GROUP-SPLIT:
           (cond
             ((eq? line-stopper 'datum-commentw)
