@@ -207,14 +207,14 @@ define factorial(n)
 
 Remember to enter a blank line (*Enter* *Enter*) to end an expression.
 
-You can use this tool to process files, say, via a makefile.  Then you can use sweet-expressions to write your code, and have it quickly translated to s-expressions.  The following portable Makefile snippet translates all ".sscm" (Sweet Scheme) files into ".scm" (Scheme) files; as this is Makefile be sure the first character on the last line is TAB:
+You can use this tool to process files, say, via a makefile.  Then you can use sweet-expressions to write your code, and have it quickly translated to s-expressions.  The following POSIX-portable Makefile snippet translates all ".sscm" (Sweet Scheme) files into ".scm" (Scheme) files.  Since this is a Makefile, be sure that the first character on the indented line is TAB:
 
     UNSWEETEN = unsweeten
     .sscm.scm:
         $(UNSWEETEN) $< > $@
+    .SUFFIXES: .sscm .scm
 
-
-Unsweeten also copies out comments, but only in certain cases.  Only a group of semicolon comments starting from either the file's very beginning, or after a blank line, are copied to the output.  Such semicolon comments will have indentation (if any) removed. Block comments and comments *inside* a datum are never copied.  Semicolon comments immediately after a datum aren't copied either (the reader has to consume them to see if it's reached the end of the datum - and once it is consumed unsweeten can't copy the comment out).
+Unsweeten also copies comments to the output file, but only in certain cases.  Only a group of semicolon comments starting from either the file's very beginning, or after a blank line, are copied to the output.  Such semicolon comments will have indentation (if any) removed. Block comments and comments *inside* a datum are never copied.  Semicolon comments immediately after a datum aren't copied either (the reader has to consume them to see if it's reached the end of the datum - and once the data is consumed unsweeten can't copy the comment out).
 
 Unsweeten also has some special substitutions.  If a semicolon begins a line, the next character may cause it to do something special.  If line begins with ";#: or ";!", the line is copied back without the leading semicolon.  If a line begins with ";_", then the line is copied back without either of those first two characters.
 

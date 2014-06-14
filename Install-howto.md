@@ -199,7 +199,7 @@ If you have installed it to system-wide locations, then in most cases the progra
 
 If you have not installed the files to system-wide locations, then you need to make sure the system can find commands when you type them.  You can tell the system where the commands are by prefixing the command name with the directory it's in, e.g., prefix the command with "./" if the command is in the current directory.  Another approach is to modify your PATH. On a Bourne-like shell (the usual kind), if the current directory contains some of the programs you'd like to be able to run without prefixing them with "./", you can modify your PATH using:
 
-    export PATH="$PATH:$pwd"
+    export PATH="$PATH:$(pwd)"
 
 
 Tutorials
