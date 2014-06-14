@@ -432,7 +432,9 @@ dist_doc_DATA += README-ANTLR README-files
 
 # These the markdown (.md) files that are on the Wiki and we'll
 # duplicate in the distributed package:
-MDMIRRORS = Problem.md Solution.md Install-howto.md Retort.md \
+MDMIRRORS = Problem.md Solution.md \
+            Install-howto.md Prepackaged.md \
+            Retort.md \
             Examples.md Hunchentoot-make-docstrings.md \
             Scheme-tutorial.md Common-lisp-tutorial.md
 
