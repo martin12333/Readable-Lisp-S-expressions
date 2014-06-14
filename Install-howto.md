@@ -1,4 +1,4 @@
-If your system has "readable" capabilities prepackaged, it's easiest to use that; see [Prepackaged] for a partial list.  But if that's not the case, here's how to install the "readable" software.
+If your system or Lisp implementation has "readable" capabilities prepackaged, it's easiest to use that; see [Prepackaged] for a partial list.  But if that's not the case, here's how to install our "readable" software.  This software provides robust production-ready Scheme and Common Lisp implementations of our readable notations, including their test suites, available as free/libre/open source software under the [MIT license](http://opensource.org/licenses/MIT).
 
 To install the "readable" software directly from our site, you need to have the right prerequisites, download and uncompress the software, configure it, build it, and then actually install it.  In most cases it should be easy, but we've provided some tips to help you avoid (or fix) problems.
 
