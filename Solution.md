@@ -5,15 +5,15 @@ Unlike most past efforts to make Lisp more readable, our approach is **generic**
 Readable abbreviation specification
 ===================================
 
-We have three notation tiers, each of which builds on the previous one. Curly-infix adds support for traditional infix notation; neoteric-expressions add support for traditional function notation; and sweet-expressions reduce the number of explicit parentheses needed (by deducing them from indentation).  Here's the complete specification of these abbreviations (where "&rArr;" means "maps to"):
+We have three notation tiers, each of which builds on the previous one. Curly-infix starts with traditional s-expressions and adds support for traditional infix notation; neoteric-expressions add support for traditional function notation; and sweet-expressions reduce the number of explicit parentheses needed (by deducing them from indentation).  Here's the complete specification of these abbreviations (where "&rArr;" means "maps to"):
 
-1.   *Curly-infix-expressions* (*c-expressions*): Curly braces {...} contain an *infix list*.
+1.   *Curly-infix-expressions* (*c-expressions*): A c-expression is an s-expression or an expression surrounded by curly braces {...} called an *infix list*.
     * A *simple* infix list {a op b op c op ...} represents one operation in infix order, that is, (op a b c ...).  It has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol (aka eq? or eq).  It maps to "(even-parameter odd-parameters)".  E.g., {n <= 2} &rArr; (<= n 2), and {7 + 8 + 9} &rArr; (+ 7 8 9).
-    * The *empty* {} maps to (), the *escaping* {e} maps to e, and the *unary-op* {e1 e2} maps to (e1 e2).  Thus, {$} &rArr; $, and {- x} &rArr; (- x).
-    * Curly-infix lists beginning with the "." symbol have an unspecified mapping.
+    * The *empty* infix list {} maps to (), the *escaping* infix list {e} maps to e, and the *unary-op* infix list {e1 e2} maps to (e1 e2).  Thus, {$} &rArr; $, and {- x} &rArr; (- x).
+    * Infix lists with "." as the first contained symbol have an unspecified mapping.
     * Other infix lists are mixed and map to "($nfx$ parameters)".  E.g., {2 + 3 * 4} &rArr; ($nfx$ 2 + 3 * 4)
     * By intent, there is no precedence; just use another list. E.g., {2 + {3 * 4}} &rArr; (+ 2 (* 3 4))
-    * There are two variations of curly-infix, "basic" and "full".  In "basic" c-expressions, each element (in a regular or curly-infix list) is another basic c-expression.  In "full" c-expressions, each element is a neoteric-expression, as defined below; that means inside {} you can use f(x) as (f x).
+    * There are two variations of curly-infix notation, "basic" and "full".  In "basic" c-expressions, each element in a regular or infix list is another basic c-expression.  In "full" c-expressions, each element is a neoteric-expression, as defined below; that means inside {} you can use f(x) to represent (f x).
     * Full c-expressions are defined for Scheme in [SRFI 105](http://srfi.schemers.org/srfi-105/).
 2.   *Neoteric-expressions* (*n-expressions*): This includes curly-infix-expressions, and adds special meanings to some prefixed expressions.
     * An e(...) maps to (e ...).  E.g., f(1 2) &rArr; (f 1 2), exit() &rArr; (exit), and read(. port) &rArr; (read . port).
@@ -38,13 +38,12 @@ We have three notation tiers, each of which builds on the previous one. Curly-in
     - A line with only spaces and tabs is an empty line.  A line with at least one "!" is ignored if it only has indent characters.
     - An expression that *starts* indented enables "indented-compatibility" mode, where indentation is completely ignored (that line switches to neoteric-expressions).
 
-
     Sweet-expressions also include these advanced capabilities:
 
     - A \\\\ (aka SPLIT) starts a new line at the current indentation.  If it's immediately after indentation (aka GROUP in that case), it represents no symbol at all (at that indentation) - this is useful for lists of lists.
-    - A $ (aka SUBLIST) in the middle of list restarts list processing; the right-hand-side (including its sub-blocks) is the last parameter of the left-hand side (of just that line). If there's no left-hand-side, the right-hand-side is put in a list.
+    - A $ (aka SUBLIST) in the middle of list restarts list processing; the right-hand-side (including its sub-blocks) is the last parameter of the left-hand side (of just that line). If there's no left-hand-side, the right-hand-side is put in a list.  This useful abbreviation from Haskell simplifies many common cases.
     - A leading traditional abbreviation (quote, comma, backquote, or comma-at) or datum comment "#;", at the beginning of a sweet-expression line, and followed by space or tab or end-of-line, is that operator applied to the following sweet-expression.   Otherwise, it applies to the next neoteric-expression.
-    - The markers &#8220;&lt;&#42;&#8221; and &#8220;&#42;&gt;&#8221; surround a <i>collecting list</i>, and <em>MUST</em> accept a list of 0 or more un-indented sweet-expressions.
+    - The markers &#8220;&lt;&#42;&#8221; and &#8220;&#42;&gt;&#8221; surround a <i>collecting list</i>, and <em>MUST</em> accept a list of 0 or more un-indented sweet-expressions. The &#8220;&lt;&#42;&#8221; and &#8220;&#42;&gt;&#8221; represent opening and closing parentheses, but restart indentation processing at the beginning of the line.  A collecting list is only terminated by its matching &#8220;&#42;&gt;&#8221; and not by a blank line.  These are valuable for defining libraries and for short let-style constructs.
     - The marker &#8220;$$$&#8221; is reserved for future use.
 
     Sweet-expression examples are shown below.  For Scheme, sweet-expressions are defined in [SRFI 110](http://srfi.schemers.org/srfi-110/).
@@ -152,7 +151,7 @@ Also, thanks to the many other mailing list participants who provided feedback.
 Trying them out
 =============
 
-Read the [Install-howto] to learn how to install the software.
+Read the [Install-howto] to learn how to install the software.  [Prepackaged] lists some cases where the software is prepackaged for your use.
 
 Then look one of our two tutorials:
 

@@ -144,31 +144,31 @@ Here's a larger example in Scheme, reformatted from the example in the Scheme Fi
             kibi-self-desc  amb('m 'f)
             kibi-lied?      amb(#t #f)
           assert
-           distinct?(list(parent1 parent2))
+            distinct? list(parent1 parent2)
           assert
-           if eqv?(kibi 'm)
-               not(kibi-lied?)
+            if eqv?(kibi 'm)
+               not kibi-lied?
           assert
-           if kibi-lied?
-              xor
-                {eqv?(kibi-self-desc 'm) and eqv?(kibi 'f)}
-                {eqv?(kibi-self-desc 'f) and eqv?(kibi 'm)}
+            if kibi-lied?
+               xor
+                 {eqv?(kibi-self-desc 'm) and eqv?(kibi 'f)}
+                 {eqv?(kibi-self-desc 'f) and eqv?(kibi 'm)}
           assert
-           if not(kibi-lied?)
-              xor
-                {eqv?(kibi-self-desc 'm) and eqv?(kibi 'm)}
-                {eqv?(kibi-self-desc 'f) and eqv?(kibi 'f)}
+            if not(kibi-lied?)
+               xor
+                 {eqv?(kibi-self-desc 'm) and eqv?(kibi 'm)}
+                 {eqv?(kibi-self-desc 'f) and eqv?(kibi 'f)}
           assert
-           if eqv?(parent1 'm)
-              and
-                eqv?(kibi-self-desc 'm)
-                xor
-                 {eqv?(kibi 'f) and eqv?(kibi-lied? #f)}
-                 {eqv?(kibi 'm) and eqv?(kibi-lied? #t)}
+            if eqv?(parent1 'm)
+               and
+                 eqv?(kibi-self-desc 'm)
+                 xor
+                   {eqv?(kibi 'f) and eqv?(kibi-lied? #f)}
+                   {eqv?(kibi 'm) and eqv?(kibi-lied? #t)}
           assert
-           if eqv?(parent1 'f)
-              {eqv?(kibi 'f) and eqv?(kibi-lied? #t)}
-          list(parent1 parent2 kibi)
+            if eqv?(parent1 'f)
+               {eqv?(kibi 'f) and eqv?(kibi-lied? #t)}
+          list parent1 parent2 kibi
 
     solve-kalotan-puzzle()
 </pre>

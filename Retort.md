@@ -9,11 +9,9 @@ What's remarkable is that much of their "evidence" actually supports our positio
 
 <i>Q: What's up with all the parentheses? ... Lisp's most superficially obvious characteristic is its extensive use of parentheses to delimit expressions. Unfortunately many would-be Lispers get stuck on the parentheses and never get far enough into Lisp to see that they are a feature, not a bug.</i>
 
-We disagree.  Most developers do not use Lisp for their real work, and part of that reason is that  Lisp's overuse of parentheses is a bug that many developers perceive as being more of a problem than Lisp's advantages.  Even some people who've gone far into Lisp see that its syntax is a bug, not a feature.  David A. Wheeler started the readable project, after having used Lisp for over 30 years (starting in circa 1982, and having professionally using $120,000 equipment).
+We disagree.  Most developers do not use Lisp for their real work, and part of the reason is that many developers perceive Lisp's poor readability (such as its overuse of parentheses) is more of a problem than Lisp's advantages.  Even some people who've gone far into Lisp believe that its syntax is a bug, not a feature.  David A. Wheeler started the readable project, after having used Lisp for over 30 years (starting in circa 1982, and having professionally using $120,000 equipment).
 
-Lisp has advantages, sure.  But there's a reason why Lisp is widely referred to as "Lots of Irritating Silly Parentheses" (and worse).
-
-Lots of vendors have tried to tell us that a bug is a really feature.  They are still bugs.  Let's call a spade, a spade, and call a bug, a bug.
+Lisp has advantages, sure.  But there's a reason why Lisp is widely referred to as "Lots of Irritating Silly Parentheses" (and worse).  Lots of vendors try to claim that a bug is a really feature.  But if a large number of people perceive something as a bug... it is likely to be a bug.
 
 * * * * *
 
@@ -31,7 +29,7 @@ In other words, this is such a serious problem that a large number of people hav
 
 Now, just because there's a problem, that does not mean there's a solution. It's actually true that lots of people have tried and failed, but we think there's a reason for it: People didn't really understand the requirements. Creating a new syntax is easy, but what people don't appreciate is that Lisp's syntax has some subtle advantages. For example, its syntax is generic (it does not imply a particular semantic) and homoiconic (the mapping of programming construct to syntactic tree is quite obvious). Previous efforts didn't realize that those were requirements, and so they failed.
 
-But now that we understand the requirements better, we can fix it.  We do *not* need an "Algol-like" syntax, and we are expressly *not* trying to create an "Algol-like" syntax.  What we are trying to create are clearer notations for s-expressions that are general and homoiconic; that's not the same thing.
+But now that we understand the requirements, we can fix the problem.  We do *not* need an "Algol-like" syntax, and we are expressly *not* trying to create an "Algol-like" syntax.  What we are trying to create are clearer notations for s-expressions that are general and homoiconic; that's not the same thing as copying Algol.
 
 * * * * *
 
@@ -45,7 +43,7 @@ We agree with Guy Steele that no one language can be all things to all people. A
 
 *The idea of introducing Algol-like syntax into Lisp keeps popping up and has seldom failed to create enormous controversy between those who find the universal use of S-expressions a technical advantage (and don't mind the admitted relative clumsiness of S-expressions for numerical expressions) and those who are certain that algebraic syntax is more concise, more convenient, or even more natural (whatever that may mean, considering that all these notations are artificial).*
 
-So even Steele and Gabriel admit that s-expressions are clumsy.  This is again evidence that many people are dissatisfied with traditional Lisp notation.
+So Steele, Gabriel, and some others who argue for traditional s-expression syntax all admit that s-expressions are clumsy.  This is again evidence for our position, that traditional s-expression syntax is a *problem*.  Many people are dissatisfied with traditional Lisp notation, and even its proponents admit that it is clumsy!
 
 Note that these authors assume that the only two possibilities are s-expressions and an "Algol-like syntax".  They do not consider a third alternative: An improved s-expression notation that is still general and homoiconic.  We advocate this third alternative.
 
@@ -67,15 +65,13 @@ Here Steele and Gabriel are **extremely** insightful - which given their massive
 
 This property is typically called "homoiconicity", and is very rare among programming languages. Lisps are one of the very few language groups that are homoiconic, and it's why Lisps are still used, decades after their development.
 
-Steele and Gabriel are correct in stating that there have been many efforts to create readable Lisp formats, and they all failed because they did not create formats that accurately represented the programs as data structures.  These other notations typically tried to just directly copy existing syntaxes like Fortran's or Algol's, with the notation that they would be "easier to read". They all failed.  One reason was that when the semantics changed underneath, their syntax could not easily access the new capabilities, and the constant maintenance eventually caused the approach to fail.
-
 The whole point of a Lisp-like language is that you *can* treat code as data, and data as code. Any notation that makes this difficult means that you lose Lisp's advantages.  Homoiconicity is critical if you're going to treat a program as data. To do so, you must be able to easily "see" the program's format. If you can, you can do amazing manipulations.
 
-But what Gabriel and Steele failed to appreciate in their paper is that ***it's possible to have both homoiconicity and a more readable notation***.
+Steele and Gabriel are correct in stating that there have been many efforts to create readable Lisp formats, and they all failed because they did not create formats that accurately represented the programs as data structures.  These other notations typically tried to just directly copy existing syntaxes like Fortran's or Algol's, with the notation that they would be "easier to read". They all failed.  One reason was that when the semantics changed underneath, their syntax could not easily access the new capabilities, and the constant maintenance eventually caused the approach to fail.  There is also a more general problem: It is difficult to manipulate programs-as-data when you cannot easily perceive the programs as data.
 
-At the time, no one understood why the previous efforts at readable Lisps failed. Now that we have a good diagnosis for why these previous efforts failed, we can avoid their mistakes! We thank Gabriel, Steele, and others, who had this key insight. This insight is absolutely necessary for any future effort to even have a chance to succeed.
+Now that we have a good diagnosis for why these previous efforts failed, we can avoid their mistakes! In short, any Lisp notation *must* be homoiconic.  We thank Gabriel, Steele, and others, who had this key insight. This insight is absolutely necessary for any future effort to even have a chance to succeed.
 
-Unfortunately, their paper presumed that this readability problem was unsolvable, and that strong claim has meant that people who **could** have solved this problem in the past didn't even try. After all, why work on an impossible problem?
+But what Gabriel and Steele failed to appreciate in their paper is that ***it's possible to have both homoiconicity and a more readable notation***. Unfortunately, their paper appears to quietly assume that a homoiconic notation *has* to have poor readability.  That assumption has meant that people who **could** have solved this problem in the past didn't even try. After all, why work on an impossible problem?
 
 But now that we know why past efforts failed, we have a better chance at solving the problem. So let's solve the problem.
 
@@ -166,9 +162,9 @@ S-expressions require users to represent math notations using this format:
 
 Note that curly-infix-expressions allow users to write it this way:
 
-    {{1 * 2} + {3 / 4}}.
+    {{1 * 2} + {3 / 4}}
 
-This is a big deal, but why it's a big deal isn't immediately obvious.  It's a big deal because this notation does **not** depend on any precedence rules, or registration.  It also doesn't depend on knowing what the final language is (or which operators are infix). Instead, **all** operators will work this same way. So the fact that you don't know exactly what the final language will be like, or which operators are infix operators, or what "+" actually means, doesn't matter... and you can change it without trouble. This notation exposes exactly where every list begins and ends, too. Curly infix adds only one abbreviation: if a list is surrounded by {...}, the operators are presented in infix order instead of in prefix order. This is just like 'x, which is just an abbreviation (quote x).  We're adding a small set of additional abbreviations.
+This is a big deal, but why it's a big deal isn't immediately obvious.  It's a big deal because this notation does **not** depend on any precedence rules, or registration.  It also doesn't depend on knowing what the final language is (or which operators are infix). Instead, **all** operators will work this same way. So the fact that you don't know exactly what the final language will be like, or which operators are infix operators, or what "+" actually means, doesn't matter... and you can change it without trouble. This notation exposes exactly where every list begins and ends, too. Curly infix adds only one abbreviation: if a list is surrounded by {...}, the operators are presented in infix order instead of in prefix order. This is just like 'x, which is just an abbreviation (quote x).  We're adding a small set of additional abbreviations.  And finally, this extension to s-expressions makes the resulting expressions ''much'' easier for humans to read and write, because it allows humans to the use the notation they've been trained to use for 15+ years and that nearly all books use.
 
 Here are some interesting relevant quotes:
 
