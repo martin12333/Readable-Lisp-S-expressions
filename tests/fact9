@@ -1,0 +1,12 @@
+#!/usr/bin/env sweet-run
+;#!guile -s
+;!#
+
+; Trivial test of sweet-run: define factorial and run it.
+
+define factorial(n)
+  if {n <= 1}
+    1
+    {n * factorial{n - 1}}
+
+display factorial(9)
