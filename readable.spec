@@ -1,7 +1,7 @@
 # This RPM spec file uses the Fedora conventions and makes subpackages.
 Name:    readable
 # The rpm format forbids "-" in version numbers:
-Version: 1.0.2
+Version: 1.0.3
 Release: 1%{?dist}
 Summary: Improve Lisp readability (infix, sweet-expression indentation)
 Group:   Development/Libraries
