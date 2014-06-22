@@ -13,7 +13,7 @@ If you're completely impatient, and you want to install the current released ver
     make
     sudo make install
 
-Below are more details about each of those steps, including various options you can use.  You don't need to install to system-wide locations (so you *could* skip the last step), though it's slightly easier to use if you do.  If you want to install the *development* version instead of the released version, see below (you'll replace the first two commands with something else).
+Below are more details about each of those steps, including various options you can use.  You don't need to install to system-wide locations (so you *could* skip the last step), though it's slightly easier to use if you do.  If you want to install the *development* version instead of the released version, see below; you'll replace the first two commands to instead use *git* to obtain our *develop* branch.
 
 The "readable" software supports both Scheme (guile) and Common Lisp.  If you want, you can choose to install just the Scheme (guile) or just the Common Lisp portion.  In particular, if you don't already have an implementation of Common Lisp installed, you might try using the configuration option "--without-common-lisp"; setting up a usable Common Lisp system can take a few more steps as described below.
 
@@ -127,7 +127,7 @@ If you *instead* want to get the *development* version instead of the stable ver
 
      git clone git://git.code.sf.net/p/readable/code readable-code
      cd readable-code
-     git checkout develop  # Switch to "develop" branch
+     git checkout -b develop origin/develop  # Set up and switch to "develop" branch
      autoreconf -i
 
 
