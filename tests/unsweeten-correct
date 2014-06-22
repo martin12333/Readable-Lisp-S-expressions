@@ -128,7 +128,9 @@ b4
       ((e1 e2)))
 
 ; Errors
-Error: Unexpected text after n-expression
+Error: Unexpected text after n-expression around character W
+Error: Unexpected text after n-expression around character #\x1
+Error: Unexpected text after n-expression around character '
 Error: Invalid character name
 Error: Closing *> without preceding matching <*
 Error: Datum comment start not followed a datum (EOL instead)

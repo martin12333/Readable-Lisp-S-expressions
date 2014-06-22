@@ -14,10 +14,33 @@ Starting Common Lisp implementation and loading the readable library
 
 You need to run your implementation of Common Lisp and then load the "readable" library.
 
-You can load the "readable" library by invoking ASDF directly, or by using QuickLisp. Here is how to do it in each case.
+You can load the "readable" library by using QuickLisp, or by invoking ASDF directly. Here is how to do it in each case.
+
+Loading the "readable" library via QuickLisp
+--------------------------------------------
+
+QuickLisp makes things easy to start, assuming you have QuickLisp installed.  You need to *first* start up up your implementation of Common Lisp.  E.G., for clisp, this is normally:
+
+    clisp  # Use "sbcl" to run sbcl instead, obviously.
+
+To load the "readable" library, at the command line or at the beginning of each file, do this:
+
+    (ql:quickload "readable")
+
+After that, you just tell "readable" which notation you want to use.  So for example, if you want to use the "sweet-expression" notation described later, you'd execute *(readable:enable-sweet)*.  Thus, the top of each of your files would say something like this:
+
+    (ql:quickload "readable")
+    (readable:enable-sweet) ; or whichever notation you've chosen.
+
+... and at the end of the file you can insert:
+
+    (readable:disable-readable)
+
 
 Loading the "readable" library via ASDF
 ---------------------------------------
+
+If you don't want to use QuickLisp, you can load the library directly using ASDF.
 
 *First*, start up up your Common Lisp implementation.  E.G., for clisp, this is normally:
 
@@ -41,27 +64,6 @@ After you've loaded the readable library, you can use it.  Generally, you run (r
 
     (require "asdf")
     (asdf:load-system :readable)
-    (readable:enable-sweet) ; or whichever notation you've chosen.
-
-... and at the end of the file you can insert:
-
-    (readable:disable-readable)
-
-
-Loading the "readable" library via QuickLisp
---------------------------------------------
-
-QuickLisp makes things easy to start.  You need to *first* start up up your implementation of Common Lisp.  E.G., for clisp, this is normally:
-
-    clisp  # Use "sbcl" to run sbcl instead, obviously.
-
-To load the "readable" library, at the command line or at the beginning of each file, do this:
-
-    (ql:quickload "readable")
-
-After that, you just tell "readable" which notation you want to use.  So for example, if you want to use the "sweet-expression" notation described later, you'd execute *(readable:enable-sweet)*.  Thus, the top of each of your files would say something like this:
-
-    (ql:quickload "readable")
     (readable:enable-sweet) ; or whichever notation you've chosen.
 
 ... and at the end of the file you can insert:

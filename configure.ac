@@ -42,8 +42,8 @@
 
 # Initialize, but use more options.  Note parameter brackets and whitespace.
 # TO CHANGE THE VERSION NUMBER: Edit readable-simple.spec, readable.spec,
-# readable.asd, and the line below:
-AC_INIT([readable], [1.0.0], [dwheeler@dwheeler.com],
+# readable.asd, possibly ChangeLog, and the line below:
+AC_INIT([readable], [1.0.2], [dwheeler@dwheeler.com],
         [readable], [http://readable.sourceforge.net/])
 AC_COPYRIGHT(
 [[Copyright (C) 2007-2013 by David A. Wheeler and Alan Manuel K. Gloria.

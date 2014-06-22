@@ -11,7 +11,7 @@
 #   ;!#
 # Where "guile -s" might be "scsh -s" or similar.
 
-result="$(mktemp)"
+result="$(mktemp 2>/dev/null || mktemp -t 'sweet-run')"
 
 export PATH="@PATH_PREFIX@$PATH"
 
@@ -28,6 +28,10 @@ fullname="$(dirname "$result")/$(basename "$result")"
 
 # Run it, passing all the parameters we got.
 "$fullname" "$@"
+errcode=$?
 
 # Erase temp file # once we're done with it:
 rm -f -- "$result"
+
+# Return whatever error code was produced.
+exit $errcode

@@ -432,7 +432,9 @@ dist_doc_DATA += README-ANTLR README-files
 
 # These the markdown (.md) files that are on the Wiki and we'll
 # duplicate in the distributed package:
-MDMIRRORS = Problem.md Solution.md Install-howto.md Retort.md \
+MDMIRRORS = Problem.md Solution.md \
+            Install-howto.md Prepackaged.md \
+            Retort.md \
             Examples.md Hunchentoot-make-docstrings.md \
             Scheme-tutorial.md Common-lisp-tutorial.md
 
@@ -498,6 +500,7 @@ EXTRA_DIST += \
  tests/sweet-testsuite \
  tests/roundtrip-test \
  tests/roundtrip-testsuite \
+ tests/fact9 \
  tests/pprint \
  tests/sweeten-testsuite \
  tests/sweeten-correct \
@@ -561,6 +564,10 @@ check-guile: readable/kernel.scm my-realpath
 	@echo "About to run roundtrip-test"
 	PATH="$(builddir):$(srcdir)/tests:${PATH}" \
 	     $(srcdir)/tests/roundtrip-test $(srcdir)/tests/roundtrip-testsuite
+	@echo "About to test sweet-run (using fact9 as the test case)"
+	PATH="$(builddir):$(srcdir)/tests:${PATH}" \
+	     $(srcdir)/tests/fact9 > /dev/null
+	@echo "Tests completed."
 else !HAVE_GUILE
 check-guile:
 endif !HAVE_GUILE

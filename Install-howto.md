@@ -1,11 +1,11 @@
-If your system has "readable" pre-packaged, it's easiest to use that.  But if that's not the case, here's how to install the "readable" software.
+If your system or Lisp implementation has "readable" capabilities prepackaged, it's easiest to use that; see [Prepackaged] for a partial list.  But if that's not the case, here's how to install our "readable" software.  This software provides robust production-ready Scheme and Common Lisp implementations of our readable notations, including their test suites, available as free/libre/open source software under the [MIT license](http://opensource.org/licenses/MIT).
 
 To install the "readable" software directly from our site, you need to have the right prerequisites, download and uncompress the software, configure it, build it, and then actually install it.  In most cases it should be easy, but we've provided some tips to help you avoid (or fix) problems.
 
 For the impatient: Source installs
 ==================================
 
-If you're completely impatient, and you want to install from source, just install the packages *guile*, *expect*, *clisp*, and *asdf* (asdf is often the package "cl-asdf").  You might also install *sbcl*.  Then download the current stable version from [http://readable.sourceforge.net](http://readable.sourceforge.net) and run the following command-line commands on your Unix-like system (including Cygwin):
+If you're completely impatient, and you want to install the current released version from source, just install the packages *guile*, *expect*, *clisp*, and *asdf* (asdf is often the package "cl-asdf").  You might also install *sbcl*.  Then download the current stable version from [http://readable.sourceforge.net](http://readable.sourceforge.net) and run the following command-line commands on your Unix-like system (including Cygwin):
 
     tar xvzf readable-*.tar.gz
     cd readable-*
@@ -13,7 +13,7 @@ If you're completely impatient, and you want to install from source, just instal
     make
     sudo make install
 
-Below are more details about each of those steps, including various options you can use.  You don't need to install to system-wide locations (so you *could* skip the last step), though it's slightly easier to use if you do.
+Below are more details about each of those steps, including various options you can use.  You don't need to install to system-wide locations (so you *could* skip the last step), though it's slightly easier to use if you do.  If you want to install the *development* version instead of the released version, see below; you'll replace the first two commands to instead use *git* to obtain our *develop* branch.
 
 The "readable" software supports both Scheme (guile) and Common Lisp.  If you want, you can choose to install just the Scheme (guile) or just the Common Lisp portion.  In particular, if you don't already have an implementation of Common Lisp installed, you might try using the configuration option "--without-common-lisp"; setting up a usable Common Lisp system can take a few more steps as described below.
 
@@ -118,7 +118,7 @@ Download and uncompress
 
 Obviously, you'll need to download our "readable" software.
 
-We recommend that you get the current "stable" version, unless you have some special need.  Just use a web browser to view http://readable.sourceforge.net - click on "download files" - and download the current version.  Then uncompress the download and cd into its directory.  E.g., at the command line:
+We recommend that you get the current "stable" version, unless you want to help develop readable (we'd love it!) or have a special need.  Just use a web browser to view http://readable.sourceforge.net - click on "download files" - and download the current version.  Then uncompress the download and cd into its directory.  E.g., at the command line:
 
      tar xvzf readable-*.tar.gz
      cd readable-*
@@ -127,7 +127,7 @@ If you *instead* want to get the *development* version instead of the stable ver
 
      git clone git://git.code.sf.net/p/readable/code readable-code
      cd readable-code
-     git checkout develop  # Switch to "develop" branch
+     git checkout -b develop origin/develop  # Set up and switch to "develop" branch
      autoreconf -i
 
 
@@ -199,7 +199,7 @@ If you have installed it to system-wide locations, then in most cases the progra
 
 If you have not installed the files to system-wide locations, then you need to make sure the system can find commands when you type them.  You can tell the system where the commands are by prefixing the command name with the directory it's in, e.g., prefix the command with "./" if the command is in the current directory.  Another approach is to modify your PATH. On a Bourne-like shell (the usual kind), if the current directory contains some of the programs you'd like to be able to run without prefixing them with "./", you can modify your PATH using:
 
-    export PATH="$(pwd)/$PATH"
+    export PATH="$PATH:$(pwd)"
 
 
 Tutorials

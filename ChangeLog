@@ -1,3 +1,31 @@
+2014-06-15 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Version 1.0.2.  Various minor improvements,
+	  primarily in the documentation and Scheme implementation,
+	  as listed below.
+	* Various minor Scheme bug fixes, e.g., improve EOF handling during
+	  symbol reading, fix detection of unsupported #.
+	* Many portability improvements, especially for Chicken Scheme and
+	  rscheme.  E.G., remove all "#:" in source,
+	  change "throw" to "raise", rename internal "body" to "read-body".
+	  Modify sweet-run so it works unchanged on Mac OS Darwin.
+	* Many changes to eliminate warnings in various Schemes, e.g.,
+	  change (cond .. #t) to (cond .. else); either is legal Scheme,
+	  but chicken Scheme emits warnings on the former.
+	* Add the following as delimiters: #\' and #\` and #\.
+          These are not required to be delimiters in Scheme, but
+	  they can be, and doing so means that we can detect syntax errors
+	  of very dodgy constructs.  This means that x'y will be
+	  considered an error, not a 3-char symbol.  We can already express
+	  that as |x'y|, and (x 'y) or x('y) work for making a list.
+	* Optimize read-digits.
+	* Improve Scheme error reporting when giving "Unexpected text
+	  after n-expression" by reporting the next (peeked) character.
+	* Add #!keyword-prefix and #!keyword-suffix support so can handle
+	  syntax like STUFF: and :STUFF.
+	* Modify Scheme sweet-run so that it returns the program exit code.
+	* Add type annotations in chicken format, and ensure it does not
+	  interfere with other Schemes like guile.
+
 2013-10-14 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Version 1.0.0.
 	* Provide various minor improvements to the documentation.
