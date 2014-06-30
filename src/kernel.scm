@@ -193,7 +193,9 @@
 
     ; Enable R5RS hygenic macro system (define-syntax) - guile 1.X
     ; does not automatically provide it, but version 1.6+ enable it this way
-    (use-syntax (ice-9 syncase)))
+    (cond-expand
+      (guile-2 )
+      (else (use-syntax (ice-9 syncase)))))
   (else ))
 
 ; Type annotations (":" ...), chicken compatible format.
