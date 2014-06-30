@@ -524,9 +524,9 @@
   ; We can't use #:select because other Schemes can't read that.
   ; We can't use (symbol->keyword 'select)  because guile won't accept it.
   ; So we temporarily switch to prefix keywords, use that, and switch back.
-  (define temp-saved-keywords (cadr (memq 'keywords (read-options))))
-  (read-set! keywords 'prefix)
-  (use-modules ((srfi srfi-69) :select
+  (let ((temp-saved-keywords (cadr (memq 'keywords (read-options)))))
+    (read-set! keywords 'prefix)
+    (use-modules ((srfi srfi-69) :select
                         ((make-hash-table . srfi-69-make-hash-table)
                          (hash-table? . srfi-69-hash-table?)
                          hash-table-set!
@@ -535,7 +535,7 @@
                          hash-table-ref/default
                          hash-table-walk
                          hash-table-delete! )))
-  (read-set! keywords temp-saved-keywords)
+    (read-set! keywords temp-saved-keywords))
 
   ; For "any"
   (use-modules (srfi srfi-1))
