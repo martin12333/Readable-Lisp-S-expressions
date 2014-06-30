@@ -526,9 +526,13 @@
   ; We can't use #:select because other Schemes can't read that.
   ; We can't use (symbol->keyword 'select)  because guile won't accept it.
   ; So we temporarily switch to prefix keywords, use that, and switch back.
-  (let ((temp-saved-keywords (cadr (memq 'keywords (read-options)))))
-    (read-set! keywords 'prefix)
-    (use-modules ((srfi srfi-69) :select
+  ; Finally, to add to the horror, guile < 2.0 requires that use-modules
+  ; be at the top level, but guile 2.0 scoping rules require the use of "let".
+  (cond-expand
+    (guile-2
+      (let ((temp-saved-keywords (cadr (memq 'keywords (read-options)))))
+        (read-set! keywords 'prefix)
+        (use-modules ((srfi srfi-69) :select
                         ((make-hash-table . srfi-69-make-hash-table)
                          (hash-table? . srfi-69-hash-table?)
                          hash-table-set!
@@ -537,7 +541,20 @@
                          hash-table-ref/default
                          hash-table-walk
                          hash-table-delete! )))
-    (read-set! keywords temp-saved-keywords))
+        (read-set! keywords temp-saved-keywords)))
+    (else
+        (define temp-saved-keywords (cadr (memq 'keywords (read-options))))
+        (read-set! keywords 'prefix)
+        (use-modules ((srfi srfi-69) :select
+                        ((make-hash-table . srfi-69-make-hash-table)
+                         (hash-table? . srfi-69-hash-table?)
+                         hash-table-set!
+                         hash-table-update!/default
+                         hash-table-ref
+                         hash-table-ref/default
+                         hash-table-walk
+                         hash-table-delete! )))
+        (read-set! keywords temp-saved-keywords)))
 
   ; For "any"
   (use-modules (srfi srfi-1))
