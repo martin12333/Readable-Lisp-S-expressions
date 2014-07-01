@@ -51,7 +51,7 @@ This software is Free/libre/open source software and is
 released under the "MIT" license.]])
 
 # Force autoconf to be more recent.
-AC_PREREQ([2.67])
+AC_PREREQ([2.63])
 # Safety check - list a source file that wouldn't be in other projects:
 AC_CONFIG_SRCDIR([src/kernel.scm])
 # Put autotools auxiliary files in a subdir, so they don't clutter top dir:
@@ -165,6 +165,7 @@ AC_ARG_VAR([GUILE_SITE],
 # Many autoconf files have text of the form test "x$variable" because
 # variable might begin with "-"; POSIX 2008 systems can handle this when
 # there are <=3 arguments, but a non-compliant system could get it wrong.
+m4_ifdef([AS_VAR_COPY], [
 for input_variable in \
   with_guile GUILE \
   with_guile_readline \
@@ -182,6 +183,7 @@ do
     [[[-\ ]*]],
       [AC_MSG_ERROR([Input $input_variable begins with dash or space: $received_value])])
 done
+])
 
 # If registering is forceably disabled, disable unregistering to match
 AS_IF([test "$with_register_cl_source" = "no"],
@@ -224,8 +226,10 @@ AM_COND_IF([IS_MAKE_DISTCHECK], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 # For purposes of configuration, do we have a working guile?
 AS_IF([is_permitted "$with_guile"],
-  [AS_IF([is_useful "$GUILE"], [], [AC_PATH_PROG([GUILE],[guile])])
-   AS_IF([is_useful "$GUILE"], [AC_SUBST([GUILE])])])
+  [AS_IF([is_useful "$GUILE"], [:], [AC_PATH_PROG([GUILE],[guile])])
+   AS_IF([is_useful "$GUILE"],
+    [AC_SUBST([GUILE])
+     :])])
 AM_CONDITIONAL([HAVE_GUILE], [is_useful "$GUILE"])
 AC_MSG_CHECKING([final decision HAVE_GUILE])
 AM_COND_IF([HAVE_GUILE], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
@@ -286,7 +290,9 @@ AM_COND_IF([HAVE_GUILE],
 
   AS_IF([is_permitted "$with_scsh"],
     [AS_IF([is_useful "$SCSH"], [], [AC_PATH_PROG([SCSH],[scsh])])
-     AS_IF([is_useful "$SCSH"], [AC_SUBST([SCSH])])])
+     AS_IF([is_useful "$SCSH"],
+      [AC_SUBST([SCSH])
+       :])])
 ])
 AC_SUBST([GUILE_READLINE_AVAILABLE])
 AM_CONDITIONAL([HAVE_SCSH], [is_useful "$SCSH"])
@@ -322,11 +328,15 @@ AS_IF([is_permitted "$with_common_lisp"],
 
   AS_IF([is_permitted "$with_register_cl_source"],
     [AS_IF([is_useful "$REGISTER_COMMON_LISP_SOURCE"], [], [AC_PATH_PROG([REGISTER_COMMON_LISP_SOURCE],[register-common-lisp-source])])
-     AS_IF([is_useful "$REGISTER_COMMON_LISP_SOURCE"], [AC_SUBST([REGISTER_COMMON_LISP_SOURCE])])])
+     AS_IF([is_useful "$REGISTER_COMMON_LISP_SOURCE"],
+       [AC_SUBST([REGISTER_COMMON_LISP_SOURCE])
+        :])])
 
   AS_IF([is_permitted "$with_unregister_cl_source"],
     [AS_IF([is_useful "$UNREGISTER_COMMON_LISP_SOURCE"], [], [AC_PATH_PROG([UNREGISTER_COMMON_LISP_SOURCE],[unregister-common-lisp-source])])
-     AS_IF([is_useful "$UNREGISTER_COMMON_LISP_SOURCE"], [AC_SUBST([UNREGISTER_COMMON_LISP_SOURCE])])])
+     AS_IF([is_useful "$UNREGISTER_COMMON_LISP_SOURCE"],
+       [AC_SUBST([UNREGISTER_COMMON_LISP_SOURCE])
+        :])])
 
   # We'll use LN_S to install Common Lisp ASDF files:
   AC_PROG_LN_S])
@@ -378,7 +388,9 @@ AC_MSG_RESULT([$have_clisp_working_asdf])
 # Check sbcl.
 AS_IF([is_permitted "$with_sbcl"],
   [AS_IF([is_useful "$SBCL"], [], [AC_PATH_PROG([SBCL],[sbcl])])
-   AS_IF([is_useful "$SBCL"], [AC_SUBST([SBCL])])])
+   AS_IF([is_useful "$SBCL"],
+         [AC_SUBST([SBCL])
+          :])])
 AM_CONDITIONAL([HAVE_SBCL], [is_useful "$SBCL"])
 AC_MSG_CHECKING([final decision HAVE_SBCL])
 AM_COND_IF([HAVE_SBCL], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
@@ -413,7 +425,9 @@ AS_IF([is_permitted "$with_markdown"],
         AC_MSG_WARN([Python not found, and markdown2 requires it. HTML generation disabled])])])])
 
 AM_CONDITIONAL([HAVE_MARKDOWN], [is_permitted "$with_markdown"])
-AM_COND_IF([HAVE_MARKDOWN], [AC_SUBST([MARKDOWN])])
+AM_COND_IF([HAVE_MARKDOWN],
+  [AC_SUBST([MARKDOWN])
+   :])
 AC_MSG_CHECKING([final decision HAVE_MARKDOWN])
 AM_COND_IF([HAVE_MARKDOWN], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
