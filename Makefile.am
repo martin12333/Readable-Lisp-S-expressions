@@ -617,7 +617,8 @@ clisp-asdf:
 	  echo "ASDF already installed for this user" ; \
 	 else \
 	  $(MKDIR_P) "${CLISP_ASDF_DIR}" ; \
-	  if test -r "$(SYSTEM_ASDF_FILE)" ; then \
+	  if test -r "$(SYSTEM_ASDF_FILE)" && \
+	     grep 'load-system' "$(SYSTEM_ASDF_FILE)" > /dev/null ; then \
             echo "Creating link to system asdf file $(SYSTEM_ASDF_FILE)" ; \
             echo $(LN_S) "$(SYSTEM_ASDF_FILE)" "$(CLISP_ASDF_FILE)" ; \
             $(LN_S) "$(SYSTEM_ASDF_FILE)" "$(CLISP_ASDF_FILE)" ; \
