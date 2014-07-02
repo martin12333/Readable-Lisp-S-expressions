@@ -161,6 +161,9 @@ generate_local_command = \
 # Guile library and scripts/tools that depend on it
 # ####################################################
 
+# Include script that works around guile 1.6 bug by patching cond...else:
+EXTRA_DIST += patch_cond_else
+
 if HAVE_GUILE
 readable_libdir = $(GUILE_SITE)/readable
 
@@ -170,6 +173,7 @@ readable_lib_DATA = readable/kernel.scm
 readable/kernel.scm: src/kernel.scm
 	$(MKDIR_P) readable
 	cp -p "$(srcdir)/src/kernel.scm" readable/kernel.scm
+	$(PATCH_COND_ELSE) readable/kernel.scm
 
 CLEANFILES += readable/kernel.scm
 endif HAVE_GUILE

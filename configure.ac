@@ -288,6 +288,22 @@ AM_COND_IF([HAVE_GUILE],
          test "$enable_guile_readline" = "yes"],
     [AC_MSG_ERROR([Guile readline required but unavailable.])])
 
+  # Determine if guile can handle cond...else.  This is standard Scheme,
+  # and chicken Scheme complains if you use cond...#t.  Sadly,
+  # guile 1.6 doesn't support it.  So we'll try to use it; if it fails,
+  # we will set PATCH_COND_ELSE to a program that fixes it.
+  # Normally PATCH_COND_ELSE is ":", which is a no-op.
+  AC_MSG_CHECKING([if (cond...else) is supported in guile])
+  AS_IF([[$GUILE] -q \
+      -c '(cond (#f (display "bad")) (else (display "good")))' \
+      > /dev/null 2>&1],
+    [AC_MSG_RESULT([yes])
+     PATCH_COND_ELSE=':'],
+    [AC_MSG_RESULT([no])
+     PATCH_COND_ELSE='$(srcdir)/patch_cond_else'])
+  AC_SUBST([PATCH_COND_ELSE])
+
+
   AS_IF([is_permitted "$with_scsh"],
     [AS_IF([is_useful "$SCSH"], [], [AC_PATH_PROG([SCSH],[scsh])])
      AS_IF([is_useful "$SCSH"],

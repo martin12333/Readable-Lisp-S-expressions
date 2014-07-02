@@ -174,7 +174,7 @@
     ; this ensures that the user's module does not get contaminated with
     ; our compatibility procedures/macros
     (define-module (readable kernel)))
-  (else ))
+  (else )) ; not cond expression
 
 ; Early setups, e.g., enable define-syntax
 (cond-expand
@@ -195,8 +195,8 @@
     ; does not automatically provide it, but version 1.6+ enable it this way
     (cond-expand
       (guile-2 )
-      (else (use-syntax (ice-9 syncase)))))
-  (else ))
+      (else (use-syntax (ice-9 syncase))))) ; not cond expression
+  (else )) ; not cond expression
 
 ; Type annotations (":" ...), chicken compatible format.
 ; Ignored on other platforms. See: http://wiki.call-cc.org/man/4/Types
@@ -217,7 +217,7 @@
     ; (defmacro \: (x . y) '(values))
     (define-macro (: x . y) '(values))
     (define-syntax no-values (syntax-rules () ((_) (values)))))
- (else
+ (else ; not cond expression
   (define-syntax : (syntax-rules () ((_ . rest) #f)))
   (define-syntax no-values (syntax-rules () ((_) (if #f #t))))))
 
@@ -229,7 +229,7 @@
  (chicken
   (define-syntax flush-output-port
     (syntax-rules () ((_ port) (flush-output port)))))
- (else ))
+ (else )) ; not cond expression
 
 ; Special cases for those Scheme implementations which do that not
 ; support define-syntax.
@@ -257,7 +257,7 @@
                  (first-value (car full))
                  (second-value (cadr full)))
                  body ...)))))
- (else
+ (else ; not cond expression
     ; assume R5RS with define-syntax
 
     ; On R6RS, and other Scheme's, module contents must
@@ -542,7 +542,7 @@
                          hash-table-walk
                          hash-table-delete! )))
         (read-set! keywords temp-saved-keywords)))
-    (else
+    (else ; not cond expression
         (define temp-saved-keywords (cadr (memq 'keywords (read-options))))
         (read-set! keywords 'prefix)
         (use-modules ((srfi srfi-69) :select
@@ -570,7 +570,7 @@
 ; -----------------------------------------------------------------------------
 ; R5RS Compatibility
 ; -----------------------------------------------------------------------------
-  (else
+  (else ; not cond expression
 
     ; A do-nothing.
     (define (init-sweet) (no-values))
@@ -634,7 +634,7 @@
     (define (replace-read-with f)
       ;; (set! read f)
       #f))
- (else
+ (else ; not cond expression
     ; Not strictly R5RS but we expect at least some Schemes
     ; to allow this somehow.
     (define (replace-read-with f)
@@ -645,7 +645,7 @@
  ((or guile rscheme)
   (define (string->keyword s)
     (symbol->keyword (string->symbol s))))
- (else ))
+ (else )) ; not cond expression
 
 ; -----------------------------------------------------------------------------
 ; Module declaration and useful utilities
@@ -947,7 +947,7 @@
       (case c
         ((#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
           (cons (my-read-char port) (read-digits port)))
-        (else '()))))
+        (else '())))) ; not cond expression
 
   ;; FIXME See comment in read-digits: It might be a good idea to use
   ;; something better than a-lists in such frequently executed code.
@@ -1297,7 +1297,7 @@
 	      ((quasiquote)       qq)
 	      ((unquote)          uq)
 	      ((unquote-splicing) us)
-	      (else x))
+	      (else x)) ; not cond expression
 	    x))))
                   
   ; detect #| or |#
@@ -1843,7 +1843,7 @@
             ((eq? (car result) 'abbrev)
               (maybe-initial-abbrev port (cadr result)))
             (else result))))
-      (else
+      (else ; not cond expression
         (n-expr port))))
 
   ; Consume ;-comment (if there), consume EOL, and return new indent.
