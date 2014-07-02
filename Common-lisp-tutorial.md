@@ -54,9 +54,11 @@ But... if you didn't install the "readable" library source files in the standard
 
     (require "asdf")  ; Load "asdf".  You can use (load "path-to-asdf") if you must.
 
-*Third*, you need to load the actual "readable" library, at the command line or at the beginning of each file.  That's easy:
+*Third*, you need to load the actual "readable" library, at the command line or at the beginning of each file.  That's easy with modern versions of ASDF:
 
     (asdf:load-system :readable)  ; Load the "readable" library
+
+In older versions of ASDF, you needed to use <tt>(asdf:oos 'asdf:load-op :readable)</tt>. However, if your ASDF is so old that it doesn't include <tt>asdf:load-system</tt>, you should consider upgrading to ASDF 3.
 
 After you've loaded the readable library, you can use it.  Generally, you run (readable:enable-...) where "..." selects the readable notation you want to use.  E.G., (readable:enable-sweet) enables sweet-expression processing as described below.  The text below will show the various options.  When you're all done, you can use (readable:disable-readable) to restore the readtable to the state before you enabled any readable notations.  You can enable a different readable notation at any time; you don't need to disable the current notation first.
 
