@@ -2100,7 +2100,19 @@
             ((eq? line-stopper 'group-split-marker)
               (hspaces port)
               (if (lcomment-eol? (my-peek-char port))
-                  (read-error "Cannot follow split with end of line")
+                  ; Local extension - allow \\ as line-continuation, a
+                  ; capability more useful in Common Lisp than in Scheme.
+                  ; Add this to be consistent with Common Lisp implementation.
+                  ; This is *NOT* a SRFI-110 requirement!!
+                  ; To error out instead, replace with:
+                  ; (read-error "Cannot follow split with end of line.")
+                  (let ((new-indent (get-next-indent port)))
+                    (if (string=? new-indent starting-indent)
+                      (let-splitter (more-full-results more-new-indent more-value)
+                                    (it-expr port new-indent)
+                        (list more-new-indent
+                          (my-append line-value more-value)))
+                      (read-error "Continue without same-indent line.")))
                   (list starting-indent (monify line-value))))
             ((eq? line-stopper 'sublist-marker)
               (hspaces port)

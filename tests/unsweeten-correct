@@ -143,7 +143,7 @@ Error: Illegal second value after .
 Error: Illegal second value after .
 Error: Cannot end line with '.'
 Error: Dedent required after lone . and value line
-Error: Cannot follow split with end of line
+Error: Continue without same-indent line.
 Error: EOL illegal immediately after solo sublist
 Error: Indent required after abbreviation
 Error: Inconsistent indentation

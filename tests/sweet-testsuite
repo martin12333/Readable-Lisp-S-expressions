@@ -2158,6 +2158,13 @@ a <* #; hi *> <* b *>
 (() () ())
 <* #; 1 *> <* #; 2 *> <* #; 3 *>
 
+; This is not required by SRFI-110, but is a local extension:
+; \\ at the end as line-continuation
+(a b c (d e f g))
+a b c
+  d e \\
+  f g
+
 (+ 11/13 7/8)
 {11/13 + 7/8}
 
