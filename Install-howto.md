@@ -63,7 +63,7 @@ Prerequisites if you use the development version
 If you plan to use the development (not stable) version directly from our git repository, you'll also need:
 
 *   *git* (to download the software).
-*   *autoconf*. You need autoconf version 2.67 or later.
+*   *autoconf*. You should use autoconf version 2.67 or later; use at least version 2.63.
 *   *automake*.  You should use version 1.14 or later; we haven't tested older versions.
 *   *guile development libraries* (e.g., package "guile-devel" on Fedora and Cygwin).  These need to match the version of guile you're using.
 *   *python* (to generate some HTML files from markdown).  You should have version 2.7+ or version 3+.  Version 2.4+ will do in a pinch (you need version 2.7 to auto-download markdown files, but only 2.4+ to generate HTML from them.)

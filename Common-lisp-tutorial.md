@@ -54,9 +54,11 @@ But... if you didn't install the "readable" library source files in the standard
 
     (require "asdf")  ; Load "asdf".  You can use (load "path-to-asdf") if you must.
 
-*Third*, you need to load the actual "readable" library, at the command line or at the beginning of each file.  That's easy:
+*Third*, you need to load the actual "readable" library, at the command line or at the beginning of each file.  That's easy with modern versions of ASDF:
 
     (asdf:load-system :readable)  ; Load the "readable" library
+
+In older versions of ASDF, you needed to use <tt>(asdf:oos 'asdf:load-op :readable)</tt>. However, if your ASDF is so old that it doesn't include <tt>asdf:load-system</tt>, you should consider upgrading to ASDF 3.
 
 After you've loaded the readable library, you can use it.  Generally, you run (readable:enable-...) where "..." selects the readable notation you want to use.  E.G., (readable:enable-sweet) enables sweet-expression processing as described below.  The text below will show the various options.  When you're all done, you can use (readable:disable-readable) to restore the readtable to the state before you enabled any readable notations.  You can enable a different readable notation at any time; you don't need to disable the current notation first.
 
@@ -440,6 +442,12 @@ which becomes:
     (let ((x (cos a)))
         (* 2 x))
 
+Indent characters
+-----------------
+
+You can indent using one or more of the indent characters, which are space, tab, and the exclamation point (!). Lines after the first line need to be consistently indented, that is, the current line’s indentation, when compared to the previous line’s, are equal or one is a prefix of the other. Indentation processing does not occur inside ( ), [ ], and { }, whether they are prefixed or not; this makes sweet-expressions backwards-compatible with traditional s-expressions, and also provides an easy way to disable indentation processing if it’s inconvenient. 
+
+These rules eliminate many concerns people have with indentation systems.  One objection that people raise about indentation-sensitive syntax is that horizontal whitespace can get lost in many transports (HTML readers, etc.). In addition, sometimes there are indented groups that you’d like to highlight; traditional whitespace indentation provides no opportunity to highlight indented groups specially.  By allowing "!" as an indent character (as well as space and tab), these problems disappear.  Also, some like to use spaces to indent; others like tabs. Python allows either. Sweet-expressions also allow people to use spaces, tabs, or a combination, as long as you are consistent, so developers can use whatever they prefer.
 
 What's the big deal?
 ====================

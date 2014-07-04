@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Patch the listed files so every "(else" becomes "(#t",
+# skipping the lines that say "not cond expression".
+
+# This works around a bug in guile version 1.6.
+
+if [ $# -eq 0 ]
+then
+  echo "Error, must have parameters" >&2
+  exit 1
+fi
+
+for file in "$*"
+do
+  sed -e '/not cond expression/!s/(else/(#t/' < "$file" > ,1
+  mv -f ,1 "$file"
+done

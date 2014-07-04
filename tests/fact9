@@ -1,5 +1,5 @@
 #!/usr/bin/env sweet-run
-;#!guile -s
+;#!/usr/bin/env guile
 ;!#
 
 ; Trivial test of sweet-run: define factorial and run it.
