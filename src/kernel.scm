@@ -1915,7 +1915,7 @@
 
   ; Return contents (value) of collecting-content.  It does *not* report a
   ; stopper or ending indent, because it is *ONLY* stopped by collecting-end
-  (: collecting-content (input-port -> *)) ; ??? doesn't it return :reader-token: ???
+  (: collecting-content (input-port -> *))
   (define (collecting-content port)
     (let* ((c (my-peek-char port)))
       (cond
