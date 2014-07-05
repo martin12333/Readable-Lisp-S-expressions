@@ -368,6 +368,9 @@
             "^"))
       (t (concatenate 'string indentation-as-list)))))
 
+; Read and throw away "skippable" content (text that is semantically the
+; same as whitespace but is complex).  This implements the sequence:
+;   (scomment hs | datum-commentw hs n-expr hs)
 (defun skippable (stopper stream)
   (cond
   ((eq stopper 'scomment)
@@ -415,6 +418,9 @@
     (t x)))
 
 
+; Read the contents of a collecting list and return it.
+; Precondition: Have already read collecting start and horizontal spaces.
+; Postcondition: Consumed the matching COLLECTING_END.
 ; Return contents (value) of collecting-content.  It does *not* report a
 ; stopper or ending indent, because it is *ONLY* stopped by collecting-end
 (defun collecting-content (stream)
@@ -475,6 +481,7 @@
           (t ; We found a stopper, return it with the value from "full"
             (list n-stopper (cadr full)))))))
 
+; Read input after a lone ".", normally exactly one datum.
 ; Returns (stopper value-after-period)
 (defun post-period (stream)
   (if (not (lcomment-eolp (my-peek-char stream)))
@@ -499,6 +506,11 @@
             (list pn-stopper (list period-symbol)))))
       (list 'normal period-symbol))) ; Empty branch.
 
+; Read the 1+ n-expressions on one line, and return them as a list.
+; If there is exactly one n-expression on the line,
+; it returns a list of exactly one item.
+; Precondition: At beginning of line after indent
+; Postcondition: At unconsumed EOL
 ; Returns (stopper computed-value).
 ; The stopper may be 'normal, 'scomment (special comment),
 ; 'abbrevw (initial abbreviation), 'sublist-marker, or 'group-split-marker
@@ -535,6 +547,10 @@
       (t 
         (list 'normal (list basic-value))))))
 
+; Read the rest of the expressions on a line,
+; after the first expression of the line.  This supports line-exprs.
+; Precondition: At beginning of non-first expression on line (past hspace)
+; Postcondition: At unconsumed EOL
 ; Returns (stopper computed-value); stopper may be 'normal, etc.
 ; Read in one n-expr, then process based on whether or not it's special.
 (defun rest-of-line (stream indent)
@@ -583,7 +599,10 @@
             (list 'normal (list basic-value))))
       (t (list 'normal (list basic-value))))))
 
-; Returns (new-indent computed-value)
+; Read the sequence of 1+ child lines in an it_expr
+; (e.g., after "line_expr"), each of which is itself an it_expr.
+; It returns the list of expressions in the body and the new indent as
+; (new-indent computed-value).
 (defun body (stream starting-indent)
   (let-splitter (i-full-results i-new-indent i-value)
                 (it-expr stream starting-indent)
@@ -601,6 +620,7 @@
                   (list nxt-new-indent (conse i-value nxt-value)))))
         (list i-new-indent (list1e i-value))))) ; dedent - end list.
 
+; Read a sweet-expression that doesn't have a special prefix.
 ; Returns (new-indent computed-value)
 (defun it-expr-real (stream starting-indent)
   (let-splitter (line-full-results line-stopper line-value)
@@ -697,7 +717,7 @@
             (read-error "Initial line-expression error."))))))
 
 ; Read it-expr.  This is a wrapper that attaches source info
-; and checks for consistent indentation results.
+; and checks for consistent indentation results, then calls it-expr-real.
 (defun it-expr (stream starting-indent)
   (let ((pos (get-sourceinfo stream)))
     (let-splitter (results results-indent results-value)
@@ -707,6 +727,8 @@
       (list results-indent (attach-sourceinfo pos results-value)))))
 
  
+; Read the rest of an initial-indent-expr (a sweet-expression with
+; a special initial value).
 (defun initial-indent-expr-tail (stream)
   (if (not (member (my-peek-char stream) initial-comment-eol))
       (let-splitter (results results-stopper results-value)
@@ -737,7 +759,7 @@
         (consume-end-of-line stream)
         empty-value))) ; (t-expr-real stream)
 
-; Top level - read a sweet-expression (t-expression).  Handle special
+; Read a sweet-expression (t-expression).  Handle special
 ; cases, such as initial indent; call it-expr for normal case.
 (defun t-expr-real (stream)
   (let* ((c (my-peek-char stream)))
@@ -761,12 +783,16 @@
                   (read-error "Closing *> without preceding matching <*."))
               results-value)))))
 
+; Top level - read a sweet-expression (t-expression).  Handle special values.
 (defun t-expr (stream)
   (let* ((te (t-expr-real stream)))
     (if (eq te empty-value)
         (t-expr stream)
         te)))
 
+; Transition to read a sweet-expression (t-expression).
+; Lisp "read" tried to read a character, and got redirected here.
+; We will unread that character, and then invoke our own reader.
 (defun t-expr-entry (stream char)
   (unread-char char stream)
   ; (princ "DEBUG entry: ") (write char) (terpri)
