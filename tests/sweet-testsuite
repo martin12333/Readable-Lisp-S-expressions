@@ -2165,6 +2165,48 @@ a b c
   d e \\
   f g
 
+(a b c (d e f))
+a b c
+  d e \\
+  f
+
+(a b c (d e f (g h)))
+a b c
+  d e \\
+  f $ g h
+
+(a b c (d e f g))
+a b c
+  d e \\
+  f $ g
+
+(a b c (d e f g))
+a b c
+  d e \\
+  ; Test1
+  f g
+
+(a b c (d e f g))
+a b c
+  d e \\ ; Test2
+  f g
+
+(a b c (q e f . g))
+a b c
+  q e \\ ; Test "."
+  f . g
+
+(a b c (q e . z))
+a b c
+  q e \\ ; Test "."
+  . z
+
+(1 (2 3 4 5 6))
+1
+  2 3 \\
+  4 5 \\
+  6
+
 (+ 11/13 7/8)
 {11/13 + 7/8}
 

@@ -1998,8 +1998,8 @@
   ; Returns (stopper computed-value).
   ; The stopper may be 'normal, 'scomment (special comment),
   ; 'abbrevw (initial abbreviation), 'sublist-marker, or 'group-split-marker
-  (: line-exprs (input-port -> :reader-token:))
-  (define (line-exprs port)
+  (: line-exprs (input-port string -> :reader-token:))
+  (define (line-exprs port indent)
     (let-splitter (basic-full-results basic-special basic-value)
                   (n-expr-first port)
       (cond
@@ -2009,7 +2009,7 @@
             (hspaces port)
             (if (not (lcomment-eol? (my-peek-char port)))
                 (let-splitter (rr-full-results rr-stopper rr-value)
-                              (rest-of-line port)
+                              (rest-of-line port indent)
                   (list rr-stopper (cons cl-results rr-value)))
                 (list 'normal (list cl-results)))))
         ((eq? basic-special 'period-marker)
@@ -2025,7 +2025,7 @@
           (hspaces port)
           (if (not (lcomment-eol? (my-peek-char port)))
               (let-splitter (br-full-results br-stopper br-value)
-                            (rest-of-line port)
+                            (rest-of-line port indent)
                 (list br-stopper (cons basic-value br-value)))
               (list 'normal (list basic-value))))
         (else
@@ -2033,15 +2033,15 @@
 
   ; Returns (stopper computed-value); stopper may be 'normal, etc.
   ; Read in one n-expr, then process based on whether or not it's special.
-  (: rest-of-line (input-port -> :reader-token:))
-  (define (rest-of-line port)
+  (: rest-of-line (input-port string -> :reader-token:))
+  (define (rest-of-line port indent)
     (let-splitter (basic-full-results basic-special basic-value)
                   (n-expr port)
       (cond
         ((or (eq? basic-special 'scomment) (eq? basic-special 'datum-commentw))
           (skippable basic-special port)
           (if (not (lcomment-eol? (my-peek-char port)))
-              (rest-of-line port)
+              (rest-of-line port indent)
               (list 'normal '())))
         ((eq? basic-special 'collecting)
           (hspaces port)
@@ -2049,7 +2049,7 @@
             (hspaces port)
             (if (not (lcomment-eol? (my-peek-char port)))
                 (let-splitter (rr-full-results rr-stopper rr-value)
-                              (rest-of-line port)
+                              (rest-of-line port indent)
                   (list rr-stopper (cons cl-results rr-value)))
                 (list 'normal (list cl-results)))))
         ((eq? basic-special 'period-marker)
@@ -2059,12 +2059,24 @@
                 (post-period port))
               ; (list 'normal (list period-symbol)) ; To interpret as |.|
               (read-error "Cannot end line with '.'")))
-        ((not (eq? basic-special 'normal)) (list basic-special '())) 
+        ((eq? basic-special 'group-split-marker)
+          ; Local extension - allow \\ as line-continuation, a
+          ; capability useful in Common Lisp.
+          ; Add this here to be consistent with Common Lisp implementation.
+          ; This is *NOT* a SRFI-110 requirement!!
+          (hspaces port)
+          (if (lcomment-eol? (my-peek-char port))
+            (let ((new-indent (get-next-indent port)))
+              (if (string=? new-indent indent)
+                (rest-of-line port new-indent)
+                (read-error "Line continuation indentation does not match.")))
+            (list basic-special '())))
+        ((not (eq? basic-special 'normal)) (list basic-special '()))
         ((char-hspace? (my-peek-char port))
           (hspaces port)
           (if (not (lcomment-eol? (my-peek-char port)))
               (let-splitter (br-full-results br-stopper br-value)
-                            (rest-of-line port)
+                            (rest-of-line port indent)
                 (list br-stopper (cons basic-value br-value)))
               (list 'normal (list basic-value))))
         (else (list 'normal (list basic-value))))))
@@ -2093,26 +2105,16 @@
   (: it-expr-real (input-port string -> :reader-indent-token:))
   (define (it-expr-real port starting-indent)
     (let-splitter (line-full-results line-stopper line-value)
-                  (line-exprs port)
+                  (line-exprs port starting-indent)
       (if (and (not (null? line-value)) (not (eq? line-stopper 'abbrevw)))
           ; Production line-exprs produced at least one n-expression:
           (cond
             ((eq? line-stopper 'group-split-marker)
               (hspaces port)
+              ; This error can't happen due to \\ line continuation extension,
+	      ; but we will test it just in case:
               (if (lcomment-eol? (my-peek-char port))
-                  ; Local extension - allow \\ as line-continuation, a
-                  ; capability more useful in Common Lisp than in Scheme.
-                  ; Add this to be consistent with Common Lisp implementation.
-                  ; This is *NOT* a SRFI-110 requirement!!
-                  ; To error out instead, replace with:
-                  ; (read-error "Cannot follow split with end of line.")
-                  (let ((new-indent (get-next-indent port)))
-                    (if (string=? new-indent starting-indent)
-                      (let-splitter (more-full-results more-new-indent more-value)
-                                    (it-expr port new-indent)
-                        (list more-new-indent
-                          (my-append line-value more-value)))
-                      (read-error "Continue without same-indent line.")))
+                  (read-error "Cannot follow split with end of line")
                   (list starting-indent (monify line-value))))
             ((eq? line-stopper 'sublist-marker)
               (hspaces port)
