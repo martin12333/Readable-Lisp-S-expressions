@@ -603,7 +603,10 @@
 ; (e.g., after "line_expr"), each of which is itself an it_expr.
 ; It returns the list of expressions in the body and the new indent as
 ; (new-indent computed-value).
-(defun body (stream starting-indent)
+; We name this "read-body", not "body", to make this more similar to the
+; Scheme implementation (which uses "read-body" to avoid an error in rscheme),
+; and also to reduce confusion ("body" is used with other meanings elsewhere).
+(defun read-body (stream starting-indent)
   (let-splitter (i-full-results i-new-indent i-value)
                 (it-expr stream starting-indent)
     (if (string= starting-indent i-new-indent)
@@ -614,9 +617,9 @@
                   (read-error "Dedent required after lone . and value line."))
               (list f-new-indent f-value)) ; final value of improper list
             (if (eq i-value empty-value)
-                (body stream i-new-indent)
+                (read-body stream i-new-indent)
                 (let-splitter (nxt-full-results nxt-new-indent nxt-value)
-                              (body stream i-new-indent)
+                              (read-body stream i-new-indent)
                   (list nxt-new-indent (conse i-value nxt-value)))))
         (list i-new-indent (list1e i-value))))) ; dedent - end list.
 
@@ -654,7 +657,7 @@
             (let ((new-indent (get-next-indent stream)))
               (if (indentation>p new-indent starting-indent)
                   (let-splitter (body-full-results body-new-indent body-value)
-                                (body stream new-indent)
+                                (read-body stream new-indent)
                     (list body-new-indent (my-append line-value body-value)))
                   (list new-indent (monify line-value)))))
           (t
@@ -673,7 +676,7 @@
                 (let ((new-indent (get-next-indent stream)))
                   (if (indentation>p new-indent starting-indent)
                     (let-splitter (body-full-results body-new-indent body-value)
-                                  (body stream new-indent)
+                                  (read-body stream new-indent)
                       (declare (ignore body-value))
                       (list body-new-indent empty-value))
                     (read-error "#;+EOL must be followed by indent"))))))
@@ -685,7 +688,7 @@
                 (let ((new-indent (get-next-indent stream)))
                   (cond
                     ((indentation>p new-indent starting-indent)
-                      (body stream new-indent))
+                      (read-body stream new-indent))
                     (t
                       (list new-indent empty-value))))))
           ((eq line-stopper 'sublist-marker)
@@ -704,7 +707,7 @@
                     (if (not (indentation>p new-indent starting-indent))
                         (read-error "Indent required after abbreviation."))
                     (let-splitter (ab-full-results ab-new-indent ab-value)
-                                  (body stream new-indent)
+                                  (read-body stream new-indent)
                       (list ab-new-indent
                         (append (list line-value) ab-value)))))
                 (let-splitter (ai-full-results ai-new-indent ai-value)
