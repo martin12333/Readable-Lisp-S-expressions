@@ -502,7 +502,7 @@
 ; Returns (stopper computed-value).
 ; The stopper may be 'normal, 'scomment (special comment),
 ; 'abbrevw (initial abbreviation), 'sublist-marker, or 'group-split-marker
-(defun line-exprs (stream)
+(defun line-exprs (stream indent)
   (let-splitter (basic-full-results basic-special basic-value)
                 (n-expr-first stream)
     ; (princ "DEBUG: line-exprs=") (write basic-full-results) (terpri)
@@ -513,7 +513,7 @@
           (hspaces stream)
           (if (not (lcomment-eolp (my-peek-char stream)))
               (let-splitter (rr-full-results rr-stopper rr-value)
-                            (rest-of-line stream)
+                            (rest-of-line stream indent)
                 (list rr-stopper (cons cl-results rr-value)))
               (list 'normal (list cl-results)))))
       ((eq basic-special 'period-marker)
@@ -529,7 +529,7 @@
         (hspaces stream)
         (if (not (lcomment-eolp (my-peek-char stream)))
             (let-splitter (br-full-results br-stopper br-value)
-                          (rest-of-line stream)
+                          (rest-of-line stream indent)
               (list br-stopper (cons basic-value br-value)))
             (list 'normal (list basic-value))))
       (t 
@@ -537,14 +537,14 @@
 
 ; Returns (stopper computed-value); stopper may be 'normal, etc.
 ; Read in one n-expr, then process based on whether or not it's special.
-(defun rest-of-line (stream)
+(defun rest-of-line (stream indent)
   (let-splitter (basic-full-results basic-special basic-value)
                 (n-expr stream)
     (cond
       ((or (eq basic-special 'scomment) (eq basic-special 'datum-commentw))
         (skippable basic-special stream)
         (if (not (lcomment-eolp (my-peek-char stream)))
-            (rest-of-line stream)
+            (rest-of-line stream indent)
             (list 'normal '())))
       ((eq basic-special 'collecting)
         (hspaces stream)
@@ -552,7 +552,7 @@
           (hspaces stream)
           (if (not (lcomment-eolp (my-peek-char stream)))
               (let-splitter (rr-full-results rr-stopper rr-value)
-                            (rest-of-line stream)
+                            (rest-of-line stream indent)
                 (list rr-stopper (cons cl-results rr-value)))
               (list 'normal (list cl-results)))))
       ((eq basic-special 'period-marker)
@@ -562,12 +562,23 @@
               (post-period stream))
             ; (list 'normal (list period-symbol)) ; To interpret as |.|
             (read-error "Cannot end line with '.'")))
-      ((not (eq basic-special 'normal)) (list basic-special '())) 
+      ((eq basic-special 'group-split-marker)
+        ; Local extension - allow \\ as line-continuation, a
+        ; capability useful in Common Lisp.
+        ; This is *NOT* a SRFI-110 requirement!!
+        (hspaces stream)
+        (if (lcomment-eolp (my-peek-char stream))
+          (let ((new-indent (get-next-indent stream)))
+            (if (string= new-indent indent)
+              (rest-of-line stream new-indent)
+              (read-error "Line continuation indentation does not match.")))
+          (list basic-special '())))
+      ((not (eq basic-special 'normal)) (list basic-special '()))
       ((char-hspacep (my-peek-char stream))
         (hspaces stream)
         (if (not (lcomment-eolp (my-peek-char stream)))
             (let-splitter (br-full-results br-stopper br-value)
-                          (rest-of-line stream)
+                          (rest-of-line stream indent)
               (list br-stopper (cons basic-value br-value)))
             (list 'normal (list basic-value))))
       (t (list 'normal (list basic-value))))))
@@ -593,25 +604,17 @@
 ; Returns (new-indent computed-value)
 (defun it-expr-real (stream starting-indent)
   (let-splitter (line-full-results line-stopper line-value)
-                (line-exprs stream)
+                (line-exprs stream starting-indent)
     ; (princ "DEBUG: it-expr-real: line-exprs result=") (write line-full-results) (terpri)
     (if (and (not (null line-value)) (not (eq line-stopper 'abbrevw)))
         ; Production line-exprs produced at least one n-expression:
         (cond
           ((eq line-stopper 'group-split-marker)
             (hspaces stream)
+            ; This error can't happen due to \\ line continuation extension,
+            ; but we will test it just in case:
             (if (lcomment-eolp (my-peek-char stream))
-                ; Local extension - allow \\ as line-continuation, a
-                ; capability more useful in Common Lisp than in Scheme.
-                ; To error out instead, replace with:
-                ; (read-error "Cannot follow split with end of line.")
-                (let ((new-indent (get-next-indent stream)))
-                  (if (string= new-indent starting-indent)
-                    (let-splitter (more-full-results more-new-indent more-value)
-                                  (it-expr stream new-indent)
-                      (list more-new-indent
-                        (my-append line-value more-value)))
-                    (read-error "Continue without same-indent line.")))
+                (read-error "Cannot follow split with end of line")
                 (list starting-indent (monify line-value))))
           ((eq line-stopper 'sublist-marker)
             (hspaces stream)

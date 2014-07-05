@@ -282,6 +282,63 @@ ab1 ab2
   '(aa1 (ab1 ab2))
 
 mytest
+  '(a (b c d e))
+  ' a
+    b c \\
+    d e
+
+mytest
+  '(a (b c d))
+  ' a
+    b c \\
+    d
+
+mytest
+  '(a b c (d e f (g h)))
+  ' a b c
+    d e \\
+    f $ g h
+
+mytest
+  '(a b c (d e f g))
+  ' a b c
+    d e \\
+    f $ g
+
+mytest
+  '(a b c (d e f g))
+  ' a b c
+    d e \\
+    ; Test1
+    f g
+
+mytest
+  '(a b c (d e f g))
+  ' a b c
+    d e \\ ; Test2
+    f g
+
+mytest
+  '(a b c (q e f . g))
+  ' a b c
+    q e \\ ; Test "."
+    f . g
+
+mytest
+  '(a b c (q e . z))
+  ' a b c
+    q e \\ ; Test "."
+    . z
+
+mytest
+  '(1 (2 3 4 5 6))
+  ' 1
+    2 3 \\
+    4 5 \\
+    6
+
+
+mytest
   179/104
   {11/13 + 7/8}
 
