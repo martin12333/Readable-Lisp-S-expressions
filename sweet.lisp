@@ -1,7 +1,7 @@
 ;;; sweet.lisp
 ;;; Implements sweet-expressions from the "readable" approach for Lisp.
 
-;;; Copyright (C) 2007-2013 by David A. Wheeler
+;;; Copyright (C) 2007-2014 by David A. Wheeler
 ;;;
 ;;; This software is released as open source software under the "MIT" license:
 ;;;
