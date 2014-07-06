@@ -124,7 +124,9 @@ But what happens to infix lists that aren't any of these?  The answer is that th
 
 Note that curly-infix-expressions intentionally do not force a particular precedence, nor do they automatically switch to infix operators recursively inside {...}. Many previous systems did that, but this turned out to interfere with many of Lisp's power (which needs homoiconicity and generality). It also does not attempt to guess when infix operators are used. [After many experiments with real problems, David A. Wheeler found that this rule works better for Lisps than those alternatives.](http://www.dwheeler.com/readable/version02.html)
 
-The main advantage of basic c-expressions is that they're really simple in concept, and very simple to implement.  They have almost no chance of conflicting with anything else; they only redefine "{" and "}" in the readtable, for example.  In particular, that's all there is to basic c-expressions, they're really easy.
+That's it!  That's all there is to basic c-expressions, they're really easy.
+
+A big advantage of basic c-expressions is that they're really simple in concept and very simple to implement.  The sample implementation file basic-curly.lisp implements this in only 64 lines of (non-comment) code; if you don't want to bring in a separate library, you could simply copy that code into your program.  They also have practically no chance of conflicting with anything else; they only redefine "{" and "}" in the readtable, for example.
 
 You can disable basic curly-expressions (or any other readable notation) by just running this, which restores the readtable that was in effect before you enabled a readable notation:
 
@@ -134,13 +136,13 @@ You can disable basic curly-expressions (or any other readable notation) by just
 Using full curly-infix
 ======================
 
+Basic curly-infix provides useful features, but we have additional tiers that provide more improvements to standard Lisp syntax.  Let's move on to "full" curly-infix.
+
 You can enable full curly-infix by running:
 
     (readable:enable-full-curly-infix)
 
-In full curly-infix, the list elements inside {...} are (recursively) neoteric-expressions... but only inside some {...}. 
-
-In neoteric-expressions, an expression of the form f(...) is treated the same as (f ...).  Thus, inside a curly-infix list, cos(0) is treated the same as (cos 0), which evaluates to 1.  So we can do this:
+In full curly-infix, the list elements inside {...} are (recursively) neoteric-expressions.   In neoteric-expressions, an expression of the form f(...) is treated the same as (f ...).  Thus, inside a curly-infix list, cos(0) is treated the same as (cos 0), which evaluates to 1.  So we can do this:
 
     {cos(0) + 1}
 
