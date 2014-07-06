@@ -220,6 +220,11 @@
     (and (> len1 len2)
          (string= indentation2 (subseq indentation1 0 len2)))))
 
+(defun indentation>=p (indentation1 indentation2)
+  (or
+    (string= indentation1 indentation2)
+    (indentation>p indentation1 indentation2)))
+
 ; Return t if char is space or tab.
 (declaim (inline char-hspacep))
 (defun char-hspacep (char)
@@ -585,9 +590,9 @@
         (hspaces stream)
         (if (lcomment-eolp (my-peek-char stream))
           (let ((new-indent (get-next-indent stream)))
-            (if (string= new-indent indent)
-              (rest-of-line stream new-indent)
-              (read-error "Line continuation indentation does not match.")))
+            (if (indentation>=p new-indent indent)
+              (rest-of-line stream indent)
+              (read-error "Line continuation indentation is inconsistent.")))
           (list basic-special '())))
       ((not (eq basic-special 'normal)) (list basic-special '()))
       ((char-hspacep (my-peek-char stream))
