@@ -1697,9 +1697,15 @@
   (: indentation>? (string string --> boolean))
   (define (indentation>? indentation1 indentation2)
     (let ((len1 (string-length indentation1))
-            (len2 (string-length indentation2)))
+          (len2 (string-length indentation2)))
       (and (> len1 len2)
              (string=? indentation2 (substring indentation1 0 len2)))))
+
+  (: indentation>=? (string string --> boolean))
+  (define (indentation>=? indentation1 indentation2)
+    (or
+      (string=? indentation1 indentation2)
+      (indentation>? indentation1 indentation2)))
 
   ; Does character "c" begin a line comment (;) or end-of-line?
   (define initial-comment-eol (list #\; #\newline carriage-return))
@@ -2083,9 +2089,9 @@
           (hspaces port)
           (if (lcomment-eol? (my-peek-char port))
             (let ((new-indent (get-next-indent port)))
-              (if (string=? new-indent indent)
-                (rest-of-line port new-indent)
-                (read-error "Line continuation indentation does not match.")))
+              (if (indentation>=? new-indent indent)
+                (rest-of-line port indent)
+                (read-error "Line continuation indentation is inconsistent.")))
             (list basic-special '())))
         ((not (eq? basic-special 'normal)) (list basic-special '()))
         ((char-hspace? (my-peek-char port))
