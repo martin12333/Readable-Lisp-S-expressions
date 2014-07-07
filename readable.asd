@@ -40,8 +40,18 @@
            #:my-char-code-limit
            #:disable-readable
            #:readable-parse-error #:*noisy*
-           #:*readable-write*  ; Write format for write-readable etc.
-           #:$nfx$ #:$bracket-apply$))
+           #:$nfx$ #:$bracket-apply$
+           #:*print-notation*  ; Write format for write-readable etc.
+           #:write-readable
+           #:prin1-readable
+           #:princ-readable
+           #:print-readable
+           #:pprint-readable
+           #:write-to-string-readable
+           #:prin1-to-string-readable
+           #:princ-to-string-readable
+           #:stringify-object-readable
+           #:output-object-readable))
 
 (in-package #:readable-asd)
 
@@ -56,6 +66,7 @@
   ; :serial t ;; the dependencies are (no longer) linear.
   :components
     ((:file "basic-curly")
+     (:file "print")
      (:file "neoteric" :depends-on ("basic-curly"))
      (:file "backquote") ; Re-implements backquote, as needed by sweet
      (:file "sweet" :depends-on ("basic-curly" "neoteric" "backquote"))))
