@@ -40,6 +40,7 @@
            #:my-char-code-limit
            #:disable-readable
            #:readable-parse-error #:*noisy*
+           #:*readable-write*  ; Write format for write-readable etc.
            #:$nfx$ #:$bracket-apply$))
 
 (in-package #:readable-asd)

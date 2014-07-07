@@ -52,7 +52,8 @@
 (cl:in-package :readable)
 
 (defvar *original-readtable* (copy-readtable) "Saved readtable")
-(defvar *readable-active* nil "Value of the active readable notation")
+(defvar *readable-active* nil "Value of active readable notation for reading")
+(defvar *readable-write* nil "Value of readable notation for writing")
 
 ; Utility functions to implement the simple infix system:
 
@@ -119,9 +120,11 @@
       (setq *original-readtable* *readtable*)
       (setq *readtable* (copy-readtable))
       (setq *readable-active* t)
+      (setq *readable-write* into)
       t)
     (t ; We are changing from one readable mode to another; recover readtable
       (setq *readtable* (copy-readtable *original-readtable*))
+      (setq *readable-write* into)
       t)))
 
 (defun enable-basic-curly ()
