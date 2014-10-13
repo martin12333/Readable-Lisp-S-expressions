@@ -665,6 +665,8 @@
                                 (read-body stream new-indent)
                     (list body-new-indent (my-append line-value body-value)))
                   (list new-indent (monify line-value)))))
+          ((eof-objectp (my-peek-char stream))
+            (list " " (monify line-value)))
           (t
             (read-error "Unexpected text after n-expression")))
         ; Here, line-exprs begins with something special like GROUP-SPLIT:
