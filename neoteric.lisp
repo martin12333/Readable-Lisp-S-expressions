@@ -61,9 +61,10 @@
 
 ; Work around SBCL nonsense that makes its "defconstant" useless.
 ; See: http://www.sbcl.org/manual/Defining-Constants.html
-(defmacro define-constant (name value &optional doc)
-  `(defconstant ,name (if (boundp ',name) (symbol-value ',name) ,value)
-                      ,@(when doc (list doc))))
+; This is disabled, because we already define it in "print".
+; (defmacro define-constant (name value &optional doc)
+;  `(defconstant ,name (if (boundp ',name) (symbol-value ',name) ,value)
+;                      ,@(when doc (list doc))))
 
 ; Marker for eof
 (define-constant my-eof-marker (make-symbol "my-eof-marker"))

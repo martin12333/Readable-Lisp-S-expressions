@@ -67,7 +67,7 @@
   :components
     ((:file "basic-curly")
      (:file "print")
-     (:file "neoteric" :depends-on ("basic-curly"))
+     (:file "neoteric" :depends-on ("basic-curly" "print"))
      (:file "backquote") ; Re-implements backquote, as needed by sweet
      (:file "sweet" :depends-on ("basic-curly" "neoteric" "backquote"))))
 
