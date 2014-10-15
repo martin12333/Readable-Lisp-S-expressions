@@ -6,11 +6,19 @@
 ;;;; derived from the CMU CL system, which was written at
 ;;;; Carnegie Mellon University and released into the public domain.
 ;;;; Thus, this is derived from public domain code.
+;;;; Much of the rest of the code is derived from the Scheme implementation
+;;;; of the readable notation, which is also licensed under the MIT license.
 
 ;;;; The key function here is output-object-readable; outer functions call it,
-;;;; and internal printing functions recurse back to it.
+;;;; and internal printing functions keep recursing back to it.
 
 (cl:in-package :readable)
+
+; Work around SBCL nonsense that makes its "defconstant" useless.
+; See: http://www.sbcl.org/manual/Defining-Constants.html
+(defmacro define-constant (name value &optional doc)
+  `(defconstant ,name (if (boundp ',name) (symbol-value ',name) ,value)
+                      ,@(when doc (list doc))))
 
 (defvar *suppress-print-errors* nil
   #+sb-doc
@@ -20,18 +28,9 @@ variable: an unreadable object representing the error is printed instead.")
 ; Track errors in output-object-readable:
 (defvar *readable-in-print-error* nil)
 
-; Track previously-printed items
-(defvar *circularity-hash-table* nil)
-
 ; TODO: Determine output stream.  Just return stream provided for now.
 (defun out-synonym-of (stream)
   stream)
-
-; Work around SBCL nonsense that makes its "defconstant" useless.
-; See: http://www.sbcl.org/manual/Defining-Constants.html
-(defmacro define-constant (name value &optional doc)
-  `(defconstant ,name (if (boundp ',name) (symbol-value ',name) ,value)
-                      ,@(when doc (list doc))))
 
 (defun allow-neoteric ()
   (member *print-notation* '(neoteric sweet)))
@@ -127,30 +126,27 @@ variable: an unreadable object representing the error is printed instead.")
   (mapc (lambda (c) (princ c stream))
     (cadr (assoc (car x) abbreviations))))
 
-
-; Return list x's *contents* represented as a list of characters.
-; Each one must use neoteric-expressions, space-separated;
-; it will be surrounded by (...) so no indentation processing is relevant.
-(defun n-write-list-contents (x stream)
+; Write rest of list x's contents.
+(defun write-list-contents-rest (x stream)
   (cond
     ((null x) (values))
+    ((check-for-circularity x)
+      (write-string " . " stream)
+      (output-object-readable x stream))
     ((consp x)
+      (princ " " stream)
       (output-object-readable (car x) stream)
-      (cond ((not (null (cdr x)))
-        (princ " " stream)
-        (n-write-list-contents (cdr x) stream))))
+      (write-list-contents-rest (cdr x) stream))
     (t
-      (princ ". " stream)
+      (princ " . " stream)
       (output-object-readable x stream))))
 
-(defun c-write-list-contents (x stream)
+(defun write-list-contents (x stream)
   (cond
     ((null x) (values))
     ((consp x)
       (output-object-readable (car x) stream)
-      (cond ((not (null (cdr x)))
-        (princ " " stream)
-        (c-write-list-contents (cdr x) stream))))
+      (write-list-contents-rest (cdr x) stream))
     (t
       (princ ". " stream)
       (output-object-readable x stream))))
@@ -176,13 +172,11 @@ variable: an unreadable object representing the error is printed instead.")
   (princ "{" stream)
   (if (list2p x)
     (progn
-      (n-write-list-contents x stream)
+      (write-list-contents x stream)
       (princ "}" stream))
     (progn
       (output-object-readable (cadr x) stream)
       (infix-tail (car x) (cddr x) stream))))
-
-;;;; NOTE: Keep recursing back to output-object-readable
 
 ;;; Main routine for outputting objects in current readable notation.
 ;;; Output OBJECT to STREAM observing all printer control variables
@@ -190,7 +184,6 @@ variable: an unreadable object representing the error is printed instead.")
 ;;; then the pretty printer will be used for any components of OBJECT,
 ;;; just not for OBJECT itself.
 (defun output-ugly-object-readable (object stream)
-  ; (princ "DEBUG: output-ugly-object-readable") (princ object)
   (typecase object
     (list
       (cond
@@ -201,12 +194,16 @@ variable: an unreadable object representing the error is printed instead.")
           (output-object-readable (cadr object) stream))
         ((represent-as-inline-infixp object)              ; Format {a + b}
           (princ "{" stream)
-          (output-object-readable (cadr object) stream)
-          (infix-tail (car object) (cddr object) stream))
+          (let ((*print-notation*
+                  (if (eq *print-notation* 'full-curly-infix)
+                      'neoteric
+                      *print-notation*)))
+               (output-object-readable (cadr object) stream)
+               (infix-tail (car object) (cddr object) stream)))
         ((and (allow-neoteric)
               (long-and-boringp object boring-length))    ; Format (a b c ...)
           (princ "(" stream)
-          (n-write-list-contents object stream)
+          (write-list-contents object stream)
           (princ ")" stream))
         ((and (allow-neoteric)                            ; Format f{...}
               (symbolp (car object))
@@ -219,11 +216,11 @@ variable: an unreadable object representing the error is printed instead.")
               (symbolp (car object)))
           (output-object-readable (car object) stream)
           (princ "(" stream)
-          (n-write-list-contents (cdr object) stream)
+          (write-list-contents (cdr object) stream)
           (princ ")" stream))
         (t                                                ; Format (1 2 3 ...)
           (princ "(" stream)
-          (c-write-list-contents object stream)
+          (write-list-contents object stream)
           (princ ")" stream))))
     (symbol
       ; Workaround: clisp displays symbols oddly if readtable set
@@ -241,15 +238,162 @@ variable: an unreadable object representing the error is printed instead.")
     (t
       (write object :stream stream))))
 
-; TODO: Implement.
-; (defun check-for-circularity (object t)
-;  (values nil :initiate))
-(defun handle-circularity (marker stream)
-  nil)
-(defun compound-object-p (object)
-  nil)
+; TODO: Implement fully.
+;;; Could this object contain other objects? (This is important to
+;;; the implementation of things like *PRINT-CIRCLE* and the dumper.)
+(defun compound-object-p (x)
+  (or (consp x)
+      ; (%instancep x)
+      (typep x '(array t *))))
 (defun setup-printer-state ()
   nil)
+
+
+;;;; circularity detection stuff
+
+;;; When *PRINT-CIRCLE* is T, this gets bound to a hash table that
+;;; (eventually) ends up with entries for every object printed. When
+;;; we are initially looking for circularities, we enter a T when we
+;;; find an object for the first time, and a 0 when we encounter an
+;;; object a second time around. When we are actually printing, the 0
+;;; entries get changed to the actual marker value when they are first
+;;; printed.
+(defvar *circularity-hash-table* nil)
+
+;;; When NIL, we are just looking for circularities. After we have
+;;; found them all, this gets bound to 0. Then whenever we need a new
+;;; marker, it is incremented.
+(defvar *circularity-counter* nil)
+
+;;; Check to see whether OBJECT is a circular reference, and return
+;;; something non-NIL if it is. If ASSIGN is true, reference
+;;; bookkeeping will only be done for existing entries, no new
+;;; references will be recorded. If ASSIGN is true, then the number to
+;;; use in the #n= and #n# noise is assigned at this time.
+;;;
+;;; Note: CHECK-FOR-CIRCULARITY must be called *exactly* once with
+;;; ASSIGN true, or the circularity detection noise will get confused
+;;; about when to use #n= and when to use #n#. If this returns non-NIL
+;;; when ASSIGN is true, then you must call HANDLE-CIRCULARITY on it.
+;;; If CHECK-FOR-CIRCULARITY returns :INITIATE as the second value,
+;;; you need to initiate the circularity detection noise, e.g. bind
+;;; *CIRCULARITY-HASH-TABLE* and *CIRCULARITY-COUNTER* to suitable values
+;;; (see #'OUTPUT-OBJECT for an example).
+;;;
+;;; Circularity detection is done in two places, OUTPUT-OBJECT and
+;;; WITH-CIRCULARITY-DETECTION (which is used from PPRINT-LOGICAL-BLOCK).
+;;; These checks aren't really redundant (at least I can't really see
+;;; a clean way of getting by with the checks in only one of the places).
+;;; This causes problems when mixed with pprint-dispatching; an object is
+;;; marked as visited in OUTPUT-OBJECT, dispatched to a pretty printer
+;;; that uses PPRINT-LOGICAL-BLOCK (directly or indirectly), leading to
+;;; output like #1=#1#. The MODE parameter is used for detecting and
+;;; correcting this problem.
+(defun check-for-circularity (object &optional assign (mode t))
+  (cond ((null *print-circle*)
+         ;; Don't bother, nobody cares.
+         nil)
+        ((null *circularity-hash-table*)
+          (values nil :initiate))
+        ((null *circularity-counter*)
+         (ecase (gethash object *circularity-hash-table*)
+           ((nil)
+            ;; first encounter
+            (setf (gethash object *circularity-hash-table*) mode)
+            ;; We need to keep looking.
+            nil)
+           ((:logical-block)
+            (setf (gethash object *circularity-hash-table*)
+                  :logical-block-circular)
+            t)
+           ((t)
+            (cond ((eq mode :logical-block)
+                   ;; We've seen the object before in output-object, and now
+                   ;; a second time in a PPRINT-LOGICAL-BLOCK (for example
+                   ;; via pprint-dispatch). Don't mark it as circular yet.
+                   (setf (gethash object *circularity-hash-table*)
+                         :logical-block)
+                   nil)
+                  (t
+                   ;; second encounter
+                   (setf (gethash object *circularity-hash-table*) 0)
+                   ;; It's a circular reference.
+                   t)))
+           ((0 :logical-block-circular)
+            ;; It's a circular reference.
+            t)))
+        (t
+         (let ((value (gethash object *circularity-hash-table*)))
+           (case value
+             ((nil t :logical-block)
+              ;; If NIL, we found an object that wasn't there the
+              ;; first time around. If T or :LOGICAL-BLOCK, this
+              ;; object appears exactly once. Either way, just print
+              ;; the thing without any special processing. Note: you
+              ;; might argue that finding a new object means that
+              ;; something is broken, but this can happen. If someone
+              ;; uses the ~@<...~:> format directive, it conses a new
+              ;; list each time though format (i.e. the &REST list),
+              ;; so we will have different cdrs.
+              nil)
+             ;; A circular reference to something that will be printed
+             ;; as a logical block. Wait until we're called from
+             ;; PPRINT-LOGICAL-BLOCK with ASSIGN true before assigning the
+             ;; number.
+             ;;
+             ;; If mode is :LOGICAL-BLOCK and assign is false, return true
+             ;; to indicate that this object is circular, but don't assign
+             ;; it a number yet. This is neccessary for cases like
+             ;; #1=(#2=(#2# . #3=(#1# . #3#))))).
+             (:logical-block-circular
+              (cond ((and (not assign)
+                          (eq mode :logical-block))
+                     t)
+                    ((and assign
+                          (eq mode :logical-block))
+                     (let ((value (incf *circularity-counter*)))
+                       ;; first occurrence of this object: Set the counter.
+                       (setf (gethash object *circularity-hash-table*) value)
+                       value))
+                    (t
+                     nil)))
+             (0
+              (if (eq assign t)
+                  (let ((value (incf *circularity-counter*)))
+                    ;; first occurrence of this object: Set the counter.
+                    (setf (gethash object *circularity-hash-table*) value)
+                    value)
+                  t))
+             (t
+              ;; second or later occurrence
+              (- value)))))))
+
+;;; Handle the results of CHECK-FOR-CIRCULARITY. If this returns T then
+;;; you should go ahead and print the object. If it returns NIL, then
+;;; you should blow it off.
+(defun handle-circularity (marker stream)
+  (case marker
+    (:initiate
+     ;; Someone forgot to initiate circularity detection.
+     (let ((*print-circle* nil))
+       (error "trying to use CHECK-FOR-CIRCULARITY when ~
+               circularity checking isn't initiated")))
+    ((t :logical-block)
+     ;; It's a second (or later) reference to the object while we are
+     ;; just looking. So don't bother groveling it again.
+     nil)
+    (t
+     (write-char #\# stream)
+     (let ((*print-base* 10) (*print-radix* nil))
+       (cond ((minusp marker)
+              (write (- marker) :stream stream)
+              (write-char #\# stream)
+              nil)
+             (t
+              (write marker :stream stream)
+              (write-char #\= stream)
+              t))))))
+
 
 ;;; Objects whose print representation identifies them EQLly don't
 ;;; need to be checked for circularity.
@@ -262,10 +406,7 @@ variable: an unreadable object representing the error is printed instead.")
 ;;; Output OBJECT to STREAM observing all printer control variables.
 ;;; This code is straight from SBCL, including its hairiness.
 (defun output-object-readable (object stream)
-  (declare (ignore *circularity-counter*))
-  ; (princ "DEBUG: Begin output-object-readable")
   (labels ((print-it (stream)
-             ; (princ "DEBUG: Within print-it")
              (if *print-pretty*
                  ; TODO: (sb!pretty:output-pretty-object object stream)
                  (output-ugly-object-readable object stream)
