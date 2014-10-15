@@ -459,6 +459,18 @@ If you aren't familiar with Lisp, you may say "what's the big deal"? After all, 
 But that's the point - the results look much more familiar (and thus are more acceptable to non-Lispers), but all of Lisp's more exotic capabilities still work. You can use techniques like quoting (') and quasi-quoting (\`) with lifting (,), which enable powerful capabilities. Many people have created "infix" notations with Lisp-like languages before, but they all failed to work with many other Lisp features. We think this approach succeeds instead, where others before have failed.
 
 
+Writing readable expressions
+============================
+
+The "develop" branch includes additional procedures to print expressions using these notations, which are intentionally similar to the standard Common Lisp procedures.  Here's a preview of its current capability (which may shift slightly before release).
+
+For example, "write-readable" is a procedure that writes out its first parameter in a readable notation.  It takes all the optional parameters of write (such as :stream), plus the optional ":notation" parameter for controlling the output notation.  The ":notation" parameter can be 'basic-curly-infix, 'full-curly-infix, 'neoteric, or 'sweet; by default the current notation is printed.  "Write-readable" will always use at least basic-curly-infix notation.  Circularity detection is available; use ":circle t" to enable it.
+
+It also includes similar procedures print1-readable, princ-readable, and print-readable.  You can write to strings instead of the current output with write-to-string-readable, prin1-to-string-readable, and princ-to-string-readable.
+
+Currently the implementation can write out atoms and conses (including lists).  Not all Common Lisp types are currently supported; patches welcome.  Pretty-printing is not supported, so there is no indented output; instead, neoteric notation is used.
+
+
 Closing Remarks
 ===============
 
