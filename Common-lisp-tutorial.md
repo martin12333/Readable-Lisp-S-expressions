@@ -462,13 +462,62 @@ But that's the point - the results look much more familiar (and thus are more ac
 Writing readable expressions
 ============================
 
-The "develop" branch includes additional procedures to print expressions using these notations, which are intentionally similar to the standard Common Lisp procedures.  Here's a preview of its current capability (which may shift slightly before release).
+Version 1.0.5 adds additional procedures in Common Lisp to print expressions using these readable notations.  That way, you can easily print these notations as well as read them.  Their interfaces are intentionally similar to the standard Common Lisp procedures, so they should be easy to use.
 
-For example, "write-readable" is a procedure that writes out its first parameter in a readable notation.  It takes all the optional parameters of write (such as :stream), plus the optional ":notation" parameter for controlling the output notation.  The ":notation" parameter can be 'basic-curly-infix, 'full-curly-infix, 'neoteric, or 'sweet; by default the current notation is printed.  "Write-readable" will always use at least basic-curly-infix notation.  Circularity detection is available; use ":circle t" to enable it.
+Procedure "write-readable" writes out its first parameter in a readable notation, similar to the standard procedure write.  It takes all the optional parameters of write (such as :stream), plus the optional ":notation" parameter for controlling the output notation.  By default, the output notation is the same as the input notation.  The ":notation" parameter can be 'basic-curly-infix, 'full-curly-infix, 'neoteric, or 'sweet.  "Write-readable" will always use at least basic-curly-infix notation.  Circularity detection is available; use ":circle t" to enable it.  It also includes similar procedures print1-readable, princ-readable, and print-readable.  You can write to strings instead of the current output with write-to-string-readable, prin1-to-string-readable, and princ-to-string-readable.
 
-It also includes similar procedures print1-readable, princ-readable, and print-readable.  You can write to strings instead of the current output with write-to-string-readable, prin1-to-string-readable, and princ-to-string-readable.
+The current implementation directly supports circularity detection in cons cells.  The implementation directly supports the following Common Lisp types: cons, symbol, number, character, pathname, string, and bit-vector.  Note that the "cons" is fully supported, which means that proper lists, dotted lists, and circular lists are all supported. Other types are currently partly supported by calling the underlying "write" implementation; this includes the types array (including vector), hash-table, function, readtable, package, stream, random-state, condition, and restart, as well as those created by defstruct, define-condition, or defclass.  In most cases this partial support is more than enough, but you should be aware of its limitations.   First, the contents of partially-supported types will be presented in traditional Lisp notation instead of a more readable notation (though it will still be a valid format).  Also, if you use circularity detection, the circularity detection in any partially-supported types will be separate and will not synchronize with the detection in fully-supported types. There are merely limitations of the current implementation, not of the fundamental concept.  Patches are welcome!
 
-Currently the implementation can write out atoms and conses (including lists).  Not all Common Lisp types are currently supported; patches welcome.  Pretty-printing is not supported, so there is no indented output; instead, neoteric notation is used.
+Here are some examples, presuming that you use-package(:readable) first and that the current notation is neoteric or sweet:
+
+    write-readable '(+ 1 2)       ; Writes {1 + 2}
+    write-readable '(+ 1 (* 3 4)) ; Writes {1 + {3 * 4}}
+    write-readable '(COS X)       ; Writes COS(X)
+    write-readable '(LOG 10 100)  ; Writes LOG(10 100)
+    write-readable '(COS (* 2 X)) ; Writes COS{2 * X}
+
+The clisp implementation of "write" displays symbols in a really ugly way when the readtable includes letters (as it does when neoteric or sweet-expression reading is active).  The "write-readable" and related routines work around this problem as well.
+
+
+Syntax for basic writing procedures
+-----------------------------------
+
+**write-readable** object &key array base case circle escape gensym length level lines miser-width pprint-dispatch pretty radix readably right-margin stream notation => object
+
+**prin1-readable** object &optional output-stream => object
+
+**princ-readable** object &optional output-stream => object
+
+**print-readable** object &optional output-stream => object
+
+
+Arguments and values are the same as for write, with the addition of "notation" in some cases.
+write-readable is the general entry point to the readable Lisp printer.  The "notation" corresponds to \*print-notation\*.
+
+prin1-readable produces output suitable for input to read. It binds \*print-escape\* to true.
+
+princ-readable is just like prin1 except that the output has no escape characters. It binds \*print-escape\* to false and \*print-readably\* to false. The general rule is that output from princ is intended to look good to people, while output from prin1 is intended to be acceptable to read.
+
+print-readable is just like prin1-readable except that the printed representation of object is preceded by a newline and followed by a space.
+
+Syntax for string writing procedures
+-----------------------------------
+
+**write-to-string-readable** object &key array base case circle escape gensym length level lines miser-width pprint-dispatch pretty radix readably right-margin => string
+
+**prin1-to-string-readable** object => string
+
+**princ-to-string-readable** object => string
+
+write-to-string-readable, prin1-to-string-readable, and princ-to-string-readable are used to create a string consisting of the printed representation of object in readable notation. Object is effectively printed as if by write, prin1, or princ, respectively, and the characters that would be output are made into a string.
+
+write-to-string-readable is the general output function.  prin1-to-string acts like write-to-string with :escape t.  princ-to-string acts like write-to-string with :escape nil :readably nil. As a result, no escape characters are written.
+
+
+sweet-clisp REPL
+----------------
+
+The "sweet-clisp" program, if you download the entire package, by default uses write-readable to display REPL results. The variable \*repl-write-readable\* controls this; by default it is t, so write-readable is used; if it is nil, then the standard write routine is used.
 
 
 Closing Remarks
