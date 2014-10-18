@@ -80,6 +80,8 @@ override='
 ; Temporarily unlocks packages
 (ext:without-package-lock ("SYSTEM" "SYS") 
 
+(defvar *repl-write-readable* t)
+
 (defun sys::read-form (ostream istream prompt &optional (command-list nil))
   ; (format t "DEBUG: Entering rewritten read-form~%")
   ; (format t "command-list= ~S ~%~%" command-list)
@@ -141,9 +143,10 @@ override='
            (let ((ostream *standard-output*))
              (fresh-line ostream)
              (when (consp vals)
-               ; (write (car vals) :stream ostream)
-               (readable:write-readable (car vals)
+               (if *repl-write-readable*
+                   (readable:write-readable (car vals)
                                      :escape t :circle t :stream ostream)
+                   (write (car vals) :stream ostream))
                (do ((L (cdr vals) (cdr L)))
                    ((atom L))
                  (write-string " ;" ostream)
