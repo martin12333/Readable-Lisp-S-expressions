@@ -282,8 +282,155 @@ ab1 ab2
   '(aa1 (ab1 ab2))
 
 mytest
+  '(a (b c d e))
+  ' a
+    b c \\
+    d e
+
+mytest
+  '(a (b c d))
+  ' a
+    b c \\
+    d
+
+mytest
+  '(a b c (d e f (g h)))
+  ' a b c
+    d e \\
+    f $ g h
+
+mytest
+  '(a b c (d e f g))
+  ' a b c
+    d e \\
+    f $ g
+
+mytest
+  '(a b c (d e f g))
+  ' a b c
+    d e \\
+    ; Test1
+    f g
+
+mytest
+  '(a b c (d e f g))
+  ' a b c
+    d e \\ ; Test2
+    f g
+
+mytest
+  '(a b c (q e f . g))
+  ' a b c
+    q e \\ ; Test "."
+    f . g
+
+mytest
+  '(a b c (q e . z))
+  ' a b c
+    q e \\ ; Test "."
+    . z
+
+mytest
+  '(1 (2 3 4 5 6))
+  ' 1
+    2 3 \\
+    4 5 \\
+    6
+
+mytest
   179/104
   {11/13 + 7/8}
+
+
+; Now test writing back.
+
+mytest
+  "THIS-IS-A-TEST"
+  write-to-string-readable 'THIS-IS-A-TEST
+
+mytest
+  "1"
+  write-to-string-readable 1
+
+mytest
+  "(1)"
+  write-to-string-readable '(1)
+
+mytest
+  "(1 2)"
+  write-to-string-readable '(1 2)
+
+mytest
+  "(1 2 3)"
+  write-to-string-readable '(1 2 3)
+
+mytest
+  "(AA)"
+  write-to-string-readable '(AA) :notation 'basic-curly-infix
+
+mytest
+  "AA()"
+  write-to-string-readable '(AA)
+
+mytest
+  "AA(BB)"
+  write-to-string-readable '(AA BB)
+
+mytest
+  "AA(BB CC)"
+  write-to-string-readable '(AA BB CC)
+
+mytest
+  "(A B C D E F G H I J K L M N O P Q R S T U V)"
+  write-to-string-readable '(A B C D E F G H I J K L M N O P Q R S T U V)
+
+mytest
+  "(A B C D E F G H I J K L M N O P Q R S T U V . Z)"
+  write-to-string-readable '(A B C D E F G H I J K L M N O P Q R S T U V . Z)
+
+mytest
+  "{4 + 5}"
+  write-to-string-readable '(+ 4 5)
+
+mytest
+  "{4 + 5 + 6}"
+  write-to-string-readable '(+ 4 5 6)
+
+mytest
+  "{A <= B}"
+  write-to-string-readable '(<= A B)
+
+mytest
+  "{4 + {5 * 6}}"
+  write-to-string-readable '(+ 4 (* 5 6))
+
+mytest
+  "{F(X) + 4 + 5 + 6}"
+  write-to-string-readable '(+ (f x) 4 5 6)
+
+mytest
+  "FOO(BAR {1 + 2})"
+  write-to-string-readable '(FOO BAR (+ 1 2))
+
+mytest
+  "SPAM(. EGGS)"
+  write-to-string-readable '(SPAM . EGGS)
+
+setq x '((AAA BBB CCC) . W)
+setq x rplacd(x x)
+
+mytest
+  "#1=(AAA(BBB CCC) . #1#)"
+  write-to-string-readable x :circle t
+
+
+setq z '(1 2)
+rplaca(z z)
+rplacd(z z)
+
+mytest
+  "#1=(#1# . #1#)"
+  write-to-string-readable z :circle t
 
 (disable-readable)
 (princ "Tests complete!")

@@ -52,7 +52,8 @@
 (cl:in-package :readable)
 
 (defvar *original-readtable* (copy-readtable) "Saved readtable")
-(defvar *readable-active* nil "Value of the active readable notation")
+(defvar *readable-active* nil "Value of active readable notation for reading")
+(defvar *print-notation* nil "Value of readable notation for printing")
 
 ; Utility functions to implement the simple infix system:
 
@@ -112,6 +113,7 @@
 ; Enable setup to transition into "into":
 ; If we're already in mode "into" return false (nil) and do nothing.
 ; Otherwise, get it ready to transition to the new mode and return true.
+; If we transition, set *print-notation* to the new notation.
 (defun setup-enable (into)
   (cond
     ((eq *readable-active* into) nil) ; Do nothing.
@@ -119,9 +121,11 @@
       (setq *original-readtable* *readtable*)
       (setq *readtable* (copy-readtable))
       (setq *readable-active* t)
+      (setq *print-notation* into)
       t)
     (t ; We are changing from one readable mode to another; recover readtable
       (setq *readtable* (copy-readtable *original-readtable*))
+      (setq *print-notation* into)
       t)))
 
 (defun enable-basic-curly ()

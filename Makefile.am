@@ -297,7 +297,7 @@ pkg_asd_file=readable.asd
 
 if INSTALL_COMMON_LISP_LIB
 dist_common_lisp_source_pkg_DATA = \
- basic-curly.lisp neoteric.lisp backquote.lisp sweet.lisp
+ basic-curly.lisp neoteric.lisp backquote.lisp sweet.lisp print.lisp
 
 dist_common_lisp_source_pkg_DATA += $(pkg_asd_file)
 

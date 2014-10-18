@@ -1,7 +1,7 @@
 ;;; kernel.scm
 ;;; Implementation of the sweet-expressions project by readable mailinglist.
 ;;;
-;;; Copyright (C) 2005-2013 by David A. Wheeler and Alan Manuel K. Gloria
+;;; Copyright (C) 2005-2014 by David A. Wheeler and Alan Manuel K. Gloria
 ;;;
 ;;; This software is released as open source software under the "MIT" license:
 ;;;
@@ -1697,9 +1697,15 @@
   (: indentation>? (string string --> boolean))
   (define (indentation>? indentation1 indentation2)
     (let ((len1 (string-length indentation1))
-            (len2 (string-length indentation2)))
+          (len2 (string-length indentation2)))
       (and (> len1 len2)
              (string=? indentation2 (substring indentation1 0 len2)))))
+
+  (: indentation>=? (string string --> boolean))
+  (define (indentation>=? indentation1 indentation2)
+    (or
+      (string=? indentation1 indentation2)
+      (indentation>? indentation1 indentation2)))
 
   ; Does character "c" begin a line comment (;) or end-of-line?
   (define initial-comment-eol (list #\; #\newline carriage-return))
@@ -1863,7 +1869,9 @@
               "^"))
         (else (list->string indentation-as-list)))))
 
-  ; Implement (scomment hs | datum-commentw hs n-expr hs)
+  ; Read and throw away "skippable" content (text that is semantically the
+  ; same as whitespace but is complex).  This implements the sequence:
+  ;   (scomment hs | datum-commentw hs n-expr hs)
   (: skippable (symbol input-port -> . *)) ; FIXME: incomplete result type
   (define (skippable stopper port)
     (cond
@@ -1913,9 +1921,12 @@
       ((null? (cdr x)) (car x))
       (else x)))
 
+  ; Read the contents of a collecting list and return it.
+  ; Precondition: Have already read collecting start and horizontal spaces.
+  ; Postcondition: Consumed the matching COLLECTING_END.
   ; Return contents (value) of collecting-content.  It does *not* report a
   ; stopper or ending indent, because it is *ONLY* stopped by collecting-end
-  (: collecting-content (input-port -> *)) ; ??? doesn't it return :reader-token: ???
+  (: collecting-content (input-port -> *))
   (define (collecting-content port)
     (let* ((c (my-peek-char port)))
       (cond
@@ -1971,6 +1982,7 @@
             (else ; We found a stopper, return it with the value from "full"
               (list n-stopper (cadr full)))))))
 
+  ; Read input after a lone ".", normally exactly one datum.
   ; Returns (stopper value-after-period)
   (: post-period (input-port -> :reader-token:))
   (define (post-period port)
@@ -1995,11 +2007,17 @@
               (list pn-stopper (list period-symbol)))))
         (list 'normal period-symbol))) ; Empty branch.
 
+
+  ; Read the 1+ n-expressions on one line, and return them as a list.
+  ; If there is exactly one n-expression on the line,
+  ; it returns a list of exactly one item.
+  ; Precondition: At beginning of line after indent
+  ; Postcondition: At unconsumed EOL
   ; Returns (stopper computed-value).
   ; The stopper may be 'normal, 'scomment (special comment),
   ; 'abbrevw (initial abbreviation), 'sublist-marker, or 'group-split-marker
-  (: line-exprs (input-port -> :reader-token:))
-  (define (line-exprs port)
+  (: line-exprs (input-port string -> :reader-token:))
+  (define (line-exprs port indent)
     (let-splitter (basic-full-results basic-special basic-value)
                   (n-expr-first port)
       (cond
@@ -2009,7 +2027,7 @@
             (hspaces port)
             (if (not (lcomment-eol? (my-peek-char port)))
                 (let-splitter (rr-full-results rr-stopper rr-value)
-                              (rest-of-line port)
+                              (rest-of-line port indent)
                   (list rr-stopper (cons cl-results rr-value)))
                 (list 'normal (list cl-results)))))
         ((eq? basic-special 'period-marker)
@@ -2025,23 +2043,27 @@
           (hspaces port)
           (if (not (lcomment-eol? (my-peek-char port)))
               (let-splitter (br-full-results br-stopper br-value)
-                            (rest-of-line port)
+                            (rest-of-line port indent)
                 (list br-stopper (cons basic-value br-value)))
               (list 'normal (list basic-value))))
         (else
           (list 'normal (list basic-value))))))
 
+  ; Read the rest of the expressions on a line,
+  ; after the first expression of the line.  This supports line-exprs.
+  ; Precondition: At beginning of non-first expression on line (past hspace)
+  ; Postcondition: At unconsumed EOL
   ; Returns (stopper computed-value); stopper may be 'normal, etc.
   ; Read in one n-expr, then process based on whether or not it's special.
-  (: rest-of-line (input-port -> :reader-token:))
-  (define (rest-of-line port)
+  (: rest-of-line (input-port string -> :reader-token:))
+  (define (rest-of-line port indent)
     (let-splitter (basic-full-results basic-special basic-value)
                   (n-expr port)
       (cond
         ((or (eq? basic-special 'scomment) (eq? basic-special 'datum-commentw))
           (skippable basic-special port)
           (if (not (lcomment-eol? (my-peek-char port)))
-              (rest-of-line port)
+              (rest-of-line port indent)
               (list 'normal '())))
         ((eq? basic-special 'collecting)
           (hspaces port)
@@ -2049,7 +2071,7 @@
             (hspaces port)
             (if (not (lcomment-eol? (my-peek-char port)))
                 (let-splitter (rr-full-results rr-stopper rr-value)
-                              (rest-of-line port)
+                              (rest-of-line port indent)
                   (list rr-stopper (cons cl-results rr-value)))
                 (list 'normal (list cl-results)))))
         ((eq? basic-special 'period-marker)
@@ -2059,17 +2081,32 @@
                 (post-period port))
               ; (list 'normal (list period-symbol)) ; To interpret as |.|
               (read-error "Cannot end line with '.'")))
-        ((not (eq? basic-special 'normal)) (list basic-special '())) 
+        ((eq? basic-special 'group-split-marker)
+          ; Local extension - allow \\ as line-continuation, a
+          ; capability useful in Common Lisp.
+          ; Add this here to be consistent with Common Lisp implementation.
+          ; This is *NOT* a SRFI-110 requirement!!
+          (hspaces port)
+          (if (lcomment-eol? (my-peek-char port))
+            (let ((new-indent (get-next-indent port)))
+              (if (indentation>=? new-indent indent)
+                (rest-of-line port indent)
+                (read-error "Line continuation indentation is inconsistent.")))
+            (list basic-special '())))
+        ((not (eq? basic-special 'normal)) (list basic-special '()))
         ((char-hspace? (my-peek-char port))
           (hspaces port)
           (if (not (lcomment-eol? (my-peek-char port)))
               (let-splitter (br-full-results br-stopper br-value)
-                            (rest-of-line port)
+                            (rest-of-line port indent)
                 (list br-stopper (cons basic-value br-value)))
               (list 'normal (list basic-value))))
         (else (list 'normal (list basic-value))))))
 
-  ; Returns (new-indent computed-value)
+  ; Read the sequence of 1+ child lines in an it_expr
+  ; (e.g., after "line_expr"), each of which is itself an it_expr.
+  ; It returns the list of expressions in the body and the new indent as
+  ; (new-indent computed-value).
   ; We name this "read-body", not "body", to avoid an error in rscheme.
   (: read-body (input-port string -> :reader-token:))
   (define (read-body port starting-indent)
@@ -2089,16 +2126,20 @@
                   (list nxt-new-indent (cons i-value nxt-value)))))
           (list i-new-indent (list1e i-value))))) ; dedent - end list.
 
+
+  ; Read a sweet-expression that doesn't have a special prefix.
   ; Returns (new-indent computed-value)
   (: it-expr-real (input-port string -> :reader-indent-token:))
   (define (it-expr-real port starting-indent)
     (let-splitter (line-full-results line-stopper line-value)
-                  (line-exprs port)
+                  (line-exprs port starting-indent)
       (if (and (not (null? line-value)) (not (eq? line-stopper 'abbrevw)))
           ; Production line-exprs produced at least one n-expression:
           (cond
             ((eq? line-stopper 'group-split-marker)
               (hspaces port)
+              ; This error can't happen due to \\ line continuation extension,
+	      ; but we will test it just in case:
               (if (lcomment-eol? (my-peek-char port))
                   (read-error "Cannot follow split with end of line")
                   (list starting-indent (monify line-value))))
@@ -2187,7 +2228,7 @@
               (read-error "Initial line-expression error"))))))
 
   ; Read it-expr.  This is a wrapper that attaches source info
-  ; and checks for consistent indentation results.
+  ; and checks for consistent indentation results, then calls it-expr-real.
   (: it-expr (input-port string -> :reader-indent-token:))
   (define (it-expr port starting-indent)
     (let ((pos (get-sourceinfo port)))
@@ -2197,6 +2238,8 @@
             (read-error "Inconsistent indentation"))
         (list results-indent (attach-sourceinfo pos results-value)))))
 
+  ; Read the rest of an initial-indent-expr (a sweet-expression with
+  ; a special initial value).
   (: initial-indent-expr-tail :reader-proc:)
   (define (initial-indent-expr-tail port)
     (if (not (memv (my-peek-char port) initial-comment-eol))
@@ -2212,7 +2255,7 @@
           (consume-end-of-line port)
           empty-value))) ; (t-expr-real port)
 
-  ; Top level - read a sweet-expression (t-expression).  Handle special
+  ; Read a sweet-expression (t-expression).  Handle special
   ; cases, such as initial indent; call it-expr for normal case.
   (: t-expr-real :reader-proc:)
   (define (t-expr-real port)
@@ -2239,7 +2282,7 @@
                 (read-error "Closing *> without preceding matching <*")
                 results-value))))))
 
-  ; Top level - read a sweet-expression (t-expression).  Handle special
+  ; Top level - read a sweet-expression (t-expression).  Handle special values
   (: t-expr :reader-proc:)
   (define (t-expr port)
     (let* ((te (t-expr-real port)))

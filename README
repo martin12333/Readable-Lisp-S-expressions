@@ -110,6 +110,10 @@ Then follow the installation instructions in the file
 (you can use your web browser!).  The installation instructions are also at:
 https://sourceforge.net/p/readable/wiki/Install-howto/
 
+You can also get the development version using "git".
+In git the "master" branch contains final released versions, while
+the "develop" branch contains the version in development.
+
 This software supports the usual GNU Build System conventions, and
 it should be easy to install on most systems.  Users who only want to
 use the Common Lisp library can use QuickLisp instead.  If you have very

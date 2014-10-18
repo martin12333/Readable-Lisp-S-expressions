@@ -40,13 +40,24 @@
            #:my-char-code-limit
            #:disable-readable
            #:readable-parse-error #:*noisy*
-           #:$nfx$ #:$bracket-apply$))
+           #:$nfx$ #:$bracket-apply$
+           #:*print-notation*  ; Write format for write-readable etc.
+           #:write-readable
+           #:prin1-readable
+           #:princ-readable
+           #:print-readable
+           #:pprint-readable
+           #:write-to-string-readable
+           #:prin1-to-string-readable
+           #:princ-to-string-readable
+           #:stringify-object-readable
+           #:output-object-readable))
 
 (in-package #:readable-asd)
 
 (defsystem readable
   :name "readable"
-  :version "1.0.4"  ; ONLY digits and periods allowed.
+  :version "1.0.5"  ; ONLY digits and periods allowed.
   :maintainer "David A. Wheeler"
   :author "David A. Wheeler"
   :license "MIT"
@@ -55,7 +66,8 @@
   ; :serial t ;; the dependencies are (no longer) linear.
   :components
     ((:file "basic-curly")
-     (:file "neoteric" :depends-on ("basic-curly"))
+     (:file "print")
+     (:file "neoteric" :depends-on ("basic-curly" "print"))
      (:file "backquote") ; Re-implements backquote, as needed by sweet
      (:file "sweet" :depends-on ("basic-curly" "neoteric" "backquote"))))
 
