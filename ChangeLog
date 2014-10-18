@@ -1,7 +1,9 @@
-2014-10-15 David A. Wheeler <dwheeler, at, dwheeler.com>
+2014-10-18 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Version 1.0.5.
 	* Common Lisp implementation sweet-expression reader now handles
 	  expressions that end without an EOL.
-	* Common Lisp - add basic ability to print readable expressions.
+	* Common Lisp implementation adds basic ability to print
+	  readable expressions, e.g., write-readable.
 
 2014-07-04 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Version 1.0.4. Fixes regression in guile 2.
