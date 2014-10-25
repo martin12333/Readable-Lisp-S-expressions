@@ -1,0 +1,133 @@
+; math.slisp - demonstrate math simplification system
+; by David A. Wheeler
+; Demonstrates using sweet-expressions in Common Lisp.
+
+#-quicklisp
+(let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp" (user-homedir-pathname))))
+  (when (probe-file quicklisp-init)
+    (load quicklisp-init)))
+
+; We'll reuse the optima pattern-matcher.  Its notation is more
+; complex than cl-pattern, but it has more functionality and we need it.
+(ql:quickload "optima")
+(ql:quickload "readable")
+
+(use-package :optima)
+(readable:enable-sweet)
+
+; These optima patterns are like optima's "list" and "list*", but inline.
+defpattern ilist (arg)
+  when consp(arg)
+   ` cons ,car(arg) ilist(,cdr(arg))
+
+defpattern ilist* (arg)
+  if null(cdr(arg))
+      ` and ,car(arg) type(list)
+      ` cons ,car(arg) ilist*(,cdr(arg))
+
+; Return t if expr is a numeric-only operation using an op in op-list
+defun numeric-operationp (expr op-list)
+  and
+    consp expr
+    member car(expr) op-list
+    not null(cdr(expr))
+    every #'numberp cdr(expr)
+
+defun more-than-onep (expr)
+  and
+    consp expr
+    consp cdr(expr)
+
+
+defun simplify-using-pattern (expr)
+  optima:match expr
+    ilist{a '+ 0}                  a
+    ilist{0 '+ a}                  a
+    ilist{a '+ eql(a)}             `{2 * ,a}
+    ilist{a '- 0}                  a
+    ilist{0 '- a}                  `-(,a)
+    ilist{a '- eql(a)}             0
+    ilist{a '+ list('- eql(a))}    0
+    ilist{a '* 0}                  0
+    ilist{0 '* a}                  0
+    ilist{a '* 1}                  a
+    ilist{1 '* a}                  a
+    ilist{a '* eql(a)}             `{,a ^ 2}
+    ilist{a '* eql(a) * eql(a)}    `{,a ^ 3}
+    ilist{a '/ 0}                  'undef
+    ilist{a '/ 1}                  a
+    ilist{a '/ eql(a)}             1
+    ilist{0 '^ 0}                  'undef
+    ilist{a '^ 0}                  1
+    ilist{0 '^ a}                  0
+    ilist{1 '^ a}                  1
+    ilist{a '^ 1}                  a
+    ilist{a '^ -1}                 {1 / a}
+    ilist{ilist{a '* b} '/ eql(a)} b
+    ilist{ilist{b '* a} '/ eql(a)} b
+    ilist{a '* ilist{b '/ eql(a)}} b
+    ilist{ilist{b '/ a} '* eql(a)} b
+    ilist*{a + 0 + rest}           simplify(`{,a + ,@rest})
+    ilist*{0 + a + rest}           simplify(`{,a + ,@rest})
+    list('log 0)                   'undef
+    list('log 0 _)                 'undef
+    list('log 1)                   0
+    list('log 1 _)                 0
+    list('log a eql(a))            1
+    list('ln 0)                    'undef
+    list('ln e)                    1
+    list('sin 0)                   0
+    list('sin pi)                  0
+    list('cos 0)                   1
+    list('cos pi)                  -1
+    a                              a
+
+defun simplify-expression (expr)
+  "Simplify one expression (its operands have already been simplified)."
+  cond
+    numeric-operationp(expr '(+ - *)) ; If only numbers, calculate answer.
+      apply car(expr) cdr(expr)
+    {numeric-operationp(expr '(/)) and
+     more-than-onep(cdr(expr)) and
+     notany(#'zerop cdr(expr))} ; Calculate division, but don't divide by 0.
+      apply car(expr) cdr(expr)
+    {consp(expr) and find('undef expr)}  ; undef dominates.
+      'undef
+    t
+      simplify-using-pattern expr
+
+defun simplify (expr)
+  "Simplify an expression; first its operands, then the whole thing."
+  if atom(expr) expr
+      (simplify-expression (mapcar #'simplify expr))
+
+princ "Math demo - Simplify possibly-symbolic math expressions"
+terpri()
+
+princ "Here are some examples (input => output):"
+terpri()
+loop for item in
+  ' \\
+    {2 + 3}
+    {a * 0}
+    {x * y}
+    {{x * y} * 0}
+    {x + 0 + y}
+    {5 / 0}
+    cos(0)
+  do \\ progn
+    readable:write-readable item
+    princ "  =>  "
+    readable:write-readable simplify(item)
+    terpri()
+
+terpri()
+princ "Please enter expressions to be simplified:"
+terpri()
+loop for line = read-preserving-whitespace(*standard-input* nil :eof)
+     until \\ eq line :eof
+     do \\ progn
+       readable:write-readable simplify(line)
+       terpri()
+
+(readable:disable-readable)
