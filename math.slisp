@@ -54,17 +54,22 @@ defun generous-zerop (x)
 defun generous-onep (x)
   {numberp(x) and {x = 1}}
 
+defun constant-valuep (x)
+  {numberp(x) or eq(x 'pi) eq(x 'e)}
+
 ; Implement "num" function, which forces numerical calculation.
-defun compute-numeric (expr)
+; Numeric + - * / already computed using simplification, so no need to do that.
+defun compute-numeric (x)
   cond
-    not(consp(expr)) expr
-    ; + - * / already computed using simplification
-    numeric-operationp(expr '(^))
-      apply #'expt cdr(expr)
-    numeric-operationp(expr '(log ln sin cos))
-      apply car(expr) cdr(expr)
+    eq(x 'pi) pi
+    eq(x 'e)  exp(1)
+    not(consp(x)) x
+    numeric-operationp(x '(^))
+      apply #'expt cdr(x)
+    numeric-operationp(x '(log ln sin cos))
+      apply car(x) cdr(x)
     t
-      expr
+      x
 
 defun simplify-using-pattern (expr)
   optima:match expr
@@ -105,6 +110,8 @@ defun simplify-using-pattern (expr)
     list('sin 'pi)                 0
     list('cos 0)                   1
     list('cos 'pi)                 -1
+    list('d constant '/ 'd x)      when constant-valuep(constant) 0
+    list('d x '/ 'd (eql x))       when symbolp(x)                1
     list('num arg)                 compute-numeric(arg) ; "num(...)" function
     a                              a
 
