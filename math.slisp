@@ -1,6 +1,7 @@
 ; math.slisp - demonstrate math simplification system
 ; by David A. Wheeler
 ; Demonstrates using sweet-expressions in Common Lisp.
+; This program focuses on returning exact results where possible.
 
 #-quicklisp
 (let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp" (user-homedir-pathname))))
@@ -62,6 +63,9 @@ defun simplify-using-pattern (expr)
     ilist{1 '^ a}                  1
     ilist{a '^ 1}                  a
     ilist{a '^ -1}                 {1 / a}
+    ilist{a '^ b}
+      when {integerp(a) and integerp(b) and {b >= 2}}
+           expt(a b)
     ilist{ilist{a '* b} '/ eql(a)} b
     ilist{ilist{b '* a} '/ eql(a)} b
     ilist{a '* ilist{b '/ eql(a)}} b
@@ -86,7 +90,7 @@ defun simplify-expression (expr)
       apply car(expr) cdr(expr)
     {numeric-operationp(expr '(/)) and
      more-than-onep(cdr(expr)) and
-     notany(#'zerop cdr(expr))} ; Calculate division, but don't divide by 0.
+     notany(#'zerop cddr(expr))} ; Calculate division, but don't divide by 0.
       apply car(expr) cdr(expr)
     {consp(expr) and find('undef expr)}  ; undef dominates.
       'undef
@@ -103,7 +107,7 @@ defun simplify-all (expr)
      expr
      simplify-expression mapcar(#'simplify-all expr)
 
-princ "Math demo - Simplify possibly-symbolic math expressions"
+princ "Math - Simplify possibly-symbolic math expressions.  Enter sweet-expressions."
 terpri()
 
 princ "Here are some examples (input => output):"
