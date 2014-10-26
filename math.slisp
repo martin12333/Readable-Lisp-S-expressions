@@ -38,6 +38,8 @@ defun more-than-onep (expr)
     consp expr
     consp cdr(expr)
 
+defun generous-zerop (x)
+  {numberp(x) and zerop(x)}
 
 defun simplify-using-pattern (expr)
   optima:match expr
@@ -67,8 +69,10 @@ defun simplify-using-pattern (expr)
     ilist{ilist{b '* a} '/ eql(a)} b
     ilist{a '* ilist{b '/ eql(a)}} b
     ilist{ilist{b '/ a} '* eql(a)} b
-    ilist*{a + 0 + rest}           simplify(`{,a + ,@rest})
-    ilist*{0 + a + rest}           simplify(`{,a + ,@rest})
+    list*('+ args)
+      when find(0 args)
+        ; TODO: Handle {x + 0 + 0}
+        cons '+ remove-if(#'generous-zerop args)
     list('log 0)                   'undef
     list('log 0 _)                 'undef
     list('log 1)                   0
@@ -96,10 +100,11 @@ defun simplify-expression (expr)
     t
       simplify-using-pattern expr
 
-defun simplify (expr)
+defun simplify-all (expr)
   "Simplify an expression; first its operands, then the whole thing."
-  if atom(expr) expr
-      (simplify-expression (mapcar #'simplify expr))
+  if atom(expr)
+     expr
+     simplify-expression mapcar(#'simplify-all expr)
 
 princ "Math demo - Simplify possibly-symbolic math expressions"
 terpri()
@@ -118,7 +123,7 @@ loop for item in
   do \\ progn
     readable:write-readable item
     princ "  =>  "
-    readable:write-readable simplify(item)
+    readable:write-readable simplify-all(item)
     terpri()
 
 terpri()
@@ -127,7 +132,7 @@ terpri()
 loop for line = read-preserving-whitespace(*standard-input* nil :eof)
      until \\ eq line :eof
      do \\ progn
-       readable:write-readable simplify(line)
+       readable:write-readable simplify-all(line)
        terpri()
 
 (readable:disable-readable)
