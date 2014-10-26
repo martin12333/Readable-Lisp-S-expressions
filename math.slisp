@@ -43,15 +43,12 @@ defun generous-zerop (x)
 
 defun simplify-using-pattern (expr)
   optima:match expr
-    ilist{a '+ 0}                  a
-    ilist{0 '+ a}                  a
+    list('+ a)                     a
     ilist{a '+ eql(a)}             `{2 * ,a}
     ilist{a '- 0}                  a
     ilist{0 '- a}                  `-(,a)
     ilist{a '- eql(a)}             0
     ilist{a '+ list('- eql(a))}    0
-    ilist{a '* 0}                  0
-    ilist{0 '* a}                  0
     ilist{a '* 1}                  a
     ilist{1 '* a}                  a
     ilist{a '* eql(a)}             `{,a ^ 2}
@@ -69,10 +66,6 @@ defun simplify-using-pattern (expr)
     ilist{ilist{b '* a} '/ eql(a)} b
     ilist{a '* ilist{b '/ eql(a)}} b
     ilist{ilist{b '/ a} '* eql(a)} b
-    list*('+ args)
-      when find(0 args)
-        ; TODO: Handle {x + 0 + 0}
-        cons '+ remove-if(#'generous-zerop args)
     list('log 0)                   'undef
     list('log 0 _)                 'undef
     list('log 1)                   0
@@ -97,6 +90,10 @@ defun simplify-expression (expr)
       apply car(expr) cdr(expr)
     {consp(expr) and find('undef expr)}  ; undef dominates.
       'undef
+    {eq(car(expr) '+) and find(0 cdr(expr))} ; Remove zeros from +
+      simplify-expression $ cons '+ remove-if(#'generous-zerop cdr(expr))
+    {eq(car(expr) '*) and find(0 cdr(expr))} ; Any 0 in *
+      0
     t
       simplify-using-pattern expr
 
