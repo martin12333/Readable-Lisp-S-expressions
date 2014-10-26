@@ -3,6 +3,15 @@
 ; Demonstrates using sweet-expressions in Common Lisp.
 ; This program focuses on returning exact results where possible.
 
+; There are many implementations of Computer Algebra Systems (CASs)
+; in Common Lisp, but they typically have to implement their own reader
+; because the built-in reader is so painful to use.
+; You *can* implement your own language, of course, but having a
+; built-in notation that's easier to use makes it easier to move on
+; to actually solving problems instead.  So this demonstration
+; shows *using* sweet-expressions to write the program, *and* uses
+; sweet-expressions as the input notation.
+
 #-quicklisp
 (let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp" (user-homedir-pathname))))
   (when (probe-file quicklisp-init)
@@ -40,11 +49,29 @@ defun more-than-onep (expr)
     consp cdr(expr)
 
 defun generous-zerop (x)
-  {numberp(x) and zerop(x)}
+  {numberp(x) and {x = 0}}
+
+defun generous-onep (x)
+  {numberp(x) and {x = 1}}
+
+; Implement "num" function, which forces numerical calculation.
+defun compute-numeric (expr)
+  cond
+    not(consp(expr)) expr
+    ; + - * / already computed using simplification
+    numeric-operationp(expr '(^))
+      apply #'expt cdr(expr)
+    numeric-operationp(expr '(log ln sin cos))
+      apply car(expr) cdr(expr)
+    t
+      expr
 
 defun simplify-using-pattern (expr)
   optima:match expr
     list('+ a)                     a
+    list('* a)                     a
+    list('+)                       0
+    list('*)                       1
     ilist{a '+ eql(a)}             `{2 * ,a}
     ilist{a '- 0}                  a
     ilist{0 '- a}                  `-(,a)
@@ -62,10 +89,7 @@ defun simplify-using-pattern (expr)
     ilist{0 '^ a}                  0
     ilist{1 '^ a}                  1
     ilist{a '^ 1}                  a
-    ilist{a '^ -1}                 {1 / a}
-    ilist{a '^ b}
-      when {integerp(a) and integerp(b) and {b >= 2}}
-           expt(a b)
+    ilist{a '^ -1}                 `{1 / ,a}
     ilist{ilist{a '* b} '/ eql(a)} b
     ilist{ilist{b '* a} '/ eql(a)} b
     ilist{a '* ilist{b '/ eql(a)}} b
@@ -78,26 +102,33 @@ defun simplify-using-pattern (expr)
     list('ln 0)                    'undef
     list('ln e)                    1
     list('sin 0)                   0
-    list('sin pi)                  0
+    list('sin 'pi)                 0
     list('cos 0)                   1
-    list('cos pi)                  -1
+    list('cos 'pi)                 -1
+    list('num arg)                 compute-numeric(arg) ; "num(...)" function
     a                              a
 
 defun simplify-expression (expr)
   "Simplify one expression (its operands have already been simplified)."
   cond
-    numeric-operationp(expr '(+ - *)) ; If only numbers, calculate answer.
+    ; If we can do straight-up exact numerical calculations, do it:
+    numeric-operationp(expr '(+ - *))
       apply car(expr) cdr(expr)
-    {numeric-operationp(expr '(/)) and
-     more-than-onep(cdr(expr)) and
-     notany(#'zerop cddr(expr))} ; Calculate division, but don't divide by 0.
-      apply car(expr) cdr(expr)
-    {consp(expr) and find('undef expr)}  ; undef dominates.
-      'undef
     {eq(car(expr) '+) and find(0 cdr(expr))} ; Remove zeros from +
       simplify-expression $ cons '+ remove-if(#'generous-zerop cdr(expr))
+    {eq(car(expr) '*) and find(1 cdr(expr))} ; Remove ones from *
+      simplify-expression $ cons '* remove-if(#'generous-onep cdr(expr))
     {eq(car(expr) '*) and find(0 cdr(expr))} ; Any 0 in *
       0
+    {numeric-operationp(expr '(/)) and ; Division, avoid divide by zero.
+     more-than-onep(cdr(expr)) and
+     notany(#'zerop cddr(expr))}
+      apply car(expr) cdr(expr)
+    {numeric-operationp(expr '(^)) and integerp(second(expr)) and
+     integerp(third(expr)) and {third(expr) >= 2}}
+      apply #'expt cdr(expr)
+    {consp(expr) and find('undef expr)}  ; undef normally dominates.
+      'undef
     t
       simplify-using-pattern expr
 
