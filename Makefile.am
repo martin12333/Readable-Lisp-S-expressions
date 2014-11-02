@@ -498,6 +498,8 @@ EXTRA_DIST += \
  tests/curly-infix-testsuite-scm \
  tests/curly-infix-test-scm \
  tests/full-test-cl \
+ tests/math-test \
+ tests/math-test-correct \
  tests/neoteric-test \
  tests/neoteric-testsuite \
  tests/sweet-test \
@@ -531,6 +533,13 @@ check-clisp: my-realpath
 	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
 	  $(CLISP) -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
 	        $(srcdir)/tests/full-test-cl
+# Create separate "check-math" target so we only run these tests on command.
+check-math:
+	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
+	  $(CLISP) -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
+	        "$(srcdir)/math.slisp" < "$(srcdir)/tests/math-test" \
+             | diff -b -u "$(srcdir)/tests/math-test-correct" -
+test-math: check-math
 else !HAVE_CLISP
 check-clisp:
 endif !HAVE_CLISP

@@ -12,6 +12,8 @@
 ; shows *using* sweet-expressions to write the program, *and* uses
 ; sweet-expressions as the input notation.
 
+; To run test suite: "make check-math"
+
 #-quicklisp
 (let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp" (user-homedir-pathname))))
   (when (probe-file quicklisp-init)
@@ -145,27 +147,12 @@ defun simplify-all (expr)
      expr
      simplify-expression mapcar(#'simplify-all expr)
 
-princ "Math - Simplify possibly-symbolic math expressions.  Enter sweet-expressions."
+princ "Math - Simplify possibly-symbolic math sweet-expressions."
+terpri()
+princ "Examples: {3 * {1 + 2}}, cos(0), {x + {y * 0}}"
+terpri()
 terpri()
 
-princ "Here are some examples (input => output):"
-terpri()
-loop for item in
-  ' \\
-    {2 + 3}
-    {a * 0}
-    {x * y}
-    {{x * y} * 0}
-    {x + 0 + y}
-    {5 / 0}
-    cos(0)
-  do \\ progn
-    readable:write-readable item :case :downcase
-    princ "  =>  "
-    readable:write-readable simplify-all(item) :case :downcase
-    terpri()
-
-terpri()
 princ "Please enter expressions to be simplified:"
 terpri()
 loop for line = read-preserving-whitespace(*standard-input* nil :eof)

@@ -1,0 +1,22 @@
+To load "optima":
+  Load 1 ASDF system:
+    optima
+; Loading "optima"
+
+To load "readable":
+  Load 1 ASDF system:
+    readable
+; Loading "readable"
+
+Math - Simplify possibly-symbolic math sweet-expressions.
+Examples: {3 * {1 + 2}}, cos(0), {x + {y * 0}}
+
+Please enter expressions to be simplified:
+3
+{a + b}
+0
+{x * y}
+0
+{x + y}
+undef
+1
