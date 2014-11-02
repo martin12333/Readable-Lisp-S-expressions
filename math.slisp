@@ -45,16 +45,11 @@ defun numeric-operationp (expr op-list)
     not null(cdr(expr))
     every #'numberp cdr(expr)
 
-defun more-than-onep (expr)
-  and
-    consp expr
-    consp cdr(expr)
+defun more-than-onep (x) {consp(x) and consp(cdr(x))}
 
-defun generous-zerop (x)
-  {numberp(x) and {x = 0}}
+defun generous-zerop (x) {numberp(x) and {x = 0}}
 
-defun generous-onep (x)
-  {numberp(x) and {x = 1}}
+defun generous-onep (x)  {numberp(x) and {x = 1}}
 
 defun constant-valuep (x)
   {numberp(x) or eq(x 'pi) eq(x 'e)}
