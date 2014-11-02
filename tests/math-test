@@ -6,3 +6,34 @@
 {x + 0 + y}
 {5 / 0}
 cos(0)
+num {2 + 3}
++(g)
+{z + z}
+{z - 0}
+{0 - z}
+{z * 1}
+{1 * z}
+{z * z}
+{z * z * z}
+{z / 0}
+{z / 1}
+{0 ^ 5}
+{1 ^ 5}
+{z ^ -1}
+{{x * y} / x}
+{{y * x} / x}
+{x * {y / x}}
+{{x / y} * y}
+log(0)
+log(0 8)
+log(1)
+log(1 8)
+log(5 5)
+ln(0)
+ln(e)
+sin(0)
+sin(pi)
+cos(0)
+cos(pi)
+(d 5 / d x)
+(d x / d x)

@@ -52,7 +52,7 @@ defun generous-zerop (x) {numberp(x) and {x = 0}}
 defun generous-onep (x)  {numberp(x) and {x = 1}}
 
 defun constant-valuep (x)
-  {numberp(x) or eq(x 'pi) eq(x 'e)}
+  {numberp(x) or eq(x 'pi) or eq(x 'e)}
 
 ; Implement "num" function, which forces numerical calculation.
 ; Numeric + - * / already computed using simplification, so no need to do that.
@@ -82,7 +82,7 @@ defun simplify-using-pattern (expr)
     ilist{a '* 1}                  a
     ilist{1 '* a}                  a
     ilist{a '* eql(a)}             `{,a ^ 2}
-    ilist{a '* eql(a) * eql(a)}    `{,a ^ 3}
+    ilist{a '* eql(a) '* eql(a)}   `{,a ^ 3}
     ilist{a '/ 0}                  'undef
     ilist{a '/ 1}                  a
     ilist{a '/ eql(a)}             1
