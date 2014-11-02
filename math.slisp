@@ -160,9 +160,9 @@ loop for item in
     {5 / 0}
     cos(0)
   do \\ progn
-    readable:write-readable item
+    readable:write-readable item :case :downcase
     princ "  =>  "
-    readable:write-readable simplify-all(item)
+    readable:write-readable simplify-all(item) :case :downcase
     terpri()
 
 terpri()
@@ -171,7 +171,7 @@ terpri()
 loop for line = read-preserving-whitespace(*standard-input* nil :eof)
      until \\ eq line :eof
      do \\ progn
-       readable:write-readable simplify-all(line)
+       readable:write-readable simplify-all(line) :case :downcase
        terpri()
 
 (readable:disable-readable)
