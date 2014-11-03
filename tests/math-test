@@ -37,3 +37,4 @@ cos(0)
 cos(pi)
 (d 5 / d x)
 (d x / d x)
+{5 * x * 6}

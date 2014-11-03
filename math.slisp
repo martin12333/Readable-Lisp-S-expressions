@@ -131,6 +131,13 @@ defun simplify-expression (expr)
     {numeric-operationp(expr '(^)) and integerp(second(expr)) and
      integerp(third(expr)) and {third(expr) >= 2}}
       apply #'expt cdr(expr)
+    {member(car(expr) '(+ *)) and {length(expr) >= 3} and
+     {length(remove-if(complement(#'numberp) expr)) > 1}}
+     ; Mixed numbers and symbols - simplify just the numbers.
+     simplify-expression $ append
+         list car(expr)
+           apply car(expr) remove-if(complement(#'numberp) expr)
+         remove-if #'numberp cdr(expr)
     {consp(expr) and find('undef expr)}  ; undef normally dominates.
       'undef
     t
