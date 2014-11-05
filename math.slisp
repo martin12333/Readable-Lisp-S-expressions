@@ -158,6 +158,12 @@ defun simplify-expression (expr)
     list('d constant '/ 'd x)      when constant-valuep(constant) 0
     list('d x '/ 'd (eql x))       when symbolp(x)                1
     list('num arg)                 compute-numeric(arg) ; "num(...)" function
+    list*('/= args)                `(<> ,@args)
+    list*('!= args)                `(<> ,@args)
+    list('if 'true tside)          tside
+    list('if 'true tside fside)    tside
+    list('if 'false tside)         'undef
+    list('if 'false tside fside)   fside
     a                              a
 
 defun simplify-all (expr)
