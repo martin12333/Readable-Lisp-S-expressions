@@ -87,8 +87,11 @@ defun simplify-expression (expr)
       when \\ find('undef params)
       'undef
     list*(op args)
-      when \\ {member(op '(+ - *)) and numberlistp(args)}
+      when \\ {member(op '(+ - * = < <= > >=)) and numberlistp(args)}
       apply op args
+    list*('<> args)
+      when \\ numberlistp(args)
+      apply #'/= args
     list*('+ args)
       when \\ find 0 args
       simplify-expression $ cons '+ remove-if(#'generous-zerop args)
@@ -158,8 +161,11 @@ defun simplify-expression (expr)
     list('d constant '/ 'd x)      when constant-valuep(constant) 0
     list('d x '/ 'd (eql x))       when symbolp(x)                1
     list('num arg)                 compute-numeric(arg) ; "num(...)" function
+    list('not 'true)               'false
+    list('not 'false)              'true
     list*('/= args)                `(<> ,@args)
     list*('!= args)                `(<> ,@args)
+    ilist{a '= eql(a)}             'true
     list('if 'true tside)          tside
     list('if 'true tside fside)    tside
     list('if 'false tside)         'undef
