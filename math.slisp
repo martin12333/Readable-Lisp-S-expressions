@@ -85,79 +85,85 @@ defun compute-numeric (x)
 ; ?=symbol is a repeat of a previous symbol.
 defun rewrite-match-pattern (x)
   cond
-    eql(x '?args)
+    eq(x '?args)
       'args
+    eq(x '_)
+      x
     {symbolp(x) and equal(char(symbol-name(x) 0) #\?)}
       if equal(char(symbol-name(x) 1) #\=)
          list 'eql intern(substring(symbol-name(x) 2))
          intern(substring(symbol-name(x) 1))
-    member(x '(op args lhs rhs))
+    member(x '(op args lhs rhs a b))
       error "Operation should have ?"  ; DEBUG
     symbolp(x)
       `quote(,x)
     atom(x)
       x
     consp(x)
-      if eql(car(last(x)) '?args)
+      if eq(car(last(x)) '?args)
         ` list* ,@mapcar(#'rewrite-match-pattern x)
         ` list  ,@mapcar(#'rewrite-match-pattern x)
 
-; princ "DEBUG: Demo"
-; terpri()
-; write
-;   rewrite-match-pattern '*(?args)
-; write
-;   rewrite-match-pattern '{?lhs * ?rhs}
-; write
-;   rewrite-match-pattern '{?a + ?=a}
-; write
-;   rewrite-match-pattern 'if(false ?tside ?fside)
-; write
-;   rewrite-match-pattern '?args()
+defun convert-math-patterns (x)
+  cond
+    null(x) x
+    consp(x)
+      cons
+        cons
+          rewrite-match-pattern car(car(x))
+          cdr car(x)
+        convert-math-patterns cdr(x)
+
+defmacro math-patterns (expr patterns)
+  ` optima:match ,expr
+      ,@ convert-math-patterns patterns
 
 defun simplify-expression (expr)
   "Simplify one expression (its operands have already been simplified)."
-  optima:match expr
-    list*('* args)
+  math-patterns expr
+   \\
+    (* ?args)
       when \\ find 0 args
       0
-    list*('and args)
+    {?a + 0}
+      a
+    (and ?args)
       when \\ find 'false args
       'false
-    list*(params)
-      when \\ find('undef params)
+    (?args)
+      when \\ find('undef args)
       'undef
-    list*(op args)
+    (?op ?args)
       when \\ {member(op '(+ - *)) and numberlistp(args)}
       apply op args
-    list*(op args)
+    (?op ?args)
       when \\ {member(op '(= < <= > >=)) and numberlistp(args)}
       truthiness $ apply op args
-    list*('<> args)
+    (<> ?args)
       when \\ numberlistp(args)
       truthiness $ apply #'/= args
-    list*('+ args)
+    (+ ?args)
       when \\ find 0 args
       simplify-expression $ cons '+ remove-if(#'generous-zerop args)
-    list*('* args)
+    (* ?args)
       when \\ find 1 args
       simplify-expression $ cons '* remove-if(#'generous-onep args)
-    list*('and args)
+    (and ?args)
       when \\ find 'true args
       simplify-expression $ cons 'and remove-if(#'true-valuep args)
-    list*('or args)
+    (or ?args)
       when \\ find 'false args
       simplify-expression $ cons 'or remove-if(#'false-valuep args)
-    list*('or args)
+    (or ?args)
       when \\ find 'true args
       'true
-    ilist{lhs '/ rhs}
+    {?lhs / ?rhs}
       when \\ {integerp(lhs) and integerp(rhs) and {rhs /= 0}}
       {lhs / rhs}
-    ilist{lhs '^ rhs}
+    {?lhs ^ ?rhs}
       when \\ {integerp(lhs) and integerp(rhs) and {rhs >= 2}}
       expt lhs rhs
-    list*(op args)
+    (?op ?args)
       when \\ {member(op '(+ *)) and {length(args) >= 2} and
                {length(remove-if(complement(#'numberp) args)) > 1}}
       ; Mixed numbers and symbols - simplify just the numbers.
@@ -166,62 +172,62 @@ defun simplify-expression (expr)
           list op
             apply op remove-if(complement(#'numberp) args)
           remove-if #'numberp args
-    list('+ a)                     a
-    list('* a)                     a
-    list('+)                       0
-    list('or)                      'false
-    list('*)                       1
-    list('and)                     'true
-    ilist{a '+ eql(a)}             `{2 * ,a}
-    ilist{a '- 0}                  a
-    ilist{0 '- a}                  `-(,a)
-    ilist{a '- eql(a)}             0
-    ilist{a '+ list('- eql(a))}    0
-    ilist{a '* 1}                  a
-    ilist{1 '* a}                  a
-    ilist{a '* eql(a)}             `{,a ^ 2}
-    ilist{a '* eql(a) '* eql(a)}   `{,a ^ 3}
-    ilist{a '/ 0}                  'undef
-    ilist{a '/ 1}                  a
-    ilist{a '/ eql(a)}             1
-    ilist{0 '^ 0}                  'undef
-    ilist{a '^ 0}                  1
-    ilist{0 '^ a}                  0
-    ilist{1 '^ a}                  1
-    ilist{a '^ 1}                  a
-    ilist{a '^ -1}                 `{1 / ,a}
-    ilist{ilist{a '* b} '/ eql(a)} b
-    ilist{ilist{b '* a} '/ eql(a)} b
-    ilist{a '* ilist{b '/ eql(a)}} b
-    ilist{ilist{b '/ a} '* eql(a)} b
-    list('log 0)                   'undef
-    list('log 0 _)                 'undef
-    list('log 1)                   0
-    list('log 1 _)                 0
-    list('log a eql(a))            1
-    list('ln 0)                    'undef
-    list('ln e)                    1
-    list('sin 0)                   0
-    list('sin 'pi)                 0
-    list('cos 0)                   1
-    list('cos 'pi)                 -1
-    list('d constant '/ 'd x)      when constant-valuep(constant) 0
-    list('d x '/ 'd (eql x))       when symbolp(x)                1
-    list('num arg)                 compute-numeric(arg) ; "num(...)" function
-    list*('/= args)                `(<> ,@args)  ; Prefer "<>"
-    list*('!= args)                `(<> ,@args)
-    ilist{a '= eql(a)}             'true
-    list('not 'true)               'false
-    list('not 'false)              'true
-    list('-> 'false 'false)        'true
-    list('-> 'false 'true)         'true
-    list('-> 'true 'false)         'false
-    list('-> 'true 'true)          'true
-    list('if 'true tside)          tside
-    list('if 'true tside fside)    tside
-    list('if 'false tside)         'undef
-    list('if 'false tside fside)   fside
-    a                              a
+    (+ ?a)                         a
+    (* ?a)                         a
+    (+)                            0
+    (or)                           'false
+    (*)                            1
+    (and)                          'true
+    {?a + ?=a}                     `{2 * ,a}
+    {?a - 0}                       a
+    {0 - ?a}                       `-(,a)
+    {?a - ?=a}                     0
+    {?a + (- ?=a)}                 0
+    {?a * 1}                       a
+    {1 * ?a}                       a
+    {?a * ?=a}                     `{,a ^ 2}
+    {?a * ?=a * ?=a}               `{,a ^ 3}
+    {?a / 0}                       'undef
+    {?a / 1}                       a
+    {?a / ?=a}                     1
+    {0 ^ 0}                        'undef
+    {?a ^ 0}                       1
+    {0 ^ ?a}                       0
+    {1 ^ ?a}                       1
+    {?a ^ 1}                       a
+    {?a ^ -1}                      `{1 / ,a}
+    {{?a * ?b} / ?=a}              b
+    {{?b * ?a} / ?=a}              b
+    {?a * {?b / ?=a}}              b
+    {{?b / ?a} * ?=a}              b
+    log(0)                         'undef
+    log(0 _)                       'undef
+    log(1)                         0
+    log(1 _)                       0
+    log(?a ?=a)                    1
+    ln(0)                          'undef
+    ln(e)                          1
+    sin(0)                         0
+    sin(pi)                        0
+    cos(0)                         1
+    cos(pi)                        -1
+    (d ?constant / d ?x)           when constant-valuep(constant) 0
+    (d ?x / d ?=x)                 when symbolp(x)                1
+    num(?arg)                      compute-numeric(arg) ; "num(...)" function
+    (/= ?args)                     `(<> ,@args)  ; Prefer "<>"
+    (!= ?args)                     `(<> ,@args)
+    {?a = ?=a}                     'true
+    not(true)                      'false
+    not(false)                     'true
+    {false -> false}               'true
+    {false -> true}                'true
+    {true -> false}                'false
+    {true -> true}                 'true
+    if(true ?tside)                tside
+    if(true ?tside ?fside)         tside
+    if(false ?tside)               'undef
+    if(false ?tside ?fside)        fside
+    ?a                             a
 
 defun simplify-all (expr)
   "Simplify an expression: first its operands, then the whole thing."
