@@ -77,6 +77,44 @@ defun compute-numeric (x)
     t
       x
 
+; We use a pattern language especially good for math expressions.
+; The following converts our local pattern language into optima, so that
+; we can use optima's optimizations and facilities.
+; ?symbol is a variable, else symbol (and atom) is constant.
+; "?args" matches 1+ arguments of a list.
+; ?=symbol is a repeat of a previous symbol.
+defun rewrite-match-pattern (x)
+  cond
+    eql(x '?args)
+      'args
+    {symbolp(x) and equal(char(symbol-name(x) 0) #\?)}
+      if equal(char(symbol-name(x) 1) #\=)
+         list 'eql intern(substring(symbol-name(x) 2))
+         intern(substring(symbol-name(x) 1))
+    member(x '(op args lhs rhs))
+      error "Operation should have ?"  ; DEBUG
+    symbolp(x)
+      `quote(,x)
+    atom(x)
+      x
+    consp(x)
+      if eql(car(last(x)) '?args)
+        ` list* ,@mapcar(#'rewrite-match-pattern x)
+        ` list  ,@mapcar(#'rewrite-match-pattern x)
+
+; princ "DEBUG: Demo"
+; terpri()
+; write
+;   rewrite-match-pattern '*(?args)
+; write
+;   rewrite-match-pattern '{?lhs * ?rhs}
+; write
+;   rewrite-match-pattern '{?a + ?=a}
+; write
+;   rewrite-match-pattern 'if(false ?tside ?fside)
+; write
+;   rewrite-match-pattern '?args()
+
 defun simplify-expression (expr)
   "Simplify one expression (its operands have already been simplified)."
   optima:match expr
