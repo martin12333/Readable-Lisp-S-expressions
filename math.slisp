@@ -45,6 +45,9 @@ defun numeric-operationp (expr op-list)
     not null(cdr(expr))
     every #'numberp cdr(expr)
 
+defun numberlistp (x)
+  {not(null(x)) and every(#'numberp x)}
+
 defun more-than-onep (x) {consp(x) and consp(cdr(x))}
 
 defun generous-zerop (x) {numberp(x) and {x = 0}}
@@ -68,8 +71,39 @@ defun compute-numeric (x)
     t
       x
 
-defun simplify-using-pattern (expr)
+defun simplify-expression (expr)
+  "Simplify one expression (its operands have already been simplified)."
   optima:match expr
+    list*(op args)
+      when \\ {member(op '(+ - *)) and numberlistp(args)}
+      apply op args
+    list*('+ args)
+      when \\ find 0 args
+      simplify-expression $ cons '+ remove-if(#'generous-zerop args)
+    list*('* args)
+      when \\ find 1 args
+      simplify-expression $ cons '* remove-if(#'generous-onep args)
+    list*('* args)
+      when \\ find 0 args
+      0
+    ilist{lhs '/ rhs}
+      when \\ {integerp(lhs) and integerp(rhs) and {rhs /= 0}}
+      {lhs / rhs}
+    ilist{lhs '^ rhs}
+      when \\ {integerp(lhs) and integerp(rhs) and {rhs >= 2}}
+      expt lhs rhs
+    list*(op args)
+      when \\ {member(op '(+ *)) and {length(args) >= 2} and
+               {length(remove-if(complement(#'numberp) args)) > 1}}
+      ; Mixed numbers and symbols - simplify just the numbers.
+      simplify-expression
+        append
+          list car(expr)
+            apply car(expr) remove-if(complement(#'numberp) expr)
+          remove-if #'numberp cdr(expr)
+    list*(params)
+      when \\ find('undef params)
+      'undef
     list('+ a)                     a
     list('* a)                     a
     list('+)                       0
@@ -112,39 +146,8 @@ defun simplify-using-pattern (expr)
     list('num arg)                 compute-numeric(arg) ; "num(...)" function
     a                              a
 
-defun simplify-expression (expr)
-  "Simplify one expression (its operands have already been simplified)."
-  cond
-    ; If we can do straight-up exact numerical calculations, do it:
-    numeric-operationp(expr '(+ - *))
-      apply car(expr) cdr(expr)
-    {eq(car(expr) '+) and find(0 cdr(expr))} ; Remove zeros from +
-      simplify-expression $ cons '+ remove-if(#'generous-zerop cdr(expr))
-    {eq(car(expr) '*) and find(1 cdr(expr))} ; Remove ones from *
-      simplify-expression $ cons '* remove-if(#'generous-onep cdr(expr))
-    {eq(car(expr) '*) and find(0 cdr(expr))} ; Any 0 in *
-      0
-    {numeric-operationp(expr '(/)) and ; Division, avoid divide by zero.
-     more-than-onep(cdr(expr)) and
-     notany(#'zerop cddr(expr))}
-      apply car(expr) cdr(expr)
-    {numeric-operationp(expr '(^)) and integerp(second(expr)) and
-     integerp(third(expr)) and {third(expr) >= 2}}
-      apply #'expt cdr(expr)
-    {member(car(expr) '(+ *)) and {length(expr) >= 3} and
-     {length(remove-if(complement(#'numberp) expr)) > 1}}
-     ; Mixed numbers and symbols - simplify just the numbers.
-     simplify-expression $ append
-         list car(expr)
-           apply car(expr) remove-if(complement(#'numberp) expr)
-         remove-if #'numberp cdr(expr)
-    {consp(expr) and find('undef expr)}  ; undef normally dominates.
-      'undef
-    t
-      simplify-using-pattern expr
-
 defun simplify-all (expr)
-  "Simplify an expression; first its operands, then the whole thing."
+  "Simplify an expression: first its operands, then the whole thing."
   if atom(expr)
      expr
      simplify-expression mapcar(#'simplify-all expr)
