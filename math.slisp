@@ -102,6 +102,9 @@ defun simplify-expression (expr)
       when \\ find 'true args
       simplify-expression $ cons 'and remove-if(#'true-valuep args)
     list*('or args)
+      when \\ find 'false args
+      simplify-expression $ cons 'or remove-if(#'false-valuep args)
+    list*('or args)
       when \\ find 'true args
       'true
     ilist{lhs '/ rhs}
@@ -163,7 +166,7 @@ defun simplify-expression (expr)
     list('num arg)                 compute-numeric(arg) ; "num(...)" function
     list('not 'true)               'false
     list('not 'false)              'true
-    list*('/= args)                `(<> ,@args)
+    list*('/= args)                `(<> ,@args)  ; Prefer "<>"
     list*('!= args)                `(<> ,@args)
     ilist{a '= eql(a)}             'true
     list('if 'true tside)          tside

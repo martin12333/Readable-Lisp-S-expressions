@@ -38,3 +38,9 @@ cos(pi)
 (d 5 / d x)
 (d x / d x)
 {5 * x * 6}
+{true and true}
+{true and false}
+{true or false}
+{false or false}
+if true 5 7
+if not(true) 6 8
