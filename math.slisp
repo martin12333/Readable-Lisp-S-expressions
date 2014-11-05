@@ -54,6 +54,9 @@ defun generous-zerop (x) {numberp(x) and {x = 0}}
 
 defun generous-onep (x)  {numberp(x) and {x = 1}}
 
+defun true-valuep (x)  {x eq 'true}
+defun false-valuep (x)  {x eq 'false}
+
 defun constant-valuep (x)
   {numberp(x) or eq(x 'pi) or eq(x 'e)}
 
@@ -74,6 +77,15 @@ defun compute-numeric (x)
 defun simplify-expression (expr)
   "Simplify one expression (its operands have already been simplified)."
   optima:match expr
+    list*('* args)
+      when \\ find 0 args
+      0
+    list*('and args)
+      when \\ find 'false args
+      'false
+    list*(params)
+      when \\ find('undef params)
+      'undef
     list*(op args)
       when \\ {member(op '(+ - *)) and numberlistp(args)}
       apply op args
@@ -83,9 +95,12 @@ defun simplify-expression (expr)
     list*('* args)
       when \\ find 1 args
       simplify-expression $ cons '* remove-if(#'generous-onep args)
-    list*('* args)
-      when \\ find 0 args
-      0
+    list*('and args)
+      when \\ find 'true args
+      simplify-expression $ cons 'and remove-if(#'true-valuep args)
+    list*('or args)
+      when \\ find 'true args
+      'true
     ilist{lhs '/ rhs}
       when \\ {integerp(lhs) and integerp(rhs) and {rhs /= 0}}
       {lhs / rhs}
@@ -98,16 +113,15 @@ defun simplify-expression (expr)
       ; Mixed numbers and symbols - simplify just the numbers.
       simplify-expression
         append
-          list car(expr)
-            apply car(expr) remove-if(complement(#'numberp) expr)
-          remove-if #'numberp cdr(expr)
-    list*(params)
-      when \\ find('undef params)
-      'undef
+          list op
+            apply op remove-if(complement(#'numberp) args)
+          remove-if #'numberp args
     list('+ a)                     a
     list('* a)                     a
     list('+)                       0
+    list('or)                      'false
     list('*)                       1
+    list('and)                     'true
     ilist{a '+ eql(a)}             `{2 * ,a}
     ilist{a '- 0}                  a
     ilist{0 '- a}                  `-(,a)
