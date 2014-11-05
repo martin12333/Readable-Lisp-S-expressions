@@ -60,6 +60,9 @@ defun false-valuep (x)  {x eq 'false}
 defun constant-valuep (x)
   {numberp(x) or eq(x 'pi) or eq(x 'e)}
 
+defun truthiness (x)
+  if x 'true 'false
+
 ; Implement "num" function, which forces numerical calculation.
 ; Numeric + - * / already computed using simplification, so no need to do that.
 defun compute-numeric (x)
@@ -87,11 +90,14 @@ defun simplify-expression (expr)
       when \\ find('undef params)
       'undef
     list*(op args)
-      when \\ {member(op '(+ - * = < <= > >=)) and numberlistp(args)}
+      when \\ {member(op '(+ - *)) and numberlistp(args)}
       apply op args
+    list*(op args)
+      when \\ {member(op '(= < <= > >=)) and numberlistp(args)}
+      truthiness $ apply op args
     list*('<> args)
       when \\ numberlistp(args)
-      apply #'/= args
+      truthiness $ apply #'/= args
     list*('+ args)
       when \\ find 0 args
       simplify-expression $ cons '+ remove-if(#'generous-zerop args)

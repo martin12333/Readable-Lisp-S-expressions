@@ -44,3 +44,5 @@ cos(pi)
 {false or false}
 if true 5 7
 if not(true) 6 8
+{5 = 5}
+{6 <> 9}
