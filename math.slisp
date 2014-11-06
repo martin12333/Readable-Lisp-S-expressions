@@ -132,15 +132,15 @@ defun simplify-expression (expr)
     (<> ?args) when numberlistp(args)
       truthiness $ apply #'/= args
     (+ ?args) when find(0 args)
-      simplify-expression $ cons '+ remove-if(#'generous-zerop args)
+      simplify-expression `(+ ,@remove-if(#'generous-zerop args))
     (* ?args) when find(1 args)
-      simplify-expression $ cons '* remove-if(#'generous-onep args)
+      simplify-expression `(* ,@remove-if(#'generous-onep args))
     (and ?args) when find('true args)
-      simplify-expression $ cons 'and remove-if(#'true-valuep args)
+      simplify-expression `(and ,@remove-if(#'true-valuep args))
     (or ?args) when find('true args)
       'true
     (or ?args) when find('false args)
-      simplify-expression $ cons 'or remove-if(#'false-valuep args)
+      simplify-expression `(or ,@remove-if(#'false-valuep args))
     {?lhs / ?rhs} when {integerp(lhs) and integerp(rhs) and {rhs /= 0}}
       {lhs / rhs}
     {?lhs ^ ?rhs} when {integerp(lhs) and integerp(rhs) and {rhs >= 2}}
@@ -199,6 +199,7 @@ defun simplify-expression (expr)
     (/= ?args)                     `(<> ,@args)  ; Prefer "<>"
     (!= ?args)                     `(<> ,@args)
     {?a = ?=a}                     'true
+    {?a <> ?=a}                    'false
     not(true)                      'false
     not(false)                     'true
     {false -> false}               'true
