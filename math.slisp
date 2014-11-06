@@ -146,13 +146,13 @@ defun simplify-expression (expr)
     {?lhs ^ ?rhs} when {integerp(lhs) and integerp(rhs) and {rhs >= 2}}
       expt lhs rhs
     (?op ?args) when {member(op '(+ *)) and {length(args) >= 2} and
-                      {length(remove-if(complement(#'numberp) args)) > 1}}
+                      {length(remove-if-not(#'numberp args)) > 1}}
       ; Mixed numbers and symbols - simplify just the numbers.
       simplify-expression
         append
-          list op
-            apply op remove-if(complement(#'numberp) args)
-          remove-if #'numberp args
+           list op
+             apply op remove-if-not(#'numberp args)
+           remove-if #'numberp args
     (+ ?a)                         a
     (* ?a)                         a
     (+)                            0
