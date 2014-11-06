@@ -15,7 +15,8 @@
 ; To run test suite: "make check-math"
 
 #-quicklisp
-(let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp" (user-homedir-pathname))))
+(let ((quicklisp-init
+        (merge-pathnames "quicklisp/setup.lisp" (user-homedir-pathname))))
   (when (probe-file quicklisp-init)
     (load quicklisp-init)))
 
@@ -27,16 +28,6 @@
 (use-package :optima)
 (readable:enable-sweet)
 
-; These optima patterns are like optima's "list" and "list*", but inline.
-defpattern ilist (arg)
-  when consp(arg)
-   ` cons ,car(arg) ilist(,cdr(arg))
-
-defpattern ilist* (arg)
-  if null(cdr(arg))
-      ` and ,car(arg) type(list)
-      ` cons ,car(arg) ilist*(,cdr(arg))
-
 ; Return t if expr is a numeric-only operation using an op in op-list
 defun numeric-operationp (expr op-list)
   and
@@ -45,23 +36,20 @@ defun numeric-operationp (expr op-list)
     not null(cdr(expr))
     every #'numberp cdr(expr)
 
-defun numberlistp (x)
-  {not(null(x)) and every(#'numberp x)}
-
+defun numberlistp (x)    {not(null(x)) and every(#'numberp x)}
 defun more-than-onep (x) {consp(x) and consp(cdr(x))}
 
 defun generous-zerop (x) {numberp(x) and {x = 0}}
-
 defun generous-onep (x)  {numberp(x) and {x = 1}}
 
-defun true-valuep (x)  {x eq 'true}
-defun false-valuep (x)  {x eq 'false}
-
-defun constant-valuep (x)
-  {numberp(x) or eq(x 'pi) or eq(x 'e)}
+defun true-valuep (x)    {x eq 'true}
+defun false-valuep (x)   {x eq 'false}
 
 defun truthiness (x)
   if x 'true 'false
+
+defun constant-valuep (x)
+  {numberp(x) or eq(x 'pi) or eq(x 'e)}
 
 ; Implement "num" function, which forces numerical calculation.
 ; Numeric + - * / already computed using simplification, so no need to do that.
@@ -121,50 +109,37 @@ defmacro math-patterns (expr &rest patterns)
 defun simplify-expression (expr)
   "Simplify one expression (its operands have already been simplified)."
   math-patterns expr
-    (* ?args)
-      when \\ find 0 args
+    ; The following have higher precedence than undef, so {0 * undef} => 0:
+    (* ?args) when find(0 args)
       0
-    {?a + 0}
-      a
-    (and ?args)
-      when \\ find 'false args
+    (and ?args) when find('false args)
       'false
-    (?args)
-      when \\ find('undef args)
+    ; In general, any undef propogates as undef:
+    (?args) when find('undef args)
       'undef
-    (?op ?args)
-      when \\ {member(op '(+ - *)) and numberlistp(args)}
+    ; Calculate to numbers where possible:
+    (?op ?args) when {member(op '(+ - *)) and numberlistp(args)}
       apply op args
-    (?op ?args)
-      when \\ {member(op '(= < <= > >=)) and numberlistp(args)}
+    (?op ?args) when {member(op '(= < <= > >=)) and numberlistp(args)}
       truthiness $ apply op args
-    (<> ?args)
-      when \\ numberlistp(args)
+    (<> ?args) when numberlistp(args)
       truthiness $ apply #'/= args
-    (+ ?args)
-      when \\ find 0 args
+    (+ ?args) when find(0 args)
       simplify-expression $ cons '+ remove-if(#'generous-zerop args)
-    (* ?args)
-      when \\ find 1 args
+    (* ?args) when find(1 args)
       simplify-expression $ cons '* remove-if(#'generous-onep args)
-    (and ?args)
-      when \\ find 'true args
+    (and ?args) when find('true args)
       simplify-expression $ cons 'and remove-if(#'true-valuep args)
-    (or ?args)
-      when \\ find 'false args
-      simplify-expression $ cons 'or remove-if(#'false-valuep args)
-    (or ?args)
-      when \\ find 'true args
+    (or ?args) when find('true args)
       'true
-    {?lhs / ?rhs}
-      when \\ {integerp(lhs) and integerp(rhs) and {rhs /= 0}}
+    (or ?args) when find('false args)
+      simplify-expression $ cons 'or remove-if(#'false-valuep args)
+    {?lhs / ?rhs} when {integerp(lhs) and integerp(rhs) and {rhs /= 0}}
       {lhs / rhs}
-    {?lhs ^ ?rhs}
-      when \\ {integerp(lhs) and integerp(rhs) and {rhs >= 2}}
+    {?lhs ^ ?rhs} when {integerp(lhs) and integerp(rhs) and {rhs >= 2}}
       expt lhs rhs
-    (?op ?args)
-      when \\ {member(op '(+ *)) and {length(args) >= 2} and
-               {length(remove-if(complement(#'numberp) args)) > 1}}
+    (?op ?args) when {member(op '(+ *)) and {length(args) >= 2} and
+                      {length(remove-if(complement(#'numberp) args)) > 1}}
       ; Mixed numbers and symbols - simplify just the numbers.
       simplify-expression
         append
@@ -177,6 +152,7 @@ defun simplify-expression (expr)
     (or)                           'false
     (*)                            1
     (and)                          'true
+    {?a + 0}                       a
     {?a + ?=a}                     `{2 * ,a}
     {?a - 0}                       a
     {0 - ?a}                       `-(,a)
