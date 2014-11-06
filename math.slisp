@@ -28,8 +28,8 @@
 (use-package :optima)
 (readable:enable-sweet)
 
-; Return t if expr is a numeric-only operation using an op in op-list
 defun numeric-operationp (expr op-list)
+  "Return t if expr is a numeric-only operation using an op in op-list."
   and
     consp expr
     member car(expr) op-list
@@ -65,6 +65,13 @@ defun compute-numeric (x)
     t
       x
 
+defun symbol-beginsp (sym start)
+  "Returns t if symbol sym begins with string start."
+  and
+    symbolp(sym)
+    {length(symbol-name(sym)) >= length(start)}
+    string= subseq(symbol-name(sym) 0 length(start)) start
+
 ; We use a pattern language especially good for math expressions.
 ; The following converts our local pattern language into optima, so that
 ; we can use optima's optimizations and facilities.
@@ -77,10 +84,10 @@ defun rewrite-match-pattern (x)
       'args
     eq(x '_)
       x
-    {symbolp(x) and equal(char(symbol-name(x) 0) #\?)}
-      if equal(char(symbol-name(x) 1) #\=)
-         list 'eql intern(substring(symbol-name(x) 2))
-         intern(substring(symbol-name(x) 1))
+    symbol-beginsp(x "?=")
+      list 'eql intern(substring(symbol-name(x) 2))
+    symbol-beginsp(x "?")
+      intern substring(symbol-name(x) 1)
     member(x '(op args lhs rhs a b))
       error "Operation should have ?"  ; DEBUG
     symbolp(x)
