@@ -114,14 +114,13 @@ defun convert-math-patterns (x)
           cdr car(x)
         convert-math-patterns cdr(x)
 
-defmacro math-patterns (expr patterns)
+defmacro math-patterns (expr &rest patterns)
   ` optima:match ,expr
       ,@ convert-math-patterns patterns
 
 defun simplify-expression (expr)
   "Simplify one expression (its operands have already been simplified)."
   math-patterns expr
-   \\
     (* ?args)
       when \\ find 0 args
       0
