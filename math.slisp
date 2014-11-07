@@ -116,36 +116,34 @@ defmacro math-patterns (expr &rest patterns)
 defun simplify-expression (expr)
   "Simplify one expression (its operands have already been simplified)."
   math-patterns expr
-    ; The following have higher precedence than undef, so {0 * undef} => 0:
-    (* ?args) when find(0 args)
+    *(?args) when find(0 args)
       0
-    (and ?args) when find('false args)
+    and(?args) when find('false args)
       'false
     ; In general, any undef propogates as undef:
     (?args) when find('undef args)
       'undef
-    ; Calculate to numbers where possible:
-    (?op ?args) when {member(op '(+ - *)) and numberlistp(args)}
+    ?op(?args) when {member(op '(+ - *)) and numberlistp(args)}
       apply op args
-    (?op ?args) when {member(op '(= < <= > >=)) and numberlistp(args)}
+    ?op(?args) when {member(op '(= < <= > >=)) and numberlistp(args)}
       truthiness $ apply op args
-    (<> ?args) when numberlistp(args)
+    <>(?args) when numberlistp(args)
       truthiness $ apply #'/= args
-    (+ ?args) when find(0 args)
+    +(?args) when find(0 args)
       simplify-expression `(+ ,@remove-if(#'generous-zerop args))
-    (* ?args) when find(1 args)
+    *(?args) when find(1 args)
       simplify-expression `(* ,@remove-if(#'generous-onep args))
-    (and ?args) when find('true args)
+    and(?args) when find('true args)
       simplify-expression `(and ,@remove-if(#'true-valuep args))
-    (or ?args) when find('true args)
+    or(?args) when find('true args)
       'true
-    (or ?args) when find('false args)
+    or(?args) when find('false args)
       simplify-expression `(or ,@remove-if(#'false-valuep args))
     {?lhs / ?rhs} when {integerp(lhs) and integerp(rhs) and {rhs /= 0}}
       {lhs / rhs}
     {?lhs ^ ?rhs} when {integerp(lhs) and integerp(rhs) and {rhs >= 2}}
       expt lhs rhs
-    (?op ?args) when {member(op '(+ *)) and {length(args) >= 2} and
+    ?op(?args) when {member(op '(+ *)) and {length(args) >= 2} and
                       {length(remove-if-not(#'numberp args)) > 1}}
       ; Mixed numbers and symbols - simplify just the numbers.
       simplify-expression
@@ -153,18 +151,18 @@ defun simplify-expression (expr)
            list op
              apply op remove-if-not(#'numberp args)
            remove-if #'numberp args
-    (+ ?a)                         a
-    (* ?a)                         a
-    (+)                            0
-    (or)                           'false
-    (*)                            1
-    (and)                          'true
+    +(?a)                          a
+    *(?a)                          a
+    +()                            0
+    or()                           'false
+    *()                            1
+    and()                          'true
     {?a + 0}                       a
     {?a + ?=a}                     `{2 * ,a}
     {?a - 0}                       a
     {0 - ?a}                       `-(,a)
     {?a - ?=a}                     0
-    {?a + (- ?=a)}                 0
+    {?a + -(?=a)}                  0
     {?a * 1}                       a
     {1 * ?a}                       a
     {?a * ?=a}                     `{,a ^ 2}
@@ -196,7 +194,7 @@ defun simplify-expression (expr)
     (d ?constant / d ?x)           when constant-valuep(constant) 0
     (d ?x / d ?=x)                 when symbolp(x)                1
     num(?arg)                      compute-numeric(arg) ; "num(...)" function
-    (/= ?args)                     `(<> ,@args)  ; Prefer "<>"
+    /=(?args)                      `(<> ,@args)  ; Prefer "<>"
     (!= ?args)                     `(<> ,@args)
     {?a = ?=a}                     'true
     {?a <> ?=a}                    'false
