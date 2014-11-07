@@ -176,10 +176,11 @@ defun simplify-expression (expr)
     {1 ^ ?a}                       1
     {?a ^ 1}                       a
     {?a ^ -1}                      `{1 / ,a}
-    {{?a * ?b} / ?=a}              b
-    {{?b * ?a} / ?=a}              b
-    {?a * {?b / ?=a}}              b
-    {{?b / ?a} * ?=a}              b
+    {{?a - ?b} <> 0}               simplify-expression(`{,a <> ,b})
+    {{?a * ?b} / ?=a}              simplify-all(`if({,a <> 0} ,b))
+    {{?b * ?a} / ?=a}              simplify-all(`if({,a <> 0} ,b))
+    {?a * {?b / ?=a}}              simplify-all(`if({,a <> 0} ,b))
+    {{?b / ?a} * ?=a}              simplify-all(`if({,a <> 0} ,b))
     log(0)                         'undef
     log(0 _)                       'undef
     log(1)                         0
