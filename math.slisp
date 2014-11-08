@@ -152,8 +152,6 @@ defun simplify-expression (expr)
            list op
              apply op remove-if-not(#'numberp args)
            remove-if #'numberp args
-    {?n + ?a} when numberp(n)      `{,a + ,n}
-    {?a * ?n} when numberp(n)      `{,n * ,a}
     +(?a)                          a
     *(?a)                          a
     +()                            0
@@ -184,6 +182,8 @@ defun simplify-expression (expr)
     {{?b * ?a} / ?=a}              simplify-all(`if({,a <> 0} ,b))
     {?a * {?b / ?=a}}              simplify-all(`if({,a <> 0} ,b))
     {{?b / ?a} * ?=a}              simplify-all(`if({,a <> 0} ,b))
+    {?n + ?a} when numberp(n)      `{,a + ,n}
+    {?a * ?n} when numberp(n)      `{,n * ,a}
     log(0)                         'undef
     log(0 _)                       'undef
     log(1)                         0
