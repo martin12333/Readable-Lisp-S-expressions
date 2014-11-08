@@ -152,6 +152,8 @@ defun simplify-expression (expr)
            list op
              apply op remove-if-not(#'numberp args)
            remove-if #'numberp args
+    {?n + ?a} when numberp(n)      `{,a + ,n}
+    {?a * ?n} when numberp(n)      `{,n * ,a}
     +(?a)                          a
     *(?a)                          a
     +()                            0
