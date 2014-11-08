@@ -239,18 +239,52 @@ defun simplify-all (expr)
      expr
      simplify-expression mapcar(#'simplify-all expr)
 
+defun show-help ()
+  dolist
+    line
+      ' <*
+"Enter mathematical expressions, and this program prints simplified versions."
+"Enter expressions in sweet-expression format. For example:"
+"- Infix operations are surrounded by {...}, e.g., {3 + 4}"
+"- Prefix operations can begin before parentheses, e.g., sin(0)"
+"- Indent expressions to make them children of the main expression."
+"Enter a blank line to complete an expression."
+"This simplifier accepts symbolic expressions, e.g., {2 * x * 3 * y}."
+"Supported operations are:"
+" +, -, *, /, ^ : Infix add, subtract, multiply, divide, exponentiate."
+" =, <>, <, <=, >, >=: Infix numeric comparision."
+" and, or, ->: Infix (logical) and, (logical) or, implication."
+" log(n [base]), ln(n), ln(n [base]): Logarithmic functions."
+" sin(x), cos(x): Trigonometric functions."
+" undef, true, false: Constant values undefined, true, false."
+" not(x): Logical negation."
+" if(condition true-result [false-result]): If-then-else."
+" (d expression / d variable): Derivative of expression w.r.t. variable."
+"     Single symbols are constants; use f(x) to represent a function."
+" num(expression): Force numeric calculation of expression."
+"This program doesn't compete with programs like Maxima.  However,"
+"it is unusual in that it tracks undefined values e.g., by division-by-zero."
+"E.g., {z / z} simplifies to if({z <> 0} 1), not just 1."
+"Number-only expressions with exact results simplify to that number."
+"E.G., {3 * {1 + 2}} => 9, cos(0) => 0, {x + {y * 0}} => x."
+*>
+    princ line
+    terpri()
+
 princ "Math - Simplify possibly-symbolic math sweet-expressions."
 terpri()
 princ "Examples: {3 * {1 + 2}}, cos(0), {x + {y * 0}}"
 terpri()
 terpri()
 
-princ "Please enter expressions to be simplified:"
+princ "Please enter expressions to be simplified (:help ENTER ENTER for help):"
 terpri()
 loop for line = read-preserving-whitespace(*standard-input* nil :eof)
      until \\ eq line :eof
      do \\ progn
-       readable:write-readable simplify-all(line) :case :downcase
+       if eq(line :help)
+         show-help()
+         readable:write-readable simplify-all(line) :case :downcase
        terpri()
 
 (readable:disable-readable)
