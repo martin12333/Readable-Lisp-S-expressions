@@ -538,8 +538,11 @@ check-math:
 	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
 	  $(CLISP) -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
 	        "$(srcdir)/math.slisp" < "$(srcdir)/tests/math-test" \
+             | tee "math-results" \
              | diff -b -u "$(srcdir)/tests/math-test-correct" -
 test-math: check-math
+check-math-is-okay:
+	cp math-results tests/math-test-correct
 else !HAVE_CLISP
 check-clisp:
 endif !HAVE_CLISP

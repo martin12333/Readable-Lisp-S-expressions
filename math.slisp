@@ -50,6 +50,9 @@ defun truthiness (x)
 defun constant-valuep (x)
   {numberp(x) or eq(x 'pi) or eq(x 'e)}
 
+defun filter (pred list)
+  remove-if complement(pred) list
+
 ; Implement "num" function, which forces numerical calculation.
 ; Numeric + - * / already computed using simplification, so no need to do that.
 defun compute-numeric (x)
@@ -71,6 +74,13 @@ defun symbol-beginsp (sym start)
     {length(symbol-name(sym)) >= length(start)}
     string= subseq(symbol-name(sym) 0 length(start)) start
 
+; If simplification makes it better, return it, otherwise fail.
+defmacro simplify-all-if-can (expr)
+  ` let* <* old-expr ,expr \\ new-expr simplify-all(old-expr) *>
+    if equal(old-expr new-expr)
+      fail()
+      new-expr
+
 ; We use a pattern language especially good for math expressions.
 ; The following converts our local pattern language into optima, so that
 ; we can use optima's optimizations and facilities.
@@ -82,7 +92,7 @@ defun rewrite-match-pattern (x)
     eq(x '?args)
       'args
     eq(x '?n-args)
-      '(guard args (numberlistp args))
+      '(guard args (numberlistp args))  ; list of only numbers
     eq(x '_)
       x
     symbol-beginsp(x "?=")
@@ -121,7 +131,7 @@ defun simplify-expression (expr)
       0
     and(?args) when find('false args)
       'false
-    ; In general, any undef propogates as undef:
+    ; In general, any undef propagates as undef:
     (?args) when find('undef args)
       'undef
     ?op(?n-args) when member(op '(+ - *))
@@ -144,14 +154,14 @@ defun simplify-expression (expr)
       {lhs / rhs}
     {?lhs ^ ?rhs} when {integerp(lhs) and integerp(rhs) and {rhs >= 2}}
       expt lhs rhs
-    ?op(?args) when {member(op '(+ *)) and {length(args) >= 2} and
-                      {length(remove-if-not(#'numberp args)) > 1}}
-      ; Mixed numbers and symbols - simplify just the numbers.
+    +(?args) when {{length(args) >= 2} and
+                   {length(filter(#'numberp args)) > 1}}
       simplify-expression
-        append
-           list op
-             apply op remove-if-not(#'numberp args)
-           remove-if #'numberp args
+        `(+ ,@remove-if(#'numberp args) ,apply('+ filter(#'numberp args)))
+    *(?args) when {{length(args) >= 2} and
+                   {length(filter(#'numberp args)) > 1}}
+      simplify-expression
+        `(* ,apply('* filter(#'numberp args)) ,@remove-if(#'numberp args))
     +(?a)                          a
     *(?a)                          a
     +()                            0
@@ -195,8 +205,15 @@ defun simplify-expression (expr)
     sin(pi)                        0
     cos(0)                         1
     cos(pi)                        -1
-    (d ?constant / d ?x)           when constant-valuep(constant) 0
     (d ?x / d ?=x)                 when symbolp(x)                1
+    (d ?constant / d ?x)           when constant-valuep(constant) 0
+    (d ?y / d ?x)                  when symbolp(y)                0
+    (d +(?args) / d ?x)
+      simplify-all-if-can `(+ ,@mapcar(lambda((expr) `(d ,expr / d ,x)) args))
+    (d -(?args) / d ?x)
+      simplify-all-if-can `(- ,@mapcar(lambda((expr) `(d ,expr / d ,x)) args))
+    (d {?f * ?g} / d ?x)
+      simplify-all-if-can `{{(d ,f / d ,x) * ,g} + {,f * (d ,g / d ,x)}}
     num(?arg)                      compute-numeric(arg) ; "num(...)" function
     /=(?args)                      `(<> ,@args)  ; Prefer "<>"
     (!= ?args)                     `(<> ,@args)

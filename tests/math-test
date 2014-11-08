@@ -36,7 +36,11 @@ sin(pi)
 cos(0)
 cos(pi)
 (d 5 / d x)
+(d a / d x)
 (d x / d x)
+(d {3 * x} / d x)
+(d {y * x} / d x)
+(d {f(x) * g(x)} / d x)
 {5 * x * 6}
 {true and true}
 {true and false}
@@ -46,3 +50,5 @@ if true 5 7
 if not(true) 6 8
 {5 = 5}
 {6 <> 9}
+{x * 2 * y * 3 * z * 4}
+{x + 2 + y + 3 + z + 4}
