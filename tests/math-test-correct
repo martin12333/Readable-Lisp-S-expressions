@@ -34,10 +34,10 @@ z
 0
 1
 {1 / z}
-y
-y
-y
-x
+if({x <> 0} y)
+if({x <> 0} y)
+if({x <> 0} y)
+if({y <> 0} x)
 undef
 undef
 0
