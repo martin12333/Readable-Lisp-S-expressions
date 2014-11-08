@@ -180,7 +180,7 @@ defun simplify-expression (expr)
     {?a * ?=a * ?=a}               `{,a ^ 3}
     {?a / 0}                       'undef
     {?a / 1}                       a
-    {?a / ?=a}                     1
+    {?a / ?=a}                     simplify-all(`if({,a <> 0} 1))
     {0 ^ 0}                        'undef
     {?a ^ 0}                       1
     {0 ^ ?a}                       0
