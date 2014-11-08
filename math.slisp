@@ -38,7 +38,6 @@ defun numeric-operationp (expr op-list)
 
 defun numberlistp (x)    {not(null(x)) and every(#'numberp x)}
 defun more-than-onep (x) {consp(x) and consp(cdr(x))}
-
 defun generous-zerop (x) {numberp(x) and {x = 0}}
 defun generous-onep (x)  {numberp(x) and {x = 1}}
 
@@ -82,6 +81,8 @@ defun rewrite-match-pattern (x)
   cond
     eq(x '?args)
       'args
+    eq(x '?n-args)
+      '(guard args (numberlistp args))
     eq(x '_)
       x
     symbol-beginsp(x "?=")
@@ -95,7 +96,7 @@ defun rewrite-match-pattern (x)
     atom(x)
       x
     consp(x)
-      if eq(car(last(x)) '?args)
+      if member(car(last(x)) '(?args ?n-args))
         ` list* ,@mapcar(#'rewrite-match-pattern x)
         ` list  ,@mapcar(#'rewrite-match-pattern x)
 
@@ -123,11 +124,11 @@ defun simplify-expression (expr)
     ; In general, any undef propogates as undef:
     (?args) when find('undef args)
       'undef
-    ?op(?args) when {member(op '(+ - *)) and numberlistp(args)}
+    ?op(?n-args) when member(op '(+ - *))
       apply op args
-    ?op(?args) when {member(op '(= < <= > >=)) and numberlistp(args)}
+    ?op(?n-args) when member(op '(= < <= > >=))
       truthiness $ apply op args
-    <>(?args) when numberlistp(args)
+    <>(?n-args)
       truthiness $ apply #'/= args
     +(?args) when find(0 args)
       simplify-expression `(+ ,@remove-if(#'generous-zerop args))
