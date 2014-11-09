@@ -169,7 +169,7 @@ defun simplify-expression (expr)
     *()                            1
     and()                          'true
     {?a + 0}                       a
-    {?a + ?=a}                     `{2 * ,a}
+    {?a + ?=a}                     simplify-expression(`{2 * ,a})
     {?a - 0}                       a
     {0 - ?a}                       `-(,a)
     {?a - ?=a}                     0
@@ -205,20 +205,20 @@ defun simplify-expression (expr)
     sin(pi)                        0
     cos(0)                         1
     cos(pi)                        -1
-    (d ?x / d ?=x)                 when symbolp(x)                1
-    (d ?constant / d ?x)           when constant-valuep(constant) 0
-    (d ?y / d ?x)                  when symbolp(y)                0
-    (d +(?args) / d ?x)
-      simplify-all-if-can `(+ ,@mapcar(lambda((expr) `(d ,expr / d ,x)) args))
-    (d -(?args) / d ?x)
-      simplify-all-if-can `(- ,@mapcar(lambda((expr) `(d ,expr / d ,x)) args))
-    (d {?f * ?g} / d ?x)
-      simplify-all-if-can `{{(d ,f / d ,x) * ,g} + {,f * (d ,g / d ,x)}}
-    (d {?f / ?g} / d ?x)
+    deriv(?x ?=x)                 when symbolp(x)                1
+    deriv(?constant ?x)           when constant-valuep(constant) 0
+    deriv(?y ?x)                  when symbolp(y)                0
+    deriv(+(?args) ?x)
+      simplify-all-if-can `(+ ,@mapcar(lambda((expr) `deriv(,expr ,x)) args))
+    deriv(-(?args) ?x)
+      simplify-all-if-can `(- ,@mapcar(lambda((expr) `deriv(,expr ,x)) args))
+    deriv({?f * ?g} ?x)
+      simplify-all-if-can `{{deriv(,f ,x) * ,g} + {,f * deriv(,g ,x)}}
+    deriv({?f / ?g} ?x)
       simplify-all-if-can
         ` if {,g <> 0}
-             {{{(d ,f / d ,x) * ,g} - {,f * (d ,g / d ,x)}} / {,g ^ 2}}
-    (d {?x ^ ?n} / d ?=x) when {numberp(n) and {n /= 0}}
+             {{{deriv(,f ,x) * ,g} - {,f * deriv(,g ,x)}} / {,g ^ 2}}
+    deriv({?x ^ ?n} ?=x) when {numberp(n) and {n /= 0}}
       `{,n * {,x ^ ,{n - 1}}}      ; Power rule
     num(?arg)                      compute-numeric(arg) ; "num(...)" function
     /=(?args)                      `(<> ,@args)  ; Prefer "<>"
@@ -263,8 +263,8 @@ defun show-help ()
 " undef, true, false: Constant values undefined, true, false."
 " not(x): Logical negation."
 " if(condition true-result [false-result]): If-then-else."
-" (d expression / d variable): Derivative of expression w.r.t. variable."
-"     Single symbols are constants; use f(x) to represent a function."
+" deriv(expression variable): Derivative of expression w.r.t. variable."
+"     Symbols are considered constants; use f(x) to represent a function."
 " num(expression): Force numeric calculation of expression."
 "This program doesn't compete with programs like Maxima.  However,"
 "it is unusual in that it tracks undefined values e.g., by division-by-zero."

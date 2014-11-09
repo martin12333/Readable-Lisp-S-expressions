@@ -35,12 +35,12 @@ sin(0)
 sin(pi)
 cos(0)
 cos(pi)
-(d 5 / d x)
-(d a / d x)
-(d x / d x)
-(d {3 * x} / d x)
-(d {y * x} / d x)
-(d {f(x) * g(x)} / d x)
+deriv(5 x)
+deriv(a x)
+deriv(x x)
+deriv({3 * x} x)
+deriv({y * x} x)
+deriv({f(x) * g(x)} x)
 {5 * x * 6}
 {true and true}
 {true and false}
@@ -52,6 +52,6 @@ if not(true) 6 8
 {6 <> 9}
 {x * 2 * y * 3 * z * 4}
 {x + 2 + y + 3 + z + 4}
-(d {x ^ 5} / d x)
+deriv({x ^ 5} x)
 {z / z}
 {5.5 / 5.5}

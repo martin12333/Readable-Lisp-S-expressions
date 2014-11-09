@@ -541,8 +541,11 @@ check-math:
              | tee "math-results" \
              | diff -b -u "$(srcdir)/tests/math-test-correct" -
 test-math: check-math
+# If the results are correct, record them:
 check-math-is-okay:
 	cp math-results tests/math-test-correct
+check-math-is-ok: check-math-is-okay
+check-math-is-correct: check-math-is-okay
 else !HAVE_CLISP
 check-clisp:
 endif !HAVE_CLISP

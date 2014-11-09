@@ -11,7 +11,7 @@ To load "readable":
 Math - Simplify possibly-symbolic math sweet-expressions.
 Examples: {3 * {1 + 2}}, cos(0), {x + {y * 0}}
 
-Please enter expressions to be simplified:
+Please enter expressions to be simplified (:help ENTER ENTER for help):
 3
 {a + b}
 0
@@ -54,7 +54,7 @@ undef
 1
 3
 y
-d({f(x) * g(x)} / d x)
+deriv({f(x) * g(x)} x)
 {30 * x}
 true
 false
