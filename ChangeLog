@@ -10,6 +10,8 @@
 	  didn't affect infix or traditional s-expression
 	  notation, and this is normally how such expressions would be used.
 	  Also, the neoteric reader worked just fine.
+	* Added "math.slisp", a symbol math simplifier in Common Lisp
+	  that demonstrates the readable notations.
 
 2014-10-18 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Version 1.0.5.
