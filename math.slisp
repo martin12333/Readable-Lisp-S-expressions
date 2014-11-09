@@ -214,6 +214,10 @@ defun simplify-expression (expr)
       simplify-all-if-can `(- ,@mapcar(lambda((expr) `(d ,expr / d ,x)) args))
     (d {?f * ?g} / d ?x)
       simplify-all-if-can `{{(d ,f / d ,x) * ,g} + {,f * (d ,g / d ,x)}}
+    (d {?f / ?g} / d ?x)
+      simplify-all-if-can
+        ` if {,g <> 0}
+             {{{(d ,f / d ,x) * ,g} - {,f * (d ,g / d ,x)}} / {,g ^ 2}}
     (d {?x ^ ?n} / d ?=x) when {numberp(n) and {n /= 0}}
       `{,n * {,x ^ ,{n - 1}}}      ; Power rule
     num(?arg)                      compute-numeric(arg) ; "num(...)" function
