@@ -1,17 +1,28 @@
-; math.slisp - demonstrate math simplification system
+; math.slisp - math expression simplifier
 ; by David A. Wheeler
-; Demonstrates using sweet-expressions in Common Lisp.
-; This program focuses on returning exact results where possible.
-
-; There are many implementations of Computer Algebra Systems (CASs)
-; in Common Lisp, but they typically have to implement their own reader
-; because the built-in reader is so painful to use.
-; You *can* implement your own language, of course, but having a
-; built-in notation that's easier to use makes it easier to move on
-; to actually solving problems instead.  So this demonstration
-; shows *using* sweet-expressions to write the program, *and* uses
-; sweet-expressions as the input notation.
+; This simplifies various math expressions, returning exact results.
+; Its real purpose is to demonstrate sweet-expressions in Common Lisp.
 ; This is a pattern rule based system.
+
+; MIT license.
+; Copyright (c) 2014 David A. Wheeler
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+; 
+; The above copyright notice and this permission notice shall be included in
+; all copies or substantial portions of the Software.
+; 
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+; THE SOFTWARE.
 
 ; To run test suite: "make check-math"
 
@@ -217,6 +228,8 @@ defun simplify-expression (expr)
     cos{3/2 * pi}                  0
     cos{{3 * pi} / 2}              0
     cos{2 * pi}                    1
+    tan(0)                         0
+    tan(pi)                        0
     deriv(?x ?=x)                  when symbolp(x)                1
     deriv(?constant ?x)            when constant-valuep(constant) 0
     deriv(?y ?x)                   when symbolp(y)                0
@@ -285,8 +298,9 @@ defun show-help ()
 " =, <>, <, <=, >, >=: Infix numeric comparision."
 " and, or, ->: Infix (logical) and, (logical) or, implication."
 " log(n [base]), ln(n), ln(n [base]): Logarithmic functions."
-" sin(x), cos(x): Trigonometric functions."
+" sin(x), cos(x), tan(x): Trigonometric functions (radians)."
 " undef, true, false: Constant values undefined, true, false."
+" pi, e: Constant values pi (3.14159...) and e (2.71828...)."
 " not(x): Logical negation."
 " if(condition true-result [false-result]): If-then-else."
 " deriv(expression variable): Derivative of expression w.r.t. variable."
@@ -294,9 +308,10 @@ defun show-help ()
 " num(expression): Force numeric calculation of expression."
 "This program doesn't compete with programs like Maxima.  However,"
 "it is unusual in that it tracks undefined values e.g., by division-by-zero."
-"E.g., {z / z} simplifies to if({z <> 0} 1), not just 1."
+"For example, {z / z} simplifies to if({z <> 0} 1), not just 1."
 "Number-only expressions with exact results simplify to that number."
-"E.G., {3 * {1 + 2}} => 9, cos(0) => 0, {x + {y * 0}} => x."
+"Examples: {3 * {1 + 2}} => 9, cos(0) => 0, {x + {y * 0}} => x,"
+" {true and false} => false, deriv({x ^ 3} x) => {3 * {x ^ 2}}."
 *>
     princ line
     terpri()
