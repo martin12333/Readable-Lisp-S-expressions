@@ -204,12 +204,22 @@ defun simplify-expression (expr)
     ln(0)                          'undef
     ln(e)                          1
     sin(0)                         0
+    sin{pi / 2}                    1
+    sin{1/2 * pi}                  1
     sin(pi)                        0
+    sin{3/2 * pi}                  -1
+    sin{{3 * pi} / 2}              -1
+    sin{2 * pi}                    0
     cos(0)                         1
+    cos{pi / 2}                    0
+    cos{1/2 * pi}                  0
     cos(pi)                        -1
-    deriv(?x ?=x)                 when symbolp(x)                1
-    deriv(?constant ?x)           when constant-valuep(constant) 0
-    deriv(?y ?x)                  when symbolp(y)                0
+    cos{3/2 * pi}                  0
+    cos{{3 * pi} / 2}              0
+    cos{2 * pi}                    1
+    deriv(?x ?=x)                  when symbolp(x)                1
+    deriv(?constant ?x)            when constant-valuep(constant) 0
+    deriv(?y ?x)                   when symbolp(y)                0
     deriv(+(?args) ?x)
       simplify-all-if-can `+(,@mapcar(lambda((expr) `deriv(,expr ,x)) args))
     deriv(-(?args) ?x)
