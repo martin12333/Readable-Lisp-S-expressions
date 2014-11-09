@@ -38,6 +38,7 @@ defun numeric-operationp (expr op-list)
 
 defun numberlistp (x)    {not(null(x)) and every(#'numberp x)}
 defun more-than-onep (x) {consp(x) and consp(cdr(x))}
+defun lastvalue (x)      car(last(x))
 defun generous-zerop (x) {numberp(x) and {x = 0}}
 defun generous-onep (x)  {numberp(x) and {x = 1}}
 
@@ -192,8 +193,6 @@ defun simplify-expression (expr)
     {{?b * ?a} / ?=a}              simplify-all(`if({,a <> 0} ,b))
     {?a * {?b / ?=a}}              simplify-all(`if({,a <> 0} ,b))
     {{?b / ?a} * ?=a}              simplify-all(`if({,a <> 0} ,b))
-    {?n + ?a} when numberp(n)      `{,a + ,n}
-    {?a * ?n} when numberp(n)      `{,n * ,a}
     {?a * *(?args)}                simplify-expression(`*(,a ,@args))
     {?a + +(?args)}                simplify-expression(`+(,a ,@args))
     log(0)                         'undef
@@ -211,9 +210,9 @@ defun simplify-expression (expr)
     deriv(?constant ?x)           when constant-valuep(constant) 0
     deriv(?y ?x)                  when symbolp(y)                0
     deriv(+(?args) ?x)
-      simplify-all-if-can `(+ ,@mapcar(lambda((expr) `deriv(,expr ,x)) args))
+      simplify-all-if-can `+(,@mapcar(lambda((expr) `deriv(,expr ,x)) args))
     deriv(-(?args) ?x)
-      simplify-all-if-can `(- ,@mapcar(lambda((expr) `deriv(,expr ,x)) args))
+      simplify-all-if-can `-(,@mapcar(lambda((expr) `deriv(,expr ,x)) args))
     deriv({?f * ?g} ?x)
       simplify-all-if-can `{{deriv(,f ,x) * ,g} + {,f * deriv(,g ,x)}}
     deriv({?f / ?g} ?x)
@@ -224,6 +223,10 @@ defun simplify-expression (expr)
       simplify-all
         `{ {,g * {,f ^ {,g - 1}} * deriv(,f ,x)}
          + {{,f ^ ,g} * log(,f)  * deriv(,g ,x)}}
+    deriv(log(?f) ?x)              simplify-all(`{deriv(,f ,x) / ,f})
+    deriv({e ^ ?f} ?x)             simplify-all(`{{e ^ ,f} * deriv(,f ,x)})
+    deriv(sin(?f) ?x)              simplify-all(`{cos(,f) * deriv(,f ,x)})
+    deriv(cos(?f) ?x)              simplify-all(`{-(sin(,f)) * deriv(,f ,x)})
     num(?arg)                      compute-numeric(arg) ; "num(...)" function
     /=(?args)                      `(<> ,@args)  ; Prefer "<>"
     (!= ?args)                     `(<> ,@args)
@@ -239,6 +242,16 @@ defun simplify-expression (expr)
     if(true ?tside ?fside)         tside
     if(false ?tside)               'undef
     if(false ?tside ?fside)        fside
+    +(?args) when
+      {{length(args) > 1} and not(numberp(lastvalue(args))) and
+        some(#'numberp args)}
+      `+(,@remove-if(#'numberp args) ,@filter(#'numberp args))
+    *(?args) when
+      {{length(args) > 1} and not(numberp(car(args))) and
+        some(#'numberp args)}
+      `*(,@filter(#'numberp args) ,@remove-if(#'numberp args))
+    ; {?n + ?a} when numberp(n)      `{,a + ,n}
+    ; {?a * ?n} when numberp(n)      `{,n * ,a}
     ?a                             a
 
 defun simplify-all (expr)
