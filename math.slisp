@@ -200,13 +200,20 @@ defun simplify-expression (expr)
     {1 ^ ?a}                       1
     {?a ^ 1}                       a
     {?a ^ -1}                      `{1 / ,a}
+    {{?a + ?b} <> 0}               simplify-all(`{,a <> -(,b)})
+    {{?a + ?b} = 0}                simplify-all(`{,a = -(,b)})
     {{?a - ?b} <> 0}               simplify-expression(`{,a <> ,b})
+    {{?a - ?b} = 0}                simplify-expression(`{,a = ,b})
+    {{?a * ?b} <> 0}               simplify-expression(`{,a <> 0})
+    {{?a * ?b} = 0}                simplify-expression(`{,a = 0})
+    {{?a / ?b} <> 0}               simplify-expression(`{,a <> 0})
+    {{?a / ?b} = 0}                simplify-expression(`{,a = 0})
     {{?a * ?b} / ?=a}              simplify-all(`if({,a <> 0} ,b))
     {{?b * ?a} / ?=a}              simplify-all(`if({,a <> 0} ,b))
     {?a * {?b / ?=a}}              simplify-all(`if({,a <> 0} ,b))
     {{?b / ?a} * ?=a}              simplify-all(`if({,a <> 0} ,b))
-    {?a * *(?args)}                simplify-expression(`*(,a ,@args))
-    {?a + +(?args)}                simplify-expression(`+(,a ,@args))
+    {?a * *(?args)}                simplify-all(`{,a * ,@args})
+    {+(?args) + ?a}                simplify-all(`{,@args + ,a})
     log(0)                         'undef
     log(0 _)                       'undef
     log(1)                         0

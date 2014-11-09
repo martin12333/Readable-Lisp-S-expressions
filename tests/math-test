@@ -61,3 +61,5 @@ deriv({2 * sin(z)} z)
 deriv(sin{z ^ 2} z)
 {z * 3 * y}
 {z + 3 + y}
+{3 * {2 * x}}
+{{1 + 2 + x} + 7}
