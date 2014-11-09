@@ -194,6 +194,8 @@ defun simplify-expression (expr)
     {{?b / ?a} * ?=a}              simplify-all(`if({,a <> 0} ,b))
     {?n + ?a} when numberp(n)      `{,a + ,n}
     {?a * ?n} when numberp(n)      `{,n * ,a}
+    {?a * *(?args)}                simplify-expression(`*(,a ,@args))
+    {?a + +(?args)}                simplify-expression(`+(,a ,@args))
     log(0)                         'undef
     log(0 _)                       'undef
     log(1)                         0
@@ -218,8 +220,10 @@ defun simplify-expression (expr)
       simplify-all-if-can
         ` if {,g <> 0}
              {{{deriv(,f ,x) * ,g} - {,f * deriv(,g ,x)}} / {,g ^ 2}}
-    deriv({?x ^ ?n} ?=x) when {numberp(n) and {n /= 0}}
-      `{,n * {,x ^ ,{n - 1}}}      ; Power rule
+    deriv({?f ^ ?g} ?x)
+      simplify-all
+        `{ {,g * {,f ^ {,g - 1}} * deriv(,f ,x)}
+         + {{,f ^ ,g} * log(,f)  * deriv(,g ,x)}}
     num(?arg)                      compute-numeric(arg) ; "num(...)" function
     /=(?args)                      `(<> ,@args)  ; Prefer "<>"
     (!= ?args)                     `(<> ,@args)
