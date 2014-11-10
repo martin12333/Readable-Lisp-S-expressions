@@ -255,10 +255,12 @@ defun simplify-expression (expr)
     log(0 _)                       'undef
     log(1)                         0
     log(1 _)                       0
-    log(?a ?=a)                    1
-    log(?a) when {numberp(a) and {a > 0} and integerp(log(a 10))}
+    ; TODO: Logarithms of complex numbers.  For now, simplify some reals
+    log(?a ?=a) when {realp(a) and {a > 0}}
+      1
+    log(?a) when {realp(a) and {a > 0} and integerp(log(a 10))}
       log(a 10)
-    log(?a ?x) when {numberp(a) and numberp(x) and {a > 0} and
+    log(?a ?x) when {realp(a) and realp(x) and {a > 0} and
                      integerp(log(a x))}
       log(a x)
     {log(?a) + log(?b)}            simplify-all(`log{,a * ,b})
