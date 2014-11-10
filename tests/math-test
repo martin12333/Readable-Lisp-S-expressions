@@ -64,3 +64,11 @@ deriv(sin{z ^ 2} z)
 {3 * {2 * x}}
 {{1 + 2 + x} + 7}
 {{3 * x} + {4 * x}}
+{false -> false}
+{false -> true}
+{true -> false}
+{true -> true}
+{x -> y}
+{true -> {f(x) > 1}}
+{{x > 0} or false}
+{false or {x > 0}}

@@ -75,6 +75,8 @@ defun compute-numeric (x)
     not(consp(x)) x
     numeric-operationp(x '(^))
       apply #'expt cdr(x)
+    {numeric-operationp(x '(log)) and {length(x) = 2}}
+      log second(x) 10 ; "log" default base is 10.
     numeric-operationp(x '(log ln sin cos))
       apply car(x) cdr(x)
     t
@@ -112,7 +114,9 @@ defun rewrite-match-pattern (x)
       list 'eql intern(substring(symbol-name(x) 2))
     symbol-beginsp(x "?")
       intern substring(symbol-name(x) 1)
-    member(x '(op args lhs rhs a b))
+    symbol-beginsp(x ",")
+      error "Operation should have ?"  ; DEBUG
+    member(x '(op args lhs rhs a b f g p q x y z))
       error "Operation should have ?"  ; DEBUG
     symbolp(x)
       `quote(,x)
@@ -157,11 +161,11 @@ defun simplify-expression (expr)
       simplify-expression `(+ ,@remove-if(#'generous-zerop args))
     *(?args) when find(1 args)
       simplify-expression `(* ,@remove-if(#'generous-onep args))
-    and(?args) when find('true args)
+    and(?args) when {find('true args) and {length(args) > 1}}
       simplify-expression `(and ,@remove-if(#'true-valuep args))
     or(?args) when find('true args)
       'true
-    or(?args) when find('false args)
+    or(?args) when {find('false args) and {length(args) > 1}}
       simplify-expression `(or ,@remove-if(#'false-valuep args))
     {?lhs / ?rhs} when {integerp(lhs) and integerp(rhs) and {rhs /= 0}}
       {lhs / rhs}
@@ -175,29 +179,33 @@ defun simplify-expression (expr)
                    {length(filter(#'numberp args)) > 1}}
       simplify-expression
         `(* ,apply('* filter(#'numberp args)) ,@remove-if(#'numberp args))
+    +()                            0
+    *()                            1
+    or()                           'false
+    and()                          'true
     +(?a)                          a
     *(?a)                          a
-    +()                            0
-    or()                           'false
-    *()                            1
-    and()                          'true
+    or(?a)                         a
+    and(?a)                        a
     {?a + 0}                       a
     {?a + ?=a}                     simplify-expression(`{2 * ,a})
     {?a - 0}                       a
     {0 - ?a}                       `-(,a)
     -(-(?a))                       a
+    {-(?a) ^ ?b} when {numberp(b) and evenp(b)}
+      simplify-expression `{,a ^ ,b}
     {?a - ?=a}                     0
     {?a + -(?=a)}                  0
     {?a * 1}                       a
     {1 * ?a}                       a
-    {?a * ?=a}                     `{,a ^ 2}
-    {?a * ?=a * ?=a}               `{,a ^ 3}
+    {?a * ?=a}                     simplify-expression(`{,a ^ 2})
+    {?a * ?=a * ?=a}               simplify-expression(`{,a ^ 3})
     {?a / 0}                       'undef
     {?a / 1}                       a
     {?a / ?=a}                     simplify-all(`if({,a <> 0} 1))
     {0 ^ 0}                        'undef
-    {?a ^ 0}                       1
-    {0 ^ ?a}                       0
+    {?a ^ 0}                       `if({,a <> 0} 1)
+    {0 ^ ?a}                       `if({,a <> 0} 0)
     {1 ^ ?a}                       1
     {?a ^ 1}                       a
     {?a ^ -1}                      `{1 / ,a}
@@ -220,8 +228,22 @@ defun simplify-expression (expr)
     log(1)                         0
     log(1 _)                       0
     log(?a ?=a)                    1
+    log(?a) when {numberp(a) and {a > 0} and integerp(log(a 10))}
+      log(a 10)
+    log(?a ?x) when {numberp(a) and numberp(x) and {a > 0} and
+                     integerp(log(a x))}
+      log(a x)
+    {log(?a) + log(?b)}            simplify-all(`log{,a * ,b})
+    {log(?a) - log(?b)}            simplify-all(`log{,a / ,b})
+    log{?a ^ ?b}                   simplify-all(`{,b * log(,a)})
+    {log(?a ?x) + log(?b ?=x)}     simplify-all(`log({,a * ,b} ,x))
+    {log(?a ?x) - log(?b ?=x)}     simplify-all(`log({,a / ,b} ,x))
+    log({?a ^ ?b} ?x)              simplify-all(`{,b * log(,a ,x)})
     ln(0)                          'undef
     ln(e)                          1
+    {ln(?a) + ln(?b)}              simplify-all(`ln{,a * ,b})
+    {ln(?a) - ln(?b)}              simplify-all(`ln{,a / ,b})
+    ln{?a ^ ?b}                    simplify-all(`{,b * ln(,a)})
     sin(0)                         0
     sin{pi / 2}                    1
     sin{1/2 * pi}                  1
@@ -236,6 +258,7 @@ defun simplify-expression (expr)
     cos{3/2 * pi}                  0
     cos{{3 * pi} / 2}              0
     cos{2 * pi}                    1
+    {{sin(?x) ^ 2} + {cos(?=x) ^ 2}}  1
     tan(0)                         0
     tan(pi)                        0
     deriv(?x ?=x)                  when symbolp(x)                1
@@ -266,15 +289,20 @@ defun simplify-expression (expr)
     {?a <> ?=a}                    'false
     not(true)                      'false
     not(false)                     'true
-    {false -> false}               'true
-    {false -> true}                'true
-    {true -> false}                'false
-    {true -> true}                 'true
+    not(not(?a))                   a
+    not(=(?args))                  `<>(,args)
+    not(<>(?args))                 `=(,args)
+    not(<(?args))                  `>=(,args)
+    not(<=(?args))                 `>(,args)
+    not(>(?args))                  `<=(,args)
+    not(>=(?args))                 `<(,args)
+    {?p -> ?q}                     simplify-all-if-can(`{not(,p) or ,q})
     if(true ?tside)                tside
     if(true ?tside ?fside)         tside
     if(false ?tside)               'undef
     if(false ?tside ?fside)        fside
     {{?a * ?x} + {?b * ?=x}}       simplify-all(`{{,a + ,b} * ,x})
+    {{?a ^ ?x} * {?=a ^ ?y}}       simplify-all(`{,a ^ {,x + ,y}})
     +(?args) when
       {{length(args) > 1} and not(numberp(lastvalue(args))) and
         some(#'numberp args)}
@@ -305,8 +333,9 @@ defun show-help ()
 "Supported operations are:"
 " +, -, *, /, ^ : Infix add, subtract, multiply, divide, exponentiate."
 " =, <>, <, <=, >, >=: Infix numeric comparision."
-" and, or, ->: Infix (logical) and, (logical) or, implication."
-" log(n [base]), ln(n), ln(n [base]): Logarithmic functions."
+" and, or: Infix (logical) and, (logical) or."
+" ->: Infix (material) implication per classical (not intuitionist) logic."
+" log(n [base=10]), ln(n): Logarithms."
 " sin(x), cos(x), tan(x): Trigonometric functions (radians)."
 " undef, true, false: Constant values undefined, true, false."
 " pi, e: Constant values pi (3.14159...) and e (2.71828...)."
@@ -316,7 +345,8 @@ defun show-help ()
 "     Symbols are considered constants; use f(x) to represent a function."
 " num(expression): Force numeric calculation of expression."
 "This program doesn't compete with programs like Maxima.  However,"
-"it is unusual in that it tracks undefined values e.g., by division-by-zero."
+"it is unusual in that it tracks undefined values e.g., division-by-zero"
+"and {0 ^ 0} have the value undef (undefined)."
 "For example, {z / z} simplifies to if({z <> 0} 1), not just 1."
 "Number-only expressions with exact results simplify to that number."
 "Examples: {3 * {1 + 2}} => 9, cos(0) => 0, {x + {y * 0}} => x,"
