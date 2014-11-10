@@ -198,6 +198,7 @@ defun simplify-expression (expr)
     {?a + -(?=a)}                  0
     {?a * 1}                       a
     {1 * ?a}                       a
+    {-1 * ?a}                      simplify-expression(`-(,a))
     {?a * ?=a}                     simplify-expression(`{,a ^ 2})
     {?a * ?=a * ?=a}               simplify-expression(`{,a ^ 3})
     {?a / 0}                       'undef
