@@ -78,3 +78,4 @@ deriv(sin{2 * x} x)
 deriv(sin{2 * {x ^ 2}} x)
 {x - 3 - 4 - 5}
 {x - 3 - 4 - 5 - q}
+{1 / {m / n}}

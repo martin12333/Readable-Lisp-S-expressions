@@ -241,7 +241,8 @@ defun simplify-expression (expr)
     {0 ^ ?a}                       `if({,a <> 0} 0)
     {1 ^ ?a}                       1
     {?a ^ 1}                       a
-    {?a ^ -1}                      `{1 / ,a}
+    {?a ^ -1}                      simplify-all(`{1 / ,a})
+    {1 / {?a / ?b}}                simplify-all(`if({,b <> 0} {,b / ,a}))
     {{?a + ?b} <> 0}               simplify-all(`{,a <> -(,b)})
     {{?a + ?b} = 0}                simplify-all(`{,a = -(,b)})
     {{?a - ?b} <> 0}               simplify-expression(`{,a <> ,b})
@@ -309,6 +310,7 @@ defun simplify-expression (expr)
     deriv({e ^ ?f} ?x)             simplify-all(`{{e ^ ,f} * deriv(,f ,x)})
     deriv(sin(?f) ?x)              simplify-all(`{cos(,f) * deriv(,f ,x)})
     deriv(cos(?f) ?x)              simplify-all(`{-(sin(,f)) * deriv(,f ,x)})
+    deriv(tan(?f) ?x)              simplify-all(`{tan(,f) ^ -2} * deriv(,f ,x))
     num(?arg)                      compute-numeric(arg) ; "num(...)" function
     /=(?args)                      `(<> ,@args)  ; Prefer "<>"
     (!= ?args)                     `(<> ,@args)
