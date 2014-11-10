@@ -66,6 +66,34 @@ defun constant-valuep (x)
 defun filter (pred list)
   remove-if complement(pred) list
 
+defun reorder-first (pred list)
+  "Recorder list so that elements satisfying predicate pred are first."
+  append filter(pred list) remove-if(pred list)
+
+defun some-ignorelast (pred lyst)
+  "Return t if a list element (ignoring last) satisfies pred; similar to some."
+  cond
+    not(consp(lyst))      nil  ; null isn't a consp, so that works here too.
+    null(cdr(lyst))       nil
+    apply(pred list(car(lyst))) t
+    t                     some-ignorelast(pred cdr(lyst))
+
+defun find-operation (op list)
+  "Return t if operator 'op' is the car of a list element in list."
+  some lambda((x) {consp(x) and eq(car(x) op)}) list
+
+defun flatten-operation (op lyst)
+  "Return a list, but flatten by one level any list element beginning with op."
+  cond
+    not(consp(lyst))
+      lyst
+    {not(consp(car(lyst))) or not(eq(caar(lyst) op))}
+      cons car(lyst) flatten-operation(op cdr(lyst))
+    null(cdr(car(lyst))) ; Defensive programming, should not be needed.
+      flatten-operation(op cdr(lyst))
+    t
+      append cdr(car(lyst)) flatten-operation(op cdr(lyst))
+
 ; Implement "num" function, which forces numerical calculation.
 ; Numeric + - * / already computed using simplification, so no need to do that.
 defun compute-numeric (x)
@@ -214,16 +242,10 @@ defun simplify-expression (expr)
     {{?a + ?b} = 0}                simplify-all(`{,a = -(,b)})
     {{?a - ?b} <> 0}               simplify-expression(`{,a <> ,b})
     {{?a - ?b} = 0}                simplify-expression(`{,a = ,b})
-    {{?a * ?b} <> 0}               simplify-expression(`{,a <> 0})
-    {{?a * ?b} = 0}                simplify-expression(`{,a = 0})
-    {{?a / ?b} <> 0}               simplify-expression(`{,a <> 0})
-    {{?a / ?b} = 0}                simplify-expression(`{,a = 0})
     {{?a * ?b} / ?=a}              simplify-all(`if({,a <> 0} ,b))
     {{?b * ?a} / ?=a}              simplify-all(`if({,a <> 0} ,b))
     {?a * {?b / ?=a}}              simplify-all(`if({,a <> 0} ,b))
     {{?b / ?a} * ?=a}              simplify-all(`if({,a <> 0} ,b))
-    {?a * *(?args)}                simplify-all(`{,a * ,@args})
-    {+(?args) + ?a}                simplify-all(`{,@args + ,a})
     log(0)                         'undef
     log(0 _)                       'undef
     log(1)                         0
@@ -304,14 +326,14 @@ defun simplify-expression (expr)
     if(false ?tside ?fside)        fside
     {{?a * ?x} + {?b * ?=x}}       simplify-all(`{{,a + ,b} * ,x})
     {{?a ^ ?x} * {?=a ^ ?y}}       simplify-all(`{,a ^ {,x + ,y}})
-    +(?args) when
-      {{length(args) > 1} and not(numberp(lastvalue(args))) and
-        some(#'numberp args)}
-      `+(,@remove-if(#'numberp args) ,@filter(#'numberp args))
-    *(?args) when
-      {{length(args) > 1} and not(numberp(car(args))) and
-        some(#'numberp args)}
-      `*(,@filter(#'numberp args) ,@remove-if(#'numberp args))
+    +(?args) when find-operation('+ args)  ; +-in-+
+      simplify-all `+(,@flatten-operation('+ args))
+    *(?args) when find-operation('* args)  ; *-in-*
+      simplify-all `*(,@flatten-operation('* args))
+    +(?args) when some-ignorelast(#'numberp args) ; Number not in last place.
+      simplify-expression `+(,@reorder-first(complement(#'numberp) args))
+    *(?args) when some(#'numberp cdr(args)) ; Number not in first place.
+      simplify-expression `*(,@reorder-first(#'numberp args))
     ?a                             a
 
 defun simplify-all (expr)

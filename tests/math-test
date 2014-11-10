@@ -72,3 +72,7 @@ deriv(sin{z ^ 2} z)
 {true -> {f(x) > 1}}
 {{x > 0} or false}
 {false or {x > 0}}
+{x * y * z * {a * b}}
+{x * y * {a * b} * z}
+deriv(sin{2 * x} x)
+deriv(sin{2 * {x ^ 2}} x)
