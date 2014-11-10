@@ -120,9 +120,9 @@ defun symbol-beginsp (sym start)
 ; If simplification makes it better, return it, otherwise fail.
 defmacro simplify-all-if-can (expr)
   ` let* <* old-expr ,expr \\ new-expr simplify-all(old-expr) *>
-    if equal(old-expr new-expr)
-      fail()
-      new-expr
+      if equal(old-expr new-expr)
+        fail()
+        new-expr
 
 ; We use a pattern language especially good for math expressions.
 ; The following converts our local pattern language into optima, so that
@@ -203,6 +203,10 @@ defun simplify-expression (expr)
                    {length(filter(#'numberp args)) > 1}}
       simplify-expression
         `(+ ,@remove-if(#'numberp args) ,apply('+ filter(#'numberp args)))
+    -(?a ?args) when {{length(args) >= 2} and
+                      {length(filter(#'numberp args)) > 1}}
+      simplify-expression
+        `(- ,a ,@remove-if(#'numberp args) ,apply('+ filter(#'numberp args)))
     *(?args) when {{length(args) >= 2} and
                    {length(filter(#'numberp args)) > 1}}
       simplify-expression
@@ -330,9 +334,11 @@ defun simplify-expression (expr)
       simplify-all `+(,@flatten-operation('+ args))
     *(?args) when find-operation('* args)  ; *-in-*
       simplify-all `*(,@flatten-operation('* args))
-    +(?args) when some-ignorelast(#'numberp args) ; Number not in last place.
+    +(?args) when some-ignorelast(#'numberp args) ; Number not in last place
       simplify-expression `+(,@reorder-first(complement(#'numberp) args))
-    *(?args) when some(#'numberp cdr(args)) ; Number not in first place.
+    -(?a ?args) when some-ignorelast(#'numberp args) ; Number not in last place
+      simplify-expression `-(,a ,@reorder-first(complement(#'numberp) args))
+    *(?args) when some(#'numberp cdr(args)) ; Number not in first place
       simplify-expression `*(,@reorder-first(#'numberp args))
     ?a                             a
 

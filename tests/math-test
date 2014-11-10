@@ -76,3 +76,5 @@ deriv(sin{z ^ 2} z)
 {x * y * {a * b} * z}
 deriv(sin{2 * x} x)
 deriv(sin{2 * {x ^ 2}} x)
+{x - 3 - 4 - 5}
+{x - 3 - 4 - 5 - q}
