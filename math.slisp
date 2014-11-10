@@ -274,6 +274,7 @@ defun simplify-expression (expr)
     if(true ?tside ?fside)         tside
     if(false ?tside)               'undef
     if(false ?tside ?fside)        fside
+    {{?a * ?x} + {?b * ?=x}}       simplify-all(`{{,a + ,b} * ,x})
     +(?args) when
       {{length(args) > 1} and not(numberp(lastvalue(args))) and
         some(#'numberp args)}
