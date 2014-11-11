@@ -204,12 +204,12 @@ defun simplify-expression (expr)
       'true
     or(?args) when {find('false args) and {length(args) > 1}}
       simplify-expression `(or ,@remove-if(#'false-valuep args))
-    {?lhs / ?rhs} when {integerp(lhs) and integerp(rhs) and {rhs /= 0}}
+    {?lhs / ?rhs} when {rationalp(lhs) and rationalp(rhs) and {rhs /= 0}}
       {lhs / rhs}
     {?lhs / -(?rhs)}
       simplify-expression `{-(,lhs) / ,rhs}
     {?lhs / #C(0 1)} simplify-expression(`-(,lhs)) ; Division by i.
-    {?lhs ^ ?rhs} when {integerp(lhs) and integerp(rhs) and {rhs >= 2}}
+    {?lhs ^ ?rhs} when {rationalp(lhs) and integerp(rhs) and {rhs >= 2}}
       expt lhs rhs
     {#C(0 1) ^ ?rhs} when {integerp(rhs) and {rhs >= 1}} ; Powers of i.
       expt #C(0 1) rhs
@@ -272,10 +272,10 @@ defun simplify-expression (expr)
     ; TODO: Logarithms of complex numbers.  For now, simplify some reals
     log(?a ?=a) when {realp(a) and {a > 0}}
       1
-    log(?a) when {realp(a) and {a > 0} and integerp(log(a 10))}
+    log(?a) when {rationalp(a) and {a > 0} and rationalp(log(a 10))}
       log(a 10)
     log(?a ?x) when {realp(a) and realp(x) and {a > 0} and
-                     integerp(log(a x))}
+                     rationalp(log(a x))}
       log(a x)
     {log(?a) + log(?b)}            simplify-all(`log{,a * ,b})
     {log(?a) - log(?b)}            simplify-all(`log{,a / ,b})
