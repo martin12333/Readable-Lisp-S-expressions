@@ -197,8 +197,13 @@ defun simplify-expression (expr)
       simplify-expression `(or ,@remove-if(#'false-valuep args))
     {?lhs / ?rhs} when {integerp(lhs) and integerp(rhs) and {rhs /= 0}}
       {lhs / rhs}
+    {?lhs / -(?rhs)}
+      simplify-expression `{-(,lhs) / ,rhs}
+    {?lhs / #C(0 1)} simplify-expression(`-(,lhs)) ; Division by i.
     {?lhs ^ ?rhs} when {integerp(lhs) and integerp(rhs) and {rhs >= 2}}
       expt lhs rhs
+    {#C(0 1) ^ ?rhs} when {integerp(rhs) and {rhs >= 1}} ; Powers of i.
+      expt #C(0 1) rhs
     +(?args) when {{length(args) >= 2} and
                    {length(filter(#'numberp args)) > 1}}
       simplify-expression
