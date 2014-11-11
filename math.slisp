@@ -198,11 +198,11 @@ defun simplify-expression (expr)
       simplify-expression `(+ ,@remove-if(#'generous-zerop args))
     *(?args) when find(1 args)
       simplify-expression `(* ,@remove-if(#'generous-onep args))
-    and(?args) when {find('true args) and {length(args) > 1}}
+    and(?args) when find('true args)
       simplify-expression `(and ,@remove-if(#'true-valuep args))
     or(?args) when find('true args)
       'true
-    or(?args) when {find('false args) and {length(args) > 1}}
+    or(?args) when find('false args)
       simplify-expression `(or ,@remove-if(#'false-valuep args))
     {?lhs / ?rhs} when {rationalp(lhs) and rationalp(rhs) and {rhs /= 0}}
       {lhs / rhs}
@@ -346,6 +346,7 @@ defun simplify-expression (expr)
     if(true ?tside ?fside)         tside
     if(false ?tside)               'undef
     if(false ?tside ?fside)        fside
+    if(?c1 if(?c2 ?tside))         simplify-all(`if({,c1 and ,c2} ,tside))
     {{?a * ?x} + {?b * ?=x}}       simplify-all(`{{,a + ,b} * ,x})
     {{?a ^ ?x} * {?=a ^ ?y}}       simplify-all(`{,a ^ {,x + ,y}})
     +(?args) when find-operation('+ args)  ; +-in-+

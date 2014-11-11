@@ -58,8 +58,10 @@ deriv({f(x) * g(x)} x)
 {30 * x}
 true
 false
+false
 true
 false
+true
 5
 8
 true
@@ -95,3 +97,6 @@ true
 if({n <> 0} {n / m})
 -(d)
 #C(0 -1)
+8
+-1
+if({{x > 5} and {y > 2}} {x = z})
