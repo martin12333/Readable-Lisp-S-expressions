@@ -2,7 +2,6 @@
 ; by David A. Wheeler
 ; This simplifies various math expressions, returning exact results.
 ; Its real purpose is to demonstrate sweet-expressions in Common Lisp.
-; This is a pattern rule based system.
 
 ; MIT license.
 ; Copyright (c) 2014 David A. Wheeler
@@ -23,6 +22,16 @@
 ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ; THE SOFTWARE.
+
+; Lisp and symbolic math have a long intertwined history. 
+; John McCarthy's "An Algebraic Language for the Manipulation of
+; Symbolic Expressions", MIT AI Lab Memo Number 1, October 1958
+; ( http://www.softwarepreservation.org/projects/LISP/MIT/AIM-001.pdf/view )
+; defined a precursor of Lisp (including car, symbols, etc.).
+; This particular program is a pattern rule based system, loosely inspired by
+; "Paradigms of Artificial Programming: Case Studies in Common Lisp"
+; by Peter Norvig, 1992, chapter 8 ("Symbolic Mathematics...").
+; However, this is an independent separate implementation.
 
 ; To run test suite: "make check-math"
 
