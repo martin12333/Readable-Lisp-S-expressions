@@ -129,8 +129,8 @@ defun symbol-beginsp (sym start)
     string= subseq(symbol-name(sym) 0 length(start)) start
 
 ; If simplification makes it better, return it, otherwise fail.
-defmacro simplify-all-if-can (expr)
-  ` let* <* old-expr ,expr \\ new-expr simplify-all(old-expr) *>
+defmacro simplify-if-can (expr)
+  ` let* <* old-expr ,expr \\ new-expr simplify(old-expr) *>
       if equal(old-expr new-expr)
         fail()
         new-expr
@@ -251,22 +251,22 @@ defun simplify-expression (expr)
     {?a * ?=a * ?=a}               simplify-expression(`{,a ^ 3})
     {?a / 0}                       'undef
     {?a / 1}                       a
-    {?a / ?=a}                     simplify-all(`if({,a <> 0} 1))
+    {?a / ?=a}                     simplify(`if({,a <> 0} 1))
     {0 ^ 0}                        'undef
     {?a ^ 0}                       `if({,a <> 0} 1)
     {0 ^ ?a}                       `if({,a <> 0} 0)
     {1 ^ ?a}                       1
     {?a ^ 1}                       a
-    {?a ^ -1}                      simplify-all(`{1 / ,a})
-    {1 / {?a / ?b}}                simplify-all(`if({,b <> 0} {,b / ,a}))
-    {{?a + ?b} <> 0}               simplify-all(`{,a <> -(,b)})
-    {{?a + ?b} = 0}                simplify-all(`{,a = -(,b)})
+    {?a ^ -1}                      simplify(`{1 / ,a})
+    {1 / {?a / ?b}}                simplify(`if({,b <> 0} {,b / ,a}))
+    {{?a + ?b} <> 0}               simplify(`{,a <> -(,b)})
+    {{?a + ?b} = 0}                simplify(`{,a = -(,b)})
     {{?a - ?b} <> 0}               simplify-expression(`{,a <> ,b})
     {{?a - ?b} = 0}                simplify-expression(`{,a = ,b})
-    {{?a * ?b} / ?=a}              simplify-all(`if({,a <> 0} ,b))
-    {{?b * ?a} / ?=a}              simplify-all(`if({,a <> 0} ,b))
-    {?a * {?b / ?=a}}              simplify-all(`if({,a <> 0} ,b))
-    {{?b / ?a} * ?=a}              simplify-all(`if({,a <> 0} ,b))
+    {{?a * ?b} / ?=a}              simplify(`if({,a <> 0} ,b))
+    {{?b * ?a} / ?=a}              simplify(`if({,a <> 0} ,b))
+    {?a * {?b / ?=a}}              simplify(`if({,a <> 0} ,b))
+    {{?b / ?a} * ?=a}              simplify(`if({,a <> 0} ,b))
     log(0)                         'undef
     log(0 _)                       'undef
     log(1)                         0
@@ -279,17 +279,17 @@ defun simplify-expression (expr)
     log(?a ?x) when {realp(a) and realp(x) and {a > 0} and
                      rationalp(log(a x))}
       log(a x)
-    {log(?a) + log(?b)}            simplify-all(`log{,a * ,b})
-    {log(?a) - log(?b)}            simplify-all(`log{,a / ,b})
-    log{?a ^ ?b}                   simplify-all(`{,b * log(,a)})
-    {log(?a ?x) + log(?b ?=x)}     simplify-all(`log({,a * ,b} ,x))
-    {log(?a ?x) - log(?b ?=x)}     simplify-all(`log({,a / ,b} ,x))
-    log({?a ^ ?b} ?x)              simplify-all(`{,b * log(,a ,x)})
+    {log(?a) + log(?b)}            simplify(`log{,a * ,b})
+    {log(?a) - log(?b)}            simplify(`log{,a / ,b})
+    log{?a ^ ?b}                   simplify(`{,b * log(,a)})
+    {log(?a ?x) + log(?b ?=x)}     simplify(`log({,a * ,b} ,x))
+    {log(?a ?x) - log(?b ?=x)}     simplify(`log({,a / ,b} ,x))
+    log({?a ^ ?b} ?x)              simplify(`{,b * log(,a ,x)})
     ln(0)                          'undef
     ln(e)                          1
-    {ln(?a) + ln(?b)}              simplify-all(`ln{,a * ,b})
-    {ln(?a) - ln(?b)}              simplify-all(`ln{,a / ,b})
-    ln{?a ^ ?b}                    simplify-all(`{,b * ln(,a)})
+    {ln(?a) + ln(?b)}              simplify(`ln{,a * ,b})
+    {ln(?a) - ln(?b)}              simplify(`ln{,a / ,b})
+    ln{?a ^ ?b}                    simplify(`{,b * ln(,a)})
     sin(0)                         0
     sin{pi / 2}                    1
     sin{1/2 * pi}                  1
@@ -311,24 +311,24 @@ defun simplify-expression (expr)
     deriv(?constant ?x)            when constant-valuep(constant) 0
     deriv(?y ?x)                   when symbolp(y)                0
     deriv(+(?args) ?x)
-      simplify-all-if-can `+(,@mapcar(lambda((expr) `deriv(,expr ,x)) args))
+      simplify-if-can `+(,@mapcar(lambda((expr) `deriv(,expr ,x)) args))
     deriv(-(?args) ?x)
-      simplify-all-if-can `-(,@mapcar(lambda((expr) `deriv(,expr ,x)) args))
+      simplify-if-can `-(,@mapcar(lambda((expr) `deriv(,expr ,x)) args))
     deriv({?f * ?g} ?x)
-      simplify-all-if-can `{{deriv(,f ,x) * ,g} + {,f * deriv(,g ,x)}}
+      simplify-if-can `{{deriv(,f ,x) * ,g} + {,f * deriv(,g ,x)}}
     deriv({?f / ?g} ?x)
-      simplify-all-if-can
+      simplify-if-can
         ` if {,g <> 0}
              {{{deriv(,f ,x) * ,g} - {,f * deriv(,g ,x)}} / {,g ^ 2}}
     deriv({?f ^ ?g} ?x)
-      simplify-all
+      simplify
         `{ {,g * {,f ^ {,g - 1}} * deriv(,f ,x)}
          + {{,f ^ ,g} * log(,f)  * deriv(,g ,x)}}
-    deriv(log(?f) ?x)              simplify-all(`{deriv(,f ,x) / ,f})
-    deriv({e ^ ?f} ?x)             simplify-all(`{{e ^ ,f} * deriv(,f ,x)})
-    deriv(sin(?f) ?x)              simplify-all(`{cos(,f) * deriv(,f ,x)})
-    deriv(cos(?f) ?x)              simplify-all(`{-(sin(,f)) * deriv(,f ,x)})
-    deriv(tan(?f) ?x)              simplify-all(`{tan(,f) ^ -2} * deriv(,f ,x))
+    deriv(log(?f) ?x)              simplify(`{deriv(,f ,x) / ,f})
+    deriv({e ^ ?f} ?x)             simplify(`{{e ^ ,f} * deriv(,f ,x)})
+    deriv(sin(?f) ?x)              simplify(`{cos(,f) * deriv(,f ,x)})
+    deriv(cos(?f) ?x)              simplify(`{-(sin(,f)) * deriv(,f ,x)})
+    deriv(tan(?f) ?x)              simplify(`{tan(,f) ^ -2} * deriv(,f ,x))
     num(?arg)                      compute-numeric(arg) ; "num(...)" function
     /=(?args)                      `(<> ,@args)  ; Prefer "<>"
     (!= ?args)                     `(<> ,@args)
@@ -343,18 +343,18 @@ defun simplify-expression (expr)
     not(<=(?args))                 `>(,args)
     not(>(?args))                  `<=(,args)
     not(>=(?args))                 `<(,args)
-    {?p -> ?q}                     simplify-all-if-can(`{not(,p) or ,q})
+    {?p -> ?q}                     simplify-if-can(`{not(,p) or ,q})
     if(true ?tside)                tside
     if(true ?tside ?fside)         tside
     if(false ?tside)               'undef
     if(false ?tside ?fside)        fside
-    if(?c1 if(?c2 ?tside))         simplify-all(`if({,c1 and ,c2} ,tside))
-    {{?a * ?x} + {?b * ?=x}}       simplify-all(`{{,a + ,b} * ,x})
-    {{?a ^ ?x} * {?=a ^ ?y}}       simplify-all(`{,a ^ {,x + ,y}})
+    if(?c1 if(?c2 ?tside))         simplify(`if({,c1 and ,c2} ,tside))
+    {{?a * ?x} + {?b * ?=x}}       simplify(`{{,a + ,b} * ,x})
+    {{?a ^ ?x} * {?=a ^ ?y}}       simplify(`{,a ^ {,x + ,y}})
     +(?args) when find-operation('+ args)  ; +-in-+
-      simplify-all `+(,@flatten-operation('+ args))
+      simplify `+(,@flatten-operation('+ args))
     *(?args) when find-operation('* args)  ; *-in-*
-      simplify-all `*(,@flatten-operation('* args))
+      simplify `*(,@flatten-operation('* args))
     +(?args) when some-ignorelast(#'numberp args) ; Number not in last place
       simplify-expression `+(,@reorder-first(complement(#'numberp) args))
     -(?a ?args) when some-ignorelast(#'numberp args) ; Number not in last place
@@ -363,11 +363,11 @@ defun simplify-expression (expr)
       simplify-expression `*(,@reorder-first(#'numberp args))
     ?a                             a
 
-def-memoized-function simplify-all (expr)
+def-memoized-function simplify (expr)
   "Simplify an expression: first its operands, then the whole thing."
   if atom(expr)
      expr
-     simplify-expression mapcar(#'simplify-all expr)
+     simplify-expression mapcar(#'simplify expr)
 
 defun show-help ()
   dolist
@@ -420,7 +420,7 @@ loop for line = read-preserving-whitespace(*standard-input* nil :eof)
          eq(line :help)
            show-help()
          t
-           readable:write-readable simplify-all(line) :case :downcase
+           readable:write-readable simplify(line) :case :downcase
            clear-memoized-functions()
        terpri()
 
