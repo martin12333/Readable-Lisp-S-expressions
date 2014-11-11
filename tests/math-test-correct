@@ -3,6 +3,11 @@ To load "optima":
     optima
 ; Loading "optima"
 
+To load "memoize":
+  Load 1 ASDF system:
+    memoize
+; Loading "memoize"
+
 To load "readable":
   Load 1 ASDF system:
     readable

@@ -44,9 +44,11 @@
 ; We'll reuse the optima pattern-matcher.  Its notation is more
 ; complex than cl-pattern, but it has more functionality and we need it.
 (ql:quickload "optima")
+(ql:quickload "memoize")
 (ql:quickload "readable")
 
 (use-package :optima)
+(use-package :org.tfeb.hax.memoize)
 (readable:enable-sweet)
 
 defun numeric-operationp (expr op-list)
@@ -361,7 +363,7 @@ defun simplify-expression (expr)
       simplify-expression `*(,@reorder-first(#'numberp args))
     ?a                             a
 
-defun simplify-all (expr)
+def-memoized-function simplify-all (expr)
   "Simplify an expression: first its operands, then the whole thing."
   if atom(expr)
      expr
@@ -414,9 +416,12 @@ terpri()
 loop for line = read-preserving-whitespace(*standard-input* nil :eof)
      until \\ eq line :eof
      do \\ progn
-       if eq(line :help)
-         show-help()
-         readable:write-readable simplify-all(line) :case :downcase
+       cond
+         eq(line :help)
+           show-help()
+         t
+           readable:write-readable simplify-all(line) :case :downcase
+           clear-memoized-functions()
        terpri()
 
 (readable:disable-readable)
