@@ -35,17 +35,25 @@
 
 ; To run test suite: "make check-math"
 
+(princ "Math - Simplify possibly-symbolic math sweet-expressions.")
+(terpri)
+
 #-quicklisp
 (let ((quicklisp-init
         (merge-pathnames "quicklisp/setup.lisp" (user-homedir-pathname))))
   (when (probe-file quicklisp-init)
     (load quicklisp-init)))
 
-; We'll reuse the optima pattern-matcher.  Its notation is more
-; complex than cl-pattern, but it has more functionality and we need it.
-(ql:quickload "optima")
-(ql:quickload "memoize")
-(ql:quickload "readable")
+; By default disable noisy output (set to *standard-output* for more info):
+(defvar *loading-output* (make-broadcast-stream))
+
+; Load the libraries. Send loading output to *loading-output*:
+(let ((*standard-output* *loading-output*))
+  ; We'll reuse the optima pattern-matcher.  Its notation is more
+  ; complex than cl-pattern, but it has more functionality and we need it.
+  (ql:quickload "optima")
+  (ql:quickload "memoize")
+  (ql:quickload "readable"))
 
 (use-package :optima)
 (use-package :org.tfeb.hax.memoize)
@@ -387,26 +395,27 @@ defun show-help ()
 " ->: Infix (material) implication per classical (not intuitionist) logic."
 " log(n [base=10]), ln(n): Logarithms. ln(n) = log(n e)."
 " sin(x), cos(x), tan(x): Trigonometric functions (radians)."
+" abs(x): Absolute value (distance from 0)."
 " undef, true, false: Constant values undefined, true, and false."
 " pi, e: Constant values pi (3.14159...) and e (2.71828...)."
 " not(x): Logical negation; not(false) = true."
 " if(condition true-result [false-result]): If-then-else."
 " deriv(expression variable): Derivative of expression w.r.t. variable."
 "     Symbols are considered constants; use f(x) to represent a function."
+" #C(real imaginary): Complex number (real and imaginary cannot be symbols)."
 " num(expression): Force numeric calculation of expression."
 "This program doesn't compete with programs like Maxima.  However,"
-"it is unusual in that it tracks undefined values e.g., division-by-zero"
+"it is unusual in that it tracks undefined values, e.g., division-by-zero"
 "and {0 ^ 0} have the value undef (undefined)."
-"For example, {z / z} simplifies to if({z <> 0} 1), not just 1."
-"Number-only expressions with exact results simplify to that number."
+"Therefore {z / z} simplifies to if({z <> 0} 1), not just 1."
+"Number-only expressions with exact results simplify to that number;"
+"inexact results are avoided unless 'num' is used."
 "Examples: {3 * {1 + 2}} => 9, cos(0) => 0, {x + {y * 0}} => x,"
 " {true and false} => false, deriv({x ^ 3} x) => {3 * {x ^ 2}}."
 *>
     princ line
     terpri()
 
-princ "Math - Simplify possibly-symbolic math sweet-expressions."
-terpri()
 princ "Examples: {3 * {1 + 2}}, cos(0), {x + {y * 0}}"
 terpri()
 terpri()
