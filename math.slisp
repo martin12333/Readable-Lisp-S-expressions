@@ -126,6 +126,8 @@ defun compute-numeric (x)
       log second(x) 10 ; "log" default base is 10.
     numeric-operationp(x '(log ln sin cos))
       apply car(x) cdr(x)
+    numeric-operationp(x '(abs))
+      abs second(x)
     t
       x
 
@@ -151,26 +153,17 @@ defmacro simplify-if-can (expr)
 ; ?=symbol is a repeat of a previous symbol.
 defun rewrite-match-pattern (x)
   cond
-    eq(x '?args)
-      'args
-    eq(x '?n-args)
-      '(guard args (numberlistp args))  ; list of only numbers
-    eq(x '_)
-      x
-    symbol-beginsp(x "?=")
-      list 'eql intern(substring(symbol-name(x) 2))
-    symbol-beginsp(x "?")
-      intern substring(symbol-name(x) 1)
-    symbol-beginsp(x ",")
-      error "Operation should have ?"  ; DEBUG
-    member(x '(op args lhs rhs a b f g p q x y z))
-      error "Operation should have ?"  ; DEBUG
-    symbolp(x)
-      `quote(,x)
-    atom(x)
-      x
+    eq(x '?args)   $ 'args
+    eq(x '?n-args) $ '(guard args (numberlistp args))  ; list of only numbers
+    eq(x '_)       $ x
+    symbol-beginsp(x "?=") $ list 'eql intern(substring(symbol-name(x) 2))
+    symbol-beginsp(x "?")  $ intern substring(symbol-name(x) 1)
+    symbol-beginsp(x ",")  $ error "Comma not allowed"
+    member(x '(op args lhs rhs a b f g p q x y z)) $ error "Missing ?symbol"
+    symbolp(x) $ `quote(,x)
+    atom(x)    $ x
     consp(x)
-      if member(car(last(x)) '(?args ?n-args))
+      if member(lastvalue(x) '(?args ?n-args))
         ` list* ,@mapcar(#'rewrite-match-pattern x)
         ` list  ,@mapcar(#'rewrite-match-pattern x)
 
@@ -205,15 +198,15 @@ defun simplify-expression (expr)
     <>(?n-args)
       truthiness $ apply #'/= args
     +(?args) when find(0 args)
-      simplify-expression `(+ ,@remove-if(#'generous-zerop args))
+      simplify-expression `+(,@remove-if(#'generous-zerop args))
     *(?args) when find(1 args)
-      simplify-expression `(* ,@remove-if(#'generous-onep args))
+      simplify-expression `*(,@remove-if(#'generous-onep args))
     and(?args) when find('true args)
-      simplify-expression `(and ,@remove-if(#'true-valuep args))
+      simplify-expression `and(,@remove-if(#'true-valuep args))
     or(?args) when find('true args)
       'true
     or(?args) when find('false args)
-      simplify-expression `(or ,@remove-if(#'false-valuep args))
+      simplify-expression `or(,@remove-if(#'false-valuep args))
     {?lhs / ?rhs} when {rationalp(lhs) and rationalp(rhs) and {rhs /= 0}}
       {lhs / rhs}
     {?lhs / -(?rhs)}
@@ -235,6 +228,8 @@ defun simplify-expression (expr)
                    {length(filter(#'numberp args)) > 1}}
       simplify-expression
         `(* ,apply('* filter(#'numberp args)) ,@remove-if(#'numberp args))
+    abs(?a) when {numberp(a) and rationalp(abs(a))}
+      abs(a)
     +()                            0
     *()                            1
     or()                           'false
@@ -257,6 +252,7 @@ defun simplify-expression (expr)
     {-1 * ?a}                      simplify-expression(`-(,a))
     {?a * ?=a}                     simplify-expression(`{,a ^ 2})
     {?a * ?=a * ?=a}               simplify-expression(`{,a ^ 3})
+    /(?a)                          simplify(`{1 / ,a})
     {?a / 0}                       'undef
     {?a / 1}                       a
     {?a / ?=a}                     simplify(`if({,a <> 0} 1))
@@ -275,6 +271,7 @@ defun simplify-expression (expr)
     {{?b * ?a} / ?=a}              simplify(`if({,a <> 0} ,b))
     {?a * {?b / ?=a}}              simplify(`if({,a <> 0} ,b))
     {{?b / ?a} * ?=a}              simplify(`if({,a <> 0} ,b))
+    {{?a / ?b} / ?=a}              simplify(`if({,a <> 0} {1 / ,b}))
     log(0)                         'undef
     log(0 _)                       'undef
     log(1)                         0
@@ -329,7 +326,7 @@ defun simplify-expression (expr)
         ` if {,g <> 0}
              {{{deriv(,f ,x) * ,g} - {,f * deriv(,g ,x)}} / {,g ^ 2}}
     deriv({?f ^ ?g} ?x)
-      simplify
+      simplify-if-can
         `{ {,g * {,f ^ {,g - 1}} * deriv(,f ,x)}
          + {{,f ^ ,g} * log(,f)  * deriv(,g ,x)}}
     deriv(log(?f) ?x)              simplify(`{deriv(,f ,x) / ,f})
@@ -337,6 +334,10 @@ defun simplify-expression (expr)
     deriv(sin(?f) ?x)              simplify(`{cos(,f) * deriv(,f ,x)})
     deriv(cos(?f) ?x)              simplify(`{-(sin(,f)) * deriv(,f ,x)})
     deriv(tan(?f) ?x)              simplify(`{tan(,f) ^ -2} * deriv(,f ,x))
+    ; TODO: This "solve" is lame, replace with a real solver.
+    solve({?x = ?y} ?=x)           y
+    solve({{?a * ?x} = ?y} ?=x)    simplify(`{,y / ,a})
+    solve({{?x + ?a} = ?y} ?=x)    simplify(`{,y - ,a})
     num(?arg)                      compute-numeric(arg) ; "num(...)" function
     /=(?args)                      `(<> ,@args)  ; Prefer "<>"
     (!= ?args)                     `(<> ,@args)
@@ -381,10 +382,10 @@ defun show-help ()
   dolist
     line
       ' <*
-"Enter mathematical expressions, and this program prints simplified versions."
-"Enter expressions in sweet-expression format. For example:"
+"This program prints simplified versions of expressions entered"
+"in sweet-expression format. In sweet-expressions:"
 "- Infix operations are surrounded by {...}, e.g., {3 + 4}"
-"- Prefix operations can begin before parentheses, e.g., sin(0)"
+"- Prefix operations can begin before parentheses, e.g., sin(0), log(100 10)"
 "- Indent expressions to make them children of the main expression."
 "Enter a blank line to complete an expression."
 "This simplifier accepts symbolic expressions, e.g., {2 * x * 3 * y}."
