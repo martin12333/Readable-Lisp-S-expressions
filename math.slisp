@@ -328,7 +328,7 @@ defun simplify-expression (expr)
     deriv({?f ^ ?g} ?x)
       simplify-if-can
         `{ {,g * {,f ^ {,g - 1}} * deriv(,f ,x)}
-         + {{,f ^ ,g} * log(,f)  * deriv(,g ,x)}}
+         + {{,f ^ ,g} * ln(,f)  * deriv(,g ,x)}}
     deriv(log(?f) ?x)              simplify(`{deriv(,f ,x) / ,f})
     deriv({e ^ ?f} ?x)             simplify(`{{e ^ ,f} * deriv(,f ,x)})
     deriv(sin(?f) ?x)              simplify(`{cos(,f) * deriv(,f ,x)})
