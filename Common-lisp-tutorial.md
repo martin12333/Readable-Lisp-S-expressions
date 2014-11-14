@@ -1,4 +1,4 @@
-This tutorial describes shows how to use the "readable" free-libre/open source software with Common Lisp.  The "readable" software adds new abbreviations to traditional Lisp notation, to make it far more readable.  You don't need to be familiar with Lisp-like languages to understand this tutorial, though it greatly helps.
+This tutorial describes shows how to use the "readable" free-libre/open source software with Common Lisp.  The "readable" software adds new abbreviations to traditional Lisp notation, to make it far more readable.  You don't need to be very familiar with Lisp-like languages to understand this tutorial, though it greatly helps.
 
 But first, here are some related pages you might find useful:
 
@@ -12,22 +12,24 @@ So let's get started!
 Starting Common Lisp implementation and loading the readable library
 ====================================================================
 
-You need to run your implementation of Common Lisp and then load the "readable" library.
+You need to run your implementation of Common Lisp and then load the "readable" library.  Any Common Lisp implementation should work well, as it only depends on standard Common Lisp mechanisms. The sbcl and clisp implementations are especially tested and known to work well.  Since clisp has some annoying limitations, you might prefer sbcl, but again, either work well.
 
 You can load the "readable" library by using QuickLisp, or by invoking ASDF directly. Here is how to do it in each case.
 
 Loading the "readable" library via QuickLisp
 --------------------------------------------
 
-QuickLisp makes things easy to start, assuming you have QuickLisp installed.  You need to *first* start up up your implementation of Common Lisp.  E.G., for clisp, this is normally:
+QuickLisp makes things easy to start, assuming you have QuickLisp installed (see [Install-howto]).  You need to *first* start up up your implementation of Common Lisp.  E.G., for sbcl, this is normally:
 
-    clisp  # Use "sbcl" to run sbcl instead, obviously.
+    sbcl  # Use "clisp" to run clisp instead, obviously.
 
 To load the "readable" library, at the command line or at the beginning of each file, do this:
 
     (ql:quickload "readable")
 
-After that, you just tell "readable" which notation you want to use.  So for example, if you want to use the "sweet-expression" notation described later, you'd execute *(readable:enable-sweet)*.  Thus, the top of each of your files would say something like this:
+After that, you just tell "readable" which notation you want to use.  So for example, if you want to use the "sweet-expression" notation described later, you'd execute *(readable:enable-sweet)*.
+
+Thus, the top of each of your files would say something like this:
 
     (ql:quickload "readable")
     (readable:enable-sweet) ; or whichever notation you've chosen.
@@ -35,6 +37,25 @@ After that, you just tell "readable" which notation you want to use.  So for exa
 ... and at the end of the file you can insert:
 
     (readable:disable-readable)
+
+
+QuickLisp and Clisp
+-------------------
+
+Clisp, unlike sbcl and many other Common Lisp implementations, has an annoying limitation that affects QuickLisp.  Clisp does *not* run its initialization (rc) files when it is loading a file; it only looks at its rc files when running interactively.  That means that QuickLisp is not immediately available in clisp, even if it's installed, when directly running files.
+
+To work around this limitation of clisp, you can add the following text in your file before using QuickLisp:
+
+    #-quicklisp
+    (let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp" (user-homedir-pathname))))
+      (when (probe-file quicklisp-init)
+        (load quicklisp-init)))
+
+An alternative workaround is to invoke clisp with "-i" (to force it to load an initialization file), e.g.:
+
+    clisp -i ~/.clisp YOURFILE.lisp
+
+This limitation might apply to another Common Lisp implementation, though I do not know of any.
 
 
 Loading the "readable" library via ASDF
@@ -58,7 +79,7 @@ But... if you didn't install the "readable" library source files in the standard
 
     (asdf:load-system :readable)  ; Load the "readable" library
 
-In older versions of ASDF, you needed to use <tt>(asdf:oos 'asdf:load-op :readable)</tt>. However, if your ASDF is so old that it doesn't include <tt>asdf:load-system</tt>, you should consider upgrading to ASDF 3.
+In older versions of ASDF, you needed to use <tt>(asdf:oos 'asdf:load-op :readable)</tt>. However, if your ASDF is so old that it doesn't include <tt>asdf:load-system</tt>, you should consider upgrading to ASDF 3.  For a discussion of the many advantages of ASDF version 3, ee [ASDF 3, or Why Lisp is Now an Acceptable Scripting Language](http://fare.tunes.org/files/asdf3/asdf3-2014.html).
 
 After you've loaded the readable library, you can use it.  Generally, you run (readable:enable-...) where "..." selects the readable notation you want to use.  E.G., (readable:enable-sweet) enables sweet-expression processing as described below.  The text below will show the various options.  When you're all done, you can use (readable:disable-readable) to restore the readtable to the state before you enabled any readable notations.  You can enable a different readable notation at any time; you don't need to disable the current notation first.
 
@@ -98,15 +119,15 @@ Any of the readable notations (basic curly-infix-expressions, full curly-infix-e
 
 and when you press enter you'll see 5.
 
-Basic curly-infix-expressions add the ability to use {...} around infix operators.  Basically, {...} also creates a list, but in the usual case the reader converts the *even* parameter(s) into the *first* parameter.  So just type this in:
+Basic curly-infix-expressions add the ability to use {...} around infix operators.  Basically, {...} also creates a list, but in the usual case the reader converts it into a list where the *even* parameter(s) becomes the *first* parameter.  So just type this in:
 
     {2 + 3}
 
-and you will see 5. Look! You now have a calculator! In curly-infix expressions, {a op b op c ...} is an abbreviation for (op a b c...).  It's important to realize this is a simple syntactic convenience — an abbreviation automatically handled by the system when it reads the input. Traditional Lisp actually includes many abbreviations, for example, 'x is a traditional abbreviation for (quote x), which when executed will just return the quoted x.  So curly-infix-expressions just includes an additional abbreviation and does not change how "Lisp works". Thus, if you enter:
+and you will see 5. Look! You now have a calculator! In curly-infix expressions, {a op b op c ...} is an abbreviation for (op a b c...).  It's important to realize this is a simple syntactic convenience — this is just an abbreviation automatically handled by the system when it reads the input. Traditional Lisp actually includes many abbreviations, for example, 'x is a traditional abbreviation for (quote x), which when executed will just return the quoted x.  So curly-infix-expressions just adds an additional abbreviation and does not change how "Lisp works". For example, if you enter:
 
     '{2 + 3}
 
-it will respond with (+ 2 3).  That is, once it's read in, it will read in a quoted (+&nbsp;2&nbsp;3), and "executing" it will return the simple (+&nbsp;2&nbsp;3).  Note that the infix operator *must* be surrounded by whitespace - otherwise, it would have no way to know where the name of the operation begins or ends.
+it will respond with (+ 2 3).  That is, once it's read in, it will read in a quoted (+&nbsp;2&nbsp;3), and "executing" it will return the simple (+&nbsp;2&nbsp;3).  Note that the infix operator *must* be surrounded by whitespace - otherwise, it would have no way to know where the name of the operation begins or ends.  This means that all of Lisp's capabilities, such as macros and quasiquoting, just keep working.
 
 There is intentionally no support for precedence between different operators. While precedence is useful in some circumstances, in typical uses for Lisp-derived languages and sweet-expressions, it doesn't help and is often harmful. In particular, precedence can hide where different lists occur.  This lack of precedence is not a problem at all; you can just use curly braces or parentheses when mixing different infix operators:
 
@@ -127,6 +148,8 @@ Note that curly-infix-expressions intentionally do not force a particular preced
 That's it!  That's all there is to basic c-expressions, they're really easy.
 
 A big advantage of basic c-expressions is that they're really simple in concept and very simple to implement.  The sample implementation file basic-curly.lisp implements this in only 64 lines of (non-comment) code; if you don't want to bring in a separate library, you could simply copy that code into your program.  They also have practically no chance of conflicting with anything else; they only redefine "{" and "}" in the readtable, for example.
+
+Like all readable notations, basic c-expressions work very well with macros, quasiquotation, and other capabilities of Lisp.  Many people have tried to implement infix systems with macros, but their syntax is terrible and they often have surprising (and unfortunate) interactions with macros.  Instead, the readable notations "just work".
 
 You can disable basic curly-expressions (or any other readable notation) by just running this, which restores the readtable that was in effect before you enabled a readable notation:
 
@@ -156,6 +179,9 @@ You can enable neoteric-expressions by running:
 
     (readable:enable-neoteric)
 
+Introduction to neoteric-expressions
+------------------------------------
+
 The difference between enable-neoteric and enable-full-curly-infix is that enable-neoteric lets you type in neoteric-expressions at the topmost level.  With enable-full-curly-infix, you have to surround neoteric-expressions with {...}.
 
 Neoteric-expressions support curly-infix-expressions, including normally-formatted s-expressions.  In addition, neoteric-expressions add special meanings to the grouping symbols ( ), [ ], and { } if they *immediately* follow an expression (instead of being separated by whitespace).  In particular, any e( ... ) is mapped to (e ...), and any e{ ... } is mapped to (e { ... }).
@@ -183,9 +209,9 @@ You can even use function name prefixes with traditional binary operators, such 
 
     *(5 4)
 
-This works with zero parameters, too; if you have a command called "help" (guile does), and choose not to give it any parameters, just type this (without pressing space before typing it in):
+This works with zero parameters, too.  For example, you can output a newline to the standard output stream by invoking <tt>[terpri](http://clhs.lisp.se/Body/f_terpri.htm)</tt> like this:
 
-    help()
+    terpri()
 
 It's actually quite common to have a function call pass one parameter, where the parameter is calculated using infix notation, so there's a rule to simplify this common case. You can use f{x + 1}, which maps to (f {x + 1}) which then maps to (f (+ x 1)). This makes it easy to pass a single parameter which happens to be calculated using infix. For example, factorial{n - 1} maps to factorial({n - 1}) which maps to (factorial (- n 1)).  You can try out this simple example:
 
@@ -193,11 +219,34 @@ It's actually quite common to have a function call pass one parameter, where the
 
 Just like traditional s-expressions, spaces separate parameters, so it's *important* that there be *no* space between the function name and the opening "(". Since spaces separate parameters, a space between the function name and the opening "(" would create two parameters instead of a single function call. The same is basically true for traditional s-expressions, too; (a b) and (ab) are not the same thing.
 
+Neoteric-expressions, more formally
+-----------------------------------
+
 Here's the real rule: in neoteric-expressions, e(...) maps to (e ...), e{} maps to (e), other e{...} maps to (e {...}), e[ ... ] maps to ($bracket-apply$ e), and (. e) maps to e. The "$bracket-apply$" is so that you can write a macro to access arrays and other mappings.  The (. e) rule lets you escape expressions (e.g., for the sweet-expressions we'll describe next).  Note that "neoteric-expressions" used to be called "modern-expressions"; you may see some older documents using that name.
 
-The advantage of full-curly-infix is that it is totally and completely compatible with traditional s-expressions (since traditional s-expressions do not define what happens inside {...} anyway).  Enable-neoteric can, in extremely unlikely scenarios, cause expressions to be interpreted differently... but they let you use n-expressions directly.
+Backwards compatibility
+-----------------------------
+
+The advantage of full-curly-infix is that it is totally and completely compatible with traditional s-expressions (since traditional s-expressions do not define what happens inside {...} anyway).  Enabling neoteric expressions can, in extremely unlikely scenarios, cause expressions to be interpreted differently... but they let you use n-expressions directly.
 
 Normally, people and pretty-printers will format Lisp code so that parameters inside a list are *separated* by whitespace, e.g., (a b c), so it turns out that this change in interpretation doesn't change the meaning of typically-formatted modern Lisp code (and you can pretty-print code to fix it in the rare cases you need to). What's more, typical Lisp-aware text editors can often work with neoteric-expressions as they are, without change... so if you don't want to change the way you work, but have a somewhat more readable notation, neoteric-expressions can help.  If you're worried about some expression being interpreted differently, you can disable neoteric-expressions while you read them... or just run them through a pretty-printer (pretty-printers fix such weird formats normally anyway).
+
+More examples
+-------------
+
+Here are more examples. The left-hand-side are neoteric-expressions (and thus are also valid sweet-expressions, as we'll discuss next).  The right-hand-side are the traditional s-expression forms.  Note that the neoteric-expression and sweet-expression readers accept the right-hand-side version as well:
+
+    factorial(z)         <==> (factorial z)
+    foo(x y)             <==> (foo x y)
+    bar(x y z)           <==> (bar x y z)
+    factorial{x - 1}     <==> (factorial {x - 1}) <==> (factorial (- x 1))
+    f(g(y) h(y) a)       <==> (f (g y) (h y) a)
+    f({x + 2} y {z - 3}) <==> (f (+ x 2) y (- z 3))
+    f{{x + 2} * {y - 3}} <==> (f (* (+ x 2) (- y 3)))
+
+
+Wrapping up neoteric-expressions
+--------------------------------
 
 Neoteric-expressions are a nice step forward.  But we still have to do all that parentheses-balancing, which hinders readability. Sweet-expressions, our next stop, address this.
 
@@ -207,20 +256,24 @@ To end this part of the demo, disable our changed notation:
 
 
 
-Quick note about clisp
-======================
+Another clisp limitation: ugly symbols
+========================================
 
-If you use clisp, a widely-used Common Lisp implementation, then symbols will always be written with |...| around them when neoteric-expressions or sweet-expressions are active.  This behavior is peculiar to clisp.  It happens because the clisp "write" varies what it writes based on the contents of the current readtable.
+If you use clisp, a widely-used Common Lisp implementation, then symbols will always be written with |...| around them when neoteric-expressions or sweet-expressions are active.  This behavior is peculiar to clisp.  It happens because the clisp "write" procedure varies how it writes symbols based on the contents of the current readtable.  This is technically not *wrong*, but it is astoundingly weird and ugly, and this is absolutely *not* required by the Common Lisp specification.
 
-We hope that this will not happen in a future version of clisp.  The problem is that clisp needs more flexible symbol writing code (the issue is in clisp source file "src/io.d" function "pr_symbol_part").   On 2013-05-06 David A. Wheeler raised the issue of adding such flexibility to clisp.  If clisp were more flexible, then the readable library could use that flexibility to inhibit these extraneous vertical bars.
+We hope that this will not happen in a future version of clisp.  The problem is that clisp needs more flexible symbol writing code.  The issue is in clisp source file "src/io.d" function "pr_symbol_part", which implements this weird behavior yet provides no mechanism to turn it off.   On 2013-05-06 David A. Wheeler raised the issue of adding such flexibility to clisp.  If clisp were more flexible, then the readable library could use that flexibility to inhibit these extraneous vertical bars.  At the time of this writing the clisp developers have refused to fix this.
 
-If you really don't like the vertical bars, you can set \*print-escape\*, like this:
+If you use clisp and you really don't like the vertical bars, you can set \*print-escape\*, like this:
 
     (setq *print-escape* nil)
 
 The problem with setting *print-escape* is that this completely disables printing vertical bars, even when the vertical bar characters *do* need to be there.  If you use the clisp "-modern" mode this isn't too bad; "-modern" mode makes all text entry case-sensitive, and forces all built-in lisp functions to lower case, eliminating a common reason for needing the |...| escapes.  But if you write symbols that need to be escaped (which is especially likely if you do not use "-modern" mode), turning off *print-escape* may disable more than you'd like.
 
-For now, clisp users will have to see a lot of vertical bars while neoteric-expressions or sweet-expressions are active, or live without automated printing of escapes.  Note that after running "(readable:disable-readable)" the extra vertical bars disappear, since this restores the default readtable (and thus the default behavior).
+For now, clisp users will have to see a lot of vertical bars while neoteric-expressions or sweet-expressions are active and using its built-in write, or live without automated printing of escapes.  Note that after running "(readable:disable-readable)" the extra vertical bars disappear, since this restores the default readtable (and thus the default behavior).
+
+Another solution is to use the routines we provide for writing readable expressions (below).  Those routines include work-arounds so that symbols are displayed normally even when you are using clisp.
+
+A completely different solution, if you hate how the symbols look, is to switch to another Common Lisp implementation like sbcl.  This will also enable auto-loading of rc files as discussed above (a problem that impacts QuickLisp).
 
 
 Using sweet-expressions (t-expressions) 
@@ -302,66 +355,27 @@ If you're not sure what something means, you can "quote" it so it won't execute.
 Will produce:
 (foo bar1 bar2 (spam eggs eggs))
 
-Sometimes you want to have a parameter that is a list of lists, or where the function to be called is in fact determined by another calculation. This is indicated with the "\\\\" keyword; basically, at the beginning of line (but after indentation) "\\\\" maps into a null function name, so you can use forms like "let" easily.
+Here's another example:
+
+    defun factorial (n)
+      if {n <= 1}
+         1
+         {n * factorial{n - 1}}
+
+Note that infix is easily expressed with {...}.  You can call a procedure using an infix expression with f{...}, a common circumstance.  Naturally, this is simply a cleaner representation of:
+
+    (defun factorial (n)
+      (if (<= n 1)
+          1
+          (* n (factorial (- n 1)))))
+
+Notice that even this trivial example must have *5* closing parentheses in traditional Lisp notation; real Lisp programs have many more.  In contrast, the sweet-expression notation automatically closes most of them, and the few left over are easily matched by eye.
+
+Sometimes you want to have a parameter that is a list of lists, or where the function to be called is in fact determined by another calculation. This is indicated with the "\\\\" keyword; basically, at the beginning of line (but after indentation) "\\\\" maps into a null function name, so you can use forms like "let" easily.  We'll explain advanced sweet-expression advanced features in just a moment.
 
 
-Convenience programs "sweet-clisp" and "sweet-sbcl"
-===================================================
-
-For your convenience, the full package includes "sweet-clisp" and "sweet-sbcl" (if you have clisp or sbcl respectively), which automatically put you in sweet-expression mode (the last tier) for that implementation of Common Lisp.  They are especially convenient for interactive use; you can also use them to run scripts in sweet-expression notation.
-
-The sweet-clisp will also work around some bugs and problems in clisp.  It will "setq *print-escape* t" as described above, for one thing.  It also works around a problem in the clisp REPL.  In the clisp standard REPL any top-level sweet-expressions (after the first one) that are not initially indented must be preceded by a  blank  line.   If  they aren't, then the first line of the second sweet-expression would be skipped (they are consumed by the REPL reader).   Note  that  this bug does not affect files run by clisp, re-implementations of the REPL on clisp, or other Common Lisp  implementations  (e.g.,  SBCL  doesn't have this problem).  The work-around over‐rides some system function definitions when the REPL  is  invoked, so it will trigger some warnings about "redefining functions".  If  you do not want the work-around performed, use the "-CREPL" option, which forces this program to use the standard  clisp  REPL (without a work-around) instead.  The REPL work-around is irrelevant for programs run directly without the REPL, obviously.
-
-Installing via QuickLisp doesn't install the full package, so users who *only* install using QuickLisp won't have working versions of tools such as sweet-clisp, sweet-sbcl, sweeten, or unsweeten.
-
-Sweeten: Translating S-expressions into Sweet-expressions
-=========================================================
-
-We also have a filter called "sweeten" that translates existing S-expressions into sweet-expressions (this is the *reverse* of unsweeten).  You can use sweeten to help you understand sweet-expressions, or to move an existing program to sweet-expressions.
-
-Just put some S-expressions into a file and you can have them translated.  For example, you could the following in file "demo.scm":
-
-    (defun doubleadd (a b)
-        (* (+ a b) 2))
-
-
-You can run the sweetener by typing:
-
-    ./sweeten -C < demo.scm
-
-And you should see this as output:
-
-    defun doubleadd (a b) {{a + b} * 2}
-
-You can also run it interactively, but you may find that you want to press an extra "Enter" after your expression.  (It's done this way so that when it translates files they look correct.)
-
-Sweeten is designed to read Scheme (or more specifically, Guile) S-expression syntax.  The "-C" option  adds some support for Common Lisp notation instead, in particular, #'function.  However, its handling of Common Lisp is far from perfect.  There is also a limitation of the sweeten implementation: Comments inside any parentheses will not be produced in the output.  (This is because it uses the underlying system "read" function, which throws this information away.) Still, it's a useful tool.
-
-Readable library
-=========================
-
-The "readable" library comes with some other functions you can call, e.g.:
-
-*   curly-infix-read: Read a curly-infix-expression datum.
-*   neoteric-read: Read a neoteric-expression datum.
-*   sweet-read: Read a sweet-expression datum.
-
-
-More Complex Examples
-=====================
-
-Basic Expressions
------------------
-
-If you're familiar with traditional s-expressions, here are more examples. The left-hand-side are sweet-expressions; the right-hand-side are the transitional s-expression forms, though the sweet-expression reader can read them as well:
-
-    factorial(z)         <==> (factorial z)
-    foo(x y)             <==> (foo x y)
-    bar(x y z)           <==> (bar x y z)
-    factorial{x - 1}     <==> (factorial {x - 1}) <==> (factorial (- x 1))
-    f(g(y) h(y) a)       <==> (f (g y) (h y) a)
-    f({x + 2} y {z - 3}) <==> (f (+ x 2) y (- z 3))
-    f{{x + 2} * {y - 3}} <==> (f (* (+ x 2) (- y 3)))
+Advanced features
+=================
 
 
 Grouping and Splitting
@@ -416,13 +430,15 @@ But what if you actually want to refer to "\\\\"?  No problem, just use the expr
 Sublist
 -------
 
-Sweet-expressions support another special abbreviation when not inside ( ... ), [ ... ], or { ... }.  A $ (aka SUBLIST) in the middle of list restarts list processing; the right-hand-side (including its sub-blocks) is the last parameter of the left-hand side.  This is really handy when you need to chain functions together, e.g., where a sequence of functions process in sequence the output of something more complex.  For example:
+Sweet-expressions support another special abbreviation when not inside ( ... ), [ ... ], or { ... }.  A $ (aka SUBLIST) in the middle of list restarts list processing; the right-hand-side (including its sub-blocks) is the last parameter of that line's left-hand side list.  Even if there's only one n-expression on the left-hand-side, it's still considered a list (in this case, of one element).  This is really handy when you need to chain functions together, e.g., where a sequence of functions process in sequence the output of something more complex.  For example:
 
     onfail $ run $ head -10 "README"
 
 has the same meaning as:
 
     (onfail (run (head -10 "README")))
+
+This abbreviation is copied from Haskell.
 
 Empty lines
 -----------
@@ -451,16 +467,59 @@ You can indent using one or more of the indent characters, which are space, tab,
 
 These rules eliminate many concerns people have with indentation systems.  One objection that people raise about indentation-sensitive syntax is that horizontal whitespace can get lost in many transports (HTML readers, etc.). In addition, sometimes there are indented groups that you’d like to highlight; traditional whitespace indentation provides no opportunity to highlight indented groups specially.  By allowing "!" as an indent character (as well as space and tab), these problems disappear.  Also, some like to use spaces to indent; others like tabs. Python allows either. Sweet-expressions also allow people to use spaces, tabs, or a combination, as long as you are consistent, so developers can use whatever they prefer.
 
-What's the big deal?
-====================
 
-If you aren't familiar with Lisp, you may say "what's the big deal"? After all, this looks a lot like traditional languages. Many have commented that it looks like Python, with its use of indenting, and of course nearly all other languages use infix notation.
+Convenience programs "sweet-clisp" and "sweet-sbcl"
+===================================================
 
-But that's the point - the results look much more familiar (and thus are more acceptable to non-Lispers), but all of Lisp's more exotic capabilities still work. You can use techniques like quoting (') and quasi-quoting (\`) with lifting (,), which enable powerful capabilities. Many people have created "infix" notations with Lisp-like languages before, but they all failed to work with many other Lisp features. We think this approach succeeds instead, where others before have failed.
+For your convenience, the full package includes "sweet-clisp" and "sweet-sbcl" (if you have clisp or sbcl respectively), which automatically put you in sweet-expression mode (the last tier) for that implementation of Common Lisp.  They are especially convenient for interactive use; you can also use them to run scripts in sweet-expression notation.
+
+The sweet-clisp will also work around some bugs and problems in clisp.  It will "setq *print-escape* t" as described above, for one thing.  It also works around a problem in the clisp REPL.  In the clisp standard REPL any top-level sweet-expressions (after the first one) that are not initially indented must be preceded by a  blank  line.   If  they aren't, then the first line of the second sweet-expression would be skipped (they are consumed by the REPL reader).   Note  that  this bug does not affect files run by clisp, re-implementations of the REPL on clisp, or other Common Lisp  implementations  (e.g.,  SBCL  doesn't have this problem).  The work-around over‐rides some system function definitions when the REPL  is  invoked, so it will trigger some warnings about "redefining functions".  If  you do not want the work-around performed, use the "-CREPL" option, which forces this program to use the standard  clisp  REPL (without a work-around) instead.  The REPL work-around is irrelevant for programs run directly without the REPL, obviously.
+
+The "sweet-clisp" program, if you download the entire package, by default uses write-readable to display REPL results. The variable \*repl-write-readable\* controls this; by default it is t, so write-readable is used; if it is nil, then the standard write routine is used.
+
+Installing via QuickLisp doesn't install the full package, so users who *only* install using QuickLisp won't have working versions of tools such as sweet-clisp, sweet-sbcl, sweeten, or unsweeten.
+
+
+Sweeten: Translating S-expressions into Sweet-expressions
+=========================================================
+
+We also have a filter called "sweeten" that translates existing S-expressions into sweet-expressions (this is the *reverse* of unsweeten).  You can use sweeten to help you understand sweet-expressions, or to move an existing program to sweet-expressions.
+
+Just put some S-expressions into a file and you can have them translated.  For example, you could the following in file "demo.scm":
+
+    (defun doubleadd (a b)
+        (* (+ a b) 2))
+
+
+You can run the sweetener by typing:
+
+    ./sweeten -C < demo.scm
+
+And you should see this as output:
+
+    defun doubleadd (a b) {{a + b} * 2}
+
+You can also run it interactively, but you may find that you want to press an extra "Enter" after your expression.  (It's done this way so that when it translates files they look correct.)
+
+When processing Common Lisp code, be sure to use the "-C" option for sweeten.  This tells sweeten to use Common Lisp notation, such as #'function, instead of Scheme (its default).  Sweeten does have limitations.  First, it is written in Scheme, so its handling of Common Lisp is far from perfect.  There is also a general limitation of the sweeten implementation: Comments inside any parentheses will not be produced in the output.  Still, it's a useful tool.
+
+Readable library
+=========================
+
+The "readable" library comes with some other functions you can call.
+
+Reading procedures
+------------------
+
+Various procedures let you read using a specific notation:
+
+*   curly-infix-read: Read a curly-infix-expression datum.
+*   neoteric-read: Read a neoteric-expression datum.
+*   sweet-read: Read a sweet-expression datum.
 
 
 Writing readable expressions
-============================
+----------------------------
 
 Version 1.0.5 adds additional procedures in Common Lisp to print expressions using these readable notations.  That way, you can easily print these notations as well as read them.  Their interfaces are intentionally similar to the standard Common Lisp procedures, so they should be easy to use.
 
@@ -514,34 +573,38 @@ write-to-string-readable, prin1-to-string-readable, and princ-to-string-readable
 write-to-string-readable is the general output function.  prin1-to-string acts like write-to-string with :escape t.  princ-to-string acts like write-to-string with :escape nil :readably nil. As a result, no escape characters are written.
 
 
-sweet-clisp REPL
-----------------
+What's the big deal?
+====================
 
-The "sweet-clisp" program, if you download the entire package, by default uses write-readable to display REPL results. The variable \*repl-write-readable\* controls this; by default it is t, so write-readable is used; if it is nil, then the standard write routine is used.
+If you aren't familiar with Lisp, you may say "what's the big deal"? After all, this looks a lot like traditional languages. Many have commented that it looks like Python, with its use of indenting, and of course nearly all other languages use infix notation.
+
+But that's the point - the results look much more familiar (and thus are more acceptable to non-Lispers), but all of Lisp's more exotic capabilities still work. You can use techniques like quoting (') and quasi-quoting (\`) with lifting (,), which enable powerful capabilities. Many people have created "infix" notations with Lisp-like languages before, but they all failed to work with many other Lisp features. We think this approach succeeds instead, where others before have failed.
 
 
 Closing Remarks
 ===============
 
 
-*RECAP*: The normal sequence after you start up your Common Lisp implementation (e.g., at the top of a file) is, if you use ASDF directly:
+*RECAP*: If you use QuickLisp (and are willing to require your users to use it), start your files with:
+
+    (ql:quickload "readable")
+    (readable:enable-sweet) ; or whichever notation you've chosen.
+
+If you use ASDF directly, start with:
 
     (require "asdf")
     (asdf:load-system :readable)
-    (readable:enable-sweet) ; or whichever notation you've chosen.
-
-If you use QuickLisp (and are willing to require your users to use it), this can be shortened to:
-
-    (ql:quickload "readable")
     (readable:enable-sweet) ; or whichever notation you've chosen.
 
 In either case, at the end of each file you can insert:
 
     (readable:disable-readable)
 
+You would typically load other modules before actually enabling a notation, to prevent the unlikely case that they'd be interpreted differently.
+
 The programs sweet-clisp and sweet-sbcl set up sweet-expression readers for those two implementations of Common Lisp, for your convenience.
 
-Although we used some specific implementations, note that these notations could be used with any Lisp-based system.  You can even use the "unsweeten" tool to translate arbitrary Lisp text into traditional s-expression notation, so you could use sweet-expressions even with Lisp-based languages other than Common Lisp.
+Although we discussed some specific implementations, these notations can be used with any Lisp-based system.  You can even use the "unsweeten" tool to translate arbitrary Lisp text into traditional s-expression notation, so you could use sweet-expressions even with Lisp-based languages other than Common Lisp.
 
 These notations can take a few minutes to learn how to use, just like anything else new, but we believe they are worth it.  We hope you like them and eventually believe it too.
 
