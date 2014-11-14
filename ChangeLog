@@ -1,3 +1,18 @@
+2014-11-07 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Bug fix for a subtle rarely-encountered error in the
+	  Common Lisp implementation of the sweet-expression reader.
+	  Previously, the reader would not work correctly on
+	  an n-expression if it was not a symbol, indentation processing
+	  is active, and it begins with the punctuation symbols
+	  "$", "\", "<", "*", or ".".
+	  For example, (* 4 5) and {4 * 5} worked fine, but *(4 5) did not.
+	  This bug took a long time to detect, because it
+	  didn't affect infix or traditional s-expression
+	  notation, and this is normally how such expressions would be used.
+	  Also, the neoteric reader worked just fine.
+	* Added "math.slisp", a symbol math simplifier in Common Lisp
+	  that demonstrates the readable notations.
+
 2014-10-18 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Version 1.0.5.
 	* Common Lisp implementation sweet-expression reader now handles

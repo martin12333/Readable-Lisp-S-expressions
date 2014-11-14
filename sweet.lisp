@@ -302,6 +302,8 @@
           results
           (cond
             ; TODO: Improve Workaround for symbol packaging:
+            ((not (symbolp expr))
+              results)
             ((and (eql c sublist-char) (string= (symbol-name expr) "$"))
               (list 'sublist-marker '()))
             ((and (eql c group-split-char) (string= (symbol-name expr) "\\"))
