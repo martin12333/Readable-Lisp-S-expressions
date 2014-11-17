@@ -380,7 +380,8 @@ This works with the other standard abbreviations (backquote, comma, and comma-at
 Advanced sweet-expression features
 ==================================
 
-The goal of sweet-expressions is to easily and cleanly express programs and data.  They work well, but experience with them suggested that certain abbreviations would make them even more pleasant to use.  So, here are those advanced features.
+The goal of sweet-expressions is to easily and cleanly express programs and data.  The basics work well, but experience with them suggested that certain abbreviations would make them even more pleasant to use.  So, here are those advanced features, along with more details about using them.   We've tried to think ahead, to make sure you can use sweet-expressions to easily and clearly express things.
+
 
 Grouping and Splitting
 ----------------------
