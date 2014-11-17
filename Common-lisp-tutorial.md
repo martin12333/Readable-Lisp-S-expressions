@@ -347,14 +347,6 @@ This has the same meaning as the following (and a sweet-expression reader would 
         (+ n1 n2)
         (fibup max (+ count 1) (+ n1 n2) n1)))
 
-If you're not sure what something means, you can "quote" it so it won't execute.  If you type ' followed by space, the indentation processing continues (starting at the ' mark indentation) but the whole thing will be quoted.  That way you can try things out!  For example:
-
-    ' foo bar1 bar2
-        spam eggs eggs
-
-Will produce:
-(foo bar1 bar2 (spam eggs eggs))
-
 Here's another example:
 
     defun factorial (n)
@@ -371,17 +363,29 @@ Note that infix is easily expressed with {...}.  You can call a procedure using 
 
 Notice that even this trivial example must have *5* closing parentheses in traditional Lisp notation; real Lisp programs have many more.  In contrast, the sweet-expression notation automatically closes most of them, and the few left over are easily matched by eye.
 
-Sometimes you want to have a parameter that is a list of lists, or where the function to be called is in fact determined by another calculation. This is indicated with the "\\\\" keyword; basically, at the beginning of line (but after indentation) "\\\\" maps into a null function name, so you can use forms like "let" easily.  We'll explain advanced sweet-expression advanced features in just a moment.
+Trying things out
+-----------------
+
+If you're not sure what something means, you can "quote" it so it won't execute.  If you type ' followed by space, the indentation processing continues (starting at the ' mark indentation) but the whole thing will be quoted.  That way you can try things out!  For example:
+
+    ' foo bar1 bar2
+        spam eggs1 eggs2
+
+Will produce:
+(FOO BAR1 BAR2 (SPAM EGGS1 EGGS2))
+
+This works with the other standard abbreviations (backquote, comma, and comma-at): use them at the beginning of a line and follow them with space, and they apply to the entire sweet-expression that follows.  Otherwise, they only apply to the next neoteric expression.
 
 
-Advanced features
-=================
+Advanced sweet-expression features
+==================================
 
+The goal of sweet-expressions is to easily and cleanly express programs and data.  They work well, but experience with them suggested that certain abbreviations would make them even more pleasant to use.  So, here are those advanced features.
 
 Grouping and Splitting
 ----------------------
 
-A basic indentation processor can sometimes require an excessive amount of vertical space, or it can make it hard to show the relationship between items at the same list level.  The \\\\ marker can help resolve this.
+Sometimes you want to have a parameter that is a list of lists, or where the function to be called is in fact determined by another calculation.   Also, a basic indentation processor can sometimes require an excessive amount of vertical space, or it can make it hard to show the relationship between items at the same list level.  The \\\\ marker can help resolve this.
 
 When a \\\\ marker is first on a line (after optional indentation), it stands for nothing at all.  This is useful for indicating groups of lists, e.g.,:
 
@@ -398,7 +402,7 @@ When a \\\\ marker is first on a line (after optional indentation), it stands fo
       (if ...))
 
 
-The \\\\ marker is also useful, when first on a line, to show that this line is logically subordinate to the previous line, but nevertheless it is at the same list level. For example:
+Basically, at the beginning of line (but after indentation) "\\\\" maps into a null function name, so you can use forms like "let" easily.  The \\\\ marker is also useful, when first on a line, to show that this line is logically subordinate to the previous line, but nevertheless it is at the same list level. For example:
 
     arc-if
       complicated-condition1()
@@ -416,7 +420,7 @@ The \\\\ marker is also useful, when first on a line, to show that this line is 
       (do-if-complicated-condition1-is-true)
       ...)
 
-If you have small items that need to be at the same list level, you can combine them on one line and separate them with \\\\.  For example, this is useful for keyword symbols:
+If you have small items that need to be at the same list level, you can combine them on one line and separate them with \\\\.  Basically, if \\\\ is not the first item on the line, it acts as if you split the line and restarted at the current indentation.  This is useful, for example, with keyword symbols:
 
     foo
       :amount \\ 100 \\ :from \\ ocean
