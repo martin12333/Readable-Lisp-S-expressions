@@ -59,6 +59,9 @@
 (use-package :org.tfeb.hax.memoize)
 (readable:enable-sweet)
 
+#-clisp
+(setf (readtable-case *readtable*) :invert)
+
 defun numeric-operationp (expr op-list)
   "Return t if expr is a numeric-only operation using an op in op-list."
   and
@@ -156,8 +159,8 @@ defun rewrite-match-pattern (x)
     eq(x '?args)   $ 'args
     eq(x '?n-args) $ '(guard args (numberlistp args))  ; list of only numbers
     eq(x '_)       $ x
-    symbol-beginsp(x "?=") $ list 'eql intern(substring(symbol-name(x) 2))
-    symbol-beginsp(x "?")  $ intern substring(symbol-name(x) 1)
+    symbol-beginsp(x "?=") $ list 'eql intern(subseq(symbol-name(x) 2))
+    symbol-beginsp(x "?")  $ intern subseq(symbol-name(x) 1)
     symbol-beginsp(x ",")  $ error "Comma not allowed"
     member(x '(op args lhs rhs a b f g p q x y z)) $ error "Missing ?symbol"
     symbolp(x) $ `quote(,x)
