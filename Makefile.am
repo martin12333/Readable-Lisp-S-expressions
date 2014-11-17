@@ -1,6 +1,6 @@
 # Makefile.am for "readable" project
 
-# Copyright (C) 2007-2013 by David A. Wheeler and Alan Manuel K. Gloria.
+# Copyright (C) 2007-2014 by David A. Wheeler and Alan Manuel K. Gloria.
 #
 # This software is released as open source software under the "MIT" license:
 #
