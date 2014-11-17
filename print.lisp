@@ -25,8 +25,16 @@
   "Suppress printer errors when the condition is of the type designated by this
 variable: an unreadable object representing the error is printed instead.")
 
+(defvar *print-notation* nil
+  #+sb-doc
+  "Currently-active notation used in readable package's writers")
+
 ; Track errors in output-object-readable:
 (defvar *readable-in-print-error* nil)
+
+; WORKAROUND: This was already defined in basic-curly.lisp; we redeclare it
+; here to inhibit compiling warnings.
+(defvar *original-readtable*)
 
 ; TODO: Determine output stream.  Just return stream provided for now.
 (defun out-synonym-of (stream)
