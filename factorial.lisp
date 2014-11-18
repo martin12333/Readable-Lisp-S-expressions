@@ -1,4 +1,6 @@
-; This is a trivial demo of sweet-expressions in Common Lisp.  Run as:
+; This is a trivial demo of sweet-expressions in Common Lisp.
+; This version uses ASDF.
+; Run as:
 ;     clisp -q -q factorial.lisp
 ; To use the NOT installed version of the readable library, prepend with:
 ;     CL_SOURCE_REGISTRY="$PWD" 
@@ -11,12 +13,12 @@
 
 
 
-defun fact (x)
+defun factorial (x)
   if {x < 1}
     1
-    {x * fact{x - 1}}
+    {x * factorial{x - 1}}
 
-princ fact(5)
+princ factorial(5)
 
 
 
