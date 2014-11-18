@@ -32,6 +32,7 @@ setup_commands='
 (require "asdf")
 (asdf:load-system :readable)
 (setq *print-escape* nil)
+(setf (readtable-case *readtable*) :invert)
 (readable:enable-sweet)
 '
 
