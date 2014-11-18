@@ -53,7 +53,7 @@ variable: an unreadable object representing the error is printed instead.")
 (define-constant special-infix-operators '(and or xor))
 
 (define-constant punct-chars
-  '(#\! #\" #\# #\$ #\% #\& #\' #\( #\) #\* #\+ #\, #\-
+  `(#\! #\" #\# #\$ #\% #\& #\' #\( #\) #\* #\+ #\, #\-
     #\.  #\/ #\: #\; #\< #\= #\> #\p #\@ #\[ #\\ #\] #\^
     #\- #\` #\{ #\| #\} #\~ ))
 
