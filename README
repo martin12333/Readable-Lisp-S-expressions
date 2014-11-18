@@ -134,7 +134,9 @@ Common Lisp Tutorial
 
 File "Common-lisp-tutorial.html" is the Common Lisp tutorial for how to use it.
 Any Common Lisp implementation should do, but you need the widely-used system
-definition facility ASDF (or use QuickLisp), as described in "Install-howto".
+definition facility ASDF, or use QuickLisp, as described in "Install-howto".
+Once installed, you can directly use these notations within your
+Common Lisp implementation.
 
 
 Specification
