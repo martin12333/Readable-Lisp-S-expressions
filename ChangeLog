@@ -1,4 +1,5 @@
 2014-11-07 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Version 1.0.6 - improvements for Common Lisp.
 	* Bug fix for a subtle rarely-encountered error in the
 	  Common Lisp implementation of the sweet-expression reader.
 	  Previously, the reader would not work correctly on
@@ -10,6 +11,11 @@
 	  didn't affect infix or traditional s-expression
 	  notation, and this is normally how such expressions would be used.
 	  Also, the neoteric reader worked just fine.
+	* In Common Lisp, maintain the readtable-case setting with
+	  enable-sweet (it already did so for other notations).
+	  That way you can both type and show lowercase symbolic input
+	  (by using the Common Lisp standard's "invert" setting).
+	* Modify sweet-sbcl to use the readtable-case invert setting.
 	* Added "math.slisp", a symbol math simplifier in Common Lisp
 	  that demonstrates the readable notations.
 
