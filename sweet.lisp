@@ -403,7 +403,7 @@
   (cond
     ((eq y empty-value) x)
     ((eq x empty-value) y)
-    (t (append y))))
+    (t (append x y))))
 
 (defun list1e (x) ; list, but handle "empty" values
   (if (eq x empty-value)
