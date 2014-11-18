@@ -817,6 +817,8 @@
 (defun compute-sweet-redirect-readtable ()
   (setq *sweet-readtable*
     (let ((new (copy-readtable nil)))
+      ; Copy readtable-case setting
+      (setf (readtable-case new) (readtable-case *readtable*))
       (set-syntax-from-char #\# #\' new) ; force # to not be dispatching char.
       (loop for ci from 0 upto my-char-code-limit
          do (set-macro-character (code-char ci) #'t-expr-entry nil new))
