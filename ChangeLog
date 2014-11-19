@@ -1,3 +1,24 @@
+2014-11-18 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Version 1.0.6 - improvements for Common Lisp.
+	* Bug fix for a subtle rarely-encountered error in the
+	  Common Lisp implementation of the sweet-expression reader.
+	  Previously, the reader would not work correctly on
+	  an n-expression if it was not a symbol, indentation processing
+	  is active, and it begins with the punctuation symbols
+	  "$", "\", "<", "*", or ".".
+	  For example, (* 4 5) and {4 * 5} worked fine, but *(4 5) did not.
+	  This bug took a long time to detect, because it
+	  didn't affect infix or traditional s-expression
+	  notation, and this is normally how such expressions would be used.
+	  Also, the neoteric reader worked just fine.
+	* In Common Lisp, maintain the readtable-case setting with
+	  enable-sweet (it already did so for other notations).
+	  That way you can both type and show lowercase symbolic input
+	  (by using the Common Lisp standard's "invert" setting).
+	* Modify sweet-sbcl to use the readtable-case invert setting.
+	* Added "math.slisp", a symbol math simplifier in Common Lisp
+	  that demonstrates the readable notations.
+
 2014-10-18 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Version 1.0.5.
 	* Common Lisp implementation sweet-expression reader now handles

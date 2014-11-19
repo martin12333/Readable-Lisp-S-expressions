@@ -18,6 +18,7 @@ fi
 
 
 sbcl --eval '(require "asdf")' \
+     --eval '(setf (readtable-case *readtable*) :invert)' \
      --eval '(asdf:load-system :readable)' \
      --eval '(readable:enable-sweet)' "$@"
 

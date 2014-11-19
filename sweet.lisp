@@ -302,6 +302,8 @@
           results
           (cond
             ; TODO: Improve Workaround for symbol packaging:
+            ((not (symbolp expr))
+              results)
             ((and (eql c sublist-char) (string= (symbol-name expr) "$"))
               (list 'sublist-marker '()))
             ((and (eql c group-split-char) (string= (symbol-name expr) "\\"))
@@ -401,7 +403,7 @@
   (cond
     ((eq y empty-value) x)
     ((eq x empty-value) y)
-    (t (append y))))
+    (t (append x y))))
 
 (defun list1e (x) ; list, but handle "empty" values
   (if (eq x empty-value)
@@ -811,10 +813,16 @@
       ; Specially handle EOF so the underlying reader will see it.
       (end-of-file () (values)))))
 
-; Set up a readtable that'll redirect everything.
+; Set up a readtable that'll redirect any character to t-expr-entry.
 (defun compute-sweet-redirect-readtable ()
   (setq *sweet-readtable*
+    ; Create a new readtable from the standard one. We do this because
+    ; other characters may have been defined as dispatching macro chars, and 
+    ; we need to make sure that they *stop* dispatching.
+    ; Starting from the standard readtable gives us a known starting point.
     (let ((new (copy-readtable nil)))
+      ; Copy the readtable-case setting so we will continue to use it.
+      (setf (readtable-case new) (readtable-case *readtable*))
       (set-syntax-from-char #\# #\' new) ; force # to not be dispatching char.
       (loop for ci from 0 upto my-char-code-limit
          do (set-macro-character (code-char ci) #'t-expr-entry nil new))

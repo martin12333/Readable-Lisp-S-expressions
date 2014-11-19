@@ -42,8 +42,30 @@ For more information, see:
   http://readable.sourceforge.net
 
 
-Example
-=======
+Curly-infix-expression examples
+===============================
+
+Here are some examples of basic curly-infix-expressions:
+
+    {3 + 4}             ; (+ 3 4)
+    {a * {b + c}}       ; (* a (+ b c))
+
+Neoteric-expression examples
+============================
+
+Here are some examples of neoteric expressions
+(note that this notation is optional):
+
+    cos(0)              ; (cos 0)
+    if({n > max} max n) ; (if (> n max) max n)
+
+Sweet-expression examples
+=========================
+
+You can optionally enable sweet-expressions. Remember:
+   - An indented line is a parameter of its parent.
+   - Later terms on a line are parameters of the first term.
+   - A line with exactly one term and no child lines is simply that term.
 
 Here is an example of a sweet-expression:
 
@@ -61,11 +83,22 @@ That sweet-expression would be interpreted as:
 
 A sweet-expression reader would accept *either* one.
 
+Here's another example of a sweet-expression and its meaning:
+
+a b c d      ; (a b c d
+  e f g      ;    (e f g)
+  h i        ;    (h i
+    j k l    ;       (j k l)
+    m n o    ;       (m n o))
+  p          ;    p
+  q r s      ;    (q r s))
+
+
 
 Maturity
 ========
 
-This code is *mature* and *production-ready*.
+This code is *mature* and *production-ready* for Scheme and Common Lisp.
 It comes with an extensive test suite, which it passes.
 
 
@@ -93,7 +126,7 @@ See the COPYING.GPL file for the conditions for the "sweet-clisp" program.
 Getting, building, and installing
 =================================
 
-Most people should get the current stable version.  To get it:
+Most people should get the current stable version.  To get the whole package:
 
 * Use your web browser to view http://readable.sourceforge.net
 * Click on "Download files"
@@ -115,11 +148,12 @@ In git the "master" branch contains final released versions, while
 the "develop" branch contains the version in development.
 
 This software supports the usual GNU Build System conventions, and
-it should be easy to install on most systems.  Users who only want to
-use the Common Lisp library can use QuickLisp instead.  If you have very
-exotic needs, the file INSTALL gives details on how to precisely control
-installation.
+it should be easy to install on most systems.  If you have
+very exotic needs, the file INSTALL gives details on how
+to precisely control the installation.  For most people the automatic
+install will "do the right thing".
 
+Users who only want to use the Common Lisp library can use QuickLisp instead.
 
 
 Scheme Tutorial
@@ -134,7 +168,9 @@ Common Lisp Tutorial
 
 File "Common-lisp-tutorial.html" is the Common Lisp tutorial for how to use it.
 Any Common Lisp implementation should do, but you need the widely-used system
-definition facility ASDF (or use QuickLisp), as described in "Install-howto".
+definition facility ASDF, or use QuickLisp, as described in "Install-howto".
+Once installed, you can directly use these notations within your
+Common Lisp implementation.
 
 
 Specification

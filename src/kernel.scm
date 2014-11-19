@@ -1900,7 +1900,7 @@
     (cond
       ((eq? y empty-value) x)
       ((eq? x empty-value) y)
-      (else (append y))))
+      (else (append x y))))
 
   (define (list1e x) ; list, but handle "empty" values
     (if (eq? x empty-value)

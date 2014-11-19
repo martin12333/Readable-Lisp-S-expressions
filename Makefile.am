@@ -1,6 +1,6 @@
 # Makefile.am for "readable" project
 
-# Copyright (C) 2007-2013 by David A. Wheeler and Alan Manuel K. Gloria.
+# Copyright (C) 2007-2014 by David A. Wheeler and Alan Manuel K. Gloria.
 #
 # This software is released as open source software under the "MIT" license:
 #
@@ -498,6 +498,8 @@ EXTRA_DIST += \
  tests/curly-infix-testsuite-scm \
  tests/curly-infix-test-scm \
  tests/full-test-cl \
+ tests/math-test \
+ tests/math-test-correct \
  tests/neoteric-test \
  tests/neoteric-testsuite \
  tests/sweet-test \
@@ -531,6 +533,19 @@ check-clisp: my-realpath
 	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
 	  $(CLISP) -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
 	        $(srcdir)/tests/full-test-cl
+# Create separate "check-math" target so we only run these tests on command.
+check-math:
+	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
+	  $(CLISP) -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
+	        "$(srcdir)/math.slisp" < "$(srcdir)/tests/math-test" \
+             | tee "math-results" \
+             | diff -b -u "$(srcdir)/tests/math-test-correct" -
+test-math: check-math
+# If the results are correct, record them:
+check-math-is-okay:
+	cp math-results tests/math-test-correct
+check-math-is-ok: check-math-is-okay
+check-math-is-correct: check-math-is-okay
 else !HAVE_CLISP
 check-clisp:
 endif !HAVE_CLISP

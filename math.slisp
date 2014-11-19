@@ -1,0 +1,440 @@
+; math.slisp - math expression simplifier
+; by David A. Wheeler
+; This simplifies various math expressions, returning exact results.
+; Its real purpose is to demonstrate sweet-expressions in Common Lisp.
+
+; MIT license.
+; Copyright (c) 2014 David A. Wheeler
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+; 
+; The above copyright notice and this permission notice shall be included in
+; all copies or substantial portions of the Software.
+; 
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+; THE SOFTWARE.
+
+; Lisp and symbolic math have a long intertwined history. 
+; John McCarthy's "An Algebraic Language for the Manipulation of
+; Symbolic Expressions", MIT AI Lab Memo Number 1, October 1958
+; ( http://www.softwarepreservation.org/projects/LISP/MIT/AIM-001.pdf/view )
+; defined a precursor of Lisp (including car, symbols, etc.).
+; This particular program is a pattern rule based system, loosely inspired by
+; "Paradigms of Artificial Programming: Case Studies in Common Lisp"
+; by Peter Norvig, 1992, chapter 8 ("Symbolic Mathematics...").
+; However, this is an independent separate implementation.
+
+; To run test suite: "make check-math"
+
+(princ "Math - Simplify possibly-symbolic math sweet-expressions.")
+(terpri)
+
+#-quicklisp
+(let ((quicklisp-init
+        (merge-pathnames "quicklisp/setup.lisp" (user-homedir-pathname))))
+  (when (probe-file quicklisp-init)
+    (load quicklisp-init)))
+
+; By default disable noisy output (set to *standard-output* for more info):
+(defvar *loading-output* (make-broadcast-stream))
+
+; Load the libraries. Send loading output to *loading-output*:
+(let ((*standard-output* *loading-output*))
+  ; We'll reuse the optima pattern-matcher.  Its notation is more
+  ; complex than cl-pattern, but it has more functionality and we need it.
+  (ql:quickload "optima")
+  (ql:quickload "memoize")
+  (ql:quickload "readable"))
+
+(use-package :optima)
+(use-package :org.tfeb.hax.memoize)
+(readable:enable-sweet)
+
+#-clisp
+(setf (readtable-case *readtable*) :invert)
+
+defun numeric-operationp (expr op-list)
+  "Return t if expr is a numeric-only operation using an op in op-list."
+  and
+    consp expr
+    member car(expr) op-list
+    not null(cdr(expr))
+    every #'numberp cdr(expr)
+
+defun numberlistp (x)    {not(null(x)) and every(#'numberp x)}
+defun more-than-onep (x) {consp(x) and consp(cdr(x))}
+defun lastvalue (x)      car(last(x))
+defun generous-zerop (x) {numberp(x) and {x = 0}}
+defun generous-onep (x)  {numberp(x) and {x = 1}}
+
+defun true-valuep (x)    {x eq 'true}
+defun false-valuep (x)   {x eq 'false}
+
+defun truthiness (x) ; Convert Common Lisp truth value to our notation.
+  if x 'true 'false
+
+defun constant-valuep (x)
+  {numberp(x) or eq(x 'pi) or eq(x 'e)}
+
+defun filter (pred list)
+  remove-if complement(pred) list
+
+defun reorder-first (pred list)
+  "Recorder list so that elements satisfying predicate pred are first."
+  append filter(pred list) remove-if(pred list)
+
+defun some-ignorelast (pred lyst)
+  "Return t if a list element (ignoring last) satisfies pred; similar to some."
+  cond
+    not(consp(lyst))      nil  ; null isn't a consp, so that works here too.
+    null(cdr(lyst))       nil
+    apply(pred list(car(lyst))) t
+    t                     some-ignorelast(pred cdr(lyst))
+
+defun find-operation (op list)
+  "Return t if operator 'op' is the car of a list element in list."
+  some lambda((x) {consp(x) and eq(car(x) op)}) list
+
+defun flatten-operation (op lyst)
+  "Return a list, but flatten by one level any list element beginning with op."
+  cond
+    not(consp(lyst))
+      lyst
+    {not(consp(car(lyst))) or not(eq(caar(lyst) op))}
+      cons car(lyst) flatten-operation(op cdr(lyst))
+    null(cdr(car(lyst))) ; Defensive programming, should not be needed.
+      flatten-operation(op cdr(lyst))
+    t
+      append cdr(car(lyst)) flatten-operation(op cdr(lyst))
+
+; Implement "num" function, which forces numerical calculation.
+; Numeric + - * / already computed using simplification, so no need to do that.
+defun compute-numeric (x)
+  cond
+    eq(x 'pi) pi
+    eq(x 'e)  exp(1)
+    not(consp(x)) x
+    numeric-operationp(x '(^))
+      apply #'expt cdr(x)
+    {numeric-operationp(x '(log)) and {length(x) = 2}}
+      log second(x) 10 ; "log" default base is 10.
+    numeric-operationp(x '(log ln sin cos))
+      apply car(x) cdr(x)
+    numeric-operationp(x '(abs))
+      abs second(x)
+    t
+      x
+
+defun symbol-beginsp (sym start)
+  "Returns t if symbol sym begins with string start."
+  and
+    symbolp(sym)
+    {length(symbol-name(sym)) >= length(start)}
+    string= subseq(symbol-name(sym) 0 length(start)) start
+
+; If simplification makes it better, return it, otherwise fail.
+defmacro simplify-if-can (expr)
+  ` let* <* old-expr ,expr \\ new-expr simplify(old-expr) *>
+      if equal(old-expr new-expr)
+        fail()
+        new-expr
+
+; We use a pattern language especially good for math expressions.
+; The following converts our local pattern language into optima, so that
+; we can use optima's optimizations and facilities.
+; ?symbol is a variable, else symbol (and atom) is constant.
+; "?args" matches 1+ arguments of a list.
+; ?=symbol is a repeat of a previous symbol.
+defun rewrite-match-pattern (x)
+  cond
+    eq(x '?args)   $ 'args
+    eq(x '?n-args) $ '(guard args (numberlistp args))  ; list of only numbers
+    eq(x '_)       $ x
+    symbol-beginsp(x "?=") $ list 'eql intern(subseq(symbol-name(x) 2))
+    symbol-beginsp(x "?")  $ intern subseq(symbol-name(x) 1)
+    symbol-beginsp(x ",")  $ error "Comma not allowed"
+    member(x '(op args lhs rhs a b f g p q x y z)) $ error "Missing ?symbol"
+    symbolp(x) $ `quote(,x)
+    atom(x)    $ x
+    consp(x)
+      if member(lastvalue(x) '(?args ?n-args))
+        ` list* ,@mapcar(#'rewrite-match-pattern x)
+        ` list  ,@mapcar(#'rewrite-match-pattern x)
+
+defun convert-math-patterns (x)
+  cond
+    null(x) x
+    consp(x)
+      cons
+        cons
+          rewrite-match-pattern car(car(x))
+          cdr car(x)
+        convert-math-patterns cdr(x)
+
+defmacro math-patterns (expr &rest patterns)
+  ` optima:match ,expr
+      ,@ convert-math-patterns patterns
+
+defun simplify-expression (expr)
+  "Simplify one expression (its operands have already been simplified)."
+  math-patterns expr
+    *(?args) when find(0 args)
+      0
+    and(?args) when find('false args)
+      'false
+    ; In general, any undef propagates as undef:
+    (?args) when find('undef args)
+      'undef
+    ?op(?n-args) when member(op '(+ - *))
+      apply op args
+    ?op(?n-args) when member(op '(= < <= > >=))
+      truthiness $ apply op args
+    <>(?n-args)
+      truthiness $ apply #'/= args
+    +(?args) when find(0 args)
+      simplify-expression `+(,@remove-if(#'generous-zerop args))
+    *(?args) when find(1 args)
+      simplify-expression `*(,@remove-if(#'generous-onep args))
+    and(?args) when find('true args)
+      simplify-expression `and(,@remove-if(#'true-valuep args))
+    or(?args) when find('true args)
+      'true
+    or(?args) when find('false args)
+      simplify-expression `or(,@remove-if(#'false-valuep args))
+    {?lhs / ?rhs} when {rationalp(lhs) and rationalp(rhs) and {rhs /= 0}}
+      {lhs / rhs}
+    {?lhs / -(?rhs)}
+      simplify-expression `{-(,lhs) / ,rhs}
+    {?lhs / #C(0 1)} simplify-expression(`-(,lhs)) ; Division by i.
+    {?lhs ^ ?rhs} when {rationalp(lhs) and integerp(rhs) and {rhs >= 2}}
+      expt lhs rhs
+    {#C(0 1) ^ ?rhs} when {integerp(rhs) and {rhs >= 1}} ; Powers of i.
+      expt #C(0 1) rhs
+    +(?args) when {{length(args) >= 2} and
+                   {length(filter(#'numberp args)) > 1}}
+      simplify-expression
+        `(+ ,@remove-if(#'numberp args) ,apply('+ filter(#'numberp args)))
+    -(?a ?args) when {{length(args) >= 2} and
+                      {length(filter(#'numberp args)) > 1}}
+      simplify-expression
+        `(- ,a ,@remove-if(#'numberp args) ,apply('+ filter(#'numberp args)))
+    *(?args) when {{length(args) >= 2} and
+                   {length(filter(#'numberp args)) > 1}}
+      simplify-expression
+        `(* ,apply('* filter(#'numberp args)) ,@remove-if(#'numberp args))
+    abs(?a) when {numberp(a) and rationalp(abs(a))}
+      abs(a)
+    +()                            0
+    *()                            1
+    or()                           'false
+    and()                          'true
+    +(?a)                          a
+    *(?a)                          a
+    or(?a)                         a
+    and(?a)                        a
+    {?a + 0}                       a
+    {?a + ?=a}                     simplify-expression(`{2 * ,a})
+    {?a - 0}                       a
+    {0 - ?a}                       `-(,a)
+    -(-(?a))                       a
+    {-(?a) ^ ?b} when {numberp(b) and evenp(b)}
+      simplify-expression `{,a ^ ,b}
+    {?a - ?=a}                     0
+    {?a + -(?=a)}                  0
+    {?a * 1}                       a
+    {1 * ?a}                       a
+    {-1 * ?a}                      simplify-expression(`-(,a))
+    {?a * ?=a}                     simplify-expression(`{,a ^ 2})
+    {?a * ?=a * ?=a}               simplify-expression(`{,a ^ 3})
+    /(?a)                          simplify(`{1 / ,a})
+    {?a / 0}                       'undef
+    {?a / 1}                       a
+    {?a / ?=a}                     simplify(`if({,a <> 0} 1))
+    {0 ^ 0}                        'undef
+    {?a ^ 0}                       `if({,a <> 0} 1)
+    {0 ^ ?a}                       `if({,a <> 0} 0)
+    {1 ^ ?a}                       1
+    {?a ^ 1}                       a
+    {?a ^ -1}                      simplify(`{1 / ,a})
+    {1 / {?a / ?b}}                simplify(`if({,b <> 0} {,b / ,a}))
+    {{?a + ?b} <> 0}               simplify(`{,a <> -(,b)})
+    {{?a + ?b} = 0}                simplify(`{,a = -(,b)})
+    {{?a - ?b} <> 0}               simplify-expression(`{,a <> ,b})
+    {{?a - ?b} = 0}                simplify-expression(`{,a = ,b})
+    {{?a * ?b} / ?=a}              simplify(`if({,a <> 0} ,b))
+    {{?b * ?a} / ?=a}              simplify(`if({,a <> 0} ,b))
+    {?a * {?b / ?=a}}              simplify(`if({,a <> 0} ,b))
+    {{?b / ?a} * ?=a}              simplify(`if({,a <> 0} ,b))
+    {{?a / ?b} / ?=a}              simplify(`if({,a <> 0} {1 / ,b}))
+    log(0)                         'undef
+    log(0 _)                       'undef
+    log(1)                         0
+    log(1 _)                       0
+    ; TODO: Logarithms of complex numbers.  For now, simplify some reals
+    log(?a ?=a) when {realp(a) and {a > 0}}
+      1
+    log(?a) when {rationalp(a) and {a > 0} and rationalp(log(a 10))}
+      log(a 10)
+    log(?a ?x) when {realp(a) and realp(x) and {a > 0} and
+                     rationalp(log(a x))}
+      log(a x)
+    {log(?a) + log(?b)}            simplify(`log{,a * ,b})
+    {log(?a) - log(?b)}            simplify(`log{,a / ,b})
+    log{?a ^ ?b}                   simplify(`{,b * log(,a)})
+    {log(?a ?x) + log(?b ?=x)}     simplify(`log({,a * ,b} ,x))
+    {log(?a ?x) - log(?b ?=x)}     simplify(`log({,a / ,b} ,x))
+    log({?a ^ ?b} ?x)              simplify(`{,b * log(,a ,x)})
+    ln(0)                          'undef
+    ln(e)                          1
+    {ln(?a) + ln(?b)}              simplify(`ln{,a * ,b})
+    {ln(?a) - ln(?b)}              simplify(`ln{,a / ,b})
+    ln{?a ^ ?b}                    simplify(`{,b * ln(,a)})
+    sin(0)                         0
+    sin{pi / 2}                    1
+    sin{1/2 * pi}                  1
+    sin(pi)                        0
+    sin{3/2 * pi}                  -1
+    sin{{3 * pi} / 2}              -1
+    sin{2 * pi}                    0
+    cos(0)                         1
+    cos{pi / 2}                    0
+    cos{1/2 * pi}                  0
+    cos(pi)                        -1
+    cos{3/2 * pi}                  0
+    cos{{3 * pi} / 2}              0
+    cos{2 * pi}                    1
+    {{sin(?x) ^ 2} + {cos(?=x) ^ 2}}  1
+    tan(0)                         0
+    tan(pi)                        0
+    deriv(?x ?=x)                  when symbolp(x)                1
+    deriv(?constant ?x)            when constant-valuep(constant) 0
+    deriv(?y ?x)                   when symbolp(y)                0
+    deriv(+(?args) ?x)
+      simplify-if-can `+(,@mapcar(lambda((expr) `deriv(,expr ,x)) args))
+    deriv(-(?args) ?x)
+      simplify-if-can `-(,@mapcar(lambda((expr) `deriv(,expr ,x)) args))
+    deriv({?f * ?g} ?x)
+      simplify-if-can `{{deriv(,f ,x) * ,g} + {,f * deriv(,g ,x)}}
+    deriv({?f / ?g} ?x)
+      simplify-if-can
+        ` if {,g <> 0}
+             {{{deriv(,f ,x) * ,g} - {,f * deriv(,g ,x)}} / {,g ^ 2}}
+    deriv({?f ^ ?g} ?x)
+      simplify-if-can
+        `{ {,g * {,f ^ {,g - 1}} * deriv(,f ,x)}
+         + {{,f ^ ,g} * ln(,f)  * deriv(,g ,x)}}
+    deriv(log(?f) ?x)              simplify(`{deriv(,f ,x) / ,f})
+    deriv({e ^ ?f} ?x)             simplify(`{{e ^ ,f} * deriv(,f ,x)})
+    deriv(sin(?f) ?x)              simplify(`{cos(,f) * deriv(,f ,x)})
+    deriv(cos(?f) ?x)              simplify(`{-(sin(,f)) * deriv(,f ,x)})
+    deriv(tan(?f) ?x)              simplify(`{tan(,f) ^ -2} * deriv(,f ,x))
+    ; TODO: This "solve" is lame, replace with a real solver.
+    solve({?x = ?y} ?=x)           y
+    solve({{?a * ?x} = ?y} ?=x)    simplify(`{,y / ,a})
+    solve({{?x + ?a} = ?y} ?=x)    simplify(`{,y - ,a})
+    num(?arg)                      compute-numeric(arg) ; "num(...)" function
+    /=(?args)                      `(<> ,@args)  ; Prefer "<>"
+    (!= ?args)                     `(<> ,@args)
+    {?a = ?=a}                     'true
+    {?a <> ?=a}                    'false
+    not(true)                      'false
+    not(false)                     'true
+    not(not(?a))                   a
+    not(=(?args))                  `<>(,args)
+    not(<>(?args))                 `=(,args)
+    not(<(?args))                  `>=(,args)
+    not(<=(?args))                 `>(,args)
+    not(>(?args))                  `<=(,args)
+    not(>=(?args))                 `<(,args)
+    {?p -> ?q}                     simplify-if-can(`{not(,p) or ,q})
+    if(true ?tside)                tside
+    if(true ?tside ?fside)         tside
+    if(false ?tside)               'undef
+    if(false ?tside ?fside)        fside
+    if(?c1 if(?c2 ?tside))         simplify(`if({,c1 and ,c2} ,tside))
+    {{?a * ?x} + {?b * ?=x}}       simplify(`{{,a + ,b} * ,x})
+    {{?a ^ ?x} * {?=a ^ ?y}}       simplify(`{,a ^ {,x + ,y}})
+    +(?args) when find-operation('+ args)  ; +-in-+
+      simplify `+(,@flatten-operation('+ args))
+    *(?args) when find-operation('* args)  ; *-in-*
+      simplify `*(,@flatten-operation('* args))
+    +(?args) when some-ignorelast(#'numberp args) ; Number not in last place
+      simplify-expression `+(,@reorder-first(complement(#'numberp) args))
+    -(?a ?args) when some-ignorelast(#'numberp args) ; Number not in last place
+      simplify-expression `-(,a ,@reorder-first(complement(#'numberp) args))
+    *(?args) when some(#'numberp cdr(args)) ; Number not in first place
+      simplify-expression `*(,@reorder-first(#'numberp args))
+    ?a                             a
+
+def-memoized-function simplify (expr)
+  "Simplify an expression: first its operands, then the whole thing."
+  if atom(expr)
+     expr
+     simplify-expression mapcar(#'simplify expr)
+
+defun show-help ()
+  dolist
+    line
+      ' <*
+"This program prints simplified versions of expressions entered"
+"in sweet-expression format. In sweet-expressions:"
+"- Infix operations are surrounded by {...}, e.g., {3 + 4}"
+"- Prefix operations can begin before parentheses, e.g., sin(0), log(100 10)"
+"- Indent expressions to make them children of the main expression."
+"Enter a blank line to complete an expression."
+"This simplifier accepts symbolic expressions, e.g., {2 * x * 3 * y}."
+"Supported operations are:"
+" +, -, *, /, ^ : Infix add, subtract, multiply, divide, exponentiate."
+" =, <>, <, <=, >, >=: Infix numeric comparison (equal, not-equal, etc.)."
+" and, or: Infix (logical) and, (logical) or."
+" ->: Infix (material) implication per classical (not intuitionist) logic."
+" log(n [base=10]), ln(n): Logarithms. ln(n) = log(n e)."
+" sin(x), cos(x), tan(x): Trigonometric functions (radians)."
+" abs(x): Absolute value (distance from 0)."
+" undef, true, false: Constant values undefined, true, and false."
+" pi, e: Constant values pi (3.14159...) and e (2.71828...)."
+" not(x): Logical negation; not(false) = true."
+" if(condition true-result [false-result]): If-then-else."
+" deriv(expression variable): Derivative of expression w.r.t. variable."
+"     Symbols are considered constants; use f(x) to represent a function."
+" #C(real imaginary): Complex number (real and imaginary cannot be symbols)."
+" num(expression): Force numeric calculation of expression."
+"This program doesn't compete with programs like Maxima.  However,"
+"it is unusual in that it tracks undefined values, e.g., division-by-zero"
+"and {0 ^ 0} have the value undef (undefined)."
+"Therefore {z / z} simplifies to if({z <> 0} 1), not just 1."
+"Number-only expressions with exact results simplify to that number;"
+"inexact results are avoided unless 'num' is used."
+"Examples: {3 * {1 + 2}} => 9, cos(0) => 0, {x + {y * 0}} => x,"
+" {true and false} => false, deriv({x ^ 3} x) => {3 * {x ^ 2}}."
+*>
+    princ line
+    terpri()
+
+princ "Examples: {3 * {1 + 2}}, cos(0), {x + {y * 0}}"
+terpri()
+terpri()
+
+princ "Please enter expressions to be simplified (:help ENTER ENTER for help):"
+terpri()
+loop for line = read-preserving-whitespace(*standard-input* nil :eof)
+     until \\ eq line :eof
+     do \\ progn
+       cond
+         eq(line :help)
+           show-help()
+         t
+           readable:write-readable simplify(line) :case :downcase
+           clear-memoized-functions()
+       terpri()
+
+(readable:disable-readable)

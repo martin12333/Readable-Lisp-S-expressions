@@ -1,14 +1,26 @@
-; This is a trivial demo of sweet-expressions in Common Lisp.  Run as:
-;    sweet-clisp factorial.slisp
-; To run the NOT installed readable version, run as:
-;    CL_SOURCE_REGISTRY="$PWD" ./sweet-clisp factorial.slisp
+; This is a demo of sweet-expressions in Common Lisp.
+; This version uses QuickLisp, and thus will try to automatically
+; download and install the library if it's not available locally.  Run as:
+;    sbcl --script factorial.slisp
+; To run the NOT installed readable version, prepend with:
+;    CL_SOURCE_REGISTRY="$PWD"
+
+#-quicklisp
+(let ((quicklisp-init     ; Work around clisp failure to load quicklisp.
+        (merge-pathnames "quicklisp/setup.lisp" (user-homedir-pathname))))
+  (when (probe-file quicklisp-init)
+    (load quicklisp-init)))
+(let ((*standard-output* (make-broadcast-stream))) ; Disable noisy output
+  (ql:quickload "readable"))
+(readable:enable-sweet)
 
 
-defun fact (x)
+defun factorial (x)
   if {x < 1}
     1
-    {x * fact{x - 1}}
+    {x * factorial{x - 1}}
 
 format t "Demo factorial of 5 using sweet-expressions:~%"
-princ fact(5)
+princ factorial(5)
+terpri()
 

@@ -5,7 +5,11 @@ Unlike most past efforts to make Lisp more readable, our approach is **generic**
 Readable abbreviation specification
 ===================================
 
-We have three notation tiers, each of which builds on the previous one. Curly-infix starts with traditional s-expressions and adds support for traditional infix notation; neoteric-expressions add support for traditional function notation; and sweet-expressions reduce the number of explicit parentheses needed (by deducing them from indentation).  Here's the complete specification of these abbreviations (where "&rArr;" means "maps to"):
+We have three notation tiers, each of which builds on the previous one. Curly-infix starts with traditional s-expressions and adds support for traditional infix notation; neoteric-expressions add support for traditional function notation; and sweet-expressions reduce the number of explicit parentheses needed (by deducing them from indentation).
+
+You do *not* need to use all three tiers.  In particular, if you don't want to use an indentation-sensitive language, you don't need to.
+
+Here's the complete specification of these abbreviations (where "&rArr;" means "maps to"):
 
 1.   *Curly-infix-expressions* (*c-expressions*): A c-expression is an s-expression or an expression surrounded by curly braces {...} called an *infix list*.
     * A *simple* infix list {a op b op c op ...} represents one operation in infix order, that is, (op a b c ...).  It has (1) an odd number of parameters, (2) at least 3 parameters, and (3) all even parameters are the same symbol (aka eq? or eq).  It maps to "(even-parameter odd-parameters)".  E.g., {n <= 2} &rArr; (<= n 2), and {7 + 8 + 9} &rArr; (+ 7 8 9).
@@ -136,6 +140,19 @@ See the [Examples] page for many more examples, including with Lisp macros (they
 The code distribution comes with "sweeten.sscm"; this is a program that translates traditional S-expressions into sweet-expressions, and is itself written using sweet-expressions.
 
 "Letterfall" by Alan Manuel Gloria is a game written using sweet-expressions; you can see it here: https://github.com/AmkG/letterfall
+
+
+Advantages
+==========
+
+Here are some advantages of these notations:
+
+*   Generic: The notation does not depend on an underlying semantic.  If you create a new meta-language, you can keep using these notations.
+*   Homoiconic: The underlying data structure is clear from the syntax.  This is vitally important for debugging.
+*   Backwards-compatible: Normally-formatted Lisp expressions keep working unchanged.
+*   Easy to read: These notations add syntax that is easier to read by most developers.
+*   Rigorous yet easily implemented specification:  The entire stack of notations is LL(1), as verified using ANTLR.  It's been implemented three times (Java/ANTLR, Scheme, and Common Lisp), showing that the notation is quite implementable and not tied to just one system.
+*   Usable: Real programs have been implemented using these notations.
 
 
 Credits

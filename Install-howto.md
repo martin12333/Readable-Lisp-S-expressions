@@ -5,7 +5,7 @@ To install the "readable" software directly from our site, you need to have the 
 For the impatient: Source installs
 ==================================
 
-If you're completely impatient, and you want to install the current released version from source, just install the packages *guile*, *expect*, *clisp*, and *asdf* (asdf is often the package "cl-asdf").  You might also install *sbcl*.  Then download the current stable version from [http://readable.sourceforge.net](http://readable.sourceforge.net) and run the following command-line commands on your Unix-like system (including Cygwin):
+If you're completely impatient, and you want to install the current released version from source on a Unix-like system (including Cygwin), just install the packages *guile*, *expect*, *clisp*, and *asdf* (asdf is often the package "cl-asdf").  You might also install *sbcl*.  Then download the current stable version from https://sourceforge.net/projects/readable/files/ and run the following command-line commands:
 
     tar xvzf readable-*.tar.gz
     cd readable-*
@@ -21,7 +21,7 @@ The "readable" software supports both Scheme (guile) and Common Lisp.  If you wa
 For the impatient: QuickLisp Common Lisp library install
 ========================================================
 
-If you're completely impatient, and if you just want to *use* the "readable" library from Common Lisp code, QuickLisp is the easy solution.  This approach will not install tools (such as "sweeten" or "unsweeten"), but for a lot of Common Lisp users that may be okay.
+If you're completely impatient, and if you just want to *use* the "readable" library from Common Lisp code (regardless of underlying platform), QuickLisp is the easy solution.  This approach will not install tools (such as "sweeten" or "unsweeten"), but for a lot of Common Lisp users that may be okay.
 
 First, install *[QuickLisp](http://www.quicklisp.org/)*.  A QuickLisp install should simply involve starting your implementation of Common Lisp, downloading the [QuickLisp](http://www.quicklisp.org/) file, starting your implementation of Common Lisp (such as *clisp* or *sbcl*), then running:
 
@@ -35,11 +35,16 @@ That's it, QuickLisp is now installed!  As discussed in the Common Lisp tutorial
 
 The first time you run *(ql:quickload "readable")* the QuickLisp system will download the current "master" version of the "readable" library as it's stored in the QuickLisp repository.  By default QuickLisp will put the library code inside "~/quicklisp".
 
-If these impatient approaches aren't enough, let's go through an installation from source, step-by-step.
+You should be done!
+===================
+
+For most people, that's all you need to do.  You might now want to check out the [Scheme-tutorial] or [Common-lisp-tutorial].
+
+However, if these impatient approaches aren't enough, below is information on how to go through an installation from source, step-by-step.
 
 
-Prerequisites
-=============
+Other installs: The prerequisites
+=================================
 
 You need a Unix-like (POSIX) system such as a Linux distribution (such as Red Hat Enterprise Linux, CentOS, Fedora, Debian, Ubuntu, Gentoo, or Slackware), FreeBSD, NetBSD, OpenBSD, MacOS, etc.  On Windows, just install and use Cygwin; that works very well.  Any modern GNU/Linux system should do nicely.
 
