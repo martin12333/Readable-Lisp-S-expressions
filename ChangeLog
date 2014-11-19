@@ -1,4 +1,4 @@
-2014-11-07 David A. Wheeler <dwheeler, at, dwheeler.com>
+2014-11-18 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Version 1.0.6 - improvements for Common Lisp.
 	* Bug fix for a subtle rarely-encountered error in the
 	  Common Lisp implementation of the sweet-expression reader.
