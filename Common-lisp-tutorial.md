@@ -12,7 +12,7 @@ So let's get started!
 Starting Common Lisp implementation and loading the readable library
 ====================================================================
 
-You need to run your implementation of Common Lisp and then load the "readable" library.  Any Common Lisp implementation should work well, as it only depends on standard Common Lisp mechanisms. The sbcl and clisp implementations are especially tested and known to work well.  Since clisp has some annoying limitations, you might prefer sbcl, but again, either work well.
+You need to run your implementation of Common Lisp and then load the "readable" library.  Any Common Lisp implementation should work, as it only depends on standard Common Lisp mechanisms. The sbcl implementation is especially well-tested and known to work well.  Unfortunately, clisp has a number of annoying limitations and problems, so we would recommend another implementation (such as sbcl).  That said, the readable notation does *work* on clisp if you want to use it, and we do include information below on how to work around clisp's problems.
 
 You can load the "readable" library by using QuickLisp, or by invoking ASDF directly. Here is how to do it in each case.
 
@@ -39,10 +39,10 @@ Thus, the top of each of your files would say something like this:
     (readable:disable-readable)
 
 
-QuickLisp and Clisp
+Clisp and QuickLisp
 -------------------
 
-Clisp, unlike sbcl and many other Common Lisp implementations, has an annoying limitation that affects QuickLisp.  Clisp does *not* run its initialization (rc) files when it is loading a file; it only looks at its rc files when running interactively.  That means that QuickLisp is not immediately available in clisp, even if it's installed, when directly running files.
+Clisp has various annoying limitations, including one that affects QuickLisp.  Clisp does *not* run its initialization (rc) files when it is loading a file; it only looks at its rc files when running interactively.  That means that QuickLisp is not immediately available in clisp, even if it's installed, when directly running files.
 
 To work around this limitation of clisp, you can add the following text in your file before using QuickLisp:
 
@@ -55,7 +55,6 @@ An alternative workaround is to invoke clisp with "-i" (to force it to load an i
 
     clisp -i ~/.clisp YOURFILE.lisp
 
-This limitation might apply to another Common Lisp implementation, though I do not know of any.
 
 
 Loading the "readable" library via ASDF
@@ -63,13 +62,13 @@ Loading the "readable" library via ASDF
 
 If you don't want to use QuickLisp, you can load the library directly using ASDF.
 
-*First*, start up up your Common Lisp implementation.  E.G., for clisp, this is normally:
+*First*, start up up your Common Lisp implementation.  E.G., for sbcl, this is normally:
 
-    clisp  # Use "sbcl" to run sbcl instead, obviously.
+    sbcl # Use "clisp" to run clisp instead, obviously.
 
-But... if you didn't install the "readable" library source files in the standard central place, you will need to tell ASDF the location of the library files.  Just set environment variable CL_SOURCE_REGISTRY.  E.G., if the files are in the current directory, start up your implementation of Common Lisp this way (replace "clisp" as appropriate):
+If you installed "readable" in the standard system-wide location, that's it.  However, if you didn't install the "readable" library source files in the standard central place, you will need to tell ASDF the location of the library files.  Just set environment variable CL_SOURCE_REGISTRY.  We use this ourselves to test new versions of the "readable" library.  E.G., if the files are in the current directory, start up your implementation of Common Lisp this way (replace "clisp" as appropriate):
 
-    CL_SOURCE_REGISTRY="$PWD" clisp
+    CL_SOURCE_REGISTRY="$PWD" sbcl
 
 *Second*, you need start asdf.  Usually this is just:
 
@@ -92,6 +91,15 @@ After you've loaded the readable library, you can use it.  Generally, you run (r
 ... and at the end of the file you can insert:
 
     (readable:disable-readable)
+
+Lowercase symbols (readtable-case)
+------------------------------------------------------
+
+[Common Lisp is actually case-sensitive](http://www.cliki.net/case%20sensitivity); by default it converts all symbols into upper case and then displays them in upper case.  If you prefer to enter and see normal symbols in lowercase, just set Common Lisp's built-in "readtable-case" capability to ":invert" by doing this:
+
+    (setf (readtable-case *readtable*) :invert)
+
+"Readtable-case" is a general capability of Common Lisp, not specific to the "readable" notations, but all readable notations work with it.  It's best to do this *before* enabling a readable notation. From here on, we'll assume you did this, though it is not required.
 
 
 A few other notes
@@ -245,41 +253,31 @@ Here are more examples. The left-hand-side are neoteric-expressions (and thus ar
     f{{x + 2} * {y - 3}} <==> (f (* (+ x 2) (- y 3)))
 
 
-Wrapping up neoteric-expressions
---------------------------------
 
-Neoteric-expressions are a nice step forward.  But we still have to do all that parentheses-balancing, which hinders readability. Sweet-expressions, our next stop, address this.
+Another clisp limitation: ugly vertical bars in symbols
+=======================================================
 
-To end this part of the demo, disable our changed notation:
+If you use clisp, a widely-used Common Lisp implementation, then in many cases symbols will be written with vertical bars (|...|) whenever neoteric-expressions or sweet-expressions are active.  This behavior is peculiar to clisp.  This behavior is technically not *wrong*, but it is astoundingly weird and ugly, and this is absolutely *not* required by the Common Lisp specification.
 
-    (readable:disable-readable)
-
-
-
-Another clisp limitation: ugly symbols
-========================================
-
-If you use clisp, a widely-used Common Lisp implementation, then symbols will always be written with |...| around them when neoteric-expressions or sweet-expressions are active.  This behavior is peculiar to clisp.  It happens because the clisp "write" procedure varies how it writes symbols based on the contents of the current readtable.  This is technically not *wrong*, but it is astoundingly weird and ugly, and this is absolutely *not* required by the Common Lisp specification.
-
-We hope that this will not happen in a future version of clisp.  The problem is that clisp needs more flexible symbol writing code.  The issue is in clisp source file "src/io.d" function "pr_symbol_part", which implements this weird behavior yet provides no mechanism to turn it off.   On 2013-05-06 David A. Wheeler raised the issue of adding such flexibility to clisp.  If clisp were more flexible, then the readable library could use that flexibility to inhibit these extraneous vertical bars.  At the time of this writing the clisp developers have refused to fix this.
-
-If you use clisp and you really don't like the vertical bars, you can set \*print-escape\*, like this:
+If you use clisp and want *all* symbols to be displayed nicely, you can prevent this by setting \*print-escape\* like this:
 
     (setq *print-escape* nil)
 
-The problem with setting *print-escape* is that this completely disables printing vertical bars, even when the vertical bar characters *do* need to be there.  If you use the clisp "-modern" mode this isn't too bad; "-modern" mode makes all text entry case-sensitive, and forces all built-in lisp functions to lower case, eliminating a common reason for needing the |...| escapes.  But if you write symbols that need to be escaped (which is especially likely if you do not use "-modern" mode), turning off *print-escape* may disable more than you'd like.
+The problem with setting *print-escape* is that this completely disables printing vertical bars, even when the vertical bar characters *do* need to be there.
 
-For now, clisp users will have to see a lot of vertical bars while neoteric-expressions or sweet-expressions are active and using its built-in write, or live without automated printing of escapes.  Note that after running "(readable:disable-readable)" the extra vertical bars disappear, since this restores the default readtable (and thus the default behavior).
+Another partial solution (as described below) is to use the routines we provide for writing readable expressions (below).  Those routines produce nicer-looking output, and include work-arounds so that symbols are displayed normally even when you are using clisp.
 
-Another solution is to use the routines we provide for writing readable expressions (below).  Those routines include work-arounds so that symbols are displayed normally even when you are using clisp.
+The "sweet-clisp" script may help.  It uses both of these mechanisms (print-escape nil and special printing routines), and also works around some other clisp bugs, to prevent all those ugly vertical bars.
 
-A completely different solution, if you hate how the symbols look, is to switch to another Common Lisp implementation like sbcl.  This will also enable auto-loading of rc files as discussed above (a problem that impacts QuickLisp).
+We hope that this will not happen in a future version of clisp.  The problem is in clisp's write function.  More specifically, the problem is in clisp source file "src/io.d" function "pr_symbol_part", which implements this weird behavior yet provides no mechanism to turn it off.   On 2013-05-06 David A. Wheeler raised the issue of adding such flexibility to clisp.  If clisp were more flexible, then the readable library could use that flexibility to inhibit these extraneous vertical bars.  At the time of this writing the clisp developers have refused to fix this.
+
+A completely different solution, if you hate how the symbols look, is to switch to another Common Lisp implementation like sbcl.  This will also enable auto-loading of rc files as discussed above (a problem in clisp that impacts QuickLisp).
 
 
 Using sweet-expressions (t-expressions) 
 =======================================
 
-Sweet-expressions take neoteric-expressions and infers parentheses from indentation.  You can enable neoteric-expressions by running:
+Sweet-expressions start with neoteric-expressions and in addition infers parentheses from indentation.  You can enable neoteric-expressions by running:
 
     (readable:enable-sweet)
 
@@ -290,14 +288,24 @@ In sweet-expressions:
 - Lines with *only* a ;-comment, and nothing else, are completely ignored - even their indentation is irrelevant.
 - Whitespace-only lines at the beginning of a new expression are ignored, but a whitespace-only line (including a zero-length line) ends an expression.
 
-So, just type in your expression, and type a blank line (an extra Enter) to indicate that you're done.
+Here's a notional example, with a sweet-expression on the left and its equivalent traditional s-expression on the right (this won't *run* if you type it in, since we have no function called "a"):
 
-Here's a trivial example; type this in, and enter a blank line (*Enter* *Enter*) to calculate it:
+    a b c d        =>   (a b c d
+      e f g                (e f g)
+      h i                  (h i)
+      j k                  (j k
+        l m                   (l m)
+        n o                   (n o))
+      p                    p
+      q r s                (q r s))
+
+So, just type in your expression, and type a blank line (an extra Enter) to indicate that you're done.  Don't indent the first line of an expression; we'll discuss what that does in a moment.
+
+Here's a trivial *executable* example; type this in, and enter a blank line (*Enter* *Enter*) to calculate it:
 
     subseq "Hello"
       1
       3
-
 
 Be sure to type *Enter* *Enter* (a blank line) to execute the expression.
 
@@ -306,11 +314,11 @@ What happens if the parameters are not constants, but something to be calculated
     subseq
       "Hello"
       1
-      string-length "xyz"
+      length "xyz"
 
 You can use parentheses, too; inside any grouping characters (...), [...], and {...}, indentation is ignored:
 
-      substring
+      subseq
         "Hello"
         1
         length("xyz")
@@ -354,7 +362,7 @@ Here's another example:
          1
          {n * factorial{n - 1}}
 
-Note that infix is easily expressed with {...}.  You can call a procedure using an infix expression with f{...}, a common circumstance.  Naturally, this is simply a cleaner representation of:
+Note that infix is easily expressed with {...}.  You can call a function using an infix expression with f{...}, a common circumstance.  Naturally, this is simply a cleaner representation of:
 
     (defun factorial (n)
       (if (<= n 1)
@@ -371,8 +379,8 @@ If you're not sure what something means, you can "quote" it so it won't execute.
     ' foo bar1 bar2
         spam eggs1 eggs2
 
-Will produce:
-(FOO BAR1 BAR2 (SPAM EGGS1 EGGS2))
+Will produce this (if readtable-case is :invert):
+(foo bar1 bar2 (spam eggs1 eggs2))
 
 This works with the other standard abbreviations (backquote, comma, and comma-at): use them at the beginning of a line and follow them with space, and they apply to the entire sweet-expression that follows.  Otherwise, they only apply to the next neoteric expression.
 
@@ -472,13 +480,15 @@ You can indent using one or more of the indent characters, which are space, tab,
 
 These rules eliminate many concerns people have with indentation systems.  One objection that people raise about indentation-sensitive syntax is that horizontal whitespace can get lost in many transports (HTML readers, etc.). In addition, sometimes there are indented groups that you’d like to highlight; traditional whitespace indentation provides no opportunity to highlight indented groups specially.  By allowing "!" as an indent character (as well as space and tab), these problems disappear.  Also, some like to use spaces to indent; others like tabs. Python allows either. Sweet-expressions also allow people to use spaces, tabs, or a combination, as long as you are consistent, so developers can use whatever they prefer.
 
+If you indent the *first* line, indentation processing is ignored; the system just reads the first expression (ignoring indentation) and returns it.  So if the line begins with indentation followed by "a b c", it will return "a" the first time (and "b" on the second, and "c" on the third).  This mechanism, called "initial indent", helps with backwards-compatibility; if an s-expression begins with indentation, it's clearly not a sweet-expression.  The goal is to make it easy to just have sweet-expressions enabled at all times, since very little code will be interpreted differently.
+
 
 Convenience programs "sweet-clisp" and "sweet-sbcl"
 ===================================================
 
-For your convenience, the full package includes "sweet-clisp" and "sweet-sbcl" (if you have clisp or sbcl respectively), which automatically put you in sweet-expression mode (the last tier) for that implementation of Common Lisp.  They are especially convenient for interactive use; you can also use them to run scripts in sweet-expression notation.
+For your convenience, the full package includes "sweet-clisp" and "sweet-sbcl" (if you have clisp or sbcl respectively), which automatically put you in sweet-expression mode (the last tier) for that implementation of Common Lisp.  They are especially convenient for interactive use; you can also use them to run scripts in sweet-expression notation.  In both you can enter symbols in lowercase and see them in lowercase (they implement this by inverting the readtable-case, as discussed above).
 
-The sweet-clisp will also work around some bugs and problems in clisp.  It will "setq *print-escape* t" as described above, for one thing.  It also works around a problem in the clisp REPL.  In the clisp standard REPL any top-level sweet-expressions (after the first one) that are not initially indented must be preceded by a  blank  line.   If  they aren't, then the first line of the second sweet-expression would be skipped (they are consumed by the REPL reader).   Note  that  this bug does not affect files run by clisp, re-implementations of the REPL on clisp, or other Common Lisp  implementations  (e.g.,  SBCL  doesn't have this problem).  The work-around over‐rides some system function definitions when the REPL  is  invoked, so it will trigger some warnings about "redefining functions".  If  you do not want the work-around performed, use the "-CREPL" option, which forces this program to use the standard  clisp  REPL (without a work-around) instead.  The REPL work-around is irrelevant for programs run directly without the REPL, obviously.
+The sweet-clisp will also work around some bugs and problems in clisp.   In particular, it works around another bug in the clisp REPL.  In the clisp standard REPL any top-level sweet-expressions (after the first one) that are not initially indented must be preceded by a  blank line.   If they aren't, then the first line of the second sweet-expression would be skipped (they are consumed by the REPL reader).   Note  that  this bug does not affect files run by clisp, re-implementations of the REPL on clisp, or other Common Lisp  implementations  (e.g.,  SBCL  doesn't have this problem).  The work-around over‐rides some system function definitions when the REPL  is  invoked, so it will trigger some warnings about "redefining functions".  If  you do not want the work-around performed, use the "-CREPL" option, which forces this program to use the standard  clisp  REPL (without a work-around) instead.  The REPL work-around is irrelevant for programs run directly without the REPL, obviously.  It also tries to work around the symbol vertical bar display, as discussed above.
 
 The "sweet-clisp" program, if you download the entire package, by default uses write-readable to display REPL results. The variable \*repl-write-readable\* controls this; by default it is t, so write-readable is used; if it is nil, then the standard write routine is used.
 
@@ -513,10 +523,10 @@ Readable library
 
 The "readable" library comes with some other functions you can call.
 
-Reading procedures
+Reading functions
 ------------------
 
-Various procedures let you read using a specific notation:
+Various functions let you read using a specific notation:
 
 *   curly-infix-read: Read a curly-infix-expression datum.
 *   neoteric-read: Read a neoteric-expression datum.
@@ -526,24 +536,24 @@ Various procedures let you read using a specific notation:
 Writing readable expressions
 ----------------------------
 
-Version 1.0.5 adds additional procedures in Common Lisp to print expressions using these readable notations.  That way, you can easily print these notations as well as read them.  Their interfaces are intentionally similar to the standard Common Lisp procedures, so they should be easy to use.
+Version 1.0.5 adds additional functions in Common Lisp to print expressions using these readable notations.  That way, you can easily print these notations as well as read them.  Their interfaces are intentionally similar to the standard Common Lisp functions, so they should be easy to use.
 
-Procedure "write-readable" writes out its first parameter in a readable notation, similar to the standard procedure write.  It takes all the optional parameters of write (such as :stream), plus the optional ":notation" parameter for controlling the output notation.  By default, the output notation is the same as the input notation.  The ":notation" parameter can be 'basic-curly-infix, 'full-curly-infix, 'neoteric, or 'sweet.  "Write-readable" will always use at least basic-curly-infix notation.  Circularity detection is available; use ":circle t" to enable it.  It also includes similar procedures print1-readable, princ-readable, and print-readable.  You can write to strings instead of the current output with write-to-string-readable, prin1-to-string-readable, and princ-to-string-readable.
+Function "write-readable" writes out its first parameter in a readable notation, similar to the standard function write.  It takes all the optional parameters of write (such as :stream), plus the optional ":notation" parameter for controlling the output notation.  By default, the output notation is the same as the input notation.  The ":notation" parameter can be 'basic-curly-infix, 'full-curly-infix, 'neoteric, or 'sweet.  "Write-readable" will always use at least basic-curly-infix notation.  Circularity detection is available; use ":circle t" to enable it.  It also includes similar functions print1-readable, princ-readable, and print-readable.  You can write to strings instead of the current output with write-to-string-readable, prin1-to-string-readable, and princ-to-string-readable.
 
 The current implementation directly supports circularity detection in cons cells.  The implementation directly supports the following Common Lisp types: cons, symbol, number, character, pathname, string, and bit-vector.  Note that the "cons" is fully supported, which means that proper lists, dotted lists, and circular lists are all supported. Other types are currently partly supported by calling the underlying "write" implementation; this includes the types array (including vector), hash-table, function, readtable, package, stream, random-state, condition, and restart, as well as those created by defstruct, define-condition, or defclass.  In most cases this partial support is more than enough, but you should be aware of its limitations.   First, the contents of partially-supported types will be presented in traditional Lisp notation instead of a more readable notation (though it will still be a valid format).  Also, if you use circularity detection, the circularity detection in any partially-supported types will be separate and will not synchronize with the detection in fully-supported types. There are merely limitations of the current implementation, not of the fundamental concept.  Patches are welcome!
 
-Here are some examples, presuming that you use-package(:readable) first and that the current notation is neoteric or sweet:
+Here are some examples, presuming that you have set readtable-case to invert, use-package(:readable), and that the current notation is neoteric or sweet:
 
     write-readable '(+ 1 2)       ; Writes {1 + 2}
     write-readable '(+ 1 (* 3 4)) ; Writes {1 + {3 * 4}}
-    write-readable '(COS X)       ; Writes COS(X)
-    write-readable '(LOG 10 100)  ; Writes LOG(10 100)
-    write-readable '(COS (* 2 X)) ; Writes COS{2 * X}
+    write-readable '(cos x)       ; Writes cos(x)
+    write-readable '(log 10 100)  ; Writes log(10 100)
+    write-readable '(cos (* 2 x)) ; Writes cos{2 * x}
 
-The clisp implementation of "write" displays symbols in a really ugly way when the readtable includes letters (as it does when neoteric or sweet-expression reading is active).  The "write-readable" and related routines work around this problem as well.
+As noted earlier, the clisp implementation of "write" normally displays symbols in a really ugly way when the readtable includes letters (as it does when neoteric or sweet-expression reading is active).  The "write-readable" and related routines work around this problem as well.
 
 
-Syntax for basic writing procedures
+Syntax for basic writing functions
 -----------------------------------
 
 **write-readable** object &key array base case circle escape gensym length level lines miser-width pprint-dispatch pretty radix readably right-margin stream notation => object
@@ -564,7 +574,7 @@ princ-readable is just like prin1 except that the output has no escape character
 
 print-readable is just like prin1-readable except that the printed representation of object is preceded by a newline and followed by a space.
 
-Syntax for string writing procedures
+Syntax for string writing functions
 -----------------------------------
 
 **write-to-string-readable** object &key array base case circle escape gensym length level lines miser-width pprint-dispatch pretty radix readably right-margin => string
@@ -605,7 +615,9 @@ In either case, at the end of each file you can insert:
 
     (readable:disable-readable)
 
-You would typically load other modules before actually enabling a notation, to prevent the unlikely case that they'd be interpreted differently.
+You would typically load other modules before actually enabling a notation, to prevent the unlikely case that they'd be interpreted differently.  You might also set the readtable-case to :invert before enabling a notation, so normal symbols are displayed in lower case; you can do this using:
+
+    (setf (readtable-case *readtable*) :invert)
 
 The programs sweet-clisp and sweet-sbcl set up sweet-expression readers for those two implementations of Common Lisp, for your convenience.
 
