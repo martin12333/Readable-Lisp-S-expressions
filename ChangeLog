@@ -1,3 +1,12 @@
+2014-12-07 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Version 1.0.7 - Fix Common Lisp enable-* functions.
+	  This version fixes a bug in the enable-* functions of the
+	  Common Lisp implementation.  Previously in certain situations
+	  the enable-* functions would not be invoked at compile time.
+	  This version ensures that it works properly even at compile timt.
+	  This fixes the error reported by Alexander Dunn on 2014-12-06
+	  on the readable-discuss mailing list.
+
 2014-11-18 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Version 1.0.6 - improvements for Common Lisp.
 	* Bug fix for a subtle rarely-encountered error in the
