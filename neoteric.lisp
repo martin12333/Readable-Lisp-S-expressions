@@ -322,7 +322,7 @@
 
 ;;; Enablers
 
-(defun enable-neoteric ()
+(defun enable-neoteric-real ()
   (when (setup-enable 'neoteric)
     (setq *neoteric-underlying-readtable* (copy-readtable))
     (set-macro-character #\{ #'neoteric-curly-brace nil
@@ -430,12 +430,12 @@
   (declare (ignore char))
   (let ((*readtable* *readtable*) ; Setup to restore on return.
         (*readable-active* *readable-active*))
-    (enable-neoteric)
+    (enable-neoteric-real)
     (let* ((result (my-read-delimited-list #\} stream))
            (processed-result (process-curly result)))
       processed-result)))
 
-(defun enable-full-curly-infix ()
+(defun enable-full-curly-infix-real ()
   (when (setup-enable 'full-curly-infix)
     ; Invoke curly-brace-infix-reader when opening curly brace is read in:
     (set-macro-character #\{ #'full-curly-brace-infix-reader) ; (
@@ -443,19 +443,16 @@
     (set-macro-character #\} (get-macro-character #\) nil)))
   (values)) ; Meaning "Did it"
 
-(defun enable-curly-infix ()
-  (enable-full-curly-infix))
-
 (defun curly-infix-read (&optional (stream *standard-input*))
   (let ((*readtable* *readtable*) ; Setup to restore on return.
         (*readable-active* *readable-active*))
-    (enable-full-curly-infix)
+    (enable-full-curly-infix-real)
     (read stream)))
 
 (defun neoteric-read (&optional (stream *standard-input*))
   (let ((*readtable* *readtable*) ; Setup to restore on return.
         (*readable-active* *readable-active*))
-    (enable-neoteric)
+    (enable-neoteric-real)
     (read stream)))
 
 
