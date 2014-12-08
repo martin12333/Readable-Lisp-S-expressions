@@ -57,7 +57,7 @@
 
 (defsystem readable
   :name "readable"
-  :version "1.0.6"  ; ONLY digits and periods allowed.
+  :version "1.0.7"  ; ONLY digits and periods allowed.
   :maintainer "David A. Wheeler"
   :author "David A. Wheeler"
   :license "MIT"
@@ -69,5 +69,7 @@
      (:file "print")
      (:file "neoteric" :depends-on ("basic-curly" "print"))
      (:file "backquote") ; Re-implements backquote, as needed by sweet
-     (:file "sweet" :depends-on ("basic-curly" "neoteric" "backquote"))))
+     (:file "sweet" :depends-on ("basic-curly" "neoteric" "backquote"))
+     (:file "enablers" :depends-on ("basic-curly" "neoteric" "sweet"))))
+
 

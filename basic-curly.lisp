@@ -128,7 +128,7 @@
       (setq *print-notation* into)
       t)))
 
-(defun enable-basic-curly ()
+(defun enable-basic-curly-real ()
   ; Save old readtable:
   (when (setup-enable 'basic-curly-infix)
     ; The following install the {...} reader.

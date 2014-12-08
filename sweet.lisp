@@ -828,9 +828,9 @@
          do (set-macro-character (code-char ci) #'t-expr-entry nil new))
       new)))
 
-(defun enable-sweet ()
+(defun enable-sweet-real ()
   (when (setup-enable 'sweet)
-    (enable-neoteric)
+    (enable-neoteric-real)
 
     ; Now create the underlying sweet readtable by tweaking neoteric readtable.
     ; This underlying table is called to read specific expressions.
@@ -866,6 +866,6 @@
 (defun sweet-read (&optional (stream *standard-input*))
   (let ((*readtable* *readtable*) ; Setup to restore on return.
         (*readable-active* *readable-active*))
-    (enable-sweet)
+    (enable-sweet-real)
     (read stream)))
 
