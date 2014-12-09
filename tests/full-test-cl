@@ -30,7 +30,7 @@
 (require "asdf")
 (asdf:load-system :readable)
 (use-package :readable)
-
+(setf (readtable-case *readtable*) :invert)
 
 (defun mytest (input correct)
   (cond
@@ -348,8 +348,8 @@ mytest
 ; Now test writing back.
 
 mytest
-  "THIS-IS-A-TEST"
-  write-to-string-readable 'THIS-IS-A-TEST
+  "this-is-a-test"
+  write-to-string-readable 'this-is-a-test
 
 mytest
   "1"
@@ -368,28 +368,28 @@ mytest
   write-to-string-readable '(1 2 3)
 
 mytest
-  "(AA)"
-  write-to-string-readable '(AA) :notation 'basic-curly-infix
+  "(aa)"
+  write-to-string-readable '(aa) :notation 'basic-curly-infix
 
 mytest
-  "AA()"
-  write-to-string-readable '(AA)
+  "aa()"
+  write-to-string-readable '(aa)
 
 mytest
-  "AA(BB)"
-  write-to-string-readable '(AA BB)
+  "aa(bb)"
+  write-to-string-readable '(aa bb)
 
 mytest
-  "AA(BB CC)"
-  write-to-string-readable '(AA BB CC)
+  "aa(bb cc)"
+  write-to-string-readable '(aa bb cc)
 
 mytest
-  "(A B C D E F G H I J K L M N O P Q R S T U V)"
-  write-to-string-readable '(A B C D E F G H I J K L M N O P Q R S T U V)
+  "(a b c d e f g h i j k l m n o p q r s t u v)"
+  write-to-string-readable '(a b c d e f g h i j k l m n o p q r s t u v)
 
 mytest
-  "(A B C D E F G H I J K L M N O P Q R S T U V . Z)"
-  write-to-string-readable '(A B C D E F G H I J K L M N O P Q R S T U V . Z)
+  "(a b c d e f g h i j k l m n o p q r s t u v . z)"
+  write-to-string-readable '(a b c d e f g h i j k l m n o p q r s t u v . z)
 
 mytest
   "{4 + 5}"
@@ -400,30 +400,30 @@ mytest
   write-to-string-readable '(+ 4 5 6)
 
 mytest
-  "{A <= B}"
-  write-to-string-readable '(<= A B)
+  "{a <= b}"
+  write-to-string-readable '(<= a b)
 
 mytest
   "{4 + {5 * 6}}"
   write-to-string-readable '(+ 4 (* 5 6))
 
 mytest
-  "{F(X) + 4 + 5 + 6}"
+  "{f(x) + 4 + 5 + 6}"
   write-to-string-readable '(+ (f x) 4 5 6)
 
 mytest
-  "FOO(BAR {1 + 2})"
-  write-to-string-readable '(FOO BAR (+ 1 2))
+  "foo(bar {1 + 2})"
+  write-to-string-readable '(foo bar (+ 1 2))
 
 mytest
-  "SPAM(. EGGS)"
-  write-to-string-readable '(SPAM . EGGS)
+  "spam(. eggs)"
+  write-to-string-readable '(spam . eggs)
 
-setq x '((AAA BBB CCC) . W)
+setq x '((aaa bbb ccc) . w)
 setq x rplacd(x x)
 
 mytest
-  "#1=(AAA(BBB CCC) . #1#)"
+  "#1=(aaa(bbb ccc) . #1#)"
   write-to-string-readable x :circle t
 
 
