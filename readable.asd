@@ -39,6 +39,7 @@
            #:enable-sweet #:sweet-read
            #:my-char-code-limit
            #:disable-readable
+           #:*original-readtable*
            #:readable-parse-error #:*noisy*
            #:$nfx$ #:$bracket-apply$
            #:*print-notation*  ; Write format for write-readable etc.

@@ -36,7 +36,10 @@
   (cond
     ((equal input correct)
       (princ "Success with: ")
-      (prin1 input)
+      ; Temporarily set *readtable* to work around clisp bug.
+      ; It *works* without this, but on clisp it looks ugly.
+      (let ((*readtable* readable:*original-readtable*))
+        (prin1 input))
       (format t "~%"))
     (t
       (princ "FAIL!!!")
