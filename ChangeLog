@@ -1,4 +1,11 @@
 2014-12-07 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Version 1.0.8 - Minor Common Lisp improvements.
+	   - Fix basic-curly-read to properly enable basic-curly.
+	   - Add *original-readtable* to external interface.
+	   - Generate lowercase test results in Common Lisp that look good
+	     even with clisp.
+
+2014-12-07 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Version 1.0.7 - Fix Common Lisp enable-* functions.
 	  This version fixes a bug in the enable-* functions of the
 	  Common Lisp implementation.  Previously in certain situations
