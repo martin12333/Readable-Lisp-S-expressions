@@ -5,7 +5,7 @@ To install the "readable" software directly from our site, you need to have the 
 For the impatient: Source installs
 ==================================
 
-If you're completely impatient, and you want to install the current released version from source on a Unix-like system (including Cygwin), just install the packages *guile*, *expect*, *clisp*, and *asdf* (asdf is often the package "cl-asdf").  You might also install *sbcl*.  Then download the current stable version from https://sourceforge.net/projects/readable/files/ and run the following command-line commands:
+If you're completely impatient, and you want to install the current released version from source on a Unix-like system (including Cygwin), just install the packages *guile*, *expect*, *sbcl* or *clisp*, and *asdf* (asdf is often the package "cl-asdf").  You might also install *sbcl*.  Then download the current stable version from https://sourceforge.net/projects/readable/files/ and run the following command-line commands:
 
     tar xvzf readable-*.tar.gz
     cd readable-*
@@ -23,7 +23,7 @@ For the impatient: QuickLisp Common Lisp library install
 
 If you're completely impatient, and if you just want to *use* the "readable" library from Common Lisp code (regardless of underlying platform), QuickLisp is the easy solution.  This approach will not install tools (such as "sweeten" or "unsweeten"), but for a lot of Common Lisp users that may be okay.
 
-First, install *[QuickLisp](http://www.quicklisp.org/)*.  A QuickLisp install should simply involve starting your implementation of Common Lisp, downloading the [QuickLisp](http://www.quicklisp.org/) file, starting your implementation of Common Lisp (such as *clisp* or *sbcl*), then running:
+First, install *[QuickLisp](http://www.quicklisp.org/)*.  A QuickLisp install should simply involve starting your implementation of Common Lisp, downloading the [QuickLisp](http://www.quicklisp.org/) file, starting your implementation of Common Lisp (such as *sbcl* or *clisp*), then running:
 
     (load "quicklisp.lisp")
     (quicklisp-quickstart:install)  ; Install QuickLisp (also installs ASDF)
@@ -33,7 +33,7 @@ That's it, QuickLisp is now installed!  As discussed in the Common Lisp tutorial
 
     (ql:quickload "readable")
 
-The first time you run *(ql:quickload "readable")* the QuickLisp system will download the current "master" version of the "readable" library as it's stored in the QuickLisp repository.  By default QuickLisp will put the library code inside "~/quicklisp".
+The first time you run *(ql:quickload "readable")* the QuickLisp system will download the current "master" version of the "readable" library as it's stored in the QuickLisp repository.  By default QuickLisp will put the library code inside "~/quicklisp".  The readable library should work on any Common Lisp implementation; sbcl is known to work well.  The clisp implementation of Common Lisp has some unfortunate quirks, but readable does work on clisp.
 
 You should be done!
 ===================
@@ -55,7 +55,7 @@ The following packages are required or strongly recommended:
 
 If you're going to use Common Lisp, you also need:
 
-*   *clisp*, *sbcl*, or some other implementation of Common Lisp.  Cygwin includes a clisp package, so if you use Cygwin, that's the easiest option.  The "readable" software should work with any implementation of Common Lisp; please let us know if there's a problem.
+*   *sbcl*, *clisp*, or some other implementation of Common Lisp.  If you use Cygwin, clisp is probably the easiest option.  Clisp has some unfortunate quirks (as described in the tutorial), so you might consider using sbcl instead, but readable *does* work on clisp.  The "readable" software should work with any implementation of Common Lisp; please let us know if there's a problem.
 *   *[ASDF](http://common-lisp.net/project/asdf/)* (typically packaged with the name "cl-asdf").  You may need to configure ASDF, as discussed below.  As a convenience, we include a copy if you don't have your own copy.
 
 In most cases, users of Linux distributions can just use their package managers (such as yum, apt-get, or a GUI front-end for them) to easily install the relevant packages and any dependencies.
