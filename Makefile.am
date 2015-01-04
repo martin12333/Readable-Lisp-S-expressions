@@ -529,16 +529,13 @@ if HAVE_CLISP
 check-clisp: my-realpath
 	@echo "Starting tests for CLISP"
 	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
-	  $(CLISP) -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
-	        $(srcdir)/tests/curly-infix-test-cl
+	  $(CLISP) $(srcdir)/tests/curly-infix-test-cl
 	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
-	  $(CLISP) -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
-	        $(srcdir)/tests/full-test-cl
+	  $(CLISP) $(srcdir)/tests/full-test-cl
 # Create separate "check-math" target so we only run these tests on command.
 check-math:
 	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
-	  $(CLISP) -lp "`$(srcdir)/my-realpath $(srcdir)`/tests/" \
-	        "$(srcdir)/math.slisp" < "$(srcdir)/tests/math-test" \
+	  $(CLISP) "$(srcdir)/math.slisp" < "$(srcdir)/tests/math-test" \
              | tee "math-results" \
              | diff -b -u "$(srcdir)/tests/math-test-correct" -
 test-math: check-math
