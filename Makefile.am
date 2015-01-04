@@ -617,7 +617,7 @@ endif !IS_MAKE_DISTCHECK
 
 
 # For convenience, we'll include a copy of the external asdf.lisp file from
-# http://common-lisp.net/project/asdf/asdf.lisp as of 2013-10-02.
+# http://common-lisp.net/project/asdf/asdf.lisp as of 2015-01-03.
 # This is *NOT* changed from the external project, and users do *NOT*
 # need to use this version.  We just provide it so that users
 # who do not already have it can get something to use, quickly.
