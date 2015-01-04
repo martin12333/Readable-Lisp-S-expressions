@@ -415,6 +415,18 @@ AM_COND_IF([HAVE_SBCL], [],
   [AS_IF([test "$with_sbcl" = "yes"],
     [AC_MSG_ERROR([sbcl required but unavailable.])])])
 
+# Determine if we have a known working Common Lisp.
+# TODO: Support Common Lisp controller
+# per http://www.cliki.net/common-lisp-controller
+AC_MSG_CHECKING([Have a working known Common Lisp (HAVE_COMMON_LISP)])
+AM_CONDITIONAL([HAVE_COMMON_LISP],
+   [is_useful "$SBCL" || is_useful "$CLISP"])
+AC_MSG_RESULT([$have_common_lisp])
+AM_COND_IF([HAVE_COMMON_LISP],
+  [AS_IF([is_useful "$SBCL"],
+         [COMMON_LISP_EXEC="$SBCL --load"],
+         [COMMON_LISP_EXEC="$CLISP"])])
+AC_SUBST([COMMON_LISP_EXEC])
 
 
 ### Other stuff ###

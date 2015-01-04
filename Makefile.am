@@ -523,19 +523,19 @@ EXTRA_DIST += \
 # TODO: Improve test harness & integration into overall system.
 
 EXTRA_DIST += my-realpath
-check: check-clisp check-guile
+check: check-common-lisp check-guile
 
-if HAVE_CLISP
-check-clisp: my-realpath
-	@echo "Starting tests for CLISP"
+if HAVE_COMMON_LISP
+check-common-lisp: my-realpath
+	@echo "Starting tests for Common Lisp"
 	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
-	  $(CLISP) $(srcdir)/tests/curly-infix-test-cl
+	  $(COMMON_LISP_EXEC) $(srcdir)/tests/curly-infix-test-cl
 	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
-	  $(CLISP) $(srcdir)/tests/full-test-cl
+	  $(COMMON_LISP_EXEC) $(srcdir)/tests/full-test-cl
 # Create separate "check-math" target so we only run these tests on command.
 check-math:
 	CL_SOURCE_REGISTRY="`$(srcdir)/my-realpath $(srcdir)`"/ \
-	  $(CLISP) "$(srcdir)/math.slisp" < "$(srcdir)/tests/math-test" \
+	  $(COMMON_LISP_EXEC) "$(srcdir)/math.slisp" < "$(srcdir)/tests/math-test" \
              | tee "math-results" \
              | diff -b -u "$(srcdir)/tests/math-test-correct" -
 test-math: check-math
@@ -544,9 +544,9 @@ check-math-is-okay:
 	cp math-results tests/math-test-correct
 check-math-is-ok: check-math-is-okay
 check-math-is-correct: check-math-is-okay
-else !HAVE_CLISP
-check-clisp:
-endif !HAVE_CLISP
+else !HAVE_COMMON_LISP
+check-common-lisp:
+endif !HAVE_COMMON_LISP
 
 if HAVE_GUILE
 check-guile: readable/kernel.scm my-realpath
@@ -727,7 +727,7 @@ rpm: $(DIST_ARCHIVES) $(SPECFILE)
 from-wiki:
 	./get-from-wiki $(MDMIRRORS)
 
-PHONIES += push pull test 110 rpm check-clisp check-guile \
+PHONIES += push pull test 110 rpm check-common-lisp check-guile \
            record-generated diff-generated from-wiki clisp-asdf
 
 .PHONY: $(PHONIES)

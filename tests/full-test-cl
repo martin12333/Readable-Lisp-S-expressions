@@ -32,6 +32,31 @@
 (use-package :readable)
 (setf (readtable-case *readtable*) :invert)
 
+; From http://www.cliki.net/Portable%20Exit
+(defun my-quit (&optional code)
+      ;; This group from "clocc-port/ext.lisp"
+      #+allegro (excl:exit code)
+      #+clisp (#+lisp=cl ext:quit #-lisp=cl lisp:quit code)
+      #+cmu (ext:quit code)
+      #+cormanlisp (win32:exitprocess code)
+      #+gcl (lisp:bye code)                     ; XXX Or is it LISP::QUIT?
+      #+lispworks (lw:quit :status code)
+      #+lucid (lcl:quit code)
+      ; #+sbcl (sb-ext:quit
+      ;         :unix-code (typecase code (number code) (null 0) (t 1)))
+      #+sbcl (sb-ext:exit :code code)
+      ;; This group from Maxima
+      #+kcl (lisp::bye)                         ; XXX Does this take an arg?
+      #+scl (ext:quit code)                     ; XXX Pretty sure this *does*.
+      #+(or openmcl mcl) (ccl::quit)
+      #+abcl (cl-user::quit)
+      #+ecl (si:quit)
+      ;; This group from <hebi...@math.uni.wroc.pl>
+      #+poplog (poplog::bye)                    ; XXX Does this take an arg?
+      #-(or allegro clisp cmu cormanlisp gcl lispworks lucid sbcl
+            kcl scl openmcl mcl abcl ecl)
+      (error 'not-implemented :proc (list 'quit code)))
+
 (defun mytest (input correct)
   (cond
     ((equal input correct)
@@ -45,13 +70,18 @@
       (princ "FAIL!!!")
       (print input)
       (print correct)
-      (exit 1))))
+      (my-quit 1))))
 
 ; Special test values:
-(setq fab '(f a b))
-(setq g5qx '(g #b101 (quote x)))
-(setq gp5qx '(g (#b101 quote x)))
-(setq hnn7 '(h () () 7))
+(defvar fab '(f a b))
+(defvar g5qx '(g #b101 (quote x)))
+(defvar gp5qx '(g (#b101 quote x)))
+(defvar hnn7 '(h () () 7))
+(defvar x)
+(defvar z)
+
+
+
 
 (enable-full-curly-infix)
 
@@ -440,6 +470,6 @@ mytest
 
 (disable-readable)
 (princ "Tests complete!")
-(exit 0)
-(quit)
+(terpri)
+(my-quit 0)
 
