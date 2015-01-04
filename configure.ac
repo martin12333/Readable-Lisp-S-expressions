@@ -384,7 +384,7 @@ AM_COND_IF([INSTALL_COMMON_LISP_LIB], [],
 have_clisp_working_asdf=no
 announce_make_clisp_asdf=no
 AS_IF([is_permitted "$with_clisp"],
-  [AS_IF([is_useful "$CLISP"], [], [AC_PATH_PROG([CLISP],[clisp])])
+  [AS_IF([is_useful "$CLISP"], [], [AC_CHECK_PROG([CLISP],[clisp],[clisp])])
    AS_IF([is_useful "$CLISP"],
     [AC_SUBST([CLISP])
      AC_MSG_CHECKING([if (require "asdf") is available in clisp])
@@ -403,7 +403,7 @@ AC_MSG_RESULT([$have_clisp_working_asdf])
 
 # Check sbcl.
 AS_IF([is_permitted "$with_sbcl"],
-  [AS_IF([is_useful "$SBCL"], [], [AC_PATH_PROG([SBCL],[sbcl])])
+  [AS_IF([is_useful "$SBCL"], [], [AC_CHECK_PROG([SBCL],[sbcl],[sbcl])])
    AS_IF([is_useful "$SBCL"],
          [AC_SUBST([SBCL])
           :])])
