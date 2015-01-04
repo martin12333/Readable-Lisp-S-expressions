@@ -28,9 +28,9 @@
 ; to the name of the directory of the .asd file, followed by "/".
 
 (require "asdf")
+(setf (readtable-case *readtable*) :invert)
 (asdf:load-system :readable)
 (use-package :readable)
-(setf (readtable-case *readtable*) :invert)
 
 ; From http://www.cliki.net/Portable%20Exit
 (defun my-quit (&optional code)
@@ -61,10 +61,7 @@
   (cond
     ((equal input correct)
       (princ "Success with: ")
-      ; Temporarily set *readtable* to work around clisp bug.
-      ; It *works* without this, but on clisp it looks ugly.
-      (let ((*readtable* readable:*original-readtable*))
-        (prin1 input))
+      (prin1 input)
       (format t "~%"))
     (t
       (princ "FAIL!!!")
@@ -124,6 +121,9 @@
 
 (disable-readable)
 (enable-sweet)
+
+; Work around a bug in Windows SBCL readtable:
+(setf (readtable-case *readtable*) :invert)
 
 mytest
   ' f 1 2
