@@ -226,7 +226,7 @@ AM_COND_IF([IS_MAKE_DISTCHECK], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 # For purposes of configuration, do we have a working guile?
 AS_IF([is_permitted "$with_guile"],
-  [AS_IF([is_useful "$GUILE"], [:], [AC_PATH_PROG([GUILE],[guile])])
+  [AS_IF([is_useful "$GUILE"], [:], [AC_CHECK_PROG([GUILE],[guile],[guile])])
    AS_IF([is_useful "$GUILE"],
     [AC_SUBST([GUILE])
      :])])
