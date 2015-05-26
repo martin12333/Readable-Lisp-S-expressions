@@ -1,3 +1,13 @@
+2015-05-25 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Version 1.0.9 - Minor improvements.
+	  - Lots of documentation improvements (update from wiki).
+	  - Tweak so self-test works with Windows SBCL.
+	  - Enable Common Lisp testing with either sbcl or clisp (prefer sbcl).
+	  - Update convenience copy of asdf.lisp.
+	  - Improve handling of pathnames with whitespace.
+	  - Common Lisp: Fix basic-curly-read to properly enable basic-curly.
+	  - Expose *original-readtable* in Common Lisp interface.
+
 2014-12-07 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Version 1.0.8 - Minor Common Lisp improvements.
 	   - Fix basic-curly-read to properly enable basic-curly.
