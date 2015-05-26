@@ -119,7 +119,7 @@ For your convenience, the full package includes the tools "sweet-clisp" and "swe
 Using basic curly-infix-expressions (c-expressions)
 =============================================
 
-Let's first try out "curly-infix-expressions" (c-expressions).  We'll assume you've installed things, and that you've successfully loaded the "readable" library using either *(asdf:load-system :readable)* or *(ql:quickload "readable")*.
+Let's first try out "curly-infix-expressions" (c-expressions).  We'll assume you've installed things, started up your favorite Common Lisp implementation, and that you've successfully loaded the "readable" library using either *(asdf:load-system :readable)* or *(ql:quickload "readable")*.
 
 To enable basic c-expressions, run this command (which will modify our existing readtable to add these capabilities):
 
