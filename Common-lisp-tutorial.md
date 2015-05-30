@@ -12,9 +12,11 @@ So let's get started!
 Starting Common Lisp implementation and loading the readable library
 ====================================================================
 
-You need to run your implementation of Common Lisp and then load the "readable" library.  Any Common Lisp implementation should work, as it only depends on standard Common Lisp mechanisms. The sbcl implementation is especially well-tested and known to work well.  Unfortunately, clisp has a number of annoying limitations and problems, so we would recommend another implementation (such as sbcl).  That said, the readable notation does *work* on clisp if you want to use it, and we do include information below on how to work around clisp's problems.
+You need to run your implementation of Common Lisp and then load the "readable" library.  Any Common Lisp implementation should work, as it only depends on standard Common Lisp mechanisms. The sbcl implementation is especially well-tested and known to work well.
 
-You can load the "readable" library by using QuickLisp, or by invoking ASDF directly. Here is how to do it in each case.
+Unfortunately, the clisp implementation of Common Lisp has a number of annoying limitations and problems, so we would recommend another implementation (such as sbcl).  That said, the readable notation does *work* on clisp if you want to use it, and we do include information below on how to work around clisp's problems.  As of May 2015 it is still a live project, but the last release of clisp was in 2010; as a result, the clisp-provided ASDF system is absurdly old.  We provide some work-arounds for various broken behaviors of clisp, but they are less than optimal.  If you want an especially portable implementation of Common Lisp, you might consider CCL (which is effectively very portable) or ECL (which is written completely in C).
+
+You can load the "readable" library by using QuickLisp, or by invoking ASDF directly. QuickLisp is by far the easiest way, though using it doesn't install a few tools you might want.  Here is how to do it in each case.
 
 Loading the "readable" library via QuickLisp
 --------------------------------------------
@@ -101,6 +103,8 @@ Lowercase symbols (readtable-case)
 
 "Readtable-case" is a general capability of Common Lisp, not specific to the "readable" notations, but all readable notations work with it.  It's best to do this *before* enabling a readable notation. From here on, we'll assume you did this, though it is not required.
 
+I think that using readtable-case :invert makes interacting with Common Lisp more pleasant.  The one issue is that when debugging some actoins will reveal that the symbols are actually (still) being stored as upper case for compatibility's sake.  I think that's a small price to pay.
+
 
 A few other notes
 -----------------
@@ -115,7 +119,7 @@ For your convenience, the full package includes the tools "sweet-clisp" and "swe
 Using basic curly-infix-expressions (c-expressions)
 =============================================
 
-Let's first try out "curly-infix-expressions" (c-expressions).  We'll assume you've installed things, and that you've successfully loaded the "readable" library using either *(asdf:load-system :readable)* or *(ql:quickload "readable")*.
+Let's first try out "curly-infix-expressions" (c-expressions).  We'll assume you've installed things, started up your favorite Common Lisp implementation, and that you've successfully loaded the "readable" library using either *(asdf:load-system :readable)* or *(ql:quickload "readable")*.
 
 To enable basic c-expressions, run this command (which will modify our existing readtable to add these capabilities):
 

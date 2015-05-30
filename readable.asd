@@ -39,6 +39,7 @@
            #:enable-sweet #:sweet-read
            #:my-char-code-limit
            #:disable-readable
+           #:*original-readtable*
            #:readable-parse-error #:*noisy*
            #:$nfx$ #:$bracket-apply$
            #:*print-notation*  ; Write format for write-readable etc.
@@ -57,7 +58,7 @@
 
 (defsystem readable
   :name "readable"
-  :version "1.0.7"  ; ONLY digits and periods allowed.
+  :version "1.0.8"  ; ONLY digits and periods allowed.
   :maintainer "David A. Wheeler"
   :author "David A. Wheeler"
   :license "MIT"

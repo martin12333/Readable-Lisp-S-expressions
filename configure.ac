@@ -43,7 +43,7 @@
 # Initialize, but use more options.  Note parameter brackets and whitespace.
 # TO CHANGE THE VERSION NUMBER: Edit readable-simple.spec, readable.spec,
 # readable.asd, possibly ChangeLog, and the line below:
-AC_INIT([readable], [1.0.7], [dwheeler@dwheeler.com],
+AC_INIT([readable], [1.0.9], [dwheeler@dwheeler.com],
         [readable], [http://readable.sourceforge.net/])
 AC_COPYRIGHT(
 [[Copyright (C) 2007-2014 by David A. Wheeler and Alan Manuel K. Gloria.
@@ -226,7 +226,7 @@ AM_COND_IF([IS_MAKE_DISTCHECK], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no])])
 
 # For purposes of configuration, do we have a working guile?
 AS_IF([is_permitted "$with_guile"],
-  [AS_IF([is_useful "$GUILE"], [:], [AC_PATH_PROG([GUILE],[guile])])
+  [AS_IF([is_useful "$GUILE"], [:], [AC_CHECK_PROG([GUILE],[guile],[guile])])
    AS_IF([is_useful "$GUILE"],
     [AC_SUBST([GUILE])
      :])])
@@ -384,7 +384,7 @@ AM_COND_IF([INSTALL_COMMON_LISP_LIB], [],
 have_clisp_working_asdf=no
 announce_make_clisp_asdf=no
 AS_IF([is_permitted "$with_clisp"],
-  [AS_IF([is_useful "$CLISP"], [], [AC_PATH_PROG([CLISP],[clisp])])
+  [AS_IF([is_useful "$CLISP"], [], [AC_CHECK_PROG([CLISP],[clisp],[clisp])])
    AS_IF([is_useful "$CLISP"],
     [AC_SUBST([CLISP])
      AC_MSG_CHECKING([if (require "asdf") is available in clisp])
@@ -403,7 +403,7 @@ AC_MSG_RESULT([$have_clisp_working_asdf])
 
 # Check sbcl.
 AS_IF([is_permitted "$with_sbcl"],
-  [AS_IF([is_useful "$SBCL"], [], [AC_PATH_PROG([SBCL],[sbcl])])
+  [AS_IF([is_useful "$SBCL"], [], [AC_CHECK_PROG([SBCL],[sbcl],[sbcl])])
    AS_IF([is_useful "$SBCL"],
          [AC_SUBST([SBCL])
           :])])
@@ -415,6 +415,18 @@ AM_COND_IF([HAVE_SBCL], [],
   [AS_IF([test "$with_sbcl" = "yes"],
     [AC_MSG_ERROR([sbcl required but unavailable.])])])
 
+# Determine if we have a known working Common Lisp.
+# TODO: Support Common Lisp controller
+# per http://www.cliki.net/common-lisp-controller
+AC_MSG_CHECKING([Have a working known Common Lisp (HAVE_COMMON_LISP)])
+AM_CONDITIONAL([HAVE_COMMON_LISP],
+   [is_useful "$SBCL" || is_useful "$CLISP"])
+AC_MSG_RESULT([$have_common_lisp])
+AM_COND_IF([HAVE_COMMON_LISP],
+  [AS_IF([is_useful "$SBCL"],
+         [COMMON_LISP_EXEC="$SBCL --load"],
+         [COMMON_LISP_EXEC="$CLISP"])])
+AC_SUBST([COMMON_LISP_EXEC])
 
 
 ### Other stuff ###

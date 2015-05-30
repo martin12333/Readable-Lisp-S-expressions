@@ -28,9 +28,34 @@
 ; to the name of the directory of the .asd file, followed by "/".
 
 (require "asdf")
+(setf (readtable-case *readtable*) :invert)
 (asdf:load-system :readable)
 (use-package :readable)
 
+; From http://www.cliki.net/Portable%20Exit
+(defun my-quit (&optional code)
+      ;; This group from "clocc-port/ext.lisp"
+      #+allegro (excl:exit code)
+      #+clisp (#+lisp=cl ext:quit #-lisp=cl lisp:quit code)
+      #+cmu (ext:quit code)
+      #+cormanlisp (win32:exitprocess code)
+      #+gcl (lisp:bye code)                     ; XXX Or is it LISP::QUIT?
+      #+lispworks (lw:quit :status code)
+      #+lucid (lcl:quit code)
+      ; #+sbcl (sb-ext:quit
+      ;         :unix-code (typecase code (number code) (null 0) (t 1)))
+      #+sbcl (sb-ext:exit :code code)
+      ;; This group from Maxima
+      #+kcl (lisp::bye)                         ; XXX Does this take an arg?
+      #+scl (ext:quit code)                     ; XXX Pretty sure this *does*.
+      #+(or openmcl mcl) (ccl::quit)
+      #+abcl (cl-user::quit)
+      #+ecl (si:quit)
+      ;; This group from <hebi...@math.uni.wroc.pl>
+      #+poplog (poplog::bye)                    ; XXX Does this take an arg?
+      #-(or allegro clisp cmu cormanlisp gcl lispworks lucid sbcl
+            kcl scl openmcl mcl abcl ecl)
+      (error 'not-implemented :proc (list 'quit code)))
 
 (defun mytest (input correct)
   (cond
@@ -42,13 +67,18 @@
       (princ "FAIL!!!")
       (print input)
       (print correct)
-      (exit 1))))
+      (my-quit 1))))
 
 ; Special test values:
-(setq fab '(f a b))
-(setq g5qx '(g #b101 (quote x)))
-(setq gp5qx '(g (#b101 quote x)))
-(setq hnn7 '(h () () 7))
+(defvar fab '(f a b))
+(defvar g5qx '(g #b101 (quote x)))
+(defvar gp5qx '(g (#b101 quote x)))
+(defvar hnn7 '(h () () 7))
+(defvar x)
+(defvar z)
+
+
+
 
 (enable-full-curly-infix)
 
@@ -91,6 +121,9 @@
 
 (disable-readable)
 (enable-sweet)
+
+; Work around a bug in Windows SBCL readtable:
+(setf (readtable-case *readtable*) :invert)
 
 mytest
   ' f 1 2
@@ -348,8 +381,8 @@ mytest
 ; Now test writing back.
 
 mytest
-  "THIS-IS-A-TEST"
-  write-to-string-readable 'THIS-IS-A-TEST
+  "this-is-a-test"
+  write-to-string-readable 'this-is-a-test
 
 mytest
   "1"
@@ -368,28 +401,28 @@ mytest
   write-to-string-readable '(1 2 3)
 
 mytest
-  "(AA)"
-  write-to-string-readable '(AA) :notation 'basic-curly-infix
+  "(aa)"
+  write-to-string-readable '(aa) :notation 'basic-curly-infix
 
 mytest
-  "AA()"
-  write-to-string-readable '(AA)
+  "aa()"
+  write-to-string-readable '(aa)
 
 mytest
-  "AA(BB)"
-  write-to-string-readable '(AA BB)
+  "aa(bb)"
+  write-to-string-readable '(aa bb)
 
 mytest
-  "AA(BB CC)"
-  write-to-string-readable '(AA BB CC)
+  "aa(bb cc)"
+  write-to-string-readable '(aa bb cc)
 
 mytest
-  "(A B C D E F G H I J K L M N O P Q R S T U V)"
-  write-to-string-readable '(A B C D E F G H I J K L M N O P Q R S T U V)
+  "(a b c d e f g h i j k l m n o p q r s t u v)"
+  write-to-string-readable '(a b c d e f g h i j k l m n o p q r s t u v)
 
 mytest
-  "(A B C D E F G H I J K L M N O P Q R S T U V . Z)"
-  write-to-string-readable '(A B C D E F G H I J K L M N O P Q R S T U V . Z)
+  "(a b c d e f g h i j k l m n o p q r s t u v . z)"
+  write-to-string-readable '(a b c d e f g h i j k l m n o p q r s t u v . z)
 
 mytest
   "{4 + 5}"
@@ -400,30 +433,30 @@ mytest
   write-to-string-readable '(+ 4 5 6)
 
 mytest
-  "{A <= B}"
-  write-to-string-readable '(<= A B)
+  "{a <= b}"
+  write-to-string-readable '(<= a b)
 
 mytest
   "{4 + {5 * 6}}"
   write-to-string-readable '(+ 4 (* 5 6))
 
 mytest
-  "{F(X) + 4 + 5 + 6}"
+  "{f(x) + 4 + 5 + 6}"
   write-to-string-readable '(+ (f x) 4 5 6)
 
 mytest
-  "FOO(BAR {1 + 2})"
-  write-to-string-readable '(FOO BAR (+ 1 2))
+  "foo(bar {1 + 2})"
+  write-to-string-readable '(foo bar (+ 1 2))
 
 mytest
-  "SPAM(. EGGS)"
-  write-to-string-readable '(SPAM . EGGS)
+  "spam(. eggs)"
+  write-to-string-readable '(spam . eggs)
 
-setq x '((AAA BBB CCC) . W)
+setq x '((aaa bbb ccc) . w)
 setq x rplacd(x x)
 
 mytest
-  "#1=(AAA(BBB CCC) . #1#)"
+  "#1=(aaa(bbb ccc) . #1#)"
   write-to-string-readable x :circle t
 
 
@@ -437,6 +470,6 @@ mytest
 
 (disable-readable)
 (princ "Tests complete!")
-(exit 0)
-(quit)
+(terpri)
+(my-quit 0)
 

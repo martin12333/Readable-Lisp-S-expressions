@@ -30,8 +30,32 @@
 (require "asdf")
 (asdf:load-system :readable)
 (use-package :readable)
-(enable-basic-curly)
+(setf (readtable-case *readtable*) :invert)
 
+; From http://www.cliki.net/Portable%20Exit
+(defun my-quit (&optional code)
+      ;; This group from "clocc-port/ext.lisp"
+      #+allegro (excl:exit code)
+      #+clisp (#+lisp=cl ext:quit #-lisp=cl lisp:quit code)
+      #+cmu (ext:quit code)
+      #+cormanlisp (win32:exitprocess code)
+      #+gcl (lisp:bye code)                     ; XXX Or is it LISP::QUIT?
+      #+lispworks (lw:quit :status code)
+      #+lucid (lcl:quit code)
+      ; #+sbcl (sb-ext:quit
+      ;         :unix-code (typecase code (number code) (null 0) (t 1)))
+      #+sbcl (sb-ext:exit :code code)
+      ;; This group from Maxima
+      #+kcl (lisp::bye)                         ; XXX Does this take an arg?
+      #+scl (ext:quit code)                     ; XXX Pretty sure this *does*.
+      #+(or openmcl mcl) (ccl::quit)
+      #+abcl (cl-user::quit)
+      #+ecl (si:quit)
+      ;; This group from <hebi...@math.uni.wroc.pl>
+      #+poplog (poplog::bye)                    ; XXX Does this take an arg?
+      #-(or allegro clisp cmu cormanlisp gcl lispworks lucid sbcl
+            kcl scl openmcl mcl abcl ecl)
+      (error 'not-implemented :proc (list 'quit code)))
 
 (defun mytest (input correct)
   (cond
@@ -43,7 +67,14 @@
       (princ "FAIL!!!")
       (print input)
       (print correct)
-      (exit 1))))
+      (my-quit 1))))
+
+(defvar x 5)
+(defvar correct)
+(defvar y)
+(defvar z)
+
+(enable-basic-curly)
 
 (mytest '{2 + 3} '(+ 2 3))
 (mytest '{2 * n} '(* 2 n))
@@ -58,6 +89,11 @@
 
 ; Demo its use:
 
+(setf correct {1 <= x <= 10})
+
+; Forward reference declaration of fibup (best I can do):
+(declaim (ftype function fibup))
+
 (defun fibfast (n)
   (if {n < 2}
     n
@@ -67,9 +103,6 @@
   (if {max = count}
     {n-1 + n-2}
     (fibup max {count + 1} {n-1 + n-2} n-1)))
-
-(setf x 5)
-(setf correct {1 <= x <= 10})
 
 ; Test that demo worked correctly:
 (mytest (fibfast 10) 55)
@@ -81,6 +114,6 @@
 (setf z {{1 <= x <= 10} and {x > 0}})
 
 (princ "Tests complete!")
-(exit 0)
-(quit)
+(terpri)
+(my-quit 0)
 
