@@ -389,7 +389,7 @@
     ;   #,      = (was) load-time eval [Steele] - Intentionally not wrapped
     ;   #0..9   = used for infix arguments - Can't really wrap anyway.
     ;   #:      = uninterned symbol        - Special-meaning, wrapped
-    (set-dispatch-macro-character #\# #\* #'wrap-dispatch-disabled-tail)
+    (set-dispatch-macro-character #\# #\: #'wrap-dispatch-disabled-tail)
     ;   #;      = datum comment (extension)- Intentionally not wrapped
     ;   #=      = label following object   - Intentionally not wrapped
     ;   #\char  = character object         - Special-meaning, wrapped
