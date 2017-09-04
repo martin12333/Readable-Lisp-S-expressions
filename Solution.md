@@ -16,16 +16,17 @@ Here's the complete specification of these abbreviations (where "&rArr;" means "
     * The *empty* infix list {} maps to (), the *escaping* infix list {e} maps to e, and the *unary-op* infix list {e1 e2} maps to (e1 e2).  Thus, {$} &rArr; $, and {- x} &rArr; (- x).
     * Infix lists with "." as the first contained symbol have an unspecified mapping.
     * Other infix lists are mixed and map to "($nfx$ parameters)".  E.g., {2 + 3 * 4} &rArr; ($nfx$ 2 + 3 * 4)
-    * By intent, there is no precedence; just use another list. E.g., {2 + {3 * 4}} &rArr; (+ 2 (* 3 4))
+    * By intent, there is no precedence; just use another list. E.g., {2 + {3 * 4}} &rArr; (+ 2 (\* 3 4))
     * There are two variations of curly-infix notation, "basic" and "full".  In "basic" c-expressions, each element in a regular or infix list is another basic c-expression.  In "full" c-expressions, each element is a neoteric-expression, as defined below; that means inside {} you can use f(x) to represent (f x).
     * Full c-expressions are defined for Scheme in [SRFI 105](http://srfi.schemers.org/srfi-105/).
-2.   *Neoteric-expressions* (*n-expressions*): This includes curly-infix-expressions, and adds special meanings to some prefixed expressions.
+2.   *Neoteric-expressions* (*n-expressions*): This (normally) includes curly-infix-expressions, and adds special meanings to some prefixed expressions.
     * An e(...) maps to (e ...).  E.g., f(1 2) &rArr; (f 1 2), exit() &rArr; (exit), and read(. port) &rArr; (read . port).
     * An e{} maps to (e), otherwise, e{...} maps to (e {...}). E.g., f{n - 1} &rArr; (f {n - 1}) &rArr; (f (- n 1)), and g{- x} &rArr; (g (- x)).
     * An e\[...] maps to ($bracket-apply$ e ...)
     * In the above, "e" is any datum expression. There must be no whitespace between e and the open paired character.
     * An unprefixed "( . e)" must evaluate as "e".
     * These recurse left-to-right.  E.g., f{n - 1}(x) &rArr; f({n - 1})(x) &rArr; (f (- n 1))(x) &rArr; ((f (- n 1)) x)
+    * A system that implements neoteric expressions without curly-infix-expressions is a "simple neoteric-expression reader".
 3.   *Sweet-expressions* (*t-expressions*): Includes neoteric-expressions, and deduce parentheses from indentation. Here are the basics:
 
     - A line with content consists of one or more n-expressions, separated by one or more spaces or tabs.
