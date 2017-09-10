@@ -373,6 +373,8 @@ If you have small items that need to be at the same list level, you can combine 
 
 But what if you actually want to refer to "\\\\"?  No problem, just use the expression "{\\\\}".  Exactly what this means will depend on whether or not your Lisp uses "slashification" (e.g., if "\" followed by any character means that character is part of a symbol).  If it doesn't use slashification, \\\\ means the symbol with a two-character name \\\\.  If it uses slashification, \\\\ means the symbol with the one-character name \\.  The good news is that you can use the marker \\\\ on practically any Lisp system, so you don't need to constantly change notation if you use different ones.
 
+The readable-lisp implementation also supports a special line continuation extension.  If there's at least one expression on the line, and the line ends with "\\\\", then the "\\\\" is considered a line continuation.  That is, the line continues as if the newline never occurred.  This is similar to how many other languages handle "\\" at the end of a line.  The following line has to have the same indentation as the previous line (the line with the "\\\\" at the end).  You can keep doing this for as many lines as you'd like.  This extension is not part of the sweet-expression specification in SRFI-110, it's simply a permitted extension, but in Common Lisp this extension can be useful.  It has been added to the Scheme implementation for consistency with the Common Lisp implementation.
+
 Sublist
 -------
 

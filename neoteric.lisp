@@ -235,7 +235,7 @@
 
 ; Read preserving whitespace using the underlying readtable, then
 ; apply a neoteric tail if necessary.  This is necessary for handling
-; various situations (including constituent characters) 
+; various situations (including constituent characters)
 ; to ensure that trailing whitespace is NEVER consumed before looking for
 ; the tail.  Otherwise '{a + {b * c}} will be incorrectly
 ; interpreted as (A (+ (* B C))) instead of the correct (+ A (* B C)).
@@ -359,7 +359,7 @@
 
     ; Now deal with dispatch macro char; we'll just deal with default "#".
     ; set-dispatch-macro-character disp-char sub-char function
-    ;                              &optional readtable 
+    ;                              &optional readtable
     ;    Where "function" takes parameters (stream char arg).
     ; get-dispatch-macro-character disp-char sub-char &optional readtable
     ; See: http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node191.html
@@ -389,7 +389,7 @@
     ;   #,      = (was) load-time eval [Steele] - Intentionally not wrapped
     ;   #0..9   = used for infix arguments - Can't really wrap anyway.
     ;   #:      = uninterned symbol        - Special-meaning, wrapped
-    (set-dispatch-macro-character #\# #\* #'wrap-dispatch-disabled-tail)
+    (set-dispatch-macro-character #\# #\: #'wrap-dispatch-disabled-tail)
     ;   #;      = datum comment (extension)- Intentionally not wrapped
     ;   #=      = label following object   - Intentionally not wrapped
     ;   #\char  = character object         - Special-meaning, wrapped
@@ -463,7 +463,7 @@
 ;         (write result)
 ;         (terpri))
 ;       (end-of-file ())))
-;   
+;
 ;   (defun neoteric-load (filename)
 ;    (handler-case
 ;     (with-open-file (s (make-pathname :name filename) :direction :input)
@@ -474,4 +474,3 @@
 
 
 ; TODO: Add writers, e.g., neoteric-write.
-
