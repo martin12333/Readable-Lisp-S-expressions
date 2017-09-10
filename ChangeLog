@@ -1,3 +1,10 @@
+2017-09-10 David A. Wheeler <dwheeler, at, dwheeler.com>
+	* Version 1.0.10 - Minor improvements.
+	  - Fix subtle bug in Common Lisp neoteric reader.
+	  - Add to "Examples" a reference to math.slisp.
+	  - Document \\ line-continuation extension.
+	  - Removed trailing whitespace in a few source files.
+
 2015-05-25 David A. Wheeler <dwheeler, at, dwheeler.com>
 	* Version 1.0.9 - Minor improvements.
 	  - Lots of documentation improvements (update from wiki).
