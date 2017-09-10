@@ -57,7 +57,7 @@ See [Rationale] for why these rules are the way they are, and [Retort] if you we
 
 Beginning an expression with indentation causes that line's indentation to be ignored, improving backwards compatibility.  We recommend that editors highlight these lines as warnings, to reduce the risk of their accidental use.  It might be also useful for an editor to highlight blank lines (as they separate expressions) and lines beginning at the left column.
 
-Individual implementations may have *additional* abbreviations that are useful for their semantics; our goal is to devise general abbreviations that others can build on if they choose.
+Our goal is to devise general abbreviations that others can build on if they choose.  Individual implementations may have *additional* abbreviations that are useful for their semantics, or extensions to the rules listed above.  For example, the Scheme and Common Lisp sample implementations of sweet-expressions also implement line continuation (use "\\\\" at the end of a line, after at least one expression, and the next line will be a continuation if it has at least the same indentation level).
 
 This is version 1.0 of our notation specification.
 

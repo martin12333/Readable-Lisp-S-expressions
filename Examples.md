@@ -244,7 +244,9 @@ The notation is not limited to Scheme.  Here's [some Decision tree learning code
 Larger programs
 ===============
 
-The code distribution comes with "sweeten.sscm"; this is a program that translates traditional S-expressions into sweet-expressions, and is itself written using sweet-expressions.
+The code distribution comes with "sweeten.sscm"; this is a program in Scheme that translates traditional S-expressions into sweet-expressions, and is itself written using sweet-expressions.
+
+The code distribution also comes with "math.slisp"; this is a program in Common Lisp that simplifies math expressions, returning exact results.  Its real purpose is to demonstrate sweet-expressions in Common Lisp.
 
 "Letterfall" by Alan Manuel Gloria is a game written using sweet-expressions; you can see it here: https://github.com/AmkG/letterfall
 
